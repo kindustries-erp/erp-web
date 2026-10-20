@@ -45,16 +45,10 @@ export const CustomerDetailHeader = React.memo(function CustomerDetailHeader({
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {t(
-              "customers.drawer.title",
-              "Hồ sơ công nợ & Lịch sử phiếu dịch vụ tại xưởng",
-            )}
-          </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 self-end sm:self-auto">
+      <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0">
         <Button
           variant="outline"
           size="sm"

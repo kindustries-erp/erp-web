@@ -89,6 +89,24 @@ export function normalizeInvoiceDocuments(
     }
   }
 
+  // Gói zip gốc của nhà cung cấp (hóa đơn từ cổng thuế chỉ có xml_file_key).
+  // Thêm sau attachments để giữ attachmentId khi cùng fileKey.
+  const xmlKey = detailInvoice?.xmlFileKey;
+  if (
+    xmlKey &&
+    /\.zip$/i.test(xmlKey) &&
+    !list.some((existing) => existing.fileKey === xmlKey)
+  ) {
+    list.push({
+      id: xmlKey,
+      name: xmlKey.split("/").pop() || "Gói hóa đơn gốc.zip",
+      fileKey: xmlKey,
+      mimeType: "application/zip",
+      documentType: "HOA_DON",
+      isLegacy: true,
+    });
+  }
+
   for (let i = 0; i < pendingAddedAttachments.length; i++) {
     const p = pendingAddedAttachments[i];
     list.push({

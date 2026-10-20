@@ -176,4 +176,44 @@ describe("GarageCaseClassificationDropdown", () => {
 
     expect(onOpenDrawer).toHaveBeenCalledTimes(1);
   });
+
+  it("renders exclamation button with KGara classification title and calls onOpenDrawer on click", () => {
+    const onOpenDrawer = vi.fn();
+    render(
+      <GarageCaseClassificationDropdown
+        caseItem={{
+          ...mockCaseItem,
+          kgaraClassification: "Sửa chữa GSM",
+          kgaraClassificationCode: "GSM",
+        }}
+        canUpdate={true}
+        onOpenDrawer={onOpenDrawer}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    const exclamationBtn = screen.getByLabelText("Phân loại từ KGara");
+    expect(exclamationBtn).toBeDefined();
+    expect(exclamationBtn.getAttribute("title")).toContain("Sửa chữa GSM");
+
+    fireEvent.click(exclamationBtn);
+    expect(onOpenDrawer).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders muted exclamation button when KGara classification is missing", () => {
+    render(
+      <GarageCaseClassificationDropdown
+        caseItem={{
+          ...mockCaseItem,
+          kgaraClassification: null,
+        }}
+        canUpdate={true}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    const exclamationBtn = screen.getByLabelText("Phân loại từ KGara");
+    expect(exclamationBtn).toBeDefined();
+    expect(exclamationBtn.className).toContain("text-muted-foreground/40");
+  });
 });

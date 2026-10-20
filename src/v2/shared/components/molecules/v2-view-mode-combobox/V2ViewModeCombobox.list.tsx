@@ -3,12 +3,17 @@ import { Check, Pencil, Trash2 } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
-import type { V2ViewModeComboboxProps } from "./V2ViewModeCombobox.type";
-
-type ListProps = Pick<
+import type {
   V2ViewModeComboboxProps,
-  "items" | "activeKey" | "onSelect" | "onEdit" | "onDelete"
-> & { close: () => void };
+  V2ViewModeItem,
+} from "./V2ViewModeCombobox.type";
+
+type ListProps = Pick<V2ViewModeComboboxProps, "onEdit" | "onDelete"> & {
+  items: V2ViewModeItem[];
+  activeKey: string;
+  onSelect: (key: string) => void;
+  close: () => void;
+};
 
 export const V2ViewModeList: React.FC<ListProps> = ({
   items,

@@ -1,6 +1,5 @@
 import { useCallback } from "react";
-import { useAppStore } from "@/core/config/appStore";
-import { useT } from "@/core/i18n";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { v2Vi, v2En, lookupV2ModuleKey, walkV2Dictionary } from "../locales";
 
 export interface UseV2TranslationReturn {
@@ -14,64 +13,58 @@ export interface UseV2TranslationReturn {
   isEnglish: boolean;
 }
 
-export function useV2Translation(): UseV2TranslationReturn {
-  const locale = useAppStore((s) => s.locale);
-  const setLocale = useAppStore((s) => s.setLocale);
-  const coreT = useT();
+const interpolate = (
+  template: string,
+  values: Record<string, unknown>,
+): string => {
+  let result = template;
+  for (const [name, value] of Object.entries(values)) {
+    if (name === "defaultValue") continue;
+    result = result.replace(
+      new RegExp(`{{\\s*${name}\\s*}}`, "g"),
+      String(value),
+    );
+  }
+  return result;
+};
 
-  const v2Dict = locale === "en" ? v2En : v2Vi;
+/**
+ * Dịch chỉ dựa trên từ điển V2 (và module đăng ký qua `registerV2ModuleLocale`).
+ * Key không có tiền tố `v2.` hoặc không tìm thấy thì trả fallback, không đi sang V1.
+ */
+export function useV2Translation(): UseV2TranslationReturn {
+  const locale = useV2LocaleStore((s) => s.locale);
+  const setLocale = useV2LocaleStore((s) => s.setLocale);
+  const dict = locale === "en" ? v2En : v2Vi;
 
   const t = useCallback(
     (
       key: string,
       optionsOrFallback?: string | { defaultValue?: string; [k: string]: any },
     ): string => {
-      const fallbackStr: string =
+      const options =
         typeof optionsOrFallback === "object" && optionsOrFallback !== null
-          ? typeof optionsOrFallback.defaultValue === "string"
-            ? optionsOrFallback.defaultValue
+          ? optionsOrFallback
+          : undefined;
+      const fallback =
+        options !== undefined
+          ? typeof options.defaultValue === "string"
+            ? options.defaultValue
             : key
           : typeof optionsOrFallback === "string"
             ? optionsOrFallback
             : key;
 
-      if (!key) return fallbackStr;
+      if (!key || !key.startsWith("v2.")) return fallback;
 
-      // 1. V2 Dictionary, then module dictionaries registered via registerV2ModuleLocale
-      if (key.startsWith("v2.")) {
-        const cur =
-          walkV2Dictionary(v2Dict, key.split(".")) ??
-          lookupV2ModuleKey(locale, key);
+      const found =
+        walkV2Dictionary(dict, key.split(".")) ??
+        lookupV2ModuleKey(locale, key);
+      if (typeof found !== "string") return fallback;
 
-        if (typeof cur === "string") {
-          if (
-            typeof optionsOrFallback === "object" &&
-            optionsOrFallback !== null
-          ) {
-            let interpolated = cur;
-            for (const [varName, varVal] of Object.entries(optionsOrFallback)) {
-              if (varName !== "defaultValue") {
-                interpolated = interpolated.replace(
-                  new RegExp(`{{\\s*${varName}\\s*}}`, "g"),
-                  String(varVal),
-                );
-              }
-            }
-            return interpolated;
-          }
-          return cur;
-        }
-      }
-
-      // 2. Delegate to core application translation (nav.*, topbar.*, common.*, etc.)
-      const coreResult = coreT(key, optionsOrFallback);
-      if (coreResult && coreResult !== key) {
-        return coreResult;
-      }
-
-      return fallbackStr;
+      return options ? interpolate(found, options) : found;
     },
-    [locale, v2Dict, coreT],
+    [locale, dict],
   );
 
   return {

@@ -11,7 +11,6 @@ import {
   ArrowDownAZ,
   ArrowUpAZ,
   ListFilter,
-  Check,
   X,
   Loader2,
 } from "lucide-react";
@@ -106,6 +105,8 @@ export function TableColumnHeaderFilter({
   hideSort = false,
 }: TableColumnHeaderFilterProps) {
   const { t } = useTranslation("table");
+  const effectiveHideFooter =
+    hideFooter ?? (Boolean(dateRangeSlot) && Boolean(hideFilter));
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
     if (columnKey && getDropdownSearchState(columnKey) !== undefined) {
@@ -183,20 +184,55 @@ export function TableColumnHeaderFilter({
     enabled: open && !!shouldFetchOptions,
   });
 
+  const knownLabelsRef = useRef<Map<string, string>>(new Map());
+
+  // Register known labels from filterOptions
+  if (filterOptions) {
+    for (const opt of filterOptions) {
+      if (opt.value != null && opt.label != null) {
+        knownLabelsRef.current.set(String(opt.value), String(opt.label));
+      }
+    }
+  }
+
+  // Register known labels from optionsData
+  if (optionsData?.pages) {
+    for (const page of optionsData.pages) {
+      if (page.items) {
+        for (const item of page.items) {
+          if (typeof item === "object" && item !== null && item.value != null) {
+            knownLabelsRef.current.set(
+              String(item.value),
+              String(item.label || item.value),
+            );
+          } else if (item != null) {
+            knownLabelsRef.current.set(String(item), String(item));
+          }
+        }
+      }
+    }
+  }
+
   const finalOptions = useMemo(() => {
     let opts: { label: string; value: string }[];
+    const activeChecked = isAllMatchingMode
+      ? []
+      : pendingFilters.filter(
+          (v) => v !== "__ALL_MATCHING__" && v !== "__BLANK__",
+        );
+
     if (filterOptions && filterOptions.length > 0) {
-      if (!debouncedLocalSearch) {
+      if (!localSearch) {
         opts = filterOptions;
       } else {
-        const keywords = debouncedLocalSearch
+        const keywords = localSearch
           .split(";")
           .map((k) => k.trim())
           .filter(Boolean);
         if (keywords.length === 0) {
           opts = filterOptions;
         } else {
-          opts = filterOptions.filter((opt) => {
+          const matchingOpts = filterOptions.filter((opt) => {
             const labelLower = (opt.label || "").toLowerCase();
             const valueLower = (opt.value || "").toLowerCase();
             return keywords.some((kw) => {
@@ -215,6 +251,21 @@ export function TableColumnHeaderFilter({
               );
             });
           });
+          const matchingValues = new Set(matchingOpts.map((o) => o.value));
+          const missingChecked = activeChecked
+            .filter((v) => !matchingValues.has(v))
+            .map((v) => {
+              const found = filterOptions.find((o) => o.value === v);
+              return (
+                found || {
+                  label:
+                    knownLabelsRef.current.get(v) ||
+                    formatCompositeFilterValue(v),
+                  value: v,
+                }
+              );
+            });
+          opts = [...missingChecked, ...matchingOpts];
         }
       }
     } else if (columnKey) {
@@ -224,15 +275,12 @@ export function TableColumnHeaderFilter({
         (o: any) => o.value !== "" && o.value !== null && o.value !== undefined,
       );
       const apiValues = new Set(apiOptions.map((o: any) => o.value));
-      const isAllMatchingActive = selectedFilters[0] === "__ALL_MATCHING__";
-      const missingSelected = isAllMatchingActive
-        ? []
-        : selectedFilters
-            .filter((v) => !apiValues.has(v) && v !== "__BLANK__")
-            .map((v) => ({
-              label: formatCompositeFilterValue(v),
-              value: v,
-            }));
+      const missingSelected = activeChecked
+        .filter((v) => !apiValues.has(v))
+        .map((v) => ({
+          label: knownLabelsRef.current.get(v) || formatCompositeFilterValue(v),
+          value: v,
+        }));
       opts = [...missingSelected, ...apiOptions];
     } else {
       opts = filterOptions || [];
@@ -246,7 +294,9 @@ export function TableColumnHeaderFilter({
     optionsData,
     filterOptions,
     columnKey,
-    selectedFilters,
+    pendingFilters,
+    isAllMatchingMode,
+    localSearch,
     debouncedLocalSearch,
     showBlankOption,
   ]);
@@ -322,18 +372,21 @@ export function TableColumnHeaderFilter({
       if (pendingFilters[0] === "__ALL_MATCHING__") {
         onFilterChange(["__ALL_MATCHING__", localSearch]);
         onSearchChange(trimmedSearch);
+        if (columnKey) setDropdownSearchState(columnKey, trimmedSearch);
       } else {
         onFilterChange(pendingFilters);
-        onSearchChange(trimmedSearch);
+        onSearchChange("");
+        if (columnKey) setDropdownSearchState(columnKey, "");
       }
     } else if (trimmedSearch) {
       onSearchChange(trimmedSearch);
       onFilterChange([]);
+      if (columnKey) setDropdownSearchState(columnKey, trimmedSearch);
     } else {
       onSearchChange("");
       onFilterChange([]);
+      if (columnKey) setDropdownSearchState(columnKey, "");
     }
-    if (columnKey) setDropdownSearchState(columnKey, trimmedSearch);
     setOpen(false);
   };
 
@@ -392,45 +445,78 @@ export function TableColumnHeaderFilter({
           )}
         >
           {!hideSort && (
-            <div className="flex flex-col gap-1 border-b border-border p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "justify-start font-normal rounded-sm h-8",
-                  sortState === "asc"
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "",
-                )}
-                onClick={() => {
-                  onSortChange(sortState === "asc" ? "none" : "asc");
-                  setOpen(false);
-                }}
-              >
-                <ArrowDownAZ size={14} className="mr-2" />
-                {t("sortAsc", "Sắp xếp tăng dần")}
-                {sortState === "asc" && <Check size={14} className="ml-auto" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "justify-start font-normal rounded-sm h-8",
-                  sortState === "desc"
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "",
-                )}
-                onClick={() => {
-                  onSortChange(sortState === "desc" ? "none" : "desc");
-                  setOpen(false);
-                }}
-              >
-                <ArrowUpAZ size={14} className="mr-2" />
-                {t("sortDesc", "Sắp xếp giảm dần")}
-                {sortState === "desc" && (
-                  <Check size={14} className="ml-auto" />
-                )}
-              </Button>
+            <div className="flex items-center gap-1.5 border-b border-border p-2">
+              <div className="flex min-w-0 flex-1 rounded-lg border border-border/80 bg-muted/60 shadow-2xs overflow-hidden divide-x divide-border/60">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer",
+                    sortState === "asc"
+                      ? "bg-surface text-primary font-semibold shadow-2xs"
+                      : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
+                  )}
+                  aria-label={t("sortAsc", "Sắp xếp tăng dần")}
+                  title={t("sortAsc", "Sắp xếp tăng dần")}
+                  onClick={() => {
+                    onSortChange(sortState === "asc" ? "none" : "asc");
+                    setOpen(false);
+                  }}
+                >
+                  <ArrowDownAZ
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      sortState === "asc"
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
+                  <span>{t("sortAscShort", "Tăng")}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer",
+                    sortState === "desc"
+                      ? "bg-surface text-primary font-semibold shadow-2xs"
+                      : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
+                  )}
+                  aria-label={t("sortDesc", "Sắp xếp giảm dần")}
+                  title={t("sortDesc", "Sắp xếp giảm dần")}
+                  onClick={() => {
+                    onSortChange(sortState === "desc" ? "none" : "desc");
+                    setOpen(false);
+                  }}
+                >
+                  <ArrowUpAZ
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      sortState === "desc"
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
+                  <span>{t("sortDescShort", "Giảm")}</span>
+                </Button>
+              </div>
+              {sortState !== "none" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-7 w-7 shrink-0 rounded-md p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  aria-label={t("clearSort", "Bỏ sắp xếp")}
+                  title={t("clearSort", "Bỏ sắp xếp")}
+                  onClick={() => onSortChange("none")}
+                >
+                  <X size={14} />
+                </Button>
+              )}
             </div>
           )}
 
@@ -575,7 +661,7 @@ export function TableColumnHeaderFilter({
           )}
 
           {/* Footer Actions */}
-          {!hideFooter && (
+          {!effectiveHideFooter && (
             <div className="p-2 border-t border-border flex justify-between items-center bg-muted/30 rounded-b-xl">
               <Button
                 variant="ghost"
@@ -587,6 +673,7 @@ export function TableColumnHeaderFilter({
                   if (columnKey) setDropdownSearchState(columnKey, "");
                   onSearchChange("");
                   onFilterChange([]);
+                  onSortChange("none");
                   setOpen(false);
                 }}
               >

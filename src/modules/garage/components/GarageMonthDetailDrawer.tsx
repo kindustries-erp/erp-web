@@ -1,29 +1,31 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import {
+  StandardFormDrawer,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
-import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import {
-  DataTable,
-  createColumnHeaderFilter,
-  filterClientItems,
-  type DataTableColumn,
-} from "@/shared/components/DataTable";
-import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
-import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { GarageTrendItem } from "../api/garageDashboardApi";
 import { GarageMonthClassificationCasesDrawer } from "./GarageMonthClassificationCasesDrawer";
+import { GaragePartnerMonthDetailDrawer } from "./organisms/garage-partner-month-detail-drawer";
+import { GarageCaseStandaloneDrawer } from "./GarageCaseStandaloneDrawer";
+import { useGarageMonthReceivablesBreakdown } from "../hooks/useGarageMonthReceivablesBreakdown";
+import { PillTabs } from "@/shared/components/PillTabs";
+import { MonthPayerKpiGrid } from "./organisms/garage-month-detail-drawer/components/MonthPayerKpiGrid";
+import { MonthCostPayableKpiCard } from "./organisms/garage-month-detail-drawer/components/MonthCostPayableKpiCard";
+import { MonthPartnerCategorizedSection } from "./organisms/garage-month-detail-drawer/components/MonthPartnerCategorizedSection";
+import { MonthClassificationTable } from "./organisms/garage-month-detail-drawer/components/MonthClassificationTable";
+import { CustomerDetailDebtSwitch } from "./organisms/garage-customer-detail-drawer/components/CustomerDetailDebtSwitch";
+import type { MonthClassificationRow } from "./organisms/garage-month-detail-drawer/components/MonthClassificationTable.type";
+import type { MonthlyReceivablesGroupItem } from "../api/garageDashboardApi";
 import {
   Wallet,
   Truck,
-  Wrench,
-  Building2,
-  ExternalLink,
-  HelpCircle,
   Table as TableIcon,
-  Eye,
+  ShieldCheck,
+  AlertTriangle,
 } from "lucide-react";
 
 interface GarageMonthDetailDrawerProps {
@@ -33,100 +35,7 @@ interface GarageMonthDetailDrawerProps {
   onClose: () => void;
 }
 
-interface MonthClassificationRow {
-  key: string;
-  name: string;
-  subLabel?: string;
-  icon: React.ReactNode;
-  badgeClass: string;
-  caseCount: number;
-  billed: number;
-  paid: number;
-  remaining: number;
-  remainingWithInvoice: number;
-  remainingNoInvoice: number;
-  rate: number;
-  shareRate: number;
-}
-
-function RateBar({
-  rate,
-  isReceipt = true,
-}: {
-  rate: number;
-  isReceipt?: boolean;
-}) {
-  const color = isReceipt
-    ? "bg-emerald-500 dark:bg-emerald-400"
-    : "bg-orange-500 dark:bg-orange-400";
-  const capped = Math.min(100, Math.max(0, rate));
-
-  const badgeClass =
-    rate >= 100
-      ? isReceipt
-        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
-        : "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30"
-      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-700/80";
-
-  return (
-    <div className="flex items-center gap-2.5 w-full">
-      <Badge
-        variant="outline"
-        className={cn(
-          "font-bold px-2 py-0.5 text-xs border tabular-nums w-fit shrink-0",
-          badgeClass,
-        )}
-      >
-        {rate.toFixed(1)}%
-      </Badge>
-      <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
-        <div
-          className={cn(
-            "h-full rounded-full transition-all duration-500 ease-out",
-            color,
-          )}
-          style={{ width: `${capped}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function MoneyRow({
-  label,
-  value,
-  valueClass,
-  secondary,
-}: {
-  label: string;
-  value: number;
-  valueClass?: string;
-  secondary?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between py-2 px-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-      <span className="text-[12px] text-muted-foreground font-medium shrink-0">
-        {label}
-      </span>
-      <div className="text-right shrink-0">
-        <span
-          className={cn(
-            "text-[12px] font-mono font-semibold tabular-nums whitespace-nowrap",
-            valueClass ?? "text-foreground",
-          )}
-        >
-          {money(value)}
-        </span>
-        {secondary && (
-          <span className="block text-[10px] text-muted-foreground/75 font-normal whitespace-nowrap">
-            {secondary}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
+import { buildMonthClassificationRows } from "./organisms/garage-month-detail-drawer/utils/buildMonthClassificationRows";
 export function GarageMonthDetailDrawer({
   open,
   item,
@@ -134,23 +43,51 @@ export function GarageMonthDetailDrawer({
   onClose,
 }: GarageMonthDetailDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
-  const isReceipt = activeTab === "RECEIPT";
+  const [currentTab, setCurrentTab] = useState<"RECEIPT" | "PAYMENT">(
+    activeTab || "RECEIPT",
+  );
+  const [partnerDebtType, setPartnerDebtType] = useState<
+    "receivables" | "payables"
+  >(activeTab === "PAYMENT" ? "payables" : "receivables");
+
+  useEffect(() => {
+    if (activeTab) {
+      setCurrentTab(activeTab);
+      setPartnerDebtType(activeTab === "PAYMENT" ? "payables" : "receivables");
+    }
+  }, [activeTab]);
+
+  const isReceipt = currentTab === "RECEIPT";
 
   const [classificationDrawerState, setClassificationDrawerState] = useState<{
     open: boolean;
-    filterType: "CLASSIFICATION" | "INVOICE";
+    filterType: "CLASSIFICATION" | "INVOICE" | "PARTNER_GROUP";
     filterKey: string;
     filterLabel: string;
+    caseCodes?: string[];
   }>({
     open: false,
     filterType: "CLASSIFICATION",
     filterKey: "",
     filterLabel: "",
+    caseCodes: undefined,
   });
 
-  // Table Column State Hook for Client-side Filter & Sort
-  const classificationTableId = "garage-month-detail-classification-table";
-  const classificationTableHook = useTableColumnState(classificationTableId);
+  const [partnerMonthDrawerState, setPartnerMonthDrawerState] = useState<{
+    open: boolean;
+    customerCode?: string | null;
+    customerName?: string | null;
+    taxCode?: string | null;
+    initialCases?: any[];
+  }>({
+    open: false,
+    customerCode: null,
+    customerName: null,
+    taxCode: null,
+    initialCases: undefined,
+  });
+
+  const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
 
   const safeItem = useMemo<GarageTrendItem>(
     () =>
@@ -175,6 +112,55 @@ export function GarageMonthDetailDrawer({
     [item],
   );
 
+  const [partnerTypeFilter, setPartnerTypeFilter] = useState<
+    "all" | "enterprise" | "individual" | "insurance"
+  >("all");
+
+  // Hook lấy phân rã Phải thu / Phải trả theo đối tượng HĐ
+  const {
+    summary: breakdownSummary,
+    insuranceCompanies,
+    customerPartners,
+    insuranceCategorized,
+    enterpriseCategorized,
+    individualCategorized,
+    warning: vatWarningInfo,
+  } = useGarageMonthReceivablesBreakdown({
+    month: safeItem.label,
+    enabled: open,
+  });
+
+  const safeCategorized = useMemo(() => {
+    const empty = {
+      all: [],
+      withInvoice: [],
+      pendingInvoice: [],
+      noInvoice: [],
+      totals: {
+        billed: 0,
+        paid: 0,
+        remaining: 0,
+        caseCount: 0,
+        partnerCount: 0,
+      },
+    };
+    return {
+      insurance: insuranceCategorized ?? empty,
+      enterprise: enterpriseCategorized ?? empty,
+      individual: individualCategorized ?? empty,
+    };
+  }, [insuranceCategorized, enterpriseCategorized, individualCategorized]);
+
+  const handleSelectPartnerGroup = (group: MonthlyReceivablesGroupItem) => {
+    setPartnerMonthDrawerState({
+      open: true,
+      customerCode: group.taxCode || group.key,
+      customerName: group.title,
+      taxCode: group.taxCode,
+      initialCases: group.cases,
+    });
+  };
+
   const formatMonth = (m?: string) => {
     if (!m) return "";
     const parts = m.split("-");
@@ -185,7 +171,6 @@ export function GarageMonthDetailDrawer({
   // ── RECEIPT tab values ──────────────────────────────────────────
   const totalBilled = safeItem.tienCoThue ?? safeItem.totalBilled ?? 0;
   const totalPaid = safeItem.paid ?? 0;
-  const totalReceivable = safeItem.receivable ?? 0;
   const collectionRate =
     safeItem.collectionRate ??
     (totalBilled > 0 ? (totalPaid / totalBilled) * 100 : 0);
@@ -193,7 +178,6 @@ export function GarageMonthDetailDrawer({
   // ── PAYMENT tab values ──────────────────────────────────────────
   const totalCost = safeItem.cost ?? 0;
   const totalPaidCost = safeItem.paidCost ?? 0;
-  const totalPayable = safeItem.payableCost ?? 0;
   const costPaymentRate =
     safeItem.costPaymentRate ??
     (totalCost > 0 ? (totalPaidCost / totalCost) * 100 : 0);
@@ -201,859 +185,291 @@ export function GarageMonthDetailDrawer({
   const monthLabel = formatMonth(safeItem.label);
   const mainRate = isReceipt ? collectionRate : costPaymentRate;
   const mainBilled = isReceipt ? totalBilled : totalCost;
-  const mainPaid = isReceipt ? totalPaid : totalPaidCost;
-  const mainRemaining = isReceipt ? totalReceivable : totalPayable;
 
-  // ── Classification: Sửa chữa chung ──────────────────────────────
-  const billedScc = isReceipt
-    ? (safeItem.billedSuaChuaChung ?? 0)
-    : (safeItem.costSuaChuaChung ?? 0);
-  const paidScc = isReceipt
-    ? (safeItem.paidSuaChuaChung ?? 0)
-    : (safeItem.paidCostSuaChuaChung ?? 0);
-  const rateScc = isReceipt
-    ? (safeItem.rateSuaChuaChung ?? 0)
-    : (safeItem.costRateSuaChuaChung ?? 0);
-  const countScc = safeItem.caseCountSuaChuaChung ?? 0;
-  const remainingWithInvScc = isReceipt
-    ? (safeItem.receivableWithInvoiceSuaChuaChung ?? 0)
-    : (safeItem.payableCostWithInvoiceSuaChuaChung ?? 0);
-  const remainingNoInvScc = isReceipt
-    ? (safeItem.receivableNoInvoiceSuaChuaChung ?? 0)
-    : (safeItem.payableCostNoInvoiceSuaChuaChung ?? 0);
+  const receivableClassificationRows = useMemo(
+    () => buildMonthClassificationRows(safeItem, "receivables"),
+    [safeItem],
+  );
+  const payableClassificationRows = useMemo(
+    () => buildMonthClassificationRows(safeItem, "payables"),
+    [safeItem],
+  );
 
-  // ── Classification: Ký gửi / Nội bộ ─────────────────────────────
-  const billedKgNb = isReceipt
-    ? (safeItem.billedKyGuiNoiBo ?? 0)
-    : (safeItem.costKyGuiNoiBo ?? 0);
-  const paidKgNb = isReceipt
-    ? (safeItem.paidKyGuiNoiBo ?? 0)
-    : (safeItem.paidCostKyGuiNoiBo ?? 0);
-  const rateKgNb = isReceipt
-    ? (safeItem.rateKyGuiNoiBo ?? 0)
-    : (safeItem.costRateKyGuiNoiBo ?? 0);
-  const countKgNb = safeItem.caseCountKyGuiNoiBo ?? 0;
-  const remainingWithInvKgNb = isReceipt
-    ? (safeItem.receivableWithInvoiceKyGuiNoiBo ?? 0)
-    : (safeItem.payableCostWithInvoiceKyGuiNoiBo ?? 0);
-  const remainingNoInvKgNb = isReceipt
-    ? (safeItem.receivableNoInvoiceKyGuiNoiBo ?? 0)
-    : (safeItem.payableCostNoInvoiceKyGuiNoiBo ?? 0);
+  const handleSelectClassification = (row: MonthClassificationRow) => {
+    setClassificationDrawerState({
+      open: true,
+      filterType: "CLASSIFICATION",
+      filterKey: row.key,
+      filterLabel: row.name,
+    });
+  };
+  const classificationCount = new Set([
+    ...receivableClassificationRows.map((row) => row.key),
+    ...payableClassificationRows.map((row) => row.key),
+  ]).size;
 
-  // ── Classification: OJ Ngoài ────────────────────────────────────
-  const billedOj = isReceipt
-    ? (safeItem.billedOj ?? 0)
-    : (safeItem.costOj ?? 0);
-  const paidOj = isReceipt
-    ? (safeItem.paidOj ?? 0)
-    : (safeItem.paidCostOj ?? 0);
-  const rateOj = isReceipt
-    ? (safeItem.rateOj ?? 0)
-    : (safeItem.costRateOj ?? 0);
-  const countOj = safeItem.caseCountOj ?? 0;
-  const remainingWithInvOj = isReceipt
-    ? (safeItem.receivableWithInvoiceOj ?? 0)
-    : (safeItem.payableCostWithInvoiceOj ?? 0);
-  const remainingNoInvOj = isReceipt
-    ? (safeItem.receivableNoInvoiceOj ?? 0)
-    : (safeItem.payableCostNoInvoiceOj ?? 0);
-
-  // ── Classification: Khác / Chưa phân loại ───────────────────────
-  const billedOther = isReceipt
-    ? (safeItem.billedOther ?? 0)
-    : (safeItem.costOther ?? 0);
-  const paidOther = isReceipt
-    ? (safeItem.paidOther ?? 0)
-    : (safeItem.paidCostOther ?? 0);
-  const rateOther = isReceipt
-    ? (safeItem.rateOther ?? 0)
-    : (safeItem.costRateOther ?? 0);
-  const countOther = safeItem.caseCountOther ?? 0;
-  const remainingWithInvOther = isReceipt
-    ? (safeItem.receivableWithInvoiceOther ?? 0)
-    : (safeItem.payableCostWithInvoiceOther ?? 0);
-  const remainingNoInvOther = isReceipt
-    ? (safeItem.receivableNoInvoiceOther ?? 0)
-    : (safeItem.payableCostNoInvoiceOther ?? 0);
-
-  // ── Table Data: Classification Rows ─────────────────────────────
-  const classificationRows = useMemo<MonthClassificationRow[]>(() => {
-    const rows: MonthClassificationRow[] = [
+  // ── Build Drawer Top Tabs (Main Tabs cấp Drawer chuẩn /standardize-drawer) ──
+  const drawerTabs = useMemo<DrawerTopTabItem[]>(() => {
+    const tabs: DrawerTopTabItem[] = [
+      // Main Tab 1: Phân loại Nghiệp vụ
       {
-        key: "SUA_CHUA_CHUNG",
-        name: "Sửa chữa chung",
-        subLabel: "Bảo dưỡng định kỳ, sửa chữa tổng quát",
-        icon: (
-          <Wrench className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+        key: "classification",
+        label: isReceipt ? "Phân loại Nghiệp vụ" : "Phân loại Chi phí",
+        icon: <TableIcon className="w-3.5 h-3.5" />,
+        badgeCount: classificationCount,
+        content: (
+          <div className="space-y-4">
+            <DrawerSection
+              title={t(
+                "progress.sections.receivableClassification",
+                "Bảng Phải thu theo nghiệp vụ",
+              )}
+              titleExtra={`${receivableClassificationRows.length}/${receivableClassificationRows.length} phân loại`}
+              collapsible
+              defaultCollapsed={false}
+            >
+              <MonthClassificationTable
+                rows={receivableClassificationRows}
+                debtType="receivables"
+                totalBilled={totalBilled}
+                tableId="garage-month-detail-receivables-table"
+                onSelectClassification={handleSelectClassification}
+              />
+            </DrawerSection>
+            <DrawerSection
+              title={t(
+                "progress.sections.payableClassification",
+                "Bảng Phải trả theo chi phí",
+              )}
+              titleExtra={`${payableClassificationRows.length}/${payableClassificationRows.length} phân loại`}
+              collapsible
+              defaultCollapsed={false}
+            >
+              <MonthClassificationTable
+                rows={payableClassificationRows}
+                debtType="payables"
+                totalBilled={totalCost}
+                tableId="garage-month-detail-payables-table"
+                onSelectClassification={handleSelectClassification}
+              />
+            </DrawerSection>
+          </div>
         ),
-        badgeClass:
-          "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/40",
-        caseCount: countScc,
-        billed: billedScc,
-        paid: paidScc,
-        remaining: Math.max(0, billedScc - paidScc),
-        remainingWithInvoice: remainingWithInvScc,
-        remainingNoInvoice: remainingNoInvScc,
-        rate: rateScc,
-        shareRate: mainBilled > 0 ? (billedScc / mainBilled) * 100 : 0,
-      },
-      {
-        key: "KY_GUI_NOI_BO",
-        name: "Ký gửi / Nội bộ",
-        subLabel: "Xe công ty, nội bộ hoặc nhận ký gửi",
-        icon: (
-          <Building2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-        ),
-        badgeClass:
-          "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800/40",
-        caseCount: countKgNb,
-        billed: billedKgNb,
-        paid: paidKgNb,
-        remaining: Math.max(0, billedKgNb - paidKgNb),
-        remainingWithInvoice: remainingWithInvKgNb,
-        remainingNoInvoice: remainingNoInvKgNb,
-        rate: rateKgNb,
-        shareRate: mainBilled > 0 ? (billedKgNb / mainBilled) * 100 : 0,
       },
     ];
 
-    if (billedOj > 0 || countOj > 0) {
-      rows.push({
-        key: "OJ_NGOAI",
-        name: "OJ / Ngoài hệ thống",
-        subLabel: "Gia công hoặc ghi nhận ngoài",
-        icon: (
-          <ExternalLink className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-        ),
-        badgeClass:
-          "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800/40",
-        caseCount: countOj,
-        billed: billedOj,
-        paid: paidOj,
-        remaining: Math.max(0, billedOj - paidOj),
-        remainingWithInvoice: remainingWithInvOj,
-        remainingNoInvoice: remainingNoInvOj,
-        rate: rateOj,
-        shareRate: mainBilled > 0 ? (billedOj / mainBilled) * 100 : 0,
-      });
-    }
+    // Main Tab 2: Chi tiết theo Đối tượng Hóa đơn & Đối tác (Phải thu / Phải trả)
+    const { enterprise, individual, insurance } = safeCategorized;
+    const totalPartnerCount =
+      enterprise.all.length + individual.all.length + insurance.all.length;
+    const isPayableBreakdown = partnerDebtType === "payables";
+    const effectiveBreakdownTotal = isPayableBreakdown
+      ? totalCost
+      : (breakdownSummary?.totalBilled ?? mainBilled);
 
-    if (billedOther > 0 || countOther > 0) {
-      rows.push({
-        key: "OTHER",
-        name: "Khác / Chưa phân loại",
-        subLabel: "Chưa gắn mã phân loại",
-        icon: <HelpCircle className="w-3.5 h-3.5 text-slate-500" />,
-        badgeClass:
-          "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800/40",
-        caseCount: countOther,
-        billed: billedOther,
-        paid: paidOther,
-        remaining: Math.max(0, billedOther - paidOther),
-        remainingWithInvoice: remainingWithInvOther,
-        remainingNoInvoice: remainingNoInvOther,
-        rate: rateOther,
-        shareRate: mainBilled > 0 ? (billedOther / mainBilled) * 100 : 0,
-      });
-    }
+    tabs.push({
+      key: "partner_breakdown",
+      label: t(
+        "progress.tabs.partnerClassification",
+        "Phân loại theo đối tượng",
+      ),
+      icon: <ShieldCheck className="w-3.5 h-3.5" />,
+      badgeCount: totalPartnerCount,
+      content: (
+        <div className="flex flex-col gap-3.5">
+          {/* Top Toolbar Filter by Partner Group & Debt Switch (Single Row like erp-invoice) */}
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center overflow-x-auto scrollbar-none min-w-0">
+              <PillTabs<"all" | "enterprise" | "individual" | "insurance">
+                size="sm"
+                className="w-auto"
+                headerClassName="flex-nowrap"
+                items={[
+                  {
+                    value: "all",
+                    label: t(
+                      "progress.partnerFilterTabs.all",
+                      "Tất cả đối tượng",
+                    ),
+                    badge: totalPartnerCount,
+                  },
+                  {
+                    value: "enterprise",
+                    label: t(
+                      "progress.partnerFilterTabs.enterprise",
+                      "KH Doanh nghiệp",
+                    ),
+                    badge: enterprise.all.length,
+                  },
+                  {
+                    value: "individual",
+                    label: t(
+                      "progress.partnerFilterTabs.individual",
+                      "KH Cá nhân",
+                    ),
+                    badge: individual.all.length,
+                  },
+                  {
+                    value: "insurance",
+                    label: t(
+                      "progress.partnerFilterTabs.insurance",
+                      "Bảo hiểm",
+                    ),
+                    badge: insurance.all.length,
+                  },
+                ]}
+                value={partnerTypeFilter}
+                onValueChange={setPartnerTypeFilter}
+              />
+            </div>
+            <div className="shrink-0 flex items-center">
+              <CustomerDetailDebtSwitch
+                className="w-auto"
+                value={partnerDebtType}
+                onChange={setPartnerDebtType}
+              />
+            </div>
+          </div>
 
-    return rows;
+          {/* 1. Khách hàng Doanh nghiệp */}
+          {(partnerTypeFilter === "all" ||
+            partnerTypeFilter === "enterprise") && (
+            <MonthPartnerCategorizedSection
+              title={
+                isPayableBreakdown
+                  ? t(
+                      "progress.sections.enterprisePayment",
+                      "Chi Khách hàng Doanh nghiệp",
+                    )
+                  : t(
+                      "progress.sections.enterpriseCollection",
+                      "Thu Khách hàng Doanh nghiệp",
+                    )
+              }
+              categorized={enterprise}
+              tableIdPrefix="garage-month-detail-enterprise"
+              totalBilled={effectiveBreakdownTotal}
+              debtType={partnerDebtType}
+              isAllTab={partnerTypeFilter === "all"}
+              onSelectGroup={handleSelectPartnerGroup}
+              onOpenCaseDetail={setSelectedCaseCode}
+              defaultCollapsed={false}
+            />
+          )}
+
+          {/* 2. Khách hàng Cá nhân */}
+          {(partnerTypeFilter === "all" ||
+            partnerTypeFilter === "individual") && (
+            <MonthPartnerCategorizedSection
+              title={
+                isPayableBreakdown
+                  ? t(
+                      "progress.sections.individualPayment",
+                      "Chi Khách hàng Cá nhân",
+                    )
+                  : t(
+                      "progress.sections.individualCollection",
+                      "Thu Khách hàng Cá nhân",
+                    )
+              }
+              categorized={individual}
+              tableIdPrefix="garage-month-detail-individual"
+              totalBilled={effectiveBreakdownTotal}
+              debtType={partnerDebtType}
+              isAllTab={partnerTypeFilter === "all"}
+              onSelectGroup={handleSelectPartnerGroup}
+              onOpenCaseDetail={setSelectedCaseCode}
+              defaultCollapsed={false}
+            />
+          )}
+
+          {/* 3. Bảo hiểm */}
+          {(partnerTypeFilter === "all" ||
+            partnerTypeFilter === "insurance") && (
+            <MonthPartnerCategorizedSection
+              title={
+                isPayableBreakdown
+                  ? t("progress.sections.insurancePayment", "Chi bảo hiểm")
+                  : t("progress.sections.insuranceCollection", "Thu bảo hiểm")
+              }
+              categorized={insurance}
+              tableIdPrefix="garage-month-detail-insurance"
+              totalBilled={effectiveBreakdownTotal}
+              debtType={partnerDebtType}
+              isAllTab={partnerTypeFilter === "all"}
+              onSelectGroup={handleSelectPartnerGroup}
+              onOpenCaseDetail={setSelectedCaseCode}
+              defaultCollapsed={false}
+            />
+          )}
+        </div>
+      ),
+    });
+
+    return tabs;
   }, [
-    countScc,
-    billedScc,
-    paidScc,
-    rateScc,
-    remainingWithInvScc,
-    remainingNoInvScc,
-    countKgNb,
-    billedKgNb,
-    paidKgNb,
-    rateKgNb,
-    remainingWithInvKgNb,
-    remainingNoInvKgNb,
-    billedOj,
-    paidOj,
-    rateOj,
-    countOj,
-    remainingWithInvOj,
-    remainingNoInvOj,
-    billedOther,
-    paidOther,
-    rateOther,
-    countOther,
-    remainingWithInvOther,
-    remainingNoInvOther,
+    isReceipt,
+    t,
+    classificationCount,
+    receivableClassificationRows,
+    payableClassificationRows,
+    totalBilled,
+    totalCost,
+    insuranceCompanies,
+    customerPartners,
+    safeCategorized,
+    partnerTypeFilter,
+    partnerDebtType,
+    breakdownSummary,
+    vatWarningInfo,
     mainBilled,
+    handleSelectClassification,
+    handleSelectPartnerGroup,
   ]);
 
-  // ── Column Header Filter Builder (Client-side auto extraction) ───
-  const classificationHeaderFilter = useMemo(
-    () =>
-      createColumnHeaderFilter({
-        listHook: classificationTableHook,
-        items: classificationRows,
-        defaultAlign: "center",
-      }),
-    [classificationTableHook, classificationRows],
-  );
-
-  // ── Filtered Rows (Universal client filter & sorter) ───────────────
-  const filteredClassificationRows = useMemo(
-    () => filterClientItems(classificationRows, classificationTableHook),
-    [classificationRows, classificationTableHook],
-  );
-
-  // ── Table Columns: Classification DataTable ──────────────────────
-  const classificationColumns = useMemo<
-    DataTableColumn<MonthClassificationRow>[]
-  >(
-    () => [
-      {
-        key: "index",
-        header: <span className="w-full block text-center">#</span>,
-        size: 40,
-        enableResizing: false,
-        headerClassName: "text-center w-[40px] min-w-[40px]",
-        className: "text-center w-[40px] min-w-[40px]",
-        cell: (_: any, idx: number) => (
-          <span className="w-full block text-center text-muted-foreground font-medium">
-            {idx}
-          </span>
-        ),
-      },
-      {
-        key: "name",
-        header: classificationHeaderFilter(
-          "name",
-          t("progress.columns.classification", "Loại nghiệp vụ"),
-          { align: "left" },
-        ),
-        size: 200,
-        enableResizing: true,
-        headerClassName: "text-left font-semibold",
-        className: "text-left",
-        cell: (row: MonthClassificationRow) => (
-          <div
-            className="flex items-center gap-2 cursor-pointer group"
-            onClick={() => {
-              setClassificationDrawerState({
-                open: true,
-                filterType: "CLASSIFICATION",
-                filterKey: row.key,
-                filterLabel: row.name,
-              });
-            }}
-          >
-            <span className="shrink-0 group-hover:scale-110 transition-transform">
-              {row.icon}
-            </span>
-            <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-foreground text-xs truncate group-hover:text-primary group-hover:underline transition-colors">
-                {row.name}
-              </span>
-              {row.subLabel && (
-                <span className="text-[10px] text-muted-foreground truncate">
-                  {row.subLabel}
-                </span>
-              )}
-            </div>
-            {row.caseCount > 0 && (
-              <Badge
-                variant="outline"
-                className="ml-auto text-[10px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium tabular-nums shrink-0 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/30 transition-colors"
-              >
-                {row.caseCount}p
-              </Badge>
-            )}
-          </div>
-        ),
-      },
-      {
-        key: "billed",
-        header: classificationHeaderFilter.amount(
-          "billed",
-          t("progress.columns.totalBilled", "Tổng phát sinh"),
-          { align: "right" },
-        ),
-        size: 150,
-        enableResizing: true,
-        headerClassName: "text-right font-semibold",
-        className: "text-right font-mono tabular-nums text-foreground",
-        cell: (row: MonthClassificationRow) => {
-          const total = row.billed;
-          const paid = row.paid;
-          const bal = row.remaining;
-          if (total <= 0) {
-            return (
-              <span className="text-muted-foreground/40 font-normal select-none">
-                —
-              </span>
-            );
-          }
-          const isAllPaid = bal <= 0 && paid > 0;
-          const isUnpaid = paid <= 0 && total > 0;
-          const rate = row.rate;
-
-          const tooltipText = isReceipt
-            ? isAllPaid
-              ? `Đã thu đủ 100%: ${money(paid)}`
-              : isUnpaid
-                ? `Chưa thu (0%): Còn phải thu ${money(bal)} / Tổng ${money(total)}`
-                : `Đã thu: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải thu: ${money(bal)}`
-            : isAllPaid
-              ? `Đã trả đủ 100%: ${money(paid)}`
-              : isUnpaid
-                ? `Chưa trả (0%): Còn phải trả ${money(bal)} / Tổng ${money(total)}`
-                : `Đã trả: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải trả: ${money(bal)}`;
-
-          return (
-            <Tooltip content={tooltipText} side="top">
-              <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
-                <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
-                  <span className="font-semibold text-foreground font-mono">
-                    {money(total)}
-                  </span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-all duration-300",
-                      isAllPaid
-                        ? "bg-emerald-500 dark:bg-emerald-400"
-                        : isUnpaid
-                          ? "bg-transparent"
-                          : isReceipt
-                            ? "bg-emerald-600 dark:bg-emerald-500"
-                            : "bg-slate-600 dark:bg-slate-400",
-                    )}
-                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                  />
-                </div>
-              </div>
-            </Tooltip>
-          );
-        },
-      },
-      {
-        key: "paid",
-        header: classificationHeaderFilter.amount(
-          "paid",
-          isReceipt
-            ? t("progress.columns.paidReceipt", "Đã thu")
-            : t("progress.columns.paidPayment", "Đã chi"),
-          { align: "right" },
-        ),
-        size: 140,
-        enableResizing: true,
-        headerClassName: "text-right font-semibold",
-        className: "text-right font-mono tabular-nums text-foreground",
-        cell: (row: MonthClassificationRow) => (
-          <Tooltip content={money(row.paid)} side="top">
-            <span className="font-semibold text-xs cursor-default">
-              {money(row.paid)}
-            </span>
-          </Tooltip>
-        ),
-      },
-      {
-        key: "remaining",
-        header: classificationHeaderFilter.amount(
-          "remaining",
-          isReceipt
-            ? t("progress.columns.receivable", "Còn phải thu")
-            : t("progress.columns.payable", "Còn phải trả"),
-          { align: "right" },
-        ),
-        size: 140,
-        enableResizing: true,
-        headerClassName:
-          "text-right bg-slate-100 dark:bg-slate-800/60 font-semibold",
-        className:
-          "text-right font-mono tabular-nums bg-slate-50 dark:bg-slate-800/30",
-        cell: (row: MonthClassificationRow) => (
-          <Tooltip
-            content={
-              row.remaining > 0
-                ? `${isReceipt ? "Còn phải thu" : "Còn phải trả"}: ${money(row.remaining)}`
-                : undefined
-            }
-            side="top"
-          >
-            <span
-              className={cn(
-                "text-xs font-mono tabular-nums cursor-default",
-                row.remaining > 0
-                  ? isReceipt
-                    ? "font-bold text-amber-600 dark:text-amber-400"
-                    : "font-bold text-orange-600 dark:text-orange-400"
-                  : "text-muted-foreground/60",
-              )}
-            >
-              {row.remaining > 0 ? money(row.remaining) : "—"}
-            </span>
-          </Tooltip>
-        ),
-      },
-      {
-        key: "remainingWithInvoice",
-        header: classificationHeaderFilter.amount(
-          "remainingWithInvoice",
-          isReceipt
-            ? t("progress.columns.receivableWithInvoice", "Còn phải thu có HĐ")
-            : t(
-                "progress.columns.payableCostWithInvoice",
-                "Còn phải trả có HĐ",
-              ),
-          { align: "right" },
-        ),
-        size: 150,
-        enableResizing: true,
-        headerClassName: "text-right font-semibold",
-        className: "text-right font-mono tabular-nums",
-        cell: (row: MonthClassificationRow) => {
-          const val = row.remainingWithInvoice;
-          return (
-            <Tooltip
-              content={
-                val > 0
-                  ? `${isReceipt ? "Còn phải thu có HĐ" : "Còn phải trả có HĐ"}: ${money(val)}`
-                  : undefined
-              }
-              side="top"
-            >
-              <span
-                className={cn(
-                  "text-xs font-mono tabular-nums cursor-default",
-                  val > 0
-                    ? "font-semibold text-foreground"
-                    : "text-muted-foreground/60",
-                )}
-              >
-                {val > 0 ? money(val) : "—"}
-              </span>
-            </Tooltip>
-          );
-        },
-      },
-      {
-        key: "remainingNoInvoice",
-        header: classificationHeaderFilter.amount(
-          "remainingNoInvoice",
-          isReceipt
-            ? t("progress.columns.receivableNoInvoice", "Còn phải thu không HĐ")
-            : t(
-                "progress.columns.payableCostNoInvoice",
-                "Còn phải trả không HĐ",
-              ),
-          { align: "right" },
-        ),
-        size: 150,
-        enableResizing: true,
-        headerClassName: "text-right font-semibold",
-        className: "text-right font-mono tabular-nums",
-        cell: (row: MonthClassificationRow) => {
-          const val = row.remainingNoInvoice;
-          return (
-            <Tooltip
-              content={
-                val > 0
-                  ? `${isReceipt ? "Còn phải thu không HĐ" : "Còn phải trả không HĐ"}: ${money(val)}`
-                  : undefined
-              }
-              side="top"
-            >
-              <span
-                className={cn(
-                  "text-xs font-mono tabular-nums cursor-default",
-                  val > 0
-                    ? "font-semibold text-foreground"
-                    : "text-muted-foreground/60",
-                )}
-              >
-                {val > 0 ? money(val) : "—"}
-              </span>
-            </Tooltip>
-          );
-        },
-      },
-      {
-        key: "shareRate",
-        header: classificationHeaderFilter.numeric(
-          "shareRate",
-          t("progress.columns.shareRate", "Tỷ trọng"),
-          {
-            align: "center",
-            formatOptionLabel: (v) => {
-              const num = typeof v === "number" ? v : parseFloat(String(v));
-              return !Number.isNaN(num) ? `${num.toFixed(1)}%` : String(v);
-            },
-          },
-        ),
-        size: 90,
-        enableResizing: true,
-        headerClassName: "text-center font-semibold",
-        className: "text-center",
-        cell: (row: MonthClassificationRow) => (
-          <span className="w-full block text-center font-semibold text-xs tabular-nums text-foreground">
-            {row.shareRate.toFixed(1)}%
-          </span>
-        ),
-      },
-    ],
-    [classificationHeaderFilter, isReceipt, t],
-  );
-
-  // ── Summary Row for Classification Table ─────────────────────────
-  const classificationSummaryRow = useMemo(() => {
-    let billed = 0;
-    let paid = 0;
-    let remaining = 0;
-    let remainingWithInvoice = 0;
-    let remainingNoInvoice = 0;
-    let caseCount = 0;
-    filteredClassificationRows.forEach((r) => {
-      billed += r.billed;
-      paid += r.paid;
-      remaining += r.remaining;
-      remainingWithInvoice += r.remainingWithInvoice;
-      remainingNoInvoice += r.remainingNoInvoice;
-      caseCount += r.caseCount;
-    });
-    const rate = billed > 0 ? (paid / billed) * 100 : 0;
-    const shareRate = mainBilled > 0 ? (billed / mainBilled) * 100 : 0;
-
-    return {
-      index: (
-        <span className="w-full block text-center font-bold text-muted-foreground">
-          Σ
-        </span>
-      ),
-      name: (
-        <span className="font-bold text-xs uppercase tracking-wider text-foreground">
-          TỔNG CỘNG ({caseCount} phiếu)
-        </span>
-      ),
-      billed: (
-        <Tooltip
-          content={
-            billed > 0
-              ? isReceipt
-                ? `Đã thu: ${money(paid)} / ${money(billed)} (${rate.toFixed(1)}%) • Còn phải thu: ${money(remaining)}`
-                : `Đã trả: ${money(paid)} / ${money(billed)} (${rate.toFixed(1)}%) • Còn phải trả: ${money(remaining)}`
-              : undefined
-          }
-          side="top"
-        >
-          <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
-            <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
-              <span className="font-bold text-foreground font-mono">
-                {money(billed)}
-              </span>
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-300",
-                  remaining <= 0 && paid > 0
-                    ? "bg-emerald-500 dark:bg-emerald-400"
-                    : paid <= 0
-                      ? "bg-transparent"
-                      : isReceipt
-                        ? "bg-emerald-600 dark:bg-emerald-500"
-                        : "bg-slate-600 dark:bg-slate-400",
-                )}
-                style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-              />
-            </div>
-          </div>
-        </Tooltip>
-      ),
-      paid: (
-        <span className="font-bold text-right block font-mono tabular-nums text-foreground text-xs">
-          {money(paid)}
-        </span>
-      ),
-      remaining: (
-        <span
-          className={cn(
-            "font-mono font-bold text-right block tabular-nums text-xs",
-            remaining > 0
-              ? isReceipt
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-orange-600 dark:text-orange-400"
-              : "text-muted-foreground/60",
-          )}
-        >
-          {remaining > 0 ? money(remaining) : "—"}
-        </span>
-      ),
-      remainingWithInvoice: (
-        <span
-          className={cn(
-            "font-mono font-bold text-right block tabular-nums text-xs",
-            remainingWithInvoice > 0
-              ? "text-foreground"
-              : "text-muted-foreground/60",
-          )}
-        >
-          {remainingWithInvoice > 0 ? money(remainingWithInvoice) : "—"}
-        </span>
-      ),
-      remainingNoInvoice: (
-        <span
-          className={cn(
-            "font-mono font-bold text-right block tabular-nums text-xs",
-            remainingNoInvoice > 0
-              ? "text-foreground"
-              : "text-muted-foreground/60",
-          )}
-        >
-          {remainingNoInvoice > 0 ? money(remainingNoInvoice) : "—"}
-        </span>
-      ),
-      shareRate: (
-        <span className="font-bold text-center block text-xs text-foreground">
-          {shareRate.toFixed(1)}%
-        </span>
-      ),
-    };
-  }, [filteredClassificationRows, mainBilled, isReceipt]);
-
-  // ── LEFT PANEL: Standard Table of Classifications ────────────────
-  const leftPanel = (
-    <div className="flex flex-col gap-4">
-      {/* Main Content: Table Phân loại theo Nghiệp vụ */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2">
-            <span>Bảng phân loại theo Nghiệp vụ (Classification)</span>
-            {classificationTableHook.activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  classificationTableHook.resetFilters();
-                }}
-                className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
-              >
-                <span>
-                  Xóa bộ lọc ({classificationTableHook.activeFilterCount})
-                </span>
-              </button>
-            )}
-          </div>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-        titleExtra={
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <TableIcon className="w-3.5 h-3.5 text-primary mr-1" />
-            {filteredClassificationRows.length} / {classificationRows.length}{" "}
-            phân loại
-          </div>
-        }
-      >
-        <DataTable
-          items={filteredClassificationRows}
-          getRowKey={(row) => row.key}
-          variant="spreadsheet"
-          columns={classificationColumns}
-          summaryRow={classificationSummaryRow}
-          emptyLabel="Không tìm thấy phân loại phù hợp bộ lọc"
-          enableColumnResizing={true}
-          tableId={classificationTableId}
-          onRowClick={(row: MonthClassificationRow) => {
-            setClassificationDrawerState({
-              open: true,
-              filterType: "CLASSIFICATION",
-              filterKey: row.key,
-              filterLabel: row.name,
-            });
-          }}
-          rowHoverActions={(row: MonthClassificationRow) => [
-            {
-              groupLabel: "TRA CỨU",
-              items: [
-                {
-                  label: "Xem chi tiết danh sách vụ việc",
-                  icon: <Eye className="w-3.5 h-3.5" />,
-                  onClick: () => {
-                    setClassificationDrawerState({
-                      open: true,
-                      filterType: "CLASSIFICATION",
-                      filterKey: row.key,
-                      filterLabel: row.name,
-                    });
-                  },
-                  quickAction: true,
-                },
-              ],
-            },
-          ]}
-        />
-      </DrawerSection>
-    </div>
-  );
-
-  // ── RIGHT PANEL: Separate Top-level DrawerSections ───────────────
   const rightPanel = (
     <div className="flex flex-col gap-3.5 w-full">
-      {/* 1. Section: Tổng quan Thu tiền / Chi trả */}
-      <DrawerSection
-        title={isReceipt ? "Tổng quan Thu tiền" : "Tổng quan Chi trả"}
-        collapsible={true}
-        defaultCollapsed={false}
-      >
-        <div className="flex flex-col gap-2.5">
-          <RateBar rate={mainRate} isReceipt={isReceipt} />
-          <div className="flex flex-col rounded-xl border border-border/60 overflow-hidden bg-background/50 divide-y divide-border/40">
-            <MoneyRow
-              label="Đã thanh toán"
-              value={mainPaid}
-              valueClass="font-bold text-foreground"
-            />
-            <MoneyRow label="Tổng phát sinh" value={mainBilled} />
-            <MoneyRow
-              label={isReceipt ? "Còn phải thu" : "Còn phải trả"}
-              value={mainRemaining}
-              valueClass={
-                mainRemaining > 0
-                  ? isReceipt
-                    ? "text-amber-600 dark:text-amber-400 font-bold"
-                    : "text-orange-600 dark:text-orange-400 font-bold"
-                  : "text-muted-foreground/60"
-              }
-            />
-            {isReceipt && safeItem.revenue > 0 && (
-              <MoneyRow
-                label="Doanh thu thuần"
-                value={safeItem.revenue}
-                secondary="(chưa VAT)"
-              />
-            )}
+      {/* Cảnh báo VAT chưa xuất HĐ (đưa sang cột phải theo yêu cầu) */}
+      {vatWarningInfo?.hasVatWithoutInvoice && (
+        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs shadow-sm">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-0.5">
+            <span className="font-bold">Cảnh báo hóa đơn VAT:</span>
+            <span>
+              Có <strong>{vatWarningInfo.casesWithVatNoInvoiceCount}</strong> vụ
+              việc chưa xuất hoặc đính kèm hóa đơn điện tử.
+            </span>
           </div>
         </div>
-      </DrawerSection>
+      )}
 
-      {/* 2. Section: Thống kê số lượng vụ việc theo Phân loại */}
-      <DrawerSection
-        title="Thống kê Vụ việc theo Phân loại"
-        collapsible={true}
-        defaultCollapsed={false}
-      >
-        <div className="grid grid-cols-2 gap-2">
-          {/* Tổng vụ việc */}
-          <div className="flex flex-col items-center justify-center rounded-xl bg-slate-100/60 dark:bg-slate-800/50 border border-border/50 p-2.5 gap-0.5">
-            <span className="text-xl font-bold tabular-nums text-foreground">
-              {safeItem.caseCount}
-            </span>
-            <span className="text-[11px] text-muted-foreground text-center font-medium">
-              Tổng vụ việc
-            </span>
-          </div>
-
-          {/* Sửa chữa chung */}
-          <div className="flex flex-col items-center justify-center rounded-xl bg-blue-50/40 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/30 p-2.5 gap-0.5">
-            <span className="text-xl font-bold tabular-nums text-blue-700 dark:text-blue-300">
-              {countScc}
-            </span>
-            <span className="text-[11px] text-muted-foreground text-center font-medium flex items-center gap-1">
-              <Wrench className="w-3 h-3 text-blue-500" />
-              Sửa chữa chung
-            </span>
-          </div>
-
-          {/* Ký gửi / Nội bộ */}
-          <div className="flex flex-col items-center justify-center rounded-xl bg-purple-50/40 dark:bg-purple-950/30 border border-purple-200/50 dark:border-purple-800/30 p-2.5 gap-0.5">
-            <span className="text-xl font-bold tabular-nums text-purple-700 dark:text-purple-300">
-              {countKgNb}
-            </span>
-            <span className="text-[11px] text-muted-foreground text-center font-medium flex items-center gap-1">
-              <Building2 className="w-3 h-3 text-purple-500" />
-              Ký gửi / Nội bộ
-            </span>
-          </div>
-
-          {/* OJ Ngoài hoặc Khác */}
-          {countOj > 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl bg-teal-50/40 dark:bg-teal-950/30 border border-teal-200/50 dark:border-teal-800/30 p-2.5 gap-0.5">
-              <span className="text-xl font-bold tabular-nums text-teal-700 dark:text-teal-300">
-                {countOj}
-              </span>
-              <span className="text-[11px] text-muted-foreground text-center font-medium flex items-center gap-1">
-                <ExternalLink className="w-3 h-3 text-teal-500" />
-                OJ Ngoài
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-100/60 dark:bg-slate-800/50 border border-border/50 p-2.5 gap-0.5">
-              <span className="text-xl font-bold tabular-nums text-foreground">
-                {countOther}
-              </span>
-              <span className="text-[11px] text-muted-foreground text-center font-medium flex items-center gap-1">
-                <HelpCircle className="w-3 h-3 text-slate-400" />
-                Khác
-              </span>
-            </div>
+      {/* 1. Cơ cấu Thu KH vs Thu BH (chỉ khi ở tab Thu và có số liệu breakdown) */}
+      {isReceipt && breakdownSummary && (
+        <DrawerSection
+          title={t(
+            "progress.sections.payerComposition",
+            "Cơ cấu Thu KH vs Thu BH",
           )}
-        </div>
-      </DrawerSection>
+          collapsible
+          defaultCollapsed={false}
+        >
+          <MonthPayerKpiGrid summary={breakdownSummary} />
+        </DrawerSection>
+      )}
 
-      {/* 3. Section: Tỷ lệ hoàn tất theo từng Phân loại */}
+      {/* 2. Chi phí phát sinh & Còn nợ (Phải trả) */}
       <DrawerSection
-        title="Tỷ lệ Hoàn tất theo Phân loại"
-        collapsible={true}
+        title={t(
+          "progress.sections.costAndPayables",
+          "Chi phí phát sinh & Còn nợ",
+        )}
+        collapsible
         defaultCollapsed={false}
       >
-        <div className="flex flex-col gap-1.5">
-          {/* Sửa chữa chung */}
-          <div className="flex items-center justify-between rounded-lg bg-blue-50/30 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/30 px-3 py-1.5">
-            <div className="flex items-center gap-1.5 text-[12px] font-medium text-foreground">
-              <Wrench className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              Sửa chữa chung
-            </div>
-            <Badge
-              variant="outline"
-              className="font-bold text-[11px] px-2 py-0 border tabular-nums bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25"
-            >
-              {rateScc.toFixed(1)}%
-            </Badge>
-          </div>
-
-          {/* Ký gửi / Nội bộ */}
-          <div className="flex items-center justify-between rounded-lg bg-purple-50/30 dark:bg-purple-950/20 border border-purple-200/40 dark:border-purple-800/30 px-3 py-1.5">
-            <div className="flex items-center gap-1.5 text-[12px] font-medium text-foreground">
-              <Building2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-              Ký gửi / Nội bộ
-            </div>
-            <Badge
-              variant="outline"
-              className="font-bold text-[11px] px-2 py-0 border tabular-nums bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/25"
-            >
-              {rateKgNb.toFixed(1)}%
-            </Badge>
-          </div>
-
-          {/* OJ Ngoài (if any) */}
-          {(billedOj > 0 || countOj > 0) && (
-            <div className="flex items-center justify-between rounded-lg bg-teal-50/30 dark:bg-teal-950/20 border border-teal-200/40 dark:border-teal-800/30 px-3 py-1.5">
-              <div className="flex items-center gap-1.5 text-[12px] font-medium text-foreground">
-                <ExternalLink className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                OJ Ngoài
-              </div>
-              <Badge
-                variant="outline"
-                className="font-bold text-[11px] px-2 py-0 border tabular-nums bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/25"
-              >
-                {rateOj.toFixed(1)}%
-              </Badge>
-            </div>
-          )}
-        </div>
+        <MonthCostPayableKpiCard item={safeItem} />
       </DrawerSection>
     </div>
   );
-
   if (!item) return null;
 
   return (
@@ -1090,9 +506,10 @@ export function GarageMonthDetailDrawer({
         }
         size="xl"
         layout="2-columns"
+        tabs={drawerTabs}
+        defaultTabKey="classification"
         collapsibleRightPanel={true}
         rightPanelDefaultCollapsed={false}
-        leftPanel={leftPanel}
         rightPanel={rightPanel}
         actions={[{ label: "Đóng", variant: "outline", onClick: onClose }]}
       />
@@ -1105,10 +522,32 @@ export function GarageMonthDetailDrawer({
         filterType={classificationDrawerState.filterType}
         filterKey={classificationDrawerState.filterKey}
         filterLabel={classificationDrawerState.filterLabel}
-        activeTab={activeTab}
+        activeTab={currentTab}
+        caseCodes={classificationDrawerState.caseCodes}
         onClose={() =>
           setClassificationDrawerState((prev) => ({ ...prev, open: false }))
         }
+      />
+
+      {/* Partner Month Detail Drawer */}
+      <GaragePartnerMonthDetailDrawer
+        open={partnerMonthDrawerState.open}
+        onClose={() =>
+          setPartnerMonthDrawerState((prev) => ({ ...prev, open: false }))
+        }
+        month={safeItem.label}
+        customerCode={partnerMonthDrawerState.customerCode}
+        customerName={partnerMonthDrawerState.customerName}
+        taxCode={partnerMonthDrawerState.taxCode}
+        initialDebtType={isReceipt ? "receivables" : "payables"}
+        initialCases={partnerMonthDrawerState.initialCases}
+      />
+
+      {/* Case Standalone Drawer để xem chi tiết phiếu dịch vụ trực tiếp */}
+      <GarageCaseStandaloneDrawer
+        isOpen={Boolean(selectedCaseCode)}
+        caseCode={selectedCaseCode}
+        onClose={() => setSelectedCaseCode(null)}
       />
     </>
   );

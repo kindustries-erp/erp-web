@@ -75,6 +75,7 @@ export function useGarageConversionFunnelLogic(
 
   const {
     totalIntake = { count: 0, amount: 0, rate: 100 },
+    quotation = { count: 0, amount: 0, rate: 0 },
     inProgress = { count: 0, amount: 0, rate: 0 },
     completed = { count: 0, amount: 0, rate: 0 },
     cancelled = { count: 0, amount: 0, rate: 0 },
@@ -165,6 +166,7 @@ export function useGarageConversionFunnelLogic(
     activeFunnel,
     monthOptions,
     totalIntake,
+    quotation,
     inProgress,
     completed,
     cancelled,

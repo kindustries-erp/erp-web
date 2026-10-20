@@ -8,7 +8,8 @@ vi.mock("@/modules/garage/hooks/useGarageSuppliersList", () => ({
   useGarageSuppliersList: () => ({
     data: [
       {
-        id: "GR-KHA-000107",
+        id: "51H02028",
+        licensePlate: "51H02028",
         customerCode: "GR-KHA-000107",
         customerName: "CÔNG TY TNHH PHÁT TRIỂN",
         caseCount: 2,
@@ -56,7 +57,7 @@ vi.mock("@/modules/garage/hooks/useGarageSuppliersList", () => ({
 }));
 
 describe("GaragePayablesTable", () => {
-  it("renders payables table title and customer cost row", () => {
+  it("renders payables table title, license plate and customer cost row", () => {
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
@@ -69,7 +70,15 @@ describe("GaragePayablesTable", () => {
     );
 
     expect(screen.getByText(/Công nợ phải trả/i)).toBeInTheDocument();
-    expect(screen.getByText("CÔNG TY TNHH PHÁT TRIỂN")).toBeInTheDocument();
-    expect(screen.getByText("GR-KHA-000107")).toBeInTheDocument();
+    expect(screen.getByText("51H02028")).toBeInTheDocument();
+    expect(screen.queryByText("Khách hàng")).not.toBeInTheDocument();
+    expect(screen.getAllByText("2").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("phiếu")).toBeInTheDocument();
+    expect(screen.getByText("15 ngày")).toBeInTheDocument();
+    expect(screen.getAllByText("0-30 ngày").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Đã chi").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Còn phải chi").length).toBeGreaterThanOrEqual(
+      1,
+    );
   });
 });

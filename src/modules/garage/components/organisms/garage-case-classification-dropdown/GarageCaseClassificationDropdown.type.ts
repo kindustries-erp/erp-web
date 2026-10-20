@@ -9,6 +9,10 @@ export interface GarageCaseClassificationItem {
   category?: CategoryObject | null;
   excludeFromReports?: boolean;
   excludeFromDebt?: boolean;
+  kgaraClassification?: string | null;
+  kgaraClassificationCode?: string | null;
+  phanLoaiKgara?: string | null;
+  rawData?: Record<string, any> | null;
 }
 
 export interface GarageCaseClassificationDropdownProps {

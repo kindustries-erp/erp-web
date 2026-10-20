@@ -10,6 +10,8 @@ import {
   useGarageCaseByCode,
 } from "@/modules/garage/hooks/useGarage";
 import { useGarageCaseEditForm } from "@/modules/garage/hooks/useGarageCaseEditForm";
+import { useDraftCategorySelection } from "./useDraftCategorySelection";
+import { extractCaseCustomValues } from "@/modules/garage/utils/garageCaseCustomValues";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { SettlementSubmissionItem } from "@/modules/garage/components/GarageCaseSettlementDrawerModal";
@@ -83,8 +85,13 @@ export function useGarageCaseDrawerLogic({
   );
 
   // Client-side Draft States for Category, Exclusions, Attributes & ERP notes
-  const [draftCategoryId, setDraftCategoryId] = useState<string | null>(null);
-  const [draftClassification, setDraftClassification] = useState<string>("");
+  const {
+    draftCategoryId,
+    setDraftCategoryId,
+    draftClassification,
+    setDraftClassification,
+    reset: resetDraftCategory,
+  } = useDraftCategorySelection();
   const [draftExcludeFromReports, setDraftExcludeFromReports] =
     useState<boolean>(false);
   const [draftExcludeFromDebt, setDraftExcludeFromDebt] =
@@ -99,15 +106,15 @@ export function useGarageCaseDrawerLogic({
 
   useEffect(() => {
     if (selectedCase) {
-      setDraftCategoryId(selectedCase.categoryId || null);
-      setDraftClassification(selectedCase.classification || "");
+      resetDraftCategory(
+        selectedCase.categoryId || null,
+        selectedCase.classification || "",
+      );
       setDraftExcludeFromReports(Boolean(selectedCase.excludeFromReports));
       setDraftExcludeFromDebt(Boolean(selectedCase.excludeFromDebt));
       setDraftErpNotes(selectedCase.erpNotes || "");
-      setDraftAttributes(
-        selectedCase.attributes || selectedCase.attributeValues || {},
-      );
-      setDraftGlobalAttributes(selectedCase.globalAttributes || {});
+      setDraftAttributes({});
+      setDraftGlobalAttributes(extractCaseCustomValues(selectedCase));
       if (selectedCase.soChungTu && selectedCase.soChungTu !== activeCaseCode) {
         setActiveCaseCode(selectedCase.soChungTu);
       }
@@ -230,13 +237,9 @@ export function useGarageCaseDrawerLogic({
     const excludeDebtChanged = draftExcludeFromDebt !== origExcludeFromDebt;
     const notesChanged = (draftErpNotes || "") !== origErpNotes;
 
-    const origAttrs = JSON.stringify(
-      selectedCase.attributes || selectedCase.attributeValues || {},
-    );
-    const currAttrs = JSON.stringify(draftAttributes || {});
-    const origGAttrs = JSON.stringify(selectedCase.globalAttributes || {});
-    const currGAttrs = JSON.stringify(draftGlobalAttributes || {});
-    const attrsChanged = origAttrs !== currAttrs || origGAttrs !== currGAttrs;
+    const origCustom = JSON.stringify(extractCaseCustomValues(selectedCase));
+    const currCustom = JSON.stringify(draftGlobalAttributes || {});
+    const attrsChanged = origCustom !== currCustom;
 
     return (
       categoryChanged ||
@@ -261,15 +264,15 @@ export function useGarageCaseDrawerLogic({
 
   const handleCancel = useCallback(() => {
     if (selectedCase) {
-      setDraftCategoryId(selectedCase.categoryId || null);
-      setDraftClassification(selectedCase.classification || "");
+      resetDraftCategory(
+        selectedCase.categoryId || null,
+        selectedCase.classification || "",
+      );
       setDraftExcludeFromReports(Boolean(selectedCase.excludeFromReports));
       setDraftExcludeFromDebt(Boolean(selectedCase.excludeFromDebt));
       setDraftErpNotes(selectedCase.erpNotes || "");
-      setDraftAttributes(
-        selectedCase.attributes || selectedCase.attributeValues || {},
-      );
-      setDraftGlobalAttributes(selectedCase.globalAttributes || {});
+      setDraftAttributes({});
+      setDraftGlobalAttributes(extractCaseCustomValues(selectedCase));
     }
     cancelEdit();
   }, [selectedCase, cancelEdit]);
@@ -284,11 +287,7 @@ export function useGarageCaseDrawerLogic({
           excludeFromReports: draftExcludeFromReports,
           excludeFromDebt: draftExcludeFromDebt,
           erpNotes: draftErpNotes || null,
-          customAttributes: {
-            ...draftGlobalAttributes,
-            ...draftAttributes,
-          },
-          attributes: draftAttributes,
+          customAttributes: draftGlobalAttributes,
         });
         queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
         queryClient.invalidateQueries({ queryKey: ["garage-case"] });

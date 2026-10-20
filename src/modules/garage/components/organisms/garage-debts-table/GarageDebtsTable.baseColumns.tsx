@@ -3,21 +3,28 @@ import {
   TableColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
-import { TableText } from "@/shared/components/DataTable/TableText";
-import { money } from "@/shared/utils/format";
-import { cn } from "@/shared/utils";
 import type {
   CustomerDebtItem,
   useGarageCustomersList,
 } from "@/modules/garage/hooks/useGarageCustomersList";
-import { CaseCountCell, PaymentProgressCell } from "./GarageDebtsTable.cells";
+import { GarageCaseCustomerCell } from "../../molecules/garage-case-customer-cell";
+import { LicensePlateCell } from "@/modules/garage/components/atoms/license-plate-cell";
+import {
+  CaseCountCell,
+  PaymentProgressCell,
+  CustomerBalanceCell,
+} from "./GarageDebtsTable.cells";
 
 interface CreateBaseColumnsProps {
   createFilterProps: (columnKey: string, queryPrefix: string) => any;
   getSortState: (key: string) => "asc" | "desc" | "none";
   listHook: ReturnType<typeof useGarageCustomersList>;
   t: (key: string, fallback: string) => string;
-  onOpenCustomerDetail: (customer: { code: string; name: string }) => void;
+  onOpenCustomerDetail: (customer: {
+    code: string;
+    name: string;
+    licensePlate?: string;
+  }) => void;
 }
 
 export function createBaseColumns({
@@ -39,12 +46,50 @@ export function createBaseColumns({
       cell: (_: CustomerDebtItem, idx: number) => <span>{idx}</span>,
     },
     {
-      key: "customerName",
+      key: "licensePlate",
       header: (
         <TableColumnHeaderFilter
-          title={t("customers.columns.customerName", "Tên khách hàng")}
-          {...createFilterProps("customerName", "garage-customer-name-options")}
+          title={t("customers.columns.licensePlate", "Biển số xe")}
+          {...createFilterProps(
+            "licensePlate",
+            "garage-debts-license-plate-options",
+          )}
           showBlankOption={true}
+          enableSelectAllMatching={true}
+          align="center"
+        />
+      ),
+      size: 130,
+      minSize: 110,
+      enableResizing: true,
+      cell: (row: CustomerDebtItem) => (
+        <button
+          type="button"
+          onClick={() =>
+            onOpenCustomerDetail({
+              code: row.customerCode,
+              name: row.customerName,
+              licensePlate: row.licensePlate,
+            })
+          }
+          className="text-left w-full hover:opacity-85 cursor-pointer focus:outline-none"
+          title={t(
+            "customers.viewDetailByPlate",
+            "Xem chi tiết công nợ xe này",
+          )}
+        >
+          <LicensePlateCell licensePlate={row.licensePlate} />
+        </button>
+      ),
+    },
+    {
+      key: "customer",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("customers.columns.customer", "Khách hàng")}
+          {...createFilterProps("customer", "garage-debts-customer-options")}
+          showBlankOption={true}
+          enableSelectAllMatching={true}
           align="center"
         />
       ),
@@ -52,40 +97,18 @@ export function createBaseColumns({
       minSize: 220,
       enableResizing: true,
       cell: (row: CustomerDebtItem) => (
-        <TableText
-          text={row.customerName || "—"}
-          tooltip={true}
-          enableCopy={true}
-          textClassName="truncate text-foreground font-medium text-xs leading-tight select-text"
-          onDetailClick={(e) => {
-            e?.stopPropagation();
-            onOpenCustomerDetail({
-              code: row.customerCode,
-              name: row.customerName,
-            });
+        <GarageCaseCustomerCell
+          item={{
+            customerName: row.customerName,
+            customerCode: row.customerCode,
           }}
-        />
-      ),
-    },
-    {
-      key: "customerCode",
-      header: (
-        <TableColumnHeaderFilter
-          title={t("customers.columns.customerCode", "Mã KH")}
-          {...createFilterProps("customerCode", "garage-customer-code-options")}
-          showBlankOption={true}
-          align="center"
-        />
-      ),
-      size: 160,
-      minSize: 130,
-      enableResizing: true,
-      cell: (row: CustomerDebtItem) => (
-        <TableText
-          text={row.customerCode || "— (Chưa có mã)"}
-          enableCopy={Boolean(row.customerCode)}
-          tooltip={true}
-          className="font-mono text-muted-foreground font-normal text-xs"
+          onOpenDetail={(cust) =>
+            onOpenCustomerDetail({
+              code: cust.code,
+              name: cust.name,
+              licensePlate: row.licensePlate,
+            })
+          }
         />
       ),
     },
@@ -112,6 +135,7 @@ export function createBaseColumns({
             onOpenCustomerDetail({
               code: row.customerCode,
               name: row.customerName,
+              licensePlate: row.licensePlate,
             })
           }
         />
@@ -169,21 +193,7 @@ export function createBaseColumns({
       ),
       size: 170,
       enableResizing: true,
-      cell: (row: CustomerDebtItem) => {
-        const bal = Number(row.balanceAmount) || 0;
-        return (
-          <span
-            className={cn(
-              "font-semibold tabular-nums font-mono text-xs",
-              bal === 0
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-destructive font-bold",
-            )}
-          >
-            {money(bal)}
-          </span>
-        );
-      },
+      cell: (row: CustomerDebtItem) => <CustomerBalanceCell row={row} />,
     },
   ];
 }

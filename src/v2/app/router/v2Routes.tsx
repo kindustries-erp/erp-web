@@ -9,6 +9,7 @@ import { Badge } from "@/v2/shared/ui";
 import { Clock } from "lucide-react";
 import { PermissionGuard } from "./guards";
 import { V2_DEFAULT_ROUTE_ID, resolveV2Route } from "./v2RouteConfig";
+import { V2_PAGE_REGISTRY } from "./v2PageRegistry";
 
 export const V2RouterView: React.FC = () => {
   const { employee, profile } = useAuthStore();
@@ -41,30 +42,34 @@ export const V2RouterView: React.FC = () => {
       return <V2WelcomePage />;
     }
 
+    const page = V2_PAGE_REGISTRY[activeRoute.id]?.() ?? null;
+
     return (
       <PermissionGuard permission={activeRoute.permission}>
-        <div className="mx-auto max-w-4xl space-y-4 py-8">
-          <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center space-y-3">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
-              <Clock size={24} />
+        {page ?? (
+          <div className="mx-auto max-w-4xl space-y-4 py-8">
+            <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center space-y-3">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent text-primary">
+                <Clock size={24} />
+              </div>
+              <Badge variant="outline" className="text-xs">
+                Đang quy hoạch Phase 3
+              </Badge>
+              <V2Text as="h2" variant="h3" weight="bold">
+                {activeRoute.title}
+              </V2Text>
+              <V2Text
+                variant="body-sm"
+                color="muted"
+                className="max-w-md mx-auto"
+              >
+                Module này sẽ được triển khai cuốn chiếu (Rolling Migration)
+                theo chuẩn Atomic Design 5 tầng và Pure Domain Rules ở giai đoạn
+                kế tiếp.
+              </V2Text>
             </div>
-            <Badge variant="outline" className="text-xs">
-              Đang quy hoạch Phase 3
-            </Badge>
-            <V2Text as="h2" variant="h3" weight="bold">
-              {activeRoute.title}
-            </V2Text>
-            <V2Text
-              variant="body-sm"
-              color="muted"
-              className="max-w-md mx-auto"
-            >
-              Module này sẽ được triển khai cuốn chiếu (Rolling Migration) theo
-              chuẩn Atomic Design 5 tầng và Pure Domain Rules ở giai đoạn kế
-              tiếp.
-            </V2Text>
           </div>
-        </div>
+        )}
       </PermissionGuard>
     );
   };

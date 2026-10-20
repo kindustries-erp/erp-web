@@ -1,5 +1,48 @@
 import React from "react";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+
+export const createCashflowDateHeader = (
+  key: string,
+  title: string,
+  tableHook?: any,
+) => {
+  const sortState = tableHook?.sorts?.includes(key)
+    ? "asc"
+    : tableHook?.sorts?.includes(`-${key}`)
+      ? "desc"
+      : "none";
+  const dateRange = tableHook?.getDateRange?.(key);
+
+  return (
+    <TableColumnHeaderFilter
+      title={title}
+      sortState={sortState}
+      onSortChange={(s) => tableHook?.setSort?.(key, s)}
+      searchValue=""
+      onSearchChange={() => {}}
+      selectedFilters={[]}
+      onFilterChange={() => {}}
+      hideFilter
+      hideFooter
+      isActive={Boolean(dateRange?.from || dateRange?.to)}
+      align="center"
+      dateRangeSlot={({ close }) => (
+        <DateRangeColumnSlot
+          dateFrom={dateRange?.from || ""}
+          dateTo={dateRange?.to || ""}
+          onChange={(from, to) => {
+            tableHook?.setDateRange?.(key, from, to);
+            close();
+          }}
+          onClose={close}
+        />
+      )}
+    />
+  );
+};
 
 export const renderCreatedAtCell = (row: GarageCashflowVoucher) => {
   if (!row.createdAt) return "—";
@@ -48,3 +91,63 @@ export const renderChiCell = (row: GarageCashflowVoucher) => {
     <span className="text-muted-foreground block w-full text-right">—</span>
   );
 };
+
+export const renderCaseCodeCell = (
+  row: GarageCashflowVoucher,
+  onOpenCaseDetail?: (caseCode: string) => void,
+) => {
+  const code = row.case?.soChungTu;
+  return (
+    <TableText
+      text={code || "—"}
+      enableCopy={Boolean(code)}
+      tooltip={Boolean(code)}
+      textClassName="font-medium text-primary text-left"
+      onDetailClick={
+        code && onOpenCaseDetail ? () => onOpenCaseDetail(code) : undefined
+      }
+    />
+  );
+};
+
+export const renderPartnerNameCell = (row: GarageCashflowVoucher) => {
+  const name = row.partnerName || row.case?.khachHangName || "—";
+  return (
+    <span className="truncate block" title={name}>
+      {name}
+    </span>
+  );
+};
+
+export const renderNoteCell = (row: GarageCashflowVoucher) => (
+  <span
+    className="text-muted-foreground text-xs truncate block"
+    title={row.note || ""}
+  >
+    {row.note || "—"}
+  </span>
+);
+
+export const renderSttCell = (_: any, idx: number) => (
+  <span className="w-full block text-center font-mono text-xs text-muted-foreground">
+    {idx}
+  </span>
+);
+
+export const renderLicensePlateCell = (row: GarageCashflowVoucher) => {
+  const plate = row.licensePlate || row.case?.bienSoXe || "";
+  return (
+    <TableText
+      text={plate || "—"}
+      enableCopy={Boolean(plate)}
+      tooltip={Boolean(plate)}
+      textClassName="font-medium text-foreground text-left"
+    />
+  );
+};
+
+export {
+  renderPaymentMethodCell,
+  renderPaymentContentCell,
+  renderPaymentStatusCell,
+} from "./GarageCashflowTable.paymentCells";

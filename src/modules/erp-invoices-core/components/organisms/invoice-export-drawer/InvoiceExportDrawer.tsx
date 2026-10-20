@@ -1,12 +1,16 @@
 import React from "react";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DrawerSection } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
+import { DrawerSection } from "@/shared/components/DrawerModal";
+import { Button } from "@/shared/components/ui/Button";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { cn } from "@/shared/utils";
 import { useInvoiceExportDrawer } from "./InvoiceExportDrawer.hook";
 import { useInvoiceExportColumns } from "./InvoiceExportDrawer.columns";
 import { InvoiceExportConditionSection } from "./components/InvoiceExportConditionSection";
+import { InvoiceExportColumnSelector } from "./components/InvoiceExportColumnSelector";
+import { InvoiceExportDrawerShell } from "./components/InvoiceExportDrawerShell";
 import type { InvoiceExportDrawerProps } from "./InvoiceExportDrawer.type";
 
 export type { InvoiceExportDrawerProps };
@@ -29,9 +33,8 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
   });
 
   return (
-    <StandardFormDrawer
+    <InvoiceExportDrawerShell
       open={open}
-      mode="view"
       onClose={onClose}
       title={t("erpInvoices:exportDrawer.title", "Xuất Excel hóa đơn")}
       subtitle={t(
@@ -39,15 +42,55 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
         "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
       )}
       icon={<FileSpreadsheet className="w-4 h-4" />}
-      layout="2-columns"
-      size="lg"
-      leftPanel={
-        <div className="space-y-4">
+      leftSections={
+        <>
+          <InvoiceExportColumnSelector
+            selectedColumns={hook.selectedColumns}
+            onChange={hook.handleColumnsChange}
+            onResetDefault={hook.handleResetDefaultColumns}
+            defaultCollapsed={true}
+          />
           <DrawerSection
             title={t(
               "erpInvoices:exportDrawer.historyTitle",
               "Lịch sử xuất file",
             )}
+            titleExtra={
+              <Tooltip
+                content={t(
+                  "erpInvoices:exportDrawer.refreshHistory",
+                  "Làm mới lịch sử",
+                )}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                  title={t(
+                    "erpInvoices:exportDrawer.refreshHistory",
+                    "Làm mới lịch sử",
+                  )}
+                  aria-label={t(
+                    "erpInvoices:exportDrawer.refreshHistory",
+                    "Làm mới lịch sử",
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void hook.historyQuery.refetch();
+                  }}
+                  disabled={hook.historyQuery.isFetching}
+                >
+                  <RefreshCw
+                    className={cn(
+                      "w-3.5 h-3.5",
+                      hook.historyQuery.isFetching &&
+                        "animate-spin text-primary",
+                    )}
+                  />
+                </Button>
+              </Tooltip>
+            }
             collapsible
             defaultCollapsed={false}
           >
@@ -73,25 +116,28 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
               )}
             />
           </DrawerSection>
-        </div>
+        </>
       }
-      rightPanel={
-        <div className="space-y-4">
-          <InvoiceExportConditionSection
-            exportMode={hook.exportMode}
-            onExportModeChange={hook.setExportMode}
-            period={hook.period}
-            onPeriodChange={hook.handlePeriodChange}
-            periodOptions={hook.periodOptions}
-            dateFrom={hook.dateFrom}
-            onDateFromChange={(val) => hook.setDateFrom(val || "")}
-            dateTo={hook.dateTo}
-            onDateToChange={(val) => hook.setDateTo(val || "")}
-            currentFilterSummary={currentFilterSummary}
-            starting={hook.starting}
-            onStartExport={hook.handleStartExport}
-          />
-        </div>
+      rightContent={
+        <InvoiceExportConditionSection
+          exportMode={hook.exportMode}
+          onExportModeChange={hook.setExportMode}
+          periodType={hook.periodType}
+          onPeriodTypeChange={hook.handlePeriodTypeChange}
+          period={hook.period}
+          onPeriodChange={hook.handlePeriodChange}
+          periodOptions={hook.periodOptions}
+          quarter={hook.quarter}
+          onQuarterChange={hook.handleQuarterChange}
+          quarterOptions={hook.quarterOptions}
+          dateFrom={hook.dateFrom}
+          onDateFromChange={(val) => hook.setDateFrom(val || "")}
+          dateTo={hook.dateTo}
+          onDateToChange={(val) => hook.setDateTo(val || "")}
+          currentFilterSummary={currentFilterSummary}
+          starting={hook.starting}
+          onStartExport={hook.handleStartExport}
+        />
       }
     />
   );

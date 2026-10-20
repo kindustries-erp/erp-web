@@ -2,17 +2,24 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/shared/components/ui/badge";
 import type { PairedPnlItem } from "../types";
+import { PnlAmountCell } from "./PnlAmountCell";
 
 interface PnlManualCommissionRowsProps {
   items: PairedPnlItem[];
   isOjOnly?: boolean;
+  isLoadingPrev?: boolean;
+  isLoadingPrev2?: boolean;
 }
 
 export function PnlManualCommissionRows({
   items,
   isOjOnly = false,
+  isLoadingPrev = false,
+  isLoadingPrev2 = false,
 }: PnlManualCommissionRowsProps) {
   const { t } = useTranslation("garage");
+  const subCell =
+    "py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground";
 
   return (
     <>
@@ -23,8 +30,8 @@ export function PnlManualCommissionRows({
 
         return (
           <React.Fragment key={item.key}>
-            <tr className="text-muted-foreground bg-slate-50/40 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
-              <td className="py-2 px-8 flex items-center justify-between">
+            <tr className="text-slate-700 dark:text-slate-300 hover:bg-muted/10 transition-colors border-b border-border/20">
+              <td className="py-2 px-8 font-medium flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span>
                     7.{idx + 2}. {item.categoryName}
@@ -37,13 +44,13 @@ export function PnlManualCommissionRows({
                   </Badge>
                 </div>
                 {item.note && (
-                  <span className="text-[10px] text-muted-foreground/70 italic max-w-[200px] truncate">
+                  <span className="text-[10px] text-muted-foreground/70 font-normal italic max-w-[200px] truncate">
                     ({item.note})
                   </span>
                 )}
               </td>
               <td
-                className={`py-2 px-4 text-right tabular-nums font-mono font-medium ${
+                className={`py-2 px-4 text-right tabular-nums font-mono font-semibold ${
                   curAmount < 0 ? "text-rose-600 dark:text-rose-400" : ""
                 }`}
               >
@@ -88,21 +95,26 @@ export function PnlManualCommissionRows({
                       7.{idx + 2}.1. Trong đó: Phát sinh liên quan OJ
                     </span>
                   </td>
-                  <td className="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground">
-                    {item.curOjAmount
-                      ? `${item.curOjAmount.toLocaleString("vi-VN")} đ`
-                      : "—"}
-                  </td>
-                  <td className="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground">
-                    {item.prevOjAmount
-                      ? `${item.prevOjAmount.toLocaleString("vi-VN")} đ`
-                      : "—"}
-                  </td>
-                  <td className="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground">
-                    {item.prev2OjAmount
-                      ? `${item.prev2OjAmount.toLocaleString("vi-VN")} đ`
-                      : "—"}
-                  </td>
+                  <PnlAmountCell
+                    amount={item.curOjAmount || null}
+                    hideDelta
+                    hideRate
+                    tdClassName={subCell}
+                  />
+                  <PnlAmountCell
+                    amount={item.prevOjAmount || null}
+                    isLoading={isLoadingPrev}
+                    hideDelta
+                    hideRate
+                    tdClassName={subCell}
+                  />
+                  <PnlAmountCell
+                    amount={item.prev2OjAmount || null}
+                    isLoading={isLoadingPrev2}
+                    hideDelta
+                    hideRate
+                    tdClassName={subCell}
+                  />
                 </tr>
               )}
           </React.Fragment>

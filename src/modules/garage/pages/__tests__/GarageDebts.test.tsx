@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,10 +8,21 @@ vi.mock("@/modules/garage/store/garageStore", () => ({
   useGarageStore: () => ({ selectedBranchId: "branch-01" }),
 }));
 
-vi.mock("@/modules/garage/hooks/useGarage", () => ({
-  useGarageBranches: () => ({ data: [] }),
-  useSyncGarageCaseDetail: () => ({ mutate: vi.fn() }),
-}));
+vi.mock("@/modules/garage/hooks/useGarage", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/modules/garage/hooks/useGarage")>();
+  return {
+    ...actual,
+    useGarageBranches: () => ({ data: [] }),
+    useSyncGarageCaseDetail: () => ({ mutate: vi.fn() }),
+    useGarageCaseByCode: () => ({
+      data: null,
+      isLoading: false,
+      refetch: vi.fn(),
+    }),
+    useGarageCaseGrossProfit: () => ({ data: null, isLoading: false }),
+  };
+});
 
 vi.mock("@/modules/garage/hooks/useGarageCustomersList", () => ({
   useGarageCustomersList: () => ({
@@ -49,9 +60,29 @@ vi.mock("@/modules/garage/hooks/useGarageDebtsDashboard", () => ({
   }),
 }));
 
-describe("GarageDebts Page", () => {
-  it("renders GarageDebts page with overview tab by default", () => {
-    const queryClient = new QueryClient();
+vi.mock("../../components/organisms/garage-debts-table", () => ({
+  GarageDebtsTable: () => (
+    <div data-testid="garage-debts-table">Debts Table</div>
+  ),
+}));
+
+vi.mock("../../components/organisms/garage-payables-table", () => ({
+  GaragePayablesTable: () => (
+    <div data-testid="garage-payables-table">Payables Table</div>
+  ),
+}));
+
+describe("GarageDebts Page RBAC & Tabs", () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+  });
+
+  it("renders default 3 tabs (Tổng quan, Phải thu, Phải trả) without cashflow tab", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <GarageDebts />
@@ -62,5 +93,40 @@ describe("GarageDebts Page", () => {
     expect(screen.getByText("Tổng quan")).toBeInTheDocument();
     expect(screen.getByText("Phải thu")).toBeInTheDocument();
     expect(screen.getByText("Phải trả")).toBeInTheDocument();
+    expect(screen.queryByText("Thu chi xưởng")).not.toBeInTheDocument();
+    expect(screen.queryByText("Thu chi garage")).not.toBeInTheDocument();
+  });
+
+  it("renders receivables tab when initialTab is receivables", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebts initialTab="receivables" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByTestId("garage-debts-table")).toBeInTheDocument();
+  });
+
+  it("renders payables tab when initialTab is payables", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebts initialTab="payables" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByTestId("garage-payables-table")).toBeInTheDocument();
+  });
+
+  it("falls back to overview tab when initialTab is legacy cashflow", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebts initialTab="cashflow" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Tổng quan")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("garage-cashflow-list"),
+    ).not.toBeInTheDocument();
   });
 });

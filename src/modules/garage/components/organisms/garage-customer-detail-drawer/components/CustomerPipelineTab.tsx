@@ -1,13 +1,14 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { StandardTable } from "@/shared/components/StandardTable";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { Button } from "@/shared/components/ui/Button";
-import { Badge } from "@/shared/components/ui/badge";
 import { KgaraCaseStatusBadge } from "@/modules/garage/components/KgaraCaseStatusBadge";
+import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
-import { Car, Eye, Info } from "lucide-react";
+import { Car, Info, Eye } from "lucide-react";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
 interface CustomerPipelineTabProps {
   cases: any[];
@@ -31,7 +32,7 @@ export const CustomerPipelineTab = React.memo(function CustomerPipelineTab({
         headerClassName: "text-center w-[40px] min-w-[40px]",
         className:
           "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
-        cell: (_: any, idx: number) => idx + 1,
+        cell: (_: any, idx: number) => idx,
       },
       {
         key: "soChungTu",
@@ -107,31 +108,17 @@ export const CustomerPipelineTab = React.memo(function CustomerPipelineTab({
           </div>
         ),
       },
-      {
-        key: "actions",
-        header: (
-          <span className="w-full block text-center">
-            {t("customers.drawer.actions", "Thao tác")}
-          </span>
-        ),
-        size: 80,
-        enableResizing: false,
-        className: "text-center",
-        cell: (row: any) => (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-            title={t("customers.drawer.viewDetail", "Xem chi tiết")}
-            onClick={() => onOpenCaseDetail(row.soChungTu || row.id)}
-          >
-            <Eye className="w-3.5 h-3.5" />
-          </Button>
-        ),
-      },
     ],
     [onOpenCaseDetail, t],
   );
+
+  const getRowActions = (row: any): ActionDropdownItem[] => [
+    {
+      label: t("customers.actions.viewDetail", "Xem chi tiết"),
+      icon: <Eye className="w-4 h-4" />,
+      onClick: () => onOpenCaseDetail(row.soChungTu || row.id),
+    },
+  ];
 
   return (
     <div className="space-y-3 flex flex-col flex-1 min-h-0 w-full">
@@ -151,13 +138,20 @@ export const CustomerPipelineTab = React.memo(function CustomerPipelineTab({
         </div>
       </div>
 
-      <DataTable
+      <StandardTable
         items={cases}
         columns={columns}
+        getRowKey={(item: any) =>
+          item.id || item.soPhieu || item.caseNumber || ""
+        }
         emptyLabel={t("customers.empty", "Không có xe nào đang làm tại xưởng")}
         total={cases.length}
         page={1}
         pageSize={Math.max(10, cases.length)}
+        variant="spreadsheet"
+        actions={getRowActions}
+        enableRowHoverActions={true}
+        enableRowContextMenu={true}
         containerClassName="flex-1 min-h-0 w-full"
       />
     </div>

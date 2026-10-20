@@ -24,9 +24,9 @@ Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đ�
   - Sub-menu 2: **"Công nợ theo đối tượng"** (`/invoice-debts`) - Theo dõi, đối soát giao dịch và phân tích tuổi nợ chi tiết theo từng khách hàng, nhà cung cấp (Mặc định mở `?tab=overview`).
 - **Cấu trúc 6 Tabs trên giao diện chính (`/erp-invoices`)**:
   1. `tab=overview` (mặc định): **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
-  2. `tab=in`: **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
+  2. `tab=in`: **Hóa đơn mua vào** (Header Table, chiều `IN`, Unified View & Filter Dropdown: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` gom chung với `view_mode` Presets).
   3. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
-  4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, PillTab: `tax_tab` + `view_mode` Combobox).
+  4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, Unified View & Filter Dropdown: `tax_tab` gom chung với `view_mode` Presets).
   5. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
   6. `tab=draft`: **Hóa đơn nháp** (`ErpInvoicesDraftPage` - Quản lý hóa đơn SInvoice Viettel nháp).
 - **Tiến trình Đồng bộ Tự động (5-Slot Heartbeat Cron & Live SSE)**:
@@ -228,14 +228,25 @@ src/modules/erp-invoices-core/
 - **Bảng kê Đối tác / Nhà cung cấp (`InvoicePartnersTable`)**: Bảng tổng hợp giá trị mua/bán theo từng mã số thuế, hỗ trợ click mở `partner-invoice-drawer` để xem ngay danh sách hóa đơn của đối tác đó.
 
 ### 3.5. Drawer Xuất Excel Hóa Đơn (`invoice-export-drawer`)
-- **Hai chế độ xuất dữ liệu linh hoạt (`exportMode`)**:
-  - `by-period` (Theo kỳ - Mặc định): Cho phép chọn theo kỳ định sẵn hoặc tùy chỉnh khoảng ngày `dateFrom` - `dateTo`.
-  - `by-current-filter` (Theo filter hiện tại): Giữ nguyên toàn bộ các điều kiện lọc và tìm kiếm đang xem trên bảng (`search`, `column_filters`, `column_search`, `status`, `tag_id`, khoảng ngày bảng, `sort_by`, `sort_order`). Giao diện tự động ẩn picker ngày và hiển thị thẻ tóm tắt bộ lọc bảng (`currentFilterSummary`).
+- **Bố cục 2 Cột Chuẩn Hóa (`layout="2-columns"`)**:
+  - **Cột Trái (Left Panel)**: Gom 2 `DrawerSection` gồm:
+    1. `DrawerSection` **Cột xuất dữ liệu** (`InvoiceExportColumnSelector`): Bật/tắt 22 cột trên Sheet 1 ("Bảng kê") theo 5 nhóm nghiệp vụ, hiển thị lưới 3 cột `grid-cols-1 sm:grid-cols-2 md:grid-cols-3` thoáng đẹp, có nút Chọn tất cả/Mặc định/Bỏ chọn, tự động ghi nhớ vào `localStorage` (`erp_invoice_export_selected_columns`). Mở sẵn `defaultCollapsed={false}`.
+    2. `DrawerSection` **Lịch sử xuất file** (`StandardTable`): Danh sách các file kết quả xuất trong 24 giờ, tiến độ SSE thời gian thực và nút tải lại.
+  - **Cột Phải (Right Panel)**: Tập trung vào `DrawerSection` **Điều kiện xuất dữ liệu** (`InvoiceExportConditionSection`):
+    - Chế độ xuất: `by-period` (Theo kỳ) hoặc `by-current-filter` (Theo filter bảng hiện tại).
+    - Chuyển đổi kỳ bằng component chuẩn `<PillTabs<"month" | "quarter" | "custom">>` (`variant="pill"`, `size="sm"`): `[Theo tháng] | [Theo quý] | [Tùy chỉnh]` khớp với thiết kế sub-tabs trong Detail Drawer.
+    - Lựa chọn Tháng/Quý tự động tính `dateFrom` - `dateTo`.
+    - Nút bấm chính "Xuất Excel" kích hoạt tác vụ nền.
 - **Tác vụ nền & Lịch sử tải lại**: Hỗ trợ Server-Sent Events (SSE) theo dõi tiến độ nền, cơ chế tái sử dụng file đã xuất trong 24h và bảng lịch sử có thể resize cột.
 - **Kiến trúc Atomic Refactor (< 180 LoC, No Blue Mandate)**:
-  - Phân rã triệt để thành: `InvoiceExportDrawer.tsx` (98 LoC), `InvoiceExportDrawer.columns.tsx` (158 LoC), `InvoiceExportDrawer.hook.ts` (164 LoC), `InvoiceExportDrawer.sync.hook.ts` (147 LoC), `InvoiceExportDrawer.helper.tsx` (36 LoC).
-  - Molecules & Atoms: `InvoiceExportConditionSection.tsx` (120 LoC), `InvoiceExportModeSelector.tsx` (96 LoC), `InvoiceExportFilterPreview.tsx` (75 LoC), `CustomRadioIndicator.tsx` (28 LoC).
-  - **No Blue Mandate**: 0% màu xanh dương. Native browser `<input type="radio">` được bọc `sr-only` và thay bằng `CustomRadioIndicator` chuẩn tone neutral `foreground` / `background`. Badge trạng thái `RUNNING` dùng `amber` tone (`bg-amber-50 text-amber-700`).
+  - Phân rã triệt để thành: `InvoiceExportDrawer.tsx` (~110 LoC), `InvoiceExportDrawer.columns.tsx` (158 LoC), `InvoiceExportDrawer.hook.ts` (~92 LoC), `InvoiceExportDrawer.scope.hook.ts` (~120 LoC), `InvoiceExportDrawer.sync.hook.ts` (147 LoC), `InvoiceExportDrawer.helper.tsx` (~115 LoC).
+  - Molecules & Atoms: `InvoiceExportConditionSection.tsx` (~140 LoC), `InvoiceExportColumnSelector.tsx` (~160 LoC), `InvoiceExportModeSelector.tsx` (96 LoC), `InvoiceExportFilterPreview.tsx` (75 LoC), `CustomRadioIndicator.tsx` (28 LoC).
+  - **No Blue Mandate**: 0% màu xanh dương. Native browser `<input type="radio">` và `<input type="checkbox">` được bọc `sr-only` và custom chuẩn tone neutral `foreground` / `background`. Badge trạng thái `RUNNING` dùng `amber` tone (`bg-amber-50 text-amber-700`).
+
+### 3.6. Drawer Xuất PDF / Tải ZIP Hóa Đơn (`invoice-file-export-drawer`) & thành phần xuất dùng chung
+- **Dùng chung với drawer Excel** (nằm trong `invoice-export-drawer/`): `InvoiceExportDrawerShell` (khung `StandardFormDrawer` 2 cột: trái = lịch sử/thông tin, phải = điều kiện), `InvoiceExportConditionSection` (props mới: `modes`, `selectedCount`, `startLabel`, `startIcon`, `children`), `InvoiceExportModeSelector` (thêm mode `selected`, data-driven theo `modes[]`), `InvoiceExportFileTypeSelector` (checkbox PDF/XML), hook `useInvoiceExportScope` (`InvoiceExportDrawer.scope.hook.ts`: state kỳ/ngày/mode + `buildScopeQuery()`).
+- **`InvoiceFileExportDrawer`** (`invoice-file-export-drawer/`): nút "Tải hóa đơn" (ZIP đồng bộ, không job nền, không lịch sử). Gói chỉ chứa đúng loại đã tick: PDF → chỉ PDF thật; XML → file .xml (kể cả khi nhà cung cấp gửi zip). Mode `selected` (chỉ khi có `selectedIds`, mặc định khi có chọn) gọi `bulkDownloadSelected`; `by-period` / `by-current-filter` gọi `bulkDownloadFiles` (backend chỉ áp `date_from`, `date_to`, `direction`, `status`, `search`).
+- **Điểm mở**: menu header "Xuất PDF" (`handleExportPdf`) và bulk dropdown "Xuất PDF / Tải ZIP" (tiêu đề drawer giữ nguyên); cùng state `fileExportDrawerOpen` trong `useInvoiceBulkActions`, render trong `InvoiceBulkModals`. Đã thay `DrawerModal` "Tải ZIP N hóa đơn đã chọn" cũ; drawer "Tải hàng loạt theo tháng" giữ nguyên.
 
 ---
 
@@ -281,6 +292,10 @@ export interface ErpInvoice {
 - `syncPortal(dto)` / `loginPortal(dto)` / `getPortalCaptcha()`: Tương tác Cổng thuế GDT.
 - `bulkImportBuyerXml(formData)` / `bulkImportSellerXml(formData)`: Upload hàng loạt XML/PDF.
 - `bulkDownloadFiles(query, types)` / `bulkDownloadSelected(ids, types)`: Tải ZIP hàng loạt.
+- Tab "Tài liệu & PDF" (`InvoiceDocumentWorkspace.helper.ts` → `normalizeInvoiceDocuments`): gộp `pdfFileKey`, `pdfFiles`, `attachments` và zip gốc từ `xmlFileKey` (nhãn theo tên file, chỉ tải, không xem trước). Zip gốc không tạo dòng attachment, nên HĐ từ cổng thuế vẫn hiện file dù không có `erp_invoice_attachments`.
+- Drawer "Tải hóa đơn" có 3 loại file: PDF, XML, ZIP (gói gốc NCC). Gửi `types` tương ứng lên `bulk-download-*`.
+- **Chỉnh sửa hàng loạt** (`bulk-edit-drawer/`): state phân loại/chi nhánh/ghi chú nằm ở `useBulkEditAssignments.ts`, seed snapshot một lần mỗi lần mở (không seed lại khi mảng HĐ đổi identity), nên không mất chỉnh sửa. Ghi chú bulk ghi vào `notes` (API `bulk-set-notes`).
+- **Ghi chú** trên thẻ "THÔNG TIN CHUNG" đọc `notes` (không đọc `description`, vốn là diễn giải/tên hàng từ cổng thuế). Ô sửa tay chỉ ghi `notes`.
 - `startExportExcelBackground(query)` / `getExportExcelBackgroundHistory()`: Quản lý xuất Excel nền.
 
 ---

@@ -17,6 +17,7 @@ export interface QuoteLineItem {
   technicianName?: string;
   isInsurance?: boolean;
   insuranceApprovedAmount?: number;
+  outsourceCost?: number;
   costAllocationType?: string;
 }
 
@@ -24,6 +25,7 @@ export interface CaseCostBreakdown {
   warehousePartsCost?: number;
   externalCost?: number;
   commissionCost?: number;
+  discountCost?: number;
   otherCost?: number;
   totalCost?: number;
   allocatedPartsCost?: number;
@@ -55,6 +57,29 @@ export interface QuoteProfitSummaryData {
   profitMargin: number;
   hasProfitData: boolean;
   costBreakdown?: CaseCostBreakdown;
+  // Các chỉ số chuẩn hóa theo phiếu in thực tế
+  totalAmount?: number;
+  discountAmount?: number;
+  discountRate?: number;
+  subtotalAfterDiscount?: number;
+  deductibleAmount?: number;
+  sanctionAmount?: number;
+  afterSanctionAmount?: number;
+  customerPay?: number;
+  insurancePay?: number;
+  vatAmount?: number;
+  totalPayable?: number;
+  commissionGeneral?: number;
+  commissionGdv?: number;
+  gdvName?: string | null;
+  commissionMg?: number;
+  brokerName?: string | null;
+  partsCostInside?: number;
+  partsCostOutside?: number;
+  outsourceLaborCost?: number;
+  estimatedProfitPreTax?: number;
+  estimatedProfitAfterTax?: number;
+  isInsurance?: boolean;
 }
 
 export interface GarageCasePreviewProps {

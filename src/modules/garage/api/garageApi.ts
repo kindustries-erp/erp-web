@@ -772,7 +772,7 @@ export const garageApi = {
       },
     );
     return res.data as {
-      items: string[];
+      items: (string | { label: string; value: string })[];
       total: number;
       page: number;
       totalPages: number;
@@ -845,7 +845,7 @@ export const garageApi = {
       },
     );
     return res.data as {
-      items: string[];
+      items: (string | { label: string; value: string })[];
       total: number;
       page: number;
       totalPages: number;

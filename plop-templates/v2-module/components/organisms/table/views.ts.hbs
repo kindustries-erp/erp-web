@@ -1,0 +1,13 @@
+/** Chế độ xem hệ thống: cột hiển thị cho từng view. Chỉnh theo nhu cầu của module. */
+export const {{viewConst}} = {
+  overview: {
+{{#each fields}}
+    {{name}}: {{#if inOverview}}true{{else}}false{{/if}},
+{{/each}}
+  },
+  all: {
+{{#each fields}}
+    {{name}}: true,
+{{/each}}
+  },
+} as const;

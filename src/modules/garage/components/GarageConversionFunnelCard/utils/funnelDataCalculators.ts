@@ -19,6 +19,13 @@ export function calculateTimelineDatasets(
       : item?.completed?.count || 0;
   });
 
+  const quotationData = timelineMonths.map((m) => {
+    const item = byMonth[m];
+    return isAmount
+      ? item?.quotation?.amount || 0
+      : item?.quotation?.count || 0;
+  });
+
   const inProgressData = timelineMonths.map((m) => {
     const item = byMonth[m];
     return isAmount
@@ -43,8 +50,19 @@ export function calculateTimelineDatasets(
       type: "bar" as const,
       label: t("dashboard.funnel.chartCompleted", "Hoàn tất (Doanh thu)"),
       data: completedData,
-      backgroundColor: "#10b981",
-      borderColor: "#10b981",
+      backgroundColor: "#059669",
+      borderColor: "#059669",
+      stack: "timeline",
+      borderRadius: 3,
+      barPercentage: 0.5,
+      yAxisID: "y",
+    },
+    {
+      type: "bar" as const,
+      label: t("dashboard.funnel.chartQuotation", "Báo giá (Chờ duyệt)"),
+      data: quotationData,
+      backgroundColor: "#7C3AED",
+      borderColor: "#7C3AED",
       stack: "timeline",
       borderRadius: 3,
       barPercentage: 0.5,
@@ -54,8 +72,8 @@ export function calculateTimelineDatasets(
       type: "bar" as const,
       label: t("dashboard.funnel.chartInProgress", "Đang làm (Dự thu)"),
       data: inProgressData,
-      backgroundColor: "#6366f1",
-      borderColor: "#6366f1",
+      backgroundColor: "#475569",
+      borderColor: "#475569",
       stack: "timeline",
       borderRadius: 3,
       barPercentage: 0.5,
@@ -65,8 +83,8 @@ export function calculateTimelineDatasets(
       type: "bar" as const,
       label: t("dashboard.funnel.chartCancelled", "Đã hủy"),
       data: cancelledData,
-      backgroundColor: "#ef4444",
-      borderColor: "#ef4444",
+      backgroundColor: "#E11D48",
+      borderColor: "#E11D48",
       stack: "timeline",
       borderRadius: 3,
       barPercentage: 0.5,
@@ -76,12 +94,12 @@ export function calculateTimelineDatasets(
       type: "line" as const,
       label: t("dashboard.funnel.chartCompletionRate", "Tỷ lệ hoàn tất (%)"),
       data: completionRateData,
-      borderColor: "#f59e0b",
-      backgroundColor: "#f59e0b",
+      borderColor: "#EA580C",
+      backgroundColor: "#EA580C",
       borderWidth: 2.5,
       pointRadius: 4,
       pointHoverRadius: 6,
-      pointBackgroundColor: "#f59e0b",
+      pointBackgroundColor: "#EA580C",
       tension: 0.2,
       yAxisID: "y1",
     },
@@ -96,6 +114,8 @@ export function calculateClassificationTableRows(
       name: CLASSIFICATION_CONFIG[key]?.defaultName || key,
       totalCount: 0,
       totalAmount: 0,
+      quotationCount: 0,
+      quotationAmount: 0,
       inProgressCount: 0,
       inProgressAmount: 0,
       completedCount: 0,
@@ -114,6 +134,8 @@ export function calculateClassificationTableRows(
       icon: config.icon,
       totalCount: item.totalCount,
       totalAmount: item.totalAmount,
+      quotationCount: item.quotationCount ?? 0,
+      quotationAmount: item.quotationAmount ?? 0,
       inProgressCount: item.inProgressCount,
       inProgressAmount: item.inProgressAmount,
       completedCount: item.completedCount,

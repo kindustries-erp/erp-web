@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import { V2StandardTable } from "./V2StandardTable";
-import { mockViewport, renderTable } from "./V2StandardTable.fixture";
+import { mockViewport, renderTable } from "./mocks/V2StandardTable.fixture";
 
 describe("V2StandardTable switcher", () => {
   afterEach(() => vi.restoreAllMocks());

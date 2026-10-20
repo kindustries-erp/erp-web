@@ -1,0 +1,68 @@
+import { V2TableText } from "@/v2/shared/components/molecules/v2-table-text";
+import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table";
+import { ColumnValueType, TableColumnAlign } from "@/v2/shared/types/v2-table";
+{{#if hasStatus}}
+import { {{Entity}}StatusBadge } from "../../molecules/{{entityKebab}}-status-badge";
+{{/if}}
+import type { {{Entity}} } from "../../../domain/entities/{{entity}}";
+
+type Translate = (key: string, fallback?: string) => string;
+
+const value = (text?: string | number | null) =>
+  text === null || text === undefined || text === "" ? "—" : String(text);
+
+/** Cột STT do V2StandardTable tự render (`__index`), không khai báo ở đây */
+export const build{{EntityPlural}}Columns = (
+  t: Translate,
+  openDetail: (id: string) => void,
+): V2Column<{{Entity}}>[] => [
+{{#each fields}}
+  {
+    key: "{{name}}",
+    label: t("v2.{{../namespace}}.columns.{{name}}", "{{name}}"),
+    size: {{#if isDate}}135{{else}}{{#if isStatus}}125{{else}}{{#if isNumber}}140{{else}}170{{/if}}{{/if}}{{/if}},
+    enableResizing: true,
+{{#if isFirst}}
+    mobileSlot: "subtitle",
+    filter: { valueType: ColumnValueType.TEXT },
+    cell: (row) => (
+      <V2TableText
+        text={value(row.{{name}})}
+        enableCopy
+        onDetailClick={() => openDetail(row.id)}
+      />
+    ),
+{{else}}{{#if isStatus}}
+    align: TableColumnAlign.CENTER,
+    mobileSlot: "meta",
+    filter: {
+      valueType: ColumnValueType.STATUS,
+      filterOptions: [
+        { value: "ACTIVE", label: t("v2.{{../namespace}}.status.active", "Hoạt động") },
+        { value: "INACTIVE", label: t("v2.{{../namespace}}.status.inactive", "Ngưng hoạt động") },
+      ],
+    },
+    cell: (row) => <{{../Entity}}StatusBadge status={row.{{name}} ?? ""} />,
+{{else}}{{#if isNumber}}
+    align: TableColumnAlign.RIGHT,
+    mobileSlot: "meta",
+    filter: { valueType: ColumnValueType.NUMBER },
+    // Ô tổng: subtotal trang, lũy kế và tổng toàn bộ (lấy từ `summaries` của API)
+    summary: { variant: "{{summaryVariant}}" },
+    cell: (row) => <span className="block text-right tabular-nums">{value(row.{{name}})}</span>,
+{{else}}{{#if isDate}}
+    align: TableColumnAlign.RIGHT,
+    mobileSlot: "hidden",
+    filter: { valueType: ColumnValueType.DATE },
+    cell: (row) =>
+      row.{{name}} ? new Intl.DateTimeFormat("vi-VN").format(new Date(row.{{name}})) : "—",
+{{else}}
+    mobileSlot: "meta",
+    filter: { valueType: ColumnValueType.TEXT, showBlankOption: true },
+    cell: (row) => (
+      <span className="block truncate">{value(row.{{name}})}</span>
+    ),
+{{/if}}{{/if}}{{/if}}{{/if}}
+  },
+{{/each}}
+];

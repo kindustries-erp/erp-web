@@ -1,13 +1,12 @@
 import React from "react";
 import { Building2, Wallet, Upload } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { PillTabs } from "@/shared/components/PillTabs";
 import type { TabItem } from "@/shared/components/PageLayout";
 import {
   useBankStatementsTabLogic,
   type UseBankStatementsTabLogicProps,
 } from "./useBankStatementsTabLogic";
-import { BankStatementViewModeCombobox } from "./components/BankStatementViewModeCombobox";
+import { BankStatementViewModeCombobox } from "@/modules/bank-statements/components/molecules/bank-statement-view-mode-combobox";
 import { BankStatementViewConfigDrawer } from "./components/BankStatementViewConfigDrawer";
 import { BankStatementDrawers } from "./components/BankStatementDrawers";
 import { useBankStatementActions } from "./hooks/useBankStatementActions";
@@ -85,27 +84,6 @@ export function BankStatementSection(props: BankStatementSectionProps) {
 
   const viewTabsNode = (
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
-      <PillTabs
-        className="w-full sm:w-auto shrink-0"
-        size="sm"
-        items={[
-          {
-            value: "ALL",
-            label: t("bankStatement.tabs.all", { defaultValue: "Tất cả" }),
-          },
-          {
-            value: "IN",
-            label: t("bankStatement.tabs.in", { defaultValue: "Thu" }),
-          },
-          {
-            value: "OUT",
-            label: t("bankStatement.tabs.out", { defaultValue: "Chi" }),
-          },
-        ]}
-        value={activeTransactionType}
-        onValueChange={handleTransactionTypeChange}
-      />
-      <div className="hidden sm:block h-4 w-px bg-border shrink-0" />
       <BankStatementViewModeCombobox
         presets={columnViewPresetsHook.presets}
         activePresetKey={activeColumnPresetKey}
@@ -113,6 +91,27 @@ export function BankStatementSection(props: BankStatementSectionProps) {
         onCreateView={handleOpenCreateView}
         onEditView={handleOpenEditView}
         onDeleteView={handleDeleteViewPreset}
+        filterGroup={{
+          title: t("bankStatement.tabs.filterTitle", {
+            defaultValue: "Loại giao dịch",
+          }),
+          value: activeTransactionType,
+          onChange: handleTransactionTypeChange,
+          items: [
+            {
+              value: "ALL",
+              label: t("bankStatement.tabs.all", { defaultValue: "Tất cả" }),
+            },
+            {
+              value: "IN",
+              label: t("bankStatement.tabs.in", { defaultValue: "Thu" }),
+            },
+            {
+              value: "OUT",
+              label: t("bankStatement.tabs.out", { defaultValue: "Chi" }),
+            },
+          ],
+        }}
       />
     </div>
   );

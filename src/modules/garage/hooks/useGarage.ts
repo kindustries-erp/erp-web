@@ -337,6 +337,7 @@ export function useUpdateGarageCaseConfig() {
       queryClient.invalidateQueries({
         queryKey: ["garage-checkpoint"],
       });
+      queryClient.invalidateQueries({ queryKey: ["garage-case-code"] });
       if (updatedCase?.id) {
         queryClient.invalidateQueries({
           queryKey: ["garage-case", updatedCase.id],

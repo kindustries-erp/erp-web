@@ -45,13 +45,31 @@ const createWrapper = () => {
   );
 };
 
-describe("GarageTab Synchronous Keep-Alive Mounting & Default Dashboard Tab", () => {
+describe("GarageTab Synchronous Keep-Alive Mounting & Default Overview Tab", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.replaceState(null, "", "/garage-cases");
   });
 
-  it("by default mounts initial tab 'dashboard' immediately on first render", () => {
+  it("by default mounts initial tab 'overview' immediately on first render", () => {
+    render(<GarageTab />, { wrapper: createWrapper() });
+
+    expect(screen.getByTestId("view-garage-dashboard")).toBeDefined();
+    expect(screen.queryByTestId("view-garage-cases")).toBeNull();
+    expect(screen.queryByTestId("view-garage-services")).toBeNull();
+  });
+
+  it("mounts initial tab 'overview' when tab=overview query param is provided", () => {
+    window.history.replaceState(null, "", "/garage-cases?tab=overview");
+    render(<GarageTab />, { wrapper: createWrapper() });
+
+    expect(screen.getByTestId("view-garage-dashboard")).toBeDefined();
+    expect(screen.queryByTestId("view-garage-cases")).toBeNull();
+    expect(screen.queryByTestId("view-garage-services")).toBeNull();
+  });
+
+  it("mounts initial tab 'overview' when legacy tab=dashboard query param is provided", () => {
+    window.history.replaceState(null, "", "/garage-cases?tab=dashboard");
     render(<GarageTab />, { wrapper: createWrapper() });
 
     expect(screen.getByTestId("view-garage-dashboard")).toBeDefined();

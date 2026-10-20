@@ -3,7 +3,10 @@ export interface GarageCustomerDetailDrawerProps {
   onClose: () => void;
   customerCode: string | null;
   customerName?: string;
+  licensePlate?: string;
   branchId?: string;
+  debtType?: "receivables" | "payables";
+  onDebtTypeChange?: (debtType: "receivables" | "payables") => void;
 }
 
 export interface CustomerDebtTotals {

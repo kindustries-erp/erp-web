@@ -1,4 +1,5 @@
 import type { GarageCasesDateRanges } from "../../../utils/garageCasesTable";
+import type { GarageCasesTableQuery } from "../../../export/garageExportScopes";
 import type { TableViewPreset } from "@/shared/hooks/useUserPreferences";
 import type { TabItem } from "@/shared/components/PageLayout";
 
@@ -15,7 +16,7 @@ export interface GarageCasesTableProps {
   canUpdateGarage?: boolean;
   branches?: any[];
   onSyncCases?: () => void;
-  onExportExcel?: () => void;
+  onExportExcel?: (query: GarageCasesTableQuery) => void;
   onSyncGrossProfit?: () => void;
   activeStatusTab: string;
   onStatusTabChange: (tab: string) => void;
@@ -48,4 +49,5 @@ export interface ColumnContext {
   canUpdateGarage?: boolean;
   branches?: any[];
   activeColumnPresetKey?: string;
+  branchId?: string;
 }

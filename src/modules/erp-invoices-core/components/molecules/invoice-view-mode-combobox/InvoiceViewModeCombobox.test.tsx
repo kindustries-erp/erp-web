@@ -124,4 +124,35 @@ describe("InvoiceViewModeCombobox", () => {
       expect.objectContaining({ key: "overview" }),
     );
   });
+
+  it("renders filterGroup and handles tax tab selection", () => {
+    const onTaxTabChange = vi.fn();
+    render(
+      <InvoiceViewModeCombobox
+        presets={mockPresets}
+        activePresetKey="overview"
+        onSelect={vi.fn()}
+        onCreateView={vi.fn()}
+        onEditView={vi.fn()}
+        onDeleteView={vi.fn()}
+        filterGroup={{
+          title: "Loại hóa đơn thuế",
+          value: "all",
+          onChange: onTaxTabChange,
+          items: [
+            { value: "all", label: "Tất cả" },
+            { value: "new", label: "Mới" },
+            { value: "replacement", label: "Thay thế" },
+          ],
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button"));
+    expect(screen.getByText("Loại hóa đơn thuế")).toBeDefined();
+    expect(screen.getByText("Thay thế")).toBeDefined();
+
+    fireEvent.click(screen.getByText("Thay thế"));
+    expect(onTaxTabChange).toHaveBeenCalledWith("replacement");
+  });
 });

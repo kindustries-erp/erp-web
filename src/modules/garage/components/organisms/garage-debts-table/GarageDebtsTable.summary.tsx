@@ -33,8 +33,60 @@ export function useGarageDebtsSummaryRow({
 
     const cumCount = (listHook.page - 1) * listHook.pageSize + items.length;
 
+    const agingMetrics = [
+      {
+        key: "aging0_30",
+        title: t("customers.columns.aging0_30", "0-30 ngày"),
+        subtotal: subtotalA0_30,
+        grand: listHook.summary.totalAging0_30,
+        className: "font-bold text-emerald-700 dark:text-emerald-400",
+      },
+      {
+        key: "aging31_60",
+        title: t("customers.columns.aging31_60", "31-60 ngày"),
+        subtotal: subtotalA31_60,
+        grand: listHook.summary.totalAging31_60,
+        className: "font-bold text-amber-800 dark:text-amber-300",
+      },
+      {
+        key: "aging61_90",
+        title: t("customers.columns.aging61_90", "61-90 ngày"),
+        subtotal: subtotalA61_90,
+        grand: listHook.summary.totalAging61_90,
+        className: "font-bold text-orange-700 dark:text-orange-400",
+      },
+      {
+        key: "agingOver90",
+        title: t("customers.columns.agingOver90", ">90 ngày"),
+        subtotal: subtotalAOver90,
+        grand: listHook.summary.totalAgingOver90,
+        className: "font-bold text-rose-700 dark:text-rose-400",
+      },
+    ];
+
+    const agingCells: Record<string, React.ReactNode> = {};
+    for (const m of agingMetrics) {
+      agingCells[m.key] = (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={m.title}
+          itemTitle={t("customers.unitVehicle", "Biển số xe")}
+          itemUnit={t("customers.unitVehicle", "xe")}
+          subtotalAmount={m.subtotal}
+          grandTotalAmount={m.grand}
+          cumulativeAmount={m.subtotal}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          cumulativeCount={cumCount}
+          valueClassName={m.className}
+        />
+      );
+    }
+
     return {
-      customerName: (
+      licensePlate: (
         <SubtotalSummaryCell
           variantType="label"
           label={`${t("common:total", "Tổng cộng")}:`}
@@ -43,21 +95,23 @@ export function useGarageDebtsSummaryRow({
           totalCount={listHook.total}
           currentPageCount={items.length}
           cumulativeCount={cumCount}
-          itemTitle={t("partners.unitPartner", "Khách hàng")}
-          itemUnit={t("partners.unitPartner", "khách hàng")}
+          itemTitle={t("customers.unitVehicle", "Biển số xe")}
+          itemUnit={t("customers.unitVehicle", "xe")}
         />
       ),
       caseCount: (
         <SubtotalSummaryCell
           variantType="qty"
           metricTitle={t("customers.columns.caseCount", "Số lượng phiếu DV")}
-          itemTitle={t("partners.unitPartner", "Khách hàng")}
-          itemUnit={t("partners.unitPartner", "khách hàng")}
+          itemTitle={t("customers.unitVehicle", "Biển số xe")}
+          itemUnit={t("customers.unitVehicle", "xe")}
           subtotalQty={subtotalCases}
           page={listHook.page}
           totalPages={listHook.totalPages}
           currentPageCount={items.length}
           totalCount={listHook.total}
+          cumulativeCount={cumCount}
+          cumulativeQty={subtotalCases}
           valueClassName="text-primary font-bold"
         />
       ),
@@ -65,14 +119,16 @@ export function useGarageDebtsSummaryRow({
         <SubtotalSummaryCell
           variantType="amount"
           metricTitle={t("customers.columns.totalReceivable", "Tổng phải thu")}
-          itemTitle={t("partners.unitPartner", "Khách hàng")}
-          itemUnit={t("partners.unitPartner", "khách hàng")}
+          itemTitle={t("customers.unitVehicle", "Biển số xe")}
+          itemUnit={t("customers.unitVehicle", "xe")}
           subtotalAmount={subtotalRev}
           grandTotalAmount={listHook.summary.totalRevenue}
+          cumulativeAmount={subtotalRev}
           page={listHook.page}
           totalPages={listHook.totalPages}
           currentPageCount={items.length}
           totalCount={listHook.total}
+          cumulativeCount={cumCount}
           valueClassName="text-foreground font-bold"
         />
       ),
@@ -83,14 +139,16 @@ export function useGarageDebtsSummaryRow({
             "customers.columns.remainingReceivable",
             "Còn phải thu",
           )}
-          itemTitle={t("partners.unitPartner", "Khách hàng")}
-          itemUnit={t("partners.unitPartner", "khách hàng")}
+          itemTitle={t("customers.unitVehicle", "Biển số xe")}
+          itemUnit={t("customers.unitVehicle", "xe")}
           subtotalAmount={subtotalBal}
           grandTotalAmount={listHook.summary.totalBalance}
+          cumulativeAmount={subtotalBal}
           page={listHook.page}
           totalPages={listHook.totalPages}
           currentPageCount={items.length}
           totalCount={listHook.total}
+          cumulativeCount={cumCount}
           valueClassName={
             subtotalBal === 0
               ? "font-bold text-emerald-600 dark:text-emerald-400"
@@ -98,66 +156,7 @@ export function useGarageDebtsSummaryRow({
           }
         />
       ),
-      aging0_30: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          metricTitle={t("customers.columns.aging0_30", "0-30 ngày")}
-          itemTitle={t("partners.unitPartner", "Khách hàng")}
-          itemUnit={t("partners.unitPartner", "khách hàng")}
-          subtotalAmount={subtotalA0_30}
-          grandTotalAmount={listHook.summary.totalAging0_30}
-          page={listHook.page}
-          totalPages={listHook.totalPages}
-          currentPageCount={items.length}
-          totalCount={listHook.total}
-          valueClassName="font-bold text-emerald-700 dark:text-emerald-400"
-        />
-      ),
-      aging31_60: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          metricTitle={t("customers.columns.aging31_60", "31-60 ngày")}
-          itemTitle={t("partners.unitPartner", "Khách hàng")}
-          itemUnit={t("partners.unitPartner", "khách hàng")}
-          subtotalAmount={subtotalA31_60}
-          grandTotalAmount={listHook.summary.totalAging31_60}
-          page={listHook.page}
-          totalPages={listHook.totalPages}
-          currentPageCount={items.length}
-          totalCount={listHook.total}
-          valueClassName="font-bold text-amber-800 dark:text-amber-300"
-        />
-      ),
-      aging61_90: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          metricTitle={t("customers.columns.aging61_90", "61-90 ngày")}
-          itemTitle={t("partners.unitPartner", "Khách hàng")}
-          itemUnit={t("partners.unitPartner", "khách hàng")}
-          subtotalAmount={subtotalA61_90}
-          grandTotalAmount={listHook.summary.totalAging61_90}
-          page={listHook.page}
-          totalPages={listHook.totalPages}
-          currentPageCount={items.length}
-          totalCount={listHook.total}
-          valueClassName="font-bold text-orange-700 dark:text-orange-400"
-        />
-      ),
-      agingOver90: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          metricTitle={t("customers.columns.agingOver90", ">90 ngày")}
-          itemTitle={t("partners.unitPartner", "Khách hàng")}
-          itemUnit={t("partners.unitPartner", "khách hàng")}
-          subtotalAmount={subtotalAOver90}
-          grandTotalAmount={listHook.summary.totalAgingOver90}
-          page={listHook.page}
-          totalPages={listHook.totalPages}
-          currentPageCount={items.length}
-          totalCount={listHook.total}
-          valueClassName="font-bold text-rose-700 dark:text-rose-400"
-        />
-      ),
+      ...agingCells,
     };
   }, [
     listHook.data,

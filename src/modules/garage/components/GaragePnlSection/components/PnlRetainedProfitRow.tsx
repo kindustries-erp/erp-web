@@ -60,9 +60,6 @@ export function PnlRetainedProfitRow({
     ? prev2Report?.oj?.netMarginRate
     : prev2Report?.netMarginRate;
 
-  const subCell =
-    "py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground";
-
   return (
     <>
       {/* VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV) Header */}
@@ -111,9 +108,9 @@ export function PnlRetainedProfitRow({
 
       {/* 8.1. Trong đó: Lợi nhuận giữ lại mảng OJ (Ẩn khi đang xem riêng OJ hoặc collapsed) */}
       {!isOjOnly && !isCollapsed && (
-        <tr className="text-muted-foreground bg-emerald-50/20 dark:bg-emerald-950/10 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-colors border-b border-border/20">
-          <td className="py-1.5 pl-14 pr-4">
-            <span className="text-[11px] italic">
+        <tr className="text-slate-700 dark:text-slate-300 bg-emerald-50/20 dark:bg-emerald-950/10 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-colors border-b border-border/20">
+          <td className="py-2 px-8 font-medium">
+            <span>
               {t(
                 "pnl.retainedProfitOjSub",
                 "8.1. Trong đó: Lợi nhuận giữ lại mảng OJ",
@@ -124,21 +121,21 @@ export function PnlRetainedProfitRow({
             amount={ojRetainedProfit0 !== 0 ? ojRetainedProfit0 : 0}
             hideDelta
             hideRate
-            tdClassName={subCell}
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono font-semibold"
           />
           <PnlAmountCell
             amount={prevOjRetainedProfit}
             isLoading={isLoadingPrev}
             hideDelta
             hideRate
-            tdClassName={subCell}
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono text-slate-700 dark:text-slate-300"
           />
           <PnlAmountCell
             amount={prev2OjRetainedProfit}
             isLoading={isLoadingPrev2}
             hideDelta
             hideRate
-            tdClassName={subCell}
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground"
           />
         </tr>
       )}

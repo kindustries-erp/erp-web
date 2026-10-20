@@ -6,9 +6,12 @@ export interface GarageCashflowVoucher {
   voucherType: "RECEIPT" | "PAYMENT";
   partnerName?: string;
   partnerPhone?: string;
+  licensePlate?: string;
   note?: string;
   amount: number;
   paymentMethod?: string;
+  paymentContent?: string;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | "EXPECTED" | null;
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -16,11 +19,18 @@ export interface GarageCashflowVoucher {
   createdAt: string;
   updatedAt: string;
   transDate: string;
+  createdBy?: string;
+  isAutoCommission?: boolean;
+  pnlPeriodYear?: number | null;
+  pnlPeriodMonth?: number | null;
+  pnlCommissionType?: string | null;
+  pnlCommissionAnchorId?: string | null;
   case?: {
     id: string;
     khachHangName: string;
     khachHangCode?: string;
     soChungTu?: string;
+    bienSoXe?: string;
   };
   erpBankTransaction?: {
     id: string;
@@ -40,8 +50,11 @@ export interface CreateGarageCashflowVoucherDto {
   voucherCode?: string;
   partnerName?: string;
   partnerPhone?: string;
+  licensePlate?: string;
   note?: string;
   paymentMethod?: string;
+  paymentContent?: string;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | "EXPECTED";
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -52,16 +65,143 @@ export interface CreateGarageCashflowVoucherDto {
 export type UpdateGarageCashflowVoucherDto =
   Partial<CreateGarageCashflowVoucherDto>;
 
+export interface CashflowDuplicateItem {
+  id: string;
+  voucherCode: string;
+  voucherType: "RECEIPT" | "PAYMENT";
+  amount: number;
+  transDate: string;
+  licensePlate?: string | null;
+  caseCode?: string | null;
+  partnerName?: string | null;
+}
+
+export interface CashflowDuplicateGroup {
+  items: CashflowDuplicateItem[];
+  total: number;
+}
+
+export interface CashflowDuplicateResult {
+  nearbyDate: CashflowDuplicateGroup;
+  sameCase: CashflowDuplicateGroup;
+  samePlate: CashflowDuplicateGroup;
+}
+
+export interface CashflowDuplicateParams {
+  amount: number;
+  transDate?: string;
+  caseId?: string;
+  licensePlate?: string;
+  excludeId?: string;
+}
+
+export interface GarageCashflowDashboardParams {
+  dateFrom?: string;
+  dateTo?: string;
+  paymentMethod?: string;
+  paymentContent?: string;
+  branchId?: string;
+}
+
+export interface GarageCashflowKpiData {
+  totalIn: number;
+  totalOut: number;
+  net: number;
+  countIn: number;
+  countOut: number;
+  pendingOutAmount: number;
+  pendingOutCount: number;
+}
+
+export interface GarageCashflowBreakdownItem {
+  name: string;
+  amount: number;
+  count: number;
+  percentage?: number;
+}
+
+export interface GarageCashflowMethodBreakdown {
+  in: GarageCashflowBreakdownItem[];
+  out: GarageCashflowBreakdownItem[];
+}
+
+export interface GarageCashflowContentBreakdown {
+  in: GarageCashflowBreakdownItem[];
+  out: GarageCashflowBreakdownItem[];
+}
+
+export interface GarageCashflowTrendItem {
+  label: string;
+  cashIn: number;
+  cashOut: number;
+  net: number;
+}
+
+export interface GarageCashflowTopTransactionItem {
+  id: string;
+  voucherCode: string;
+  transDate: string;
+  amount: number;
+  partnerName?: string | null;
+  licensePlate?: string | null;
+  paymentMethod?: string | null;
+  paymentContent?: string | null;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | "EXPECTED" | null;
+  caseCode?: string | null;
+  caseId?: string | null;
+}
+
+export interface GarageCashflowTopTransactions {
+  in: GarageCashflowTopTransactionItem[];
+  out: GarageCashflowTopTransactionItem[];
+}
+
+export interface GarageCashflowDashboardData {
+  kpi: GarageCashflowKpiData;
+  methodBreakdown: GarageCashflowMethodBreakdown;
+  contentBreakdown: GarageCashflowContentBreakdown;
+  trend: GarageCashflowTrendItem[];
+  topTransactions: GarageCashflowTopTransactions;
+}
+
+export interface GarageCashflowTotals {
+  grandTotalThu: number;
+  grandTotalChi: number;
+  cumulativeThu: number;
+  cumulativeChi: number;
+}
+
+export interface GarageCashflowListResponse {
+  data: GarageCashflowVoucher[];
+  total: number;
+  totalPages?: number;
+  totals?: GarageCashflowTotals;
+}
+
 export const garageCashflowApi = {
-  getList: async (params?: Record<string, any>) => {
+  checkDuplicates: async (
+    params: CashflowDuplicateParams,
+  ): Promise<CashflowDuplicateResult> => {
+    const res = await axiosInstance.get(
+      "/api/v1/greenway/cashflow-vouchers/duplicate-check",
+      { params },
+    );
+    return res.data;
+  },
+  getList: async (
+    params?: Record<string, any>,
+  ): Promise<GarageCashflowListResponse> => {
     const res = await axiosInstance.get("/api/v1/greenway/cashflow-vouchers", {
       params,
     });
     return res.data;
   },
-  getDashboard: async () => {
+  getDashboard: async (
+    params?: GarageCashflowDashboardParams,
+  ): Promise<GarageCashflowDashboardData> => {
     const res = await axiosInstance.get(
       "/api/v1/greenway/cashflow-vouchers/dashboard",
+      { params },
     );
     return res.data;
   },
@@ -106,4 +246,52 @@ export const garageCashflowApi = {
     );
     return res.data;
   },
+  startExportExcelBackground: async (
+    params: any,
+  ): Promise<{ jobId: string; message: string; reused?: boolean }> => {
+    const res = await axiosInstance.post(
+      "/api/v1/greenway/cashflow-vouchers/export/excel/background",
+      params,
+    );
+    return res.data;
+  },
+  listExportExcelHistory: async (page = 1, pageSize = 10) => {
+    const res = await axiosInstance.get(
+      "/api/v1/greenway/cashflow-vouchers/export/excel/background/history",
+      {
+        params: { page, pageSize },
+      },
+    );
+    return res.data;
+  },
+  downloadExportExcelFile: async (jobId: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/greenway/cashflow-vouchers/export/excel/background/${jobId}/download`,
+      {
+        responseType: "blob",
+      },
+    );
+    return res.data;
+  },
 };
+
+export async function syncPnlCommissionVouchers(
+  year?: number,
+  month?: number,
+): Promise<{
+  year: number;
+  month: number;
+  saleCommission: number;
+  dvCommission: number;
+  syncedVouchers: number;
+}> {
+  const params: Record<string, any> = {};
+  if (year) params.year = year;
+  if (month) params.month = month;
+  const res = await axiosInstance.post(
+    "/api/v1/greenway/cashflow-vouchers/sync-pnl-commissions",
+    null,
+    { params },
+  );
+  return res.data;
+}

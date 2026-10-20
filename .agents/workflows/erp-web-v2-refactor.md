@@ -165,14 +165,16 @@ src/v2/
    - Tuân thủ chiều import đơn hướng: `Templates (L4) > Organisms (L3) > Molecules (L2) > Atoms (L1)`.
 
 ### 🔹 GIAI ĐOẠN 3: Triển Khai Module Scaffolding & Pure Domain Rules
-1. **Khởi tạo thư mục module `kebab-case/`**:
-   - `domain/entities/`, `domain/rules/`, `domain/value-objects/`.
+0. **Sinh khung bằng plop (ưu tiên)**: `bun plop v2-module <module> <Entity> <Plural> "<titleVi>" "<titleEn>" <apiBase> <permissionCollection> <routeInput> <navSection> <tableInput> "<fieldSpec>" <hasNextCode> <wire>`. Sau đó chạy `bunx prettier --write src/v2/modules/<module>`. Chi tiết tham số và checklist chỉnh tay: skill `plop-generate`, Generator 5.
+1. **Khởi tạo thư mục module `kebab-case/`** (nếu không dùng plop):
+   - `domain/entities/`, `domain/rules/`.
 2. **Đưa Business Logic về Domain Rules**:
    - Viết các quy tắc nghiệp vụ dưới dạng pure TypeScript functions, 0% React/JSX/Hooks.
    - Viết Co-located Unit Tests (`*.test.ts`) kiểm tra 100% case biên (< 5ms/test).
 3. **Tách riêng Data Access Layer**:
    - Đặt queries tại `api/queries/use[Module]Query.ts`.
    - Đặt mutations tại `api/mutations/use[Module]Mutation.ts`.
+4. **Đối chiếu V1 trước khi viết** (bắt buộc khi migrate): liệt kê feature trong module V1 và lập bảng parity theo playbook mục 5 của skill `erp-web-v2-refactor`.
 
 ### 🔹 GIAI ĐOẠN 4: Platform Split & UI Assembly
 1. **Áp dụng Switcher Pattern cho Layouts, Drawers, Modals, Pages**:
@@ -201,6 +203,10 @@ Trước khi hoàn tất bất kỳ module nào, chạy toàn bộ bộ lệnh k
 ```bash
 # 1. Quét vi phạm No Blue Mandate (Phải trả về 0 kết quả)
 grep -rn "blue-" src/v2/modules/[target-module]/
+
+# 1b. Không import V1 (chỉ authStore được phép) và mọi key dịch có tiền tố v2.
+grep -rnE "from \"@/(core|shared|modules|pages|components)/" src/v2/modules/[target-module] --include="*.ts" --include="*.tsx" | grep -vE "\.test\.|\.stories\.|authStore"
+grep -rnP "\bt\(\s*\"(?!v2\.)[a-zA-Z]+\.[A-Za-z.]+\"" src/v2/modules/[target-module] --include="*.ts" --include="*.tsx"
 
 # 2. Quét vi phạm kích thước file (> 180 LoC)
 find src/v2/modules/[target-module]/ -name "*.tsx" -o -name "*.ts" | xargs wc -l | awk '$1 > 180 {print}'

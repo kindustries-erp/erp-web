@@ -34,4 +34,26 @@ describe("GarageCaseCustomerCell", () => {
     expect(screen.getByText("Khách lẻ Nguyễn Văn A")).toBeDefined();
     expect(screen.queryByText("Mã:")).toBeNull();
   });
+
+  it("calls onOpenDetail when clicking customer name button", () => {
+    let clickedCustomer = null;
+    render(
+      <GarageCaseCustomerCell
+        item={{
+          customerName: "Nguyễn Văn B",
+          customerCode: "KH00456",
+        }}
+        onOpenDetail={(cust) => {
+          clickedCustomer = cust;
+        }}
+      />,
+    );
+
+    const btn = screen.getByText("Nguyễn Văn B");
+    btn.click();
+    expect(clickedCustomer).toEqual({
+      name: "Nguyễn Văn B",
+      code: "KH00456",
+    });
+  });
 });

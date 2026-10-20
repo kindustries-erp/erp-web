@@ -1,5 +1,10 @@
 import React, { useMemo } from "react";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import {
+  DataTable,
+  createColumnHeaderFilter,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { money } from "@/shared/utils/format";
@@ -29,22 +34,36 @@ export const TimeHorizonCasesTab: React.FC<TimeHorizonCasesTabProps> = ({
   onPageSizeChange,
   onOpenCustomerDetail,
 }) => {
+  const tableHook = useTableColumnState("garage-horizon-cases-table");
+
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: tableHook,
+        items,
+        defaultAlign: "left",
+      }),
+    [items, tableHook],
+  );
+
   const columns: DataTableColumn<GarageTimeHorizonCaseItem>[] = useMemo(
     () => [
       {
         key: "index",
         header: <span className="w-full block text-center">#</span>,
-        size: 40,
+        size: 45,
         enableResizing: false,
+        headerClassName: "text-center w-[45px] min-w-[45px]",
         className:
-          "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
-        cell: (_, idx) => <span>{(page - 1) * pageSize + idx}</span>,
+          "text-center w-[45px] min-w-[45px] font-mono text-xs text-muted-foreground",
+        cell: (_, idx) => <span>{(page - 1) * pageSize + idx + 1}</span>,
       },
       {
         key: "soChungTu",
-        header: "Số chứng từ / Phiếu DV",
-        size: 160,
+        header: headerFilter("soChungTu", "Số chứng từ / Phiếu DV"),
+        size: 165,
         enableResizing: true,
+        headerClassName: "text-left font-semibold",
         cell: (row) => (
           <div className="flex flex-col">
             <span className="font-mono text-xs font-semibold text-foreground select-text">
@@ -60,14 +79,15 @@ export const TimeHorizonCasesTab: React.FC<TimeHorizonCasesTabProps> = ({
       },
       {
         key: "customerName",
-        header: "Khách hàng",
+        header: headerFilter("customerName", "Khách hàng"),
         size: 220,
         enableResizing: true,
+        headerClassName: "text-left font-semibold",
         cell: (row) => (
           <TableText
             text={row.customerName || "Khách lẻ"}
-            tooltip={true}
-            enableCopy={true}
+            tooltip
+            enableCopy
             textClassName="truncate text-foreground font-medium text-xs leading-tight select-text"
             onDetailClick={
               row.customerCode && onOpenCustomerDetail
@@ -82,8 +102,11 @@ export const TimeHorizonCasesTab: React.FC<TimeHorizonCasesTabProps> = ({
       },
       {
         key: "totalAmount",
-        header: "Tổng tiền",
+        header: headerFilter.amount("totalAmount", "Tổng tiền", {
+          align: "right",
+        }),
         size: 130,
+        headerClassName: "text-right font-semibold",
         className: "text-right",
         enableResizing: true,
         cell: (row) => (
@@ -94,8 +117,9 @@ export const TimeHorizonCasesTab: React.FC<TimeHorizonCasesTabProps> = ({
       },
       {
         key: "paidAmount",
-        header: "Đã thu",
+        header: headerFilter.amount("paidAmount", "Đã thu", { align: "right" }),
         size: 120,
+        headerClassName: "text-right font-semibold",
         className: "text-right",
         enableResizing: true,
         cell: (row) => (
@@ -106,8 +130,11 @@ export const TimeHorizonCasesTab: React.FC<TimeHorizonCasesTabProps> = ({
       },
       {
         key: "balanceAmount",
-        header: "Còn nợ",
+        header: headerFilter.amount("balanceAmount", "Còn nợ", {
+          align: "right",
+        }),
         size: 130,
+        headerClassName: "text-right font-semibold",
         className: "text-right",
         enableResizing: true,
         cell: (row) => (
@@ -125,8 +152,11 @@ export const TimeHorizonCasesTab: React.FC<TimeHorizonCasesTabProps> = ({
       },
       {
         key: "completionDate",
-        header: "Ngày hoàn thành",
-        size: 120,
+        header: headerFilter("completionDate", "Ngày hoàn thành", {
+          align: "right",
+        }),
+        size: 130,
+        headerClassName: "text-right font-semibold",
         className: "text-right",
         enableResizing: true,
         cell: (row) => (
@@ -135,8 +165,11 @@ export const TimeHorizonCasesTab: React.FC<TimeHorizonCasesTabProps> = ({
       },
       {
         key: "agingDays",
-        header: "Tuổi nợ",
-        size: 100,
+        header: headerFilter.numeric("agingDays", "Tuổi nợ", {
+          align: "center",
+        }),
+        size: 95,
+        headerClassName: "text-center font-semibold",
         className: "text-center",
         enableResizing: true,
         cell: (row) => (
@@ -146,23 +179,28 @@ export const TimeHorizonCasesTab: React.FC<TimeHorizonCasesTabProps> = ({
         ),
       },
     ],
-    [page, pageSize, onOpenCustomerDetail],
+    [headerFilter, page, pageSize, onOpenCustomerDetail],
   );
 
   return (
-    <div className="flex-1 min-h-[300px] flex flex-col">
+    <div className="w-full min-w-0">
       <DataTable
         items={items}
         columns={columns}
         getRowKey={(r) => r.id}
         loading={isLoading}
         emptyLabel="Không có vụ việc nào trong mốc thời gian này"
+        variant="spreadsheet"
+        enableColumnResizing
+        tableId="garage-horizon-cases-table"
         page={page}
         pageSize={pageSize}
+        pageSizeOptions={[10, 20, 50, 100]}
         total={total}
         totalPages={totalPages}
         onPage={onPageChange}
         onPageSize={onPageSizeChange}
+        containerClassName="max-h-[calc(100vh-280px)] overflow-x-auto overflow-y-auto"
       />
     </div>
   );

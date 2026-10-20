@@ -116,7 +116,11 @@ vi.mock("@/shared/components/ui/Button", () => ({
 }));
 
 vi.mock("@/core/components/ui/Tooltip", () => ({
-  Tooltip: ({ children }: any) => <>{children}</>,
+  Tooltip: ({ content, children }: any) => (
+    <span title={content} aria-label={content}>
+      {children}
+    </span>
+  ),
 }));
 
 vi.mock("@/shared/components/ActionDropdown", () => ({
@@ -279,6 +283,116 @@ describe("InvoiceExportDrawer", () => {
       status: "PAID",
       date_from: "2026-10-01T00:00:00",
       date_to: "2026-10-15T23:59:59",
+      selected_columns: expect.any(Array),
     });
+  });
+
+  it("switches to quarter mode and automatically calculates dateFrom and dateTo", async () => {
+    startExportExcelBackgroundSpy.mockClear();
+
+    render(
+      <InvoiceExportDrawer
+        open={true}
+        onClose={() => {}}
+        direction="IN"
+        buildBaseQuery={() => ({})}
+      />,
+    );
+
+    // Switch to quarter mode
+    const quarterTab = screen.getByText("Theo quý");
+    fireEvent.click(quarterTab);
+
+    // Quarter combobox should now be rendered
+    const combobox = screen.getByTestId("period-combobox");
+    expect(combobox).toBeInTheDocument();
+
+    // Select Q1 2026
+    fireEvent.change(combobox, { target: { value: "2026-Q1" } });
+
+    const datePickers = screen.getAllByTestId(
+      "date-picker",
+    ) as HTMLInputElement[];
+    expect(datePickers[0].value).toBe("2026-01-01");
+    expect(datePickers[1].value).toBe("2026-03-31");
+
+    // Click start export
+    const exportButton = screen.getByText("Xuất Excel");
+    fireEvent.click(exportButton);
+
+    expect(startExportExcelBackgroundSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        direction: "IN",
+        date_from: "2026-01-01T00:00:00",
+        date_to: "2026-03-31T23:59:59",
+      }),
+    );
+  });
+
+  it("renders column selector and toggles columns in export payload", async () => {
+    startExportExcelBackgroundSpy.mockClear();
+    localStorage.clear();
+
+    render(
+      <InvoiceExportDrawer
+        open={true}
+        onClose={() => {}}
+        direction="IN"
+        buildBaseQuery={() => ({})}
+      />,
+    );
+
+    // Column selector and History section are both present
+    expect(screen.getByText("Cột xuất dữ liệu")).toBeInTheDocument();
+    expect(screen.getByText("Lịch sử xuất file")).toBeInTheDocument();
+
+    // PillTabs options are rendered
+    expect(screen.getByText("Theo tháng")).toBeInTheDocument();
+    expect(screen.getByText("Theo quý")).toBeInTheDocument();
+    expect(screen.getByText("Tùy chỉnh")).toBeInTheDocument();
+
+    // Deselect all
+    const deselectButton = screen.getByText("Bỏ chọn");
+    fireEvent.click(deselectButton);
+
+    // Reset default
+    const defaultButton = screen.getByText("Mặc định");
+    fireEvent.click(defaultButton);
+
+    const exportButton = screen.getByText("Xuất Excel");
+    fireEvent.click(exportButton);
+
+    expect(startExportExcelBackgroundSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        direction: "IN",
+        selected_columns: expect.arrayContaining([
+          "invoiceDate",
+          "invoiceNo",
+          "partnerName",
+          "total",
+        ]),
+      }),
+    );
+  });
+
+  it("triggers history refetch when clicking the refresh button in titleExtra", () => {
+    mockRefetch.mockClear();
+
+    render(
+      <InvoiceExportDrawer
+        open={true}
+        onClose={() => {}}
+        direction="IN"
+        buildBaseQuery={() => ({})}
+      />,
+    );
+
+    const refreshButton = screen.getByRole("button", {
+      name: "Làm mới lịch sử",
+    });
+    expect(refreshButton).toBeInTheDocument();
+
+    fireEvent.click(refreshButton);
+    expect(mockRefetch).toHaveBeenCalled();
   });
 });

@@ -3,6 +3,8 @@ import type { TabItem } from "@/shared/components/PageLayout";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { GarageCashflowDrawer } from "../garage-cashflow-drawer/GarageCashflowDrawer";
 import { GarageCashflowTable } from "../garage-cashflow-table/GarageCashflowTable";
+import { GarageCashflowExportDrawer } from "../garage-cashflow-export-drawer/GarageCashflowExportDrawer";
+import { GarageCaseStandaloneDrawer } from "../../GarageCaseStandaloneDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -14,13 +16,16 @@ export interface GarageCashflowListProps {
   tabs?: TabItem[];
   activeTab?: string;
   onTabChange?: (val: string) => void;
+  onOpenCaseDetail?: (caseCode: string) => void;
 }
 
 export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
   tabs,
   activeTab,
   onTabChange,
+  onOpenCaseDetail: onOpenCaseDetailProp,
 }) => {
+  const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
   const [drawerState, setDrawerState] = useState<{
     open: boolean;
     mode: "view" | "edit" | "create";
@@ -39,7 +44,37 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
     voucher: null,
   });
 
-  const canDelete = useHasPermission(ErpResource.GARAGE, ErpAction.DELETE);
+  const [exportState, setExportState] = useState<{
+    open: boolean;
+    tableFilter?: any;
+    filterSummary?: any;
+  }>({
+    open: false,
+  });
+
+  const handleOpenExport = useCallback((filterState: any) => {
+    setExportState({
+      open: true,
+      tableFilter: filterState,
+      filterSummary: {
+        filterCount: filterState?.activeFilterCount || 0,
+        columnFilters: filterState?.serverFilters,
+      },
+    });
+  }, []);
+
+  const canCreate = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.CREATE,
+  );
+  const canUpdate = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.UPDATE,
+  );
+  const canDelete = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.DELETE,
+  );
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
@@ -73,16 +108,36 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
     setDeleteModal({ open: true, voucher: row });
   }, []);
 
+  const handleOpenCaseDetail = useCallback(
+    (caseCode: string) => {
+      if (onOpenCaseDetailProp) {
+        onOpenCaseDetailProp(caseCode);
+      } else {
+        setSelectedCaseCode(caseCode);
+      }
+    },
+    [onOpenCaseDetailProp],
+  );
+
   return (
     <>
       <GarageCashflowTable
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
-        onCreate={handleCreate}
+        onCreate={canCreate ? handleCreate : undefined}
         onView={handleView}
-        onEdit={handleEdit}
+        onEdit={canUpdate ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
+        onOpenCaseDetail={handleOpenCaseDetail}
+        canDelete={canDelete}
+        onExportExcel={handleOpenExport}
+      />
+
+      <GarageCaseStandaloneDrawer
+        isOpen={Boolean(selectedCaseCode)}
+        caseCode={selectedCaseCode}
+        onClose={() => setSelectedCaseCode(null)}
       />
 
       <GarageCashflowDrawer
@@ -90,6 +145,13 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
         onClose={() => setDrawerState((prev) => ({ ...prev, open: false }))}
         initialMode={drawerState.mode}
         voucher={drawerState.voucher}
+      />
+
+      <GarageCashflowExportDrawer
+        open={exportState.open}
+        onClose={() => setExportState((prev) => ({ ...prev, open: false }))}
+        tableFilter={exportState.tableFilter}
+        filterSummary={exportState.filterSummary}
       />
 
       <ConfirmModal

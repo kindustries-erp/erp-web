@@ -31,7 +31,7 @@ src/v2/shared/
     │   ├── v2-tab-panel/                 V2TabPanel (lazy + keepAlive), V2PageTabs.context, useV2ToolbarPortal (slot header)
     │   ├── v2-split-button/              Nút chính + chevron; menu bơm qua renderMenu (molecule không import molecule)
     │   ├── v2-table-selection-chip/      ☑ (N) ▾ ✕; menu bơm qua renderMenu
-    │   ├── v2-view-mode-combobox/        Chọn/tạo/sửa/xóa chế độ xem qua callback (không tự lưu)
+    │   ├── v2-view-mode-combobox/        Trigger + popover: nhóm lọc `filterGroup` (trên) và danh sách chế độ xem (dưới), chỉ UI, không lưu
     │   ├── v2-filter-card/               Card thu gọn/mở cho một cột (icon theo kiểu dữ liệu, chấm active); children chỉ render khi mở
     │   └── v2-filter-panel/              Shell panel lọc: header, reset, đóng, ô tìm cột, chips, extraContent, empty state
     ├── organisms/v2-standard-table/
@@ -41,6 +41,9 @@ src/v2/shared/
     │   .state.hook.ts / .preferences.hook.ts / .view.hook.ts / .scroll.hook.ts / .menu.hook.ts
     │   .options.hook.ts + .filter.hook.ts  Truy vấn options (React Query) cho cột đang mở popup
     │   .toolbar.tsx / .toolbar.cluster.tsx / .toolbar.hook.ts   Cụm nút (portal lên slot header hoặc inline), cột + fullscreen + slot
+    │   .toolbar.type.ts                  V2TableToolbarConfig, V2ViewPreset(State/Storage), V2TableFilterPanelConfig
+    │   .viewmodes.tsx / .viewdialog.tsx  Combobox + hộp thoại tạo/sửa view + ConfirmModal xóa (organism, không ở molecule)
+    │   hooks/.views.hook.ts / .views.sync.hook.ts / .views.dialog.hook.ts   Trạng thái view tùy chỉnh, đồng bộ storage, trạng thái hộp thoại
     │   .fullscreen.hook.ts               Bật/tắt fullscreen (ESC thoát)
     │   .grid.tsx                         Phần <table> (colgroup + header + body)
     │   .filterpanel.tsx / .filterpanel.hook.ts / v2ActiveFilterChips.ts   Panel lọc theo cột: card = V2ColumnHeaderFilterPanel, chips, mở card nào truy vấn options card đó
@@ -53,7 +56,7 @@ src/v2/shared/
 
 Quy tắc tầng đã áp dụng (theo `ui-atomic-refactor`):
 - Molecule **không import molecule khác**: popup dùng primitive `shared/ui` (`Popover`) và `V2Button` (atom) thay vì `V2Popover`/`V2Dropdown`.
-- Molecule **0% API**: `V2ColumnHeaderFilter` nhận `optionsState` qua props; hook React Query nằm ở organism (`V2StandardTable.options.hook.ts`) và chỉ truy vấn cột đang mở popup.
+- Molecule **0% API**: `V2ColumnHeaderFilter` nhận `optionsState` qua props; hook React Query nằm ở organism (`hooks/V2StandardTable.options.hook.ts`) và chỉ truy vấn cột đang mở popup.
 - Không dùng `<button>` thuần trong code bảng: dùng `V2Button`.
 - Hook/logic chỉ organism dùng nằm cạnh organism; chỉ enums/types và `v2TableFormat` ở `shared/`.
 
@@ -101,8 +104,8 @@ const columns = useMemo<V2Column<Order>[]>(() => [
       table: {
         tableId: "in", columns, getRowKey,
         toolbar: {
-          pillTabs: { items, activeKey, onChange },                 // Tất cả / Mới / ...
-          viewModes: { items, activeKey, onSelect, onCreate },      // Tổng quan ▾
+          filterGroup: { title, items, activeKey, onChange, allKey }, // Tất cả / Mới / ... (nằm trong popover chế độ xem)
+          viewModes: { items, activeKey, onSelect },                // Tổng quan ▾ (tạo/sửa/xóa tùy chỉnh do bảng lo)
           bulkActions: [/* V2DropdownGroup[] cho chip (N) */],
           filterPanel: { defaultOpen: false, extraContent: <PageFilters /> },   // panel lọc bên phải
           onRefresh, enableFullscreen: true,
@@ -163,7 +166,7 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 
 ## 4. Chưa làm (đợt sau)
 
-lưu/áp preset chế độ xem (UI đã có, chưa persist), filter panel dạng popover cho mobile, header filter trên mobile, đồng bộ cấu hình cột lên backend (`core_user_preferences`), bảng nhúng trong `V2StandardDrawer`. Chưa migrate trang V1 nào.
+đồng bộ view tùy chỉnh lên backend (hiện lưu localStorage), lưu filter/sort/tìm kiếm vào view, filter panel dạng popover cho mobile, header filter trên mobile, đồng bộ cấu hình cột lên backend (`core_user_preferences`), bảng nhúng trong `V2StandardDrawer`. Chưa migrate trang V1 nào.
 
 ## 5. Kiểm thử
 
@@ -177,7 +180,7 @@ lưu/áp preset chế độ xem (UI đã có, chưa persist), filter panel dạn
 - Chữ trong toolbar, header, empty state và nhãn lọc dùng `V2Text` (atom) thay cho `<span>`/`<p>` thuần; giữ class cũ bằng `className` để không đổi giao diện.
 - Vạch ngăn toolbar dùng atom `V2Divider` (`orientation="vertical"` mặc định).
 - Ô chọn dòng/chọn tất cả (desktop header, desktop cell, mobile card) dùng molecule `V2TableSelectCheckbox` (nhận `checked: boolean | "indeterminate"`, `aria-label` bắt buộc do bên gọi truyền i18n).
-- Không thay `<table>` trong `V2StandardTable.grid.tsx` bằng primitive `Table` của `shared/ui`: primitive bọc thêm `div.overflow-auto`, làm mất sticky header.
+- Không thay `<table>` trong `grid/V2StandardTable.grid.tsx` bằng primitive `Table` của `shared/ui`: primitive bọc thêm `div.overflow-auto`, làm mất sticky header.
 
 ## 6. V2SubtotalSummaryCell (molecule `v2-subtotal-summary-cell/`)
 
@@ -188,10 +191,10 @@ lưu/áp preset chế độ xem (UI đã có, chưa persist), filter panel dạn
 ## 7. Hàng tổng (summary row) của V2StandardTable
 
 - Khai báo trên cột: `V2Column.summary = { variant: "qty" | "amount" | "count", accessor?, total?, metricTitle?, unit? }`. Cột không có `summary` để ô trống.
-- Desktop only: hàng tổng là `<tfoot>` cuối bảng (`V2StandardTable.summary.row.tsx`), dùng `V2SubtotalSummaryCell`. Mobile không render.
-- Ô của hàng tổng `sticky bottom-0` với nền `bg-surface`: bảng ngắn thì hàng tổng nằm sát dòng cuối, bảng phải cuộn thì dính đáy vùng cuộn.
+- Desktop only: hàng tổng là `<tfoot>` cuối bảng (`summary/V2StandardTable.summary.row.tsx`), dùng `V2SubtotalSummaryCell`. Mobile không render.
+- Ô của hàng tổng `sticky bottom-0` với nền kính `V2_GLASS_SURFACE_CLASS` (cùng nền và `backdrop-blur-[16px]` với header, hằng số định nghĩa trong `V2StandardTable.header.tsx`): bảng ngắn thì hàng tổng nằm sát dòng cuối, bảng phải cuộn thì dính đáy vùng cuộn và dòng bên dưới mờ qua nền kính.
 - Popover của ô tổng (`V2SubtotalSummaryCell`) rộng 320px, giữ glass/blur; nhãn `truncate`, giá trị `shrink-0 whitespace-nowrap` để không tràn.
-- Giá trị (`V2StandardTable.summary.ts` + `V2StandardTable.summary.hook.ts`):
+- Giá trị (`summary/V2StandardTable.summary.ts` + `summary/V2StandardTable.summary.hook.ts`):
   - `mode="client"`: tự tính từ toàn bộ dòng đã lọc/sắp xếp (subtotal trang, lũy kế, tổng).
   - `mode="server"`: subtotal trang lấy từ `items`; **tổng toàn bộ phải truyền qua `summary.total`** (từ API); **lũy kế được bảng tự tích lũy theo từng trang**, reset khi đổi filter/sort/pageSize. Trang chưa đi qua thì không có lũy kế.
 - Story: `V2StandardTable` → `WithSummary` (client) và `WithSummaryServer`; template → `V2ModulePage` → `ListAndDashboard`.
@@ -203,3 +206,34 @@ lưu/áp preset chế độ xem (UI đã có, chưa persist), filter panel dạn
 - Chế độ `server` với hàng tổng: tổng toàn bộ do hook trả về trong `summaries` của `useData`, khung gắn vào `summary.total` của cột.
 - Bảng nhúng trong drawer: xem `v2-foundation` mục 5.
 
+## 9. Playground trên Storybook (nguồn prop là type gốc)
+- Story `Playground` (`playground/V2StandardTable.playground.stories.tsx`, `V2ModulePage.playground.stories.tsx`) chỉ khai báo control cho prop lấy từ `Pick<V2StandardTableProps<T>, ...>` / `Pick<V2ModulePageProps<T>, ...>`, nên tên prop không thể lệch khỏi type gốc.
+- Options union lấy từ mảng runtime trong type gốc: `V2_TABLE_MODES` (`V2StandardTable.type.ts`) cho `mode`, `V2_MODULE_PAGE_TAB_VARIANTS` (`V2ModulePage.type.ts`) cho `tabVariant`. Đổi giá trị union thì sửa mảng này.
+- Công tắc toolbar (`show<Key>`) suy ra từ `keyof V2TableToolbarConfig` qua `playground/V2StandardTable.playground.toolbar.tsx`; `DEMO_TOOLBAR` khai báo kiểu `Required<V2TableToolbarConfig>`, nên thêm key mới vào type gốc mà thiếu demo thì tsc báo lỗi.
+- Công tắc `showSummary` gắn `summary` cho cột `amount`, giống story `With Summary`; ở `mode="server"` tổng lấy từ `GRAND_TOTAL`.
+- Nhãn control trong Storybook trùng tên arg (không đặt `name` tiếng Việt): `showSummary`, `keepRows`, và các công tắc toolbar `show<Key>` (ví dụ `showFilterGroup`).
+- Dữ liệu Playground đi qua React Query thật (client cũng có độ trễ 400ms). Công tắc `keepRows` ("Giữ dòng cũ khi tải"): bật thì khi đổi trang/làm mới bảng giữ dòng cũ (làm mờ); tắt thì hiện skeleton trong lúc chờ. Nút "Làm mới" của toolbar gọi `refetch` thật.
+- Story `PlaygroundMobile` dùng `parameters.viewport.defaultViewport = "mobile1"` để xem nhánh mobile (thẻ).
+
+## 10. Trạng thái tải và rỗng
+- Khi `loading` và không có dòng: desktop hiện các dòng skeleton theo từng cột đang hiển thị (`V2TableSkeletonRows`, `skeleton/V2TableSkeletonRows.tsx`, dùng `V2Skeleton`); mobile hiện 3 thẻ skeleton (`V2TableSkeletonCards`). Chữ "Đang tải dữ liệu..." giữ dưới dạng `sr-only` với `role="status"` (chỉ một phần tử).
+- Khi đang tải lại mà còn dòng: giữ dòng cũ, làm mờ (`opacity-60`), không chuyển sang skeleton.
+- Khi không tải và không có dòng: hiện `emptyLabel` (hoặc "Không có dữ liệu").
+
+
+## 11. Cấu trúc thư mục (cập nhật, mỗi component một folder)
+- Gốc: `V2StandardTable.tsx` (switcher), `V2StandardTable.type.ts`, `index.ts`, stories và test tổng.
+- Component con, mỗi folder có `index.ts`: `desktop/`, `mobile/`, `header/`, `body/`, `grid/`, `toolbar/` (gồm cluster), `filterpanel/`, `summary/`, `skeleton/` (hai component một file).
+- `hooks/`: hook state/cấu hình bảng. `utils/`: logic thuần (filter, sort, query, preferences). `mocks/`: dữ liệu demo và fixture test (không import từ production). `playground/`: story Playground và helper.
+- Test co-located cạnh component; `mocks/V2StandardTable.table-harness.tsx` bọc bảng TanStack thật để test body/summary/skeleton. Fixture riêng cho chế độ xem: `mocks/V2StandardTable.views.fixture.ts` (`renderViews`).
+
+## 12. Chế độ xem tùy chỉnh và nhóm lọc (đã thay pill tabs)
+
+- **Pill tabs đã bỏ** (`toolbar.pillTabs` không còn). Nhóm lọc nhanh là `toolbar.filterGroup`, hiển thị trong popover chế độ xem dưới tiêu đề "Bộ lọc dữ liệu"; trigger ghép nhãn `"Tổng quan • Mới"` khi filter khác `allKey` (mặc định `"all"`). Chỉ có `filterGroup` (không có `viewModes`) thì trigger chỉ hiện nhãn filter.
+- **Tạo/sửa/xóa do bảng lo**: `toolbar.viewModes` chỉ nhận `items` (view hệ thống, luôn coi là `isSystem`), `activeKey`, `onSelect`. View tùy chỉnh (tên + cột hiện/ẩn + thứ tự) lưu ở `V2ViewPresetStorage`, mặc định `localStorageViewPresets` với khóa `erp_v2_table_views:<tableId>` (try/catch, parse phòng thủ). Prop `viewPresetStorage` để thay adapter.
+- **Chọn view tùy chỉnh**: bảng gọi `prefs.applyView` (cột + thứ tự, bỏ key lạ, không để ẩn hết cột) rồi gọi `viewModes.onSelect(baseKey)`. `baseKey` là view hệ thống nền lúc tạo. Chọn view hệ thống chỉ gọi `onSelect`, không đụng cột.
+- **Nhớ lựa chọn**: bảng ghi `activeKey` (view đang chọn), `filterKey` (filter group) vào storage khi đổi, **không gọi callback lúc mount**. Consumer phải khôi phục state ban đầu bằng `readV2ViewState(tableId)` (`utils/v2ViewPresets.ts`) rồi đưa vào `filterGroup.activeKey` và `viewModes.activeKey`. Nếu consumer không làm vậy, bảng sẽ bỏ lựa chọn tùy chỉnh (vì `activeKey` không khớp `baseKey`).
+- **Mobile**: `viewModes` bị bỏ, không có hộp thoại view; `filterGroup` vẫn dùng được và được nhớ.
+- **Trang hóa đơn** (`src/v2/modules/finance-invoice`): hai bảng IN và OUT **mỗi bảng lưu view riêng** (theo `tableId` `invoice-shape-IN|OUT`, giống cách lưu cột). Trang khôi phục state ban đầu từ bảng IN. Một view tạo ở bảng IN sẽ không hiện ở bảng OUT. Dùng chung một khóa lưu cho cả hai sẽ làm hai bảng ghi đè dữ liệu của nhau.
+- Hộp thoại (`V2ViewConfigDialog`): tên bắt buộc, không trùng (không phân biệt hoa thường), ít nhất 1 cột hiển thị (cột `canHide: false` luôn tính là hiển thị). Xóa view có `V2ConfirmModal` variant `danger`; xóa view đang chọn thì quay về view hệ thống đầu tiên.
+- i18n: `v2.table.filterGroupTitle`, `viewModeSection`, `createViewTitle`, `editViewTitle`, `viewDeleteTitle`, `viewDeleteConfirm`, `viewNameLabel`, `viewNamePlaceholder`, `viewColumnsLabel`, `selectAllColumns`, `clearAllColumns`, `viewNameRequired`, `viewNameDuplicate`, `viewColumnsRequired` (vi + en). Nút Lưu/Hủy dùng `v2.common.save` / `v2.common.cancel`.

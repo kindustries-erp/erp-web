@@ -1,11 +1,8 @@
 import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 import { garageCashflowApi } from "../../../api/garageCashflowApi";
-import type {
-  GarageCashflowVoucher,
-  UpdateGarageCashflowVoucherDto,
-} from "../../../api/garageCashflowApi";
+import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
+import { useGarageCashflowMutations } from "./GarageCashflowTable.mutations";
 
 export const getDefaultPageSize = (): number => {
   if (typeof window !== "undefined" && window.innerHeight >= 900) {
@@ -22,14 +19,26 @@ export function useGarageCashflowTable() {
     {},
   );
   const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
+  const [dateRanges, setDateRanges] = useState<
+    Record<string, { from?: string; to?: string }>
+  >({});
 
-  const queryClient = useQueryClient();
+  const serverFilters = useMemo(() => {
+    const combined: Record<string, string[]> = { ...columnFilters };
+    Object.entries(dateRanges).forEach(([key, range]) => {
+      if (range?.from || range?.to) {
+        combined[key] = [`${range.from || ""}..${range.to || ""}`];
+      }
+    });
+    return combined;
+  }, [columnFilters, dateRanges]);
+
   const queryKey = [
     "garage-cashflow-list",
     page,
     pageSize,
     sorts,
-    columnFilters,
+    serverFilters,
     columnSearch,
   ];
 
@@ -40,8 +49,8 @@ export function useGarageCashflowTable() {
         page,
         pageSize,
         sorts: sorts && sorts.length > 0 ? sorts.join(",") : undefined,
-        column_filters: Object.keys(columnFilters).length
-          ? JSON.stringify(columnFilters)
+        column_filters: Object.keys(serverFilters).length
+          ? JSON.stringify(serverFilters)
           : undefined,
         column_search: Object.keys(columnSearch).length
           ? JSON.stringify(columnSearch)
@@ -49,35 +58,8 @@ export function useGarageCashflowTable() {
       }),
   });
 
-  const createMutation = useMutation({
-    mutationFn: garageCashflowApi.create,
-    onSuccess: () => {
-      toast.success("Tạo phiếu thu/chi thành công");
-      queryClient.invalidateQueries({ queryKey: ["garage-cashflow-list"] });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateGarageCashflowVoucherDto;
-    }) => garageCashflowApi.update(id, data),
-    onSuccess: () => {
-      toast.success("Cập nhật phiếu thu/chi thành công");
-      queryClient.invalidateQueries({ queryKey: ["garage-cashflow-list"] });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: garageCashflowApi.delete,
-    onSuccess: () => {
-      toast.success("Xóa phiếu thu/chi thành công");
-      queryClient.invalidateQueries({ queryKey: ["garage-cashflow-list"] });
-    },
-  });
+  const { createMutation, updateMutation, deleteMutation } =
+    useGarageCashflowMutations();
 
   const setSort = (key: string, state: "asc" | "desc" | "none") => {
     setSorts((prev) => {
@@ -85,6 +67,23 @@ export function useGarageCashflowTable() {
       if (state === "asc") return [...filtered, key];
       if (state === "desc") return [...filtered, `-${key}`];
       return filtered;
+    });
+    setPage(1);
+  };
+
+  const toggleSort = (field: string) => {
+    setSorts((prev) => {
+      const next = [...prev];
+      const ascIdx = next.indexOf(field);
+      const descIdx = next.indexOf(`-${field}`);
+      if (ascIdx >= 0) {
+        next[ascIdx] = `-${field}`;
+      } else if (descIdx >= 0) {
+        next.splice(descIdx, 1);
+      } else {
+        next.push(field);
+      }
+      return next;
     });
     setPage(1);
   };
@@ -99,6 +98,16 @@ export function useGarageCashflowTable() {
     setPage(1);
   };
 
+  const setDateRange = (key: string, from?: string, to?: string) => {
+    setDateRanges((prev) => ({
+      ...prev,
+      [key]: { from: from || "", to: to || "" },
+    }));
+    setPage(1);
+  };
+
+  const getDateRange = (key: string) => dateRanges[key] || { from: "", to: "" };
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     Object.values(columnFilters).forEach((vals) => {
@@ -107,12 +116,16 @@ export function useGarageCashflowTable() {
     Object.values(columnSearch).forEach((val) => {
       if (val && val.trim().length > 0) count += 1;
     });
+    Object.values(dateRanges).forEach((range) => {
+      if (range?.from || range?.to) count += 1;
+    });
     return count;
-  }, [columnFilters, columnSearch]);
+  }, [columnFilters, columnSearch, dateRanges]);
 
   const clearAllFilters = () => {
     setColumnFilters({});
     setColumnSearch({});
+    setDateRanges({});
     setPage(1);
   };
 
@@ -127,7 +140,7 @@ export function useGarageCashflowTable() {
     pageParam?: number;
     pageSize?: number;
   }) => {
-    const filtersWithoutCurrent = { ...columnFilters };
+    const filtersWithoutCurrent = { ...serverFilters };
     delete filtersWithoutCurrent[columnKey];
     const res = await garageCashflowApi.getOptions(
       columnKey,
@@ -149,6 +162,7 @@ export function useGarageCashflowTable() {
     data: (data?.data ?? []) as GarageCashflowVoucher[],
     total: data?.total ?? 0,
     totalPages: data?.totalPages ?? 0,
+    totals: data?.totals,
     isLoading,
     page,
     setPage,
@@ -156,10 +170,15 @@ export function useGarageCashflowTable() {
     setPageSize,
     sorts,
     setSort,
+    toggleSort,
     columnFilters,
     setColumnFilter,
     columnSearch,
     setColumnSearch: setColumnSearchVal,
+    dateRanges,
+    setDateRange,
+    getDateRange,
+    serverFilters,
     activeFilterCount,
     clearAllFilters,
     refetch,

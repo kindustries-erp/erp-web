@@ -251,6 +251,7 @@ export interface ErpInvoiceListParams {
   column_search?: string;
   column_filters?: string;
   unlinked_po_id?: string;
+  selected_columns?: string[];
 }
 
 export interface ErpInvoiceTotals {
@@ -969,7 +970,13 @@ export const erpInvoicesCoreApi = {
   },
 
   bulkDownloadFiles: async (payload: {
-    query: { date_from?: string; date_to?: string; direction?: string };
+    query: {
+      date_from?: string;
+      date_to?: string;
+      direction?: string;
+      status?: string;
+      search?: string;
+    };
     types: string[];
   }): Promise<Blob> => {
     try {

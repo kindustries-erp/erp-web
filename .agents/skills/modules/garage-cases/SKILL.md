@@ -30,7 +30,7 @@ src/modules/garage/
 │   │   │   ├── GarageCasesTable.type.ts # Type contract & ColumnContext
 │   │   │   ├── GarageCasesTable.columns.tsx # Aggregator kết hợp các nhóm cột
 │   │   │   ├── GarageCasesTable.date-columns.tsx # Nhóm 5 cột ngày tháng
-│   │   │   ├── GarageCasesTable.general-columns.tsx # Nhóm 12 cột thông tin chung
+│   │   │   ├── GarageCasesTable.general-columns.tsx # Nhóm 11 cột thông tin chung (tích hợp Exclamation Tooltip phân loại KGara trong cột ERP)
 │   │   │   ├── GarageCasesTable.progress-columns.tsx # Nhóm 4 cột tiến độ thu/chi
 │   │   │   ├── GarageCasesTable.financial-columns.tsx # Nhóm 10 cột tài chính P&L
 │   │   │   └── GarageCasesTable.test.tsx # Unit tests kiểm tra 23 cột khớp view presets
@@ -71,7 +71,7 @@ src/modules/garage/
 │   ├── vi.ts                        # Bản dịch tiếng Việt đầy đủ
 │   └── en.ts                        # Bản dịch tiếng Anh đầy đủ
 ├── pages/
-│   ├── GarageCases.tsx              # Trang chính Quản lý Phiếu dịch vụ
+│   ├── GarageCases.tsx              # Trang chính Quản lý Phiếu dịch vụ (nhãn UI từ 2026-10-17: "Hoạt động garage")
 │   ├── GarageCustomers.tsx          # Trang Quản lý Công nợ Khách hàng (SpreadsheetPageTemplate)
 │   ├── GarageDashboard.tsx          # Dashboard tổng quan hoạt động Garage
 │   ├── GaragePayables.tsx           # Sổ công nợ phải trả Garage (legacy)
@@ -103,10 +103,15 @@ src/modules/garage/
   5. `licensePlate`: Biển số xe (140px, font mono kèm icon Car).
   6. `customerCode` & `customerName`: Mã & Tên khách hàng.
   7. `doanhThu`, `chiPhi`, `loiNhuan`, `margin`: Nhóm chỉ số tài chính (căn phải, định dạng tiền tệ / %).
-  8. `classification`: Phân loại nghiệp vụ (căn giữa, badge tương tác).
+  8. `classification`: Phân loại ERP (170px, căn giữa, dropdown đổi nhanh tích hợp button icon exclamation kèm Tooltip hiển thị Phân loại KGara khi hover).
   9. `statusName`: Trạng thái dịch vụ (căn giữa, `KgaraCaseStatusBadge`).
   10. `collectionProgress` & `costProgress`: Tiến độ thu/chi dòng tiền.
 - **Table Headers**: 100% căn giữa (`text-center` / `align="center"`).
+- **Bộ lọc Cột Ngày (`DateRangeColumnSlot`)**: Đã được nâng cấp chuẩn kiến trúc Molecule L2 (`/ui-atomic-refactor`, folder-per-component `< 140 LoC`), tích hợp đầy đủ:
+  - **Hàng 1 (`Chọn nhanh`)**: DropdownMenu các presets động (*Hôm nay*, *Hôm qua*, *Tháng này*, *Tháng trước*, *Quý này*, *Quý trước*, *Năm nay*, *Tất cả*).
+  - **Hàng 2 (`Kỳ`)**: Combobox chọn nhanh 24 tháng gần nhất (`PERIOD_OPTS`) có ô tìm kiếm chuẩn như Drawer Xuất Excel.
+  - **Hàng 3 & 4 (`Từ ngày` / `Đến ngày`)**: Hai ô `DatePicker` độc lập, đồng bộ 2 chiều trơn tru với cả 2 hàng trên.
+  - **Bảo vệ footer duy nhất**: Bắt buộc cấu hình `hideFilter: true` và `hideFooter: true` (đồng thời được bảo vệ bởi cơ chế tự động fallback `effectiveHideFooter = hideFooter ?? (Boolean(dateRangeSlot) && hideFilter)` trong `TableColumnHeaderFilter`) để ngăn ngừa lặp đôi button "Xóa bộ lọc" và "Áp dụng".
 - **Cột Số, Tiền tệ & Biên LN**: Căn phải (`text-right font-semibold tabular-nums`). Số 0 hiển thị dấu gạch ngang `—`.
 - **Cột Ngày tháng & Thời gian**: Căn phải (`text-right`).
 - **Cột Trạng thái & Cột Bảo hiểm**: Căn giữa (`text-center`). Cột Bảo hiểm chỉ hiển thị icon khiên `ShieldCheck` neutral cho xe có bảo hiểm, `—` cho xe không bảo hiểm.
@@ -171,5 +176,46 @@ src/modules/garage/
 - Cho phép người dùng tạo chế độ xem cá nhân hóa (Custom View), đổi tên, chọn nhanh bộ cột, sắp xếp thứ tự hiển thị và lưu trữ bền vững vào App Setting (`core_user_preferences`) lẫn LocalStorage cache.
 - Tích hợp `ViewModeCombobox` dùng chung (`src/shared/components/ViewModeCombobox/ViewModeCombobox.tsx`) với đầy đủ các thao tác Chọn nhanh, Chỉnh sửa (Pencil) và Xóa (Trash).
 
+## 6. RBAC Tách Công Nợ khỏi Vụ Việc
+
+- `GARAGE` (`garage`) dành cho màn hình vụ việc và các thao tác chỉnh sửa case.
+- `GARAGE_DEBTS` (`garage_debts`) dành cho trang công nợ, analytics, danh sách phải thu/phải trả và menu debts.
+- `GaragePartners` là page gate: user chỉ có `GARAGE_DEBTS:READ` vẫn truy cập được debts; thiếu quyền render `Forbidden`.
+- `GARAGE_CASHFLOW` tiếp tục kiểm soát riêng tab và bảng thu chi xưởng.
+- Navigation Garage render từng item theo permission độc lập; không dùng `GARAGE:READ` làm điều kiện bắt buộc cho debts.
+- Test RBAC co-located tại `GaragePartners.test.tsx`, `GarageNavSection.test.tsx` và `SidebarNav.rbac.test.tsx`.
 
 
+
+---
+
+## 7. Thuộc tính Mặc định vs Tùy chỉnh trong Drawer (từ 2026-10-14)
+
+- `GarageCaseDefaultAttributesSection`: phân loại + 2 cờ loại trừ (built-in, lưu cột `kgara_cases`). Dropdown phân loại lấy **hoàn toàn từ API categories** (value = category id, lọc `isActive !== false`); không còn fallback hard-code (hằng `GARAGE_CASE_CLASSIFICATIONS` chỉ còn dùng cho màu/nhãn badge).
+- `ModuleEntityCustomFieldsSection`: thuộc tính tùy chỉnh. `useGarageCaseDrawerLogic` khởi tạo/so sánh draft bằng `extractCaseCustomValues` (`utils/garageCaseCustomValues.ts`) từ `custom.byCode` + `attributeValues`, khóa theo `attrDefId`; lưu chỉ gửi `customAttributes` một lần (bỏ `attributes`).
+- Cần API trả `custom.byCode`: deploy **API trước, web sau**.
+- Trang `/custom-fields`: nút xóa thuộc tính hệ thống đã ẩn; category có `semanticKey` bị server chặn xóa (409).
+
+### 7.1. Draft phân loại (2026-10-14)
+- `useDraftCategorySelection` (`components/drawer/hooks/`): state nháp `categoryId` + `classification`. `setDraftCategoryId(null)` xóa luôn `classification` nháp; `reset` dùng cho khởi tạo/Hủy.
+- `useUpdateGarageCaseConfig` invalidate thêm `["garage-case-code"]` để drawer không giữ dữ liệu cũ sau khi đổi phân loại ở danh sách.
+
+## 8. Xuất Excel nền (cases & công nợ) — lớp dùng chung `shared/export-jobs`
+
+Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến độ SSE → tự tải khi xong → lịch sử 24 giờ tải lại. Lớp dùng chung nằm ở `src/shared/export-jobs/` (không phụ thuộc garage):
+- `createExportProgressStore()` — mỗi luồng 1 store zustand (cases, công nợ KH, công nợ NCC) trong `modules/garage/export/garageExportScopes.ts`.
+- `useBackgroundExportProgress(scope, store, enabled)` — kết nối SSE (`fetchEventSource` + Bearer) và `downloadReadyFile`.
+- `useBackgroundExport({ scope, useStore, open, messages })` — `useMutation` tạo job (body đúng DTO API, `forbidNonWhitelisted`), `useQuery` lịch sử (poll 10s khi SSE mất), tự tải chỉ job do phiên này tạo, tái dùng file (`reused`) tải ngay.
+- `ExportModeSelector` (`by-period` | `by-current-filter`), `ExportHistoryTable` (nhãn truyền qua props, i18n ở `garage:exportJobs.*`).
+- `exportPeriod.ts` (hàm thuần, có test biên: tuần ISO vắt năm, tháng 2 nhuận, quý) + `useExportPeriod` + `ExportPeriodPicker`: tab **Tuần | Tháng | Quý | Tùy chỉnh**; tuần = 12 tuần gần nhất (thứ Hai–Chủ nhật), tháng = 24 tháng, quý = 3 năm; chỉ tab Tùy chỉnh mở khóa ô ngày. Kết quả luôn là `dateFrom/dateTo` (`YYYY-MM-DD`) nên payload API không đổi.
+- Drawer cases và công nợ **dùng chung bố cục** qua `modules/garage/export/GarageExportSections.tsx` (`GarageExportModeAndPeriod`, `GarageExportStartButton`, `GarageExportHistoryPanel`): `layout="2-columns"`, trái = lịch sử, phải = chế độ + kỳ + nút Xuất. Cases thêm nhóm "Loại ngày / Phân loại / Trạng thái" (`GarageCaseExportExtraFields`, chỉ ở chế độ theo kỳ); công nợ thêm PillTabs đối tượng KH/NCC, mặc định Tùy chỉnh từ `2026-07-01` đến hôm nay.
+- Invoice **chưa** chuyển sang lớp này (vẫn dùng `useInvoiceExportProgress` + `useInvoiceExportProgressStore`); có thể gộp sau.
+
+**Cases**: drawer xuất là `GarageExportDrawer` (dùng chung với tab Tổng quan, Combobox Loại báo cáo, mặc định `cases-list`; nhánh cases vẫn dùng `useGarageCaseExportLogic` và đặt các trường riêng (loại ngày / phân loại / trạng thái / chi nhánh) vào slot của `GarageExportConditionSection` qua `GarageCaseExportConditionFields`) và nhận `tableQuery` (từ `useGarageCasesTable().exportQuery`: `date_from/date_to` = `caseDate`, `filtersStr`, `sorts`) qua `GarageCasesTable.onExportExcel(query)` → `GarageCases` mở drawer qua `useGarageHeaderActions().openExport` (`GarageHeaderActionDrawers` render cả drawer đồng bộ + drawer xuất). Dropdown của nút chính "Đồng bộ" do `buildGarageHeaderActions` dựng (`buildGarageCaseCreateActions` chỉ còn là wrapper), dùng chung với tab Tổng quan. Chế độ `by-current-filter` chỉ hiện khi có `tableQuery`; chi nhánh gửi qua header `x-greenway-branch-id` (không đưa vào body). Lịch sử localStorage cũ đã bỏ, thay bằng lịch sử server.
+
+**Công nợ**: `GarageDebtsExportDrawer` (đối tượng KH/NCC, kỳ mặc định từ `GARAGE_DEBT_BASELINE_DATE = 2026-07-01`) nhận `context` = `buildGarageDebtsExportContext(kind, listHook)` do `GarageDebtsTable`/`GaragePayablesTable` truyền qua `onOpenExportDrawer(context)`. Đổi đối tượng khác bảng đang mở thì tự về `by-period`. CSV client-side (`*.export.ts`) đã gỡ.
+
+
+## Đổi nhãn điều hướng (cập nhật 2026-10-17)
+- Nhãn UI của màn hình `garage-cases` đổi từ "Phiếu dịch vụ" thành **"Hoạt động garage"** (EN: "Garage Activities") ở sidebar (`nav.items.garageCases`), breadcrumb, tab `tabs.cases`, tiêu đề `cases.title`, nhãn tổng hợp `cases.summary.items`, command palette. Route `garage-cases` và key i18n giữ nguyên. Chuỗi nghiệp vụ như "Phiếu dịch vụ gần đây", "Phiếu dịch vụ Garage (RO)" giữ nguyên.
+- Thứ tự mục sidebar GARAGE không đổi: Thu chi garage → Hoạt động garage → Công nợ garage → Chi phí vận hành Garage.

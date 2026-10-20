@@ -417,6 +417,19 @@ describe("applyGarageCasesTableState", () => {
       expect(resPlate).toHaveLength(1);
       expect(resPlate[0].id).toBe("2");
     });
+
+    it("prioritizes specific columnFilters over columnSearch to prevent double-filtering", () => {
+      // Giả sử người dùng chọn checkbox caseCode là A001 (id 1)
+      // nhưng trong searchbox trước đó còn sót từ khóa "30A-22222" (biển số của id 2)
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: { caseCode: "30A-22222" },
+        columnFilters: { caseCode: ["A001"] },
+      });
+      // Vẫn phải trả về item 1 vì checkbox A001 là lựa chọn cụ thể có quyền ưu tiên
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+    });
   });
 
   describe("extractPhaiThuKhachHang & extractPhaiThuBaoHiem", () => {

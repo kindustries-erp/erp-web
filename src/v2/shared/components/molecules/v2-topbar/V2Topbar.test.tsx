@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import React from "react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { V2Topbar } from "./V2Topbar";
 
 describe("V2Topbar Molecule", () => {
   beforeEach(() => {
     act(() => {
-      useAppStore.getState().setLocale("vi");
+      useV2LocaleStore.getState().setLocale("vi");
     });
   });
 

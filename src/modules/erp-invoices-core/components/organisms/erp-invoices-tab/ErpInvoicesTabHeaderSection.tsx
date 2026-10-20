@@ -12,9 +12,9 @@ import {
   Settings,
   Building2,
   FileCheck2,
+  FileText,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { PillTabs } from "@/shared/components/PillTabs";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
@@ -51,6 +51,7 @@ export interface InvoiceHeaderSectionProps {
   handleOpenInternal: (inv: any, mode?: "view" | "edit", tab?: string) => void;
   handleDownload: (id: string, type: "pdf" | "xml") => Promise<void>;
   handleExportExcel: () => void;
+  handleExportPdf: () => void;
   onOpenSync: () => void;
   onOpenSyncAdvanced?: () => void;
   onOpenPortalAuth: () => void;
@@ -97,6 +98,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
   handleOpenInternal,
   handleDownload,
   handleExportExcel,
+  handleExportPdf,
   onOpenSync,
   onOpenSyncAdvanced,
   onOpenPortalAuth,
@@ -212,21 +214,6 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
 
   const viewTabsNode = !isDrawer ? (
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
-      <PillTabs
-        className="w-full sm:w-auto shrink-0"
-        size="sm"
-        items={[
-          { value: "all", label: t("tabAll", "Tất cả") },
-          { value: "new", label: t("tabNew", "Mới") },
-          { value: "replacement", label: t("tabReplacement", "Thay thế") },
-          { value: "adjustment", label: t("tabAdjustment", "Điều chỉnh") },
-        ]}
-        value={activeTaxPresetKey}
-        onValueChange={handleTaxTabChange}
-      />
-
-      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
-
       <InvoiceViewModeCombobox
         presets={presets || columnViewPresetsHook.presets}
         activePresetKey={effectiveActivePresetKey}
@@ -234,6 +221,23 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
         onCreateView={onOpenCreateView}
         onEditView={onOpenViewConfig}
         onDeleteView={onDeleteViewPreset}
+        filterGroup={{
+          title: t("taxCategory", { defaultValue: "Loại hóa đơn thuế" }),
+          value: activeTaxPresetKey,
+          onChange: handleTaxTabChange,
+          items: [
+            { value: "all", label: t("tabAll", { defaultValue: "Tất cả" }) },
+            { value: "new", label: t("tabNew", { defaultValue: "Mới" }) },
+            {
+              value: "replacement",
+              label: t("tabReplacement", { defaultValue: "Thay thế" }),
+            },
+            {
+              value: "adjustment",
+              label: t("tabAdjustment", { defaultValue: "Điều chỉnh" }),
+            },
+          ],
+        }}
       />
     </div>
   ) : undefined;
@@ -437,6 +441,11 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
             icon: <Download className="w-4 h-4 text-green-600" />,
             onClick: handleExportExcel,
           },
+          {
+            label: t("exportPdf", "Xuất PDF"),
+            icon: <FileText className="w-4 h-4 text-red-600" />,
+            onClick: handleExportPdf,
+          },
         ],
       },
       ...(canEditInvoice
@@ -492,6 +501,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
       direction,
       canEditInvoice,
       handleExportExcel,
+      handleExportPdf,
       onOpenPortalAuth,
       openCustomFieldsDrawer,
     ],

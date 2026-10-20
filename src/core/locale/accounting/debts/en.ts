@@ -12,6 +12,7 @@ export const debtsEn = {
     overview: "Overview",
     customers: "Customers",
     suppliers: "Suppliers",
+    cashflow: "Garage Cashflow",
   },
 
   dashboard: {

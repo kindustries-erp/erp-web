@@ -33,7 +33,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "dashboard",
     sectionId: "overview",
-    labelKey: "nav.items.dashboard",
+    labelKey: "v2.nav.items.dashboard",
     fallback: "Tổng quan",
     icon: LayoutDashboard,
     href: "/v2",
@@ -41,7 +41,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "sales-orders",
     sectionId: "sales",
-    labelKey: "nav.items.erpSalesOrders",
+    labelKey: "v2.nav.items.erpSalesOrders",
     fallback: "Đơn bán hàng",
     icon: Boxes,
     href: "/v2/sales-orders",
@@ -49,7 +49,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "customers",
     sectionId: "sales",
-    labelKey: "nav.items.customers",
+    labelKey: "v2.nav.items.customers",
     fallback: "Khách hàng",
     icon: Users,
     href: "/v2/customers",
@@ -57,7 +57,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "after-sales",
     sectionId: "sales",
-    labelKey: "nav.items.afterSales",
+    labelKey: "v2.nav.items.afterSales",
     fallback: "Sau bán hàng & Bảo hành",
     icon: Shield,
     href: "/v2/after-sales",
@@ -65,7 +65,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "purchasing-orders",
     sectionId: "purchasing",
-    labelKey: "nav.items.purchasing",
+    labelKey: "v2.nav.items.purchasing",
     fallback: "Mua hàng",
     icon: FileText,
     href: "/v2/purchasing",
@@ -73,7 +73,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "suppliers",
     sectionId: "purchasing",
-    labelKey: "nav.items.suppliers",
+    labelKey: "v2.nav.items.suppliers",
     fallback: "Nhà cung cấp",
     icon: Building2,
     href: "/v2/suppliers",
@@ -81,7 +81,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "inventory-stock",
     sectionId: "inventory",
-    labelKey: "nav.items.erpInventoryStock",
+    labelKey: "v2.nav.items.erpInventoryStock",
     fallback: "Tồn kho thực tế",
     icon: Package,
     href: "/v2/inventory",
@@ -89,7 +89,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "inventory-vouchers",
     sectionId: "inventory",
-    labelKey: "nav.items.erpInventoryVouchers",
+    labelKey: "v2.nav.items.erpInventoryVouchers",
     fallback: "Chứng từ kho",
     icon: PackageCheck,
     href: "/v2/inventory-vouchers",
@@ -97,7 +97,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "bom",
     sectionId: "manufacturing",
-    labelKey: "nav.items.erpBom",
+    labelKey: "v2.nav.items.erpBom",
     fallback: "Định mức BOM",
     icon: Layers,
     href: "/v2/bom",
@@ -105,7 +105,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "production",
     sectionId: "manufacturing",
-    labelKey: "nav.items.erpProduction",
+    labelKey: "v2.nav.items.erpProduction",
     fallback: "Lệnh sản xuất",
     icon: Factory,
     href: "/v2/production",
@@ -113,7 +113,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "invoices",
     sectionId: "accounting",
-    labelKey: "nav.items.erpInvoices",
+    labelKey: "v2.nav.items.erpInvoices",
     fallback: "Hóa đơn điện tử",
     icon: ReceiptText,
     href: "/v2/invoices",
@@ -121,7 +121,7 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "cashflow",
     sectionId: "accounting",
-    labelKey: "nav.items.cashflow",
+    labelKey: "v2.nav.items.cashflow",
     fallback: "Sổ quỹ & Sao kê",
     icon: Wallet,
     href: "/v2/cashflow",
@@ -129,31 +129,36 @@ export const NAV_DEFS: RawNavDef[] = [
   {
     id: "settings-app",
     sectionId: "settings",
-    labelKey: "nav.items.catalog",
+    labelKey: "v2.nav.items.catalog",
     fallback: "Cài đặt chung",
     icon: Settings,
     href: "/v2/settings",
   },
+  // plop:v2-nav-items
 ];
 
 export const SECTION_DEFS: RawSectionDef[] = [
-  { id: "overview", labelKey: "nav.sections.admin", fallback: "TỔNG QUAN" },
-  { id: "sales", labelKey: "nav.sections.sales", fallback: "BÁN HÀNG" },
+  { id: "overview", labelKey: "v2.nav.sections.admin", fallback: "TỔNG QUAN" },
+  { id: "sales", labelKey: "v2.nav.sections.sales", fallback: "BÁN HÀNG" },
   {
     id: "purchasing",
-    labelKey: "nav.sections.purchasing",
+    labelKey: "v2.nav.sections.purchasing",
     fallback: "MUA HÀNG",
   },
-  { id: "inventory", labelKey: "nav.sections.inventory", fallback: "KHO VẬN" },
+  {
+    id: "inventory",
+    labelKey: "v2.nav.sections.inventory",
+    fallback: "KHO VẬN",
+  },
   {
     id: "manufacturing",
-    labelKey: "nav.sections.manufacturing",
+    labelKey: "v2.nav.sections.manufacturing",
     fallback: "SẢN XUẤT",
   },
   {
     id: "accounting",
-    labelKey: "nav.sections.accounting",
+    labelKey: "v2.nav.sections.accounting",
     fallback: "KẾ TOÁN & DÒNG TIỀN",
   },
-  { id: "settings", labelKey: "nav.sections.settings", fallback: "CÀI ĐẶT" },
+  { id: "settings", labelKey: "v2.nav.sections.settings", fallback: "CÀI ĐẶT" },
 ];

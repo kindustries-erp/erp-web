@@ -4,14 +4,34 @@ import {
   type DataTableColumn,
 } from "@/shared/components/DataTable/types";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
-import { Eye, Pencil, Trash2 } from "lucide-react";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { renderThuCell, renderChiCell } from "./GarageCashflowTable.helper";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import {
+  renderThuCell,
+  renderChiCell,
+  renderCaseCodeCell,
+  renderLicensePlateCell,
+  renderPaymentMethodCell,
+  renderPaymentContentCell,
+  renderPaymentStatusCell,
+  renderPartnerNameCell,
+  renderNoteCell,
+  renderSttCell,
+  createCashflowDateHeader,
+} from "./GarageCashflowTable.helper";
+import {
+  PAYMENT_METHOD_OPTIONS,
+  PAYMENT_CONTENT_OPTIONS,
+  PAYMENT_STATUS_OPTIONS,
+} from "./GarageCashflowTable.type";
+
+export { getGarageCashflowRowActions } from "./GarageCashflowTable.actions";
 
 export const getGarageCashflowColumns = (
   filterBuilder: any,
   openDetail: (row: GarageCashflowVoucher, mode: "view" | "edit") => void,
+  onOpenCaseDetail?: (caseCode: string) => void,
+  tableHook?: any,
 ): DataTableColumn<GarageCashflowVoucher>[] => {
   return [
     {
@@ -21,20 +41,13 @@ export const getGarageCashflowColumns = (
       className: "text-center w-[40px] min-w-[40px]",
       headerClassName: "text-center w-[40px] min-w-[40px]",
       enableResizing: false,
-      cell: (_: any, idx: number) => (
-        <span className="w-full block text-center font-mono text-xs text-muted-foreground">
-          {idx}
-        </span>
-      ),
+      cell: renderSttCell,
     },
     {
       key: "transDate",
       sortKey: "transDate",
       size: 110,
-      header: filterBuilder.date("transDate", "Ngày", {
-        hideFilter: true,
-        hideFooter: true,
-      }),
+      header: createCashflowDateHeader("transDate", "Ngày", tableHook),
       className: "text-right",
       cell: (row) => (
         <TableDateCell
@@ -48,10 +61,7 @@ export const getGarageCashflowColumns = (
       key: "createdAt",
       sortKey: "createdAt",
       size: 110,
-      header: filterBuilder.date("createdAt", "Ngày tạo", {
-        hideFilter: true,
-        hideFooter: true,
-      }),
+      header: createCashflowDateHeader("createdAt", "Ngày tạo", tableHook),
       className: "text-right",
       cell: (row) => (
         <TableDateCell date={row.createdAt} className="justify-end w-full" />
@@ -71,25 +81,6 @@ export const getGarageCashflowColumns = (
           onDetailClick={() => openDetail(row, "view")}
         />
       ),
-    },
-    {
-      key: "caseCode",
-      sortKey: "caseCode",
-      size: 160,
-      header: filterBuilder("caseCode", "Mã PDV", {
-        valueType: ColumnValueType.TEXT,
-      }),
-      cell: (row) => {
-        return row.case?.soChungTu ? (
-          <TableText
-            text={row.case.soChungTu}
-            enableCopy
-            textClassName="font-mono text-xs border border-input rounded-md px-2 py-0.5"
-          />
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        );
-      },
     },
     {
       key: "thu",
@@ -116,76 +107,76 @@ export const getGarageCashflowColumns = (
       cell: renderChiCell,
     },
     {
+      key: "paymentStatus",
+      sortKey: "paymentStatus",
+      size: 130,
+      header: filterBuilder("paymentStatus", "Trạng thái", {
+        valueType: ColumnValueType.SELECT,
+        filterOptions: PAYMENT_STATUS_OPTIONS,
+      }),
+      cell: renderPaymentStatusCell,
+    },
+    {
+      key: "paymentMethod",
+      sortKey: "paymentMethod",
+      size: 160,
+      header: filterBuilder("paymentMethod", "Phương thức TT", {
+        valueType: ColumnValueType.SELECT,
+        filterOptions: PAYMENT_METHOD_OPTIONS,
+      }),
+      cell: renderPaymentMethodCell,
+    },
+    {
+      key: "paymentContent",
+      sortKey: "paymentContent",
+      size: 160,
+      header: filterBuilder("paymentContent", "Nội dung TT", {
+        valueType: ColumnValueType.SELECT,
+        filterOptions: PAYMENT_CONTENT_OPTIONS,
+        showBlankOption: true,
+      }),
+      cell: renderPaymentContentCell,
+    },
+    {
+      key: "caseCode",
+      sortKey: "caseCode",
+      size: 180,
+      className: "text-left",
+      header: filterBuilder("caseCode", "Mã PDV", {
+        valueType: ColumnValueType.TEXT,
+        showBlankOption: true,
+      }),
+      cell: (row) => renderCaseCodeCell(row, onOpenCaseDetail),
+    },
+    {
+      key: "licensePlate",
+      sortKey: "licensePlate",
+      size: 130,
+      className: "text-left",
+      header: filterBuilder("licensePlate", "Biển số xe", {
+        valueType: ColumnValueType.TEXT,
+        showBlankOption: true,
+      }),
+      cell: renderLicensePlateCell,
+    },
+    {
       key: "partnerName",
       sortKey: "partnerName",
       size: 200,
       header: filterBuilder("partnerName", "Đối tác", {
         valueType: ColumnValueType.TEXT,
+        showBlankOption: true,
       }),
-      cell: (row) => {
-        const name = row.partnerName || row.case?.khachHangName || "—";
-        return (
-          <span className="truncate block" title={name}>
-            {name}
-          </span>
-        );
-      },
+      cell: renderPartnerNameCell,
     },
     {
       key: "note",
       size: 250,
       header: filterBuilder("note", "Diễn giải", {
         valueType: ColumnValueType.TEXT,
+        showBlankOption: true,
       }),
-      cell: (row) => (
-        <span
-          className="text-muted-foreground text-xs truncate block"
-          title={row.note || ""}
-        >
-          {row.note || "—"}
-        </span>
-      ),
+      cell: renderNoteCell,
     },
-  ];
-};
-
-export const getGarageCashflowRowActions = (
-  openDetail: (row: GarageCashflowVoucher, mode: "view" | "edit") => void,
-  onDelete?: (row: GarageCashflowVoucher) => void,
-) => {
-  return (row: GarageCashflowVoucher) => [
-    {
-      groupLabel: "Thao tác chính",
-      items: [
-        {
-          key: "view",
-          label: "Xem chi tiết",
-          icon: <Eye className="w-4 h-4" />,
-          onClick: () => openDetail(row, "view"),
-        },
-        {
-          key: "edit",
-          label: "Chỉnh sửa",
-          icon: <Pencil className="w-4 h-4" />,
-          onClick: () => openDetail(row, "edit"),
-        },
-      ],
-    },
-    ...(onDelete
-      ? [
-          {
-            groupLabel: "Khác",
-            items: [
-              {
-                key: "delete",
-                label: "Xóa phiếu",
-                icon: <Trash2 className="w-4 h-4" />,
-                variant: "danger" as const,
-                onClick: () => onDelete(row),
-              },
-            ],
-          },
-        ]
-      : []),
   ];
 };

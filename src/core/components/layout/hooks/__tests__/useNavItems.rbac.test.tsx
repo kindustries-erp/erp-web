@@ -35,6 +35,33 @@ describe("useNavItems RBAC Guard", () => {
     expect(keys).not.toContain("dashboard");
     expect(keys).not.toContain("attachments");
     expect(keys).toContain("garage-cases");
+    expect(keys).toContain("garage-debts");
+    expect(keys).toContain("garage-opex");
+    expect(keys).not.toContain("garage-cashflow");
+
+    const casesItem = result.current.find(
+      (item) => item.key === "garage-cases",
+    );
+    expect(casesItem?.group).toBeUndefined();
+    expect(casesItem?.section).toBe("GARAGE");
+  });
+
+  it("includes standalone garage-cashflow when user has GARAGE_CASHFLOW permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      if (resource === ErpResource.GARAGE_CASHFLOW) return true;
+      return false;
+    });
+
+    const { result } = renderHook(() => useNavItems());
+    const keys = result.current.map((item) => item.key);
+
+    expect(keys).toContain("garage-cashflow");
+    const cashflowItem = result.current.find(
+      (item) => item.key === "garage-cashflow",
+    );
+    expect(cashflowItem?.keywords).toContain("thu chi xưởng");
+    expect(cashflowItem?.keywords).toContain("dong tien xuong");
+    expect(cashflowItem?.keywords).toContain("thu chi garage");
   });
 
   it("includes dashboard and attachments when user has permissions", () => {

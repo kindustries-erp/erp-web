@@ -1,36 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import React, { useMemo } from "react";
 import {
-  DrawerSection,
-  DrawerField,
-  DrawerRow,
-} from "@/shared/components/DrawerModal";
-import { Combobox } from "@/shared/components/Combobox";
-
-import { Input } from "@/shared/components/ui/input";
-import { Textarea } from "@/shared/components/ui/textarea";
+  StandardFormDrawer,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { DrawerAuditTimeline } from "@/shared/components/drawer/DrawerAuditTimeline";
+import { GarageCashflowDuplicateWarning } from "../../molecules/garage-cashflow-duplicate-warning";
+import { AlertTriangle, FileText, History } from "lucide-react";
+import { useT } from "@/core/i18n";
 import { Badge } from "@/shared/components/ui/badge";
-import { DatePicker } from "@/shared/components/DatePicker";
-
-import { PaymentMethodCombobox } from "../../molecules/payment-method-combobox";
-import { GarageCaseCombobox } from "../garage-case-combobox";
-import { ErpBankTransactionCombobox } from "../erp-bank-transaction-combobox";
-import { ErpCashVoucherCombobox } from "../erp-cash-voucher-combobox";
-
-import type {
-  GarageCashflowVoucher,
-  CreateGarageCashflowVoucherDto,
-} from "../../../api/garageCashflowApi";
-import { useGarageCashflowList } from "../../../hooks/useGarageCashflowList";
-
-export interface GarageCashflowDrawerProps {
-  open: boolean;
-  onClose: () => void;
-  voucher: GarageCashflowVoucher | null;
-  initialMode?: "view" | "edit" | "create";
-}
-
-type DrawerModeType = "view" | "edit";
+import type { GarageCashflowDrawerProps } from "./GarageCashflowDrawer.type";
+import { useGarageCashflowDrawer } from "./GarageCashflowDrawer.hook";
+import { GarageCashflowDrawerGeneralSection } from "./GarageCashflowDrawerGeneralSection";
+import { GarageCashflowDrawerSettlementSection } from "./GarageCashflowDrawerSettlementSection";
 
 export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
   open,
@@ -38,348 +20,152 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
   voucher,
   initialMode = "view",
 }) => {
-  const { createMutation, updateMutation } = useGarageCashflowList();
-  const [mode, setMode] = useState<DrawerModeType>(
-    initialMode === "create" ? "edit" : (initialMode as DrawerModeType),
+  const {
+    mode,
+    setMode,
+    formData,
+    setFormData,
+    canUpdate,
+    canSave,
+    handleSave,
+    isPending,
+    duplicate,
+    auditItems,
+    isAuditLoading,
+  } = useGarageCashflowDrawer({
+    open,
+    onClose,
+    voucher,
+    initialMode,
+  });
+
+  const t = useT();
+  const sectionProps = useMemo(
+    () => ({
+      mode,
+      voucher,
+      formData,
+      setFormData,
+    }),
+    [mode, voucher, formData, setFormData],
   );
 
-  const [formData, setFormData] = useState<
-    Partial<CreateGarageCashflowVoucherDto>
-  >({});
+  const drawerTabs: DrawerTopTabItem[] | undefined = useMemo(() => {
+    if (!voucher) return undefined;
 
-  useEffect(() => {
-    if (open) {
-      setMode(
-        initialMode === "create" ? "edit" : (initialMode as DrawerModeType),
-      );
-      if (voucher) {
-        setFormData({
-          ...voucher,
-          voucherType: (voucher.voucherType || "").toUpperCase() as
-            | "RECEIPT"
-            | "PAYMENT",
-          voucherCode: voucher.voucherCode || "",
-          transDate: voucher.transDate
-            ? voucher.transDate.slice(0, 10)
-            : new Date().toISOString().slice(0, 10),
-          amount: voucher.amount,
-          partnerName: voucher.partnerName || voucher.case?.khachHangName || "",
-          partnerPhone: voucher.partnerPhone || "",
-          note: voucher.note || "",
-          paymentMethod: voucher.paymentMethod || "",
-          referenceNumber: voucher.referenceNumber || "",
-          caseId: voucher.caseId || "",
-          erpBankTransactionId: voucher.erpBankTransactionId || "",
-          erpCashVoucherId: voucher.erpCashVoucherId || "",
-        });
-      } else {
-        setFormData({
-          voucherType: "RECEIPT",
-          transDate: new Date().toISOString().slice(0, 10),
-          amount: 0,
-        });
-      }
-    }
-  }, [open, voucher, initialMode]);
-
-  const handleSave = () => {
-    if (initialMode === "create") {
-      createMutation.mutate(formData as CreateGarageCashflowVoucherDto, {
-        onSuccess: () => {
-          onClose();
-        },
-      });
-    } else if (voucher) {
-      updateMutation.mutate(
-        { id: voucher.id, data: formData },
-        {
-          onSuccess: () => {
-            onClose();
-          },
-        },
-      );
-    }
-  };
+    return [
+      {
+        key: "details",
+        label: t("garage:cashflowDrawer.tabDetails", "Chi tiết"),
+        icon: <FileText className="w-3.5 h-3.5" />,
+        content: (
+          <div className="space-y-4 pb-4">
+            <GarageCashflowDrawerGeneralSection {...sectionProps} />
+            <GarageCashflowDrawerSettlementSection {...sectionProps} />
+          </div>
+        ),
+      },
+      {
+        key: "history",
+        label: t("garage:cashflowDrawer.tabHistory", "Lịch sử & Kiểm duyệt"),
+        icon: <History className="w-3.5 h-3.5" />,
+        badgeCount: auditItems.length,
+        content: (
+          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
+            <DrawerAuditTimeline
+              items={auditItems}
+              loading={isAuditLoading}
+              emptyLabel={t(
+                "garage:cashflowDrawer.noHistory",
+                "Chưa có ghi nhận lịch sử.",
+              )}
+            />
+          </div>
+        ),
+      },
+    ];
+  }, [voucher, sectionProps, auditItems, isAuditLoading, t]);
 
   return (
-    <StandardFormDrawer
-      open={open}
-      onClose={onClose}
-      mode={mode}
-      onToggleEdit={() => setMode("edit")}
-      layout="1-column"
-      size="md"
-      title={
-        initialMode === "create"
-          ? "Tạo Phiếu Thu Chi Mới"
-          : `Phiếu ${voucher?.voucherCode || ""}`
-      }
-      titleExtra={
-        voucher && (
-          <Badge variant="outline">
-            {(voucher.voucherType || "").toUpperCase() === "RECEIPT"
-              ? "Thu"
-              : "Chi"}
-          </Badge>
-        )
-      }
-      actions={[
-        { label: "Đóng", onClick: onClose, variant: "outline" },
-        ...(mode === "edit"
-          ? [
-              {
-                label: "Lưu",
-                onClick: handleSave,
-                primary: true,
-                loading: createMutation.isPending || updateMutation.isPending,
-              },
-            ]
-          : []),
-      ]}
-      confirmOnClose={mode === "edit"}
-      leftPanel={
-        <div className="space-y-4 pb-4">
-          <DrawerSection title="THÔNG TIN CHUNG">
-            {mode === "edit" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DrawerField label="Ngày giao dịch" required>
-                  <DatePicker
-                    value={formData.transDate || ""}
-                    onChange={(val: string) =>
-                      setFormData({ ...formData, transDate: val })
-                    }
-                    className="w-full"
-                  />
-                </DrawerField>
-                <DrawerField label="Loại phiếu" required>
-                  <Combobox
-                    value={formData.voucherType || ""}
-                    onChange={(val) =>
-                      setFormData({
-                        ...formData,
-                        voucherType: val as "RECEIPT" | "PAYMENT",
-                      })
-                    }
-                    options={[
-                      { label: "Thu (RECEIPT)", value: "RECEIPT" },
-                      { label: "Chi (PAYMENT)", value: "PAYMENT" },
-                    ]}
-                    placeholder="— Chọn —"
-                  />
-                </DrawerField>
-                <DrawerField label="Số tiền" required>
-                  <Input
-                    type="number"
-                    value={formData.amount || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData({
-                        ...formData,
-                        amount: Number(e.target.value),
-                      })
-                    }
-                    className="w-full h-8 text-sm"
-                  />
-                </DrawerField>
-                <DrawerField label="Phương thức TT">
-                  <PaymentMethodCombobox
-                    value={formData.paymentMethod || ""}
-                    onChange={(val: string) =>
-                      setFormData({
-                        ...formData,
-                        paymentMethod: val,
-                      })
-                    }
-                  />
-                </DrawerField>
-                <DrawerField label="Mã chứng từ">
-                  <Input
-                    value={formData.voucherCode || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData({ ...formData, voucherCode: e.target.value })
-                    }
-                    placeholder="Tự động sinh nếu để trống"
-                    className="w-full h-8 text-sm"
-                  />
-                </DrawerField>
-                <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
-                  <GarageCaseCombobox
-                    value={formData.caseId || ""}
-                    onChange={(val: string, selectedOption?: any) => {
-                      const updates: Partial<CreateGarageCashflowVoucherDto> = {
-                        caseId: val,
-                      };
-                      if (selectedOption?.originalName) {
-                        updates.partnerName = selectedOption.originalName;
-                      }
-                      setFormData({ ...formData, ...updates });
-                    }}
-                    fallbackLabel={
-                      voucher?.case?.soChungTu
-                        ? voucher.case.soChungTu
-                        : undefined
-                    }
-                  />
-                </DrawerField>
-                <DrawerField label="Đối tác">
-                  <Input
-                    value={formData.partnerName || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData({ ...formData, partnerName: e.target.value })
-                    }
-                    className="w-full h-8 text-sm"
-                  />
-                </DrawerField>
-                <DrawerField label="SĐT Đối tác">
-                  <Input
-                    value={formData.partnerPhone || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData({
-                        ...formData,
-                        partnerPhone: e.target.value,
-                      })
-                    }
-                    className="w-full h-8 text-sm"
-                  />
-                </DrawerField>
-                <div className="col-span-1 md:col-span-2">
-                  <DrawerField label="Ghi chú">
-                    <Textarea
-                      value={formData.note || ""}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                        setFormData({ ...formData, note: e.target.value })
-                      }
-                      rows={2}
-                      className="w-full text-sm"
-                    />
-                  </DrawerField>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                <DrawerRow
-                  label="Ngày giao dịch"
-                  value={
-                    voucher?.transDate
-                      ? new Date(voucher.transDate).toLocaleDateString("vi-VN")
-                      : "—"
-                  }
-                />
-                <DrawerRow
-                  label="Loại phiếu"
-                  value={
-                    (voucher?.voucherType || "").toUpperCase() === "RECEIPT"
-                      ? "Phiếu Thu"
-                      : "Phiếu Chi"
-                  }
-                />
-                <DrawerRow
-                  label="Số tiền"
-                  value={`${(voucher?.amount || 0).toLocaleString("vi-VN")} đ`}
-                />
-                <DrawerRow
-                  label="Phương thức TT"
-                  value={voucher?.paymentMethod || "—"}
-                />
-                <DrawerRow
-                  label="Mã chứng từ"
-                  value={voucher?.voucherCode || "—"}
-                />
-                <DrawerRow
-                  label="Mã Phiếu Dịch Vụ"
-                  value={
-                    voucher?.case?.soChungTu
-                      ? voucher.case.soChungTu
-                      : voucher?.caseId || "—"
-                  }
-                />
-                <DrawerRow
-                  label="Đối tác"
-                  value={
-                    voucher?.partnerName || voucher?.case?.khachHangName || "—"
-                  }
-                />
-                <DrawerRow
-                  label="SĐT Đối tác"
-                  value={voucher?.partnerPhone || "—"}
-                />
-                <div className="col-span-1 md:col-span-2">
-                  <DrawerRow label="Ghi chú" value={voucher?.note || "—"} />
-                </div>
-              </div>
-            )}
-          </DrawerSection>
-
-          <DrawerSection
-            title="THAM CHIẾU LIÊN KẾT"
-            collapsible
-            defaultCollapsed={false}
-          >
-            {mode === "edit" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DrawerField label="Tham chiếu ERP Bank">
-                  <ErpBankTransactionCombobox
-                    value={formData.erpBankTransactionId || ""}
-                    onChange={(val: string) =>
-                      setFormData({
-                        ...formData,
-                        erpBankTransactionId: val,
-                      })
-                    }
-                    fallbackLabel={
-                      voucher?.erpBankTransaction
-                        ? voucher.erpBankTransaction.referenceNumber ||
-                          voucher.erpBankTransaction.seqNo ||
-                          voucher.erpBankTransaction.id
-                        : undefined
-                    }
-                  />
-                </DrawerField>
-                <DrawerField label="Tham chiếu ERP Cash">
-                  <ErpCashVoucherCombobox
-                    value={formData.erpCashVoucherId || ""}
-                    onChange={(val: string) =>
-                      setFormData({
-                        ...formData,
-                        erpCashVoucherId: val,
-                      })
-                    }
-                    fallbackLabel={
-                      voucher?.erpCashVoucher
-                        ? voucher.erpCashVoucher.referenceNumber ||
-                          voucher.erpCashVoucher.seqNo ||
-                          voucher.erpCashVoucher.id
-                        : undefined
-                    }
-                  />
-                </DrawerField>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                <DrawerRow
-                  label="Tham chiếu ERP Bank"
-                  value={
-                    voucher?.erpBankTransaction
-                      ? voucher.erpBankTransaction.referenceNumber ||
-                        voucher.erpBankTransaction.seqNo ||
-                        voucher.erpBankTransaction.id
-                      : voucher?.erpBankTransactionId || "—"
-                  }
-                />
-                <DrawerRow
-                  label="Tham chiếu ERP Cash"
-                  value={
-                    voucher?.erpCashVoucher
-                      ? voucher.erpCashVoucher.referenceNumber ||
-                        voucher.erpCashVoucher.seqNo ||
-                        voucher.erpCashVoucher.id
-                      : voucher?.erpCashVoucherId || "—"
-                  }
-                />
-              </div>
-            )}
-          </DrawerSection>
-        </div>
-      }
-    />
+    <>
+      <StandardFormDrawer
+        open={open}
+        onClose={onClose}
+        mode={mode}
+        onToggleEdit={canUpdate ? () => setMode("edit") : undefined}
+        layout="1-column"
+        size="md"
+        defaultTabKey="details"
+        tabs={drawerTabs}
+        title={
+          initialMode === "create"
+            ? t("garage:cashflowDrawer.createTitle", "Tạo Phiếu Thu Chi Mới")
+            : `${t("garage:cashflowDrawer.voucherPrefix", "Phiếu")} ${voucher?.voucherCode || ""}`
+        }
+        titleExtra={
+          voucher && (
+            <Badge variant="outline">
+              {(voucher.voucherType || "").toUpperCase() === "RECEIPT"
+                ? t("garage:cashflowDrawer.typeReceipt", "Thu")
+                : t("garage:cashflowDrawer.typePayment", "Chi")}
+            </Badge>
+          )
+        }
+        actions={[
+          {
+            label: t("common:close", "Đóng"),
+            onClick: onClose,
+            variant: "outline",
+          },
+          ...(mode === "edit" && canSave
+            ? [
+                {
+                  label: t("common:save", "Lưu"),
+                  onClick: handleSave,
+                  primary: true,
+                  loading: isPending,
+                },
+              ]
+            : []),
+        ]}
+        confirmOnClose={mode === "edit"}
+        leftPanel={
+          !drawerTabs ? (
+            <div className="space-y-4 pb-4">
+              <GarageCashflowDrawerGeneralSection {...sectionProps} />
+              <GarageCashflowDrawerSettlementSection {...sectionProps} />
+            </div>
+          ) : undefined
+        }
+      />
+      <ConfirmModal
+        open={!!duplicate.pending}
+        danger={false}
+        size="md"
+        icon={
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+            <AlertTriangle className="h-4 w-4" />
+          </span>
+        }
+        titleClassName="text-lg"
+        title={t(
+          "garage:cashflowDuplicate.title",
+          "Phiếu thu/chi có thể bị trùng",
+        )}
+        message={
+          duplicate.pending && (
+            <GarageCashflowDuplicateWarning
+              amount={duplicate.pending.params.amount}
+              result={duplicate.pending.result}
+            />
+          )
+        }
+        cancelLabel={t("garage:cashflowDuplicate.back", "Quay lại sửa")}
+        confirmLabel={t("garage:cashflowDuplicate.proceed", "Vẫn nhập tiếp")}
+        loading={isPending && !duplicate.isChecking}
+        onConfirm={duplicate.confirm}
+        onCancel={duplicate.cancel}
+      />
+    </>
   );
 };

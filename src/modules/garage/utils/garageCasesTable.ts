@@ -321,6 +321,15 @@ export function applyGarageCasesTableState(
       tableState.columnSearch,
     )) {
       if (!searchValue || !searchValue.trim()) continue;
+      // Bỏ qua lọc search text nếu cột đã có bộ lọc checkbox cụ thể được chọn
+      const specificFilters = tableState.columnFilters[columnKey];
+      if (
+        specificFilters &&
+        specificFilters.length > 0 &&
+        specificFilters[0] !== "__ALL_MATCHING__"
+      ) {
+        continue;
+      }
       const rawVal = getCellValue(item, columnKey);
       const val = normalizeString(rawVal);
       const extraVal =

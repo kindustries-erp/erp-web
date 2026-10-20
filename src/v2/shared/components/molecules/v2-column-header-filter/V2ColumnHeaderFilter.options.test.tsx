@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import {
   V2_ALL_MATCHING_VALUE,
   V2_BLANK_VALUE,
@@ -33,7 +33,7 @@ const renderList = (
 };
 
 describe("V2FilterOptionsList", () => {
-  beforeEach(() => useAppStore.setState({ locale: "vi" }));
+  beforeEach(() => useV2LocaleStore.setState({ locale: "vi" }));
 
   it("renders options with a select-all-visible row first", () => {
     renderList();

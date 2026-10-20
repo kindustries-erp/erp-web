@@ -1,4 +1,5 @@
 export type BankStatementExportMode = "by-period" | "by-current-filter";
+export type BankStatementPeriodType = "month" | "quarter" | "custom";
 
 export interface BankStatementColumnFilterItem {
   id: string;

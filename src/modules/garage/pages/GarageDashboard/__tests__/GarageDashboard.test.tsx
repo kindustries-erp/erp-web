@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageDashboard } from "../GarageDashboard";
 
@@ -14,6 +15,22 @@ vi.mock("react-chartjs-2", () => ({
 
 vi.mock("@/shared/components/KpiSparkline", () => ({
   KpiSparkline: () => <div data-testid="mock-sparkline" />,
+}));
+
+vi.mock("@/modules/garage/components/GarageExportDrawer", () => ({
+  GarageExportDrawer: ({
+    open,
+    defaultReportType,
+  }: {
+    open: boolean;
+    defaultReportType: string;
+  }) => (
+    <div
+      data-testid="export-drawer"
+      data-open={open ? "true" : "false"}
+      data-report-type={defaultReportType}
+    />
+  ),
 }));
 
 // Mock các API call
@@ -106,5 +123,34 @@ describe("GarageDashboard Atomic Refactor", () => {
     );
 
     expect(container).toBeTruthy();
+  });
+
+  it("nút chính Đồng bộ + dropdown: Xuất Excel mở drawer xuất chung, mặc định Tổng hợp tất cả", async () => {
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDashboard />
+      </QueryClientProvider>,
+    );
+
+    const openStates = () =>
+      screen.getAllByTestId("export-drawer").map((el) => el.dataset.open);
+
+    // Checkpoint drawer cũng chứa một drawer xuất (đóng sẵn), nên có thể có nhiều phần tử
+    expect(openStates().every((open) => open === "false")).toBe(true);
+    // Không còn nút "Xuất Excel" riêng ở header
+    expect(
+      screen.queryByRole("button", { name: /Xuất Excel|Export Excel/ }),
+    ).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: /Đồng bộ|Sync/ }));
+    expect(screen.getByText("Báo cáo & Xuất file")).toBeDefined();
+    await user.click(screen.getByText("Xuất Excel"));
+
+    const opened = screen
+      .getAllByTestId("export-drawer")
+      .filter((el) => el.dataset.open === "true");
+    expect(opened).toHaveLength(1);
+    expect(opened[0].dataset.reportType).toBe("period-all");
   });
 });

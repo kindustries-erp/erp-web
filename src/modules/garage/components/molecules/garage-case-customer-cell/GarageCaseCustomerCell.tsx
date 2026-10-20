@@ -8,10 +8,11 @@ import type { GarageCaseCustomerCellProps } from "./GarageCaseCustomerCell.type"
 export function GarageCaseCustomerCell({
   item,
   className,
+  onOpenDetail,
 }: GarageCaseCustomerCellProps) {
   const { t } = useTranslation(["garage", "common"]);
-  const customerName = item.khachHangName?.trim() || "";
-  const customerCode = item.khachHangCode?.trim() || "";
+  const customerName = (item.khachHangName || item.customerName || "").trim();
+  const customerCode = (item.khachHangCode || item.customerCode || "").trim();
 
   if (!customerName && !customerCode) {
     return <span className="text-muted-foreground/50 select-none">—</span>;
@@ -23,9 +24,22 @@ export function GarageCaseCustomerCell({
         {/* Dòng 1: Tên khách hàng (đậm) + Nút Copy */}
         <div className="flex items-center gap-1 min-w-0 group/cname">
           <Tooltip content={customerName || "—"}>
-            <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text">
-              {customerName || "—"}
-            </span>
+            {onOpenDetail ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenDetail({ code: customerCode, name: customerName });
+                }}
+                className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-primary hover:underline text-left cursor-pointer leading-tight select-text"
+              >
+                {customerName || "—"}
+              </button>
+            ) : (
+              <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text">
+                {customerName || "—"}
+              </span>
+            )}
           </Tooltip>
           {customerName && customerName !== "—" && (
             <CopyButton

@@ -44,6 +44,19 @@ export const parseQuoteLines = (
     const unitCost = Number(item.GiaVonPhuTung ?? item.giaVonPhuTung ?? 0);
     const totalCost = Number(item.TongVon ?? item.tongVon ?? unitCost * qty);
 
+    const outsourceCost = Number(
+      item.GCN ??
+        item.gcn ??
+        item.GiaCongNgoai ??
+        item.giaCongNgoai ??
+        item.ChiPhiThueNgoai ??
+        item.chiPhiThueNgoai ??
+        item.GiaChiNgoai ??
+        (item.HTThanhToanThueNgoaiCode === "CN-GCN"
+          ? (item.DonGiaThueNgoai ?? item.TienThueNgoai ?? 0)
+          : 0),
+    );
+
     return {
       id: item.Id || item.MaChiTiet || `line-${idx}`,
       itemType: isService ? "DV" : "PT",
@@ -66,6 +79,7 @@ export const parseQuoteLines = (
       technicianName: item.NhanVienKyThuatName || undefined,
       isInsurance: Boolean(item.CoBaoHiemChiTiet),
       insuranceApprovedAmount: Number(item.TienBaoHiemDuyet || 0),
+      outsourceCost,
       costAllocationType:
         item.CostAllocationType || item.costAllocationType || undefined,
     };
@@ -105,32 +119,156 @@ export const calculateProfitSummary = (
         ? Number(((profit / rev) * 100).toFixed(1))
         : 0;
 
+  const discountAmount = Number(rawData?.TienChietKhau || 0);
+  const discountRate = Number(rawData?.TyLeChietKhau || 0);
+  const rawTienChuaThue = Number(rawData?.TienChuaThue || 0);
+  const rawTongTienHang = Number(rawData?.TongTienHang || 0);
+
+  let totalAmount = 0;
+  let subtotalAfterDiscount = 0;
+
+  if (
+    rawTienChuaThue > 0 &&
+    rawTongTienHang > 0 &&
+    rawTienChuaThue > rawTongTienHang
+  ) {
+    totalAmount = rawTienChuaThue;
+    subtotalAfterDiscount = rawTongTienHang;
+  } else if (rawTienChuaThue > 0) {
+    totalAmount = rawTienChuaThue;
+    subtotalAfterDiscount = Math.max(0, totalAmount - discountAmount);
+  } else if (rawTongTienHang > 0) {
+    if (discountAmount > 0) {
+      totalAmount = rawTongTienHang + discountAmount;
+      subtotalAfterDiscount = rawTongTienHang;
+    } else {
+      totalAmount = rawTongTienHang;
+      subtotalAfterDiscount = rawTongTienHang;
+    }
+  } else if (rev > 0) {
+    totalAmount = rev;
+    subtotalAfterDiscount = Math.max(0, totalAmount - discountAmount);
+  }
+
+  const deductibleAmount = Number(rawData?.TienKhauTruBaoHiem || 0);
+  const sanctionAmount = Number(rawData?.TienChiPhiCheTai || 0);
+  const afterSanctionAmount =
+    rawData?.TienSauCheTai != null
+      ? Number(rawData.TienSauCheTai)
+      : Math.max(
+          0,
+          subtotalAfterDiscount - (deductibleAmount + sanctionAmount),
+        );
+
+  const vatAmount = Number(rawData?.TienThue || 0);
+  const customerPay = Number(rawData?.TienThanhToanKH || 0);
+  const insurancePay = Number(rawData?.TienThanhToanBH || 0);
+  const totalPayable = Number(
+    rawData?.TongTienThanhToan ||
+      rawData?.TienCoThue ||
+      caseData?.tienCoThue ||
+      0,
+  );
+
+  const commissionGeneral = Number(rawData?.TienHoaHong || 0);
+  const commissionGdv = Number(rawData?.TienHoaHongBaoHiem || 0);
+  const gdvName = rawData?.GiamDinhVienName || null;
+  const commissionMg = Number(
+    grossProfit?.TienHoaHongMoiGioi ?? rawData?.TienHoaHongMoiGioi ?? 0,
+  );
+  const brokerName = rawData?.NguoiMoiGioiName || null;
+
+  const partsCostInside = Number(
+    grossProfit?.GiaVonPhuTung ?? caseData?.giaVonPhuTung ?? 0,
+  );
+  const partsCostOutside = Number(
+    grossProfit?.ChiPhiMuaNgoai ?? rawData?.ChiPhiPhuTungNgoaiPhieu ?? 0,
+  );
+
+  const journalItems =
+    grossProfit?.journal_items || grossProfit?.rawData?.journal_items || [];
+  let journalOutsourceCost = 0;
+  let journalCommissionCost = 0;
+  let journalDiscountCost = 0;
+  let journalPartsCost = 0;
+
+  if (Array.isArray(journalItems) && journalItems.length > 0) {
+    for (const item of journalItems) {
+      const tkNo = String(item.TaiKhoanNoCode || item.TaiKhoanNo || "");
+      const val = Number(item.ChiPhi || item.ChiPhiVon || item.GiaTriTien || 0);
+      if (tkNo === "1541") journalPartsCost += val;
+      else if (tkNo === "1542") journalOutsourceCost += val;
+      else if (tkNo === "1543") journalCommissionCost += val;
+      else if (tkNo === "521") journalDiscountCost += val;
+    }
+  }
+
+  const outsourceLaborCost = Number(
+    caseData?.costBreakdown?.outsourceCost ??
+      grossProfit?.costBreakdown?.outsourceCost ??
+      (journalOutsourceCost > 0 ? journalOutsourceCost : undefined) ??
+      grossProfit?.ChiPhiGiaCongNgoai ??
+      rawData?.ChiPhiGiaCongThueNgoai ??
+      0,
+  );
+
+  const effectivePartsInside = partsCostInside || journalPartsCost;
+  const totalCommissions = commissionGeneral + commissionGdv + commissionMg;
+  const totalEstimatedCost =
+    effectivePartsInside + partsCostOutside + outsourceLaborCost;
+
+  const estimatedProfitPreTax =
+    subtotalAfterDiscount > 0
+      ? subtotalAfterDiscount - totalCommissions - totalEstimatedCost
+      : profit;
+
+  const estimatedProfitAfterTax = estimatedProfitPreTax + vatAmount;
+
   const hasData = rev > 0 || cost > 0 || grossProfit != null;
 
-  const costBreakdown = caseData?.costBreakdown ??
+  const costBreakdown: any = caseData?.costBreakdown ??
     grossProfit?.costBreakdown ?? {
-      warehousePartsCost: Number(
-        grossProfit?.GiaVonPhuTung ?? caseData?.giaVonPhuTung ?? 0,
-      ),
-      inventoryPartCost: Number(
-        grossProfit?.GiaVonPhuTung ?? caseData?.giaVonPhuTung ?? 0,
-      ),
-      externalCost: Number(grossProfit?.ChiPhiMuaNgoai ?? 0),
-      outsourceCost: Number(grossProfit?.ChiPhiMuaNgoai ?? 0),
-      commissionCost: Number(
-        grossProfit?.TienHoaHongMoiGioi ?? rawData?.TienHoaHongMoiGioi ?? 0,
-      ),
+      warehousePartsCost: effectivePartsInside,
+      inventoryPartCost: effectivePartsInside,
+      externalCost: partsCostOutside,
+      outsourceCost: outsourceLaborCost,
+      commissionCost: commissionMg + commissionGdv || journalCommissionCost,
+      discountCost: journalDiscountCost || discountAmount,
       otherCost: 0,
-      totalCost: cost,
+      totalCost: cost || totalEstimatedCost,
     };
 
   return {
     revenue: rev,
     totalCost: cost,
-    partCost: Number(grossProfit?.GiaVonPhuTung || 0),
+    partCost: effectivePartsInside,
     grossProfit: profit,
     profitMargin: margin,
     hasProfitData: hasData,
     costBreakdown,
+    totalAmount,
+    discountAmount,
+    discountRate,
+    subtotalAfterDiscount,
+    deductibleAmount,
+    sanctionAmount,
+    afterSanctionAmount,
+    customerPay,
+    insurancePay,
+    vatAmount,
+    totalPayable,
+    commissionGeneral,
+    commissionGdv,
+    gdvName,
+    commissionMg,
+    brokerName,
+    partsCostInside: effectivePartsInside,
+    partsCostOutside,
+    outsourceLaborCost,
+    estimatedProfitPreTax,
+    estimatedProfitAfterTax,
+    isInsurance: Boolean(
+      rawData?.XeLamBaoHiem || insurancePay > 0 || deductibleAmount > 0,
+    ),
   };
 };

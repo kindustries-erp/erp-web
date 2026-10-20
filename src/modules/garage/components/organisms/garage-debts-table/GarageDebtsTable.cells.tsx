@@ -3,8 +3,13 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { FileText } from "lucide-react";
+import { LicensePlateCell as AtomLicensePlateCell } from "@/modules/garage/components/atoms/license-plate-cell";
 import type { CustomerDebtItem } from "@/modules/garage/hooks/useGarageCustomersList";
 export { AgingDaysCell } from "./GarageDebtsAgingCell";
+
+export const LicensePlateCell: React.FC<{ row: CustomerDebtItem }> = ({
+  row,
+}) => <AtomLicensePlateCell licensePlate={row.licensePlate} />;
 
 export const CaseCountCell: React.FC<{
   row: CustomerDebtItem;
@@ -94,5 +99,23 @@ export const PaymentProgressCell: React.FC<{ row: CustomerDebtItem }> = ({
         </div>
       </div>
     </Tooltip>
+  );
+};
+
+export const CustomerBalanceCell: React.FC<{ row: CustomerDebtItem }> = ({
+  row,
+}) => {
+  const bal = Number(row.balanceAmount) || 0;
+  return (
+    <span
+      className={cn(
+        "font-semibold tabular-nums font-mono text-xs",
+        bal === 0
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-destructive font-bold",
+      )}
+    >
+      {money(bal)}
+    </span>
   );
 };

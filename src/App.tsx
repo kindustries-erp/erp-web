@@ -288,7 +288,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-branch": SettingsBranch,
   "custom-fields": CustomFieldsPage,
   "invoice-debts": InvoiceDebtsPage,
-  "garage-dashboard": () => <GarageCasesPage initialTab="dashboard" />,
+  "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
   "garage-opex": GarageOpex,
   "garage-cashflow": GarageCashflowPage,
@@ -320,6 +320,7 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
   "erp-inventory-tracking-parts": () =>
     import("@/pages/inventory/InventoryTrackingPartsPage"),
   "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
+  "garage-cashflow": () => import("@/modules/garage/pages/GarageCashflowPage"),
   "garage-partners": () => import("@/modules/garage/pages/GarageDebts"),
   "garage-debts": () => import("@/modules/garage/pages/GarageDebts"),
   "invoice-debts": () => import("@/pages/InvoiceDebtsPage"),

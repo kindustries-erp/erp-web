@@ -34,13 +34,13 @@ export function PnlOpexItemRow({
 
   return (
     <React.Fragment key={item.key}>
-      <tr className="text-muted-foreground hover:bg-muted/10 transition-colors">
-        <td className="py-2 px-8 flex items-center justify-between">
+      <tr className="text-slate-700 dark:text-slate-300 hover:bg-muted/10 transition-colors">
+        <td className="py-2 px-8 font-medium flex items-center justify-between">
           <span>
             5.{index + 1}. {item.categoryName}
           </span>
           {item.note && (
-            <span className="text-[10px] text-muted-foreground/70 italic max-w-[200px] truncate">
+            <span className="text-[10px] text-muted-foreground/70 font-normal italic max-w-[200px] truncate">
               ({item.note})
             </span>
           )}
@@ -49,7 +49,7 @@ export function PnlOpexItemRow({
           amount={curVal && curVal > 0 ? curVal : null}
           hideDelta
           hideRate
-          tdClassName="py-2 px-4 text-right tabular-nums font-mono font-medium"
+          tdClassName="py-2 px-4 text-right tabular-nums font-mono font-semibold"
         />
         <PnlAmountCell
           amount={prevVal && prevVal > 0 ? prevVal : null}

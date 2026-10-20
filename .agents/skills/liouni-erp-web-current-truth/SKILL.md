@@ -48,6 +48,7 @@ Mỗi domain/module frontend đều có tài liệu tri thức chuyên sâu (Rou
   - **Tài chính & Hóa đơn**: `erp-invoice-web`
   - **Quản trị, Cấu hình & Core Stores**: `rbac-core`, `app-store`
   - **Kiến trúc Layout & Thành Phần Chuẩn V2 (Atomic 5 tầng)**: `v2-layout`, `v2-drawer`, `v2-table`, `v2-foundation`
+  - **Sidebar Navigation Chuẩn Atomic**: Menu `GARAGE` và `KẾ TOÁN` được tổ chức thành các Organisms độc lập (`garage-nav-section`, `accounting-nav-section`) phẳng hóa submenu, mỗi file < 150 LoC, co-located tests và bảo vệ bởi RBAC tương ứng.
 - Khi cần quét mới hoặc cập nhật tài liệu cho một module: Sử dụng skill `scan-module-knowledge` (`.agents/skills/scan-module-knowledge/SKILL.md`).
 
 ## Team-scale reminders

@@ -5,27 +5,44 @@ import type {
   MonthlyTrendItem,
 } from "../types";
 
-export function calculateCustomerDebtTotals(cases: any[]): CustomerDebtTotals {
-  let totalRevenue = 0;
-  let totalPaid = 0;
-  let totalBalance = 0;
-  let maxAging = 0;
-  let aging0_30 = 0;
-  let aging31_60 = 0;
-  let aging61_90 = 0;
-  let agingOver90 = 0;
-  let completedCount = 0;
-  let inProgressCount = 0;
-  let inProgressAmount = 0;
+function extractCaseAmounts(c: any, isPayable: boolean) {
+  if (isPayable) {
+    return {
+      rev: Number(c.chiPhi) || 0,
+      paid: Number(c.tienDaChi) || 0,
+      bal: Number(c.tienConPhaiChi) || 0,
+    };
+  }
+  return {
+    rev: Number(c.tienCoThue) || 0,
+    paid: Number(c.tienDaThanhToan) || 0,
+    bal: Number(c.tienConPhaiThanhToan) || 0,
+  };
+}
 
+export function calculateCustomerDebtTotals(
+  cases: any[],
+  debtType: "receivables" | "payables" = "receivables",
+): CustomerDebtTotals {
+  let totalRevenue = 0,
+    totalPaid = 0,
+    totalBalance = 0,
+    maxAging = 0;
+  let aging0_30 = 0,
+    aging31_60 = 0,
+    aging61_90 = 0,
+    agingOver90 = 0;
+  let completedCount = 0,
+    inProgressCount = 0,
+    inProgressAmount = 0;
+
+  const isPayable = debtType === "payables";
   const uniqueVehicles = new Set<string>();
 
   cases.forEach((c: any) => {
     const isCompleted =
       c.isCompleted !== false && Boolean(c.ngayHoanThanhCongViec);
-    const rev = Number(c.tienCoThue) || 0;
-    const paid = Number(c.tienDaThanhToan) || 0;
-    const bal = Number(c.tienConPhaiThanhToan) || 0;
+    const { rev, paid, bal } = extractCaseAmounts(c, isPayable);
     const aging = Number(c.agingDays) || 0;
 
     if (c.bienSoXe) uniqueVehicles.add(c.bienSoXe);
@@ -74,8 +91,12 @@ export function calculateCustomerDebtTotals(cases: any[]): CustomerDebtTotals {
   };
 }
 
-export function calculateVehicleDebtStats(cases: any[]): VehicleDebtStat[] {
+export function calculateVehicleDebtStats(
+  cases: any[],
+  debtType: "receivables" | "payables" = "receivables",
+): VehicleDebtStat[] {
   const map: Record<string, VehicleDebtStat> = {};
+  const isPayable = debtType === "payables";
 
   cases.forEach((c: any) => {
     const isCompleted =
@@ -103,9 +124,7 @@ export function calculateVehicleDebtStats(cases: any[]): VehicleDebtStat[] {
     map[plate].caseCount += 1;
 
     if (isCompleted) {
-      const rev = Number(c.tienCoThue) || 0;
-      const paid = Number(c.tienDaThanhToan) || 0;
-      const bal = Number(c.tienConPhaiThanhToan) || 0;
+      const { rev, paid, bal } = extractCaseAmounts(c, isPayable);
       const aging = Number(c.agingDays) || 0;
 
       map[plate].totalRevenue += rev;
@@ -131,8 +150,12 @@ export function calculateAgingDonutItems(
   ].filter((item) => item.value > 0);
 }
 
-export function calculateMonthlyTrendItems(cases: any[]): MonthlyTrendItem[] {
+export function calculateMonthlyTrendItems(
+  cases: any[],
+  debtType: "receivables" | "payables" = "receivables",
+): MonthlyTrendItem[] {
   const monthMap: Record<string, MonthlyTrendItem> = {};
+  const isPayable = debtType === "payables";
 
   cases.forEach((c: any) => {
     const isCompleted =
@@ -142,7 +165,7 @@ export function calculateMonthlyTrendItems(cases: any[]): MonthlyTrendItem[] {
     const dateStr = c.ngayHoanThanhCongViec || c.ngayPhatSinh || c.createdAt;
     if (!dateStr) return;
 
-    const month = String(dateStr).slice(0, 7); // YYYY-MM
+    const month = String(dateStr).slice(0, 7);
     if (!monthMap[month]) {
       monthMap[month] = {
         month,
@@ -153,10 +176,7 @@ export function calculateMonthlyTrendItems(cases: any[]): MonthlyTrendItem[] {
       };
     }
 
-    const rev = Number(c.tienCoThue) || 0;
-    const paid = Number(c.tienDaThanhToan) || 0;
-    const bal = Number(c.tienConPhaiThanhToan) || 0;
-
+    const { rev, paid, bal } = extractCaseAmounts(c, isPayable);
     monthMap[month].revenue += rev;
     monthMap[month].paid += paid;
     monthMap[month].balance += bal;

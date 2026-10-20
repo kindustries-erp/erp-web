@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useT } from "@/core/i18n";
@@ -7,6 +7,7 @@ import {
   type BankStatementExportHistoryItem,
 } from "@/modules/bank-statements/api/bankStatementApi";
 import { useBankStatementExportProgress } from "@/modules/bank-statements/hooks/useBankStatementExportProgress";
+import { useBankStatementExportProgressStore } from "@/shared/stores/useBankStatementExportProgressStore";
 import { useBankStatementExportSync } from "./BankStatementExportDrawer.sync.hook";
 import { useBankStatementExportForm } from "./BankStatementExportDrawer.form.hook";
 import type { BankStatementExportMode } from "./BankStatementExportDrawer.type";
@@ -25,7 +26,6 @@ export function useBankStatementExportDrawer({
   buildBaseQuery,
 }: UseBankStatementExportDrawerProps) {
   const t = useT();
-
   const [exportMode, setExportMode] =
     useState<BankStatementExportMode>("by-period");
   const [page, setPage] = useState(1);
@@ -34,6 +34,8 @@ export function useBankStatementExportDrawer({
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
   const [trackedJobId, setTrackedJobId] = useState<string | null>(null);
 
+  const downloadedJobIdsRef = useRef<Set<string>>(new Set());
+  const progress = useBankStatementExportProgressStore();
   const formHook = useBankStatementExportForm({ type, accountsData });
   const { downloadReadyFile } = useBankStatementExportProgress();
 
@@ -43,6 +45,16 @@ export function useBankStatementExportDrawer({
     enabled: open,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    refetchInterval: (query) => {
+      if (!open) return false;
+      const data = query.state.data as
+        | { items?: Array<{ status: string }> }
+        | undefined;
+      const hasRunning = data?.items?.some((it) => it.status === "RUNNING");
+      const isJobTracked =
+        trackedJobId && !downloadedJobIdsRef.current.has(trackedJobId);
+      return hasRunning || isJobTracked || progress.isRunning ? 2500 : false;
+    },
   });
 
   const handleDownload = useCallback(
@@ -54,9 +66,7 @@ export function useBankStatementExportDrawer({
         typeof jobIdOrRow === "string" ? jobIdOrRow : jobIdOrRow.jobId;
       const fileName =
         typeof jobIdOrRow === "string" ? customFileName : jobIdOrRow.fileName;
-
       if (downloadingJobId) return;
-
       try {
         setDownloadingJobId(jobId);
         await downloadReadyFile(jobId, fileName);
@@ -76,19 +86,22 @@ export function useBankStatementExportDrawer({
     [downloadingJobId, downloadReadyFile, historyQuery, t],
   );
 
-  const { progress } = useBankStatementExportSync({
+  useBankStatementExportSync({
     open,
     trackedJobId,
     historyData: historyQuery.data,
     refetchHistory: historyQuery.refetch,
     onDownload: handleDownload,
+    downloadedJobIdsRef,
+    onJobFinished: (finishedJobId) => {
+      if (trackedJobId === finishedJobId) setTrackedJobId(null);
+    },
   });
 
   const handleStartExport = async () => {
     try {
       setStarting(true);
       let payload: any = {};
-
       if (exportMode === "by-current-filter") {
         const baseQuery = buildBaseQuery ? buildBaseQuery() : {};
         const restQuery = { ...baseQuery };
@@ -96,6 +109,7 @@ export function useBankStatementExportDrawer({
         delete restQuery.pageSize;
         payload = {
           sourceType: type === "bank" ? "BANK" : "CASH",
+          selected_columns: formHook.selectedColumns,
           ...restQuery,
         };
       } else {
@@ -112,6 +126,7 @@ export function useBankStatementExportDrawer({
           sourceType: type === "bank" ? "BANK" : "CASH",
           startDate: `${formHook.dateFrom} 00:00:00`,
           endDate: `${formHook.dateTo} 23:59:59`,
+          selected_columns: formHook.selectedColumns,
         };
         if (formHook.selectedAccountId) {
           if (type === "bank")

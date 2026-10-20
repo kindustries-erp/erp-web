@@ -10,22 +10,22 @@ export const CLASSIFICATION_CONFIG: Record<
 > = {
   SUA_CHUA_CHUNG: {
     defaultName: "Sửa chữa chung",
-    dot: "#10b981",
+    dot: "#059669",
     icon: Wrench,
   },
   KY_GUI_NOI_BO: {
     defaultName: "Ký gửi / Nội bộ",
-    dot: "#6366f1",
+    dot: "#0D9488",
     icon: Building2,
   },
   OJ_NGOAI: {
     defaultName: "OJ Ngoài",
-    dot: "#f59e0b",
+    dot: "#EA580C",
     icon: Zap,
   },
   KHAC: {
     defaultName: "Khác",
-    dot: "#64748b",
+    dot: "#475569",
     icon: HelpCircle,
   },
 };
@@ -52,30 +52,30 @@ export const getStatusColor = (name: string, index: number) => {
     lower.includes("hoàn tất") ||
     lower.includes("xong")
   ) {
-    return "#10b981"; // Emerald
+    return "#059669"; // Emerald
   }
   if (
     lower.includes("đang thực hiện") ||
     lower.includes("đang sửa") ||
     lower.includes("tiến hành")
   ) {
-    return "#6366f1"; // Indigo
+    return "#475569"; // Slate
   }
   if (lower.includes("tiếp nhận") || lower.includes("mới")) {
-    return "#3b82f6"; // Blue
+    return "#0D9488"; // Teal
   }
   if (lower.includes("báo giá") || lower.includes("chờ duyệt")) {
-    return "#f59e0b"; // Amber
+    return "#7C3AED"; // Violet
   }
   if (lower.includes("hủy") || lower.includes("từ chối")) {
-    return "#ef4444"; // Red
+    return "#E11D48"; // Rose
   }
   const fallbackColors = [
-    "#8b5cf6",
-    "#06b6d4",
-    "#ec4899",
-    "#64748b",
-    "#84cc16",
+    "#CA8A04",
+    "#64748B",
+    "#0D9488",
+    "#D97706",
+    "#9333EA",
   ];
   return fallbackColors[index % fallbackColors.length];
 };

@@ -14,6 +14,8 @@ export interface GarageOpexItem {
   recurrenceUntilYear?: number | null;
   recurrenceUntilMonth?: number | null;
   recurrenceAnchorId?: string | null;
+  /** Có giá trị khi khoản chi được ghi nhận từ phiếu chi garage (chỉ đọc). */
+  sourceCashflowVoucherId?: string | null;
   createdBy?: string | null;
   isAutoCalculated?: boolean;
   isReadOnly?: boolean;
@@ -95,6 +97,27 @@ export interface GaragePnlItem {
   autoAmount?: number;
   isAutoCalculated?: boolean;
   isReadOnly?: boolean;
+}
+
+/** Một tháng của chart "Báo cáo lợi nhuận" và "Tỷ trọng chỉ số trên 100% doanh thu". */
+export interface GaragePnlTrendPoint {
+  year: number;
+  month: number;
+  label: string;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  /** Lợi nhuận gộp / doanh thu (0..1), null khi không có doanh thu. */
+  grossMarginRatio: number | null;
+  ratios: {
+    cogs: number;
+    nhanSu: number;
+    matBang: number;
+    vatTu: number;
+    baoTri: number;
+    khauHao: number;
+    khac: number;
+  };
 }
 
 export interface GaragePnlReportResponse {
@@ -277,6 +300,18 @@ export const garageOpexApi = {
   }): Promise<GaragePnlReportResponse> => {
     const { data } = await axiosInstance.get<GaragePnlReportResponse>(
       `${BASE}/pnl-report`,
+      { params },
+    );
+    return data;
+  },
+
+  getPnlTrend: async (params: {
+    year: number;
+    month: number;
+    count?: number;
+  }): Promise<GaragePnlTrendPoint[]> => {
+    const { data } = await axiosInstance.get<GaragePnlTrendPoint[]>(
+      `${BASE}/pnl-trend`,
       { params },
     );
     return data;

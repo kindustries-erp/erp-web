@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "@/shared/components/ui/badge";
+import { Info } from "lucide-react";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { PnlAmountCell } from "./PnlAmountCell";
 
 interface PnlKyGuiCommissionDetailRowsProps {
@@ -35,27 +36,35 @@ export function PnlKyGuiCommissionDetailRows({
   return (
     <>
       {/* 4.1.1. Tỷ lệ lãi gộp ký gửi / Lãi gộp */}
-      <tr className="text-slate-600 dark:text-slate-400 hover:bg-muted/10 transition-colors">
+      <tr className="text-muted-foreground hover:bg-muted/10 transition-colors">
         <td className="py-1.5 pl-14 pr-4">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-medium">
-                {t(
-                  "pnl.kyGuiProfitRate",
-                  "4.1.1. Tỷ lệ lãi gộp ký gửi / Lãi gộp",
-                )}
-              </span>
-              <Badge
-                variant="outline"
-                className="text-[9px] px-1.5 py-0 bg-purple-100/80 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border-purple-300 dark:border-purple-800 font-medium"
-              >
-                {t("pnl.kyGuiAllocationBadge", "Tỷ trọng phân bổ Sale")}
-              </Badge>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-normal">
-              Lãi gộp Ký gửi: {kyGuiProfit.toLocaleString("vi-VN")} đ / Tổng lãi
-              gộp: {grossProfit.toLocaleString("vi-VN")} đ
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] italic">
+              {t(
+                "pnl.kyGuiProfitRate",
+                "4.1.1. Tỷ lệ lãi gộp ký gửi / Lãi gộp",
+              )}
             </span>
+            <Tooltip
+              content={
+                <div className="text-[11px] space-y-1 py-0.5">
+                  <div className="font-semibold text-purple-300">
+                    {t("pnl.kyGuiAllocationBadge", "Tỷ trọng phân bổ Sale")}
+                  </div>
+                  <div>
+                    Lãi gộp Ký gửi: {kyGuiProfit.toLocaleString("vi-VN")} đ
+                  </div>
+                  <div>
+                    Tổng lãi gộp: {grossProfit.toLocaleString("vi-VN")} đ
+                  </div>
+                </div>
+              }
+              side="right"
+            >
+              <span className="cursor-help inline-flex items-center justify-center text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+                <Info className="w-3 h-3" />
+              </span>
+            </Tooltip>
           </div>
         </td>
         <PnlAmountCell
@@ -63,9 +72,9 @@ export function PnlKyGuiCommissionDetailRows({
           prevAmount={rate1}
           isRatioOnly
           isLoadingPrev={isLoadingPrev}
+          hideDelta
           hideRate
-          tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] font-bold text-purple-700 dark:text-purple-400"
-          amountClassName="font-bold text-purple-700 dark:text-purple-400"
+          tdClassName={subCell}
         />
         <PnlAmountCell
           amount={rate1}
@@ -73,6 +82,7 @@ export function PnlKyGuiCommissionDetailRows({
           isRatioOnly
           isLoading={isLoadingPrev}
           isLoadingPrev={isLoadingPrev2}
+          hideDelta
           hideRate
           tdClassName={subCell}
         />
@@ -87,7 +97,7 @@ export function PnlKyGuiCommissionDetailRows({
       </tr>
 
       {/* 4.1.2. Hoa hồng Sale tính toán */}
-      <tr className="text-slate-600 dark:text-slate-400 hover:bg-muted/10 transition-colors border-b border-border/20">
+      <tr className="text-muted-foreground hover:bg-muted/10 transition-colors border-b border-border/20">
         <td className="py-1.5 pl-14 pr-4">
           <span className="text-[11px] italic">
             {t(
@@ -100,7 +110,7 @@ export function PnlKyGuiCommissionDetailRows({
           amount={sale0}
           hideDelta
           hideRate
-          tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px]"
+          tdClassName={subCell}
         />
         <PnlAmountCell
           amount={sale1}

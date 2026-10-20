@@ -1,187 +1,126 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { garageApi } from "@/modules/garage/api/garageApi";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-interface UseGarageDebtsExportDrawerProps {
-  branchId?: string;
-  onClose: () => void;
-}
+import {
+  toIsoDate,
+  useBackgroundExport,
+  useExportPeriod,
+  type ExportMode,
+} from "@/shared/export-jobs";
+import {
+  GARAGE_DEBT_BASELINE_DATE,
+  type GarageDebtsExportKind,
+} from "@/modules/garage/export/garageDebtsExportContext";
+import {
+  branchHeaders,
+  garageAllDebtsExportScope,
+  garageCustomersDebtExportScope,
+  garageSuppliersDebtExportScope,
+  useGarageAllDebtsExportStore,
+  useGarageCustomersDebtExportStore,
+  useGarageSuppliersDebtExportStore,
+  type GarageDebtsExportPayload,
+} from "@/modules/garage/export/garageExportScopes";
+import { useGarageExportLabels } from "@/modules/garage/export/useGarageExportLabels";
+import type { GarageDebtsExportDrawerProps } from "./GarageDebtsExportDrawer.type";
+
+const today = () => toIsoDate(new Date());
 
 export function useGarageDebtsExportDrawer({
+  open,
   branchId,
-  onClose,
-}: UseGarageDebtsExportDrawerProps) {
-  const { t } = useTranslation(["garage", "debts", "common"]);
-  const [partnerType, setPartnerType] = useState<"customers" | "suppliers">(
-    "customers",
+  context,
+}: GarageDebtsExportDrawerProps) {
+  const {
+    t,
+    history,
+    mode: modeLabels,
+    period: periodLabels,
+    messages,
+  } = useGarageExportLabels();
+
+  const [kind, setKind] = useState<GarageDebtsExportKind>(
+    context?.kind ?? "all",
   );
-  const [dateFrom, setDateFrom] = useState<string>("2026-07-01");
-  const [dateTo, setDateTo] = useState<string>(
-    new Date().toISOString().slice(0, 10),
-  );
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportMode, setExportMode] = useState<ExportMode>("by-period");
+  // Mặc định lấy toàn bộ công nợ từ mốc ghi nhận đến hôm nay (Tùy chỉnh).
+  const period = useExportPeriod({
+    initialUnit: "custom",
+    initialFrom: GARAGE_DEBT_BASELINE_DATE,
+    initialTo: today(),
+  });
 
-  const downloadCsv = (filename: string, csvContent: string) => {
-    const blob = new Blob(["\uFEFF" + csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const blobUrl = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.style.display = "none";
-    a.href = blobUrl;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      if (document.body.contains(a)) document.body.removeChild(a);
-      window.URL.revokeObjectURL(blobUrl);
-    }, 2000);
-  };
+  // Mỗi lần mở từ một bảng: chọn đúng đối tượng và dùng filter của bảng đó.
+  useEffect(() => {
+    if (!open) return;
+    setKind(context?.kind ?? "all");
+    setExportMode(context?.query ? "by-current-filter" : "by-period");
+  }, [open, context?.kind, context?.query]);
 
-  const handleExport = async () => {
-    try {
-      setIsExporting(true);
-      toast.loading(
-        t("garage:debts.exportLoading", "Đang kết xuất dữ liệu Excel..."),
-        { id: "export-garage-debt-toast" },
+  const allDebts = useBackgroundExport<GarageDebtsExportPayload>({
+    scope: garageAllDebtsExportScope,
+    useStore: useGarageAllDebtsExportStore,
+    open: open && kind === "all",
+    messages,
+  });
+  const customers = useBackgroundExport<GarageDebtsExportPayload>({
+    scope: garageCustomersDebtExportScope,
+    useStore: useGarageCustomersDebtExportStore,
+    open: open && kind === "customers",
+    messages,
+  });
+  const suppliers = useBackgroundExport<GarageDebtsExportPayload>({
+    scope: garageSuppliersDebtExportScope,
+    useStore: useGarageSuppliersDebtExportStore,
+    open: open && kind === "suppliers",
+    messages,
+  });
+  const exporter =
+    kind === "all" ? allDebts : kind === "customers" ? customers : suppliers;
+
+  const canUseCurrentFilter = Boolean(context?.query) && context?.kind === kind;
+  const effectiveMode: ExportMode = canUseCurrentFilter
+    ? exportMode
+    : "by-period";
+
+  const handleStartExport = async () => {
+    const headers = branchHeaders(branchId);
+
+    if (effectiveMode === "by-current-filter" && context?.query) {
+      await exporter.start(
+        { mode: "by-current-filter", ...context.query },
+        headers,
       );
-
-      if (partnerType === "customers") {
-        const res = await garageApi.getCustomersDebt({
-          branchId,
-          page: 1,
-          pageSize: 5000,
-          from: dateFrom,
-          to: dateTo,
-        });
-        const items = res.data || [];
-        if (items.length === 0) {
-          toast.error("Không có dữ liệu công nợ trong khoảng thời gian này", {
-            id: "export-garage-debt-toast",
-          });
-          setIsExporting(false);
-          return;
-        }
-
-        const headers = [
-          "Mã KH",
-          "Tên KH",
-          "Số phiếu",
-          "Tổng doanh thu",
-          "Đã thu",
-          "Còn phải thu",
-          "Nợ 0-30 ngày",
-          "Nợ 31-60 ngày",
-          "Nợ 61-90 ngày",
-          "Nợ >90 ngày",
-          "Tuổi nợ max",
-          "Ngày gần nhất",
-        ];
-        const csvRows = [headers.join(",")];
-        for (const r of items) {
-          csvRows.push(
-            [
-              `"${r.customerCode || ""}"`,
-              `"${(r.customerName || "").replace(/"/g, '""')}"`,
-              r.caseCount,
-              r.totalAmount,
-              r.paidAmount,
-              r.balanceAmount,
-              r.aging0_30,
-              r.aging31_60,
-              r.aging61_90,
-              r.agingOver90,
-              r.maxAgingDays,
-              `"${r.latestDate ? r.latestDate.slice(0, 10) : ""}"`,
-            ].join(","),
-          );
-        }
-        downloadCsv(
-          `Bao_cao_cong_no_khach_hang_garage_${new Date().toISOString().slice(0, 10)}.csv`,
-          csvRows.join("\n"),
-        );
-      } else {
-        const res = await garageApi.getSuppliersDebt({
-          branchId: branchId || "",
-          page: 1,
-          pageSize: 5000,
-          from: dateFrom,
-          to: dateTo,
-        });
-        const items = res.data || [];
-        if (items.length === 0) {
-          toast.error(
-            "Không có dữ liệu công nợ NCC trong khoảng thời gian này",
-            {
-              id: "export-garage-debt-toast",
-            },
-          );
-          setIsExporting(false);
-          return;
-        }
-
-        const headers = [
-          "Mã NCC",
-          "Tên NCC",
-          "Số vụ việc",
-          "Phải trả",
-          "Đã trả",
-          "Còn nợ",
-          "Nợ 0-30 ngày",
-          "Nợ 31-60 ngày",
-          "Nợ 61-90 ngày",
-          "Nợ >90 ngày",
-          "Tuổi nợ max",
-        ];
-        const csvRows = [headers.join(",")];
-        for (const r of items) {
-          csvRows.push(
-            [
-              `"${r.supplierCode || ""}"`,
-              `"${(r.supplierName || "").replace(/"/g, '""')}"`,
-              r.caseCount,
-              r.ckCo || r.psCo,
-              r.ckNo || r.psNo,
-              r.balanceAmount,
-              r.aging0_30,
-              r.aging31_60,
-              r.aging61_90,
-              r.agingOver90,
-              r.maxAgingDays,
-            ].join(","),
-          );
-        }
-        downloadCsv(
-          `Bao_cao_cong_no_nha_cung_cap_garage_${new Date().toISOString().slice(0, 10)}.csv`,
-          csvRows.join("\n"),
-        );
-      }
-
-      toast.success(
-        t("common:exportSuccess", "Đã xuất bảng kê công nợ thành công."),
-        {
-          id: "export-garage-debt-toast",
-        },
-      );
-      onClose();
-    } catch (err: any) {
-      toast.error(err?.message || "Xuất báo cáo thất bại", {
-        id: "export-garage-debt-toast",
-      });
-    } finally {
-      setIsExporting(false);
+      return;
     }
+
+    if (!period.dateFrom || !period.dateTo) {
+      toast.error(
+        t(
+          "exportJobs.missingDateRange",
+          "Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.",
+        ),
+      );
+      return;
+    }
+    await exporter.start(
+      { mode: "by-period", from: period.dateFrom, to: period.dateTo },
+      headers,
+    );
   };
 
   return {
-    partnerType,
-    setPartnerType,
-    dateFrom,
-    setDateFrom,
-    dateTo,
-    setDateTo,
-    isExporting,
-    handleExport,
+    t,
+    historyLabels: history,
+    modeLabels,
+    periodLabels,
+    kind,
+    setKind,
+    exportMode: effectiveMode,
+    setExportMode,
+    canUseCurrentFilter,
+    period,
+    exporter,
+    handleStartExport,
   };
 }

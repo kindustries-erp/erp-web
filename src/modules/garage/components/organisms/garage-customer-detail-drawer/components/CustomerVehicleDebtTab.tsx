@@ -9,17 +9,23 @@ import type { VehicleDebtStat } from "../types";
 
 interface CustomerVehicleDebtTabProps {
   vehicleStats: VehicleDebtStat[];
+  debtType?: "receivables" | "payables";
+  selectedLicensePlate?: string | null;
+  onSelectVehicle?: (plate: string) => void;
 }
 
 export const CustomerVehicleDebtTab = React.memo(
   function CustomerVehicleDebtTab({
     vehicleStats,
+    debtType = "receivables",
+    selectedLicensePlate,
+    onSelectVehicle,
   }: CustomerVehicleDebtTabProps) {
     const { t } = useTranslation(["garage", "common"]);
+    const isPayables = debtType === "payables";
 
     const columns: DataTableColumn<VehicleDebtStat>[] = useMemo(
       () => [
-        // 1. STT
         {
           key: "index",
           header: <span className="w-full block text-center">#</span>,
@@ -29,25 +35,53 @@ export const CustomerVehicleDebtTab = React.memo(
           headerClassName: "text-center w-[40px] min-w-[40px]",
           className:
             "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
-          cell: (_: any, idx: number) => idx + 1,
+          cell: (_: any, idx: number) => idx,
         },
-
-        // 2. Biển số xe
         {
           key: "licensePlate",
           header: t("customers.drawer.licensePlate", "Biển số xe"),
-          size: 150,
+          size: 160,
           minSize: 130,
           enableResizing: true,
-          cell: (row: VehicleDebtStat) => (
-            <span className="inline-flex items-center gap-1.5 font-mono font-bold text-foreground bg-muted/60 px-2 py-1 rounded text-xs whitespace-nowrap">
-              <Car className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              {row.licensePlate}
-            </span>
-          ),
-        },
+          cell: (row: VehicleDebtStat) => {
+            const isSelected =
+              Boolean(selectedLicensePlate) &&
+              row.licensePlate.trim().toUpperCase() ===
+                (selectedLicensePlate || "").trim().toUpperCase();
 
-        // 3. Số vụ việc
+            return (
+              <button
+                type="button"
+                onClick={() => onSelectVehicle?.(row.licensePlate)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 font-mono font-bold px-2 py-1 rounded text-xs whitespace-nowrap transition-all text-left",
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-xs ring-2 ring-primary/40"
+                    : "text-foreground bg-muted/60 hover:bg-primary/15 hover:text-primary cursor-pointer",
+                )}
+                title={t(
+                  "customers.drawer.clickToFilterVehicle",
+                  "Nhấn để lọc chi tiết phiếu của xe này",
+                )}
+              >
+                <Car
+                  className={cn(
+                    "w-3.5 h-3.5 shrink-0",
+                    isSelected
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground",
+                  )}
+                />
+                <span>{row.licensePlate}</span>
+                {isSelected && (
+                  <span className="text-[10px] ml-1 opacity-90 font-sans">
+                    ({t("common:active", "Đang xem")})
+                  </span>
+                )}
+              </button>
+            );
+          },
+        },
         {
           key: "caseCount",
           className: "text-center",
@@ -61,12 +95,12 @@ export const CustomerVehicleDebtTab = React.memo(
             </Badge>
           ),
         },
-
-        // 4. Doanh thu hoàn thành
         {
           key: "totalRevenue",
           className: "text-right",
-          header: t("customers.drawer.totalAmount", "Doanh thu hoàn thành"),
+          header: isPayables
+            ? t("customers.drawer.totalCost", "Tổng chi phí")
+            : t("customers.drawer.totalAmount", "Doanh thu hoàn thành"),
           size: 140,
           minSize: 120,
           enableResizing: true,
@@ -76,12 +110,12 @@ export const CustomerVehicleDebtTab = React.memo(
             </span>
           ),
         },
-
-        // 5. Đã thu
         {
           key: "totalPaid",
           className: "text-right",
-          header: t("customers.drawer.paidAmount", "Đã thu"),
+          header: isPayables
+            ? t("customers.drawer.paidPayables", "Đã chi")
+            : t("customers.drawer.paidAmount", "Đã thu"),
           size: 130,
           minSize: 115,
           enableResizing: true,
@@ -91,12 +125,12 @@ export const CustomerVehicleDebtTab = React.memo(
             </span>
           ),
         },
-
-        // 6. Còn nợ
         {
           key: "totalBalance",
           className: "text-right",
-          header: t("customers.drawer.balanceAmount", "Còn nợ"),
+          header: isPayables
+            ? t("customers.drawer.balancePayables", "Còn phải chi")
+            : t("customers.drawer.balanceAmount", "Còn nợ"),
           size: 130,
           minSize: 115,
           enableResizing: true,
@@ -113,8 +147,6 @@ export const CustomerVehicleDebtTab = React.memo(
             </span>
           ),
         },
-
-        // 7. Tuổi nợ cao nhất
         {
           key: "maxAgingDays",
           className: "text-center",
@@ -151,7 +183,7 @@ export const CustomerVehicleDebtTab = React.memo(
           },
         },
       ],
-      [t],
+      [isPayables, t],
     );
 
     return (

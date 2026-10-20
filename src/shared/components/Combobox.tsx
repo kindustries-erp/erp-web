@@ -12,6 +12,7 @@ export interface ComboboxOption {
   subCode?: string;
   searchText?: string;
   subLabel?: string;
+  tooltipContent?: React.ReactNode;
 }
 
 export function parseComboboxOptionDisplay(o?: ComboboxOption | null): {
@@ -49,7 +50,12 @@ interface ComboboxProps {
   loading?: boolean;
   onSearch?: (query: string) => void;
   fallbackLabel?: string;
+  fallbackTooltipContent?: React.ReactNode;
   variant?: "default" | "spreadsheet" | "ghost";
+  /** Khi bật, ẩn subLabel trên nút trigger để giữ nút thoáng đãng trên 1 dòng duy nhất */
+  hideTriggerSubLabel?: boolean;
+  /** Gắn dropdown vào phần tử này thay vì `document.body` (cần khi nằm trong phần tử đang full screen). */
+  portalContainer?: HTMLElement | null;
 }
 
 export function Combobox({
@@ -67,7 +73,10 @@ export function Combobox({
   loading,
   onSearch,
   fallbackLabel,
+  fallbackTooltipContent,
   variant = "default",
+  hideTriggerSubLabel = false,
+  portalContainer,
 }: ComboboxProps) {
   const t = useT();
   const defaultPlaceholder = t("common.select", "— Chọn —");
@@ -155,7 +164,9 @@ export function Combobox({
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Tooltip
         content={
-          selected ? (
+          selected?.tooltipContent ? (
+            selected.tooltipContent
+          ) : selected ? (
             <div className="flex flex-col gap-0.5">
               <span>
                 {selectedDisplay.label}
@@ -167,11 +178,13 @@ export function Combobox({
               )}
             </div>
           ) : (
-            fallbackLabel || ""
+            fallbackTooltipContent || fallbackLabel || ""
           )
         }
         side="top"
-        disabled={!selected || open}
+        disabled={
+          open || (!selected && !fallbackLabel && !fallbackTooltipContent)
+        }
       >
         <Popover.Trigger asChild>
           <button
@@ -212,7 +225,7 @@ export function Combobox({
                       ? fallbackLabel
                       : effectivePlaceholder}
                 </span>
-                {selected?.subLabel && (
+                {selected?.subLabel && !hideTriggerSubLabel && (
                   <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
                     {selected.subLabel}
                   </span>
@@ -238,7 +251,7 @@ export function Combobox({
         </Popover.Trigger>
       </Tooltip>
 
-      <Popover.Portal>
+      <Popover.Portal container={portalContainer ?? undefined}>
         <Popover.Content
           className="z-[9999] w-[var(--radix-popover-trigger-width)] min-w-[200px] flex flex-col rounded-lg popup-content overflow-hidden shadow-md"
           style={{ maxHeight: "280px" }}
@@ -314,7 +327,9 @@ export function Combobox({
                   <Tooltip
                     key={o.value}
                     content={
-                      o.subLabel ? (
+                      o.tooltipContent ? (
+                        o.tooltipContent
+                      ) : o.subLabel ? (
                         <div className="flex flex-col gap-0.5">
                           <span>{itemLabel}</span>
                           <span className="text-white/70">{o.subLabel}</span>
