@@ -55,6 +55,12 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     onTabChange?.("linked_docs");
   }, [activeTabKey]);
 
+  // Deep link "Hạch toán kế toán" (activeTabKey="accounting") → mở main tab Chi tiết (có sub-tab hạch toán)
+  useEffect(() => {
+    if (activeTabKey !== "accounting") return;
+    onTabChange?.("invoice_details");
+  }, [activeTabKey]);
+
   // Deep link danh sách HHDV/đối tượng → main tab "Chi tiết theo NCC/KH" khi mở drawer
   useEffect(() => {
     if (!open || !opensPartnerTab) return;

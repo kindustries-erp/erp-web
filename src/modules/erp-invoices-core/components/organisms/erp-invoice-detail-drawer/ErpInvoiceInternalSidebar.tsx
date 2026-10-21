@@ -21,6 +21,7 @@ export interface ErpInvoiceInternalSidebarProps {
   direction: "IN" | "OUT";
   detailInvoice: ErpInvoice | null;
   pdfSlot?: React.ReactNode;
+  debtSlot?: React.ReactNode;
   onRefreshDetail?: () => void;
   hideAccountingSection?: boolean;
 }
@@ -34,6 +35,7 @@ export function ErpInvoiceInternalSidebar({
   onPendingTagsChange,
   direction,
   detailInvoice,
+  debtSlot,
   onRefreshDetail,
 }: ErpInvoiceInternalSidebarProps) {
   const { t } = useTranslation("erpInvoices");
@@ -97,6 +99,9 @@ export function ErpInvoiceInternalSidebar({
         pendingTagIds={pendingTagIds}
         onPendingTagsChange={onPendingTagsChange}
       />
+
+      {/* 1.5. CÔNG NỢ & MỤC TIÊU CẤN TRỪ (Chỉ hiển thị khi có debtSlot - ví dụ: tab Chứng từ & Tài chính) */}
+      {debtSlot}
 
       {/* 2. THUỘC TÍNH MẶC ĐỊNH (ATOMIC SUB-COMPONENT) */}
       <ErpInvoiceDefaultAttributesSection
