@@ -23,6 +23,7 @@ export interface GarageExportFilterSummary {
   q?: string;
   sortCount?: number;
   filterCount: number;
+  filtersStr?: string;
 }
 
 export interface GarageExportModeAndPeriodProps {

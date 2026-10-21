@@ -1297,6 +1297,13 @@ export interface BulkImportResult {
   pdfOrphans?: { filename: string; reason: string }[];
 }
 
+export interface SmartNetOffReason {
+  key: string;
+  label: string;
+  /** true: tín hiệu cộng điểm; false: yếu tố trừ điểm */
+  matched: boolean;
+}
+
 export interface SmartNetOffSuggestionItem {
   txn: {
     id: string;
@@ -1331,4 +1338,5 @@ export interface SmartNetOffSuggestionItem {
       | "NOTICE";
   };
   matchedKeywords: string[];
+  reasons?: SmartNetOffReason[];
 }

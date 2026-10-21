@@ -4,5 +4,6 @@ export * from "./ErpInvoiceDetailDrawer.hook";
 export * from "./ErpInvoiceDetailDrawer.state";
 export * from "./ErpInvoiceInternalMain";
 export * from "./ErpInvoiceInternalSidebar";
+export * from "./ErpInvoiceAccountingSection";
 export { ErpInvoiceDetailDrawer as ErpInvoiceInternalDrawer } from "./ErpInvoiceDetailDrawer";
 export { ErpInvoiceDetailDrawer as default } from "./ErpInvoiceDetailDrawer";
