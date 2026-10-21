@@ -26,6 +26,15 @@ export function useGarageReportTypeOptions() {
     [t],
   );
 
+  const periodDescription = useMemo(
+    () =>
+      t(
+        "exportReport.typeDescs.periodDesc",
+        "Xuất bảng tổng hợp số liệu xưởng, kết quả kinh doanh, doanh thu, công nợ & dòng tiền theo khoảng thời gian.",
+      ),
+    [t],
+  );
+
   const periodOptions = useMemo(
     () =>
       PERIOD_REPORT_TYPES.map((type) => ({
@@ -38,6 +47,7 @@ export function useGarageReportTypeOptions() {
   return {
     kindLabel: t("exportReport.typeLabel", "Loại báo cáo"),
     kindItems,
+    periodDescription,
     periodLabel: t("exportReport.periodItemsLabel", "Nội dung báo cáo"),
     periodOptions,
     periodHint: t(
