@@ -50,7 +50,6 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     defaultRelatedTabKey = "financials",
     defaultRelatedCollapsed = false,
     bottomPanel,
-    partnerViewMode,
     pendingTagIds,
     onPendingTagsChange,
   } = props;

@@ -1,6 +1,5 @@
 import React from "react";
 import { useErpInvoiceSettlement } from "../erp-invoice-settlement-tab/context/ErpInvoiceSettlementContext";
-import { type ErpInvoiceSettlementTabProps } from "../erp-invoice-settlement-tab/types";
 import { ErpInvoiceInternalSidebar } from "../erp-invoice-detail-drawer/ErpInvoiceInternalSidebar";
 import { ErpInvoiceSettlementDebtSection } from "./ErpInvoiceSettlementDebtSection";
 import type { CreateErpInvoicePayload } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
