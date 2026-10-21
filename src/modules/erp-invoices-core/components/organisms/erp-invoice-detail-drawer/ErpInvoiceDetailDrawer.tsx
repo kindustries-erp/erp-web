@@ -1,29 +1,16 @@
 import React, { useMemo, useState, useEffect } from "react";
-import {
-  StandardFormDrawer,
-  DrawerAuditTimeline,
-  DrawerDocumentTraceability,
-} from "@/shared/components/StandardFormDrawer";
-import { DrawerSection } from "@/shared/components/DrawerModal";
-import { FileText, Users, Link2, History } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Badge } from "@/shared/components/ui/badge";
-import { VoucherNetoffSelectionModal } from "../voucher-netoff-selection-modal";
-import { PurchaseOrderSelectionModal } from "../purchase-order-selection-modal";
-import { SalesOrderSelectionModal } from "../sales-order-selection-modal";
-import { GarageCaseSelectionModal } from "../garage-case-selection-modal";
 import { ErpInvoiceSettlementProvider } from "../erp-invoice-settlement-tab";
 import { ErpInvoiceSettlementRightPanel } from "../erp-invoice-settlement-right-panel";
-import {
-  ErpInvoicePartnerTab,
-  ErpInvoicePartnerSection,
-} from "../erp-invoice-partner-tab";
+import type { InvoiceDetailSubTabKey } from "../erp-invoice-partner-tab";
 import { ErpInvoiceInternalSidebar } from "./ErpInvoiceInternalSidebar";
 import type { ErpInvoiceDetailDrawerProps } from "./ErpInvoiceDetailDrawer.type";
 import { useErpInvoiceDetailDrawer } from "./ErpInvoiceDetailDrawer.hook";
-import {
-  formatTaxInvoiceStatus,
-  buildInvoiceAuditItems,
-} from "./ErpInvoiceDetailDrawer.state";
+import { formatTaxInvoiceStatus } from "./ErpInvoiceDetailDrawer.state";
+import { useInvoiceDrawerTabs } from "./ErpInvoiceDrawerTabs";
+import { ErpInvoiceDetailDrawerModals } from "./ErpInvoiceDetailDrawerModals";
 
 export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
   const {
@@ -35,27 +22,28 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     rightPanel,
     children,
     onSyncDetail,
-    hideEditToggle = false,
+    hideEditToggle,
     form,
     fieldSet,
     direction,
     postingState,
-    pendingUnpost = false,
+    pendingUnpost,
     onUnpost,
     tabs: customTabs,
     defaultTabKey = "invoice_details",
     activeTabKey,
     onTabChange,
     relatedTabs: customRelatedTabs,
-    defaultRelatedTabKey = "financials",
-    defaultRelatedCollapsed = false,
+    defaultRelatedTabKey,
+    defaultRelatedCollapsed,
     bottomPanel,
     pendingTagIds,
     onPendingTagsChange,
   } = props;
 
+  const { t } = useTranslation("erpInvoices");
+
   const {
-    t,
     showNetOffModal,
     setShowNetOffModal,
     showPoModal,
@@ -66,6 +54,7 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     setShowGarageCaseModal,
     partnerDefaultSubTab,
     handleFetchGraph,
+    traceabilityCount,
     handleSelectBankNetOff,
     handleSelectPo,
     handleSelectSo,
@@ -74,13 +63,23 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     footerLeft,
   } = useErpInvoiceDetailDrawer(props);
 
-  const [invoiceDetailSubTab, setInvoiceDetailSubTab] = useState<
-    "details" | "accounting"
-  >(activeTabKey === "accounting" ? "accounting" : "details");
+  const [invoiceDetailSubTab, setInvoiceDetailSubTab] =
+    useState<InvoiceDetailSubTabKey>(
+      activeTabKey === "accounting"
+        ? "accounting"
+        : activeTabKey === "linked_docs" || activeTabKey === "financials"
+          ? "linked_docs"
+          : "details",
+    );
 
   useEffect(() => {
     if (activeTabKey === "accounting") {
       setInvoiceDetailSubTab("accounting");
+    } else if (
+      activeTabKey === "linked_docs" ||
+      activeTabKey === "financials"
+    ) {
+      setInvoiceDetailSubTab("linked_docs");
     }
   }, [activeTabKey]);
 
@@ -95,7 +94,6 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     let badgeClass = "border-slate-200 bg-slate-50 text-slate-700";
     switch (detailInvoice.taxInvoiceStatus) {
       case 1:
-        // No Blue Mandate: Thay thế blue-* bằng slate-*
         badgeClass =
           "border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
         break;
@@ -150,203 +148,57 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     onSyncDetail,
   ]);
 
-  // Build Top Navigation Tabs for Invoice
-  const resolvedDrawerTabs = useMemo(() => {
-    if (customTabs) return customTabs;
+  const settlementRightPanel = useMemo(() => {
     if (!detailInvoice) return undefined;
-
-    const auditItems = buildInvoiceAuditItems(detailInvoice, t);
-
-    const linkedCount =
-      (detailInvoice.voucherNetOffs?.length || 0) +
-      ((detailInvoice as any).relatedPos?.length || 0);
-
-    const financialsBadgeCount =
-      form?.pendingDocumentChanges?.filter((p) => p.type === "BANK")?.length ||
-      0;
-
-    return [
-      // 1. Tab Chi tiết: nội dung HĐ + xem trước / PDF + hạch toán kế toán (sub-tabs)
-      {
-        key: "invoice_details",
-        label: t("tabDetails", "Chi tiết"),
-        icon: <FileText className="w-3.5 h-3.5" />,
-        content: (
-          <ErpInvoicePartnerTab
-            detailInvoice={detailInvoice}
-            direction={direction}
-            form={form}
-            editMode={editMode}
-            fieldSet={fieldSet}
-            postingState={postingState}
-            pendingUnpost={pendingUnpost}
-            onUnpost={onUnpost}
-            activeSubTab={invoiceDetailSubTab}
-            onSubTabChange={setInvoiceDetailSubTab}
-          >
-            <div className="space-y-4">{children}</div>
-          </ErpInvoicePartnerTab>
-        ),
-        rightPanel: defaultRightPanel,
-      },
-
-      // 2. Tab Chi tiết theo NCC/KH (đối tượng, HHDV, biến động & phân tích)
-      {
-        key: "invoice_partner",
-        label: isDirectionIn
-          ? t("tabSupplierDetails", "Chi tiết theo Nhà cung cấp")
-          : t("tabCustomerDetails", "Chi tiết theo Khách hàng"),
-        icon: <Users className="w-3.5 h-3.5" />,
-        content: (
-          <ErpInvoicePartnerSection
-            detailInvoice={detailInvoice}
-            direction={direction}
-            defaultPartnerSubTab={partnerDefaultSubTab}
-            form={form}
-          />
-        ),
-        rightPanel: defaultRightPanel,
-      },
-
-      // 3. Tab Chứng từ liên kết: sơ đồ liên kết; ghép nối qua dropdown mở drawer chọn
-      {
-        key: "linked_docs",
-        label: t("tabLinkedFinance", "Chứng từ liên kết"),
-        icon: <Link2 className="w-3.5 h-3.5" />,
-        badgeCount: linkedCount + financialsBadgeCount,
-        rightPanel: (
-          <ErpInvoiceSettlementRightPanel
-            invoice={detailInvoice}
-            form={form}
-            editMode={editMode}
-            fieldSet={fieldSet}
-            direction={direction}
-            onRefresh={onSyncDetail}
-            onStartEdit={startEdit}
-            pendingTagIds={pendingTagIds}
-            onPendingTagsChange={onPendingTagsChange}
-          />
-        ),
-        content: (
-          <DrawerSection
-            title={t(
-              "drawerSectionLinkedDocs",
-              "Sơ đồ luồng chứng từ liên kết",
-            )}
-            collapsible
-            defaultCollapsed={false}
-          >
-            <DrawerDocumentTraceability
-              rootId={detailInvoice.id}
-              rootType="INVOICE"
-              fetchGraph={handleFetchGraph}
-              editMode={editMode}
-              allowedDocTypes={[
-                "BANK_TXN",
-                "PURCHASE_ORDER",
-                "SALES_ORDER",
-                "GARAGE_CASE",
-              ]}
-              onAddLink={(stageKey, docType) => {
-                if (docType === "BANK_TXN" || stageKey === "PAYMENT") {
-                  setShowNetOffModal(true);
-                } else if (
-                  docType === "PURCHASE_ORDER" ||
-                  stageKey === "ORDER_STOCK"
-                ) {
-                  setShowPoModal(true);
-                } else if (docType === "SALES_ORDER") {
-                  setShowSoModal(true);
-                } else if (docType === "GARAGE_CASE") {
-                  setShowGarageCaseModal(true);
-                } else {
-                  setShowNetOffModal(true);
-                }
-              }}
-              onUnlinkNode={async (node) => {
-                try {
-                  if (editMode) {
-                    const currentChanges = form?.pendingDocumentChanges || [];
-                    if (node.docType === "BANK_TXN") {
-                      fieldSet?.("pendingDocumentChanges", [
-                        ...currentChanges,
-                        { type: "BANK", action: "REMOVE", refId: node.id },
-                      ]);
-                    } else if (node.docType === "PURCHASE_ORDER") {
-                      fieldSet?.("pendingDocumentChanges", [
-                        ...currentChanges,
-                        { type: "PO", action: "REMOVE", refId: node.id },
-                      ]);
-                    } else if (node.docType === "GARAGE_CASE") {
-                      fieldSet?.("pendingDocumentChanges", [
-                        ...currentChanges,
-                        { type: "CASE", action: "REMOVE", refId: node.id },
-                      ]);
-                    } else if (node.docType === "SALES_ORDER") {
-                      fieldSet?.("pendingDocumentChanges", [
-                        ...currentChanges,
-                        { type: "SO", action: "REMOVE", refId: node.id },
-                      ]);
-                    }
-                  }
-                } catch {
-                  // ignore
-                }
-              }}
-            />
-          </DrawerSection>
-        ),
-      },
-
-      // 4. Tab Lịch sử & Kiểm duyệt (Audit Timeline)
-      {
-        key: "history",
-        label: t("tabHistory", "Lịch sử & Kiểm duyệt"),
-        icon: <History className="w-3.5 h-3.5" />,
-        badgeCount: auditItems.length,
-        content: (
-          <DrawerSection
-            title={t("drawerSectionHistory", "Nhật ký kiểm toán & thao tác")}
-            collapsible
-            defaultCollapsed={false}
-          >
-            <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
-              <DrawerAuditTimeline
-                items={auditItems}
-                emptyLabel={t("Chưa có ghi nhận lịch sử.")}
-              />
-            </div>
-          </DrawerSection>
-        ),
-        rightPanel: defaultRightPanel,
-      },
-    ];
+    return (
+      <ErpInvoiceSettlementRightPanel
+        invoice={detailInvoice}
+        form={form}
+        editMode={editMode}
+        fieldSet={fieldSet}
+        direction={direction}
+        onRefresh={onSyncDetail}
+        onStartEdit={startEdit}
+        pendingTagIds={pendingTagIds}
+        onPendingTagsChange={onPendingTagsChange}
+      />
+    );
   }, [
+    detailInvoice,
+    form,
+    editMode,
+    fieldSet,
+    direction,
+    onSyncDetail,
+    startEdit,
+    pendingTagIds,
+    onPendingTagsChange,
+  ]);
+
+  const resolvedDrawerTabs = useInvoiceDrawerTabs({
     customTabs,
     detailInvoice,
-    t,
     children,
+    direction,
+    isDirectionIn,
     editMode,
+    form,
+    fieldSet,
     postingState,
     pendingUnpost,
     onUnpost,
     invoiceDetailSubTab,
-    direction,
-    onSyncDetail,
-    handleFetchGraph,
-    defaultRightPanel,
-    pendingTagIds,
-    onPendingTagsChange,
+    setInvoiceDetailSubTab,
     partnerDefaultSubTab,
-    isDirectionIn,
-    setShowNetOffModal,
-    setShowPoModal,
-    setShowSoModal,
-    setShowGarageCaseModal,
-    startEdit,
-    form,
-    fieldSet,
-  ]);
+    defaultRightPanel,
+    settlementRightPanel,
+    handleFetchGraph,
+    traceabilityCount,
+    onOpenNetOffModal: () => setShowNetOffModal(true),
+    onOpenPoModal: () => setShowPoModal(true),
+    onOpenSoModal: () => setShowSoModal(true),
+    onOpenGarageCaseModal: () => setShowGarageCaseModal(true),
+  });
 
   return (
     <ErpInvoiceSettlementProvider
@@ -380,7 +232,9 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
         tabs={resolvedDrawerTabs}
         defaultTabKey={defaultTabKey}
         activeTabKey={
-          activeTabKey === "financials" || activeTabKey === "accounting"
+          activeTabKey === "financials" ||
+          activeTabKey === "accounting" ||
+          activeTabKey === "linked_docs"
             ? "invoice_details"
             : activeTabKey
         }
@@ -393,39 +247,21 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
         bottomPanel={bottomPanel}
       />
 
-      {detailInvoice && (
-        <>
-          <VoucherNetoffSelectionModal
-            open={showNetOffModal}
-            onClose={() => setShowNetOffModal(false)}
-            invoice={detailInvoice}
-            onSelect={handleSelectBankNetOff}
-            existingVoucherIds={(detailInvoice.voucherNetOffs || []).map(
-              (v) => v.bankTransactionId,
-            )}
-          />
-          <PurchaseOrderSelectionModal
-            open={showPoModal}
-            onClose={() => setShowPoModal(false)}
-            onSelect={handleSelectPo}
-            existingPoIds={
-              detailInvoice.purchaseOrderId
-                ? [detailInvoice.purchaseOrderId]
-                : []
-            }
-          />
-          <SalesOrderSelectionModal
-            open={showSoModal}
-            onClose={() => setShowSoModal(false)}
-            onSelect={handleSelectSo}
-          />
-          <GarageCaseSelectionModal
-            open={showGarageCaseModal}
-            onClose={() => setShowGarageCaseModal(false)}
-            onSelect={handleSelectGarageCase}
-          />
-        </>
-      )}
+      <ErpInvoiceDetailDrawerModals
+        detailInvoice={detailInvoice}
+        showNetOffModal={showNetOffModal}
+        setShowNetOffModal={setShowNetOffModal}
+        showPoModal={showPoModal}
+        setShowPoModal={setShowPoModal}
+        showSoModal={showSoModal}
+        setShowSoModal={setShowSoModal}
+        showGarageCaseModal={showGarageCaseModal}
+        setShowGarageCaseModal={setShowGarageCaseModal}
+        handleSelectBankNetOff={handleSelectBankNetOff}
+        handleSelectPo={handleSelectPo}
+        handleSelectSo={handleSelectSo}
+        handleSelectGarageCase={handleSelectGarageCase}
+      />
     </ErpInvoiceSettlementProvider>
   );
 }
