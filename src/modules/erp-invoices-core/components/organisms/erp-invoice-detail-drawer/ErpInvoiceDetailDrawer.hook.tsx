@@ -48,18 +48,20 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
   const partnerDefaultSubTab: PartnerSubTabMode =
     partnerViewMode === "lines" || isUrlLinesTab ? "lines" : "invoices";
 
-  // Deep link "Đối soát dòng tiền" (activeTabKey="financials") → mở thẳng drawer Sao kê
+  // Deep link "Đối soát dòng tiền" (activeTabKey="financials") hoặc "linked_docs" → mở main tab Chi tiết
   useEffect(() => {
-    if (activeTabKey !== "financials") return;
-    setShowNetOffModal(true);
-    onTabChange?.("linked_docs");
-  }, [activeTabKey]);
+    if (activeTabKey !== "financials" && activeTabKey !== "linked_docs") return;
+    if (activeTabKey === "financials") {
+      setShowNetOffModal(true);
+    }
+    onTabChange?.("invoice_details");
+  }, [activeTabKey, onTabChange]);
 
   // Deep link "Hạch toán kế toán" (activeTabKey="accounting") → mở main tab Chi tiết (có sub-tab hạch toán)
   useEffect(() => {
     if (activeTabKey !== "accounting") return;
     onTabChange?.("invoice_details");
-  }, [activeTabKey]);
+  }, [activeTabKey, onTabChange]);
 
   // Deep link danh sách HHDV/đối tượng → main tab "Chi tiết theo NCC/KH" khi mở drawer
   useEffect(() => {
@@ -67,10 +69,21 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     onTabChange?.("invoice_partner");
   }, [open, opensPartnerTab]);
 
-  const handleFetchGraph = useCallback(
-    (id: string) => erpInvoicesCoreApi.getTraceabilityGraph(id),
-    [],
+  const [traceabilityCount, setTraceabilityCount] = useState<number | null>(
+    null,
   );
+
+  useEffect(() => {
+    setTraceabilityCount(null);
+  }, [detailInvoice?.id]);
+
+  const handleFetchGraph = useCallback(async (id: string) => {
+    const res = await erpInvoicesCoreApi.getTraceabilityGraph(id);
+    if (res && Array.isArray(res.nodes)) {
+      setTraceabilityCount(Math.max(0, res.nodes.length - 1));
+    }
+    return res;
+  }, []);
 
   const handleSelectBankNetOff = (
     selected: { id: string; amount: number }[],
@@ -281,6 +294,7 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     setShowGarageCaseModal,
     partnerDefaultSubTab,
     handleFetchGraph,
+    traceabilityCount,
     handleSelectBankNetOff,
     handleSelectPo,
     handleSelectSo,

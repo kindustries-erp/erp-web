@@ -89,12 +89,16 @@ describe("GarageCaseServicesSection Component", () => {
     vi.clearAllMocks();
   });
 
-  it("renders SpreadsheetPageTemplate with title, columns, and PillTabs for service types", async () => {
+  it("renders SpreadsheetPageTemplate with title, columns, ViewModeCombobox dropdown and Sync action button", async () => {
     render(<GarageCaseServicesSection />, { wrapper: createWrapper() });
 
-    // Verify service type filter tabs are present
-    expect(screen.getByText("Tất cả hạng mục")).toBeDefined();
-    expect(screen.getByText("Công dịch vụ")).toBeDefined();
-    expect(screen.getByText("Phụ tùng")).toBeDefined();
+    // Verify title and description
+    expect(screen.getByText("Chi tiết phiếu dịch vụ")).toBeDefined();
+
+    // Verify ViewModeCombobox dropdown trigger button is present
+    expect(screen.getByText("Tất cả cột")).toBeDefined();
+
+    // Verify primary action button 'Đồng bộ' is present
+    expect(screen.getByText("Đồng bộ")).toBeDefined();
   });
 });

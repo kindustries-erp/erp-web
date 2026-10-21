@@ -158,6 +158,37 @@ describe("ErpInvoicePartnerTab (main tab Chi tiết)", () => {
 
     expect(screen.getByTestId("anon-invoice-details")).toBeInTheDocument();
   });
+
+  it("renders 3 sub-pills: Chi tiết hóa đơn | Hạch toán kế toán | Chứng từ liên kết", () => {
+    renderWithClient(
+      <ErpInvoicePartnerTab detailInvoice={mockInvoice as any} direction="IN">
+        <div data-testid="detail-children">Nội dung chi tiết test</div>
+      </ErpInvoicePartnerTab>,
+    );
+
+    expect(screen.getByText("Chi tiết hóa đơn")).toBeInTheDocument();
+    expect(screen.getByText("Hạch toán kế toán")).toBeInTheDocument();
+    expect(screen.getByText("Chứng từ liên kết")).toBeInTheDocument();
+  });
+
+  it("renders linkedDocsSlot khi activeSubTab='linked_docs'", () => {
+    renderWithClient(
+      <ErpInvoicePartnerTab
+        detailInvoice={mockInvoice as any}
+        direction="IN"
+        activeSubTab="linked_docs"
+        linkedDocsSlot={
+          <div data-testid="linked-docs-content">
+            Nội dung chứng từ liên kết test
+          </div>
+        }
+      >
+        <div data-testid="detail-children">Nội dung chi tiết test</div>
+      </ErpInvoicePartnerTab>,
+    );
+
+    expect(screen.getByTestId("linked-docs-content")).toBeInTheDocument();
+  });
 });
 
 describe("ErpInvoicePartnerSection (main tab Chi tiết theo NCC/KH)", () => {
