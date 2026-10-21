@@ -22,7 +22,7 @@ const baseProps = {
 };
 
 describe("useErpInvoiceDetailDrawer deep links", () => {
-  it("activeTabKey='financials' chuyển sang linked_docs và mở drawer Sao kê", () => {
+  it("activeTabKey='financials' chuyển sang invoice_details và mở drawer Sao kê", () => {
     const onTabChange = vi.fn();
     const { result } = renderHook(() =>
       useErpInvoiceDetailDrawer({
@@ -32,7 +32,7 @@ describe("useErpInvoiceDetailDrawer deep links", () => {
       } as any),
     );
 
-    expect(onTabChange).toHaveBeenCalledWith("linked_docs");
+    expect(onTabChange).toHaveBeenCalledWith("invoice_details");
     expect(result.current.showNetOffModal).toBe(true);
   });
 

@@ -22,6 +22,8 @@ export interface ErpInvoiceDetailPaneProps {
   onSubTabChange?: (tab: InvoiceDetailSubTabKey) => void;
   onLinkExistingAttachment?: (attachmentId: string) => void;
   onUnlinkAttachment?: (attachmentId: string) => void;
+  linkedBadgeCount?: number;
+  linkedDocsSlot?: React.ReactNode;
 }
 
 export type ErpInvoicePartnerTabProps = ErpInvoiceDetailPaneProps;

@@ -6,4 +6,5 @@ export * from "./ErpInvoicePartnerTabNav";
 export * from "./ErpInvoicePartnerSection";
 export * from "./ErpInvoicePartnerRightPanel";
 export * from "./ErpInvoicePartnerLinesSection";
+export * from "./ErpInvoiceLinkedDocsSection";
 export { ErpInvoicePartnerTab as default } from "./ErpInvoicePartnerTab";

@@ -51,9 +51,10 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab(
         attachmentCount={attachmentCount}
         hasPdf={hasPdf}
         accountingBadgeCount={accountingBadgeCount}
+        linkedBadgeCount={props.linkedBadgeCount}
       />
 
-      {internalSubTab === "details" ? (
+      {internalSubTab === "details" && (
         <InvoicePreviewModeContext.Provider
           value={{
             previewMode: detailViewMode,
@@ -69,7 +70,9 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab(
             )}
           </div>
         </InvoicePreviewModeContext.Provider>
-      ) : (
+      )}
+
+      {internalSubTab === "accounting" && (
         <div className="flex-1 min-h-0 overflow-y-auto space-y-3 w-full">
           <ErpInvoiceAccountingSection
             detailInvoice={props.detailInvoice}
@@ -81,6 +84,16 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab(
             pendingUnpost={props.pendingUnpost}
             onUnpost={props.onUnpost}
           />
+        </div>
+      )}
+
+      {internalSubTab === "linked_docs" && (
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-3 w-full">
+          {props.linkedDocsSlot ?? (
+            <div className="p-8 text-center text-xs text-muted-foreground">
+              {t("noLinkedDocs", "Chưa có chứng từ liên kết")}
+            </div>
+          )}
         </div>
       )}
     </div>
