@@ -4,13 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
   FileSpreadsheet,
-  TrendingUp,
   Eye,
   Users,
   Pencil,
   SlidersHorizontal,
   Scale,
-  RefreshCw,
+  Network,
 } from "lucide-react";
 import { useGarageStore } from "../../store/garageStore";
 import { useGarageCaseServicesList } from "../../hooks/useGarageCaseServicesList";
@@ -19,7 +18,19 @@ import { useGarageCaseServicesSummary } from "./hooks/useGarageCaseServicesSumma
 import { garageApi } from "../../api/garageApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
+import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
+import {
+  useUserPreferencesStore,
+  type TableViewPreset,
+} from "@/shared/hooks/useUserPreferences";
+import {
+  GARAGE_SERVICE_COLUMN_VIEW_PRESETS,
+  DEFAULT_GARAGE_SERVICE_COLUMN_VISIBILITY,
+} from "../../utils/garageCaseServicesViewPresets";
 import type { KgaraCaseServiceRow } from "./types";
+
+const columnPresetsTableId = "garage-case-services-column-views";
+const actualTableId = "garage-case-services-table";
 
 export function useGarageCaseServicesSectionLogic() {
   const { t } = useTranslation("garage");
@@ -28,6 +39,67 @@ export function useGarageCaseServicesSectionLogic() {
 
   const listHook = useGarageCaseServicesList();
 
+  // Column view presets
+  const columnViewPresetsHook = usePageViewPresets({
+    tableId: columnPresetsTableId,
+    defaultPresets: GARAGE_SERVICE_COLUMN_VIEW_PRESETS,
+  });
+
+  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
+    () => {
+      const stored = useUserPreferencesStore
+        .getState()
+        .getTablePreference(actualTableId);
+      return stored?.activeView || "all_columns";
+    },
+  );
+
+  const handleColumnPresetChange = useCallback((preset: TableViewPreset) => {
+    setActiveColumnPresetKey(preset.key);
+    const currentPref = useUserPreferencesStore
+      .getState()
+      .getTablePreference(actualTableId) || {
+      columnOrder: [],
+      columnVisibility: {},
+    };
+    useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
+      ...currentPref,
+      columnOrder: [],
+      columnVisibility:
+        preset.columnVisibility || DEFAULT_GARAGE_SERVICE_COLUMN_VISIBILITY,
+      activeView: preset.key,
+    });
+  }, []);
+
+  const handleCreateViewPreset = useCallback(() => {
+    toast(
+      t(
+        "cases.viewConfig.comingSoon",
+        "Tính năng tùy biến chế độ xem đang được hoàn thiện",
+      ),
+    );
+  }, [t]);
+
+  const handleEditViewPreset = useCallback(() => {
+    toast(
+      t(
+        "cases.viewConfig.comingSoon",
+        "Tính năng tùy biến chế độ xem đang được hoàn thiện",
+      ),
+    );
+  }, [t]);
+
+  const handleDeleteViewPreset = useCallback(
+    (key: string) => {
+      if (["all_columns", "overview", "financial"].includes(key)) return;
+      columnViewPresetsHook.deleteView(key);
+      if (activeColumnPresetKey === key) {
+        handleColumnPresetChange(GARAGE_SERVICE_COLUMN_VIEW_PRESETS[0]);
+      }
+    },
+    [activeColumnPresetKey, columnViewPresetsHook, handleColumnPresetChange],
+  );
+
   // Drawer states
   const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
   const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
@@ -35,8 +107,9 @@ export function useGarageCaseServicesSectionLogic() {
     useState<string>("quote_details");
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [syncMode, setSyncMode] = useState<
-    "cases" | "gross-profit" | "case-details"
-  >("case-details");
+    "all" | "cases" | "gross-profit" | "case-details"
+  >("all");
+  const [workflowDrawerOpen, setWorkflowDrawerOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   // Permissions
@@ -49,6 +122,14 @@ export function useGarageCaseServicesSectionLogic() {
     ErpAction.UPDATE,
   );
   const canSyncGarage = canCreateGarage || canUpdateGarage;
+
+  const openWorkflow = useCallback(() => setWorkflowDrawerOpen(true), []);
+  const closeWorkflow = useCallback(() => setWorkflowDrawerOpen(false), []);
+
+  const handleDirectSync = useCallback(() => {
+    setSyncMode("all");
+    setSyncDrawerOpen(true);
+  }, []);
 
   const openCaseDetail = useCallback(
     (
@@ -146,41 +227,15 @@ export function useGarageCaseServicesSectionLogic() {
             onClick: handleExportExcel,
             disabled: exporting,
           },
+          {
+            label: t("cases.actions.viewWorkflow", "Xem sơ đồ quy trình"),
+            icon: <Network className="w-4 h-4 text-violet-600" />,
+            onClick: openWorkflow,
+          },
         ],
       },
-      ...(canSyncGarage
-        ? [
-            {
-              groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
-              items: [
-                {
-                  label: t(
-                    "services.actions.syncDetails",
-                    "Đồng bộ chi tiết vật tư & công thợ",
-                  ),
-                  icon: <RefreshCw className="w-4 h-4 text-primary" />,
-                  onClick: () => {
-                    setSyncMode("case-details");
-                    setSyncDrawerOpen(true);
-                  },
-                },
-                {
-                  label: t(
-                    "cases.actions.syncGrossProfit",
-                    "Đồng bộ Lợi nhuận gộp",
-                  ),
-                  icon: <TrendingUp className="w-4 h-4 text-emerald-600" />,
-                  onClick: () => {
-                    setSyncMode("gross-profit");
-                    setSyncDrawerOpen(true);
-                  },
-                },
-              ],
-            },
-          ]
-        : []),
     ],
-    [canSyncGarage, exporting, handleExportExcel, t],
+    [exporting, handleExportExcel, openWorkflow, t],
   );
 
   const rowActions = useCallback(
@@ -253,11 +308,24 @@ export function useGarageCaseServicesSectionLogic() {
     drawerInitialTab,
     closeCaseDetail,
     handleDrawerSuccess,
-    // Sync Drawer
+    // Sync & Permissions
+    canSyncGarage,
+    handleDirectSync,
     syncDrawerOpen,
     syncMode,
     setSyncDrawerOpen,
     setSyncMode,
+    // Column view presets
+    columnViewPresetsHook,
+    activeColumnPresetKey,
+    handleColumnPresetChange,
+    handleCreateViewPreset,
+    handleEditViewPreset,
+    handleDeleteViewPreset,
+    // Workflow Drawer
+    workflowDrawerOpen,
+    openWorkflow,
+    closeWorkflow,
     // Export state
     exporting,
   };

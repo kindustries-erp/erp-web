@@ -1,5 +1,5 @@
 import React from "react";
-import { FileSpreadsheet, Network, TrendingUp } from "lucide-react";
+import { FileSpreadsheet, Network } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
 export interface GarageHeaderActionsConfig {
@@ -33,22 +33,5 @@ export function buildGarageHeaderActions(
         },
       ],
     },
-    ...(config.canSyncGarage
-      ? [
-          {
-            groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
-            items: [
-              {
-                label: t(
-                  "cases.actions.syncGrossProfit",
-                  "Đồng bộ Lợi nhuận gộp",
-                ),
-                icon: <TrendingUp className="w-4 h-4 text-emerald-600" />,
-                onClick: () => config.onSyncGrossProfit?.(),
-              },
-            ],
-          },
-        ]
-      : []),
   ];
 }
