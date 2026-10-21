@@ -165,7 +165,7 @@ describe("ErpInvoicePartnerSection (main tab Chi tiết theo NCC/KH)", () => {
     vi.clearAllMocks();
   });
 
-  it("renders 3 sub-pills: Chi tiết theo đối tượng | Chi tiết HHDV | Biến động & Phân tích", () => {
+  it("renders 3 sub-pills: Chi tiết theo đối tượng | Bảng kê HHDV | Biến động & Phân tích", () => {
     renderWithClient(
       <ErpInvoicePartnerSection
         detailInvoice={mockInvoice as any}
@@ -174,7 +174,7 @@ describe("ErpInvoicePartnerSection (main tab Chi tiết theo NCC/KH)", () => {
     );
 
     expect(screen.getByText("Chi tiết theo đối tượng")).toBeInTheDocument();
-    expect(screen.getByText("Chi tiết HHDV")).toBeInTheDocument();
+    expect(screen.getByText("Bảng kê HHDV")).toBeInTheDocument();
     expect(screen.getByText("Biến động & Phân tích")).toBeInTheDocument();
   });
 
@@ -213,7 +213,7 @@ describe("ErpInvoicePartnerSection (main tab Chi tiết theo NCC/KH)", () => {
     });
   });
 
-  it("switches to 'Chi tiết HHDV' when clicked and calls getItemsList", async () => {
+  it("switches to 'Bảng kê HHDV' when clicked and calls getItemsList", async () => {
     renderWithClient(
       <ErpInvoicePartnerSection
         detailInvoice={mockInvoice as any}
@@ -221,7 +221,7 @@ describe("ErpInvoicePartnerSection (main tab Chi tiết theo NCC/KH)", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("Chi tiết HHDV"));
+    fireEvent.click(screen.getByText("Bảng kê HHDV"));
 
     await waitFor(() => {
       expect(erpInvoicesCoreApi.getItemsList).toHaveBeenCalledWith(
@@ -233,7 +233,7 @@ describe("ErpInvoicePartnerSection (main tab Chi tiết theo NCC/KH)", () => {
     });
   });
 
-  it("opens 'Chi tiết HHDV' when defaultPartnerSubTab is 'lines' (deep link từ danh sách HHDV)", async () => {
+  it("opens 'Bảng kê HHDV' when defaultPartnerSubTab is 'lines' (deep link từ danh sách HHDV)", async () => {
     renderWithClient(
       <ErpInvoicePartnerSection
         detailInvoice={mockInvoice as any}

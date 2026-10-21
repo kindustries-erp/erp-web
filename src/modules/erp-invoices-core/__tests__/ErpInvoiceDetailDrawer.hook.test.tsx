@@ -51,6 +51,19 @@ describe("useErpInvoiceDetailDrawer deep links", () => {
     expect(result.current.partnerDefaultSubTab).toBe("lines");
   });
 
+  it("activeTabKey='accounting' chuyển sang invoice_details để hiển thị sub-tab Hạch toán", () => {
+    const onTabChange = vi.fn();
+    renderHook(() =>
+      useErpInvoiceDetailDrawer({
+        ...baseProps,
+        activeTabKey: "accounting",
+        onTabChange,
+      } as any),
+    );
+
+    expect(onTabChange).toHaveBeenCalledWith("invoice_details");
+  });
+
   it("mặc định không tự chuyển tab", () => {
     const onTabChange = vi.fn();
     const { result } = renderHook(() =>
