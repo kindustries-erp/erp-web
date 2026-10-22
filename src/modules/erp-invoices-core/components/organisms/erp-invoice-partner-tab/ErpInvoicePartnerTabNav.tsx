@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { FileText, Boxes, TrendingUp, RotateCcw } from "lucide-react";
-import { PillTabs } from "@/shared/components/PillTabs";
+import { V2TabBar, V2Text, type V2TabItemData } from "@/v2/shared/components";
 import { Button } from "@/shared/components/ui/Button";
 
 export * from "./ErpInvoiceDetailTabNav";
@@ -28,42 +28,50 @@ export const ErpInvoicePartnerSubTabNav = React.memo(
   }: ErpInvoicePartnerSubTabNavProps) {
     const { t } = useTranslation("erpInvoices");
 
+    const partnerTabs: V2TabItemData[] = React.useMemo(
+      () => [
+        {
+          key: "invoices",
+          label: t("tabInvoicesList", "Chi tiết theo đối tượng"),
+          icon: FileText,
+          badgeCount: debtInvoicesCount > 0 ? debtInvoicesCount : undefined,
+          alwaysShowIcon: true,
+        },
+        {
+          key: "lines",
+          label: t("tabGoodsItems", "Bảng kê HHDV"),
+          icon: Boxes,
+          badgeCount: itemLinesTotal > 0 ? itemLinesTotal : undefined,
+          alwaysShowIcon: true,
+        },
+        {
+          key: "analytics",
+          label: t("tabCashflowAnalytics", "Biến động & Phân tích"),
+          icon: TrendingUp,
+          alwaysShowIcon: true,
+        },
+      ],
+      [t, debtInvoicesCount, itemLinesTotal],
+    );
+
     return (
       <div className="flex flex-col gap-2.5 pt-0.5 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full">
           <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1">
-            <PillTabs<PartnerSubTabMode>
-              size="sm"
-              value={partnerSubTab}
-              onValueChange={onPartnerSubTabChange}
-              items={[
-                {
-                  value: "invoices",
-                  label: t("tabInvoicesList", "Chi tiết theo đối tượng"),
-                  icon: FileText,
-                  badgeCount:
-                    debtInvoicesCount > 0 ? debtInvoicesCount : undefined,
-                },
-                {
-                  value: "lines",
-                  label: t("tabGoodsItems", "Bảng kê HHDV"),
-                  icon: Boxes,
-                  badgeCount: itemLinesTotal > 0 ? itemLinesTotal : undefined,
-                },
-                {
-                  value: "analytics",
-                  label: t("tabCashflowAnalytics", "Biến động & Phân tích"),
-                  icon: TrendingUp,
-                },
-              ]}
+            <V2TabBar
+              variant="sub"
+              activeTabKey={partnerSubTab}
+              onTabChange={(k) => onPartnerSubTabChange(k as PartnerSubTabMode)}
+              tabs={partnerTabs}
+              className="w-auto pb-0"
             />
           </div>
 
           <div className="flex items-center gap-2 flex-wrap shrink-0">
             {partnerSubTab === "invoices" && debtInvoicesCount > 0 && (
-              <span className="text-xs font-normal text-muted-foreground">
+              <V2Text as="span" variant="body-sm" color="muted">
                 {debtInvoicesCount} {t("invoicesCount", "hóa đơn")}
-              </span>
+              </V2Text>
             )}
 
             {partnerSubTab === "lines" && (
@@ -80,17 +88,17 @@ export const ErpInvoicePartnerSubTabNav = React.memo(
                   </Button>
                 )}
                 {itemLinesTotal > 0 && (
-                  <span className="text-xs font-normal text-muted-foreground">
+                  <V2Text as="span" variant="body-sm" color="muted">
                     {itemLinesTotal} {t("itemsCount", "dòng HHDV")}
-                  </span>
+                  </V2Text>
                 )}
               </>
             )}
 
             {partnerSubTab === "analytics" && debtInvoicesCount > 0 && (
-              <span className="text-xs font-normal text-muted-foreground">
+              <V2Text as="span" variant="body-sm" color="muted">
                 {debtInvoicesCount} {t("invoicesCount", "hóa đơn")}
-              </span>
+              </V2Text>
             )}
           </div>
         </div>
