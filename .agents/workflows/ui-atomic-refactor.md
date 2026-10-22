@@ -148,13 +148,38 @@ grep -rn "templates/" src/modules/[target-module]/components/organisms/
 
 # 5. Chạy Type Check & Co-located Tests
 bun run type:check
-bun test src/modules/[target-module]/components/
+bun run test src/modules/[target-module]/components/
 
 # 6. Kiểm tra Storybook Build (nếu thuộc shared/v2)
 bun run build-storybook
 ```
 
 ---
+
+## 🔁 Hướng v2-ready (refactor v1 để migrate v2 dễ hơn)
+
+Áp dụng khi chạm module v1 (track T1 trong `/plan-and-task`). Phần lõi sau refactor phải copy sang `src/v2/modules/<m>/` được mà không viết lại.
+
+| Việc | Làm ở v1 bây giờ | Đích khi migrate v2 |
+| :--- | :--- | :--- |
+| Logic nghiệp vụ thuần (không React, store, axios) | file thuần trong `utils/` hoặc `[Name].helper.ts` | `domain/rules/` |
+| Gọi API | hook query/mutation riêng `use<X>Query.ts` / `use<X>Mutation.ts` | `api/queries/`, `api/mutations/` |
+| Props, type | `[Name].type.ts` | y hệt |
+| Component | folder-per-component, < 180 LoC, test co-located | y hệt, thêm `.desktop/.mobile` (chỉ ở v2) |
+
+Quy tắc:
+- **Không** làm platform split `.desktop/.mobile` ở v1; đó là bước của v2.
+- Lập **danh sách tính năng màn hình** ngay trong plan (tính năng, file v1, trạng thái). Đây là bảng parity khi migrate.
+- Module đã migrate sang v2: không refactor v1 nữa, chuyển sang `/erp-web-v2-refactor`.
+- v1 chưa đụng tới và > 180 dòng là **legacy**, không bắt buộc refactor. Ngưỡng 180 bắt buộc với code mới và code được refactor.
+
+Đường dẫn v1 và v2:
+
+| Loại | v1 | v2 |
+| :--- | :--- | :--- |
+| Component của module | `src/modules/<m>/components/` | `src/v2/modules/<m>/components/` |
+| Shared component | `src/shared/components/` | `src/v2/shared/components/` |
+| Shadcn primitive | — | `src/v2/shared/ui/` |
 
 ## 📋 Checklist Kiểm Tra Hoàn Thành (Atomic DoD)
 

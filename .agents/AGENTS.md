@@ -4,19 +4,19 @@ Source of truth for this repo (`./erp-web`).
 
 ## Read order
 
-1. `.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+1. `.agents/skills/erp-web-current-truth/SKILL.md`
 
 ## Web Specific Agent Mandates
 
 ### 1. UI Reusability Enforcer (Anti-Reinvention)
 
 - **CRITICAL:** Do NOT build basic components like Modal, Drawer, Table/Spreadsheet, or Filter Panel from scratch.
-- Always use `grep_search` in `src/components/` (e.g., `ConfirmModal`, `StandardDrawer`, `Spreadsheet`, `FilterPanel`) first.
+- Always use `grep_search` in `src/shared/components/` (e.g., `ConfirmModal`, `StandardFormDrawer`, `DataTable`, `FilterPanel`) first. V2 components live in `src/v2/shared/components/`.
 - If found, read its interface/props and reuse it.
 
 ### 2. Atomic Design & Clean Code
 
-- **Max File Size:** Any React file exceeding ~200 lines MUST be split.
+- **Max File Size:** Any React file exceeding 180 lines MUST be split (v1 legacy files over 180 lines are exempt unless touched by the task; see `ui-atomic-refactor`).
 - Extract complex state/API logic into `hooks/` (e.g., `use[Feature]Logic.ts`).
 - Extract helper functions into `utils/`.
 - Extract sub-components into their own files. Do NOT group multiple large React components in a single file.
@@ -123,7 +123,7 @@ Source of truth for this repo (`./erp-web`).
 
 ### Required behavior
 
-- load `@.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+- load `@.agents/skills/erp-web-current-truth/SKILL.md`
 - use repo-local context as default guidance
 - MUST use bun/bunx exclusively (do NOT use npm)
 - when debugging and testing API locally, always start dev on port 10010

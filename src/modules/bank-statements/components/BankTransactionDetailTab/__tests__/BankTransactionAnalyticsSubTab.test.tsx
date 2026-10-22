@@ -55,7 +55,7 @@ describe("BankTransactionAnalyticsSubTab", () => {
   it("renders 4 KPI cards, BarChart and StandardTable when partner info exists", async () => {
     const mockTxn = {
       id: "txn-1",
-      correspondentName: "Công ty TNHH Liouni",
+      correspondentName: "Công ty TNHH Mẫu",
       correspondentAccount: "111886888",
     };
 

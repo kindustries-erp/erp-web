@@ -344,7 +344,7 @@ grep -rn 'className=".*border.*rounded.*"' src/modules/[module]/components/organ
 
 # 8. TYPE CHECK VÀ UNIT TESTS PASS 100%
 bun run type:check
-bun test src/modules/[module]/components/organisms/[name]-table/
+bun run test src/modules/[module]/components/organisms/[name]-table/
 ```
 
 ---

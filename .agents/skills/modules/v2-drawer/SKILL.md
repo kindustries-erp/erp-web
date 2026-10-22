@@ -7,7 +7,7 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardDrawer) theo ki
 
 ## 1. Tổng Quan Kiến Trúc & Trách Nhiệm Hệ Thống
 
-`V2StandardDrawer` là component Drawer/Ngăn kéo chuẩn mực thế hệ mới của hệ thống **Liouni ERP Web V2**, lấy **ERP Invoice Drawer V1** (`StandardDrawer` + `slide-panel` trong `src/styles/panels.css`) làm chuẩn vàng (100% visual & feature parity), đồng thời tái cấu trúc sạch sẽ theo chuẩn **Atomic Design 5 Tầng**:
+`V2StandardDrawer` là component Drawer/Ngăn kéo chuẩn mực thế hệ mới của hệ thống **ERP Web V2**, lấy **ERP Invoice Drawer V1** (`StandardDrawer` + `slide-panel` trong `src/styles/panels.css`) làm chuẩn vàng (100% visual & feature parity), đồng thời tái cấu trúc sạch sẽ theo chuẩn **Atomic Design 5 Tầng**:
 
 1. **Atomic Design 5 Tầng Phân Minh**:
    - **L1 (Atoms & UI Primitives)**:

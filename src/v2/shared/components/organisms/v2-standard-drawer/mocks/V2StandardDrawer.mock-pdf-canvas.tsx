@@ -36,7 +36,7 @@ export const MockInvoicePdfCanvas = ({ zoom }: { zoom: number }) => (
         </div>
         <div>
           <div className="font-semibold text-zinc-800">Đơn vị mua hàng:</div>
-          <div>CÔNG TY CỔ PHẦN LIOUNI INDUSTRIES</div>
+          <div>CÔNG TY CỔ PHẦN MẪU INDUSTRIES</div>
           <div>MST: 0317899999</div>
         </div>
       </div>

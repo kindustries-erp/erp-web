@@ -1,5 +1,5 @@
 ---
-name: liouni-erp-web-current-truth
+name: erp-web-current-truth
 description: Web-specific local-only skill for ERP. Use when working in this repo to load the repo-local current-truth context, index, and implementation rules without relying on external docs.
 ---
 
