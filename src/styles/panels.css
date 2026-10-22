@@ -69,6 +69,51 @@
   transform: none;
 }
 
+/* V2StandardDrawer can run from V1 routes, where v2-theme.css is not loaded. */
+.theme-midnight [data-v2-standard-drawer] {
+  --drawer-bg: rgba(14, 14, 16, 0.96);
+  --drawer-border: rgba(255, 255, 255, 0.12);
+  --drawer-header-bg: rgba(24, 24, 27, 0.94);
+  --drawer-header-scrolled-bg: rgba(24, 24, 27, 0.98);
+  --drawer-footer-bg: rgba(24, 24, 27, 0.94);
+  --drawer-footer-scrolled-bg: rgba(24, 24, 27, 0.98);
+  --drawer-section-bg: rgba(24, 24, 27, 0.9);
+  --panel-shadow:
+    3px 12px 28px -12px rgba(0, 0, 0, 0.65),
+    1px 4px 12px -8px rgba(0, 0, 0, 0.45);
+}
+
+/* The V1 invoice route can host V2StandardDrawer without loading v2-theme.css.
+   applyDocumentTheme also sets `.dark` for the OS/browser preference, even
+   while the selected app theme remains classic or orcaq. Keep that preference
+   local to this drawer so its V2 content receives a complete dark palette. */
+.dark:not(.theme-midnight) [data-v2-standard-drawer] {
+  color-scheme: dark;
+  --background: #09090b;
+  --surface: #18181b;
+  --surface-hover: #27272a;
+  --border: #3f3f46;
+  --border-light: #27272a;
+  --foreground: #f4f4f5;
+  --muted: #131316;
+  --muted-fg: #a1a1aa;
+  --faint: #71717a;
+  --primary: #ffffff;
+  --primary-fg: #09090b;
+  --accent: #27272a;
+  --accent-foreground: #f4f4f5;
+  --drawer-bg: rgba(14, 14, 16, 0.97);
+  --drawer-border: rgba(255, 255, 255, 0.12);
+  --drawer-header-bg: rgba(24, 24, 27, 0.96);
+  --drawer-header-scrolled-bg: rgba(24, 24, 27, 0.99);
+  --drawer-footer-bg: rgba(24, 24, 27, 0.96);
+  --drawer-footer-scrolled-bg: rgba(24, 24, 27, 0.99);
+  --drawer-section-bg: rgba(24, 24, 27, 0.92);
+  --panel-shadow:
+    3px 12px 28px -12px rgba(0, 0, 0, 0.65),
+    1px 4px 12px -8px rgba(0, 0, 0, 0.45);
+}
+
 /* ── Drawer Fullscreen Mode ── */
 .slide-panel.fullscreen-drawer {
   top: 0 !important;

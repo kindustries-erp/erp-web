@@ -58,7 +58,7 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
         className={cn(
           "fixed inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0",
           "w-full max-w-none rounded-t-2xl rounded-b-none flex flex-col p-0 overflow-hidden",
-          "border-b-0 border-t border-border/80 transition-all duration-300 ease-out",
+          "border-b-0 border-t border-[color:var(--drawer-border,var(--border))] transition-all duration-300 ease-out",
           h.isUnderlying && "scale-[0.97] opacity-85 origin-bottom",
           h.depth > 0 && "shadow-[0_-12px_32px_rgba(15,23,42,0.28)]",
           props.panelClassName,
@@ -92,7 +92,7 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
             tabs={props.tabs}
             activeTabKey={h.activeTabKey}
             onTabChange={h.handleTabChange}
-            extra={props.tabBarExtra}
+            extra={props.tabBarExtra ?? h.activeTabItem?.headerExtra}
           />
         )}
 

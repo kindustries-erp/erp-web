@@ -25,6 +25,10 @@ export interface V2TabItemData {
   isClosable?: boolean;
   /** Nội dung panel tương ứng của tab */
   content?: React.ReactNode;
+  /** Nội dung panel phải riêng của tab; fallback về rightPanel của drawer nếu bỏ trống */
+  rightPanel?: React.ReactNode;
+  /** Nút hoặc nội dung phụ hiển thị bên phải khi tab đang active */
+  headerExtra?: React.ReactNode;
   /** Ẩn cột thông tin bên phải khi tab này active */
   hideRightPanel?: boolean;
   /** Hiển thị chấm tròn trạng thái (dot) */

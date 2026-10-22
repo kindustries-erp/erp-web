@@ -39,7 +39,7 @@ export const DrawerMobilePanels: React.FC<DrawerMobilePanelsProps> = ({
         </div>
       </V2Stack>
 
-      {props.rightPanel && !h.activeTabItem?.hideRightPanel && (
+      {h.activeRightPanel && !h.activeTabItem?.hideRightPanel && (
         <V2Stack gap="xs" data-testid="drawer-mobile-stacked-panel">
           <V2Divider orientation="horizontal" className="bg-border/50" />
           {props.rightTabs && props.rightTabs.length > 0 && (
@@ -51,7 +51,7 @@ export const DrawerMobilePanels: React.FC<DrawerMobilePanelsProps> = ({
               extra={props.rightTabExtra}
             />
           )}
-          {h.activeRightTabItem?.content || props.rightPanel}
+          {h.activeRightPanel}
         </V2Stack>
       )}
 

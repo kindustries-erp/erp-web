@@ -105,3 +105,50 @@ bun run test
 2. Ở tab Phân loại nghiệp vụ, xác nhận hai bảng nằm trong section riêng và right panel chỉ có cơ cấu Thu KH/Thu BH.
 3. Chuyển sang tab Phân loại theo đối tượng, xác nhận hai card nằm trong cùng right panel, xếp dọc và không lặp ở cột trái.
 4. Mở drawer từ chế độ Phải trả và xác nhận tab Phân loại theo đối tượng không xuất hiện.
+
+---
+
+# Invoice Detail Drawer sang V2StandardDrawer
+
+## Thay đổi
+
+- `ErpInvoiceDetailDrawer` dùng `V2StandardDrawer`; luồng từ danh sách và standalone/cấn trừ tiếp tục đi qua cùng component.
+- Thêm `V2TabItemData.rightPanel`; panel của tab active được dùng trước panel fallback của drawer. Desktop/Mobile dùng chung cách resolve này.
+- Tách phần dựng title, sub-tab, panel và map tab thành presentation hook để giữ file drawer dưới 180 LoC.
+- Cập nhật module skills `erp-invoice` và `v2-drawer`.
+
+## Verification
+
+- `bunx vitest run src/v2/shared/components/organisms/v2-standard-drawer src/modules/erp-invoices-core` — 69 files passed, 272 tests passed, 9 skipped.
+- `bunx tsc --noEmit` — PASS.
+- `git diff --check` — PASS.
+- Audit file V2 đã sửa/thêm: không có `blue-*`; tất cả file nguồn/test/story đã sửa hoặc thêm đều dưới 180 LoC.
+- `bash ./.agents/scripts/sync-agents.sh --sync` từ workspace root — Agent system validation PASS.
+
+## UI smoke
+
+1. Đăng nhập, mở `/erp-invoices?tab=in` hoặc `?tab=out`, mở chi tiết một hóa đơn.
+2. Chuyển `Chi tiết`, `Chi tiết theo NCC/KH`, `Lịch sử`; xác nhận panel phải theo đúng tab và panel Công nợ xuất hiện ở sub-tab `Chứng từ liên kết`.
+3. Kiểm tra view/edit, lưu/hủy, confirm khi đóng lúc edit, modal liên kết và đóng drawer con.
+4. Lặp lại trên viewport desktop và mobile; mở hóa đơn standalone trong luồng cấn trừ.
+
+UI smoke chưa chạy vì browser hiện không có phiên đăng nhập (route chuyển đến màn Đăng nhập). Test component/integration và typecheck ở trên đã pass.
+
+## Invoice button active state & V2 drawer dark theme
+
+- Button-group “Xem trước HĐ thuần” / “Tài liệu & PDF” chuẩn hóa active key rõ ràng theo mode (`template`/`pdf`) và dùng cùng state cho preview content; test giữ đúng selected state khi khởi tạo `template`, chuyển sang `pdf` và quay lại.
+- Active/inactive button colors dùng token `primary`, `primary-fg`, `surface` và `border`. Dark drawer surface tăng độ đặc/độ tách nền; Sheet viền dùng `--drawer-border`, floating shadow theo `--panel-shadow`, header/footer có shadow tối khi cuộn.
+- Scoped tests: 6 files, 26 tests PASS cho invoice/navigation và 11 files, 45 tests PASS cho V2StandardDrawer.
+- `bunx tsc --noEmit` PASS; `git diff --check` PASS.
+- UI smoke trên theme sáng/tối Desktop/Mobile chưa chạy do browser session chưa đăng nhập.
+
+### Follow-up từ ảnh UI
+
+- Nguyên nhân dark token chưa hiện ở invoice route: route đang dùng V1 theme stylesheet; `v2-theme.css` chỉ được import trong app `/v2`. Sheet content đã được gắn `data-v2-standard-drawer`, và selector Midnight đặt token tối trên chính Sheet để Radix portal cùng toàn bộ nội dung con kế thừa.
+- Nút inactive trong button-group hiện có nền/viền trong suốt; chỉ active tab dùng nền fill. Test bổ sung khóa hai trạng thái và marker của Sheet.
+- Recheck: 14 test files, 57 tests PASS.
+
+## Git
+
+- Branch: `erp-master`.
+- Chưa commit hoặc push.

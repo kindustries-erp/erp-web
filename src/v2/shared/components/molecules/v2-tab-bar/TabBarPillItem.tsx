@@ -60,7 +60,7 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
         : "text-muted-foreground"
       : isBtnGroup
         ? isActive
-          ? "text-white dark:text-slate-900"
+          ? "text-primary-fg"
           : "text-slate-500 dark:text-zinc-400"
         : isActive
           ? "text-slate-900 dark:text-zinc-100"
@@ -81,8 +81,8 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
     }
     if (isBtnGroup) {
       return isActive
-        ? "h-7 px-3 rounded-md text-xs font-semibold border bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-slate-900 dark:border-white shadow-xs hover:bg-slate-900 dark:hover:bg-white hover:text-white dark:hover:text-slate-900"
-        : "h-7 px-3 rounded-md text-xs font-medium border bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border-slate-200/80 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-slate-900";
+        ? "h-7 px-3 rounded-md text-xs font-semibold border bg-primary text-primary-fg border-primary shadow-xs hover:bg-primary/90 hover:text-primary-fg"
+        : "h-7 px-3 rounded-md text-xs font-medium border border-transparent bg-transparent text-slate-700 dark:text-zinc-300 hover:bg-transparent hover:text-foreground";
     }
     // isSub:
     return isActive
@@ -98,7 +98,7 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
     }
     if (isBtnGroup) {
       return isActive
-        ? "bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900 font-bold"
+        ? "bg-primary-fg/20 text-primary-fg font-bold"
         : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-medium border border-slate-200/60";
     }
     // isSub:

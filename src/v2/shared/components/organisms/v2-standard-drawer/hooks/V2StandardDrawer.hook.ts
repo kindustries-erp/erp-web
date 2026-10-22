@@ -36,7 +36,6 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     [props.leftTabs, activeLeftTabKey],
   );
 
-  // 3. Right Sub-Tabs
   const firstRightKey = props.rightTabs?.[0]?.key ?? props.rightTabs?.[0]?.id;
   const [activeRightTabKey, handleRightTabChange] = useTabControl(
     props.activeRightTabKey,
@@ -47,7 +46,10 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     () => props.rightTabs?.find((t) => (t.key ?? t.id) === activeRightTabKey),
     [props.rightTabs, activeRightTabKey],
   );
-
+  const activeRightPanel =
+    activeRightTabItem?.content ??
+    activeTabItem?.rightPanel ??
+    props.rightPanel;
   // Fullscreen controls
   const [internalFullscreen, setInternalFullscreen] = useState(false);
   const isFullscreen = props.isFullscreen ?? internalFullscreen;
@@ -144,6 +146,7 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     activeRightTabKey,
     handleRightTabChange,
     activeRightTabItem,
+    activeRightPanel,
     isFullscreen,
     toggleFullscreen,
     enableFullscreen:

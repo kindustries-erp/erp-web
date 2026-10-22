@@ -79,6 +79,10 @@ export const ErpInvoiceDetailTabNav = React.memo(
       ],
       [t, attachmentCount, hasPdf],
     );
+    const activeViewModeKey = detailViewMode === "pdf" ? "pdf" : "template";
+    const handleViewModeChange = (key: string) => {
+      onDetailViewModeChange(key === "pdf" ? "pdf" : "template");
+    };
 
     return (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full">
@@ -100,10 +104,8 @@ export const ErpInvoiceDetailTabNav = React.memo(
           <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
             <V2TabBar
               variant="button-group"
-              activeTabKey={detailViewMode}
-              onTabChange={(val) =>
-                onDetailViewModeChange(val as InvoiceDetailViewMode)
-              }
+              activeTabKey={activeViewModeKey}
+              onTabChange={handleViewModeChange}
               tabs={rightTabs}
             />
           </div>

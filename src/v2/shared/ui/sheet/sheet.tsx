@@ -34,14 +34,14 @@ export const sheetVariants = cva(
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b border-border/80 data-[state=closed]:animate-fade-out-0 data-[state=open]:animate-fade-in-0",
+        top: "inset-x-0 top-0 border-b border-[color:var(--drawer-border,var(--border))] data-[state=closed]:animate-fade-out-0 data-[state=open]:animate-fade-in-0",
         bottom:
-          "inset-x-0 bottom-0 border-t border-border/80 data-[state=closed]:animate-slide-out-to-bottom data-[state=open]:animate-slide-in-from-bottom",
-        left: "inset-y-0 left-0 h-full border-r border-border/80 data-[state=closed]:animate-fade-out-0 data-[state=open]:animate-fade-in-0",
+          "inset-x-0 bottom-0 border-t border-[color:var(--drawer-border,var(--border))] data-[state=closed]:animate-slide-out-to-bottom data-[state=open]:animate-slide-in-from-bottom",
+        left: "inset-y-0 left-0 h-full border-r border-[color:var(--drawer-border,var(--border))] data-[state=closed]:animate-fade-out-0 data-[state=open]:animate-fade-in-0",
         right:
-          "inset-y-0 right-0 h-full border-l border-border/80 data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
+          "inset-y-0 right-0 h-full border-l border-[color:var(--drawer-border,var(--border))] data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
         floating:
-          "top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5 h-[calc(100dvh-26px)] rounded-2xl border border-border/80 shadow-[0_20px_50px_-10px_rgba(15,23,42,0.16),0_8px_24px_-4px_rgba(15,23,42,0.08)] data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
+          "top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5 h-[calc(100dvh-26px)] rounded-2xl border border-[color:var(--drawer-border,var(--border))] shadow-[var(--panel-shadow,0_20px_40px_rgba(15,23,42,0.18))] data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
         fullscreen:
           "inset-0 w-full h-full rounded-none border-0 shadow-none data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
       },
@@ -87,6 +87,7 @@ const SheetContent = React.forwardRef<
       )}
       <SheetPrimitive.Content
         ref={ref}
+        data-v2-standard-drawer
         className={cn(sheetVariants({ side }), className)}
         {...props}
       >

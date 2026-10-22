@@ -60,7 +60,7 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
         "flex items-center justify-between px-3 sm:px-4 md:px-[18px] py-2.5",
         "border-t border-border/70 backdrop-blur-md shrink-0 gap-2 flex-wrap sm:flex-nowrap transition-shadow duration-200",
         isScrolledBottom
-          ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)] bg-[var(--drawer-footer-scrolled-bg,rgba(246,248,252,0.92))]"
+          ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)] dark:shadow-[0_-4px_18px_-4px_rgba(0,0,0,0.45),0_-2px_5px_-2px_rgba(0,0,0,0.3)] bg-[var(--drawer-footer-scrolled-bg,rgba(246,248,252,0.92))]"
           : "shadow-none bg-[var(--drawer-footer-bg,rgba(246,248,252,0.75))]",
         className,
       )}
