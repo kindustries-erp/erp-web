@@ -48,7 +48,7 @@ Mỗi domain/module frontend đều có tài liệu tri thức chuyên sâu (Rou
   - **Tài chính & Hóa đơn**: `erp-invoice-web`
   - **Quản trị, Cấu hình & Core Stores**: `rbac-core`, `app-store`
   - **Kiến trúc Layout & Thành Phần Chuẩn V2 (Atomic 5 tầng)**: `v2-layout`, `v2-drawer`, `v2-table`, `v2-foundation`
-  - **Hybrid Shell V2 Layout**: `V2ShellLayout` tại `src/core/components/layout/V2ShellLayout.tsx` đóng vai trò là App Shell chính thống của ERP Web, mang lại diện mạo V2 (Dual-Card Floating Background, V2Sidebar với collapsible 58px/210px, V2RightPanel với Frosted Glass Topbar và V2TabBar) cho toàn bộ các trang nghiệp vụ V1 thông qua 2 adapter `useV2AdaptedNavSections` và `useV2AdaptedTabs`.
+  - **Hybrid Shell V2 Layout**: `V2ShellLayout` tại `src/core/components/layout/V2ShellLayout.tsx` đóng vai trò là App Shell chính thống của ERP Web, mang lại diện mạo V2 (Dual-Card Floating Background, V2Sidebar với collapsible 58px/210px, V2RightPanel với Frosted Glass Topbar và V2TabBar) cho toàn bộ các trang nghiệp vụ V1 thông qua 2 adapter `useV2AdaptedNavSections` và `useV2AdaptedTabs`. Menu `HỆ THỐNG` (`sec-settings`) quản lý đầy đủ các trang thiết lập và cấu hình bao gồm Hòm thư hệ thống, Người dùng & Tài khoản, Phân quyền vai trò, Nhật ký hoạt động, Chi nhánh, Thẻ hệ thống (Tags) và Trường tùy chỉnh (`custom-fields` với icon `Sliders`).
   - **Sidebar Navigation Chuẩn Atomic**: Menu `GARAGE` và `KẾ TOÁN` được tổ chức thành các Organisms độc lập (`garage-nav-section`, `accounting-nav-section`) phẳng hóa submenu, mỗi file < 150 LoC, co-located tests và bảo vệ bởi RBAC tương ứng.
 - Khi cần quét mới hoặc cập nhật tài liệu cho một module: Sử dụng skill `scan-module-knowledge` (`.agents/skills/scan-module-knowledge/SKILL.md`).
 

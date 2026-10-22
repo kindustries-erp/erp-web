@@ -27,6 +27,7 @@ import {
   PackageCheck,
   Receipt,
   ReceiptText,
+  Sliders,
 } from "lucide-react";
 
 export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
@@ -156,6 +157,13 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpResource.EMAIL_INGEST,
     ErpAction.READ,
   );
+  const canReadCustomFields =
+    canReadAdminUsers ||
+    canReadInvoices ||
+    canReadBankStatements ||
+    canReadBom ||
+    canReadInventoryItems ||
+    canReadInventoryVouchers;
 
   const showSettingsAccess = canReadAdminUsers || canReadActivityLogs;
   const showSettingsGeneral =
@@ -544,6 +552,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/sys-tags",
         });
       }
+      if (canReadCustomFields) {
+        items.push({
+          id: "custom-fields",
+          label: t("nav.items.customFields", "Trường tùy chỉnh"),
+          icon: Sliders,
+          href: "/custom-fields",
+        });
+      }
 
       if (items.length > 0) {
         sections.push({
@@ -591,6 +607,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     canReadAdminUsers,
     canReadActivityLogs,
     canReadSysTags,
+    canReadCustomFields,
     t,
   ]);
 }

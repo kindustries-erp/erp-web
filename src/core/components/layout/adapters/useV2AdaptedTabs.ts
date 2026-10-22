@@ -24,6 +24,7 @@ import {
   UserSquare2,
   Paperclip,
   Mail,
+  Sliders,
   type V2IconType as LucideIcon,
 } from "@/v2/shared/components/atoms";
 
@@ -63,6 +64,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-activity-logs": FileText,
   "settings-branch": Building2,
   "sys-tags": Settings,
+  "custom-fields": Sliders,
 };
 
 export function useV2AdaptedTabs(): {
@@ -141,6 +143,8 @@ export function useV2AdaptedTabs(): {
         return t("thietlap.tabs.chi-nhanh", "Chi nhánh");
       case "sys-tags":
         return t("nav.items.sysTags", "Tags");
+      case "custom-fields":
+        return t("nav.items.customFields", "Trường tùy chỉnh");
       default:
         return key;
     }

@@ -192,6 +192,21 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.accounting", "Kế toán") },
           { label: t("nav.items.debts", "Công nợ") },
         ];
+      case "custom-fields":
+        return [
+          { label: t("nav.sections.settings", "Thiết lập") },
+          { label: t("nav.items.customFields", "Trường tùy chỉnh") },
+        ];
+      case "settings-branch":
+        return [
+          { label: t("nav.sections.settings", "Thiết lập") },
+          { label: t("thietlap.tabs.chi-nhanh", "Chi nhánh") },
+        ];
+      case "sys-tags":
+        return [
+          { label: t("nav.sections.settings", "Thiết lập") },
+          { label: t("nav.items.sysTags", "Tags") },
+        ];
       default:
         return [
           { label: t("nav.items.dashboard", "Tổng quan") },
