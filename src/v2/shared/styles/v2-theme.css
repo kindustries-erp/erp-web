@@ -112,6 +112,8 @@
   --app-shell-border: transparent;
   --sidebar-bg: #f9fbfc;
   --sidebar-border: var(--border);
+  --sidebar-hover-bg: rgba(0, 0, 0, 0.05);
+  --sidebar-hover-fg: var(--foreground);
   --sidebar-active-bg: rgba(0, 0, 0, 0.05);
   --sidebar-active-fg: var(--foreground);
   --main-panel-bg: #f9fbfc;
@@ -170,6 +172,8 @@
   --app-shell-border: transparent;
   --sidebar-bg: #15181e;
   --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-hover-bg: rgba(20, 184, 166, 0.16);
+  --sidebar-hover-fg: #5eead4;
   --sidebar-active-bg: rgba(20, 184, 166, 0.12);
   --sidebar-active-fg: #2dd4bf;
   --main-panel-bg: #16191f;
@@ -223,24 +227,26 @@
   --orcaq-tab-inactive-fg: #a1a1aa;
 }
 
-/* ── 4. Midnight (Zinc Pure-Neutral Dark) Theme ── */
+/* ── 4. Midnight (Deep Night & Soft Violet Dark) Theme ── */
 .theme-midnight,
-.dark {
-  --background: #09090b;
-  --surface: #18181b;
-  --surface-hover: #27272a;
-  --border: #3f3f46;
-  --border-light: #27272a;
-  --foreground: #f4f4f5;
-  --muted: #131316;
-  --muted-fg: #a1a1aa;
-  --faint: #52525b;
-  --primary: #ffffff;
-  --primary-fg: #09090b;
-  --accent: #fafafa;
+.theme-midnight.dark,
+.dark:not(.theme-classic):not(.theme-orcaq) {
+  --background: #12151e;
+  --surface: #181c26;
+  --surface-hover: #212634;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.04);
+  --table-border: rgba(255, 255, 255, 0.05);
+  --foreground: #f4f5f7;
+  --muted: #12151e;
+  --muted-fg: #9ba1b0;
+  --faint: #636a7e;
+  --primary: #a78bfa;
+  --primary-fg: #0e1118;
+  --primary-accent: #c4b5fd;
 
-  --scrollbar-thumb: #3f3f46;
-  --scrollbar-thumb-hover: #52525b;
+  --scrollbar-thumb: #2d3345;
+  --scrollbar-thumb-hover: #3f475e;
 
   --up-bg: rgba(16, 185, 129, 0.12);
   --up-fg: #34d399;
@@ -253,39 +259,41 @@
   --destructive: #ef4444;
   --destructive-fg: #ffffff;
 
-  --card-shadow: 0 10px 38px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.28);
+  --card-shadow:
+    0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.35);
   --panel-shadow:
-    3px 12px 28px -12px rgba(0, 0, 0, 0.65),
-    1px 4px 12px -8px rgba(0, 0, 0, 0.45);
+    0 16px 40px -8px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4);
 
-  --glass-chrome: rgba(24, 24, 27, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-chrome: rgba(18, 21, 30, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.07);
   --glass-blur: 18px;
 
-  --popup-bg: rgba(24, 24, 27, 0.72);
-  --popup-bg-hover: rgba(255, 255, 255, 0.06);
-  --popup-border: rgba(63, 63, 70, 0.6);
-  --modal-bg: rgba(9, 9, 11, 0.78);
-  --tooltip-bg: #27272a;
+  --popup-bg: rgba(22, 25, 35, 0.94);
+  --popup-bg-hover: rgba(139, 92, 246, 0.1);
+  --popup-border: rgba(255, 255, 255, 0.08);
+  --modal-bg: rgba(18, 21, 30, 0.94);
+  --tooltip-bg: #212634;
 
-  --table-header-bg: rgba(24, 24, 27, 0.72);
-  --table-footer-bg: rgba(24, 24, 27, 0.78);
+  --table-header-bg: rgba(22, 26, 36, 0.88);
+  --table-footer-bg: rgba(22, 26, 36, 0.92);
 
-  --drawer-overlay-bg: rgba(0, 0, 0, 0.3);
-  --drawer-bg: rgba(14, 14, 16, 0.96);
-  --drawer-border: rgba(255, 255, 255, 0.12);
-  --drawer-header-bg: rgba(24, 24, 27, 0.94);
-  --drawer-header-scrolled-bg: rgba(24, 24, 27, 0.98);
-  --drawer-footer-bg: rgba(24, 24, 27, 0.94);
-  --drawer-footer-scrolled-bg: rgba(24, 24, 27, 0.98);
-  --drawer-section-bg: rgba(24, 24, 27, 0.9);
+  --drawer-overlay-bg: rgba(0, 0, 0, 0.65);
+  --drawer-bg: #161922;
+  --drawer-border: rgba(255, 255, 255, 0.08);
+  --drawer-header-bg: rgba(20, 23, 33, 0.92);
+  --drawer-header-scrolled-bg: rgba(20, 23, 33, 0.96);
+  --drawer-footer-bg: rgba(20, 23, 33, 0.92);
+  --drawer-footer-scrolled-bg: rgba(20, 23, 33, 0.96);
+  --drawer-section-bg: #1c202c;
 
-  --app-shell-bg: #070708;
+  --app-shell-bg: #12151e;
   --app-shell-border: transparent;
-  --sidebar-bg: #0b0b0d;
-  --sidebar-border: #1f1f22;
-  --sidebar-active-bg: rgba(255, 255, 255, 0.1);
-  --sidebar-active-fg: #fafafa;
-  --main-panel-bg: var(--background);
-  --main-panel-border: #1f1f22;
+  --sidebar-bg: #12151e;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-hover-bg: rgba(139, 92, 246, 0.14);
+  --sidebar-hover-fg: #c4b5fd;
+  --sidebar-active-bg: rgba(139, 92, 246, 0.14);
+  --sidebar-active-fg: #a78bfa;
+  --main-panel-bg: #12151e;
+  --main-panel-border: rgba(255, 255, 255, 0.06);
 }
