@@ -435,7 +435,7 @@ export function DrawerSection({
   return (
     <div
       className={cn(
-        "mb-3 rounded-xl border border-border/80 p-2.5 sm:p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
+        "mb-3 rounded-xl border border-border/80 dark:border-white/[0.06] p-2.5 sm:p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.03)_inset] transition-all duration-200",
         isFitHeight && !isCollapsed && cn("flex flex-col", heightClass),
         className,
         isCollapsed && "!h-auto !flex-none !min-h-0 !flex-initial",
@@ -449,7 +449,7 @@ export function DrawerSection({
       {!shouldHideHeader && (
         <div
           className={cn(
-            "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0",
+            "text-[11px] font-bold text-foreground/80 dark:text-zinc-200 uppercase tracking-[0.06em] pb-[6px] border-b border-border dark:border-white/[0.06] flex justify-between items-center flex-shrink-0",
             !isCollapsed && "mb-[10px]",
           )}
         >

@@ -17,6 +17,7 @@ const hookState = {
   activeRightTabKey: "",
   handleRightTabChange: () => {},
   activeRightTabItem: undefined,
+  activeRightPanel: undefined,
 } as unknown as DrawerHook;
 
 describe("DrawerDesktopColumns", () => {
@@ -38,7 +39,9 @@ describe("DrawerDesktopColumns", () => {
     render(
       <DrawerDesktopColumns
         props={{ rightPanel: <p>Bảng bên phải</p> } as V2StandardDrawerProps}
-        h={hookState}
+        h={
+          { ...hookState, activeRightPanel: <p>Bảng bên phải</p> } as DrawerHook
+        }
         mainContent={<p>Nội dung chính</p>}
       />,
     );
@@ -53,7 +56,13 @@ describe("DrawerDesktopColumns", () => {
     render(
       <DrawerDesktopColumns
         props={{ rightPanel: <p>Bảng bên phải</p> } as V2StandardDrawerProps}
-        h={{ ...hookState, isRightPanelCollapsed: true } as DrawerHook}
+        h={
+          {
+            ...hookState,
+            isRightPanelCollapsed: true,
+            activeRightPanel: <p>Bảng bên phải</p>,
+          } as DrawerHook
+        }
         mainContent={<p>Nội dung chính</p>}
       />,
     );
@@ -61,5 +70,28 @@ describe("DrawerDesktopColumns", () => {
       "aria-hidden",
       "true",
     );
+  });
+
+  it("renders the active tab's right panel instead of the drawer fallback", () => {
+    render(
+      <DrawerDesktopColumns
+        props={
+          {
+            rightPanel: <p>Panel mặc định</p>,
+          } as V2StandardDrawerProps
+        }
+        h={
+          {
+            ...hookState,
+            activeTabItem: { rightPanel: <p>Panel theo tab</p> },
+            activeRightPanel: <p>Panel theo tab</p>,
+          } as DrawerHook
+        }
+        mainContent={<p>Nội dung chính</p>}
+      />,
+    );
+
+    expect(screen.getByText("Panel theo tab")).toBeInTheDocument();
+    expect(screen.queryByText("Panel mặc định")).not.toBeInTheDocument();
   });
 });

@@ -58,6 +58,13 @@ describe("V2 Sheet Primitive", () => {
       screen.getByText("Mô tả chi tiết nội dung sheet"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("sheet-body")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveClass(
+      "bg-[var(--drawer-bg,rgba(255,255,255,0.85))]",
+      "text-foreground",
+    );
+    expect(screen.getByRole("dialog")).toHaveAttribute(
+      "data-v2-standard-drawer",
+    );
   });
 
   it("renders accessible close button with aria-label by default", () => {

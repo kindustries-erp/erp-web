@@ -45,9 +45,9 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
   return (
     <div
       className={cn(
-        "mb-3 rounded-xl border border-border/80 p-2.5 sm:p-3 transition-all duration-200",
+        "mb-3 rounded-xl border border-border/50 dark:border-white/[0.06] p-2.5 sm:p-3 transition-all duration-200",
         "bg-[var(--drawer-section-bg,rgba(255,255,255,0.65))] backdrop-blur-[12px]",
-        "shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)]",
+        "shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.03)_inset]",
         fitViewportHeight &&
           !isCollapsed &&
           "flex flex-col max-h-none lg:max-h-[calc(100vh-210px)]",
@@ -58,7 +58,7 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
       {!shouldHideHeader && (
         <div
           className={cn(
-            "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-border flex justify-between items-center shrink-0",
+            "text-[11px] font-bold text-foreground/80 dark:text-zinc-300 uppercase tracking-[0.06em] pb-[6px] border-b border-border/40 dark:border-white/[0.05] flex justify-between items-center shrink-0",
             !isCollapsed && "mb-[10px]",
             headerClassName,
           )}
@@ -100,7 +100,7 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
               <V2Text
                 variant="section-title"
                 color="muted"
-                className="shrink-0 tabular-nums"
+                className="shrink-0 tabular-nums dark:text-teal-400 font-semibold"
               >
                 ({count})
               </V2Text>

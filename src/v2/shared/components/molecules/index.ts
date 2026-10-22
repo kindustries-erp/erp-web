@@ -45,3 +45,5 @@ export * from "./v2-empty-state";
 export * from "./v2-file-upload";
 export * from "./v2-panel";
 export * from "./v2-chart-frame";
+export * from "./v2-env-stamp";
+export * from "./v2-theme-toggle";

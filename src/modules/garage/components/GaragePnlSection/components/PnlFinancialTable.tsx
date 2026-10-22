@@ -61,17 +61,17 @@ export function PnlFinancialTable({
   };
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border/60">
+    <div className="overflow-x-auto rounded-lg border border-border/40 dark:border-white/[0.05]">
       <table className="w-full text-xs text-left border-collapse">
         <thead>
-          <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-border/70 text-muted-foreground uppercase font-semibold text-[11px]">
+          <tr className="bg-slate-50 dark:bg-slate-900/40 border-b border-border/50 dark:border-white/[0.06] text-muted-foreground uppercase font-semibold text-[11px]">
             <th className="py-2.5 px-4 w-[40%]">
               <div className="flex items-center justify-between">
                 <span>{t("pnl.tableHeaderCategory", "Danh Mục")}</span>
                 <button
                   type="button"
                   onClick={toggleAll}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors lowercase tracking-normal border border-border/50"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 dark:hover:bg-white/[0.04] transition-colors lowercase tracking-normal border border-border/50 dark:border-white/[0.06]"
                   title={
                     isAllCollapsed
                       ? t("pnl.expandAll", "Mở rộng tất cả")
@@ -103,7 +103,7 @@ export function PnlFinancialTable({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border/40">
+        <tbody className="divide-y divide-border/30 dark:divide-white/[0.04]">
           <PnlRevenueRows
             {...commonProps}
             isCollapsed={isCollapsed("revenue")}

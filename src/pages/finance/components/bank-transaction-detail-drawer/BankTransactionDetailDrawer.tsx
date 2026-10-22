@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { BankTransactionGeneralInfoSection } from "@/modules/bank-statements/components/BankTransactionGeneralInfoSection";
-import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
+import { BankTransactionCashflowSection } from "@/modules/bank-statements/components/BankTransactionCashflowSection";
 import { InvoiceNetoffSelectionModal } from "@/modules/bank-statements/components/InvoiceNetoffSelectionModal";
 import { useBankTransactionDetailDrawer } from "./BankTransactionDetailDrawer.hook";
 import { useBankTransactionDrawerTabs } from "./BankTransactionDrawerTabs";
@@ -48,18 +48,12 @@ export const BankTransactionDetailDrawer = React.memo(
           description={drawer.editDescription}
           onDescriptionChange={drawer.setEditDescription}
         />
-        <ModuleEntityCustomFieldsSection
-          moduleKey="BANK_TXN"
-          entityId={drawer.transaction.id}
+        <BankTransactionCashflowSection
+          classification={drawer.cashflowClassification}
+          purpose={drawer.cashflowPurpose}
           editMode={drawer.editMode}
-          categoryId={drawer.categoryId}
-          onCategoryChange={drawer.setCategoryId}
-          attributes={drawer.customAttributes}
-          onAttributesChange={drawer.setCustomAttributes}
-          globalAttributes={drawer.globalAttributes}
-          onGlobalAttributesChange={drawer.setGlobalAttributes}
-          title="THUỘC TÍNH TÙY CHỈNH"
-          globalTitle="THUỘC TÍNH MẶC ĐỊNH"
+          onClassificationChange={drawer.setCashflowClassification}
+          onPurposeChange={drawer.setCashflowPurpose}
         />
       </div>
     ) : null;

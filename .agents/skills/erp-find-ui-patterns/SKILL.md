@@ -13,7 +13,7 @@ Tránh việc Agent tự phát minh lại bánh xe (reinvent the wheel) bằng c
 
 Mỗi khi bạn được yêu cầu xây dựng một giao diện hoặc luồng xử lý liên quan đến hiển thị dữ liệu dạng bảng, form nhập liệu trong modal/drawer, bạn BẮT BUỘC thực hiện các bước sau TRƯỚC KHI sinh code mới:
 
-1. Dùng công cụ `grep_search` để tìm keyword (ví dụ: `Drawer`, `Modal`, `Spreadsheet`, `Filter`) trong thư mục `src/components/`.
+1. Dùng công cụ `grep_search` để tìm keyword (ví dụ: `Drawer`, `Modal`, `Spreadsheet`, `Filter`) trong thư mục `src/shared/components/`.
 2. Xác định file chứa component cốt lõi (thường nằm ở `common` hoặc `shared`).
 3. Dùng công cụ `view_file` để đọc nội dung file đó.
 4. Trích xuất block `interface Props` hoặc các param truyền vào component.
@@ -33,7 +33,7 @@ Nếu bạn cần tạo một Modal để xác nhận xoá:
   Tìm xem hệ thống có `ConfirmModal` không. Sau đó import và sử dụng (luôn nhớ dùng i18n cho text):
 
   ```tsx
-  import { ConfirmModal } from "@/components/common/ConfirmModal";
+  import { ConfirmModal } from "@/shared/components/ConfirmModal";
   import { useTranslation } from "react-i18next"; // hoặc thư viện i18n tương ứng
 
   // Bên trong component:

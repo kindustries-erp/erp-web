@@ -7,7 +7,7 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardDrawer) theo ki
 
 ## 1. Tổng Quan Kiến Trúc & Trách Nhiệm Hệ Thống
 
-`V2StandardDrawer` là component Drawer/Ngăn kéo chuẩn mực thế hệ mới của hệ thống **Liouni ERP Web V2**, lấy **ERP Invoice Drawer V1** (`StandardDrawer` + `slide-panel` trong `src/styles/panels.css`) làm chuẩn vàng (100% visual & feature parity), đồng thời tái cấu trúc sạch sẽ theo chuẩn **Atomic Design 5 Tầng**:
+`V2StandardDrawer` là component Drawer/Ngăn kéo chuẩn mực thế hệ mới của hệ thống **ERP Web V2**, lấy **ERP Invoice Drawer V1** (`StandardDrawer` + `slide-panel` trong `src/styles/panels.css`) làm chuẩn vàng (100% visual & feature parity), đồng thời tái cấu trúc sạch sẽ theo chuẩn **Atomic Design 5 Tầng**:
 
 1. **Atomic Design 5 Tầng Phân Minh**:
    - **L1 (Atoms & UI Primitives)**:
@@ -129,6 +129,7 @@ export interface V2StandardDrawerProps {
   stickyRightPanel?: boolean;
 
   // 1. Header Tabs (Toàn cục qua V2TabBar variant="header")
+  // V2TabItemData.rightPanel có thể override panel riêng cho tab đang active.
   tabs?: V2TabItemData[];
   activeTabKey?: string;
   defaultTabKey?: string;
@@ -151,6 +152,7 @@ export interface V2StandardDrawerProps {
 
   // Content Panels
   leftPanel?: React.ReactNode;
+  // Fallback khi tab không khai báo rightPanel; rightTabs.content được ưu tiên.
   rightPanel?: React.ReactNode;
   children?: V2DrawerChildren; // Hỗ trợ cả ReactNode và Render Props (context) => ReactNode
 
@@ -294,6 +296,9 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 
 ## Component dùng chung trong V2StandardDrawer
 
+- `V2TabItemData.rightPanel` chọn panel phải theo tab active; nếu không đặt, drawer dùng `V2StandardDrawerProps.rightPanel` làm fallback. `rightTabs` vẫn có ưu tiên nội dung riêng của sub-tab phải. Quy tắc áp dụng đồng nhất trên Desktop và Mobile.
+- ERP Invoice detail drawer dùng API này để giữ panel chung theo tab và chuyển sang panel đối soát khi sub-tab Chứng từ liên kết được chọn. Luồng nghiệp vụ vẫn do module invoice hiện tại quản lý.
+
 - Vỏ Sheet của cả desktop và mobile dùng molecule `V2DrawerSheet` (Esc và bấm nền đi qua `onRequestClose`, có tiêu đề sr-only).
 - Trạng thái loading dùng atom `V2Spinner`; lỗi dùng molecule `V2AlertBanner` (`role="alert"`).
 - Vạch kéo trên bottom sheet mobile dùng atom `V2GrabHandle`.
@@ -322,3 +327,10 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - Gốc: `V2StandardDrawer.tsx` (switcher), `V2StandardDrawer.type.ts`, `index.ts`, stories.
 - Component con, mỗi folder có `index.ts` hoặc file chính: `desktop/`, `mobile/`, `confirm-modal/`, `state-guard/`, `desktop-columns/`, `mobile-panels/`.
 - `hooks/`: hook state của drawer. `utils/`: stack đa drawer và tab controlled. `mocks/`: dữ liệu demo (không import từ production).
+
+## Dark mode & drawer surfaces
+- Sheet surface, border, drawer header/footer và DrawerSection lấy màu từ token theme V2 (`--drawer-bg`, `--drawer-border`, `--drawer-header-*`, `--drawer-footer-*`, `--drawer-section-bg`); tránh hardcode màu sáng ở shell dùng chung.
+- Floating drawer dùng `--panel-shadow`, để theme tối có thể tăng độ sâu/tách nền; header/footer có shadow tối riêng khi nội dung cuộn.
+- Nhóm tab button dùng `--primary`/`--primary-fg` cho active; inactive dùng nền/viền trong suốt và chỉ đổi màu chữ khi hover.
+- Inactive tab của `button-group` để nền và viền trong suốt; chỉ active tab có nền fill.
+- Drawer có thể được mở từ route V1, nơi `v2-theme.css` không được import. Sheet mang `data-v2-standard-drawer`; `src/styles/panels.css` cung cấp Midnight drawer tokens theo marker này để portal content vẫn nhận dark surface.

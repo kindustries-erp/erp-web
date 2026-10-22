@@ -7,7 +7,7 @@ import type { ListParams } from "@/shared/types/pagination";
 export const DEFAULT_STALE_TIME = 300_000;
 
 /**
- * Chuẩn hóa tập trung Enum Query Key cho toàn bộ hệ thống Liouni ERP (erp-web).
+ * Chuẩn hóa tập trung Enum Query Key cho toàn bộ hệ thống ERP (erp-web).
  * Bắt buộc sử dụng ErpQueryKey trong toàn bộ useQuery / useMutation / invalidateQueries.
  */
 export enum ErpQueryKey {

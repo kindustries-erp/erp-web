@@ -26,6 +26,12 @@ vi.mock("@/modules/auth/domain/authStore", () => ({
   }),
 }));
 
+vi.mock("@/core/components/layout/V2ShellLayout", () => ({
+  V2ShellLayout: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="v2-shell-layout">{children}</div>
+  ),
+}));
+
 vi.mock("@/core/components/layout/sidebar/index", () => ({
   Sidebar: () => <div>sidebar</div>,
 }));

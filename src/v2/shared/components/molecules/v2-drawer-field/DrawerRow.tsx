@@ -33,7 +33,7 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
   return (
     <div
       className={cn(
-        "flex items-start justify-between py-1.5 border-b border-border/40 last:border-b-0 text-xs gap-3",
+        "flex items-start justify-between py-1.5 border-b border-border/40 dark:border-white/[0.04] last:border-b-0 text-xs gap-3",
         className,
       )}
     >
@@ -71,7 +71,7 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
             className="p-0.5 text-muted-fg hover:text-foreground shrink-0 cursor-pointer"
           >
             {copied ? (
-              <Check className="w-3 h-3 text-emerald-600" />
+              <Check className="w-3 h-3 text-teal-400" />
             ) : (
               <Copy className="w-3 h-3" />
             )}

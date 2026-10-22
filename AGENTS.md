@@ -7,9 +7,9 @@
 
 # Multi-Family Workspace Router
 
-**ROUTING & RULES ONLY:** This is the single source of truth for this multi-family workspace (Liouni ERP + Klotus). Application-specific implementation rules live in each family or repo router, not here.
+**ROUTING & RULES ONLY:** This is the single source of truth for this multi-family workspace (ERP + Klotus). Application-specific implementation rules live in each family or repo router, not here.
 
-This workspace contains two independent application families: Liouni ERP (multi-module backend) and Klotus (public warranty & landing page).
+This workspace contains two independent application families: ERP (multi-module backend) and Klotus (public warranty & landing page).
 
 ---
 
@@ -192,9 +192,9 @@ Repo-level workflows (e.g. `erp/erp-web/.agents/workflows/standardize-drawer.md`
 
 <!-- Nguồn: erp/AGENTS.md -->
 
-# Liouni ERP Family Agent Entry
+# ERP Family Agent Entry
 
-Entry point for AI agents working in the Liouni ERP family (thư mục `erp/` trong workspace root). Workspace-level rules and the global workflow catalog live in `../AGENTS.md`.
+Entry point for AI agents working in the ERP family (thư mục `erp/` trong workspace root). Workspace-level rules and the global workflow catalog live in `../AGENTS.md`.
 
 ## Child Repositories
 
@@ -203,7 +203,7 @@ Entry point for AI agents working in the Liouni ERP family (thư mục `erp/` tr
 | Backend (NestJS, TypeORM, PostgreSQL) | `./erp-api` (Remote `github-industries`, branch `erp-master`) | [`./erp-api/.agents/AGENTS.md`](./erp-api/.agents/AGENTS.md) |
 | Frontend (React, Vite, React Query) | `./erp-web` (Remote `github-industries`, branch `erp-master`) | [`./erp-web/.agents/AGENTS.md`](./erp-web/.agents/AGENTS.md) |
 
-Skills nằm ở `erp-api/.agents/skills/` và `erp-web/.agents/skills/`, đăng ký trong `./.agents/skills.json`. Đọc `liouni-erp-*-current-truth/SKILL.md` của repo trước khi sửa code.
+Skills nằm ở `erp-api/.agents/skills/` và `erp-web/.agents/skills/`, đăng ký trong `./.agents/skills.json`. Đọc `erp-*-current-truth/SKILL.md` của repo trước khi sửa code.
 
 ## Strict Guardrails
 
@@ -240,19 +240,19 @@ Source of truth for this repo (`./erp-web`).
 
 ## Read order
 
-1. `.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+1. `.agents/skills/erp-web-current-truth/SKILL.md`
 
 ## Web Specific Agent Mandates
 
 ### 1. UI Reusability Enforcer (Anti-Reinvention)
 
 - **CRITICAL:** Do NOT build basic components like Modal, Drawer, Table/Spreadsheet, or Filter Panel from scratch.
-- Always use `grep_search` in `src/components/` (e.g., `ConfirmModal`, `StandardDrawer`, `Spreadsheet`, `FilterPanel`) first.
+- Always use `grep_search` in `src/shared/components/` (e.g., `ConfirmModal`, `StandardFormDrawer`, `DataTable`, `FilterPanel`) first. V2 components live in `src/v2/shared/components/`.
 - If found, read its interface/props and reuse it.
 
 ### 2. Atomic Design & Clean Code
 
-- **Max File Size:** Any React file exceeding ~200 lines MUST be split.
+- **Max File Size:** Any React file exceeding 180 lines MUST be split (v1 legacy files over 180 lines are exempt unless touched by the task; see `ui-atomic-refactor`).
 - Extract complex state/API logic into `hooks/` (e.g., `use[Feature]Logic.ts`).
 - Extract helper functions into `utils/`.
 - Extract sub-components into their own files. Do NOT group multiple large React components in a single file.
@@ -359,7 +359,7 @@ Source of truth for this repo (`./erp-web`).
 
 ### Required behavior
 
-- load `@.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+- load `@.agents/skills/erp-web-current-truth/SKILL.md`
 - use repo-local context as default guidance
 - MUST use bun/bunx exclusively (do NOT use npm)
 - when debugging and testing API locally, always start dev on port 10010

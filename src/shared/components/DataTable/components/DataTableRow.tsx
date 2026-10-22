@@ -94,7 +94,7 @@ export function DataTableRowInner<T>({
                   variant !== "spreadsheet" &&
                   "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
                 variant === "spreadsheet" &&
-                  "border-r border-border py-1 text-xs",
+                  "border-r border-border/40 dark:border-white/[0.04] py-1 text-xs",
                 variant === "spreadsheet" &&
                   !["__actions", "__selection", "__expand"].includes(
                     cell.column.id,

@@ -84,8 +84,10 @@ src/v2/
         └── organisms/                  # [Level 3 - Organisms]
             ├── v2-sidebar/             # Card 1: Sidebar hoàn chỉnh (210px / 58px) bo góc 16px
             ├── v2-right-panel/         # Card 2: Right Panel hoàn chỉnh bo góc 16px
-            ├── v2-tab-bar/             # Thanh TabBar cuộn ngang ở đáy Right Panel
+            ├── v2-tab-bar/             # Thanh TabBar đa dạng: App tabs ('app'), Sub-navigation pill tabs ('sub'), Button group ('button-group'), Header tabs ('header'), Page tabs ('page')
             └── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động
+        │
+        └── index.ts                    # Master Barrel Export toàn bộ components V2 (@/v2/shared/components)
 ```
 
 ---
@@ -290,6 +292,10 @@ cd erp/erp-web && bun run storybook
 ### 4.4. Quy Chuẩn Thẩm Mỹ TabBar & TabItem (`V2TabBar`, `V2TabItem`)
 Để đảm bảo trải nghiệm người dùng đồng nhất tuyệt đối giữa V1 và V2:
 - **Thanh TabBar (`V2TabBar`)**: Chiều cao chuẩn `h-9` (`36px`), nền `bg-background/80 backdrop-blur-md`, không viền gạch ngang (`border-none`), cuộn ngang ẩn thanh cuộn (`scrollbar-none`).
+- **Thanh Sub-Navigation Pill Tabs (`V2TabBar variant="sub"`)**:
+  - Thiết kế đồng bộ hệ bo góc ERP (Midnight Style): Container ngoài dùng `rounded-lg` (8px), sliding animated indicator dùng `rounded-md` (6px), tab item button dùng `rounded-md` (6px) ôm khít khoảng padding `p-[3px]`.
+  - Huy hiệu số lượng (`badgeCount`) và dot trạng thái luôn giữ `rounded-full` để đảm bảo độ tròn trịa tự nhiên.
+  - Tự động thích ứng màu sắc và độ tương phản cao với Dark Theme (`dark:border-zinc-700/60 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)]`).
 - **Thẻ Tab (`V2TabItem`)**:
   - Tuyệt đối không dùng nền hộp trắng (`bg-card`), không dùng viền chia cột (`border-r`). Nền tab luôn trong suốt (`bg-transparent`) hòa quyện vào Right Panel.
   - Active Tab: `text-foreground font-semibold border-b-2 border-b-primary`.
@@ -314,6 +320,19 @@ cd erp/erp-web && bun run storybook
 - Mẫu hoàn chỉnh dùng dữ liệu giả: `src/v2/modules/finance-invoice/` (story `Use Cases/Tài chính & Hóa đơn/Hóa đơn (V2 module page)`). Không có global searchbox: mọi cột có header filter và sort (lọc qua `filterClientItems`/`sortClientItems`, khai báo ở `INVOICE_FILTER_COLUMNS`). Nút "Đồng bộ" là `toolbar.create` (split button, menu nhóm Tra cứu / Thao tác / Cấu hình).
 - Use case mô phỏng erp-invoice: `src/v2/modules/finance-invoice/pages/ErpInvoiceV2ModulePage.stories.tsx` (story `Use Cases/Tài chính & Hóa đơn/Hóa đơn (V2 module page)`).
 - Thành phần V2 thêm cho form và dashboard: atom `V2Switch`, `V2Textarea`, `V2Skeleton`, `V2Progress`, `V2NumberInput`, `V2CopyButton`, `V2Sparkline`; molecule `V2Combobox`, `V2DatePicker`/`V2DateRangePicker`, `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2Panel`, `V2ChartFrame`; organism `V2BarChart`/`V2LineChart`/`V2DonutChart`, `V2FilePreviewPanel`.
+
+### 4.7. Chuẩn Hóa Pill Tab và Text Trong Sub-Drawers/Tabs: `V2TabBar variant="sub"` & `V2Text`
+- **Master Barrel Import**: Luôn import các thành phần V2 dùng chung trực tiếp từ `@/v2/shared/components`:
+  ```tsx
+  import { V2TabBar, V2Text, type V2TabItemData } from "@/v2/shared/components";
+  ```
+- **Pill Sub-Tabs (`variant="sub"`)**:
+  - Tái sử dụng `V2TabBar` với `variant="sub"` thay thế toàn bộ PillTabs tự chế trong các Drawer (như `GarageCaseDetailsTab`, `BankTransactionDetailTab`, `ErpInvoiceDetailTabNav`, `ErpInvoicePartnerTabNav`, `ErpInvoiceSettlementTab`, `DashboardTabsContent`).
+  - Bo góc chuẩn Midnight theme: vỏ ngoài `rounded-lg` (8px), item và indicator trượt `rounded-md` (6px), padding container `p-1`.
+  - Hỗ trợ Dark Mode tự nhiên qua CSS variables `bg-muted` (`bg-slate-100 dark:bg-slate-800`), viền `border-border/60`, indicator `bg-card dark:bg-slate-700` bóng `shadow-sm`.
+- **Đồng bộ hóa văn bản phụ trợ với `V2Text`**:
+  - Thay vì dùng thẻ HTML thô (`<span>`, `<h4>`, `<div>`), sử dụng `V2Text` kết hợp các biến thể chuẩn (`variant="body-sm"`, `variant="code"`, `variant="section-title"`) và `color="muted"` / `color="inherit"`.
+  - Giữ nguyên 100% diện mạo visual parity (kích thước font 12px, font-mono khi đếm số, spacing), đồng thời tự động thích ứng với Dark Theme OS thông qua semantic token `text-muted-fg`.
 
 ---
 

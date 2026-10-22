@@ -175,6 +175,7 @@ src/v2/
    - Đặt queries tại `api/queries/use[Module]Query.ts`.
    - Đặt mutations tại `api/mutations/use[Module]Mutation.ts`.
 4. **Đối chiếu V1 trước khi viết** (bắt buộc khi migrate): liệt kê feature trong module V1 và lập bảng parity theo playbook mục 5 của skill `erp-web-v2-refactor`.
+5. **Module V1 đã refactor v2-ready** (logic thuần và hook query/mutation tách riêng, xem `ui-atomic-refactor`): bước 2–3 chỉ còn đối chiếu và chuyển sang `src/v2/modules/<m>/`. Cập nhật mục "Trạng thái migrate" của skill sau khi xong.
 
 ### 🔹 GIAI ĐOẠN 4: Platform Split & UI Assembly
 1. **Áp dụng Switcher Pattern cho Layouts, Drawers, Modals, Pages**:

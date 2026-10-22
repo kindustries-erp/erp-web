@@ -20,7 +20,7 @@ type Story = StoryObj<typeof V2SidebarBottom>;
 
 export const DefaultExpanded: Story = {
   args: {
-    displayName: "Admin Liouni",
+    displayName: "Admin",
     avatarInitials: "AL",
     unreadCount: 4,
     collapsed: false,
@@ -29,7 +29,7 @@ export const DefaultExpanded: Story = {
 
 export const CollapsedMode: Story = {
   args: {
-    displayName: "Admin Liouni",
+    displayName: "Admin",
     avatarInitials: "AL",
     unreadCount: 4,
     collapsed: true,

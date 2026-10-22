@@ -3,11 +3,11 @@
 exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for the fixture 1`] = `
 <div>
   <div
-    class="mb-3 rounded-xl border border-border/80 p-2.5 sm:p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200"
+    class="mb-3 rounded-xl border border-border/80 dark:border-white/[0.06] p-2.5 sm:p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.03)_inset] transition-all duration-200"
     style="background: var(--drawer-section-bg, rgba(255,255,255,0.65)); backdrop-filter: blur(12px) saturate(180%);"
   >
     <div
-      class="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0 mb-[10px]"
+      class="text-[11px] font-bold text-foreground/80 dark:text-zinc-200 uppercase tracking-[0.06em] pb-[6px] border-b border-border dark:border-white/[0.06] flex justify-between items-center flex-shrink-0 mb-[10px]"
     >
       <div
         class="flex items-center gap-1.5 sm:gap-2"
@@ -1521,7 +1521,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                 aria-controls="radix-:r1j:"
                 aria-expanded="false"
                 aria-haspopup="dialog"
-                class="inline-flex items-center gap-1 px-2 py-[3px] border border-border rounded-[6px] text-xs text-foreground bg-surface hover:bg-surface-hover cursor-pointer outline-none"
+                class="inline-flex items-center gap-1 px-2 py-[3px] border border-border/60 dark:border-white/[0.06] rounded-[6px] text-xs text-foreground bg-surface hover:bg-surface-hover dark:hover:bg-white/[0.05] cursor-pointer outline-none transition-colors shadow-2xs"
                 data-state="closed"
                 type="button"
               >
@@ -1556,18 +1556,18 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
               class="flex items-center gap-1"
             >
               <button
-                class="w-7 h-7 border rounded-[6px] text-xs flex items-center justify-center font-medium select-none bg-surface border-border hover:bg-surface-hover text-[color:var(--faint)] cursor-default pointer-events-none opacity-40"
+                class="w-7 h-7 border rounded-[6px] text-xs flex items-center justify-center font-medium select-none transition-all bg-surface border-border/60 dark:border-white/[0.06] hover:bg-surface-hover dark:hover:bg-white/[0.05] text-[color:var(--faint)] cursor-default pointer-events-none opacity-40 shadow-none"
                 disabled=""
               >
                 ‹
               </button>
               <button
-                class="w-7 h-7 border rounded-[6px] text-xs flex items-center justify-center font-medium cursor-pointer select-none bg-primary text-primary-fg border-primary"
+                class="w-7 h-7 border rounded-[6px] text-xs flex items-center justify-center cursor-pointer select-none transition-all bg-primary text-primary-fg border-primary shadow-xs font-semibold"
               >
                 1
               </button>
               <button
-                class="w-7 h-7 border rounded-[6px] text-xs flex items-center justify-center font-medium select-none bg-surface border-border hover:bg-surface-hover text-[color:var(--faint)] cursor-default pointer-events-none opacity-40"
+                class="w-7 h-7 border rounded-[6px] text-xs flex items-center justify-center font-medium select-none transition-all bg-surface border-border/60 dark:border-white/[0.06] hover:bg-surface-hover dark:hover:bg-white/[0.05] text-[color:var(--faint)] cursor-default pointer-events-none opacity-40 shadow-none"
                 disabled=""
               >
                 ›
