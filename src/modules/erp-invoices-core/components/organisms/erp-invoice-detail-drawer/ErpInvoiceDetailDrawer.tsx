@@ -46,6 +46,7 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     handleSelectSo,
     handleSelectGarageCase,
     editActions,
+    actionGroups,
     footerLeft,
   } = useErpInvoiceDetailDrawer(props);
   const { drawerTitle, titleExtra, defaultRightPanel, tabs } =
@@ -81,6 +82,7 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
         collapsibleRightPanel={true}
         confirmOnClose={editMode}
         actions={editMode ? editActions : undefined}
+        actionGroups={actionGroups}
         footerLeft={footerLeft}
         tabs={tabs}
         loading={loadingDetail}

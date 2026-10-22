@@ -56,15 +56,15 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
 
     const colorCls = isHeader
       ? isActive
-        ? "text-white dark:text-primary-foreground"
-        : "text-muted-foreground"
+        ? "text-white dark:text-teal-300"
+        : "text-muted-foreground group-hover:text-foreground dark:text-slate-400 dark:group-hover:text-slate-200"
       : isBtnGroup
         ? isActive
-          ? "text-primary-fg"
-          : "text-slate-500 dark:text-zinc-400"
+          ? "text-primary-fg dark:text-teal-200"
+          : "text-slate-500 dark:text-slate-400"
         : isActive
-          ? "text-slate-900 dark:text-zinc-100"
-          : "text-slate-400 dark:text-zinc-500";
+          ? "text-slate-900 dark:text-teal-300"
+          : "text-slate-400 dark:text-slate-400";
 
     if (React.isValidElement(tab.icon)) {
       return <span className={cn("shrink-0", colorCls)}>{tab.icon}</span>;
@@ -76,35 +76,35 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
   const getContainerCls = () => {
     if (isHeader) {
       return isActive
-        ? "relative z-10 h-auto px-3 py-1.5 rounded-lg text-xs font-semibold text-white dark:text-primary-foreground bg-transparent hover:bg-transparent hover:text-white transition-colors duration-150"
-        : "relative z-10 h-auto px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors duration-150";
+        ? "relative z-10 h-auto px-3 py-1.5 rounded-lg text-xs font-semibold text-white dark:text-teal-300 bg-transparent hover:bg-transparent hover:text-white dark:hover:text-teal-200 transition-colors duration-150"
+        : "relative z-10 h-auto px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground dark:text-slate-400 hover:text-foreground dark:hover:text-slate-200 hover:bg-muted/60 dark:hover:bg-white/[0.04] transition-colors duration-150";
     }
     if (isBtnGroup) {
       return isActive
-        ? "h-7 px-3 rounded-md text-xs font-semibold border bg-primary text-primary-fg border-primary shadow-xs hover:bg-primary/90 hover:text-primary-fg"
-        : "h-7 px-3 rounded-md text-xs font-medium border border-transparent bg-transparent text-slate-700 dark:text-zinc-300 hover:bg-transparent hover:text-foreground";
+        ? "h-7 px-3 rounded-md text-xs font-semibold border bg-primary text-primary-fg border-primary shadow-xs dark:bg-teal-500/20 dark:border-teal-500/40 dark:text-teal-300 hover:bg-primary/90 hover:text-primary-fg"
+        : "h-7 px-3 rounded-md text-xs font-medium border border-transparent bg-transparent text-slate-700 dark:text-slate-400 hover:bg-transparent hover:text-foreground dark:hover:text-slate-200";
     }
     // isSub:
     return isActive
-      ? "text-slate-900 font-semibold dark:text-white"
-      : "text-slate-600 font-medium hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100";
+      ? "text-slate-900 font-semibold dark:text-teal-300"
+      : "text-slate-600 font-medium hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200";
   };
 
   const getBadgeCls = () => {
     if (isHeader) {
       return isActive
-        ? "bg-white text-slate-900 dark:bg-primary-foreground dark:text-primary"
-        : "bg-muted text-muted-foreground border border-border/50";
+        ? "bg-white text-slate-900 dark:bg-teal-500/30 dark:text-teal-200"
+        : "bg-muted text-muted-foreground border border-border/50 dark:border-white/[0.08]";
     }
     if (isBtnGroup) {
       return isActive
-        ? "bg-primary-fg/20 text-primary-fg font-bold"
-        : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 font-medium border border-slate-200/60";
+        ? "bg-primary-fg/20 text-primary-fg dark:bg-teal-500/30 dark:text-teal-200 font-bold"
+        : "bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 font-medium border border-slate-200/60 dark:border-white/[0.08]";
     }
     // isSub:
     return isActive
-      ? "bg-slate-900/10 text-slate-900 dark:bg-white/20 dark:text-white font-bold"
-      : "bg-slate-200/70 text-slate-600 dark:bg-zinc-700/60 dark:text-zinc-400 font-medium";
+      ? "bg-slate-900/10 text-slate-900 dark:bg-teal-500/25 dark:text-teal-200 font-bold"
+      : "bg-slate-200/70 text-slate-600 dark:bg-white/[0.06] dark:text-slate-400 font-medium";
   };
 
   const buttonVariant = isSub ? "pill-tab" : "ghost";

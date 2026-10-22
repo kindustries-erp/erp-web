@@ -29,7 +29,7 @@ const buttonVariants = cva(
         spreadsheet:
           "border border-border bg-surface hover:bg-surface-hover text-foreground rounded-sm font-normal",
         "drawer-edit":
-          "px-3 py-[5px] rounded-lg text-xs font-medium border border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg transition-colors",
+          "px-3 py-[5px] rounded-lg text-xs font-medium border border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg dark:border-teal-500/50 dark:text-teal-300 dark:hover:bg-teal-500/20 dark:hover:text-teal-200 dark:hover:border-teal-400 transition-colors cursor-pointer",
         "drawer-tab":
           "group relative inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[30px] sm:min-h-[32px] text-xs rounded-lg font-medium transition-all select-none whitespace-nowrap",
         "pill-tab":

@@ -72,16 +72,16 @@ export function NotificationPopover({
     <Popover
       content={
         <div className="w-80 flex flex-col max-h-[80vh]">
-          <div className="flex items-center justify-between p-4 pb-2 border-b border-border shrink-0">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <BellRing className="w-4 h-4" />
+          <div className="flex items-center justify-between p-4 pb-2 border-b border-border dark:border-white/[0.06] shrink-0">
+            <h3 className="text-sm font-semibold text-foreground dark:text-zinc-100 flex items-center gap-2">
+              <BellRing className="w-4 h-4 text-primary dark:text-teal-400" />
               {t("topbar.notifications.title")}
             </h3>
             <div className="flex items-center gap-2">
               {notifications.length > 0 && (
                 <button
                   onClick={() => deleteAllMutation.mutate()}
-                  className="text-xs text-destructive hover:underline bg-transparent border-none cursor-pointer"
+                  className="text-xs text-destructive dark:text-rose-400 dark:hover:text-rose-300 hover:underline bg-transparent border-none cursor-pointer"
                 >
                   {t("topbar.notifications.deleteAll", "Xóa tất cả")}
                 </button>
@@ -89,7 +89,7 @@ export function NotificationPopover({
               {notifications.some((n) => !n.isRead) && (
                 <button
                   onClick={() => markAllAsReadMutation.mutate()}
-                  className="text-xs text-primary hover:underline bg-transparent border-none cursor-pointer"
+                  className="text-xs text-primary dark:text-teal-400 dark:hover:text-teal-300 hover:underline bg-transparent border-none cursor-pointer"
                 >
                   Đánh dấu đã đọc tất cả
                 </button>
@@ -100,10 +100,10 @@ export function NotificationPopover({
           <div className="overflow-y-auto flex-1 p-2 custom-scrollbar">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center mb-3">
-                  <BellRing className="w-6 h-6 text-[color:var(--faint)]" />
+                <div className="w-12 h-12 rounded-full bg-black/5 dark:bg-white/[0.04] flex items-center justify-center mb-3">
+                  <BellRing className="w-6 h-6 text-[color:var(--faint)] dark:text-slate-500" />
                 </div>
-                <p className="text-sm text-[color:var(--muted-fg)]">
+                <p className="text-sm text-[color:var(--muted-fg)] dark:text-slate-400">
                   {t("topbar.notifications.empty")}
                 </p>
               </div>
@@ -115,8 +115,8 @@ export function NotificationPopover({
                     className={cn(
                       "group flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors relative",
                       notif.isRead
-                        ? "opacity-60 hover:bg-surface-hover"
-                        : "bg-primary/5 hover:bg-primary/10",
+                        ? "opacity-60 hover:bg-surface-hover dark:hover:bg-white/[0.04]"
+                        : "bg-primary/5 hover:bg-primary/10 dark:bg-teal-500/[0.08] dark:hover:bg-teal-500/[0.12] dark:border dark:border-teal-500/20",
                     )}
                   >
                     <div
@@ -137,16 +137,16 @@ export function NotificationPopover({
                         className={cn(
                           "text-sm font-medium mb-1 pr-6",
                           notif.isRead
-                            ? "text-[color:var(--muted-fg)]"
-                            : "text-foreground",
+                            ? "text-[color:var(--muted-fg)] dark:text-slate-400"
+                            : "text-foreground dark:text-zinc-100 font-semibold",
                         )}
                       >
                         {notif.title}
                       </h4>
-                      <p className="text-xs text-[color:var(--muted-fg)] mb-2 line-clamp-2">
+                      <p className="text-xs text-[color:var(--muted-fg)] dark:text-slate-400 mb-2 line-clamp-2">
                         {notif.message}
                       </p>
-                      <span className="text-[10px] text-[color:var(--faint)] font-medium">
+                      <span className="text-[10px] text-[color:var(--faint)] dark:text-slate-500 font-medium">
                         {formatDistanceToNow(new Date(notif.createdAt), {
                           addSuffix: true,
                           locale: vi,
@@ -156,7 +156,7 @@ export function NotificationPopover({
 
                     {/* Delete Button (visible on hover) */}
                     <button
-                      className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-black/5 hover:text-destructive transition-all"
+                      className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/[0.08] hover:text-destructive dark:hover:text-rose-400 transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteMutation.mutate(notif.id);
@@ -167,7 +167,7 @@ export function NotificationPopover({
                     </button>
 
                     {!notif.isRead && (
-                      <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2 absolute bottom-3 right-3" />
+                      <div className="w-2 h-2 rounded-full bg-primary dark:bg-teal-400 dark:shadow-[0_0_6px_rgba(45,212,191,0.6)] shrink-0 mt-2 absolute bottom-3 right-3" />
                     )}
                   </div>
                 ))}

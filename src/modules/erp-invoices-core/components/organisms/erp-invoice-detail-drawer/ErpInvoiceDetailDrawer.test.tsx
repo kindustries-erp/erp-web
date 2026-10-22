@@ -23,6 +23,7 @@ vi.mock("./ErpInvoiceDetailDrawer.hook", () => ({
     handleSelectSo: vi.fn(),
     handleSelectGarageCase: vi.fn(),
     editActions: [],
+    actionGroups: undefined,
     footerLeft: undefined,
   }),
 }));

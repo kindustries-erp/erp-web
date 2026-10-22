@@ -113,7 +113,7 @@ export function PageLayout({
             onValueChange={onTabChange}
             className="w-full z-10 bg-transparent"
           >
-            <TabsList className="bg-transparent border-b border-[color:var(--border)]/60 w-full justify-start rounded-none h-auto p-0 gap-6 mb-2 shadow-none overflow-x-auto scrollbar-none [&>[data-tabs-indicator]]:hidden">
+            <TabsList className="bg-transparent border-b border-[color:var(--border)]/40 dark:border-white/[0.06] w-full justify-start rounded-none h-auto p-0 gap-6 mb-2 shadow-none overflow-x-auto scrollbar-none [&>[data-tabs-indicator]]:hidden">
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}

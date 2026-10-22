@@ -25,7 +25,7 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
     <div
       data-testid="v2-right-panel"
       className={cn(
-        "v2-right-panel relative flex flex-1 min-w-0 flex-col h-full rounded-2xl border border-border dark:border-white/[0.08] bg-background dark:bg-[#18181b] text-foreground shadow-[0_8px_24px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.05)] dark:shadow-[0_16px_36px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] overflow-hidden transition-all duration-200",
+        "v2-right-panel relative flex flex-1 min-w-0 flex-col h-full rounded-2xl border border-border dark:border-[color:var(--main-panel-border,rgba(255,255,255,0.06))] bg-background dark:bg-[color:var(--main-panel-bg,#181a20)] text-foreground shadow-[0_8px_24px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.05)] dark:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)] overflow-hidden transition-all duration-200",
         className,
       )}
       {...props}

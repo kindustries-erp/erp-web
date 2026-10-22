@@ -1,10 +1,9 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshCw, FileSpreadsheet, ChevronDown } from "lucide-react";
+import { RefreshCw, FileSpreadsheet } from "lucide-react";
 import toast from "react-hot-toast";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import type { V2DropdownGroup } from "@/v2/shared/components/molecules/v2-dropdown";
 import type { ErpInvoiceDetailDrawerProps } from "./ErpInvoiceDetailDrawer.type";
 import type { PartnerSubTabMode } from "../erp-invoice-partner-tab/ErpInvoicePartnerTabNav";
 
@@ -212,21 +211,21 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     }
   }, [detailInvoice, direction, t]);
 
-  const footerLeft = useMemo(() => {
+  const actionGroups = useMemo<V2DropdownGroup[] | undefined>(() => {
     if (editMode) return undefined;
     if (!onSyncDetail && !detailInvoice) return undefined;
 
-    const dropdownItems: ActionDropdownItem[] = [];
+    const groups: V2DropdownGroup[] = [];
 
     if (onSyncDetail) {
-      dropdownItems.push({
+      groups.push({
         groupLabel: "ĐỒNG BỘ",
         items: [
           {
             label: "Đồng bộ từ GĐT",
             icon: (
               <RefreshCw
-                className={`w-4 h-4 ${loadingDetail ? "animate-spin" : ""}`}
+                className={`w-4 h-4 text-teal-400 ${loadingDetail ? "animate-spin" : ""}`}
               />
             ),
             onClick: onSyncDetail,
@@ -237,14 +236,14 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     }
 
     if (detailInvoice?.id) {
-      dropdownItems.push({
+      groups.push({
         groupLabel: "XUẤT DỮ LIỆU",
         items: [
           {
             label: "Xuất Excel hóa đơn",
             icon: (
               <FileSpreadsheet
-                className={`w-4 h-4 text-emerald-600 ${exportingExcel ? "animate-spin" : ""}`}
+                className={`w-4 h-4 text-emerald-500 ${exportingExcel ? "animate-spin" : ""}`}
               />
             ),
             onClick: handleExportSingleExcel,
@@ -254,25 +253,8 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
       });
     }
 
-    if (dropdownItems.length === 0) return undefined;
-
-    return (
-      <ActionDropdown
-        align="start"
-        items={dropdownItems}
-        customTrigger={
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors cursor-pointer"
-          >
-            <span className="font-semibold text-[color:var(--fg)]">
-              Thao tác
-            </span>
-            <ChevronDown className="w-3.5 h-3.5 text-[color:var(--faint)]" />
-          </button>
-        }
-      />
-    );
+    if (groups.length === 0) return undefined;
+    return groups;
   }, [
     editMode,
     onSyncDetail,
@@ -300,6 +282,7 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     handleSelectSo,
     handleSelectGarageCase,
     editActions,
-    footerLeft,
+    actionGroups,
+    footerLeft: undefined,
   };
 }
