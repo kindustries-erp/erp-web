@@ -46,13 +46,13 @@ export function GaragePnlSection() {
       {/* Header: Title on Left, Full Width Divider */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1a1e26] px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-white/[0.06] shadow-sm flex items-center gap-1.5">
             <FileSpreadsheet className="w-3.5 h-3.5 text-primary" />
             {t("pnl.title", "Báo cáo Lợi nhuận (P&L)")}
           </h4>
         </div>
 
-        <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1 hidden md:block" />
+        <div className="h-px bg-slate-200/80 dark:bg-white/[0.06] flex-1 hidden md:block" />
       </div>
 
       {/* 2 chart 12 tháng giống sheet "Báo cáo lợi nhuận" của file Excel, theo kỳ đang chọn */}
@@ -60,7 +60,7 @@ export function GaragePnlSection() {
         <GaragePnlChartsCard year={selectedYear} month={selectedMonth} />
       </div>
 
-      <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
+      <div className="bg-surface border border-border/70 dark:border-white/[0.06] rounded-xl card-shadow p-5 flex flex-col gap-4">
         {/* Card Actions Header */}
         <div className="flex items-center justify-between flex-wrap gap-2.5">
           <div className="flex items-center gap-2">
@@ -77,10 +77,10 @@ export function GaragePnlSection() {
           <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto justify-start sm:justify-end">
             <PnlViewModeSwitch isOjOnly={isOjOnly} onChange={setIsOjOnly} />
 
-            <div className="h-4 w-px bg-border/60 hidden sm:block" />
+            <div className="h-4 w-px bg-border/60 dark:bg-white/[0.08] hidden sm:block" />
 
             {/* Enhanced Period Selector Combobox (Ghost variant, clean container) */}
-            <div className="h-7 flex items-center bg-muted/40 dark:bg-slate-800/60 border border-border/80 rounded-md px-2 shadow-2xs shrink-0">
+            <div className="h-7 flex items-center bg-muted/40 dark:bg-slate-900/40 border border-border/80 dark:border-white/[0.08] rounded-md px-2 shadow-2xs shrink-0">
               <div className="flex items-center justify-center w-4 h-4 rounded bg-primary/10 text-primary shrink-0 mr-1.5">
                 <Calendar className="w-3 h-3" />
               </div>

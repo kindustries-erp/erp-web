@@ -17,7 +17,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
   mainContent,
 }) => {
   const hasRightPanel =
-    h.effectiveLayout === "2-columns" && Boolean(props.rightPanel);
+    h.effectiveLayout === "2-columns" && Boolean(h.activeRightPanel);
   const isRightCollapsed =
     h.isRightPanelCollapsed || Boolean(h.activeTabItem?.hideRightPanel);
 
@@ -71,7 +71,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
                 extra={props.rightTabExtra}
               />
             )}
-            {h.activeRightTabItem?.content || props.rightPanel}
+            {h.activeRightPanel}
           </V2Stack>
         </V2Stack>
       )}

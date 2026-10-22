@@ -71,7 +71,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
       role="tablist"
       aria-label={ariaLabel || t("v2.tabBar.ariaLabel", "Thanh tab đa nhiệm")}
       className={cn(
-        "v2-tab-bar flex h-9 min-h-[36px] w-full bg-background/80 backdrop-blur-md px-4 sm:px-6 select-none flex-shrink-0 rounded-b-2xl items-center justify-between",
+        "v2-tab-bar flex h-9 min-h-[36px] w-full bg-background/80 dark:bg-[#18181b]/80 backdrop-blur-md px-4 sm:px-6 select-none flex-shrink-0 rounded-b-2xl items-center justify-between",
         className,
       )}
       {...props}
@@ -88,9 +88,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
               key={tabKey}
               id={tabKey}
               label={typeof tab.label === "string" ? tab.label : String(tabKey)}
-              icon={
-                typeof tab.icon === "function" ? (tab.icon as any) : undefined
-              }
+              icon={tab.icon as any}
               isActive={activeKey === tabKey}
               isClosable={tab.isClosable ?? true}
               onClick={() => handleSelect(tabKey)}

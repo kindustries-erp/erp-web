@@ -179,7 +179,7 @@ describe("BankStatementExportDrawer", () => {
             id: "acc-1",
             bankCode: "TCB",
             accountNumber: "111888",
-            accountName: "LIOUNI",
+            accountName: "MẪU",
           },
         ]}
         {...extraProps}

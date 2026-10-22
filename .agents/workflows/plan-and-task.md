@@ -39,14 +39,14 @@ graph LR
      - Nếu task có file spec UI/Hook (`*.spec.tsx`): Dùng `bunx vitest run <spec>` hoặc `bunx vitest related <file> --run`.
      - Nếu là component UI/page/layout thông thường không có spec: Dùng `bunx tsc --noEmit` để type check nhanh (< 3s).
      - **TUYỆT ĐỐI CẤM** chạy full test (`bun run test`) hoặc full build (`bun run build`) ở từng task nhỏ!
-   - *Final Gate (Phase 4)*: Chỉ chạy `bun run verify:final` DUY NHẤT một lần ở Task 4.1.1 trên commit cuối trước khi nghiệm thu/push.
+   - *Final Gate (Phase 4)*: Chỉ chạy `bun run verify:final` DUY NHẤT một lần ở Task 4.1.1, **sau khi đã commit và `git pull --rebase`** (script yêu cầu working tree sạch), rồi mới push `--no-verify`.
 
 5. **Session Checkpoint Protocol (Pause & Resume)**:
    - Hỗ trợ tạm dừng và tiếp tục mượt mà. Khi tạm dừng, bắt buộc ghi log vào mục `## ⏸️ Session Checkpoint`.
    - Khi tiếp tục, Agent đọc lại Checkpoint để xác định chính xác task đang dang dở và bắt đầu làm tiếp ngay mà không phải hỏi lại từ đầu.
 
 6. **Knowledge-Sync Guard (Cập nhật Tri thức / Skill Liền Tay)**:
-   - Ngay sau khi hoàn thành task/feature/refactor có thay đổi về UI layout, Component architecture, Token styling, Store state hoặc Props interface, Agent **BẮT BUỘC cập nhật lại Module Skill** tương ứng (tại `.agents/skills/modules/<module>/SKILL.md`) hoặc tạo mới skill (ví dụ `v2-layout`) để lưu giữ tri thức.
+   - Ngay sau khi hoàn thành task/feature/refactor có thay đổi về UI layout, Component architecture, Token styling, Store state hoặc Props interface, Agent **BẮT BUỘC cập nhật lại Module Skill** tương ứng (tại `erp/erp-web/.agents/skills/modules/<module>/SKILL.md`) hoặc tạo mới skill (ví dụ `v2-layout`) để lưu giữ tri thức.
    - Tuyệt đối không để tri thức trong skill bị lỗi thời.
 
 ---
@@ -169,10 +169,10 @@ Khi bắt đầu lại phiên làm việc (User gõ `tiếp tục`, `continue`, 
 4. **Thực thi liền mạch**: Bắt tay làm tiếp ngay từ đúng bước trong checkpoint mà không làm lại từ đầu.
 
 #### 4. Nghiệm thu, Cập nhật Tri thức & Báo cáo (Walkthrough & Knowledge Sync)
-- **Nghiệm thu cuối cùng (Final Gate)**: Chạy `bun run verify:final` DUY NHẤT một lần ở cuối toàn bộ kế hoạch; sau đó push bằng `--no-verify`.
+- **Nghiệm thu cuối cùng (Final Gate)**: Chạy `bun run verify:final` DUY NHẤT một lần ở cuối toàn bộ kế hoạch, sau khi commit và `git pull --rebase`; sau đó push bằng `--no-verify`.
 - **Knowledge & Skill Sync (Bắt buộc kiểm tra & cập nhật liền sau khi xong task)**:
   - Nếu có thay đổi cấu trúc component, props, hooks, stores, hoặc semantic tokens: cập nhật ngay file Module Skill tương ứng (như `v2-layout`, `app-store`, `drawer-document-traceability`, ...) hoặc tạo skill mới.
-  - Liên kết skill mới vào `liouni-erp-web-current-truth`.
+  - Liên kết skill mới vào `erp-web-current-truth`.
   - Tuyệt đối không để tri thức chỉ nằm trong commit hoặc đầu óc mà không ghi vào skill.
 - **Tạo Báo cáo Nghiệm thu**: Tạo file `walkthrough.md` đính kèm bằng chứng test pass, screenshot giao diện (nếu có) và hướng dẫn thao tác kiểm thử UI.
 
@@ -293,5 +293,5 @@ Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tươ
 
 ## 🧠 Tri Thức & Skill Đồng Bộ (Knowledge Sync)
 - **Module Skill**: Đã cập nhật `[path/to/SKILL.md]` (hoặc: *Không có thay đổi contract/component*).
-- **Current Truth**: Đã liên kết vào `liouni-erp-web-current-truth`.
+- **Current Truth**: Đã liên kết vào `erp-web-current-truth`.
 ```

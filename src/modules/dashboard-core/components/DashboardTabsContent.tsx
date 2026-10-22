@@ -17,7 +17,7 @@ import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { money } from "@/shared/utils/format";
 import { Tabs, TabsContent } from "@/shared/components/ui/tabs";
-import { PillTabs } from "@/shared/components/PillTabs";
+import { V2TabBar, V2Text, type V2TabItemData } from "@/v2/shared/components";
 import { CashflowForecastDashboardWidget } from "@/modules/budget/components/CashflowForecastDashboardWidget";
 import {
   VinfastPartsSummaryCards,
@@ -152,23 +152,24 @@ export function DashboardTabsContent({
 
   const [activeTab, setActiveTab] = React.useState("overview");
 
-  const pillItems = React.useMemo(() => {
+  const tabItems: V2TabItemData[] = React.useMemo(() => {
     return DASH_TABS.map(({ value, labelKey, Icon }) => ({
-      value,
+      key: value,
       label: t(labelKey),
       icon: Icon,
+      alwaysShowIcon: true,
     }));
   }, [t]);
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <div className="mb-6 flex items-center justify-start">
-        <PillTabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          items={pillItems}
-          size="md"
-          className="w-auto"
+        <V2TabBar
+          variant="sub"
+          tabs={tabItems}
+          activeTabKey={activeTab}
+          onTabChange={setActiveTab}
+          className="w-auto pb-0"
         />
       </div>
 
@@ -176,9 +177,12 @@ export function DashboardTabsContent({
         {/* Kinh doanh & Doanh thu */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <V2Text
+              as="h4"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm"
+            >
               Kinh doanh & Doanh thu
-            </h4>
+            </V2Text>
             <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -226,9 +230,12 @@ export function DashboardTabsContent({
         {/* Dòng tiền */}
         <div>
           <div className="flex items-center gap-3 mb-3 mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <V2Text
+              as="h4"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm"
+            >
               Dòng tiền
-            </h4>
+            </V2Text>
             <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <Panel title={t("panel.cashTrend")}>
@@ -253,9 +260,14 @@ export function DashboardTabsContent({
               ) : loading ? (
                 <ChartSkeleton type="bar" />
               ) : (
-                <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
+                <V2Text
+                  as="div"
+                  variant="body"
+                  color="muted"
+                  className="flex items-center justify-center h-full"
+                >
                   {t("common.noData")}
-                </div>
+                </V2Text>
               )}
             </div>
           </Panel>
@@ -264,9 +276,12 @@ export function DashboardTabsContent({
         {/* Kho & Vận hành (Phụ tùng Vinfast) */}
         <div>
           <div className="flex items-center gap-3 mb-3 mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <V2Text
+              as="h4"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm"
+            >
               Kho & Vận hành (Phụ tùng)
-            </h4>
+            </V2Text>
             <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="mb-4">
@@ -290,9 +305,12 @@ export function DashboardTabsContent({
       <TabsContent value="sales" className="space-y-6">
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <V2Text
+              as="h4"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm"
+            >
               Doanh thu bán hàng
-            </h4>
+            </V2Text>
             <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -394,9 +412,12 @@ export function DashboardTabsContent({
 
         <div>
           <div className="flex items-center gap-3 mb-3 mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <V2Text
+              as="h4"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm"
+            >
               Chi phí mua hàng
-            </h4>
+            </V2Text>
             <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -498,9 +519,12 @@ export function DashboardTabsContent({
 
         <div>
           <div className="flex items-center gap-3 mb-3 mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <V2Text
+              as="h4"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm"
+            >
               Biến động Doanh thu / Chi phí
-            </h4>
+            </V2Text>
             <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           {!selectedBranchId && (
@@ -539,9 +563,12 @@ export function DashboardTabsContent({
         <VinfastPartsSummaryCards filterState={filter.state} />
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            <V2Text
+              as="h4"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm"
+            >
               Biến động Mua / Bán phụ tùng
-            </h4>
+            </V2Text>
             <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="mb-4">

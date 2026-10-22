@@ -159,6 +159,12 @@ bunx tsc --noEmit && bun run check:ci && bun run test src/v2
 
 ---
 
+## 8b. Trạng thái migrate (cập nhật mỗi lần migrate)
+
+Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `business-partners`, `finance-invoice`, `inventory`, `production-bom`, `vinfast-parts`. **Trạng thái từng module (đủ parity hay còn thiếu) chưa được xác minh trong tài liệu này**; trước khi dựa vào, kiểm tra parity bằng playbook mục 5.
+
+Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/skills/modules/<module>/SKILL.md` của module.
+
 ## 9. Hạn chế đã biết
 
 - Generator chỉ sinh khung. Nhãn, quy tắc nghiệp vụ, quyền và endpoint thực phải chỉnh tay.

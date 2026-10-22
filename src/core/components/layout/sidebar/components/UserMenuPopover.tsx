@@ -11,7 +11,8 @@ import {
 } from "@/core/config/languages";
 
 const THEME_OPTIONS: { value: AppTheme; labelKey: string }[] = [
-  { value: "classic", labelKey: "nav.bottom.themeClassic" },
+  { value: "classic-light", labelKey: "nav.bottom.themeClassicLight" },
+  { value: "classic-dark", labelKey: "nav.bottom.themeClassicDark" },
   { value: "shell", labelKey: "nav.bottom.themeShell" },
   { value: "orcaq", labelKey: "nav.bottom.themeOrca" },
   { value: "midnight", labelKey: "nav.bottom.themeMidnight" },

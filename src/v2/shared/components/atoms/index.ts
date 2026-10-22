@@ -22,3 +22,4 @@ export * from "./v2-progress";
 export * from "./v2-number-input";
 export * from "./v2-copy-button";
 export * from "./v2-sparkline";
+export * from "./v2-icon";

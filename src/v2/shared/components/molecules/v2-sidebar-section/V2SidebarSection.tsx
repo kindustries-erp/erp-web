@@ -43,7 +43,7 @@ export const V2SidebarSection: React.FC<V2SidebarSectionProps> = ({
               handleToggle();
             }
           }}
-          className="sidebar-label-el flex cursor-pointer items-center justify-between px-4 pt-2 pb-1 text-[11px] font-semibold text-sidebar-label uppercase tracking-[0.08em] select-none hover:text-foreground transition-colors"
+          className="sidebar-label-el flex cursor-pointer items-center justify-between px-4 pt-2 pb-1 text-[11px] font-semibold text-sidebar-label dark:text-zinc-400 uppercase tracking-[0.08em] select-none hover:text-foreground dark:hover:text-zinc-200 transition-colors"
         >
           <V2Text
             as="span"

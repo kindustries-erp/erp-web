@@ -104,7 +104,8 @@ src/modules/erp-invoices-core/
 │       │   ├── ErpInvoiceItemsSection.columns.tsx # Cột hiển thị chi tiết dòng mặt hàng
 │       │   └── hooks/                         # Hooks hỗ trợ query dòng hàng
 │       ├── erp-invoice-detail-drawer/         # Drawer Chi Tiết Hóa Đơn Chuẩn Hóa
-│       │   ├── ErpInvoiceDetailDrawer.tsx     # Form drawer chính kế thừa StandardFormDrawer (3 Top Tabs, 2-columns, xl, < 180 LoC)
+│       │   ├── ErpInvoiceDetailDrawer.tsx     # Vỏ V2StandardDrawer (3 Top Tabs, 2-columns, xl); dùng chung cho list và standalone
+│       │   ├── ErpInvoiceDetailDrawer.presentation.hook.tsx # Ghép nội dung/tab/panel phải và trạng thái trình bày
 │       │   ├── ErpInvoiceDrawerTabs.tsx       # Helper/Hook builder 3 Top Navigation Tabs cho Drawer (< 160 LoC)
 │       │   ├── ErpInvoiceDetailDrawerModals.tsx# Sub-organism gom 4 selection modals (Bank NetOff, PO, SO, Case < 80 LoC)
 │       │   ├── ErpInvoiceDetailDrawer.hook.tsx# Hook quản lý form state, mode xem/sửa, deep links & auto-calculate
@@ -216,7 +217,8 @@ src/modules/erp-invoices-core/
 
 ### 3.3. Form Drawer Chi Tiết Hóa Đơn (`erp-invoice-detail-drawer`)
 - **Kiến trúc Chia tách Sub-Components**:
-  - `ErpInvoiceDetailDrawer.tsx`: Form drawer chính, tích hợp `StandardFormDrawer` 2 cột hoặc full-width tùy chế độ xem.
+  - `ErpInvoiceDetailDrawer.tsx`: Form drawer chính, tích hợp `V2StandardDrawer` layout 2 cột, size `xl`; cùng component phục vụ drawer từ danh sách và standalone.
+  - `ErpInvoiceDetailDrawer.presentation.hook.tsx`: Quản lý sub-tab chi tiết, tiêu đề/trạng thái và ánh xạ các tab V1 sang `V2StandardDrawer`, bao gồm panel phải theo từng tab.
   - `ErpInvoiceDetailDrawer.hook.tsx`: Quản lý toàn bộ state, validation, tính toán tổng tiền, và gọi API lưu.
   - `ErpInvoiceInternalMain.tsx`: Khu vực làm việc chính gồm Thông tin hóa đơn, Bảng dòng hàng, và Tab Tài chính.
   - `ErpInvoiceInternalSidebar.tsx`: Cột thông tin phụ gồm Tra cứu/PDF gốc NCC, Thông tin chung, `debtSlot` (khi có), Thuộc tính mặc định Module Config, Thuộc tính tùy chỉnh.
@@ -240,6 +242,8 @@ src/modules/erp-invoices-core/
       3. `[Chứng từ liên kết]`: `ErpInvoiceLinkedDocsSection` (Sơ đồ luồng chứng từ liên kết & Traceability Graph), kèm badge đếm tổng số chứng từ liên kết, tự động chuyển Right Panel sang `ErpInvoiceSettlementRightPanel`.
     - `invoice_partner` (**Chi tiết theo NCC/KH**, `ErpInvoicePartnerSection`: 3 sub-pill `[Chi tiết theo đối tượng]` | `[Bảng kê HHDV]` | `[Biến động & Phân tích]`).
     - `history` (**Lịch sử & Kiểm duyệt**): Nhật ký kiểm toán bọc trong `DrawerSection` collapsible (`DrawerAuditTimeline`).
+
+- Hai nút bên phải bind `activeTabKey` với `detailViewMode` (`template`/`pdf`); cùng mode đó điều khiển nội dung preview qua `InvoicePreviewModeContext`. Default là `template`; active có nền token V2 còn inactive để nền trong suốt.
   - **Deep links tương thích**:
     - `activeTabKey="financials"` (action "Đối soát dòng tiền"): chuyển sang tab `invoice_details`, tự động kích hoạt sub-tab `linked_docs` và mở modal Sao kê.
     - `activeTabKey="linked_docs"`: tự động chuyển hướng sang tab `invoice_details` với sub-tab `linked_docs`.
@@ -351,7 +355,7 @@ export interface ErpInvoice {
 ## 6. Quy tắc Kiểm tra & QC UI Mandate
 
 ### 6.1. Tiêu chuẩn UI & Tương thích
-- Tuân thủ cấu trúc component nguyên tử (Atomic UI components): bảng sử dụng `SpreadsheetPageTemplate`, drawer sử dụng `DrawerModal` / `StandardFormDrawer`.
+- Tuân thủ cấu trúc component nguyên tử (Atomic UI components): bảng sử dụng `SpreadsheetPageTemplate`; drawer chi tiết hóa đơn dùng `V2StandardDrawer`, các drawer nghiệp vụ khác tiếp tục dùng primitive hiện hành của chúng.
 - Luôn hiển thị trạng thái hạch toán `postingStatus` và trạng thái hợp lệ `isValid` bằng `Badge` màu tiêu chuẩn.
 - Các cột số tiền phải format bằng font số chuẩn `tabular-nums` và căn lề phải.
 - Xử lý mượt mà Server-Sent Events (SSE) với cờ keep-alive ping 15s để tránh timeout kết nối.

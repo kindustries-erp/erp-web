@@ -74,12 +74,15 @@ describe("V2TabBar Molecule", () => {
       />,
     );
 
-    expect(screen.getByText("Xem trước")).toBeInTheDocument();
-    expect(screen.getByText("Tài liệu")).toBeInTheDocument();
+    const previewTab = screen.getByRole("tab", { name: /Xem trước/ });
+    const attachmentsTab = screen.getByRole("tab", { name: /Tài liệu/ });
+    expect(previewTab).toHaveAttribute("aria-selected", "true");
+    expect(previewTab).toHaveClass("bg-primary", "text-primary-fg");
+    expect(attachmentsTab).toHaveAttribute("aria-selected", "false");
+    expect(attachmentsTab).toHaveClass("bg-transparent", "border-transparent");
     expect(screen.getByText("2")).toBeInTheDocument();
 
-    const tab2 = screen.getByText("Tài liệu");
-    fireEvent.click(tab2);
+    fireEvent.click(attachmentsTab);
     expect(handleChange).toHaveBeenCalledWith("attachments");
   });
 

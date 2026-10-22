@@ -1,9 +1,17 @@
 import { PageKey, TabInstance } from "@/shared/types";
 
-export type AppTheme = "shell" | "classic" | "orcaq" | "midnight";
+export type AppTheme =
+  | "shell"
+  | "classic"
+  | "classic-light"
+  | "classic-dark"
+  | "orcaq"
+  | "midnight";
 
 export enum AppThemeEnum {
   CLASSIC = "classic",
+  CLASSIC_LIGHT = "classic-light",
+  CLASSIC_DARK = "classic-dark",
   SHELL = "shell",
   ORCAQ = "orcaq",
   MIDNIGHT = "midnight",

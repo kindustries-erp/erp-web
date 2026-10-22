@@ -1,6 +1,6 @@
 /**
  * System Language Registry — Single Source of Truth for all supported languages
- * across Liouni ERP Web (UI Switcher, i18n, Multilingual Inputs, Custom Fields, etc.)
+ * across ERP Web (UI Switcher, i18n, Multilingual Inputs, Custom Fields, etc.)
  */
 
 export interface SystemLanguage {

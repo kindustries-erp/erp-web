@@ -1,6 +1,6 @@
 export const changelogVi = {
   title: "Nhật ký phát hành & Phiên bản",
-  subtitle: "Thông tin phiên bản và lịch sử cập nhật hệ thống Liouni ERP",
+  subtitle: "Thông tin phiên bản và lịch sử cập nhật hệ thống ERP",
   badgeCurrent: "Bản hiện tại",
   badgeLatest: "Mới nhất",
   runtimeInfo: "Thông tin Runtime & Môi trường",

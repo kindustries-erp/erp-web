@@ -6,7 +6,10 @@ export interface V2TopbarProps extends V2BaseProps<HTMLElement> {
   breadcrumbs?: V2BreadcrumbItem[];
   branchName?: string;
   companyName?: string;
+  logoUrl?: string;
   onSearchClick?: () => void;
   onBranchClick?: () => void;
+  isDark?: boolean;
+  onThemeToggle?: () => void;
   actions?: ReactNode;
 }

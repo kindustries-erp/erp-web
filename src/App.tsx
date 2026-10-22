@@ -2,9 +2,7 @@ import { Suspense, useEffect, useRef } from "react";
 import { lazyWithRetry as lazy } from "@/shared/utils/lazyWithRetry";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { Sidebar } from "@/core/components/layout/sidebar";
-import { Topbar } from "@/core/components/layout/Topbar";
-import { TabBar } from "@/core/components/layout/TabBar";
+import { V2ShellLayout } from "@/core/components/layout/V2ShellLayout";
 import { SlidePanel } from "@/shared/components/SlidePanel";
 import { SerialGenerationProgress } from "@/shared/components/SerialGenerationProgress";
 import { useSerialGenerationProgress } from "@/modules/goods-receipts-core/hooks/useSerialGenerationProgress";
@@ -14,7 +12,6 @@ import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage, pageToPath } from "@/shared/utils/pageUrl";
-import { EnvStamp } from "@/core/components/EnvStamp";
 import { useEnvStore } from "@/core/store/useEnvStore";
 import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
 import { Login } from "@/pages/Login";
@@ -448,45 +445,39 @@ export default function App() {
 
   return (
     <TooltipProvider>
-      <div className="app-shell flex h-screen w-full overflow-hidden text-foreground">
-        <EnvStamp />
-        <Sidebar />
-        <div className="right-panel relative">
-          <Topbar />
-          <div
-            ref={contentRef}
-            onScroll={keepContentXLocked}
-            className="app-content flex-1 overflow-x-hidden overflow-y-auto pb-10"
-          >
-            <>
-              {(() => {
-                const activeTab = openTabs.find(
-                  (tab) => tab.instanceId === currentInstanceId,
-                );
-                if (!activeTab) return <NotFound />;
-                const Component = PAGE_COMPONENTS[activeTab.pageKey];
-                if (!Component) return <NotFound />;
-                return (
-                  <div key={activeTab.instanceId} className="block h-full">
-                    <Suspense fallback={PAGE_FALLBACK}>
-                      <Component instanceIndex={activeTab.instanceIndex} />
-                    </Suspense>
-                  </div>
-                );
-              })()}
-              <SerialGenerationProgress />
-            </>
-          </div>
-          <TabBar />
+      <V2ShellLayout>
+        <div
+          ref={contentRef}
+          onScroll={keepContentXLocked}
+          className="app-content !pt-0 flex-1 h-full overflow-x-hidden overflow-y-auto"
+        >
+          <>
+            {(() => {
+              const activeTab = openTabs.find(
+                (tab) => tab.instanceId === currentInstanceId,
+              );
+              if (!activeTab) return <NotFound />;
+              const Component = PAGE_COMPONENTS[activeTab.pageKey];
+              if (!Component) return <NotFound />;
+              return (
+                <div key={activeTab.instanceId} className="block h-full">
+                  <Suspense fallback={PAGE_FALLBACK}>
+                    <Component instanceIndex={activeTab.instanceIndex} />
+                  </Suspense>
+                </div>
+              );
+            })()}
+            <SerialGenerationProgress />
+          </>
         </div>
-        <SlidePanel />
-        <TopProgressBar />
-        <Toast />
-        <ReloadPrompt />
-        <AppContextMenu />
-        <DocumentDependencyModal />
-        <GlobalErpDocumentOpener />
-      </div>
+      </V2ShellLayout>
+      <SlidePanel />
+      <TopProgressBar />
+      <Toast />
+      <ReloadPrompt />
+      <AppContextMenu />
+      <DocumentDependencyModal />
+      <GlobalErpDocumentOpener />
     </TooltipProvider>
   );
 }

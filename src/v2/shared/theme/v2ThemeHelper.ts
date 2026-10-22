@@ -32,5 +32,11 @@ export function applyV2Theme(theme: V2Theme): void {
   root.classList.toggle("theme-classic", theme === "classic");
   root.classList.toggle("theme-orcaq", theme === "orcaq");
   root.classList.toggle("theme-midnight", theme === "midnight");
-  root.classList.toggle("dark", theme === "midnight");
+
+  const isSystemDark =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+  root.classList.toggle("dark", theme === "midnight" || isSystemDark);
 }

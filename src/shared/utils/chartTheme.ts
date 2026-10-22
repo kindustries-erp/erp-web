@@ -2,27 +2,28 @@ import { useAppStore } from "@/core/config/appStore";
 
 export function useChartTheme() {
   const { appTheme } = useAppStore();
-  const isDark = appTheme === "midnight" || appTheme === "orcaq";
-  if (appTheme === "midnight") {
-    return {
-      isDark: true,
-      gridColor: "#27272a",
-      tickColor: "#a1a1aa",
-      borderColor: "#18181b",
-    };
-  }
+  const isDocDark =
+    typeof document !== "undefined" &&
+    document.documentElement.classList.contains("dark");
+  const isDark =
+    isDocDark ||
+    appTheme === "midnight" ||
+    appTheme === "orcaq" ||
+    appTheme === "classic-dark";
+
   if (isDark) {
     return {
       isDark: true,
-      gridColor: "#263142",
-      tickColor: "#8892a6",
-      borderColor: "#131a22",
+      gridColor: "rgba(255, 255, 255, 0.06)",
+      tickColor: "#94a3b8",
+      borderColor: "rgba(255, 255, 255, 0.08)",
     };
   }
+
   return {
     isDark: false,
-    gridColor: "#f0f0ee",
-    tickColor: "#aaa",
-    borderColor: "#ffffff",
+    gridColor: "rgba(0, 0, 0, 0.06)",
+    tickColor: "#64748b",
+    borderColor: "rgba(0, 0, 0, 0.08)",
   };
 }

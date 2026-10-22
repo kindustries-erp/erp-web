@@ -7,4 +7,6 @@ export interface V2SidebarBottomProps extends V2BaseProps {
   unreadCount?: number;
   onUserClick?: () => void;
   onNotificationClick?: () => void;
+  userMenuNode?: React.ReactNode;
+  notificationNode?: React.ReactNode;
 }

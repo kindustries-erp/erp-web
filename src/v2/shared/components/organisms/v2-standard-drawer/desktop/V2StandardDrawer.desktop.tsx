@@ -75,7 +75,11 @@ export const V2StandardDrawerDesktop: React.FC<V2StandardDrawerProps> = (
           enableFullscreen={h.enableFullscreen}
           isFullscreen={h.isFullscreen}
           onToggleFullscreen={h.toggleFullscreen}
-          collapsibleRightPanel={h.collapsibleRightPanel}
+          collapsibleRightPanel={
+            h.collapsibleRightPanel &&
+            Boolean(h.activeRightPanel) &&
+            !h.activeTabItem?.hideRightPanel
+          }
           isRightPanelCollapsed={h.isRightPanelCollapsed}
           onToggleRightPanel={h.toggleRightPanel}
           closeAriaLabel={props.closeAriaLabel}
@@ -88,7 +92,7 @@ export const V2StandardDrawerDesktop: React.FC<V2StandardDrawerProps> = (
             tabs={props.tabs}
             activeTabKey={h.activeTabKey}
             onTabChange={h.handleTabChange}
-            extra={props.tabBarExtra}
+            extra={props.tabBarExtra ?? h.activeTabItem?.headerExtra}
           />
         )}
 
