@@ -5,6 +5,10 @@ import { createColumnHeaderFilter } from "@/shared/components/DataTable/createCo
 import { money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import {
+  getClassificationLabel,
+  getPurposeLabel,
+} from "@/modules/bank-statements/constants/cashflowAttributes";
+import {
   renderCopyableText,
   renderReferenceCell,
   renderThuCell,
@@ -241,6 +245,31 @@ export function useBankStatementColumns({
         ),
         size: 360,
         cell: (row: any) => renderCopyableText(row.description, t),
+      },
+      {
+        key: "cashflowClassification",
+        header: headerFilter(
+          "cashflowClassification",
+          t("bankStatement.columns.classification", {
+            defaultValue: "Phân loại",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 160,
+        cell: (row: any) =>
+          getClassificationLabel(t, row.cashflowClassification),
+      },
+      {
+        key: "cashflowPurpose",
+        header: headerFilter(
+          "cashflowPurpose",
+          t("bankStatement.columns.purpose", {
+            defaultValue: "Mục đích",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 160,
+        cell: (row: any) => getPurposeLabel(t, row.cashflowPurpose),
       },
       {
         key: "thu",

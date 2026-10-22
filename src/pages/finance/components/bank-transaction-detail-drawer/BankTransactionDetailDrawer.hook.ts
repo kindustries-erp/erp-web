@@ -3,8 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { usePosting } from "@/shared/components/accounting/usePosting";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { moduleConfigApi } from "@/core/api/moduleConfigApi";
-import { validateModuleRequiredFields } from "@/shared/utils";
+import type {
+  CashflowClassification,
+  CashflowPurpose,
+} from "@/modules/bank-statements/constants/cashflowAttributes";
 import type { DrawerAuditLogItem } from "@/shared/components/StandardFormDrawer";
 import type {
   BankTransactionDetailDrawerProps,
@@ -36,15 +38,12 @@ export function useBankTransactionDetailDrawer(
   const [editMode, setEditMode] = useState(false);
   const [accountingEnabled, setAccountingEnabled] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [customAttributes, setCustomAttributes] = useState<Record<string, any>>(
-    {},
-  );
-  const [globalAttributes, setGlobalAttributes] = useState<Record<string, any>>(
-    {},
-  );
   const [editBranchId, setEditBranchId] = useState<string>("");
   const [editDescription, setEditDescription] = useState<string>("");
+  const [cashflowClassification, setCashflowClassification] =
+    useState<CashflowClassification | null>(null);
+  const [cashflowPurpose, setCashflowPurpose] =
+    useState<CashflowPurpose | null>(null);
   const [subTabKey, setSubTabKey] =
     useState<BankTransactionDetailSubTabKey>("details");
   const [partnerSubTabKey, setPartnerSubTabKey] =
@@ -151,11 +150,10 @@ export function useBankTransactionDetailDrawer(
       setEditMode(false);
       setAccountingEnabled(isPosted);
       setFormError(null);
-      setCategoryId(null);
-      setCustomAttributes({});
-      setGlobalAttributes({});
       setEditBranchId("");
       setEditDescription("");
+      setCashflowClassification(null);
+      setCashflowPurpose(null);
       setSubTabKey("details");
       postingState.reset();
       return;
@@ -168,15 +166,9 @@ export function useBankTransactionDetailDrawer(
       setEditDescription(
         transaction.description || transaction.accountingDescription || "",
       );
+      setCashflowClassification(transaction.cashflowClassification ?? null);
+      setCashflowPurpose(transaction.cashflowPurpose ?? null);
       hydratePostingState(transaction);
-      moduleConfigApi
-        .getEntityValues("BANK_TXN", transaction.id)
-        .then((r) => {
-          setCategoryId(r.categoryId || null);
-          setCustomAttributes(r.attributes || {});
-          setGlobalAttributes(r.globalAttributes || {});
-        })
-        .catch(() => {});
     }
   }, [
     isOpen,
@@ -190,39 +182,23 @@ export function useBankTransactionDetailDrawer(
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!transactionId) throw new Error("Missing transaction ID");
-      const [gDefs, cats] = await Promise.all([
-        moduleConfigApi.getGlobalAttributeDefs("BANK_TXN"),
-        categoryId ? moduleConfigApi.getCategories("BANK_TXN") : [],
-      ]);
-      const curCat = cats.find((c) => c.id === categoryId);
-      const missing = validateModuleRequiredFields({
-        globalDefs: gDefs,
-        globalAttributes,
-        categoryDefs: curCat?.attributeDefs || [],
-        attributes: customAttributes,
-        hasCategory: Boolean(categoryId),
-        moduleKey: "BANK_TXN",
-        categoryCode: curCat?.code || null,
-      });
-      if (missing.length > 0)
-        throw new Error(
-          `Vui lòng nhập các trường bắt buộc: ${missing.join(", ")}`,
-        );
-      await moduleConfigApi
-        .saveEntityValues("BANK_TXN", transactionId, {
-          categoryId,
-          attributes: customAttributes,
-          globalAttributes,
-        })
-        .catch(() => {});
       const oBranch = transaction.branchId || transaction.branch?.id || "";
       const oDesc =
         transaction.description || transaction.accountingDescription || "";
-      if (editBranchId !== oBranch || editDescription !== oDesc) {
+      const oClassification = transaction.cashflowClassification ?? null;
+      const oPurpose = transaction.cashflowPurpose ?? null;
+      if (
+        editBranchId !== oBranch ||
+        editDescription !== oDesc ||
+        cashflowClassification !== oClassification ||
+        cashflowPurpose !== oPurpose
+      ) {
         await bankStatementApi.updateTransaction(transactionId, {
           branchId: editBranchId || undefined,
           description: editDescription,
           accountingDescription: editDescription,
+          cashflowClassification,
+          cashflowPurpose: cashflowClassification ? cashflowPurpose : null,
         });
       }
       if (!accountingEnabled)
@@ -391,12 +367,10 @@ export function useBankTransactionDetailDrawer(
     accountingEnabled,
     setAccountingEnabled,
     formError,
-    categoryId,
-    setCategoryId,
-    customAttributes,
-    setCustomAttributes,
-    globalAttributes,
-    setGlobalAttributes,
+    cashflowClassification,
+    setCashflowClassification,
+    cashflowPurpose,
+    setCashflowPurpose,
     editBranchId,
     setEditBranchId,
     editDescription,
