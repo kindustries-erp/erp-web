@@ -21,7 +21,7 @@ export const V2SidebarHeader: React.FC<V2SidebarHeaderProps> = ({
     <div
       data-testid="v2-sidebar-header"
       className={cn(
-        "sidebar-header flex h-12 flex-shrink-0 items-center gap-2 border-b border-border px-[10px] transition-all duration-200 select-none",
+        "sidebar-header flex h-12 flex-shrink-0 items-center gap-2 border-b border-border dark:border-white/[0.08] px-[10px] transition-all duration-200 select-none",
         className,
       )}
       {...props}
@@ -40,7 +40,7 @@ export const V2SidebarHeader: React.FC<V2SidebarHeaderProps> = ({
               variant="body"
               weight="semibold"
               truncate={2}
-              className="text-[13px] leading-[1.2]"
+              className="text-[13px] leading-[1.2] text-foreground dark:text-zinc-100 font-semibold"
             >
               {displayAppName}
             </V2Text>

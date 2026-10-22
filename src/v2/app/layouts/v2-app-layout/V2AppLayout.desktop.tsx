@@ -30,6 +30,14 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   onTabClose,
   onSearchClick,
   onBranchClick,
+  isDark,
+  onThemeToggle,
+  appName,
+  logoUrl,
+  contentClassName,
+  userMenuNode,
+  notificationNode,
+  onClickLogo,
 }) => {
   const { t, locale } = useV2Translation();
   const can = useV2PermissionChecker();
@@ -64,7 +72,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   return (
     <div
       data-testid="v2-app-layout-desktop"
-      className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-[#f4f4f4] dark:bg-background text-foreground select-none"
+      className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-[#f4f4f4] dark:bg-[#000000] text-foreground select-none"
     >
       {/* Card 1: Sidebar floating card */}
       <V2Sidebar
@@ -72,6 +80,10 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         items={navItems}
         activeId={activeNavId}
         onNavigate={onNavigate}
+        appName={appName}
+        onClickLogo={onClickLogo}
+        userMenuNode={userMenuNode}
+        notificationNode={notificationNode}
         user={{
           displayName: effectiveUserName,
           avatarInitials: effectiveUserName
@@ -86,8 +98,12 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         breadcrumbs={breadcrumbs ?? fallbackBreadcrumbs}
         branchName={effectiveBranchName}
         companyName={tenantName}
+        logoUrl={logoUrl}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
+        isDark={isDark}
+        onThemeToggle={onThemeToggle}
+        contentClassName={contentClassName}
         tabs={tabs ?? fallbackTabs}
         activeTabId={activeTabId ?? "dashboard"}
         onTabSelect={onTabSelect ?? (() => {})}

@@ -31,4 +31,10 @@ export interface V2SidebarProps extends V2BaseProps<HTMLElement> {
   user?: V2SidebarUserData;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  appName?: string;
+  onClickLogo?: () => void;
+  onUserClick?: () => void;
+  onNotificationClick?: () => void;
+  userMenuNode?: React.ReactNode;
+  notificationNode?: React.ReactNode;
 }

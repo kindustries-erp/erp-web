@@ -15,6 +15,12 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
   user,
   collapsed,
   onToggleCollapse,
+  appName,
+  onClickLogo,
+  onUserClick,
+  onNotificationClick,
+  userMenuNode,
+  notificationNode,
   className,
   ...props
 }) => {
@@ -33,13 +39,18 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
     <aside
       data-testid="v2-sidebar"
       className={cn(
-        "v2-sidebar relative flex flex-col h-full rounded-2xl border border-border shadow-sm bg-[color:var(--sidebar-bg,hsl(var(--card)))] text-card-foreground transition-all duration-200 ease-in-out select-none flex-shrink-0",
+        "v2-sidebar relative flex flex-col h-full rounded-2xl border border-border dark:border-white/[0.08] shadow-[0_8px_24px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.05)] dark:shadow-[0_16px_36px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.06)] bg-[color:var(--sidebar-bg,hsl(var(--card)))] dark:bg-[#111114] text-card-foreground transition-all duration-200 ease-in-out select-none flex-shrink-0",
         isCollapsed ? "w-[58px]" : "w-[210px]",
         className,
       )}
       {...props}
     >
-      <V2SidebarHeader isCollapsed={isCollapsed} onToggle={toggleCollapse} />
+      <V2SidebarHeader
+        isCollapsed={isCollapsed}
+        onToggle={toggleCollapse}
+        appName={appName}
+        onClickLogo={onClickLogo}
+      />
 
       <nav
         className={cn(
@@ -78,6 +89,10 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
         avatarInitials={user?.avatarInitials ?? "U"}
         displayName={user?.displayName}
         unreadCount={user?.unreadCount ?? 0}
+        onUserClick={onUserClick}
+        onNotificationClick={onNotificationClick}
+        userMenuNode={userMenuNode}
+        notificationNode={notificationNode}
       />
     </aside>
   );

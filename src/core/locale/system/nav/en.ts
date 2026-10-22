@@ -135,6 +135,8 @@ export const navEn = {
     themeStyle: "Theme",
     themeShell: "Shell",
     themeClassic: "Classic",
+    themeClassicLight: "Light Classic",
+    themeClassicDark: "Dark Classic",
     themeOrca: "Orcaq",
     themeMidnight: "Midnight",
     settings: "Settings",

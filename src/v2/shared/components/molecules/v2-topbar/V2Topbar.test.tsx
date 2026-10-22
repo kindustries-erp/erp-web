@@ -11,7 +11,7 @@ describe("V2Topbar Molecule", () => {
     });
   });
 
-  it("renders with 36px height, breadcrumbs, search button, language switcher and branch badge", () => {
+  it("renders with 36px height, breadcrumbs, search button and branch badge", () => {
     const handleSearch = vi.fn();
     const handleBranch = vi.fn();
 
@@ -33,10 +33,6 @@ describe("V2Topbar Molecule", () => {
     expect(screen.getByText("Đơn bán hàng")).toBeInTheDocument();
     expect(screen.getByText("Chi nhánh Sài Gòn")).toBeInTheDocument();
 
-    // Language switcher
-    expect(screen.getByRole("button", { name: "VI" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "EN" })).toBeInTheDocument();
-
     fireEvent.click(
       screen.getByRole("button", { name: "Tìm kiếm nhanh hệ thống" }),
     );
@@ -48,7 +44,7 @@ describe("V2Topbar Molecule", () => {
     expect(handleBranch).toHaveBeenCalledTimes(1);
   });
 
-  it("updates quick search placeholder and aria-label when switching language", () => {
+  it("updates quick search placeholder and aria-label when locale changes in store", () => {
     const { rerender } = render(
       <V2Topbar
         breadcrumbs={[{ label: "Bán hàng" }]}
@@ -60,8 +56,9 @@ describe("V2Topbar Molecule", () => {
       screen.getByRole("button", { name: "Tìm kiếm nhanh hệ thống" }),
     ).toBeInTheDocument();
 
-    // Click EN in language switcher
-    fireEvent.click(screen.getByRole("button", { name: "EN" }));
+    act(() => {
+      useV2LocaleStore.getState().setLocale("en");
+    });
 
     rerender(
       <V2Topbar
