@@ -40,7 +40,8 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "relative min-w-[240px] max-w-[420px] p-4 text-foreground",
+          // Non-modal popover portals to <body>; a modal Dialog (e.g. drawer) sets body pointer-events:none, so re-enable clicks here.
+          "pointer-events-auto relative min-w-[240px] max-w-[420px] p-4 text-foreground",
           glass &&
             "bg-[var(--popup-bg,rgba(246,248,252,0.72))] backdrop-blur-[var(--glass-blur,16px)] border border-[color:var(--popup-border,rgba(226,232,240,0.8))] shadow-[var(--popup-shadow)]",
           className,
