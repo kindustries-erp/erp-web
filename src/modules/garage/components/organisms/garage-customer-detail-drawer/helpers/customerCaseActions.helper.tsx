@@ -1,13 +1,31 @@
 import React from "react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
-import { Eye, Pencil, Scale, Receipt, RefreshCw, Copy } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  Scale,
+  Receipt,
+  RefreshCw,
+  Copy,
+  ArrowDownLeft,
+  ArrowUpRight,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
+
+export interface CaseCashflowParams {
+  voucherType: "RECEIPT" | "PAYMENT";
+  caseId: string;
+  licensePlate?: string;
+  partnerName?: string;
+  amount?: number;
+}
 
 export interface CaseActionCallbacks {
   onOpenCaseDetail: (caseCode: string, editMode?: boolean) => void;
   onOpenSettlementModal: (c: any) => void;
   onOpenInvoiceLinkingModal: (c: any) => void;
   onSyncFromKgara?: (caseId: string) => void;
+  onCreateCashflow?: (params: CaseCashflowParams) => void;
 }
 
 export function buildCustomerCaseRowActions(
@@ -23,6 +41,9 @@ export function buildCustomerCaseRowActions(
     void navigator.clipboard.writeText(caseCode);
     toast.success(t("common:copied", "Đã sao chép vào bộ nhớ tạm"));
   };
+
+  const thuAmount = Number(row.tienCoThue) || 0;
+  const chiAmount = Number(row.chiPhi) || 0;
 
   return [
     {
@@ -62,6 +83,45 @@ export function buildCustomerCaseRowActions(
         },
       ],
     },
+    ...(callbacks.onCreateCashflow
+      ? [
+          {
+            groupLabel: t("debts.actions.cashflowGroup", "PHIẾU THU / CHI"),
+            items: [
+              {
+                label: t(
+                  "debts.actions.createReceiptForCase",
+                  "Tạo phiếu thu vụ việc...",
+                ),
+                icon: <ArrowDownLeft className="w-4 h-4 text-emerald-600" />,
+                onClick: () =>
+                  callbacks.onCreateCashflow?.({
+                    voucherType: "RECEIPT",
+                    caseId: row.id,
+                    licensePlate: row.bienSoXe,
+                    partnerName: row.khachHangName,
+                    amount: thuAmount > 0 ? thuAmount : undefined,
+                  }),
+              },
+              {
+                label: t(
+                  "debts.actions.createPaymentForCase",
+                  "Tạo phiếu chi vụ việc...",
+                ),
+                icon: <ArrowUpRight className="w-4 h-4 text-rose-600" />,
+                onClick: () =>
+                  callbacks.onCreateCashflow?.({
+                    voucherType: "PAYMENT",
+                    caseId: row.id,
+                    licensePlate: row.bienSoXe,
+                    partnerName: row.khachHangName,
+                    amount: chiAmount > 0 ? chiAmount : undefined,
+                  }),
+              },
+            ],
+          },
+        ]
+      : []),
     {
       groupLabel: t("common:utility", "Tiện ích"),
       items: [

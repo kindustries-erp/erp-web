@@ -19,6 +19,8 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
   onClose,
   voucher,
   initialMode = "view",
+  initialData,
+  onSuccess,
 }) => {
   const {
     mode,
@@ -37,6 +39,8 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
     onClose,
     voucher,
     initialMode,
+    initialData,
+    onSuccess,
   });
 
   const t = useT();
@@ -46,8 +50,9 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
       voucher,
       formData,
       setFormData,
+      initialData,
     }),
-    [mode, voucher, formData, setFormData],
+    [mode, voucher, formData, setFormData, initialData],
   );
 
   const drawerTabs: DrawerTopTabItem[] | undefined = useMemo(() => {

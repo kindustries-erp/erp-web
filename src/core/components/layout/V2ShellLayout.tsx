@@ -13,7 +13,7 @@ import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
 import { UserMenuPopover } from "./sidebar/components/UserMenuPopover";
-import { NotificationPopover } from "./sidebar/components/NotificationPopover";
+import { V2NotificationPopover } from "@/v2/shared/components";
 import { useQuery } from "@tanstack/react-query";
 import { notificationsApi } from "@/core/api/notifications";
 
@@ -244,7 +244,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   );
 
   const notificationNode = (
-    <NotificationPopover>
+    <V2NotificationPopover notifications={notifications}>
       <div className="relative flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-faint hover:text-foreground hover:bg-accent/50 cursor-pointer flex-shrink-0 transition-colors p-0">
         <svg
           width="14"
@@ -262,7 +262,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           <span className="absolute top-[2px] right-[2px] w-[6px] h-[6px] bg-destructive rounded-full" />
         )}
       </div>
-    </NotificationPopover>
+    </V2NotificationPopover>
   );
 
   return (

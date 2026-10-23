@@ -794,10 +794,15 @@ export const garageApi = {
     };
   },
 
-  getCasesByCustomer: async (branchId: string, customerCode: string) => {
+  getCasesByCustomer: async (
+    branchId: string,
+    customerCode: string,
+    licensePlate?: string,
+  ) => {
     const res = await axiosInstance.get(
       `${BASE}/cases/by-customer/${encodeURIComponent(customerCode)}`,
       {
+        params: licensePlate ? { licensePlate } : undefined,
         headers: { "x-greenway-branch-id": branchId || "" },
       },
     );

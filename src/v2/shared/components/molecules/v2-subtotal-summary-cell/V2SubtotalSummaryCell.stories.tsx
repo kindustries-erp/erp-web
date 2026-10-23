@@ -52,3 +52,12 @@ export const TotalDisplayMode = () => (
     displayMode="total"
   />
 );
+export const Label = () => (
+  <V2SubtotalSummaryCell
+    variant="label"
+    pageValue={20}
+    totalValue={531}
+    page={1}
+    totalPages={27}
+  />
+);

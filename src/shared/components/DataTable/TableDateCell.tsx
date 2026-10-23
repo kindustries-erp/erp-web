@@ -19,7 +19,7 @@ export function TableDateCell({
   className,
   showTooltip = true,
 }: TableDateCellProps) {
-  if (!date) return <span className="text-gray-400">—</span>;
+  if (!date) return <span className="text-muted-foreground">—</span>;
 
   // Render format
   const dateTimeStr = formatGMT7(date, format === "date" ? "date" : "datetime");
@@ -33,9 +33,9 @@ export function TableDateCell({
         showTooltip ? "cursor-help" : ""
       } ${className || ""}`}
     >
-      <span className="text-sm text-gray-900">{datePart}</span>
+      <span className="text-sm text-foreground">{datePart}</span>
       {timePart && (
-        <span className="text-[11px] text-gray-400 font-normal">
+        <span className="text-[11px] text-muted-foreground font-normal">
           {timePart}
         </span>
       )}

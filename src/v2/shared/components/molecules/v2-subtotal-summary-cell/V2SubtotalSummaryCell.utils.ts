@@ -29,5 +29,7 @@ export const formatSubtotalValue = (
 ): string => {
   if (variant === "amount") return formatAmount(value, locale);
   const formatted = formatNumber(value, locale);
+  if (variant === "label")
+    return unit ? `${formatted} ${unit}` : `${formatted} dòng`;
   return unit ? `${formatted} ${unit}` : formatted;
 };

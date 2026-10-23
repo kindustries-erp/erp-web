@@ -8,6 +8,7 @@ import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import { Badge } from "@/v2/shared/ui";
 import {
   BRANCHES,
+  branchLabelsOf,
   POSTING_OPTIONS,
   formatMoney,
   type FakeInvoice,
@@ -138,8 +139,6 @@ export const getBaseInvoiceColumns = (
     size: 160,
     mobileSlot: "hidden",
     cell: (row) =>
-      row.branchName ||
-      BRANCHES.find((b) => b.value === row.branchId)?.label ||
-      "-",
+      row.branchName || branchLabelsOf(row.branchIds, row.branchId) || "-",
   },
 ];

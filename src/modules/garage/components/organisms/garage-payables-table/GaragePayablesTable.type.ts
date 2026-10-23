@@ -5,6 +5,15 @@ import type {
   useGarageSuppliersList,
 } from "@/modules/garage/hooks/useGarageSuppliersList";
 
+export interface CreateSupplierCashflowParams {
+  voucherType: "RECEIPT" | "PAYMENT";
+  customerCode?: string;
+  partnerName?: string;
+  licensePlate?: string;
+  supplierId?: string;
+  amount?: number;
+}
+
 export interface GaragePayablesTableProps {
   tabs?: TabItem[];
   activeTab?: string;
@@ -23,6 +32,7 @@ export interface GaragePayablesTableProps {
   onOpenExportDrawer: (context: GarageDebtsExportContext) => void;
   canSyncGarage?: boolean;
   onSyncCases?: () => void;
+  onCreateCashflow?: (params: CreateSupplierCashflowParams) => void;
 }
 
 export interface CreateBaseColumnsProps {

@@ -84,6 +84,8 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
                       values: summaryValues,
                       page: state.query.page,
                       totalPages,
+                      totalRows: view.total,
+                      pageSize: state.query.pageSize,
                     }
                   : undefined
               }

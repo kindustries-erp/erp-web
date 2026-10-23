@@ -16,6 +16,8 @@ export interface FakeInvoice {
   taxCode: string;
   taxTab: Exclude<TaxTab, "all">;
   branchId: string;
+  /** Mọi chi nhánh của hóa đơn (branch_ids), có thể nhiều hơn một */
+  branchIds?: string[];
   preVat: number;
   vat: number;
   total: number;
@@ -49,6 +51,18 @@ export const BRANCHES = [
   { value: "hcm", label: "Chi nhánh TP.HCM" },
   { value: "dn", label: "Chi nhánh Đà Nẵng" },
 ];
+
+/** Nhãn mọi chi nhánh của hóa đơn, nối bằng dấu phẩy; dùng branchId khi chưa có danh sách. */
+export function branchLabelsOf(
+  branchIds: string[] | undefined,
+  branchId: string | null | undefined,
+): string {
+  const ids = branchIds?.length ? branchIds : branchId ? [branchId] : [];
+  return ids
+    .map((id) => BRANCHES.find((b) => b.value === id)?.label)
+    .filter((label): label is string => !!label)
+    .join(", ");
+}
 
 export const POSTING_OPTIONS = [
   { value: "POSTED", label: "Đã hạch toán" },

@@ -97,3 +97,67 @@ export const WithSummaryServer = () => {
     </div>
   );
 };
+
+export const BenchmarkParity = () => {
+  const { columns, rowActions } = useDemoActions();
+  const [selected, setSelected] = useState<string[]>([]);
+  const parityColumns = useMemo(
+    () =>
+      columns.map((c) => {
+        if (c.key === "customer") {
+          return {
+            ...c,
+            summary: { variant: "label" as const, label: "Tổng cộng:" },
+          };
+        }
+        if (c.key === "amount") {
+          return { ...c, summary: { variant: "amount" as const } };
+        }
+        return c;
+      }),
+    [columns],
+  );
+
+  return (
+    <div className="flex h-full flex-col gap-2">
+      <V2StandardTable<MockOrder>
+        tableId="story-orders-parity"
+        className="min-h-0 flex-1"
+        mode="client"
+        columns={parityColumns}
+        items={MOCK_ORDERS}
+        getRowKey={(row) => row.id}
+        rowActions={rowActions}
+        getRowClassName={orderRowClassName}
+        enableRowSelection
+        selectedKeys={selected}
+        onSelectionChange={setSelected}
+        toolbar={{
+          filterGroup: {
+            title: "TRẠNG THÁI",
+            items: [
+              { key: "all", label: "Tất cả" },
+              { key: "done", label: "Hoàn tất" },
+            ],
+            activeKey: "all",
+            onChange: () => {},
+          },
+          viewModes: {
+            items: [
+              { key: "all", label: "Tất cả cột", isSystem: true },
+              { key: "overview", label: "Tổng quan", isSystem: true },
+            ],
+            activeKey: "all",
+            onSelect: () => {},
+          },
+          create: {
+            label: "Đồng bộ",
+            onClick: () => {},
+          },
+          enableFullscreen: true,
+          onRefresh: () => {},
+        }}
+      />
+    </div>
+  );
+};

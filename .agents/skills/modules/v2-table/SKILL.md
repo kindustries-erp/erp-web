@@ -179,25 +179,26 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 
 - Chữ trong toolbar, header, empty state và nhãn lọc dùng `V2Text` (atom) thay cho `<span>`/`<p>` thuần; giữ class cũ bằng `className` để không đổi giao diện.
 - Vạch ngăn toolbar dùng atom `V2Divider` (`orientation="vertical"` mặc định).
-- Ô chọn dòng/chọn tất cả (desktop header, desktop cell, mobile card) dùng molecule `V2TableSelectCheckbox` (nhận `checked: boolean | "indeterminate"`, `aria-label` bắt buộc do bên gọi truyền i18n).
+- Ô chọn dòng/chọn tất cả (desktop header, desktop cell, mobile card) dùng molecule `V2TableSelectCheckbox` (nhận `checked: boolean | "indeterminate"`, `aria-label` bắt buộc do bên gọi truyền i18n). Checkbox dùng style chuẩn V1 sắc nét: `rounded-[4px]`, viền mờ `border-border`, nền `bg-surface`, chỉ khi checked/indeterminate mới lên `bg-primary`, và hiện icon `Minus` khi indeterminate.
 - Không thay `<table>` trong `grid/V2StandardTable.grid.tsx` bằng primitive `Table` của `shared/ui`: primitive bọc thêm `div.overflow-auto`, làm mất sticky header.
 
 ## 6. V2SubtotalSummaryCell (molecule `v2-subtotal-summary-cell/`)
 
-- Props: `variant: "qty" | "amount" | "count"`, `pageValue`, `totalValue`, `page`, `totalPages`, `cumulativeValue`, `displayMode: "page" | "total"`, `metricTitle`, `unit`, `locale`.
+- Props: `variant: "qty" | "amount" | "count" | "label"`, `pageValue`, `totalValue`, `label`, `page`, `totalPages`, `cumulativeValue`, `displayMode: "page" | "total"`, `metricTitle`, `unit`, `locale`.
+- Trực quan: Ô số có **gạch chân nét đứt** (`border-b border-dashed border-current/40`) kèm **icon `Info` (`ⓘ`)** báo hiệu popover; ô `label` hiển thị nhãn (mặc định "Tổng cộng:") kèm icon `Info` (`ⓘ`), hover mở popover xem chi tiết số dòng.
 - Mở popover bằng hover (delay 120ms mở, 180ms đóng), focus, click; Esc đóng. Logic nằm ở `V2SubtotalSummaryCell.hook.ts`; hàm thuần (tỷ lệ, lũy kế, định dạng) ở `V2SubtotalSummaryCell.utils.ts`.
 - Chỉ là UI, nhận số liệu qua props, không gọi API.
 
 ## 7. Hàng tổng (summary row) của V2StandardTable
 
-- Khai báo trên cột: `V2Column.summary = { variant: "qty" | "amount" | "count", accessor?, total?, metricTitle?, unit? }`. Cột không có `summary` để ô trống.
+- Khai báo trên cột: `V2Column.summary = { variant: "qty" | "amount" | "count" | "label", label?, accessor?, total?, metricTitle?, unit? }`. Cột có `variant: "label"` hiển thị ô `Tổng cộng: ⓘ` mở popover số dòng; các cột có `variant` số hiển thị giá trị tương ứng; cột không có `summary` để ô trống.
 - Desktop only: hàng tổng là `<tfoot>` cuối bảng (`summary/V2StandardTable.summary.row.tsx`), dùng `V2SubtotalSummaryCell`. Mobile không render.
 - Ô của hàng tổng `sticky bottom-0` với nền kính `V2_GLASS_SURFACE_CLASS` (cùng nền và `backdrop-blur-[16px]` với header, hằng số định nghĩa trong `V2StandardTable.header.tsx`): bảng ngắn thì hàng tổng nằm sát dòng cuối, bảng phải cuộn thì dính đáy vùng cuộn và dòng bên dưới mờ qua nền kính.
 - Popover của ô tổng (`V2SubtotalSummaryCell`) rộng 320px, giữ glass/blur; nhãn `truncate`, giá trị `shrink-0 whitespace-nowrap` để không tràn.
 - Giá trị (`summary/V2StandardTable.summary.ts` + `summary/V2StandardTable.summary.hook.ts`):
   - `mode="client"`: tự tính từ toàn bộ dòng đã lọc/sắp xếp (subtotal trang, lũy kế, tổng).
   - `mode="server"`: subtotal trang lấy từ `items`; **tổng toàn bộ phải truyền qua `summary.total`** (từ API); **lũy kế được bảng tự tích lũy theo từng trang**, reset khi đổi filter/sort/pageSize. Trang chưa đi qua thì không có lũy kế.
-- Story: `V2StandardTable` → `WithSummary` (client) và `WithSummaryServer`; template → `V2ModulePage` → `ListAndDashboard`.
+- Story: `V2StandardTable` → `WithSummary` (client), `WithSummaryServer`, `BenchmarkParity` (so khớp chuẩn mực V1); template → `V2ModulePage` → `ListAndDashboard`.
 
 ## 8. Tìm kiếm toàn cục, query trên URL và dữ liệu từ khung trang
 

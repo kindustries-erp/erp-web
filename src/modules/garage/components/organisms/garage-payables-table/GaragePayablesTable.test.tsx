@@ -81,4 +81,21 @@ describe("GaragePayablesTable", () => {
       1,
     );
   });
+
+  it("accepts onCreateCashflow callback prop", () => {
+    const queryClient = new QueryClient();
+    const handleCreateCashflow = vi.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GaragePayablesTable
+          onOpenCustomerDetail={vi.fn()}
+          onOpenSupplierDetail={vi.fn()}
+          onOpenExportDrawer={vi.fn()}
+          onCreateCashflow={handleCreateCashflow}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("51H02028")).toBeInTheDocument();
+  });
 });

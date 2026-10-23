@@ -1,91 +1,107 @@
-import React, { useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { garageApi } from "../../../api/garageApi";
-import { useAppStore } from "@/core/config/appStore";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import {
+  renderGarageCaseTooltipContent,
+  formatCaseToOption,
+} from "./GarageCaseCombobox.helper";
 
-export function renderGarageCaseTooltipContent(item: {
-  bienSoXe?: string;
-  soChungTu?: string;
-  id?: string;
-  khachHangName?: string;
-  ngayPhatSinh?: string;
-  caseDate?: string;
-  phaiThuBaoHiem?: number | string;
-  phaiThuKhachHang?: number | string;
-  chiPhi?: number | string;
-  tienCoThue?: number | string;
-}) {
-  const rawDateStr = item.ngayPhatSinh || item.caseDate;
-  const date = rawDateStr
-    ? new Date(rawDateStr).toLocaleDateString("vi-VN")
-    : "";
-  const ref = item.soChungTu || item.id || "";
-  const plate = item.bienSoXe || "Không BKS";
+export { renderGarageCaseTooltipContent };
 
-  const thuBH = Number(item.phaiThuBaoHiem) || 0;
-  const thuKH = Number(item.phaiThuKhachHang) || 0;
-  const tra = Number(item.chiPhi) || 0;
-  const hasAmounts = thuBH > 0 || thuKH > 0 || tra > 0;
-
-  return (
-    <div className="flex flex-col gap-1 min-w-[210px] text-xs p-0.5">
-      <div className="font-semibold text-white flex items-center justify-between border-b border-white/20 pb-1">
-        <span>{plate}</span>
-        <span className="text-[11px] font-mono opacity-80">{ref}</span>
-      </div>
-      {item.khachHangName && (
-        <div className="text-white/90 text-[11px] truncate">
-          <span className="text-white/60">Khách hàng: </span>
-          <span>{item.khachHangName}</span>
-        </div>
-      )}
-      {date && (
-        <div className="text-white/90 text-[11px]">
-          <span className="text-white/60">Ngày: </span>
-          <span>{date}</span>
-        </div>
-      )}
-      {hasAmounts && (
-        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 pt-1 border-t border-white/10 text-[11px] font-mono">
-          <span className="text-white/70">Thu BH:</span>
-          <span className="text-right text-emerald-300 font-medium">
-            {thuBH.toLocaleString("vi-VN")}đ
-          </span>
-          <span className="text-white/70">Thu KH:</span>
-          <span className="text-right text-sky-300 font-medium">
-            {thuKH.toLocaleString("vi-VN")}đ
-          </span>
-          <span className="text-white/70">Phải chi:</span>
-          <span className="text-right text-rose-300 font-medium">
-            {tra.toLocaleString("vi-VN")}đ
-          </span>
-        </div>
-      )}
-    </div>
-  );
+export interface UseGarageCaseComboboxParams {
+  branchId?: string;
+  customerCode?: string;
+  licensePlate?: string;
+  supplierId?: string;
+  partnerName?: string;
 }
 
-export const useGarageCaseCombobox = (propsBranchId?: string) => {
-  const currentBranchId = useAppStore((state) => state.currentBranchId);
-  const branchId = propsBranchId || currentBranchId;
+const isUuid = (id?: string) =>
+  Boolean(
+    id &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
+  );
+
+export const useGarageCaseCombobox = (
+  branchIdOrParams?: string | UseGarageCaseComboboxParams,
+) => {
+  const params: UseGarageCaseComboboxParams =
+    typeof branchIdOrParams === "string"
+      ? { branchId: branchIdOrParams }
+      : branchIdOrParams || {};
+
+  const { customerCode, licensePlate, supplierId } = params;
+  const effectiveBranchId =
+    params.branchId &&
+    params.branchId !== "BRANCH_ALL" &&
+    params.branchId !== "ALL" &&
+    !isUuid(params.branchId)
+      ? params.branchId
+      : "";
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
-
   const hasPermission = useHasPermission("garage", "read");
 
+  const hasCustomerContext = Boolean(
+    customerCode && customerCode !== "UNKNOWN",
+  );
+  const hasSupplierContext = Boolean(supplierId);
+  const hasPlateContext = Boolean(
+    licensePlate && !hasCustomerContext && !hasSupplierContext,
+  );
+  const hasTargetContext = Boolean(
+    hasCustomerContext || hasSupplierContext || hasPlateContext,
+  );
+
+  // 1. Fetch target-specific cases if context is provided
+  const { data: targetCases = [], isLoading: isLoadingTarget } = useQuery({
+    queryKey: [
+      "garage-target-cases",
+      effectiveBranchId,
+      customerCode,
+      supplierId,
+      licensePlate,
+    ],
+    queryFn: async () => {
+      if (hasCustomerContext && customerCode) {
+        return (
+          (await garageApi.getCasesByCustomer(
+            effectiveBranchId,
+            customerCode,
+            licensePlate,
+          )) || []
+        );
+      }
+      if (hasSupplierContext && supplierId) {
+        return (
+          (await garageApi.getCasesBySupplier(effectiveBranchId, supplierId)) ||
+          []
+        );
+      }
+      if (hasPlateContext && licensePlate) {
+        const res = await garageApi.getCases(
+          effectiveBranchId,
+          1,
+          50,
+          licensePlate,
+        );
+        return res?.data || [];
+      }
+      return [];
+    },
+    enabled: Boolean(hasPermission && hasTargetContext),
+    staleTime: 60000,
+  });
+
+  // 2. Fetch general cases ONLY when NO target context is present
   const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
     useInfiniteQuery({
-      queryKey: ["garage-cases-infinite", branchId, debouncedSearch],
+      queryKey: ["garage-cases-infinite", effectiveBranchId, debouncedSearch],
       queryFn: ({ pageParam = 1 }) =>
-        garageApi.getCases(
-          "", // Do not filter by ERP branch ID since Kgara uses external branch IDs
-          pageParam,
-          20, // pageSize
-          debouncedSearch,
-        ),
+        garageApi.getCases("", pageParam, 20, debouncedSearch),
       initialPageParam: 1,
       getNextPageParam: (lastPage, allPages) => {
         if (lastPage?.data?.length === 20) {
@@ -93,47 +109,39 @@ export const useGarageCaseCombobox = (propsBranchId?: string) => {
         }
         return undefined;
       },
-      enabled: hasPermission,
+      enabled: Boolean(hasPermission && !hasTargetContext),
     });
 
-  const options =
-    data?.pages
-      ?.flatMap((page) => page?.data || [])
-      ?.map((item: any) => {
-        const date =
-          item.ngayPhatSinh || item.caseDate
-            ? new Date(item.ngayPhatSinh || item.caseDate).toLocaleDateString(
-                "vi-VN",
-              )
-            : "";
-        const ref = item.soChungTu || item.id;
-        const plate = item.bienSoXe || "Không BKS";
+  // 3. Map & strictly isolate options:
+  // If target context is present, NEVER append unrelated general cases.
+  const options = useMemo(() => {
+    if (hasTargetContext) {
+      const list = Array.isArray(targetCases) ? targetCases : [];
+      const term = debouncedSearch.trim().toLowerCase();
+      const filtered = term
+        ? list.filter((item: any) => {
+            const plate = (item.bienSoXe || "").toLowerCase();
+            const code = (item.soChungTu || item.id || "").toLowerCase();
+            const name = (item.khachHangName || "").toLowerCase();
+            return (
+              plate.includes(term) || code.includes(term) || name.includes(term)
+            );
+          })
+        : list;
 
-        // Tiền thu BH, Tiền thu KH, Phải chi, Tổng thu
-        const tra = Number(item.chiPhi) || 0;
-        const thu = Number(item.tienCoThue) || 0;
+      return filtered.map((item: any) => formatCaseToOption(item, true));
+    }
 
-        const tooltipContent = renderGarageCaseTooltipContent(item);
-
-        return {
-          label: `${plate} - ${ref}`,
-          code: `Thu: ${thu.toLocaleString("vi-VN")}đ`,
-          subCode: `Chi: ${tra.toLocaleString("vi-VN")}đ`,
-          subLabel: item.khachHangName || "Không có thông tin",
-          searchText: `${plate} ${ref} ${item.khachHangName || ""} ${date}`,
-          tooltipContent,
-          value: item.id,
-          originalName: item.khachHangName || "",
-          originalLicensePlate: item.bienSoXe || "",
-        };
-      }) || [];
+    const generalList = data?.pages?.flatMap((page) => page?.data || []) || [];
+    return generalList.map((item: any) => formatCaseToOption(item, false));
+  }, [hasTargetContext, targetCases, debouncedSearch, data]);
 
   return {
     options,
-    isLoading,
-    isFetchingNextPage,
+    isLoading: hasTargetContext ? isLoadingTarget : isLoading,
+    isFetchingNextPage: hasTargetContext ? false : isFetchingNextPage,
     fetchNextPage: () => {
-      if (hasNextPage && !isFetchingNextPage) {
+      if (!hasTargetContext && hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
       }
     },
