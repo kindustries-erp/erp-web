@@ -53,6 +53,13 @@ export const v2Vi = {
       userFallback: "Quản trị viên",
       toggleSidebar: "Thu gọn / Mở rộng",
     },
+    notifications: {
+      title: "Thông báo",
+      empty: "Chưa có thông báo nào",
+      deleteAll: "Xóa tất cả",
+      markAllAsRead: "Đánh dấu đã đọc tất cả",
+      deleteItem: "Xóa thông báo",
+    },
     topbar: {
       quickSearchPlaceholder: "Tìm kiếm menu, chứng từ (Ctrl K)...",
       quickSearchShortcut: "Ctrl K",

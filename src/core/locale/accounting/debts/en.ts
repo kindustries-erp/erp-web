@@ -134,6 +134,15 @@ export const debtsEn = {
   exportDetailed: "Advanced / By Period Export",
   exportCurrentView: "Quick Export Current View",
 
+  actions: {
+    exportGroup: "Reports & Export",
+    cashflowGroup: "RECEIPT & PAYMENT",
+    createReceipt: "Create Receipt Voucher",
+    createPayment: "Create Payment Voucher",
+    createReceiptForCase: "Create Receipt for Case...",
+    createPaymentForCase: "Create Payment for Case...",
+  },
+
   exportDrawer: {
     title: "Export Debts Excel Report",
     subtitle:

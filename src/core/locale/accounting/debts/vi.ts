@@ -135,6 +135,15 @@ export const debtsVi = {
   exportDetailed: "Xuất Excel theo kỳ / Nâng cao",
   exportCurrentView: "Xuất nhanh dữ liệu hiện tại",
 
+  actions: {
+    exportGroup: "Báo cáo & Xuất file",
+    cashflowGroup: "PHIẾU THU / CHI",
+    createReceipt: "Tạo phiếu thu",
+    createPayment: "Tạo phiếu chi",
+    createReceiptForCase: "Tạo phiếu thu vụ việc...",
+    createPaymentForCase: "Tạo phiếu chi vụ việc...",
+  },
+
   exportDrawer: {
     title: "Xuất Excel báo cáo công nợ",
     subtitle: "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",

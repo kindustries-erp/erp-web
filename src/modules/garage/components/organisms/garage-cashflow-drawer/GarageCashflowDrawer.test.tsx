@@ -99,6 +99,30 @@ describe("GarageCashflowDrawer Organism", () => {
     expect(screen.getByText("Biển số xe")).toBeInTheDocument();
   });
 
+  it("pre-fills initialData when opened in create mode", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowDrawer
+          open={true}
+          onClose={vi.fn()}
+          voucher={null}
+          initialMode="create"
+          initialData={{
+            voucherType: "RECEIPT",
+            partnerName: "Khách hàng Test",
+            licensePlate: "30A-12345",
+            amount: 7500000,
+          }}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByDisplayValue("Khách hàng Test")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("30A-12345")).toBeInTheDocument();
+  });
+
   it("hides Save button when user lacks CREATE permission in create mode", () => {
     vi.mocked(useHasPermission).mockImplementation(
       (res: string, action?: string) => {

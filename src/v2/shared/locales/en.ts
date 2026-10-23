@@ -54,6 +54,13 @@ export const v2En: V2Dictionary = {
       userFallback: "Administrator",
       toggleSidebar: "Toggle sidebar",
     },
+    notifications: {
+      title: "Notifications",
+      empty: "No notifications yet",
+      deleteAll: "Delete all",
+      markAllAsRead: "Mark all as read",
+      deleteItem: "Delete notification",
+    },
     topbar: {
       quickSearchPlaceholder: "Search menus, documents (Ctrl K)...",
       quickSearchShortcut: "Ctrl K",

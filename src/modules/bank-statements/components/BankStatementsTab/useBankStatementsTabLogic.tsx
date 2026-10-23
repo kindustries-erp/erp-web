@@ -173,6 +173,7 @@ export function useBankStatementsTabLogic({
     setDetailDefaultTab,
     setSelectedPartner,
     setPartnerDrawerOpen,
+    branches,
   });
 
   const summaryRow = useBankStatementSummary({

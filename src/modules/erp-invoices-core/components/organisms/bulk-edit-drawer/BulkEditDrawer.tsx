@@ -297,8 +297,8 @@ export function BulkEditDrawer({
   );
 
   // Apply-all handlers
+  // Không chọn chi nhánh nào thì áp dụng "chưa gán" (mảng rỗng) cho mọi dòng đã chọn
   const applyAllBranch = useCallback(() => {
-    if (bulkBranchIds.length === 0) return;
     const updated: BranchAssignments = {};
     selectedIds.forEach((id) => {
       updated[id] = bulkBranchIds;
@@ -412,8 +412,28 @@ export function BulkEditDrawer({
         return;
       }
 
-      // Calls chạy song song
-      await Promise.all(tasks);
+      // Calls chạy song song; một nhóm lỗi không che lỗi của nhóm khác
+      const results = await Promise.allSettled(tasks);
+      const failure = results.find(
+        (r): r is PromiseRejectedResult => r.status === "rejected",
+      );
+      if (failure) {
+        const reason = failure.reason as {
+          message?: string;
+          response?: { data?: { message?: string | string[] } };
+        };
+        const apiMsg = reason?.response?.data?.message;
+        showToast({
+          title: t("bulkEditErrorTitle", "Không thể cập nhật"),
+          description: Array.isArray(apiMsg)
+            ? apiMsg.join("; ")
+            : apiMsg || reason?.message,
+          variant: "destructive",
+        });
+        // Phần đã ghi thành công vẫn hiện trên danh sách
+        if (branchUpdated + categoryUpdated + notesUpdated > 0) onSuccess();
+        return;
+      }
 
       const parts: string[] = [];
       if (categoryUpdated > 0)
@@ -433,9 +453,17 @@ export function BulkEditDrawer({
       });
       onSuccess();
       onClose();
-    } catch {
+    } catch (err) {
+      const reason = err as {
+        message?: string;
+        response?: { data?: { message?: string | string[] } };
+      };
+      const apiMsg = reason?.response?.data?.message;
       showToast({
         title: t("bulkEditErrorTitle", "Không thể cập nhật"),
+        description: Array.isArray(apiMsg)
+          ? apiMsg.join("; ")
+          : apiMsg || reason?.message,
         variant: "destructive",
       });
     } finally {

@@ -6,6 +6,7 @@ import type {
   InvoiceDto,
   InvoiceTotalsDto,
 } from "@/v2/modules/finance-invoice/api/dtos/invoice.dto";
+import { resolveBranchIds } from "@/shared/utils/branchIds";
 
 const toAmount = (value?: number | string | null) => Number(value ?? 0) || 0;
 
@@ -29,6 +30,7 @@ export function toInvoiceRow(
     taxCode: (isIn ? inv.sellerTaxCode : inv.buyerTaxCode) ?? inv.taxCode ?? "",
     taxTab: (inv.taxTab ?? "new") as FakeInvoice["taxTab"],
     branchId: inv.branchId ?? "",
+    branchIds: resolveBranchIds(inv),
     preVat: preVatAmount,
     vat: vatAmount,
     total: totalAmount,

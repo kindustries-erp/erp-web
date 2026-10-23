@@ -26,6 +26,9 @@ export function useGarageCashflowEditSection({
     if (opt?.originalLicensePlate && !formData.licensePlate) {
       updates.licensePlate = opt.originalLicensePlate;
     }
+    if (opt?.originalAmount && (!formData.amount || formData.amount === 0)) {
+      updates.amount = opt.originalAmount;
+    }
     setFormData((prev) => ({ ...prev, ...updates }));
   };
 

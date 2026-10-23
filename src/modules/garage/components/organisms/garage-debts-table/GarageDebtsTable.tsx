@@ -1,16 +1,16 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useGarageStore } from "@/modules/garage/store/garageStore";
 import { useGarageCustomersList } from "@/modules/garage/hooks/useGarageCustomersList";
-import { Users, Eye, FileSpreadsheet, DownloadCloud } from "lucide-react";
-import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import { Users, FileSpreadsheet } from "lucide-react";
 import type {
   GarageDebtsTableProps,
   CustomerDebtItem,
 } from "./GarageDebtsTable.type";
 import { useGarageDebtsColumns } from "./GarageDebtsTable.columns";
 import { useGarageDebtsSummaryRow } from "./GarageDebtsTable.summary";
+import { useGarageDebtsActions } from "./GarageDebtsTable.actions";
 import { buildGarageDebtsExportContext } from "@/modules/garage/export/garageDebtsExportContext";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
 import {
@@ -35,6 +35,7 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
   onOpenExportDrawer,
   canSyncGarage,
   onSyncCases,
+  onCreateCashflow,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const { selectedBranchId } = useGarageStore();
@@ -57,18 +58,15 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
 
   const handleColumnPresetChange = (preset: TableViewPreset) => {
     setActiveColumnPresetKey(preset.key);
-    const currentPref = useUserPreferencesStore
+    const pref = useUserPreferencesStore
       .getState()
-      .getTablePreference(actualTableId) || {
-      columnOrder: [],
-      columnVisibility: {},
-    };
+      .getTablePreference(actualTableId);
     useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
-      ...currentPref,
       columnOrder: [],
       columnVisibility:
         preset.columnVisibility || DEFAULT_GARAGE_RECEIVABLES_COLUMN_VISIBILITY,
       activeView: preset.key,
+      ...pref,
     });
   };
 
@@ -127,35 +125,14 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
     onOpenExportDrawer(buildGarageDebtsExportContext("customers", listHook));
   }, [listHook, onOpenExportDrawer]);
 
-  const createActions = useMemo<ActionDropdownItem[]>(
-    () => [
-      {
-        groupLabel: t("debts.actions.exportGroup", "Báo cáo & Xuất file"),
-        items: [
-          {
-            label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
-            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: handleOpenExport,
-          },
-        ],
-      },
-      ...(canSyncGarage && onSyncCases
-        ? [
-            {
-              groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
-              items: [
-                {
-                  label: t("cases.actions.syncCases", "Đồng bộ phiếu dịch vụ"),
-                  icon: <DownloadCloud className="w-4 h-4 text-blue-600" />,
-                  onClick: onSyncCases,
-                },
-              ],
-            },
-          ]
-        : []),
-    ],
-    [canSyncGarage, onSyncCases, handleOpenExport, t],
-  );
+  const { createActions, getRowActions } = useGarageDebtsActions({
+    t,
+    canSyncGarage,
+    onSyncCases,
+    onOpenExport: handleOpenExport,
+    onOpenCustomerDetail,
+    onCreateCashflow,
+  });
 
   return (
     <SpreadsheetPageTemplate<CustomerDebtItem>
@@ -199,23 +176,7 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
         listHook.clearAllFilters();
         setActiveDebtFilter("ALL");
       }}
-      rowActions={(row: CustomerDebtItem) => [
-        {
-          groupLabel: "TRA CỨU",
-          items: [
-            {
-              label: t("customers.viewDetail", "Xem chi tiết công nợ"),
-              icon: <Eye className="w-4 h-4" />,
-              onClick: () =>
-                onOpenCustomerDetail({
-                  code: row.customerCode,
-                  name: row.customerName,
-                  licensePlate: row.licensePlate,
-                }),
-            },
-          ],
-        },
-      ]}
+      rowActions={getRowActions}
       summaryRow={summaryRow}
     />
   );

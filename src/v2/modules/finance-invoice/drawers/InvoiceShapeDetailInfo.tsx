@@ -1,7 +1,7 @@
 import * as React from "react";
 import { DrawerRow, DrawerSection } from "@/v2/shared/components";
 import {
-  BRANCHES,
+  branchLabelsOf,
   formatMoney,
 } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
@@ -12,7 +12,7 @@ interface Props {
 
 /** Thông tin chung của hóa đơn, chỉ đọc */
 export const InvoiceShapeDetailInfo: React.FC<Props> = ({ invoice }) => {
-  const branch = BRANCHES.find((b) => b.value === invoice.branchId)?.label;
+  const branch = branchLabelsOf(invoice.branchIds, invoice.branchId);
   return (
     <DrawerSection title="Thông tin chung">
       <div className="grid gap-2 sm:grid-cols-2">
