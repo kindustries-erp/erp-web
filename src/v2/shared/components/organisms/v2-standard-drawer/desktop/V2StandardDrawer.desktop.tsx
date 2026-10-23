@@ -104,8 +104,13 @@ export const V2StandardDrawerDesktop: React.FC<V2StandardDrawerProps> = (
           )}
         >
           <DrawerStateGuard loading={props.loading} error={props.error}>
-            {/* shrink-0: vùng cuộn flex-col không được co nội dung lại */}
-            <V2Stack gap="md" className="shrink-0">
+            {/* shrink-0: vùng cuộn flex-col không được co nội dung lại; fillHeight thì nội dung giãn hết chiều cao */}
+            <V2Stack
+              gap="md"
+              className={
+                props.fillHeight ? "flex-1 min-h-0 flex flex-col" : "shrink-0"
+              }
+            >
               <DrawerDesktopColumns
                 props={props}
                 h={h}

@@ -108,6 +108,7 @@ src/
   - Khoảng ngày cần quét (`dateFrom`, `dateTo`).
   - Tùy chọn **Xóa sạch và tạo lại từ đầu** (`clearDb: true`).
 - Kết nối SSE endpoint `/api/v1/vinfast-parts/sync/progress` để cập nhật thanh tiến trình theo thời gian thực.
+- Section "Tiến trình" bọc `V2SyncProgress` (`src/v2/shared/components/molecules/v2-sync-progress/`) trong `DrawerSection` V1, dùng chung với drawer "Đồng bộ hóa đơn" (`InvoiceSyncProgressSection`). Trạng thái suy bằng `deriveSyncPanelStatus` (`pages/hooks/vinfastSyncStatus.ts`): đang chạy > lỗi (dòng cuối có `level: "error"`) > hoàn tất (100%). Log lưu `{ at, message, level? }`, giờ hiển thị lấy từ `at`.
 
 ### 3.4. Drawer Xuất Báo Cáo Excel Chạy Ngầm (`VinfastPartsStockExportDrawer.tsx`)
 - Tích hợp với Zustand store `useVinfastPartsStockExportProgressStore`.

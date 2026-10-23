@@ -53,4 +53,12 @@ export const vinfastPartsEn = {
   SELLING_PRICE: "Selling Price",
   PROFIT: "Profit",
   NO_DATA: "No data",
+  SYNC_PROGRESS_TITLE: "Progress",
+  SYNC_PROGRESS_EMPTY: "No progress yet...",
+  SYNC_PROGRESS_RUNNING: "Syncing",
+  SYNC_PROGRESS_DONE: "Completed",
+  SYNC_PROGRESS_ERROR: "Sync failed",
+  SYNC_PROGRESS_CURRENT_ITEM: "Processing",
+  SYNC_PROGRESS_STARTING: "Starting sync...",
+  SYNC_PROGRESS_JOINED: "A sync is already running, following its progress...",
 };

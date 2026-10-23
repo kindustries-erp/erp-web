@@ -1,8 +1,15 @@
+import type {
+  V2SyncProgressLevel,
+  V2SyncProgressStatus,
+} from "@/v2/shared/components/molecules/v2-sync-progress";
+
 /**
  * Trạng thái lượt đồng bộ phụ tùng VinFast do API trả về (GET /vinfast-parts/sync/status).
  */
 export interface VinfastSyncStatus {
   running: boolean;
+  /** Hóa đơn / dòng đang xử lý; API bản cũ có thể không trả về */
+  currentItem?: string | null;
   startedAt: string | null;
   finishedAt: string | null;
   phase: string | null;
@@ -16,6 +23,7 @@ export interface SyncStatusUpdate {
   isSyncing: boolean;
   progress?: number;
   logMessage?: string;
+  currentItem?: string;
 }
 
 /**
@@ -38,6 +46,7 @@ export function reconcileSyncStatus(
       isSyncing: true,
       progress,
       logMessage: message && message !== lastLog ? message : undefined,
+      currentItem: status.currentItem ?? undefined,
     };
   }
   if (isSyncing && status.finishedAt) {
@@ -50,4 +59,18 @@ export function reconcileSyncStatus(
     };
   }
   return { isSyncing };
+}
+
+/**
+ * Trạng thái hiển thị của panel tiến trình: đang chạy > lỗi (dòng cuối) > hoàn tất (100%) > chưa chạy.
+ */
+export function deriveSyncPanelStatus(
+  isSyncing: boolean,
+  progress: number,
+  lastLevel: V2SyncProgressLevel | undefined,
+): V2SyncProgressStatus {
+  if (isSyncing) return "running";
+  if (lastLevel === "error") return "error";
+  if (progress === 100) return "done";
+  return "idle";
 }

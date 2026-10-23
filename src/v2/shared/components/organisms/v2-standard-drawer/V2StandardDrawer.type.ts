@@ -120,4 +120,6 @@ export interface V2StandardDrawerProps {
   bodyClassName?: string;
   closeAriaLabel?: string;
   floating?: boolean;
+  /** Nội dung chiếm hết chiều cao còn lại của drawer (desktop), để section bên trong giãn theo (ví dụ nhật ký tiến trình) */
+  fillHeight?: boolean;
 }

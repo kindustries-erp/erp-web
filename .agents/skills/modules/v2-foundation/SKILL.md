@@ -59,7 +59,7 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 | Tầng | Thành phần | Thay cho (V1) |
 | :--- | :--- | :--- |
 | Atom | `V2Switch`, `V2Textarea`, `V2Skeleton`, `V2Progress` (+ `ui/progress`), `V2NumberInput`, `V2CopyButton`, `V2Sparkline` | `switch`, `textarea`, `Skeleton`, `progress`, ô nhập số, `CopyButton`, `KpiSparkline` |
-| Molecule | `V2Combobox`, `V2DatePicker`, `V2DateRangePicker` (+ `buildV2DatePresets`), `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2StatCard`, `V2Panel`, `V2ChartFrame` | `Combobox`, `DatePicker`, `EmptyState`, `Attachment`, `SearchInput`, `KpiCard`, `Panel` |
+| Molecule | `V2Combobox` (`onSearchChange` để tìm trên server, `loading` hiện spinner; mặc định lọc phía client), `V2DatePicker`, `V2DateRangePicker` (+ `buildV2DatePresets`), `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2StatCard`, `V2Panel`, `V2ChartFrame`, `V2SyncProgress` (thanh % + console nhật ký, có dark theme; bọc bằng `DrawerSection` ở drawer) | `Combobox`, `DatePicker`, `EmptyState`, `Attachment`, `SearchInput`, `KpiCard`, `Panel`, khối "Tiến trình" của drawer đồng bộ |
 | Organism | `V2BarChart`, `V2LineChart`, `V2DonutChart`, `V2ComboChart` (`organisms/v2-chart/`), `V2FilePreviewPanel` | `BarChart`, `LineChart`, `DonutChart`, Combo/Mixed Chart, `FilePreviewDrawer` |
 | Template | `V2ModulePage` | `PageLayout`, `SpreadsheetPageTemplate`, `DashboardTemplate` |
 

@@ -53,4 +53,12 @@ export const vinfastPartsVi = {
   SELLING_PRICE: "Giá bán (trước VAT)",
   PROFIT: "Lợi nhuận",
   NO_DATA: "Không có dữ liệu",
+  SYNC_PROGRESS_TITLE: "Tiến trình",
+  SYNC_PROGRESS_EMPTY: "Chưa có tiến trình nào...",
+  SYNC_PROGRESS_RUNNING: "Đang đồng bộ",
+  SYNC_PROGRESS_DONE: "Hoàn tất",
+  SYNC_PROGRESS_ERROR: "Đồng bộ thất bại",
+  SYNC_PROGRESS_CURRENT_ITEM: "Đang xử lý",
+  SYNC_PROGRESS_STARTING: "Đang khởi tạo tiến trình đồng bộ...",
+  SYNC_PROGRESS_JOINED: "Đang có lượt đồng bộ chạy, theo dõi tiến trình...",
 };

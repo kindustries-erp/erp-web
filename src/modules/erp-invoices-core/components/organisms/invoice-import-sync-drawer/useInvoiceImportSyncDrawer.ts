@@ -1,0 +1,179 @@
+import { useState, useEffect, useMemo } from "react";
+import { toast } from "react-hot-toast";
+import {
+  useInvoiceXmlUpload,
+  type Direction,
+} from "@/modules/erp-invoices-core/hooks/useInvoiceXmlUpload";
+import { usePortalSync } from "@/modules/erp-invoices-core/hooks/usePortalSync";
+import { useInvoiceSyncProgressStore } from "@/modules/erp-invoices-core/hooks/useInvoiceSyncProgressStore";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import {
+  getPastMonthPresets,
+  getCurrentMonthPreset,
+} from "@/shared/utils/datePresets";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
+import type { InvoiceSyncMethod } from "./invoiceSyncDrawer.actions";
+
+export interface UseInvoiceImportSyncDrawerParams {
+  open: boolean;
+  onClose: () => void;
+  onImported: (direction: Direction) => void;
+  initialDirection: Direction;
+  t: (key: string, fallback: string) => string;
+}
+
+export function useInvoiceImportSyncDrawer({
+  open,
+  onClose,
+  onImported,
+  initialDirection,
+  t,
+}: UseInvoiceImportSyncDrawerParams) {
+  const canEditInvoice = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.UPDATE,
+  );
+
+  const presetOptions = useMemo(() => getPastMonthPresets(2), []);
+  const initialPreset = useMemo(() => getCurrentMonthPreset(), []);
+
+  const [method, setMethod] = useState<InvoiceSyncMethod>("GDT");
+  const [configOpen, setConfigOpen] = useState(false);
+  const [direction, setDirection] = useState<Direction>(initialDirection);
+  const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<string>(
+    initialPreset.presetKey,
+  );
+  const [showDrawerConfirm, setShowDrawerConfirm] = useState(false);
+
+  const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
+  const portal = usePortalSync();
+
+  const startSyncLog = useInvoiceSyncProgressStore((s) => s.start);
+  const addSyncLog = useInvoiceSyncProgressStore((s) => s.addLog);
+  const failSync = useInvoiceSyncProgressStore((s) => s.fail);
+  const setPanelVisible = useInvoiceSyncProgressStore((s) => s.setPanelVisible);
+
+  useEffect(() => {
+    setPanelVisible(open);
+    return () => setPanelVisible(false);
+  }, [open, setPanelVisible]);
+
+  useEffect(() => {
+    if (portal.needsRelogin && canEditInvoice) {
+      setConfigOpen(true);
+    }
+  }, [portal.needsRelogin, canEditInvoice]);
+
+  useEffect(() => {
+    if (open) {
+      setDirection(initialDirection);
+      xml.setDirection(initialDirection);
+      const current = getCurrentMonthPreset();
+      setSelectedPreset(current.presetKey);
+      portal.setDateFrom(current.from);
+      portal.setDateTo(current.to);
+    }
+  }, [open, initialDirection]);
+
+  // Phiên nhập XML đang có file chưa import: cần xác nhận trước khi đóng
+  const hasPendingXml =
+    method === "XML" && xml.step === "select" && xml.files.length > 0;
+
+  function handleDirectionChange(d: Direction) {
+    if (xml.step === "importing" || portal.loading) return;
+    setDirection(d);
+    xml.setDirection(d);
+    portal.clearResult();
+    xml.handleReset();
+  }
+
+  function handleMethodChange(m: InvoiceSyncMethod) {
+    if (xml.step === "importing" || portal.loading) return;
+    setMethod(m);
+  }
+
+  function doClose() {
+    xml.handleReset();
+    portal.clearResult();
+    onClose();
+  }
+
+  function requestClose() {
+    if (hasPendingXml) {
+      setShowDrawerConfirm(true);
+      return;
+    }
+    doClose();
+  }
+
+  const handleSync = async () => {
+    const type = direction === "IN" ? "purchase" : "sold";
+    startSyncLog(
+      t("syncProgressStarting", "Đang khởi tạo tiến trình đồng bộ..."),
+    );
+    const res = await portal.sync(type);
+    if (res) {
+      addSyncLog(
+        res.note ||
+          `Đã lấy ${res.imported} hóa đơn mới, bỏ qua ${res.skipped} trùng, xếp hàng ${res.xmlDownloadQueued} file XML.`,
+        "success",
+      );
+      onImported(direction);
+    } else {
+      failSync(
+        t(
+          "syncProgressFailed",
+          "Đồng bộ thất bại. Xem thông báo lỗi để biết chi tiết.",
+        ),
+      );
+    }
+  };
+
+  const handleBulkXml = async () => {
+    try {
+      setBulkXmlLoading(true);
+      startSyncLog(t("syncProgressBulkStarting", "Đang tải lại XML..."));
+      const res = await erpInvoicesCoreApi.bulkDownloadXml({ direction });
+      addSyncLog(res.message, "success");
+      toast.success(res.message);
+    } catch (e: any) {
+      const message =
+        e.response?.data?.message || e.message || "Lỗi tải lại XML";
+      failSync(message);
+      toast.error(message);
+    } finally {
+      setBulkXmlLoading(false);
+    }
+  };
+
+  return {
+    method,
+    direction,
+    presetOptions,
+    selectedPreset,
+    setSelectedPreset,
+    configOpen,
+    setConfigOpen,
+    bulkXmlLoading,
+    showPreview,
+    setShowPreview,
+    viewInvoiceId,
+    setViewInvoiceId,
+    showDrawerConfirm,
+    setShowDrawerConfirm,
+    hasPendingXml,
+    canEditInvoice,
+    xml,
+    portal,
+    handleDirectionChange,
+    handleMethodChange,
+    requestClose,
+    doClose,
+    handleSync,
+    handleBulkXml,
+  };
+}

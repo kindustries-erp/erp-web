@@ -151,6 +151,7 @@ export const v2Vi = {
       selectPlaceholder: "Chọn...",
       searchPlaceholder: "Tìm kiếm...",
       noResults: "Không có kết quả",
+      searching: "Đang tìm...",
       clearSelection: "Bỏ lựa chọn",
       selectedCount: "Đã chọn {{count}}",
       pickDate: "Chọn ngày",
