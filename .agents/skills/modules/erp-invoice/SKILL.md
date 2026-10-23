@@ -382,4 +382,6 @@ bun run lint:check
 - API gán chi nhánh: `erpInvoicesCoreApi.bulkSetBranch(ids, branchIds: string[])`; `[]` = bỏ gán. Hiển thị cột chi nhánh nối tên bằng ", " từ `branchIds`.
 - Bộ lọc cột chi nhánh là multi-select có lựa chọn "(Trống)" = `__BLANK__`.
 - Component chọn nhiều dùng chung: `V2MultiCombobox` (`src/v2/shared/components/molecules/v2-multi-combobox/`), và filter type `multi-combobox` trong `FilterPanel`.
-- Chưa làm: form tạo/sửa hóa đơn và drawer bulk-edit vẫn chọn đơn (gửi 0/1 phần tử); cần chuyển sang `V2MultiCombobox`.
+- Form chi tiết hóa đơn (`ErpInvoiceGeneralInfoEdit`, field "Chi nhánh") dùng `V2MultiCombobox` với `branchIds`; khi đổi, đồng bộ `branchId = branchIds[0]` để `ErpInvoiceAccountingSection` đọc đúng.
+- Lưu ý popover trong drawer: `V2MultiCombobox` dùng Radix Popover nằm trong `V2DrawerSheet` (Radix Dialog modal). Các package `@radix-ui/react-focus-scope`, `react-dismissable-layer`, `react-focus-guards`, `react-portal`, `react-presence` phải chỉ có 1 bản (khai báo trong `overrides` của `package.json`); nhiều bản làm focus trap đóng popover ngay khi mở (không chọn được option).
+- Chưa làm: drawer bulk-edit vẫn chọn đơn (gửi 0/1 phần tử); cần chuyển sang `V2MultiCombobox`.

@@ -162,6 +162,7 @@ export const erpInvoicesVi = {
   "invoice.isValid.true": "Hợp lệ",
   "invoice.isValid.false": "Chưa hợp lệ",
   branch: "Chi nhánh",
+  selectBranch: "-- Chọn chi nhánh --",
   invoiceCategory: "Phân loại HĐ",
   "invoice.columns.notes": "Ghi chú",
 
