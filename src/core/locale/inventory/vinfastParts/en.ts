@@ -21,6 +21,7 @@ export const vinfastPartsEn = {
   FIFO_BUY_PRICE: "Cost",
   FIFO_SELL_UNIT_PRICE: "Sell unit price",
   FIFO_REVENUE: "Revenue",
+  FIFO_COGS: "COGS",
   FIFO_GROSS_PROFIT: "Gross profit",
   FIFO_MARGIN: "Margin %",
   SYNC_LEDGER: "Sync Ledger",

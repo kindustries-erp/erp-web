@@ -45,10 +45,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
           class="flex items-center gap-2"
         >
           <button
-            class="inline-flex items-center justify-center font-medium cursor-pointer transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed border px-[14px] py-[7px] text-xs rounded-lg h-8 gap-2 bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+            class="inline-flex items-center justify-center font-medium cursor-pointer transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed border px-[14px] py-[7px] text-xs rounded-lg h-8 gap-2 bg-white hover:bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700"
           >
             <svg
-              class="lucide lucide-download-cloud w-4 h-4 text-emerald-600"
+              class="lucide lucide-download-cloud w-4 h-4 text-emerald-600 dark:text-emerald-400"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -86,50 +86,50 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
           class="flex flex-col gap-4"
         >
           <div
-            class="w-full overflow-x-auto overflow-y-visible border border-slate-200 rounded-md bg-white relative"
+            class="w-full overflow-x-auto overflow-y-visible border border-border/30 dark:border-zinc-800/40 rounded-lg bg-card/40 dark:bg-zinc-950/40 backdrop-blur-sm relative"
           >
             <table
               class="caption-bottom w-full text-sm text-left whitespace-nowrap min-w-max border-collapse"
             >
               <thead
-                class="table-header-glass sticky top-0 z-10 table-header-glass text-slate-700 border-b border-border"
+                class="table-header-glass sticky top-0 z-10 table-header-glass text-slate-700 dark:text-zinc-200 border-b border-border/30"
               >
                 <tr
                   class="group border-[color:var(--border-light)] transition-colors data-[state=selected]:bg-muted hover:bg-transparent border-b-0"
                 >
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-slate-200 font-semibold text-center w-10 bg-slate-100/75 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle uppercase tracking-[0.05em] px-3 py-2 border-r border-t border-slate-300/60 dark:border-zinc-700/60 font-semibold text-center w-10 bg-slate-100/90 dark:bg-zinc-900/90 text-slate-700 dark:text-zinc-200 shadow-[0_1px_0_0_var(--border-light)] text-[11px]"
                     rowspan="2"
                   >
                     #
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-slate-200 font-semibold text-center bg-slate-100/75 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r font-semibold text-center border-t border-slate-300/60 dark:border-zinc-700/60 bg-slate-100/90 dark:bg-zinc-900/90 text-slate-700 dark:text-zinc-200 uppercase text-[11px] tracking-wider shadow-[0_1px_0_0_var(--border-light)]"
                     colspan="2"
                   >
                     THÔNG TIN CHUNG
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] px-3 py-2 border-r border-slate-200 font-semibold text-center bg-orange-50/75 text-orange-800 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 font-semibold text-center border-t-2 border-t-amber-500/80 bg-amber-500/[0.07] dark:bg-amber-500/[0.12] text-amber-700 dark:text-amber-400 uppercase text-[11px] tracking-wider shadow-[0_1px_0_0_var(--border-light)]"
                     colspan="3"
                   >
                     NHẬP KHO
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] px-3 py-2 border-r border-slate-200 font-semibold text-center bg-emerald-50/75 text-emerald-800 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 font-semibold text-center border-t-2 border-t-emerald-500/80 bg-emerald-500/[0.07] dark:bg-emerald-500/[0.12] text-emerald-700 dark:text-emerald-400 uppercase text-[11px] tracking-wider shadow-[0_1px_0_0_var(--border-light)]"
                     colspan="3"
                   >
                     XUẤT KHO - FIFO
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] px-3 py-2 border-r border-slate-200 font-semibold text-center bg-blue-50/75 text-blue-800 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 font-semibold text-center border-t-2 border-t-slate-400/80 dark:border-t-zinc-600/80 bg-slate-500/[0.05] dark:bg-zinc-500/[0.08] text-slate-800 dark:text-zinc-200 uppercase text-[11px] tracking-wider shadow-[0_1px_0_0_var(--border-light)]"
                     colspan="2"
                   >
                     TỒN KHO
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] px-3 py-2 font-semibold text-center bg-purple-50/75 text-purple-800 shadow-[0_1px_0_0_var(--border-light)]"
-                    colspan="7"
+                    class="h-9 align-middle px-3 py-2 font-semibold text-center border-t-2 border-t-purple-500/80 bg-purple-500/[0.07] dark:bg-purple-500/[0.12] text-purple-700 dark:text-purple-400 uppercase text-[11px] tracking-wider shadow-[0_1px_0_0_var(--border-light)]"
+                    colspan="6"
                   >
                     HIỆU QUẢ KINH DOANH
                   </th>
@@ -138,10 +138,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                   class="group border-[color:var(--border-light)] transition-colors data-[state=selected]:bg-muted hover:bg-transparent border-b-0 shadow-[0_1px_0_0_var(--border-light)]"
                 >
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-center bg-slate-50/75 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-center bg-slate-50 dark:bg-zinc-900/90 text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]"
                   >
                     <div
-                      aria-controls="radix-:rq:"
+                      aria-controls="radix-:rp:"
                       aria-expanded="false"
                       aria-haspopup="dialog"
                       class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-center"
@@ -178,10 +178,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-center bg-slate-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-slate-300/40 dark:border-zinc-700/40 text-[11px] uppercase tracking-wider font-semibold text-center bg-slate-50 dark:bg-zinc-900/90 text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)]"
                   >
                     <div
-                      aria-controls="radix-:rr:"
+                      aria-controls="radix-:rq:"
                       aria-expanded="false"
                       aria-haspopup="dialog"
                       class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-center"
@@ -218,7 +218,47 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-orange-50/50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-amber-500/[0.03] dark:bg-amber-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
+                  >
+                    <div
+                      aria-controls="radix-:rr:"
+                      aria-expanded="false"
+                      aria-haspopup="dialog"
+                      class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
+                      data-state="closed"
+                      type="button"
+                    >
+                      SL
+                      <div
+                        class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
+                      >
+                        <svg
+                          class="lucide lucide-list-filter "
+                          fill="none"
+                          height="14"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                          width="14"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M3 6h18"
+                          />
+                          <path
+                            d="M7 12h10"
+                          />
+                          <path
+                            d="M10 18h4"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </th>
+                  <th
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-amber-500/[0.03] dark:bg-amber-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)]"
                   >
                     <div
                       aria-controls="radix-:rs:"
@@ -228,7 +268,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                       data-state="closed"
                       type="button"
                     >
-                      SL
+                      Đơn giá
                       <div
                         class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
                       >
@@ -258,7 +298,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-orange-50/50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-slate-300/40 dark:border-zinc-700/40 text-[11px] uppercase tracking-wider font-semibold text-right bg-amber-500/[0.03] dark:bg-amber-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)]"
                   >
                     <div
                       aria-controls="radix-:rt:"
@@ -268,7 +308,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                       data-state="closed"
                       type="button"
                     >
-                      Đơn giá
+                      Thành tiền
                       <div
                         class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
                       >
@@ -298,7 +338,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-orange-50/50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-emerald-500/[0.03] dark:bg-emerald-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
                   >
                     <div
                       aria-controls="radix-:ru:"
@@ -308,46 +348,6 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                       data-state="closed"
                       type="button"
                     >
-                      Thành tiền
-                      <div
-                        class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
-                      >
-                        <svg
-                          class="lucide lucide-list-filter "
-                          fill="none"
-                          height="14"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                          width="14"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M3 6h18"
-                          />
-                          <path
-                            d="M7 12h10"
-                          />
-                          <path
-                            d="M10 18h4"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </th>
-                  <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-emerald-50/50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
-                  >
-                    <div
-                      aria-controls="radix-:rv:"
-                      aria-expanded="false"
-                      aria-haspopup="dialog"
-                      class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
-                      data-state="closed"
-                      type="button"
-                    >
                       SL
                       <div
                         class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
@@ -378,10 +378,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-emerald-50/50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-emerald-500/[0.03] dark:bg-emerald-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)]"
                   >
                     <div
-                      aria-controls="radix-:r10:"
+                      aria-controls="radix-:rv:"
                       aria-expanded="false"
                       aria-haspopup="dialog"
                       class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
@@ -418,7 +418,47 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-emerald-50/50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-slate-300/40 dark:border-zinc-700/40 text-[11px] uppercase tracking-wider font-semibold text-right bg-emerald-500/[0.03] dark:bg-emerald-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)]"
+                  >
+                    <div
+                      aria-controls="radix-:r10:"
+                      aria-expanded="false"
+                      aria-haspopup="dialog"
+                      class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
+                      data-state="closed"
+                      type="button"
+                    >
+                      Thành tiền
+                      <div
+                        class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
+                      >
+                        <svg
+                          class="lucide lucide-list-filter "
+                          fill="none"
+                          height="14"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                          width="14"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M3 6h18"
+                          />
+                          <path
+                            d="M7 12h10"
+                          />
+                          <path
+                            d="M10 18h4"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </th>
+                  <th
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-slate-500/[0.02] dark:bg-zinc-500/[0.04] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
                   >
                     <div
                       aria-controls="radix-:r11:"
@@ -428,7 +468,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                       data-state="closed"
                       type="button"
                     >
-                      Thành tiền
+                      SL
                       <div
                         class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
                       >
@@ -458,7 +498,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-blue-50/50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-slate-300/40 dark:border-zinc-700/40 text-[11px] uppercase tracking-wider font-semibold text-right bg-slate-500/[0.02] dark:bg-zinc-500/[0.04] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)]"
                   >
                     <div
                       aria-controls="radix-:r12:"
@@ -468,46 +508,6 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                       data-state="closed"
                       type="button"
                     >
-                      SL
-                      <div
-                        class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
-                      >
-                        <svg
-                          class="lucide lucide-list-filter "
-                          fill="none"
-                          height="14"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                          width="14"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M3 6h18"
-                          />
-                          <path
-                            d="M7 12h10"
-                          />
-                          <path
-                            d="M10 18h4"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </th>
-                  <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-blue-50/50 shadow-[0_1px_0_0_var(--border-light)]"
-                  >
-                    <div
-                      aria-controls="radix-:r13:"
-                      aria-expanded="false"
-                      aria-haspopup="dialog"
-                      class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
-                      data-state="closed"
-                      type="button"
-                    >
                       Thành tiền
                       <div
                         class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
@@ -538,10 +538,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-purple-500/[0.03] dark:bg-purple-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
                   >
                     <div
-                      aria-controls="radix-:r14:"
+                      aria-controls="radix-:r13:"
                       aria-expanded="false"
                       aria-haspopup="dialog"
                       class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
@@ -578,90 +578,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-purple-500/[0.03] dark:bg-purple-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)]"
                   >
                     <div
-                      aria-controls="radix-:r15:"
-                      aria-expanded="false"
-                      aria-haspopup="dialog"
-                      class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
-                      data-state="closed"
-                      type="button"
-                    >
-                      Đơn giá mua
-                      <div
-                        class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
-                      >
-                        <svg
-                          class="lucide lucide-list-filter "
-                          fill="none"
-                          height="14"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                          width="14"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M3 6h18"
-                          />
-                          <path
-                            d="M7 12h10"
-                          />
-                          <path
-                            d="M10 18h4"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </th>
-                  <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]"
-                  >
-                    <div
-                      aria-controls="radix-:r16:"
-                      aria-expanded="false"
-                      aria-haspopup="dialog"
-                      class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
-                      data-state="closed"
-                      type="button"
-                    >
-                      Giá mua
-                      <div
-                        class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
-                      >
-                        <svg
-                          class="lucide lucide-list-filter "
-                          fill="none"
-                          height="14"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          viewBox="0 0 24 24"
-                          width="14"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M3 6h18"
-                          />
-                          <path
-                            d="M7 12h10"
-                          />
-                          <path
-                            d="M10 18h4"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </th>
-                  <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]"
-                  >
-                    <div
-                      aria-controls="radix-:r17:"
+                      aria-controls="radix-:r14:"
                       aria-expanded="false"
                       aria-haspopup="dialog"
                       class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
@@ -698,10 +618,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-purple-500/[0.03] dark:bg-purple-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]"
                   >
                     <div
-                      aria-controls="radix-:r18:"
+                      aria-controls="radix-:r15:"
                       aria-expanded="false"
                       aria-haspopup="dialog"
                       class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
@@ -738,10 +658,50 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]"
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-purple-500/[0.03] dark:bg-purple-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]"
                   >
                     <div
-                      aria-controls="radix-:r19:"
+                      aria-controls="radix-:r16:"
+                      aria-expanded="false"
+                      aria-haspopup="dialog"
+                      class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
+                      data-state="closed"
+                      type="button"
+                    >
+                      Giá vốn
+                      <div
+                        class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
+                      >
+                        <svg
+                          class="lucide lucide-list-filter "
+                          fill="none"
+                          height="14"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                          width="14"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M3 6h18"
+                          />
+                          <path
+                            d="M7 12h10"
+                          />
+                          <path
+                            d="M10 18h4"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </th>
+                  <th
+                    class="h-9 align-middle px-3 py-2 border-r border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-purple-500/[0.03] dark:bg-purple-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]"
+                  >
+                    <div
+                      aria-controls="radix-:r17:"
                       aria-expanded="false"
                       aria-haspopup="dialog"
                       class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
@@ -778,17 +738,17 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </th>
                   <th
-                    class="h-9 align-middle text-[11px] uppercase tracking-[0.05em] text-[color:var(--muted-fg)] px-3 py-2 border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)] min-w-[60px]"
+                    class="h-9 align-middle px-3 py-2 border-t border-border/20 dark:border-white/[0.03] text-[11px] uppercase tracking-wider font-semibold text-right bg-purple-500/[0.03] dark:bg-purple-500/[0.06] text-slate-600 dark:text-zinc-400 shadow-[0_1px_0_0_var(--border-light)] min-w-[70px]"
                   >
                     <div
-                      aria-controls="radix-:r1a:"
+                      aria-controls="radix-:r18:"
                       aria-expanded="false"
                       aria-haspopup="dialog"
                       class="flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none justify-end"
                       data-state="closed"
                       type="button"
                     >
-                      % LN
+                      % biên LN
                       <div
                         class="flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5 text-muted-foreground/30 opacity-0 group-hover:opacity-100"
                       >
@@ -823,23 +783,23 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                 class=""
               >
                 <tr
-                  class="group border-b border-[color:var(--border-light)] transition-colors data-[state=selected]:bg-muted hover:bg-slate-50 group"
+                  class="group data-[state=selected]:bg-muted group border-b border-border/20 dark:border-white/[0.03] hover:bg-surface-hover dark:hover:bg-zinc-800/40 transition-colors"
                 >
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center text-slate-400"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] text-center text-muted-foreground font-mono text-xs"
                   >
                     1
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] text-center text-foreground text-xs"
                   >
                     01/06/2026
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 text-center"
                   >
                     <div
-                      class="flex items-center gap-1.5 group text-slate-600 cursor-pointer justify-center w-full"
+                      class="flex items-center gap-1.5 group text-muted-foreground hover:text-foreground cursor-pointer justify-center w-full"
                     >
                       <button
                         aria-label="Xem thông tin liên quan"
@@ -887,83 +847,80 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right font-medium text-foreground/90 tabular-nums w-[80px]"
                   >
                     10
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right text-muted-foreground tabular-nums"
                   >
                     100 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right font-semibold text-foreground tabular-nums"
                   >
                     1.000 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-emerald-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right font-medium text-emerald-600 dark:text-emerald-400 tabular-nums w-[80px]"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right text-muted-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-emerald-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-slate-500/[0.02] dark:bg-zinc-500/[0.03] group-hover:bg-slate-500/[0.05] dark:group-hover:bg-zinc-500/[0.06] text-right font-semibold tabular-nums w-[80px]"
                   >
                     <span
-                      class="text-blue-700"
+                      class="text-foreground"
                     >
                       10
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-blue-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-slate-500/[0.02] dark:bg-zinc-500/[0.03] group-hover:bg-slate-500/[0.05] dark:group-hover:bg-zinc-500/[0.06] text-right font-semibold text-foreground tabular-nums"
                   >
                     1.000 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-purple-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-medium text-purple-600 dark:text-purple-400 tabular-nums w-[80px]"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right text-muted-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-medium text-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right text-muted-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-semibold text-purple-600 dark:text-purple-400 tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-purple-700 tabular-nums bg-white"
-                  />
-                  <td
-                    class="align-middle px-3 py-2 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right tabular-nums"
                   />
                 </tr>
                 <tr
-                  class="group border-b border-[color:var(--border-light)] transition-colors data-[state=selected]:bg-muted hover:bg-slate-50 group"
+                  class="group data-[state=selected]:bg-muted group border-b border-border/20 dark:border-white/[0.03] hover:bg-surface-hover dark:hover:bg-zinc-800/40 transition-colors"
                 >
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center text-slate-400"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] text-center text-muted-foreground font-mono text-xs"
                   >
                     2
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] text-center text-foreground text-xs"
                   >
                     05/06/2026
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 text-center"
                   >
                     <div
-                      class="flex items-center gap-1.5 group text-slate-600 cursor-pointer justify-center w-full"
+                      class="flex items-center gap-1.5 group text-muted-foreground hover:text-foreground cursor-pointer justify-center w-full"
                     >
                       <button
                         aria-label="Xem thông tin liên quan"
@@ -1011,97 +968,96 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right font-medium text-foreground/90 tabular-nums w-[80px]"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right text-muted-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right font-semibold text-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-emerald-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right font-medium text-emerald-600 dark:text-emerald-400 tabular-nums w-[80px]"
                   >
                     4
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right text-muted-foreground tabular-nums"
                   >
                     100 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-emerald-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums"
                   >
                     400 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-slate-500/[0.02] dark:bg-zinc-500/[0.03] group-hover:bg-slate-500/[0.05] dark:group-hover:bg-zinc-500/[0.06] text-right font-semibold tabular-nums w-[80px]"
                   >
                     <span
-                      class="text-blue-700"
+                      class="text-foreground"
                     >
                       6
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-blue-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-slate-500/[0.02] dark:bg-zinc-500/[0.03] group-hover:bg-slate-500/[0.05] dark:group-hover:bg-zinc-500/[0.06] text-right font-semibold text-foreground tabular-nums"
                   >
                     600 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-purple-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-medium text-purple-600 dark:text-purple-400 tabular-nums w-[80px]"
                   >
                     4
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
-                  >
-                    100 ₫
-                  </td>
-                  <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
-                  >
-                    400 ₫
-                  </td>
-                  <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right text-muted-foreground tabular-nums"
                   >
                     200 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-medium text-foreground tabular-nums"
                   >
                     800 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-purple-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right text-muted-foreground tabular-nums"
                   >
                     400 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-semibold text-purple-600 dark:text-purple-400 tabular-nums"
                   >
-                    50.0%
+                    400 ₫
+                  </td>
+                  <td
+                    class="align-middle px-3 py-2 bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right tabular-nums"
+                  >
+                    <span
+                      class="inline-flex items-center justify-end px-1.5 py-0.5 rounded text-[11px] font-semibold font-mono tabular-nums border select-none transition-colors bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-900/40"
+                    >
+                      +50.0%
+                    </span>
                   </td>
                 </tr>
                 <tr
-                  class="group border-b border-[color:var(--border-light)] transition-colors data-[state=selected]:bg-muted hover:bg-slate-50 group"
+                  class="group data-[state=selected]:bg-muted group border-b border-border/20 dark:border-white/[0.03] hover:bg-surface-hover dark:hover:bg-zinc-800/40 transition-colors"
                 >
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center text-slate-400"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] text-center text-muted-foreground font-mono text-xs"
                   >
                     3
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] text-center text-foreground text-xs"
                   >
                     07/06/2026
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 text-center"
                   >
                     <div
-                      class="flex items-center gap-1.5 group text-slate-600 cursor-pointer justify-center w-full"
+                      class="flex items-center gap-1.5 group text-muted-foreground hover:text-foreground cursor-pointer justify-center w-full"
                     >
                       <button
                         aria-label="Xem thông tin liên quan"
@@ -1149,106 +1105,105 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right font-medium text-foreground/90 tabular-nums w-[80px]"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right text-muted-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right font-semibold text-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-emerald-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right font-medium text-emerald-600 dark:text-emerald-400 tabular-nums w-[80px]"
                   >
                     -1
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right text-muted-foreground tabular-nums"
                   >
                     100 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-emerald-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums"
                   >
                     -100 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-slate-500/[0.02] dark:bg-zinc-500/[0.03] group-hover:bg-slate-500/[0.05] dark:group-hover:bg-zinc-500/[0.06] text-right font-semibold tabular-nums w-[80px]"
                   >
                     <span
                       class="mr-1 inline-flex flex-wrap gap-1"
                     >
                       <span
-                        class="rounded bg-amber-100 px-1.5 text-[11px] text-amber-800"
+                        class="rounded bg-amber-100 dark:bg-amber-950/60 px-1.5 text-[11px] text-amber-800 dark:text-amber-300"
                       >
                         Trả hàng
                       </span>
                     </span>
                     <span
-                      class="text-blue-700"
+                      class="text-foreground"
                     >
                       7
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-blue-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-slate-500/[0.02] dark:bg-zinc-500/[0.03] group-hover:bg-slate-500/[0.05] dark:group-hover:bg-zinc-500/[0.06] text-right font-semibold text-foreground tabular-nums"
                   >
                     700 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-purple-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-medium text-purple-600 dark:text-purple-400 tabular-nums w-[80px]"
                   >
                     -1
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
-                  >
-                    100 ₫
-                  </td>
-                  <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
-                  >
-                    -100 ₫
-                  </td>
-                  <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right text-muted-foreground tabular-nums"
                   >
                     150 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-medium text-foreground tabular-nums"
                   >
                     -150 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-purple-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right text-muted-foreground tabular-nums"
+                  >
+                    -100 ₫
+                  </td>
+                  <td
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-semibold text-purple-600 dark:text-purple-400 tabular-nums"
                   >
                     -50 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right tabular-nums"
                   >
-                    0.0%
+                    <span
+                      class="text-muted-foreground/40 font-normal select-none"
+                    >
+                      —
+                    </span>
                   </td>
                 </tr>
                 <tr
-                  class="group border-b border-[color:var(--border-light)] transition-colors data-[state=selected]:bg-muted hover:bg-slate-50 group"
+                  class="group data-[state=selected]:bg-muted group border-b border-border/20 dark:border-white/[0.03] hover:bg-surface-hover dark:hover:bg-zinc-800/40 transition-colors"
                 >
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center text-slate-400"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] text-center text-muted-foreground font-mono text-xs"
                   >
                     4
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] text-center text-foreground text-xs"
                   >
                     09/06/2026
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-center bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 text-center"
                   >
                     <div
-                      class="flex items-center gap-1.5 group text-slate-600 cursor-pointer justify-center w-full"
+                      class="flex items-center gap-1.5 group text-muted-foreground hover:text-foreground cursor-pointer justify-center w-full"
                     >
                       <button
                         aria-label="Xem thông tin liên quan"
@@ -1296,37 +1251,37 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </div>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right font-medium text-foreground/90 tabular-nums w-[80px]"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right text-muted-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-amber-500/[0.025] dark:bg-amber-500/[0.04] group-hover:bg-amber-500/[0.06] dark:group-hover:bg-amber-500/[0.08] text-right font-semibold text-foreground tabular-nums"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-emerald-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right font-medium text-emerald-600 dark:text-emerald-400 tabular-nums w-[80px]"
                   >
                     9
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right text-muted-foreground tabular-nums"
                   >
                     78 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-emerald-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-emerald-500/[0.025] dark:bg-emerald-500/[0.04] group-hover:bg-emerald-500/[0.06] dark:group-hover:bg-emerald-500/[0.08] text-right font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums"
                   >
                     700 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-slate-500/[0.02] dark:bg-zinc-500/[0.03] group-hover:bg-slate-500/[0.05] dark:group-hover:bg-zinc-500/[0.06] text-right font-semibold tabular-nums w-[80px]"
                   >
                     <span
                       class="mr-1 inline-flex flex-wrap gap-1"
                     >
                       <span
-                        class="rounded bg-red-100 px-1.5 text-[11px] text-red-700"
+                        class="rounded bg-red-100 dark:bg-red-950/60 px-1.5 text-[11px] text-red-700 dark:text-red-300"
                       >
                         Thiếu hàng
                          
@@ -1334,67 +1289,66 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                       </span>
                     </span>
                     <span
-                      class="text-red-600"
+                      class="text-rose-500 dark:text-rose-400"
                     >
                       -2
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-blue-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 bg-slate-500/[0.02] dark:bg-zinc-500/[0.03] group-hover:bg-slate-500/[0.05] dark:group-hover:bg-zinc-500/[0.06] text-right font-semibold text-foreground tabular-nums"
                   >
                     0 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-purple-700 tabular-nums bg-white w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-medium text-purple-600 dark:text-purple-400 tabular-nums w-[80px]"
                   >
                     9
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
-                  >
-                    78 ₫
-                  </td>
-                  <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
-                  >
-                    700 ₫
-                  </td>
-                  <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right text-muted-foreground tabular-nums"
                   >
                     150 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-medium text-foreground tabular-nums"
                   >
                     1.350 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-medium text-purple-700 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right text-muted-foreground tabular-nums"
+                  >
+                    700 ₫
+                  </td>
+                  <td
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right font-semibold text-purple-600 dark:text-purple-400 tabular-nums"
                   >
                     650 ₫
                   </td>
                   <td
-                    class="align-middle px-3 py-2 text-right text-slate-600 tabular-nums bg-white"
+                    class="align-middle px-3 py-2 bg-purple-500/[0.025] dark:bg-purple-500/[0.04] group-hover:bg-purple-500/[0.06] dark:group-hover:bg-purple-500/[0.08] text-right tabular-nums"
                   >
-                    48.1%
+                    <span
+                      class="inline-flex items-center justify-end px-1.5 py-0.5 rounded text-[11px] font-semibold font-mono tabular-nums border select-none transition-colors bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-900/40"
+                    >
+                      +48.1%
+                    </span>
                   </td>
                 </tr>
               </tbody>
               <tfoot
-                class="table-footer-glass sticky bottom-0 z-10 font-semibold table-footer-glass border-t-2 border-slate-300 dark:border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]"
+                class="table-footer-glass sticky bottom-0 z-10 font-semibold table-footer-glass border-t border-border/40 shadow-[0_-2px_6px_rgba(0,0,0,0.04)]"
               >
                 <tr
                   class="group border-b border-[color:var(--border-light)] transition-colors data-[state=selected]:bg-muted hover:bg-transparent bg-transparent"
                 >
                   <td
-                    class="align-middle px-3 py-3 border-r border-slate-200 text-right uppercase text-slate-700"
+                    class="align-middle px-3 py-3 border-r border-slate-300/40 dark:border-zinc-700/40 text-right uppercase text-foreground bg-slate-50/50 dark:bg-zinc-900/50 text-xs tracking-wider font-bold"
                     colspan="3"
                   >
                     Tổng cộng
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-slate-700 bg-orange-50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-amber-500/[0.04] dark:bg-amber-500/[0.07] text-right font-bold text-amber-600 dark:text-amber-400 tabular-nums w-[80px]"
                   >
                     <span
                       class="underline"
@@ -1403,10 +1357,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right bg-orange-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-amber-500/[0.04] dark:bg-amber-500/[0.07]"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-slate-700 bg-orange-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 shadow-[0_1px_0_0_var(--border-light)] bg-amber-500/[0.04] dark:bg-amber-500/[0.07] text-right font-bold text-amber-600 dark:text-amber-400 tabular-nums"
                   >
                     <span
                       class="underline"
@@ -1415,7 +1369,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-emerald-700 bg-emerald-50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-emerald-500/[0.04] dark:bg-emerald-500/[0.07] text-right font-bold text-emerald-600 dark:text-emerald-400 tabular-nums w-[80px]"
                   >
                     <span
                       class="underline"
@@ -1424,10 +1378,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right bg-emerald-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-emerald-500/[0.04] dark:bg-emerald-500/[0.07]"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-emerald-700 bg-emerald-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 shadow-[0_1px_0_0_var(--border-light)] bg-emerald-500/[0.04] dark:bg-emerald-500/[0.07] text-right font-bold text-emerald-600 dark:text-emerald-400 tabular-nums"
                   >
                     <span
                       class="underline"
@@ -1436,7 +1390,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-blue-700 bg-blue-50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-slate-500/[0.03] dark:bg-zinc-500/[0.05] text-right font-bold text-foreground tabular-nums w-[80px]"
                   >
                     <span
                       class="underline"
@@ -1445,7 +1399,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-blue-700 bg-blue-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-slate-300/40 dark:border-zinc-700/40 shadow-[0_1px_0_0_var(--border-light)] bg-slate-500/[0.03] dark:bg-zinc-500/[0.05] text-right font-bold text-foreground tabular-nums"
                   >
                     <span
                       class="underline"
@@ -1454,7 +1408,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-purple-700 bg-purple-50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-purple-500/[0.04] dark:bg-purple-500/[0.07] text-right font-bold text-purple-600 dark:text-purple-400 tabular-nums w-[80px]"
                   >
                     <span
                       class="underline"
@@ -1463,22 +1417,10 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right bg-purple-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-purple-500/[0.04] dark:bg-purple-500/[0.07]"
                   />
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-purple-700 bg-purple-50 shadow-[0_1px_0_0_var(--border-light)]"
-                  >
-                    <span
-                      class="underline"
-                    >
-                      1.000 ₫
-                    </span>
-                  </td>
-                  <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right bg-purple-50 shadow-[0_1px_0_0_var(--border-light)]"
-                  />
-                  <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-purple-700 bg-purple-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-purple-500/[0.04] dark:bg-purple-500/[0.07] text-right font-bold text-foreground tabular-nums"
                   >
                     <span
                       class="underline"
@@ -1487,7 +1429,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 border-r border-slate-200 text-right font-semibold text-purple-700 bg-purple-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-purple-500/[0.04] dark:bg-purple-500/[0.07] text-right font-bold text-muted-foreground tabular-nums"
                   >
                     <span
                       class="underline"
@@ -1496,13 +1438,21 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
                     </span>
                   </td>
                   <td
-                    class="align-middle px-3 py-2 text-right font-semibold text-purple-700 bg-purple-50 shadow-[0_1px_0_0_var(--border-light)]"
+                    class="align-middle px-3 py-2 border-r border-border/15 dark:border-white/[0.02] shadow-[0_1px_0_0_var(--border-light)] bg-purple-500/[0.04] dark:bg-purple-500/[0.07] text-right font-bold text-purple-600 dark:text-purple-400 tabular-nums"
                   >
                     <span
                       class="underline"
                     >
-                      50.0
-                      %
+                      1.000 ₫
+                    </span>
+                  </td>
+                  <td
+                    class="align-middle px-3 py-2 bg-purple-500/[0.04] dark:bg-purple-500/[0.07] text-right tabular-nums shadow-[0_1px_0_0_var(--border-light)]"
+                  >
+                    <span
+                      class="inline-flex items-center justify-end px-1.5 py-0.5 rounded text-[11px] font-semibold font-mono tabular-nums border select-none transition-colors bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-900/40"
+                    >
+                      +50.0%
                     </span>
                   </td>
                 </tr>
@@ -1518,7 +1468,7 @@ exports[`FifoUnitLedgerSection characterization > matches the baseline DOM for t
               Hiển thị
                
               <button
-                aria-controls="radix-:r1j:"
+                aria-controls="radix-:r1h:"
                 aria-expanded="false"
                 aria-haspopup="dialog"
                 class="inline-flex items-center gap-1 px-2 py-[3px] border border-border/60 dark:border-white/[0.06] rounded-[6px] text-xs text-foreground bg-surface hover:bg-surface-hover dark:hover:bg-white/[0.05] cursor-pointer outline-none transition-colors shadow-2xs"

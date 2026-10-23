@@ -21,6 +21,7 @@ export const vinfastPartsVi = {
   FIFO_BUY_PRICE: "Giá mua",
   FIFO_SELL_UNIT_PRICE: "Đơn giá bán",
   FIFO_REVENUE: "Doanh thu",
+  FIFO_COGS: "Giá vốn",
   FIFO_GROSS_PROFIT: "Lợi nhuận gộp",
   FIFO_MARGIN: "% LN",
   SYNC_LEDGER: "Đồng bộ danh mục Vinfast",

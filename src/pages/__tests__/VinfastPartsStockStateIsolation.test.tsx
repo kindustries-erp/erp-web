@@ -15,23 +15,23 @@ window.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
-vi.mock("@/shared/components/PillTabs", () => ({
-  PillTabs: ({
-    value,
-    onValueChange,
-    items,
+vi.mock("@/shared/components/ViewModeCombobox", () => ({
+  ViewModeCombobox: ({
+    filterGroup,
   }: {
-    value: string;
-    onValueChange: (val: string) => void;
-    items: { value: string; label: React.ReactNode }[];
+    filterGroup?: {
+      value: string;
+      onChange: (val: string) => void;
+      items: { value: string; label: React.ReactNode }[];
+    };
   }) => (
-    <div data-testid="pill-tabs" data-value={value}>
-      {items.map((item) => (
+    <div data-testid="view-mode-combobox" data-value={filterGroup?.value}>
+      {filterGroup?.items.map((item) => (
         <button
           key={item.value}
           role="tab"
-          data-state={value === item.value ? "active" : "inactive"}
-          onClick={() => onValueChange(item.value)}
+          data-state={filterGroup.value === item.value ? "active" : "inactive"}
+          onClick={() => filterGroup.onChange(item.value)}
         >
           {item.label}
         </button>

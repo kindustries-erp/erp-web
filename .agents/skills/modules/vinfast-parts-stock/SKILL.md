@@ -29,20 +29,33 @@ Module Kho Phụ Tùng VinFast cung cấp giao diện quản lý tồn kho, sổ
 ```text
 src/
 ├── pages/
-│   ├── VinfastPartsStockPage.tsx                          # Unified Entry Point quản lý 3 Header Tabs (dashboard, oto, xemay)
+│   ├── VinfastPartsStockPage.tsx                          # Unified Entry Point [L5 Page] (< 150 LoC) quản lý 3 Header Tabs
 │   ├── VinfastPartsDashboardPage.tsx                      # Dashboard View (KPI Cards, Sparklines, Bar Charts)
 │   ├── VinfastPartsOtoStockPage.tsx                       # Backward-compatible wrapper (initialTab="oto")
 │   ├── VinfastPartsMotoStockPage.tsx                      # Backward-compatible wrapper (initialTab="xemay")
 │   ├── api/
 │   │   └── vinfastPartsStockExportApi.ts                  # API client cho background export kho phụ tùng
 │   ├── hooks/
+│   │   ├── useVinfastPartsStockPageUrl.ts                 # Hook URL hydration, active tab switcher & popstate (< 140 LoC)
 │   │   └── useVinfastPartsStockExportProgress.ts          # Hook kết nối SSE tiến độ export Excel nền
 │   └── components/
-│       ├── VinfastPartsStockDetailDrawer.tsx              # Drawer xem chi tiết thông tin phụ tùng và lịch sử sổ cái
+│       ├── vinfast-parts-stock-table/                     # [L3 Organism] Folder-per-component Tồn kho Ô tô & Xe máy
+│       │   ├── VinfastPartsStockTable.tsx                 # Organism chính (< 150 LoC)
+│       │   ├── VinfastPartsStockTable.hook.ts             # Hook React Query & state (< 160 LoC)
+│       │   ├── useVinfastPartsStockTableUrlSync.ts        # Hook 2-way URL synchronization (< 150 LoC)
+│       │   ├── VinfastPartsStockTable.columns.tsx         # Định nghĩa 7 cột DataTable (< 120 LoC)
+│       │   ├── VinfastPartsStockTable.actions.tsx         # PillTabs, createActions, rowActions (< 120 LoC)
+│       │   ├── VinfastPartsStockTable.type.ts             # Type contracts (< 30 LoC)
+│       │   └── index.ts                                   # Barrel export
+│       ├── VinfastPartsStockDetailDrawer.tsx              # Drawer chi tiết phụ tùng: 2 Top Tabs ("Chi tiết" & "Biến động & Phân tích")
 │       ├── VinfastPartsSyncDrawer.tsx                     # Drawer kích hoạt đồng bộ hóa đơn IN/OUT và theo dõi tiến độ SSE
 │       ├── VinfastPartsStockExportDrawer.tsx              # Drawer quản lý job xuất Excel ngầm và lịch sử tải file
-│       └── fifo-unit-ledger/                              # Cụm component sổ cái đơn vị FIFO
-│           ├── FifoFlatTable.tsx                          # Bảng phẳng hiển thị từng đơn vị nhập vs đơn vị xuất tương ứng
+│       └── fifo-unit-ledger/                              # Cụm component sổ cái đơn vị FIFO (No Blue Mandate)
+│           ├── fifoColumns.ts                             # Cấu hình 17 cột FIFO & 4 dải tint màu (< 90 LoC)
+│           ├── FifoFlatTable.tsx                          # Bảng phẳng hiển thị sổ cái FIFO (17 cột, hairline borders)
+│           ├── FifoTableHeader.tsx                        # Header đa tầng 4 nhóm (Nhập, Xuất, Tồn, Hiệu quả KD)
+│           ├── FifoTableRow.tsx                           # Dòng dữ liệu với background tint & GarageMarginBadge
+│           ├── FifoTableFooter.tsx                        # Hàng tổng cộng đồng bộ 17 cột
 │           ├── FifoUnitLedgerSection.tsx                  # Section container bọc FifoFlatTable và bộ lọc trạng thái
 │           ├── fifoTransform.ts                           # Thuật toán chuyển đổi raw ledger sang cấu trúc đơn vị FIFO
 │           └── useFifoUnitLedger.ts                       # Hook query dữ liệu FIFO unit từ API backend

@@ -24,7 +24,7 @@ const GROUP_ROW_CLASS = "hover:bg-transparent border-b-0";
 const COLUMN_ROW_CLASS =
   "hover:bg-transparent border-b-0 shadow-[0_1px_0_0_var(--border-light)]";
 const HASH_CELL_CLASS =
-  "px-3 py-2 border-r border-slate-200 font-semibold text-center w-10 bg-slate-100/75 shadow-[0_1px_0_0_var(--border-light)]";
+  "px-3 py-2 border-r border-t border-slate-300/60 dark:border-zinc-700/60 font-semibold text-center w-10 bg-slate-100/90 dark:bg-zinc-900/90 text-slate-700 dark:text-zinc-200 shadow-[0_1px_0_0_var(--border-light)] text-[11px]";
 
 /** Hàng nhóm (NHẬP/XUẤT/TỒN/HIỆU QUẢ) và hàng tiêu đề cột của bảng FIFO. */
 export function FifoTableHeader({
@@ -34,7 +34,7 @@ export function FifoTableHeader({
   const { t } = useTranslation(["vinfastParts", "common"]);
 
   return (
-    <TableHeader className="sticky top-0 z-10 table-header-glass text-slate-700 border-b border-border">
+    <TableHeader className="sticky top-0 z-10 table-header-glass text-slate-700 dark:text-zinc-200 border-b border-border/30">
       <TableRow className={GROUP_ROW_CLASS}>
         <TableHead rowSpan={2} className={HASH_CELL_CLASS}>
           #
