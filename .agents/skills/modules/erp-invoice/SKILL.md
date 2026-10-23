@@ -385,3 +385,21 @@ bun run lint:check
 - Form chi tiết hóa đơn (`ErpInvoiceGeneralInfoEdit`, field "Chi nhánh") dùng `V2MultiCombobox` với `branchIds`; khi đổi, đồng bộ `branchId = branchIds[0]` để `ErpInvoiceAccountingSection` đọc đúng.
 - Lưu ý popover trong drawer: `V2MultiCombobox` dùng Radix Popover nằm trong `V2DrawerSheet` (Radix Dialog modal). Các package `@radix-ui/react-focus-scope`, `react-dismissable-layer`, `react-focus-guards`, `react-portal`, `react-presence` phải chỉ có 1 bản (khai báo trong `overrides` của `package.json`); nhiều bản làm focus trap đóng popover ngay khi mở (không chọn được option).
 - Chưa làm: drawer bulk-edit vẫn chọn đơn (gửi 0/1 phần tử); cần chuyển sang `V2MultiCombobox`.
+
+---
+
+## 7. Kiến Trúc V2 Standard Table (Dual-Run & Migration Pilot)
+
+Module Hóa đơn đã hoàn thiện tích hợp bảng chuẩn **`V2StandardTable`** và khung trang **`V2ModulePage`** tại:
+👉 `src/v2/modules/finance-invoice/`
+
+### 7.1. Cấu hình Bảng V2
+- **Table IDs**: `erp-invoices-table-IN` (Mua vào) và `erp-invoices-table-OUT` (Bán ra), lưu cấu hình qua `v2ColumnPreferencesStorage` và `v2ViewPresetStorage` (store riêng `useV2TablePreferencesStore`). Cấu hình V1 chỉ được **chép một lần** sang V2 (`migrateV1TablePreferences`, bỏ alias `_2`/`__n`); sau đó hai bên không đồng bộ ngược. Sort và filter cột không nằm trong preference V2.
+- **4 Tab Thuế (`tax_tab`)**: Tích hợp trực tiếp vào cụm `toolbar.filterGroup` (`all`, `new`, `replacement`, `adjustment`).
+- **Chế độ xem Cột (`viewModes`)**: Hỗ trợ chuyển đổi nhanh qua `toolbar.viewModes`: `overview` (Tổng quan), `audit` (Đối soát / Kiểm toán), `tax` (Thuế & Kê khai).
+- **Hàng Tổng Tiền Kế Toán (Summary Row)**: Tự động cộng dồn hoặc nhận chỉ số từ server (`preVatAmount`, `vatAmount`, `totalAmount`, `discountAmount`, `netOffAmount`, `remainingAmount`) hiển thị ở chân bảng.
+- **Header Filters & Server-side Options**: Tích hợp qua `createInvoiceFetchOptions` (`api/queries/useInvoiceColumnOptions.ts`) gọi `financeInvoiceV2Api.getColumnOptions` (endpoint `/api/v1/erp-invoices/column-options`, qua `v2HttpClient`, không import code V1).
+- **Dữ liệu dòng**: `api/adapters/invoiceRowAdapter.ts` (`toInvoiceRow`, `invoiceTotalsToSummary`) chuyển `ErpInvoice` (số tiền dạng chuỗi decimal, tổng `grandTotal*`) sang shape cột V2 `FakeInvoice`.
+- **Cầu nối query V1 ⇄ V2** (`erp-invoices-tab/hooks/useInvoiceV2Bridge.ts`): `useErpInvoicesList` vẫn là nguồn sự thật của API; bảng V2 đẩy page/pageSize/sort/filter/search/ngày vào store V1 (`erp-invoices-table-*`). Khi V1 reset bộ lọc, bảng V2 được remount qua `tableKey`.
+- **Dual-Run URL**: Màn hình V2 chạy trên dữ liệu mẫu khi `MODE=test` hoặc thiếu `VITE_API_BASE_URL` (Storybook, integration test `src/v2/modules/finance-invoice/tests/integration/ErpInvoiceV2ModulePage.test.tsx`). Lỗi API thật không còn được thay bằng dữ liệu mẫu.
+

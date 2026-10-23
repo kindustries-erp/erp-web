@@ -11,10 +11,15 @@ import type {
   FakeInvoice,
   InvoiceDirection,
 } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
-import type { InvoiceView } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-table/invoiceShape.columns";
+import { buildInvoiceColumns } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-table/invoiceShape.columns";
 import { useFakeInvoices } from "@/v2/modules/finance-invoice/api/queries/useInvoiceShapeQuery";
+import { createInvoiceFetchOptions } from "@/v2/modules/finance-invoice/api/queries/useInvoiceColumnOptions";
 import { InvoiceShapeDashboard } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-dashboard/InvoiceShapeDashboard";
 import { DETAIL_PREFIX } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-overlays/InvoiceShapeOverlays";
+import {
+  v2ColumnPreferencesStorage,
+  v2ViewPresetStorage,
+} from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import {
   TAX_FILTER_TITLE,
   TAX_TABS,
@@ -37,10 +42,15 @@ const buildListTab = (
     resetCount,
     bumpResetCount,
     setBulkOpen,
-    columns,
     changeTaxTab,
     openOverlay,
   } = state;
+
+  const columns = buildInvoiceColumns(
+    view,
+    (id) => openOverlay(`${DETAIL_PREFIX}${id}`),
+    direction,
+  );
 
   return {
     key: direction.toLowerCase(),
@@ -53,9 +63,14 @@ const buildListTab = (
       tableId: invoiceTableId(direction),
       columns,
       getRowKey: (row) => row.id,
+      mode: "server",
+      fetchOptions: createInvoiceFetchOptions(direction),
+      preferencesStorage: v2ColumnPreferencesStorage,
+      viewPresetStorage: v2ViewPresetStorage,
       enableRowSelection: true,
       selectedKeys: selected,
       onSelectionChange: setSelected,
+      emptyLabel: "Không tìm thấy hóa đơn nào phù hợp",
       rowActions: (row) => [
         {
           items: [
@@ -78,7 +93,7 @@ const buildListTab = (
         viewModes: {
           items: VIEW_MODES,
           activeKey: view,
-          onSelect: (key) => setView(key as InvoiceView),
+          onSelect: (key) => setView(key as any),
         },
         bulkActions: [
           {
@@ -93,6 +108,7 @@ const buildListTab = (
           },
         ],
         filterPanel: {},
+        enableFullscreen: true,
         create: {
           label: "Đồng bộ",
           icon: <DownloadCloud className="h-4 w-4" />,

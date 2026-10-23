@@ -14,8 +14,9 @@ export const TAX_FILTER_TITLE = "Loại hóa đơn thuế";
 export const VIEW_MODES = [
   { key: "overview", label: "Tổng quan", isSystem: true },
   { key: "audit", label: "Kiểm toán / Đối soát", isSystem: true },
+  { key: "tax", label: "Thuế & Kê khai", isSystem: true },
 ];
 
-/** Bảng danh sách theo chiều hóa đơn; chế độ xem và filter lưu theo từng bảng */
+/** Bảng danh sách theo chiều hóa đơn; giữ nguyên tableId chuẩn của ERP để tái sử dụng preference */
 export const invoiceTableId = (direction: InvoiceDirection) =>
-  `invoice-shape-${direction}`;
+  `erp-invoices-table-${direction}`;

@@ -1,6 +1,5 @@
 /**
- * Dữ liệu giả có hình dạng giống erp-invoice, chỉ để chứng minh khung V2 đáp ứng được
- * một module hoàn chỉnh. Không gọi API và không import module thật.
+ * Dữ liệu có hình dạng giống erp-invoice, đáp ứng cả dữ liệu giả định và dữ liệu từ API thật.
  */
 export type InvoiceDirection = "IN" | "OUT";
 export type TaxTab = "all" | "new" | "replacement" | "adjustment";
@@ -23,6 +22,26 @@ export interface FakeInvoice {
   paid: number;
   posting: PostingStatus;
   note: string;
+  // Các trường bổ sung từ API thật
+  sellerName?: string | null;
+  sellerTaxCode?: string | null;
+  buyerName?: string | null;
+  buyerTaxCode?: string | null;
+  taxInvoiceStatus?: number | string | null;
+  branchName?: string | null;
+  preVatAmount?: number;
+  vatAmount?: number;
+  totalAmount?: number;
+  discountAmount?: number;
+  netOffAmount?: number;
+  remainingAmount?: number;
+  postingStatus?: string | null;
+  description?: string | null;
+  notes?: string;
+  attachments?: any[];
+  pdfFileKey?: string | null;
+  xmlFileKey?: string | null;
+  originalPdfStatus?: string | null;
 }
 
 export const BRANCHES = [
@@ -82,6 +101,11 @@ export const makeInvoices = (
       note: "",
     };
   });
+
+export const INVOICE_ROWS: Record<InvoiceDirection, FakeInvoice[]> = {
+  IN: makeInvoices("IN"),
+  OUT: makeInvoices("OUT"),
+};
 
 export const MONTH_LABELS = [
   "T1",

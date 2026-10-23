@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState, useCallback } from "react";
+import React, { useMemo, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Receipt,
@@ -14,7 +14,21 @@ import {
   FileCheck2,
   FileText,
 } from "lucide-react";
-import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import { PageLayout } from "@/shared/components/PageLayout";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { V2StandardTable } from "@/v2/shared/components/organisms/v2-standard-table";
+import { useInvoiceV2Columns } from "./hooks/useInvoiceV2Columns";
+import { useInvoiceV2Bridge } from "./hooks/useInvoiceV2Bridge";
+import {
+  invoiceTotalsToSummary,
+  toInvoiceRow,
+} from "@/v2/modules/finance-invoice/api/adapters/invoiceRowAdapter";
+import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
+import { createInvoiceFetchOptions } from "@/v2/modules/finance-invoice/api/queries/useInvoiceColumnOptions";
+import {
+  v2ColumnPreferencesStorage,
+  v2ViewPresetStorage,
+} from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
@@ -22,21 +36,14 @@ import {
   useUserPreferencesStore,
   type TableViewPreset,
 } from "@/shared/hooks/useUserPreferences";
-import { getTags } from "@/modules/tags/api/tagsApi";
-import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
-import { useQuery } from "@tanstack/react-query";
 import { useUIStore } from "@/core/config/uiStore";
 import type { TabItem } from "@/shared/components/PageLayout";
-import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import {
   getPdfAttachments,
   getInvoiceRowClassName,
   DEFAULT_INVOICE_COLUMN_VISIBILITY,
   INVOICE_COLUMN_VIEW_PRESETS,
 } from "./utils";
-import { useInvoiceColumns } from "./ErpInvoicesTabColumns";
-import { useInvoiceSummary } from "./hooks/useInvoiceSummary";
-import { useInvoiceTableHandlers } from "./hooks/useInvoiceTableHandlers";
 import { InvoiceViewModeCombobox } from "@/modules/erp-invoices-core/components/molecules/invoice-view-mode-combobox";
 
 export interface InvoiceHeaderSectionProps {
@@ -115,8 +122,6 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
   onOpenViewConfig,
   onOpenCreateView,
   onDeleteViewPreset,
-  setPreviewPdf,
-  handlePreviewPdf,
 }: InvoiceHeaderSectionProps) {
   const { t } = useTranslation("erpInvoices");
 
@@ -135,32 +140,6 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
     : `erp-invoices-table-${listDir}`;
 
   const listHook = useErpInvoicesList(listDir, partnerTaxCode);
-
-  const { data: allTags = [] } = useQuery({
-    queryKey: ["sys-tags"],
-    queryFn: getTags,
-  });
-
-  const { data: branches = [] } = useQuery({
-    queryKey: ["branches-options"],
-    queryFn: getBranchOptionsApi,
-  });
-
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      noDefaultPeriod: true,
-      custom: [
-        {
-          key: "tag_id",
-          label: t("tag", "Thẻ nhãn"),
-          placeholder: t("allTags", "Tất cả thẻ"),
-          options: allTags.map((tag) => ({ value: tag.id, label: tag.name })),
-          type: "combobox" as const,
-        },
-      ],
-    }),
-    [t, allTags],
-  );
 
   // Column Presets
   const columnPresetsTableId = isDrawer
@@ -241,41 +220,6 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
       />
     </div>
   ) : undefined;
-
-  const tableHandlers = useInvoiceTableHandlers({
-    direction,
-    branches,
-    listHook,
-  });
-
-  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
-
-  const columns = useInvoiceColumns({
-    direction,
-    t,
-    branches,
-    listHook,
-    openPopoverId,
-    setOpenPopoverId,
-    setPreviewPdf,
-    handleOpenInternal,
-    handleDownload,
-    handlePreviewPdf,
-    getSortState: tableHandlers.getSortState,
-    handleSortChange: tableHandlers.handleSortChange,
-    handleSearchChange: tableHandlers.handleSearchChange,
-    handleFilterChange: tableHandlers.handleFilterChange,
-    fetchInvoiceOptions: tableHandlers.fetchInvoiceOptions,
-  });
-
-  const summaryRow = useInvoiceSummary({
-    invoices: listHook.invoices,
-    totals: listHook.totals,
-    page: listHook.page,
-    pageSize: listHook.pageSize,
-    totalCount: listHook.total,
-    totalPages: listHook.totalPages,
-  });
 
   const rowActions = React.useCallback(
     (inv: any) => {
@@ -520,13 +464,99 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
     }
   }, [isCurrentTabActive, listHook.isFetching]);
 
+  const bridge = useInvoiceV2Bridge(listHook);
+
+  const v2Items = useMemo(
+    () => listHook.invoices.map((inv) => toInvoiceRow(inv, direction)),
+    [listHook.invoices, direction],
+  );
+
+  const fetchOptions = useMemo(
+    () => createInvoiceFetchOptions(direction),
+    [direction],
+  );
+
+  const selectedKeys = useMemo(
+    () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
+    [rowSelection],
+  );
+
+  const handleSelectionChange = useCallback(
+    (keys: string[]) => {
+      const next: Record<string, boolean> = {};
+      keys.forEach((k) => {
+        next[k] = true;
+      });
+      setRowSelection(next);
+    },
+    [setRowSelection],
+  );
+
+  const v2Columns = useInvoiceV2Columns({
+    direction,
+    view: (activePresetKey as any) || "overview",
+    handleOpenInternal,
+    invoices: listHook.invoices,
+  });
+
+  // Tổng cộng từ server gắn vào cột có `summary`, khớp key cột (preVatAmount, vatAmount, totalAmount)
+  const v2ColumnsWithTotals = useMemo(() => {
+    const totals = invoiceTotalsToSummary(listHook.totals);
+    return v2Columns.map((column) => {
+      const total = totals[column.key as keyof typeof totals];
+      return column.summary && total !== undefined
+        ? { ...column, summary: { ...column.summary, total } }
+        : column;
+    });
+  }, [v2Columns, listHook.totals]);
+
+  // Bảng V2 trả về dòng FakeInvoice; đổi về dòng API gốc để rowActions/getRowClassName của V1 hoạt động như cũ
+  const invoiceById = useMemo(
+    () => new Map(listHook.invoices.map((inv) => [inv.id, inv])),
+    [listHook.invoices],
+  );
+  const v2RowActions = useCallback(
+    (row: FakeInvoice) => rowActions(invoiceById.get(row.id) ?? row),
+    [rowActions, invoiceById],
+  );
+  const v2RowClassName = useCallback(
+    (row: FakeInvoice) =>
+      getInvoiceRowClassName(invoiceById.get(row.id) ?? (row as any)),
+    [invoiceById],
+  );
+
+  const actionGroupNode = useMemo(
+    () => (
+      <TableActionGroup
+        onRefresh={() => void listHook.loadInvoices()}
+        loading={listHook.loading}
+        onClearAllFilters={bridge.clearAll}
+        onCreate={onOpenSync}
+        createLabel={t("syncInvoices", "Đồng bộ")}
+        createIcon={
+          <DownloadCloud className="w-4 h-4 mr-1 text-primary-fg/80" />
+        }
+        createActions={createActions}
+        portalId={actualTableId}
+      >
+        {viewTabsNode}
+        {bulkActionsNode}
+      </TableActionGroup>
+    ),
+    [
+      listHook,
+      bridge.clearAll,
+      onOpenSync,
+      t,
+      createActions,
+      actualTableId,
+      viewTabsNode,
+      bulkActionsNode,
+    ],
+  );
+
   return (
-    <SpreadsheetPageTemplate
-      hideHeader={isDrawer}
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      defaultColumnOrder={["__selection", "__actions", "__expand"]}
+    <PageLayout
       title={
         direction === "IN"
           ? t("inbound", "Hóa đơn mua vào")
@@ -534,51 +564,34 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
       }
       desc={t("invoiceDesc", "Quản lý danh sách hóa đơn điện tử")}
       icon={<Receipt className="h-5 w-5" />}
-      tableId={actualTableId}
-      items={listHook.invoices}
-      columns={columns}
-      getRowKey={(r) => r.id}
-      getRowClassName={getInvoiceRowClassName}
-      summaryRow={summaryRow}
-      loading={listHook.loading}
-      isPending={listHook.isFetching}
-      emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
-      minWidth={1200}
-      onClearAllFilters={() => {
-        listHook.filterPanel.resetAll();
-        listHook.setPage(1);
-      }}
-      listHook={listHook}
-      sortArray={
-        listHook.sortBy
-          ? [
-              listHook.sortOrder === "desc"
-                ? `-${listHook.sortBy}`
-                : listHook.sortBy,
-            ]
-          : undefined
-      }
-      onSort={listHook.handleSort}
-      page={listHook.page}
-      pageSize={listHook.pageSize}
-      total={listHook.total}
-      totalPages={listHook.totalPages}
-      onPage={listHook.setPage}
-      onPageSize={listHook.setPageSize}
-      onRefresh={() => void listHook.loadInvoices()}
-      enableRowSelection={true}
-      rowSelection={rowSelection}
-      onRowSelectionChange={setRowSelection}
-      defaultColumnVisibility={DEFAULT_INVOICE_COLUMN_VISIBILITY}
-      bulkActionsNode={bulkActionsNode}
-      customActionsNode={viewTabsNode}
-      filterConfig={filterConfig}
-      filter={listHook.filterPanel}
-      rowActions={rowActions}
-      onCreate={onOpenSync}
-      createLabel={t("syncInvoices", "Đồng bộ")}
-      createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-primary-fg/80" />}
-      createActions={createActions}
-    />
+      hideHeader={isDrawer}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
+      actions={actionGroupNode}
+    >
+      <V2StandardTable
+        key={`${direction}-${bridge.tableKey}`}
+        tableId={actualTableId}
+        items={v2Items}
+        columns={v2ColumnsWithTotals}
+        getRowKey={(r) => r.id}
+        loading={listHook.loading}
+        emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
+        mode="server"
+        total={listHook.total}
+        initialQuery={bridge.initialQuery}
+        onQueryChange={bridge.onQueryChange}
+        fetchOptions={fetchOptions}
+        preferencesStorage={v2ColumnPreferencesStorage}
+        viewPresetStorage={v2ViewPresetStorage}
+        enableRowSelection={true}
+        selectedKeys={selectedKeys}
+        onSelectionChange={handleSelectionChange}
+        rowActions={v2RowActions}
+        getRowClassName={v2RowClassName}
+        className="flex-1 min-h-0"
+      />
+    </PageLayout>
   );
 });
