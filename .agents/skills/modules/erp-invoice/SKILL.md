@@ -280,6 +280,11 @@ src/modules/erp-invoices-core/
 - **`InvoiceFileExportDrawer`** (`invoice-file-export-drawer/`): nút "Tải hóa đơn" (ZIP đồng bộ, không job nền, không lịch sử). Gói chỉ chứa đúng loại đã tick: PDF → chỉ PDF thật; XML → file .xml (kể cả khi nhà cung cấp gửi zip). Mode `selected` (chỉ khi có `selectedIds`, mặc định khi có chọn) gọi `bulkDownloadSelected`; `by-period` / `by-current-filter` gọi `bulkDownloadFiles` (backend chỉ áp `date_from`, `date_to`, `direction`, `status`, `search`).
 - **Điểm mở**: menu header "Xuất PDF" (`handleExportPdf`) và bulk dropdown "Xuất PDF / Tải ZIP" (tiêu đề drawer giữ nguyên); cùng state `fileExportDrawerOpen` trong `useInvoiceBulkActions`, render trong `InvoiceBulkModals`. Đã thay `DrawerModal` "Tải ZIP N hóa đơn đã chọn" cũ; drawer "Tải hàng loạt theo tháng" giữ nguyên.
 
+### 3.7. Biểu Đồ Dashboard Tổng Quan (`InvoiceDashboard` & `V2ComboChart`)
+- **`BranchInvoiceChart`**: Hiển thị biến động Hóa đơn (Doanh thu `OUT` - Cột Emerald `#059669`, Chi phí `IN` - Cột Orange `#ea580c`, Lợi nhuận gộp - Đường Line Teal `#2dd4bf` Dark / `#0d9488` Light với `tension: 0.3` mềm mại).
+- **`BranchVatChart`**: Hiển thị biến động Thuế VAT (VAT Đầu vào, VAT Đầu ra, Chênh lệch).
+- **Chuẩn hóa V2**: Sử dụng component `V2ComboChart` kế thừa `V2ChartFrame` hỗ trợ chuyển đổi tức thì giữa chế độ xem Biểu đồ (Chart View) và Bảng chi tiết (Table View), dot viền tương phản `theme.surface`, và tooltip gom đa chuỗi `interaction: { mode: "index" }`.
+
 ---
 
 ## 4. API Client Interface (`erpInvoicesCoreApi.ts`)

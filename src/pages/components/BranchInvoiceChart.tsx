@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Panel, PanelMore } from "@/shared/components/Panel";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
-import { BarChart } from "@/shared/components/charts/BarChart";
 import { shortMoney } from "@/shared/utils/format";
 import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoiceDashboardApi";
+import {
+  V2ComboChart,
+  type V2ComboSeries,
+} from "@/v2/shared/components/organisms/v2-chart";
+import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 
 interface BranchInvoiceChartProps {
   branchId: string | null; // null means "Unclassified", "all" means all branches
@@ -21,6 +24,7 @@ export function BranchInvoiceChart({
   canView,
   mode = "all",
 }: BranchInvoiceChartProps) {
+  const theme = useV2ChartTheme();
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: [
       "invoice-dashboard-stats",
@@ -39,90 +43,80 @@ export function BranchInvoiceChart({
 
   const colorRevenue = "#059669"; // Emerald 600 (Đầu ra)
   const colorExpense = "#ea580c"; // Orange 600 (Đầu vào)
-  const lineProfit = "#1e293b"; // Slate 800 (Lợi nhuận)
+  const lineProfit = theme.mode === "dark" ? "#2dd4bf" : "#0d9488"; // Teal 400 / 600
 
-  const cashTrendLabels = statsData?.cashTrend?.map((t: any) => t.label) || [];
-  const cashTrendIn = statsData?.cashTrend?.map((t: any) => t.cashIn) || []; // Đầu ra
-  const cashTrendOut = statsData?.cashTrend?.map((t: any) => -t.cashOut) || []; // Đầu vào
-  const cashProfit =
-    statsData?.cashTrend?.map((t: any) => t.cashIn - t.cashOut) || []; // Lợi nhuận
+  const cashTrendLabels = useMemo(
+    () => statsData?.cashTrend?.map((t: any) => t.label) || [],
+    [statsData],
+  );
+  const cashTrendIn = useMemo(
+    () => statsData?.cashTrend?.map((t: any) => t.cashIn) || [],
+    [statsData],
+  );
+  const cashTrendOut = useMemo(
+    () => statsData?.cashTrend?.map((t: any) => -t.cashOut) || [],
+    [statsData],
+  );
+  const cashProfit = useMemo(
+    () => statsData?.cashTrend?.map((t: any) => t.cashIn - t.cashOut) || [],
+    [statsData],
+  );
 
-  const datasets = [];
+  const series = useMemo(() => {
+    const list: V2ComboSeries[] = [];
 
-  if (mode === "all") {
-    datasets.push({
-      type: "line",
-      data: cashProfit,
-      color: "transparent",
-      borderColor: lineProfit,
-      borderWidth: 2,
-      fill: false,
-      label: "Lợi nhuận (Đầu ra - Đầu vào)",
-    });
-    datasets.push({
+    if (mode === "all") {
+      list.push({
+        key: "expense",
+        type: "bar",
+        data: cashTrendOut,
+        color: colorExpense,
+        label: "HĐ Đầu vào (Chi phí)",
+      });
+    }
+
+    list.push({
+      key: "revenue",
       type: "bar",
-      data: cashTrendOut,
-      color: colorExpense, // Hóa đơn đầu vào
-      label: "HĐ Đầu vào (Chi phí)",
+      data: cashTrendIn,
+      color: colorRevenue,
+      label: "HĐ Đầu ra (Doanh thu)",
     });
-  }
 
-  // Always show revenue
-  datasets.push({
-    type: "bar",
-    data: cashTrendIn,
-    color: colorRevenue, // Hóa đơn đầu ra
-    label: "HĐ Đầu ra (Doanh thu)",
-  });
+    if (mode === "all") {
+      list.push({
+        key: "profit",
+        type: "line",
+        data: cashProfit,
+        color: lineProfit,
+        borderColor: lineProfit,
+        borderWidth: 2.5,
+        tension: 0.3,
+        label: "Lợi nhuận (Đầu ra - Đầu vào)",
+      });
+    }
+
+    return list;
+  }, [
+    mode,
+    cashTrendOut,
+    cashTrendIn,
+    cashProfit,
+    colorExpense,
+    colorRevenue,
+    lineProfit,
+  ]);
 
   return (
     <Panel title={branchName} extra={<PanelMore />}>
-      <div className="relative h-[280px]">
-        {!isLoadingStats && cashTrendLabels.length > 0 ? (
-          <BarChart
-            labels={cashTrendLabels}
-            yCallback={(v) => shortMoney(Number(v))}
-            datasets={datasets as any}
-          />
-        ) : isLoadingStats ? (
-          <ChartSkeleton type="bar" />
-        ) : (
-          <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-            Chưa có dữ liệu
-          </div>
-        )}
-      </div>
-      <div className="flex gap-4 mt-[10px] justify-center">
-        {mode === "all" && <LegendItem color={colorExpense} label="Đầu vào" />}
-        <LegendItem color={colorRevenue} label="Đầu ra" />
-        {mode === "all" && (
-          <LegendItem color={lineProfit} label="Lợi nhuận" isLine={true} />
-        )}
-      </div>
+      <V2ComboChart
+        labels={cashTrendLabels}
+        series={series}
+        height={280}
+        loading={isLoadingStats}
+        formatValue={(v) => shortMoney(Number(v))}
+        ariaLabel={`Biểu đồ biến động hóa đơn chi nhánh ${branchName}`}
+      />
     </Panel>
-  );
-}
-
-function LegendItem({
-  color,
-  label,
-  isLine,
-}: {
-  color: string;
-  label: string;
-  isLine?: boolean;
-}) {
-  return (
-    <div className="flex items-center text-xs">
-      {isLine ? (
-        <div className="w-4 h-[2px] mr-2" style={{ backgroundColor: color }} />
-      ) : (
-        <div
-          className="w-3 h-3 rounded-[3px] mr-2"
-          style={{ backgroundColor: color }}
-        />
-      )}
-      <span className="text-[color:var(--muted-fg)] font-medium">{label}</span>
-    </div>
   );
 }

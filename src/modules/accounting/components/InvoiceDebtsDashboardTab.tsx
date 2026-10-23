@@ -19,6 +19,11 @@ import { PillTabs } from "@/shared/components/PillTabs";
 import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
 import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
+import {
+  V2ComboChart,
+  type V2ComboSeries,
+} from "@/v2/shared/components/organisms/v2-chart";
+import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { ChartSkeleton } from "@/shared/components/ChartSkeleton";
 import { EmptyState } from "@/shared/components/EmptyState";
@@ -78,32 +83,39 @@ export function InvoiceDebtsDashboardTab({
     dateTo: filter.state.dateTo || undefined,
   });
 
+  const theme = useV2ChartTheme();
+  const lineNet = theme.mode === "dark" ? "#2dd4bf" : "#0d9488"; // Teal 400 / 600
+
   // 1. Chart 1: Monthly Cashflow Trend & Net Position (Mixed Bar & Line)
   const trendLabels = useMemo(() => cashTrend.map((x) => x.label), [cashTrend]);
-  const trendDatasets = useMemo(
+  const trendSeries = useMemo<V2ComboSeries[]>(
     () => [
       {
-        type: "bar" as const,
+        key: "in",
+        type: "bar",
         data: cashTrend.map((x) => x.cashIn),
         color: "#10b981",
         label: t("debts:dashboard.cashIn", "Bán ra (Thu)"),
       },
       {
-        type: "bar" as const,
+        key: "out",
+        type: "bar",
         data: cashTrend.map((x) => x.cashOut),
         color: "#f59e0b",
         label: t("debts:dashboard.cashOut", "Mua vào (Chi)"),
       },
       {
-        type: "line" as const,
+        key: "net",
+        type: "line",
         data: cashTrend.map((x) => x.netCash ?? x.cashIn - x.cashOut),
-        color: "#0f172a",
-        borderColor: "#0f172a",
-        borderWidth: 2,
+        color: lineNet,
+        borderColor: lineNet,
+        borderWidth: 2.5,
+        tension: 0.3,
         label: t("debts:dashboard.netCash", "Dòng tiền ròng"),
       },
     ],
-    [cashTrend, t],
+    [cashTrend, lineNet, t],
   );
 
   // 2. Chart 2: Aging Matrix Comparison (Receivables vs Payables)
@@ -782,28 +794,17 @@ export function InvoiceDebtsDashboardTab({
               "Biến động Dòng tiền Mua/Bán & Vị thế ròng theo tháng",
             )}
           >
-            <div className="relative h-[280px]">
-              {isLoading ? (
-                <ChartSkeleton />
-              ) : trendLabels.length > 0 ? (
-                <BarChart
-                  labels={trendLabels}
-                  datasets={trendDatasets}
-                  showLegend={true}
-                  yCallback={(v) => money(Number(v))}
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <EmptyState
-                    message={t(
-                      "debts:dashboard.noData",
-                      "Chưa có dữ liệu biểu đồ",
-                    )}
-                    size="sm"
-                  />
-                </div>
+            <V2ComboChart
+              labels={trendLabels}
+              series={trendSeries}
+              height={280}
+              loading={isLoading}
+              formatValue={(v) => money(Number(v))}
+              ariaLabel={t(
+                "debts:dashboard.trendChartTitle",
+                "Biến động Dòng tiền Mua/Bán & Vị thế ròng theo tháng",
               )}
-            </div>
+            />
           </Panel>
         </div>
 
