@@ -107,54 +107,5 @@ export const INVOICE_ROWS: Record<InvoiceDirection, FakeInvoice[]> = {
   OUT: makeInvoices("OUT"),
 };
 
-export const MONTH_LABELS = [
-  "T1",
-  "T2",
-  "T3",
-  "T4",
-  "T5",
-  "T6",
-  "T7",
-  "T8",
-  "T9",
-  "T10",
-  "T11",
-  "T12",
-];
-
-export const CASH_TREND = [
-  {
-    key: "in",
-    label: "Mua vào",
-    data: [120, 150, 90, 180, 140, 200, 170, 160, 190, 210, 180, 230],
-  },
-  {
-    key: "out",
-    label: "Bán ra",
-    data: [200, 170, 210, 260, 230, 300, 280, 250, 310, 330, 290, 360],
-  },
-];
-
-export const VAT_BY_MONTH = [
-  {
-    key: "vat-in",
-    label: "VAT đầu vào",
-    data: [12, 15, 9, 18, 14, 20, 17, 16, 19, 21, 18, 23],
-  },
-  {
-    key: "vat-out",
-    label: "VAT đầu ra",
-    data: [20, 17, 21, 26, 23, 30, 28, 25, 31, 33, 29, 36],
-  },
-];
-
-export const PARTNER_SHARE = {
-  labels: PARTNERS.map(([name]) => name),
-  values: [34, 24, 18, 14, 10],
-};
-
 export const formatMoney = (value: number): string =>
   `${value.toLocaleString("vi-VN")} ₫`;
-
-export const sampleInvoiceXml = (invoice: FakeInvoice): string =>
-  `<?xml version="1.0" encoding="UTF-8"?>\n<HDon>\n  <SHDon>${invoice.invoiceNo}</SHDon>\n  <KHHDon>${invoice.serialNo}</KHHDon>\n  <NLap>${invoice.invoiceDate}</NLap>\n  <TgTCThue>${invoice.preVat}</TgTCThue>\n  <TgTThue>${invoice.vat}</TgTThue>\n  <TgTTTBSo>${invoice.total}</TgTTTBSo>\n</HDon>`;

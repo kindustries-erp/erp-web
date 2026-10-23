@@ -42,6 +42,12 @@ export const V2_ROUTES: V2RouteDef[] = [
     path: "/v2/settings",
     title: "Cấu hình hệ thống (Settings)",
   },
+  {
+    id: "invoices",
+    path: "/v2/invoices",
+    title: "Hóa đơn điện tử",
+    permission: { collection: "erp_invoices", action: "read" },
+  },
   // plop:v2-routes
 ];
 

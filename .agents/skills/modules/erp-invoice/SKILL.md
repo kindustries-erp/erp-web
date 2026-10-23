@@ -388,18 +388,29 @@ bun run lint:check
 
 ---
 
-## 7. Kiến Trúc V2 Standard Table (Dual-Run & Migration Pilot)
+## 7. Trang V2 Hóa đơn (dual-run `/v2/invoices`, đợt 1)
 
-Module Hóa đơn đã hoàn thiện tích hợp bảng chuẩn **`V2StandardTable`** và khung trang **`V2ModulePage`** tại:
-👉 `src/v2/modules/finance-invoice/`
+Trang V2 nằm tại `src/v2/modules/finance-invoice/`, dựng trên `V2ModulePage`. V1 (`/`) giữ nguyên, không đổi route.
 
-### 7.1. Cấu hình Bảng V2
-- **Table IDs**: `erp-invoices-table-IN` (Mua vào) và `erp-invoices-table-OUT` (Bán ra), lưu cấu hình qua `v2ColumnPreferencesStorage` và `v2ViewPresetStorage` (store riêng `useV2TablePreferencesStore`). Cấu hình V1 chỉ được **chép một lần** sang V2 (`migrateV1TablePreferences`, bỏ alias `_2`/`__n`); sau đó hai bên không đồng bộ ngược. Sort và filter cột không nằm trong preference V2.
-- **4 Tab Thuế (`tax_tab`)**: Tích hợp trực tiếp vào cụm `toolbar.filterGroup` (`all`, `new`, `replacement`, `adjustment`).
-- **Chế độ xem Cột (`viewModes`)**: Hỗ trợ chuyển đổi nhanh qua `toolbar.viewModes`: `overview` (Tổng quan), `audit` (Đối soát / Kiểm toán), `tax` (Thuế & Kê khai).
-- **Hàng Tổng Tiền Kế Toán (Summary Row)**: Tự động cộng dồn hoặc nhận chỉ số từ server (`preVatAmount`, `vatAmount`, `totalAmount`, `discountAmount`, `netOffAmount`, `remainingAmount`) hiển thị ở chân bảng.
-- **Header Filters & Server-side Options**: Tích hợp qua `createInvoiceFetchOptions` (`api/queries/useInvoiceColumnOptions.ts`) gọi `financeInvoiceV2Api.getColumnOptions` (endpoint `/api/v1/erp-invoices/column-options`, qua `v2HttpClient`, không import code V1).
-- **Dữ liệu dòng**: `api/adapters/invoiceRowAdapter.ts` (`toInvoiceRow`, `invoiceTotalsToSummary`) chuyển `ErpInvoice` (số tiền dạng chuỗi decimal, tổng `grandTotal*`) sang shape cột V2 `FakeInvoice`.
-- **Cầu nối query V1 ⇄ V2** (`erp-invoices-tab/hooks/useInvoiceV2Bridge.ts`): `useErpInvoicesList` vẫn là nguồn sự thật của API; bảng V2 đẩy page/pageSize/sort/filter/search/ngày vào store V1 (`erp-invoices-table-*`). Khi V1 reset bộ lọc, bảng V2 được remount qua `tableKey`.
-- **Dual-Run URL**: Màn hình V2 chạy trên dữ liệu mẫu khi `MODE=test` hoặc thiếu `VITE_API_BASE_URL` (Storybook, integration test `src/v2/modules/finance-invoice/tests/integration/ErpInvoiceV2ModulePage.test.tsx`). Lỗi API thật không còn được thay bằng dữ liệu mẫu.
+### 7.1. Phạm vi đợt 1 (chỉ đọc)
+- **Route**: id `invoices`, path `/v2/invoices`, quyền `erp_invoices:read` (`v2RouteConfig.ts`); page đăng ký ở `v2PageRegistry.tsx`; menu Kế toán dùng `href: /v2/invoices`.
+- **Tab**: Tổng quan (`InvoiceShapeDashboard`), Hóa đơn mua vào (`IN`), Hóa đơn bán ra (`OUT`).
+- **Drawer chi tiết** (`InvoiceShapeDetailDrawer`): chỉ đọc, mở qua `?overlay=invoice:<id>`, dữ liệu từ `useInvoiceDetailQuery`.
+- **Chưa có** (đợt sau): sửa, hạch toán, bulk, net-off, đồng bộ/import, xuất Excel/PDF, tab Tài chính và Chứng từ liên kết, tải PDF gốc.
 
+### 7.2. Dữ liệu và API
+- Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`, đường dẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
+- Endpoint dùng: `GET /` (list), `GET /:id` (chi tiết, bọc `data`), `GET /column-options`, `GET /stats?direction` (KPI tháng), `GET /dashboard/stats` (cashTrend cashIn/cashOut/vatIn/vatOut), `GET /dashboard/partners`.
+- DTO: `api/dtos/invoice.dto.ts`. Số tiền API là chuỗi decimal; `api/adapters/invoiceRowAdapter.ts` (`toInvoiceRow`, `invoiceTotalsToSummary`) chuyển sang shape cột V2 `FakeInvoice`. Tổng toàn bộ kết quả là `grandTotal*`.
+- Dashboard: `domain/rules/invoiceDashboard.logic.ts` (thuần, có test) dựng KPI (VAT = tổng - trước thuế; VAT ròng = VAT đầu ra - VAT đầu vào), chuỗi biểu đồ và cơ cấu đối tác top 5 theo số bán ra.
+- Dữ liệu mẫu (`api/sampleMode.ts`, `isInvoiceSampleMode`) chỉ dùng khi `MODE=test` hoặc thiếu `VITE_API_BASE_URL`. **Lỗi API thật không được thay bằng dữ liệu mẫu.**
+
+### 7.3. Bảng và preference
+- Table IDs: `erp-invoices-table-IN` / `erp-invoices-table-OUT`. Preference qua `v2ColumnPreferencesStorage` / `v2ViewPresetStorage` (store riêng `useV2TablePreferencesStore`). Cấu hình V1 chỉ được **chép một lần** sang V2 (`migrateV1TablePreferences`, bỏ alias `_2`/`__n`); sau đó không đồng bộ ngược. Sort và filter cột không nằm trong preference V2.
+- Header filter động: `createInvoiceFetchOptions` (`api/queries/useInvoiceColumnOptions.ts`) gọi `financeInvoiceV2Api.getColumnOptions`.
+- Hybrid trên V1: `erp-invoices-tab/hooks/useInvoiceV2Bridge.ts` đẩy query V2 vào store V1 cho trang V1 đang dùng `V2StandardTable`.
+
+### 7.4. Kiểm thử
+- Unit: `invoiceRowAdapter.test.ts`, `financeInvoiceV2Api.test.ts` (khóa đường dẫn API), `invoiceDashboard.logic.test.ts`, `useInvoiceV2Bridge.test.ts`.
+- Integration: `tests/integration/ErpInvoiceV2ModulePage.test.tsx` (dữ liệu mẫu).
+- Chưa kiểm tay trên trình duyệt với dữ liệu thật.

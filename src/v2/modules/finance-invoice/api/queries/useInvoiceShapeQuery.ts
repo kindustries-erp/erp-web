@@ -13,19 +13,15 @@ import {
 } from "@/v2/modules/finance-invoice/domain/rules/invoiceShape.logic";
 import { v2InvoiceQueryToParams } from "../adapters/invoiceQueryAdapter";
 import { financeInvoiceV2Api } from "../financeInvoiceV2Api";
+import { isInvoiceSampleMode } from "../sampleMode";
 import {
   invoiceTotalsToSummary,
   toInvoiceRow,
 } from "../adapters/invoiceRowAdapter";
 
-/**
- * Dữ liệu mẫu chỉ dùng cho test và storybook (không có API URL).
- * Lỗi gọi API thật KHÔNG được thay bằng dữ liệu mẫu: trả lỗi qua `onError`.
- */
-const useSampleMode = () =>
-  import.meta.env.MODE === "test" || !import.meta.env.VITE_API_BASE_URL;
+const useSampleMode = isInvoiceSampleMode;
 
-export function useFakeInvoices(
+export function useInvoiceList(
   direction: InvoiceDirection,
   taxTab: TaxTab,
   query: V2TableQuery,

@@ -25,7 +25,7 @@ export interface InvoiceDto {
   description?: string | null;
 }
 
-/** Tổng cộng toàn bộ kết quả (`grandTotal*`) và tổng lũy kế trang hiện tại */
+/** Tổng cộng toàn bộ kết quả (`grandTotal*`) */
 export interface InvoiceTotalsDto {
   grandTotalPreVat: number;
   grandTotalVat: number;
@@ -51,4 +51,37 @@ export interface InvoiceColumnOptionsResponseDto {
   total: number;
   page: number;
   totalPages: number;
+}
+
+/** `GET /api/v1/erp-invoices/stats`: KPI theo tháng/tuần/ngày của một chiều hóa đơn */
+export interface InvoiceStatsDto {
+  monthTotal: number;
+  monthPreVat: number;
+}
+
+/** Một tháng trong `GET /api/v1/erp-invoices/dashboard/stats` */
+export interface InvoiceCashTrendDto {
+  label: string;
+  cashIn: number;
+  cashOut: number;
+  vatIn?: number;
+  vatOut?: number;
+}
+
+export interface InvoiceDashboardStatsDto {
+  cashTrend: InvoiceCashTrendDto[];
+}
+
+export interface InvoiceDashboardPartnerDto {
+  taxCode: string;
+  partnerName: string;
+  totalInAmount: number;
+  totalOutAmount: number;
+  payableAmount: number;
+  receivableAmount: number;
+}
+
+export interface InvoiceDashboardPartnersDto {
+  items: InvoiceDashboardPartnerDto[];
+  total: number;
 }
