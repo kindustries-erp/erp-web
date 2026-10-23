@@ -8,6 +8,7 @@ import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAc
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { resolvePurchaseDebitAccountCode } from "@/modules/erp-invoices-core/utils/invoiceTaxCodeAccounting";
 import { createClientId } from "./ErpInvoiceDetailDrawer.state";
+import { resolveBranchIds } from "@/shared/utils/branchIds";
 import type {
   ErpInvoice,
   CreateErpInvoicePayload,
@@ -92,7 +93,7 @@ export function ErpInvoiceAccountingSection({
               <span className="text-xs font-semibold text-foreground">
                 {t("accountingEntrySettings", "Thiết lập định khoản")}
               </span>
-              {form?.branchId && (
+              {resolveBranchIds(form).length > 0 && (
                 <Button
                   type="button"
                   variant={accountingEnabled ? "outline" : "primary"}
@@ -109,7 +110,7 @@ export function ErpInvoiceAccountingSection({
               )}
             </div>
 
-            {!form?.branchId ? (
+            {resolveBranchIds(form).length === 0 ? (
               <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
                 {t(
                   "requireBranchForAccounting",

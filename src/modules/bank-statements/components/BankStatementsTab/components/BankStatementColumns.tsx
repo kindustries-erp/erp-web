@@ -18,8 +18,10 @@ import {
   renderInvoiceSubjectCell,
   renderPartnerCell,
 } from "./BankStatementCellRenderers";
+import { resolveBranchIds } from "@/shared/utils/branchIds";
 
 export interface UseBankStatementColumnsProps {
+  branches?: Array<{ id: string; name: string }>;
   type: "bank" | "cash";
   page: number;
   pageSize: number;
@@ -50,6 +52,18 @@ export interface UseBankStatementColumnsProps {
   setPartnerDrawerOpen: (open: boolean) => void;
 }
 
+/** Tên mọi chi nhánh của dòng sao kê, nối bằng dấu phẩy (không chỉ chi nhánh đầu). */
+function branchNamesOf(
+  row: any,
+  branches?: Array<{ id: string; name: string }>,
+): string {
+  const names = resolveBranchIds(row)
+    .map((id) => branches?.find((b) => b.id === id)?.name)
+    .filter((name): name is string => !!name);
+  if (names.length > 0) return names.join(", ");
+  return row.branch?.name || "";
+}
+
 export function useBankStatementColumns({
   type,
   tableState,
@@ -59,6 +73,7 @@ export function useBankStatementColumns({
   setDetailDefaultTab,
   setSelectedPartner,
   setPartnerDrawerOpen,
+  branches,
 }: UseBankStatementColumnsProps) {
   const { t } = useTranslation();
 
@@ -402,7 +417,7 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 140,
-        cell: (row: any) => renderCopyableText(row.branch?.name || "", t),
+        cell: (row: any) => renderCopyableText(branchNamesOf(row, branches), t),
       },
     ],
     [

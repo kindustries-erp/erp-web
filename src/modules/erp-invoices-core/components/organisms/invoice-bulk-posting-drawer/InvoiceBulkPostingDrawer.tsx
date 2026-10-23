@@ -494,11 +494,17 @@ export function InvoiceBulkPostingDrawer({
 
   const bulkPostMutation = useMutation({
     mutationFn: async () => {
-      // Group invoices by target branch to bulk set branch first if changed
+      // Chỉ gán chi nhánh cho hóa đơn chưa có: không ghi đè hóa đơn đã nhiều chi nhánh
       const branchGroups: Record<string, string[]> = {};
       for (const inv of selectedInvoices) {
         const targetBranch = branchAssignments[inv.id] || globalBranchId;
-        if (targetBranch && inv.branchId !== targetBranch) {
+        const currentBranches =
+          inv.branchIds && inv.branchIds.length > 0
+            ? inv.branchIds
+            : inv.branchId
+              ? [inv.branchId]
+              : [];
+        if (targetBranch && currentBranches.length === 0) {
           if (!branchGroups[targetBranch]) branchGroups[targetBranch] = [];
           branchGroups[targetBranch].push(inv.id);
         }

@@ -16,6 +16,7 @@ export interface InvoiceDto {
   taxInvoiceStatus?: number | string | null;
   taxTab?: string | null;
   branchId?: string | null;
+  branchIds?: string[] | null;
   preVatAmount?: number | string | null;
   vatAmount?: number | string | null;
   totalAmount?: number | string | null;
