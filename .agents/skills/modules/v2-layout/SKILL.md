@@ -79,7 +79,8 @@ src/v2/
         │   ├── v2-sidebar-header/      # Header Sidebar h-12 (Logo + App name + Toggle Button)
         │   ├── v2-sidebar-nav-item/    # Hàng menu điều hướng (12px, icon 16px, active pill)
         │   ├── v2-sidebar-section/     # Tiêu đề phân hệ in hoa text-[11px] collapsible
-        │   └── v2-sidebar-bottom/      # Chân Sidebar (Avatar 22px + Tên user + Chuông thông báo)
+        │   ├── v2-sidebar-bottom/      # Chân Sidebar (Avatar 22px + Tên user + Chuông thông báo)
+        │   └── v2-notification-popover/# Popover thông báo V2 (V2Popover, Glassmorphism, tự fallback useQuery)
         │
         └── organisms/                  # [Level 3 - Organisms]
             ├── v2-sidebar/             # Card 1: Sidebar hoàn chỉnh (210px / 58px) bo góc 16px
