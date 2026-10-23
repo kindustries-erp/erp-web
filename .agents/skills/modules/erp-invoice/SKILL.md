@@ -376,3 +376,10 @@ bun run type:check
 # Kiểm tra lint và format code
 bun run lint:check
 ```
+
+## Đa chi nhánh (branchIds)
+
+- API gán chi nhánh: `erpInvoicesCoreApi.bulkSetBranch(ids, branchIds: string[])`; `[]` = bỏ gán. Hiển thị cột chi nhánh nối tên bằng ", " từ `branchIds`.
+- Bộ lọc cột chi nhánh là multi-select có lựa chọn "(Trống)" = `__BLANK__`.
+- Component chọn nhiều dùng chung: `V2MultiCombobox` (`src/v2/shared/components/molecules/v2-multi-combobox/`), và filter type `multi-combobox` trong `FilterPanel`.
+- Chưa làm: form tạo/sửa hóa đơn và drawer bulk-edit vẫn chọn đơn (gửi 0/1 phần tử); cần chuyển sang `V2MultiCombobox`.

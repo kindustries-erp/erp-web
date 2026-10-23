@@ -1,4 +1,5 @@
 import React from "react";
+import { resolveTransactionBranchIds } from "@/modules/bank-statements/utils/transactionBranchIds";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
@@ -9,7 +10,7 @@ import {
   Calendar,
   FileText,
 } from "lucide-react";
-import { Combobox } from "@/shared/components/Combobox";
+import { V2MultiCombobox } from "@/v2/shared/components/molecules/v2-multi-combobox";
 import { CopyButton } from "@/shared/components/CopyButton";
 import { BufferedTextarea } from "@/shared/components/BufferedTextarea";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
@@ -19,8 +20,8 @@ import { formatGMT7 } from "@/shared/utils/format";
 export interface BankTransactionGeneralInfoSectionProps {
   transaction: any | null;
   editMode?: boolean;
-  branchId?: string;
-  onBranchChange?: (branchId: string) => void;
+  branchIds?: string[];
+  onBranchChange?: (branchIds: string[]) => void;
   description?: string;
   onDescriptionChange?: (description: string) => void;
   className?: string;
@@ -32,7 +33,7 @@ export const BankTransactionGeneralInfoSection = React.memo(
   function BankTransactionGeneralInfoSection({
     transaction,
     editMode = false,
-    branchId,
+    branchIds,
     onBranchChange,
     description,
     onDescriptionChange,
@@ -52,27 +53,24 @@ export const BankTransactionGeneralInfoSection = React.memo(
 
     const partnerName = transaction.correspondentName?.trim() || "";
 
-    const effectiveBranchId =
-      editMode && branchId !== undefined
-        ? branchId
-        : transaction.branchId || transaction.branch?.id || "";
-
-    const branchObj = transaction.branch;
-    const matchedOption = branchOptions.find(
-      (o) => o.value === effectiveBranchId,
-    );
+    const effectiveBranchIds: string[] =
+      editMode && branchIds !== undefined
+        ? branchIds
+        : resolveTransactionBranchIds(transaction);
 
     const branchLabel = (() => {
-      if (branchObj?.name) return branchObj.name;
-      if (branchObj?.branchName) return branchObj.branchName;
-      if (matchedOption?.label) {
-        return matchedOption.label.split(" — ")[1] || matchedOption.label;
+      if (effectiveBranchIds.length === 0) {
+        return transaction.branch?.name || transaction.branchName || "—";
       }
-      if (transaction.branchName) return transaction.branchName;
-      if (effectiveBranchId && !effectiveBranchId.includes("-")) {
-        return effectiveBranchId;
-      }
-      return "—";
+      const names = effectiveBranchIds.map((id) => {
+        const option = branchOptions.find((o) => o.value === id);
+        if (option?.label) return option.label.split(" — ")[1] || option.label;
+        if (transaction.branch?.id === id && transaction.branch?.name) {
+          return transaction.branch.name;
+        }
+        return id;
+      });
+      return names.join(", ");
     })();
 
     const effectiveDescription =
@@ -142,13 +140,17 @@ export const BankTransactionGeneralInfoSection = React.memo(
             <DrawerField
               label={t("bankStatement.branch", { defaultValue: "Chi nhánh" })}
             >
-              <Combobox
-                options={branchOptions}
-                value={effectiveBranchId}
-                onChange={(val) => onBranchChange?.(val)}
-                placeholder="-- Chọn chi nhánh --"
-                allowClear={false}
-              />
+              {editMode && onBranchChange ? (
+                <V2MultiCombobox
+                  options={branchOptions}
+                  value={effectiveBranchIds}
+                  onValueChange={(vals) => onBranchChange(vals)}
+                  placeholder="-- Chọn chi nhánh --"
+                  clearable
+                />
+              ) : (
+                <span className="text-sm">{branchLabel}</span>
+              )}
             </DrawerField>
 
             {/* Tài khoản nguồn */}

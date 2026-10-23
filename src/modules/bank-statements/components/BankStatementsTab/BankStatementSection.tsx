@@ -12,6 +12,13 @@ import { BankStatementDrawers } from "./components/BankStatementDrawers";
 import { useBankStatementActions } from "./hooks/useBankStatementActions";
 import { DEFAULT_BANK_COLUMN_VISIBILITY } from "./utils";
 
+/** Chi nhánh mặc định cho drawer: chỉ khi lọc đúng một chi nhánh thật */
+const singleBranchIdOf = (raw: unknown): string | undefined => {
+  const value = typeof raw === "string" ? raw : "";
+  if (!value || value.includes(",") || value === "__BLANK__") return undefined;
+  return value;
+};
+
 export interface BankStatementSectionProps extends UseBankStatementsTabLogicProps {
   tabs?: TabItem[];
   activeTab?: string;
@@ -204,7 +211,7 @@ export function BankStatementSection(props: BankStatementSectionProps) {
         selectedPartner={selectedPartner}
         dateFrom={filter.state.dateFrom}
         dateTo={filter.state.dateTo}
-        branchId={filter.state.custom.branchId as string}
+        branchId={singleBranchIdOf(filter.state.custom.branchId)}
         onRefresh={handleRefresh}
         buildBaseQuery={logic.buildBaseQuery}
         currentFilterSummary={logic.currentFilterSummary}
