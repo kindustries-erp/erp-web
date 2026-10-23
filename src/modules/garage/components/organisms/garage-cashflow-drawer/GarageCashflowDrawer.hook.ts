@@ -9,7 +9,10 @@ import type {
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
 import { useGarageCashflowList } from "../../../hooks/useGarageCashflowList";
-import type { DrawerModeType } from "./GarageCashflowDrawer.type";
+import type {
+  DrawerModeType,
+  InitialCashflowData,
+} from "./GarageCashflowDrawer.type";
 import { useGarageCashflowDuplicateGuard } from "./useGarageCashflowDuplicateGuard";
 import {
   buildInitialFormData,
@@ -29,6 +32,8 @@ interface UseGarageCashflowDrawerParams {
   onClose: () => void;
   voucher: GarageCashflowVoucher | null;
   initialMode?: "view" | "edit" | "create";
+  initialData?: InitialCashflowData;
+  onSuccess?: () => void;
 }
 
 export function useGarageCashflowDrawer({
@@ -36,6 +41,8 @@ export function useGarageCashflowDrawer({
   onClose,
   voucher,
   initialMode = "view",
+  initialData,
+  onSuccess,
 }: UseGarageCashflowDrawerParams) {
   const t = useT();
   const { createMutation, updateMutation } = useGarageCashflowList();
@@ -56,16 +63,16 @@ export function useGarageCashflowDrawer({
 
   const [formData, setFormData] = useState<
     Partial<CreateGarageCashflowVoucherDto>
-  >(() => buildInitialFormData(voucher));
+  >(() => buildInitialFormData(voucher, initialData));
 
   useEffect(() => {
     if (open) {
       setMode(
         initialMode === "create" ? "edit" : (initialMode as DrawerModeType),
       );
-      setFormData(buildInitialFormData(voucher));
+      setFormData(buildInitialFormData(voucher, initialData));
     }
-  }, [open, voucher, initialMode]);
+  }, [open, voucher, initialMode, initialData]);
 
   const duplicateGuard = useGarageCashflowDuplicateGuard();
   const canSave = initialMode === "create" ? canCreate : canUpdate;
@@ -76,7 +83,12 @@ export function useGarageCashflowDrawer({
     if (initialMode === "create") {
       const createDto = buildCreatePayload(formData);
       const submit = () =>
-        createMutation.mutate(createDto, { onSuccess: () => onClose() });
+        createMutation.mutate(createDto, {
+          onSuccess: () => {
+            onSuccess?.();
+            onClose();
+          },
+        });
       if (createDto.amount > 0) {
         duplicateGuard.guard(
           {
@@ -95,7 +107,12 @@ export function useGarageCashflowDrawer({
       const submit = () =>
         updateMutation.mutate(
           { id: voucher.id, data: updateDto },
-          { onSuccess: () => onClose() },
+          {
+            onSuccess: () => {
+              onSuccess?.();
+              onClose();
+            },
+          },
         );
       if (
         updateDto.amount &&
@@ -124,6 +141,7 @@ export function useGarageCashflowDrawer({
     createMutation,
     updateMutation,
     duplicateGuard,
+    onSuccess,
     onClose,
   ]);
 

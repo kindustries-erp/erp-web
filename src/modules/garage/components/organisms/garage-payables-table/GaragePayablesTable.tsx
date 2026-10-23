@@ -1,16 +1,16 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useGarageStore } from "@/modules/garage/store/garageStore";
 import { useGarageSuppliersList } from "@/modules/garage/hooks/useGarageSuppliersList";
-import { Truck, Eye, FileSpreadsheet, DownloadCloud } from "lucide-react";
-import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import { Truck, FileSpreadsheet } from "lucide-react";
 import type {
   GaragePayablesTableProps,
   SupplierDebtItem,
 } from "./GaragePayablesTable.type";
 import { useGaragePayablesColumns } from "./GaragePayablesTable.columns";
 import { useGaragePayablesSummaryRow } from "./GaragePayablesTable.summary";
+import { useGaragePayablesActions } from "./GaragePayablesTable.actions";
 import { buildGarageDebtsExportContext } from "@/modules/garage/export/garageDebtsExportContext";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
 import {
@@ -36,6 +36,7 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
   onOpenExportDrawer,
   canSyncGarage,
   onSyncCases,
+  onCreateCashflow,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const { selectedBranchId } = useGarageStore();
@@ -48,28 +49,22 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
   });
 
   const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
-    () => {
-      const stored = useUserPreferencesStore
-        .getState()
-        .getTablePreference(actualTableId);
-      return stored?.activeView || "overview";
-    },
+    () =>
+      useUserPreferencesStore.getState().getTablePreference(actualTableId)
+        ?.activeView || "overview",
   );
 
   const handleColumnPresetChange = (preset: TableViewPreset) => {
     setActiveColumnPresetKey(preset.key);
-    const currentPref = useUserPreferencesStore
+    const pref = useUserPreferencesStore
       .getState()
-      .getTablePreference(actualTableId) || {
-      columnOrder: [],
-      columnVisibility: {},
-    };
+      .getTablePreference(actualTableId);
     useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
-      ...currentPref,
       columnOrder: [],
       columnVisibility:
         preset.columnVisibility || DEFAULT_GARAGE_PAYABLES_COLUMN_VISIBILITY,
       activeView: preset.key,
+      ...pref,
     });
   };
 
@@ -134,54 +129,15 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
     onOpenExportDrawer(buildGarageDebtsExportContext("suppliers", listHook));
   }, [listHook, onOpenExportDrawer]);
 
-  const handleOpenDetail = useCallback(
-    (row: SupplierDebtItem) => {
-      if (onOpenCustomerDetail) {
-        onOpenCustomerDetail({
-          code: row.customerCode,
-          name: row.customerName,
-          debtType: "payables",
-        });
-      } else if (onOpenSupplierDetail) {
-        onOpenSupplierDetail({
-          id: row.id,
-          code: row.customerCode,
-          name: row.customerName,
-        });
-      }
-    },
-    [onOpenCustomerDetail, onOpenSupplierDetail],
-  );
-
-  const createActions = useMemo<ActionDropdownItem[]>(
-    () => [
-      {
-        groupLabel: t("debts.actions.exportGroup", "Báo cáo & Xuất file"),
-        items: [
-          {
-            label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
-            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: handleOpenExport,
-          },
-        ],
-      },
-      ...(canSyncGarage && onSyncCases
-        ? [
-            {
-              groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
-              items: [
-                {
-                  label: t("cases.actions.syncCases", "Đồng bộ phiếu dịch vụ"),
-                  icon: <DownloadCloud className="w-4 h-4 text-blue-600" />,
-                  onClick: onSyncCases,
-                },
-              ],
-            },
-          ]
-        : []),
-    ],
-    [canSyncGarage, onSyncCases, handleOpenExport, t],
-  );
+  const { createActions, getRowActions } = useGaragePayablesActions({
+    t,
+    canSyncGarage,
+    onSyncCases,
+    onOpenExport: handleOpenExport,
+    onOpenCustomerDetail,
+    onOpenSupplierDetail,
+    onCreateCashflow,
+  });
 
   return (
     <SpreadsheetPageTemplate<SupplierDebtItem>
@@ -225,21 +181,7 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
         listHook.clearAllFilters();
         setActiveDebtFilter("ALL");
       }}
-      rowActions={(row: SupplierDebtItem) => [
-        {
-          groupLabel: t("common:search", "TRA CỨU"),
-          items: [
-            {
-              label: t(
-                "customers.actions.viewDetail",
-                "Xem chi tiết khách hàng",
-              ),
-              icon: <Eye className="w-4 h-4" />,
-              onClick: () => handleOpenDetail(row),
-            },
-          ],
-        },
-      ]}
+      rowActions={getRowActions}
       summaryRow={summaryRow}
     />
   );

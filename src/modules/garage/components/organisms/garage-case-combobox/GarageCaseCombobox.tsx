@@ -11,9 +11,20 @@ export const GarageCaseCombobox: React.FC<GarageCaseComboboxProps> = ({
   branchId,
   fallbackLabel,
   fallbackTooltipContent,
+  customerCode,
+  licensePlate,
+  supplierId,
+  partnerName,
+  disabled,
 }) => {
   const { options, isLoading, isFetchingNextPage, fetchNextPage, setSearch } =
-    useGarageCaseCombobox(branchId);
+    useGarageCaseCombobox({
+      branchId,
+      customerCode,
+      licensePlate,
+      supplierId,
+      partnerName,
+    });
 
   return (
     <div className={className}>
@@ -26,6 +37,7 @@ export const GarageCaseCombobox: React.FC<GarageCaseComboboxProps> = ({
           }
         }}
         options={options}
+        disabled={disabled}
         placeholder={isLoading ? "Đang tải..." : placeholder}
         onSearch={setSearch}
         onScrollBottom={fetchNextPage}

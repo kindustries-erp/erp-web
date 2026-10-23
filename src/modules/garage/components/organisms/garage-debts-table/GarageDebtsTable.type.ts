@@ -2,6 +2,14 @@ import type { GarageDebtsExportContext } from "@/modules/garage/export/garageDeb
 import type { TabItem } from "@/shared/components/PageLayout";
 import type { CustomerDebtItem } from "@/modules/garage/hooks/useGarageCustomersList";
 
+export interface CreateCustomerCashflowParams {
+  voucherType: "RECEIPT" | "PAYMENT";
+  customerCode?: string;
+  partnerName?: string;
+  licensePlate?: string;
+  amount?: number;
+}
+
 export interface GarageDebtsTableProps {
   tabs?: TabItem[];
   activeTab?: string;
@@ -14,6 +22,7 @@ export interface GarageDebtsTableProps {
   onOpenExportDrawer: (context: GarageDebtsExportContext) => void;
   canSyncGarage?: boolean;
   onSyncCases?: () => void;
+  onCreateCashflow?: (params: CreateCustomerCashflowParams) => void;
 }
 
 export type { CustomerDebtItem };

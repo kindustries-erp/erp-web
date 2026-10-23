@@ -262,3 +262,31 @@ Resource RBAC: `garage`
 - **PDF kèm tài liệu hướng dẫn** (chỉ PDF, PNG chỉ có sơ đồ): trang 1 = sơ đồ A3; trang sau = A4 dọc do `guide/WorkflowGuideDocument.tsx` dựng (HTML ẩn ngoài màn hình, pha 1 đo chiều cao đơn vị, pha 2 xếp trang bằng `packGuideUnits`), `exportPdf(container, bounds, name, guidePages)` chụp từng trang rồi `addPage("a4","portrait")`. Chữ trong PDF là ảnh (jsPDF không có font tiếng Việt), không bôi chọn được.
   - Nội dung: `guide/guideContent.ts` (phần viết tay, key `workflow.guide.*` trong `locales/vi.ts` + `en.ts`) ghép với phần sinh từ dữ liệu sơ đồ trong `guide/buildGuide.ts` (các bước theo `step`, thẻ theo khung, bước theo luồng). Đổi rule hay thêm thẻ/luồng thì tài liệu tự theo; chỉ phần viết tay phải sửa tay. `garageWorkflowLocales.spec.ts` kiểm tra đủ key vi/en và không thừa.
 - **Tài liệu PDF có mục lục và đánh số**: `flattenGuide` đánh số mục `1`, `1.1`, `1.1.1` và dựng mục lục (cấp 1 và mục cấp 2 có tiêu đề, kèm số trang tra từ kết quả xếp trang). Mỗi mục cấp 2 có lời giải thích và khối **Ví dụ** cụ thể: viết ở `guide/guideDetails.ts` (`GUIDE_DETAILS`, tra theo key i18n, quy ước key ghi ở đầu file) và `locales` nhánh `workflow.guide.*`. Thêm thẻ/luồng/mục mới thì thêm key tương ứng; `buildGuide.spec.ts` báo mục cấp 2 nào thiếu ví dụ.
+
+---
+
+## 1.10. Quản lý Công nợ Garage (`garage-debts`) & Tích hợp Tạo Phiếu Thu/Chi Trực Tiếp (`garage-cashflow`)
+
+### A. Context Menu / Row Actions Tạo Phiếu Thu/Chi
+- **Tab `receivables` (`GarageDebtsTable`)**: Chuột phải hoặc action menu trên dòng khách hàng cung cấp nhóm `PHIẾU THU / CHI`:
+  - `Tạo phiếu thu` (`RECEIPT`): Điền sẵn `partnerName`, `licensePlate`, `amount` (dư nợ `balanceAmount`), `customerCode`.
+  - `Tạo phiếu chi` (`PAYMENT`): Chi hoàn tiền/chi khác.
+- **Tab `payables` (`GaragePayablesTable`)**: Chuột phải hoặc action menu trên dòng NCC/đối tác:
+  - `Tạo phiếu chi` (`PAYMENT`): Điền sẵn `partnerName`, `licensePlate`, `amount`, `supplierId`, `customerCode`.
+  - `Tạo phiếu thu` (`RECEIPT`): Thu hoàn chi phí.
+- **Chi tiết Vụ việc (`CustomerCasesTableTab`)**: Action trên từng vụ việc hỗ trợ "Tạo phiếu thu vụ việc..." và "Tạo phiếu chi vụ việc..." gắn sẵn `caseId`.
+- **RBAC Guard**: Kiểm tra quyền `ErpResource.GARAGE_CASHFLOW` - `ErpAction.CREATE`.
+
+### B. Mở Drawer & Điều Phối Dòng Tiền
+- Component: `GarageCashflowDrawer` gắn trực tiếp trên `GarageDebts.tsx`.
+- Quản lý qua hook `useGarageDebtsCashflow`: Tự động pre-fill `initialData` khi mở `initialMode="create"`.
+- Khi tạo thành công: Tự động invalidate các query: `garage-customers-debt`, `garage-suppliers-debt`, `garage-debts-analytics`, `garage-dashboard-stats`, `garage/customers`, `garage/suppliers`.
+
+### C. Cơ Chế Hiển Thị Ưu Tiên Phiếu Dịch Vụ Của Đối Tượng (`GarageCaseCombobox`)
+- Props nhận ngữ cảnh: `customerCode`, `licensePlate`, `supplierId`, `partnerName`.
+- `useGarageCaseCombobox`:
+  - Tự động query các phiếu dịch vụ của đối tượng (`getCasesByCustomer`, `getCasesBySupplier`, hoặc query theo `licensePlate`).
+  - Đưa danh sách lên đầu combobox dưới nhóm ưu tiên: **"⭐ Phiếu dịch vụ của [Khách hàng/BKS]"** kèm tooltip chi tiết (Số chứng từ, BKS, Doanh thu, Chi phí, Dư nợ).
+  - Khi chọn case: Tự động bind `caseId`, cập nhật `licensePlate`, `partnerName`, và nếu `amount` chưa có thì gợi ý điền số tiền của vụ việc.
+- Tuân thủ `/ui-atomic-refactor`: File helper `GarageCaseCombobox.helper.tsx` độc lập, hook $< 160\text{ LoC}$, 0 class `blue-*`, 100% i18n, co-located test.
+
