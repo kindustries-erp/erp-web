@@ -30,8 +30,6 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   onTabClose,
   onSearchClick,
   onBranchClick,
-  isDark,
-  onThemeToggle,
   appName,
   logoUrl,
   contentClassName,
@@ -101,8 +99,6 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         logoUrl={logoUrl}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
-        isDark={isDark}
-        onThemeToggle={onThemeToggle}
         contentClassName={contentClassName}
         tabs={tabs ?? fallbackTabs}
         activeTabId={activeTabId ?? "dashboard"}

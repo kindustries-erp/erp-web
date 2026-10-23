@@ -24,8 +24,6 @@ export interface V2AppLayoutProps extends V2BaseProps {
   onTabClose?: (id: string) => void;
   onSearchClick?: () => void;
   onBranchClick?: () => void;
-  isDark?: boolean;
-  onThemeToggle?: () => void;
   appName?: string;
   logoUrl?: string;
   contentClassName?: string;

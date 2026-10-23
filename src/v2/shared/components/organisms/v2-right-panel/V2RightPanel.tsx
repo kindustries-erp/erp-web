@@ -11,8 +11,6 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
   logoUrl,
   onSearchClick,
   onBranchClick,
-  isDark,
-  onThemeToggle,
   topbarActions,
   tabs,
   activeTabId,
@@ -40,8 +38,6 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
         logoUrl={logoUrl}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
-        isDark={isDark}
-        onThemeToggle={onThemeToggle}
         actions={topbarActions}
         className="absolute top-0 left-0 right-0 z-20"
       />

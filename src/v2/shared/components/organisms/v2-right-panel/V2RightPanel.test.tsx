@@ -39,15 +39,4 @@ describe("V2RightPanel Organism", () => {
     fireEvent.click(orderTab);
     expect(handleSelectTab).toHaveBeenCalledWith("orders");
   });
-
-  it("does not leak theme props onto the DOM panel", () => {
-    render(
-      <V2RightPanel isDark onThemeToggle={vi.fn()}>
-        <div>content</div>
-      </V2RightPanel>,
-    );
-    const panel = screen.getByTestId("v2-right-panel");
-    expect(panel).not.toHaveAttribute("onthemetoggle");
-    expect(panel).not.toHaveAttribute("isdark");
-  });
 });

@@ -9,7 +9,5 @@ export interface V2TopbarProps extends V2BaseProps<HTMLElement> {
   logoUrl?: string;
   onSearchClick?: () => void;
   onBranchClick?: () => void;
-  isDark?: boolean;
-  onThemeToggle?: () => void;
   actions?: ReactNode;
 }
