@@ -1,5 +1,7 @@
-import type { V2ColumnPreferences } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.type";
-import type { V2ViewPresetState } from "@/v2/shared/components/organisms/v2-standard-table/toolbar/V2StandardTable.toolbar.type";
+import type {
+  V2ColumnPreferences,
+  V2ViewPresetState,
+} from "@/v2/shared/components";
 
 /** Cấu hình V2 của một bảng: cột đang hiển thị và chế độ xem (hệ thống + tùy chỉnh) */
 export interface V2TablePreferenceEntry {

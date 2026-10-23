@@ -1,7 +1,6 @@
 import * as React from "react";
 import { FileDown, FileUp, Receipt } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
-import { V2ModulePage } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage";
+import { V2Button, V2ModulePage } from "@/v2/shared/components";
 import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import { InvoiceShapeOverlays } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-overlays/InvoiceShapeOverlays";
 import { useInvoiceShapePage } from "./InvoiceShapePage.hook";

@@ -19,10 +19,7 @@ import { PillTabs } from "@/shared/components/PillTabs";
 import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
 import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import {
-  V2ComboChart,
-  type V2ComboSeries,
-} from "@/v2/shared/components/organisms/v2-chart";
+import { V2ComboChart, type V2ComboSeries } from "@/v2/shared/components";
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { ChartSkeleton } from "@/shared/components/ChartSkeleton";

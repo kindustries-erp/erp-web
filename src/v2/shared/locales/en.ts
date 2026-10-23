@@ -27,6 +27,9 @@ export const v2En: V2Dictionary = {
         erpInvoices: "Invoices",
         cashflow: "Cash Flow",
         catalog: "General Settings",
+        allModules: "All",
+        catalogTitle: "All Modules",
+        customize: "Customize Shortcuts",
         inventoryGroup: "Inventory",
         // plop:v2-nav-items
       },
@@ -35,6 +38,8 @@ export const v2En: V2Dictionary = {
       close: "Close",
       save: "Save",
       cancel: "Cancel",
+      done: "Done",
+      reset: "Reset",
       loading: "Loading...",
       error: "An error occurred",
       actions: "Actions",

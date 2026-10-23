@@ -1,7 +1,9 @@
-import { V2CopyButton } from "@/v2/shared/components/atoms/v2-copy-button";
-import { V2TableDateCell } from "@/v2/shared/components/atoms/v2-table-date-cell";
-import { headerFilter } from "@/v2/shared/components/organisms/v2-standard-table";
-import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table";
+import {
+  V2CopyButton,
+  V2TableDateCell,
+  headerFilter,
+  type V2Column,
+} from "@/v2/shared/components";
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import { Badge } from "@/v2/shared/ui";
 import {

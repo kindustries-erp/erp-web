@@ -39,6 +39,8 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
         side={side}
         align={align}
         sideOffset={sideOffset}
+        onFocusOutside={(e) => e.preventDefault()}
+        style={{ pointerEvents: "auto" }}
         className={cn(
           // Non-modal popover portals to <body>; a modal Dialog (e.g. drawer) sets body pointer-events:none, so re-enable clicks here.
           "pointer-events-auto relative min-w-[240px] max-w-[420px] p-4 text-foreground",

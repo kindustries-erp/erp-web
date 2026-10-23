@@ -3,10 +3,7 @@ import { fmtQty } from "@/shared/utils/format";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { useT } from "@/core/i18n";
 import type { InventoryTrendPoint } from "../utils/inventoryLedgerTransform";
-import {
-  V2ComboChart,
-  type V2ComboSeries,
-} from "@/v2/shared/components/organisms/v2-chart";
+import { V2ComboChart, type V2ComboSeries } from "@/v2/shared/components";
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 
 interface InventoryItemTrendChartProps {

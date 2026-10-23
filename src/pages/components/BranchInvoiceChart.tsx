@@ -3,10 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { shortMoney } from "@/shared/utils/format";
 import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoiceDashboardApi";
-import {
-  V2ComboChart,
-  type V2ComboSeries,
-} from "@/v2/shared/components/organisms/v2-chart";
+import { V2ComboChart, type V2ComboSeries } from "@/v2/shared/components";
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 
 interface BranchInvoiceChartProps {

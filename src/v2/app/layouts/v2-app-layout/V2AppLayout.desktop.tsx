@@ -1,7 +1,6 @@
 import * as React from "react";
 import { LayoutDashboard } from "lucide-react";
-import { V2Sidebar } from "@/v2/shared/components/organisms/v2-sidebar";
-import { V2RightPanel } from "@/v2/shared/components/organisms/v2-right-panel";
+import { V2Sidebar, V2RightPanel } from "@/v2/shared/components";
 import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {

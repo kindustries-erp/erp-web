@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/shared/components/ui/badge";
-import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar";
+import type { V2TabItemData } from "@/v2/shared/components";
 import type {
   InvoiceDetailSubTabKey,
   PartnerSubTabMode,

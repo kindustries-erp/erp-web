@@ -1,8 +1,10 @@
 import * as React from "react";
-import { V2Progress } from "@/v2/shared/components/atoms/v2-progress";
-import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { V2StandardTable } from "@/v2/shared/components/organisms/v2-standard-table";
-import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table";
+import {
+  V2Progress,
+  DrawerSection,
+  V2StandardTable,
+  type V2Column,
+} from "@/v2/shared/components";
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import { formatMoney } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";

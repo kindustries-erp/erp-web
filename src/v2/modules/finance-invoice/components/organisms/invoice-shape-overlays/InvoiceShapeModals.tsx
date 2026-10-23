@@ -1,10 +1,12 @@
 import * as React from "react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
-import { V2Textarea } from "@/v2/shared/components/atoms/v2-textarea";
-import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
-import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
-import { V2FileUpload } from "@/v2/shared/components/molecules/v2-file-upload";
-import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
+import {
+  V2Button,
+  V2Textarea,
+  V2Combobox,
+  DrawerField,
+  V2FileUpload,
+  V2Modal,
+} from "@/v2/shared/components";
 import { BRANCHES } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 
 interface BulkProps {

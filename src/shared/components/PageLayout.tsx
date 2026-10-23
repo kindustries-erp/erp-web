@@ -75,8 +75,8 @@ export function PageLayout({
   return (
     <div
       className={cn(
-        "flex flex-col h-full overflow-hidden space-y-4 px-5 pt-[18px]",
-        hideHeader && "px-4 pt-3 space-y-3",
+        "flex flex-col h-full overflow-hidden space-y-3 sm:space-y-4 px-2 sm:px-5 pt-2 sm:pt-[18px]",
+        hideHeader && "px-2 sm:px-4 pt-2 sm:pt-3 space-y-2 sm:space-y-3",
         className,
       )}
     >

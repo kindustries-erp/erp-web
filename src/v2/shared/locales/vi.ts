@@ -26,6 +26,9 @@ export const v2Vi = {
         erpInvoices: "Hóa đơn",
         cashflow: "Dòng tiền",
         catalog: "Thiết lập chung",
+        allModules: "Tất cả",
+        catalogTitle: "Danh mục phân hệ",
+        customize: "Tùy chỉnh lối tắt",
         inventoryGroup: "Kho",
         // plop:v2-nav-items
       },
@@ -34,6 +37,8 @@ export const v2Vi = {
       close: "Đóng",
       save: "Lưu",
       cancel: "Hủy",
+      done: "Xong",
+      reset: "Mặc định",
       loading: "Đang tải...",
       error: "Đã xảy ra lỗi",
       actions: "Thao tác",

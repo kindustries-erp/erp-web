@@ -6,7 +6,7 @@ import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type {
   V2SidebarSectionData,
   V2SidebarItem,
-} from "@/v2/shared/components/organisms/v2-sidebar";
+} from "@/v2/shared/components";
 import {
   Boxes,
   Users,
