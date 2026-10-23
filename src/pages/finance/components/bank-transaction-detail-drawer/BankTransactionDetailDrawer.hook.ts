@@ -1,4 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import {
+  isSameBranchIds,
+  resolveTransactionBranchIds,
+} from "@/modules/bank-statements/utils/transactionBranchIds";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { usePosting } from "@/shared/components/accounting/usePosting";
@@ -38,7 +42,7 @@ export function useBankTransactionDetailDrawer(
   const [editMode, setEditMode] = useState(false);
   const [accountingEnabled, setAccountingEnabled] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
-  const [editBranchId, setEditBranchId] = useState<string>("");
+  const [editBranchIds, setEditBranchIds] = useState<string[]>([]);
   const [editDescription, setEditDescription] = useState<string>("");
   const [cashflowClassification, setCashflowClassification] =
     useState<CashflowClassification | null>(null);
@@ -150,7 +154,7 @@ export function useBankTransactionDetailDrawer(
       setEditMode(false);
       setAccountingEnabled(isPosted);
       setFormError(null);
-      setEditBranchId("");
+      setEditBranchIds([]);
       setEditDescription("");
       setCashflowClassification(null);
       setCashflowPurpose(null);
@@ -162,7 +166,7 @@ export function useBankTransactionDetailDrawer(
       setEditMode(initialMode === "edit");
       setAccountingEnabled(isPosted);
       setFormError(null);
-      setEditBranchId(transaction.branchId || transaction.branch?.id || "");
+      setEditBranchIds(resolveTransactionBranchIds(transaction));
       setEditDescription(
         transaction.description || transaction.accountingDescription || "",
       );
@@ -182,19 +186,21 @@ export function useBankTransactionDetailDrawer(
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!transactionId) throw new Error("Missing transaction ID");
-      const oBranch = transaction.branchId || transaction.branch?.id || "";
+      const oBranchIds = resolveTransactionBranchIds(transaction);
+      const branchChanged = !isSameBranchIds(editBranchIds, oBranchIds);
       const oDesc =
         transaction.description || transaction.accountingDescription || "";
       const oClassification = transaction.cashflowClassification ?? null;
       const oPurpose = transaction.cashflowPurpose ?? null;
       if (
-        editBranchId !== oBranch ||
+        branchChanged ||
         editDescription !== oDesc ||
         cashflowClassification !== oClassification ||
         cashflowPurpose !== oPurpose
       ) {
         await bankStatementApi.updateTransaction(transactionId, {
-          branchId: editBranchId || undefined,
+          // Chỉ gửi chi nhánh khi người dùng thực sự đổi, tránh xóa nhầm khi chỉ sửa mô tả
+          ...(branchChanged ? { branchIds: editBranchIds } : {}),
           description: editDescription,
           accountingDescription: editDescription,
           cashflowClassification,
@@ -371,8 +377,8 @@ export function useBankTransactionDetailDrawer(
     setCashflowClassification,
     cashflowPurpose,
     setCashflowPurpose,
-    editBranchId,
-    setEditBranchId,
+    editBranchIds,
+    setEditBranchIds,
     editDescription,
     setEditDescription,
     subTabKey,

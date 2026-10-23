@@ -38,11 +38,23 @@ export const V2ChartFrame: React.FC<V2ChartFrameProps> = ({
                 key={item.key}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground"
               >
-                <span
-                  aria-hidden
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
+                {item.isLine ? (
+                  <span
+                    aria-hidden
+                    className="inline-flex items-center justify-center w-3.5 h-2"
+                  >
+                    <span
+                      className="w-full h-0.5 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                  </span>
+                ) : (
+                  <span
+                    aria-hidden
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                )}
                 {item.label}
               </li>
             ))}

@@ -80,6 +80,7 @@ export const bankStatementVi = {
   dateTo: "Đến ngày",
   branch: "Chi nhánh",
   allBranches: "Tất cả chi nhánh",
+  noBranch: "Không có chi nhánh",
   bankAccount: "Tài khoản ngân hàng",
   cashBook: "Sổ quỹ",
   allBankAccounts: "Tất cả tài khoản ngân hàng",

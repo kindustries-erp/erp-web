@@ -32,9 +32,9 @@ export const V2SidebarNavItem: React.FC<V2SidebarNavItemProps> = ({
       }}
       className={cn(
         "group flex min-h-[34px] items-center gap-2 mx-2 px-2 py-[7px] rounded-md cursor-pointer whitespace-nowrap overflow-hidden text-[12px] font-medium transition-colors select-none",
-        "text-muted-fg dark:text-zinc-400 opacity-80 hover:opacity-100 hover:bg-[color:var(--sidebar-active-bg,rgba(0,0,0,0.04))] hover:text-foreground dark:hover:text-zinc-100 dark:hover:bg-white/[0.05]",
+        "text-muted-fg dark:text-zinc-400 opacity-80 hover:opacity-100 hover:bg-[color:var(--sidebar-hover-bg,rgba(0,0,0,0.04))] hover:text-[color:var(--sidebar-hover-fg,var(--foreground))] dark:hover:text-[color:var(--sidebar-hover-fg,var(--foreground))] dark:hover:bg-[color:var(--sidebar-hover-bg,rgba(255,255,255,0.06))]",
         isActive &&
-          "!text-[color:var(--sidebar-active-fg,var(--foreground))] dark:!text-[color:var(--sidebar-active-fg,#2dd4bf)] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg,rgba(0,0,0,0.06))] dark:bg-[color:var(--sidebar-active-bg,rgba(20,184,166,0.12))] shadow-xs",
+          "!text-[color:var(--sidebar-active-fg,var(--foreground))] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg,rgba(0,0,0,0.06))] shadow-xs",
         isCollapsed && "justify-center px-0 mx-1",
         className,
       )}

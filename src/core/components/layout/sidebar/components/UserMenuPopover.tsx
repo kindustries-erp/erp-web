@@ -39,6 +39,10 @@ export function UserMenuPopover({
 
   const displayName = employee?.full_name ?? t("nav.bottom.userFallback");
   const email = employee?.email ?? "";
+  const isAdmin = email === "admin@liouni.com";
+  const visibleThemes = THEME_OPTIONS.filter(
+    (opt) => isAdmin || (opt.value !== "shell" && opt.value !== "orcaq"),
+  );
 
   const currentThemeLabel =
     THEME_OPTIONS.find((o) => o.value === appTheme)?.labelKey ?? "";
@@ -259,7 +263,7 @@ export function UserMenuPopover({
               : t("nav.bottom.languageLabel")}
           </p>
           {subMenu === "appearance" &&
-            THEME_OPTIONS.map((opt) => (
+            visibleThemes.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => setAppTheme(opt.value)}

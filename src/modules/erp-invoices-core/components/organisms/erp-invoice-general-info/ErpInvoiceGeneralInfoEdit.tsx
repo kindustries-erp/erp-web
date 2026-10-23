@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Building2, CreditCard } from "lucide-react";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
-import { Combobox } from "@/shared/components/Combobox";
+import { V2MultiCombobox } from "@/v2/shared/components/molecules/v2-multi-combobox";
 import { CopyButton } from "@/shared/components/CopyButton";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { BufferedTextarea } from "@/shared/components/BufferedTextarea";
@@ -130,12 +130,12 @@ export const ErpInvoiceGeneralInfoEdit = React.memo(
 
           {/* 4. Chi nhánh */}
           <DrawerField label={t("branchId", "Chi nhánh")}>
-            <Combobox
+            <V2MultiCombobox
               options={branchOptions}
-              value={form?.branchId || ""}
-              onChange={(val) => fieldSet?.("branchId", val)}
+              value={form?.branchIds ?? []}
+              onValueChange={(vals) => fieldSet?.("branchIds", vals)}
               placeholder="-- Chọn chi nhánh --"
-              allowClear={false}
+              clearable
             />
           </DrawerField>
 

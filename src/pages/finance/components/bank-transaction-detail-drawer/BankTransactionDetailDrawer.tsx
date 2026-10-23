@@ -43,8 +43,8 @@ export const BankTransactionDetailDrawer = React.memo(
         <BankTransactionGeneralInfoSection
           transaction={drawer.transaction}
           editMode={drawer.editMode}
-          branchId={drawer.editBranchId}
-          onBranchChange={drawer.setEditBranchId}
+          branchIds={drawer.editBranchIds}
+          onBranchChange={drawer.setEditBranchIds}
           description={drawer.editDescription}
           onDescriptionChange={drawer.setEditDescription}
         />

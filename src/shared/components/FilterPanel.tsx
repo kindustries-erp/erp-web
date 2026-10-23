@@ -19,6 +19,7 @@ import {
   useUnifiedTableFilter,
   type UnifiedTableFilterReturn,
 } from "@/shared/hooks/useUnifiedTableFilter";
+import { V2MultiCombobox } from "@/v2/shared/components/molecules/v2-multi-combobox";
 import { ActiveFilterChips } from "./FilterPanel/ActiveFilterChips";
 import { ColumnFilterCard } from "./FilterPanel/ColumnFilterCard";
 
@@ -309,7 +310,21 @@ export function FilterPanel<T = any>({
 
         {config.custom?.map((f) => (
           <FilterSection key={f.key} label={f.label}>
-            {f.type === "multi-select" ? (
+            {f.type === "multi-combobox" ? (
+              <V2MultiCombobox
+                options={f.options}
+                value={
+                  legacyFilter.state.custom[f.key]
+                    ? legacyFilter.state.custom[f.key].split(",")
+                    : []
+                }
+                onValueChange={(v) =>
+                  legacyFilter.setCustom(f.key, v.join(","))
+                }
+                placeholder={f.placeholder}
+                clearable
+              />
+            ) : f.type === "multi-select" ? (
               <MultiSelect
                 options={f.options}
                 value={

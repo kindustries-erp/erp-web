@@ -80,6 +80,7 @@ export const bankStatementEn = {
   dateTo: "To Date",
   branch: "Branch",
   allBranches: "All Branches",
+  noBranch: "No branch",
   bankAccount: "Bank Account",
   cashBook: "Cash Book",
   allBankAccounts: "All Bank Accounts",

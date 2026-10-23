@@ -10,6 +10,7 @@ export interface V2ChartLegendItem {
   key: string;
   label: string;
   color: string;
+  isLine?: boolean;
 }
 
 export interface V2ChartFrameProps {

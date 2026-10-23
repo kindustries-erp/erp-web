@@ -8,8 +8,11 @@ import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import api from "@/core/api/axiosInstance";
 import { Panel } from "@/shared/components/Panel";
 import { DrawerSection } from "@/shared/components/DrawerModal";
-import { BarChart } from "@/shared/components/charts/BarChart";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
+import {
+  V2ComboChart,
+  type V2ComboSeries,
+} from "@/v2/shared/components/organisms/v2-chart";
+import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { KpiSparkline } from "@/shared/components/KpiSparkline";
 import { format, subMonths, subWeeks, startOfWeek, endOfWeek } from "date-fns";
@@ -260,6 +263,7 @@ export function VinfastPartTrendChart({
   variant?: "panel" | "drawer";
 }) {
   const { t } = useTranslation(["vinfastParts", "common"]);
+  const theme = useV2ChartTheme();
   const { data, isLoading } = useQuery({
     queryKey: [
       "vinfast-parts-dashboard",
@@ -285,70 +289,71 @@ export function VinfastPartTrendChart({
   });
 
   const trend = data?.trend || [];
-  const trendLabels = trend.map((t: any) => t.month);
-  const trendBuy = trend.map((t: any) => t.cogs);
-  const trendSell = trend.map((t: any) => t.revenue);
-  const trendProfit = trend.map((t: any) => t.grossProfit);
+  const trendLabels = React.useMemo(
+    () => trend.map((t: any) => t.month),
+    [trend],
+  );
+  const trendBuy = React.useMemo(() => trend.map((t: any) => t.cogs), [trend]);
+  const trendSell = React.useMemo(
+    () => trend.map((t: any) => t.revenue),
+    [trend],
+  );
+  const trendProfit = React.useMemo(
+    () => trend.map((t: any) => t.grossProfit),
+    [trend],
+  );
 
   const colorRevenue = "#059669"; // Emerald 600 (Doanh thu)
   const colorExpense = "#ea580c"; // Orange 600 (Giá vốn)
-  const lineProfit = "#1e293b"; // Slate 800 (Lợi nhuận gộp)
+  const lineProfit = theme.mode === "dark" ? "#2dd4bf" : "#0d9488"; // Teal 400 / 600
+
+  const series = React.useMemo<V2ComboSeries[]>(
+    () => [
+      {
+        key: "buy",
+        type: "bar",
+        data: trendBuy,
+        color: colorExpense,
+        label: t("vinfastParts:trendBuy", "Giá vốn"),
+      },
+      {
+        key: "sell",
+        type: "bar",
+        data: trendSell,
+        color: colorRevenue,
+        label: t("vinfastParts:trendSell", "Doanh thu"),
+      },
+      {
+        key: "profit",
+        type: "line",
+        data: trendProfit,
+        color: lineProfit,
+        borderColor: lineProfit,
+        borderWidth: 2.5,
+        tension: 0.3,
+        label: t("vinfastParts:trendProfit", "Lợi nhuận gộp"),
+      },
+    ],
+    [
+      trendBuy,
+      trendSell,
+      trendProfit,
+      colorExpense,
+      colorRevenue,
+      lineProfit,
+      t,
+    ],
+  );
 
   const content = (
-    <>
-      <div className="relative" style={{ height: chartHeight }}>
-        {!isLoading && trendLabels.length > 0 ? (
-          <BarChart
-            labels={trendLabels}
-            yCallback={(v) => money(Number(v))}
-            datasets={[
-              {
-                type: "line",
-                data: trendProfit,
-                color: "transparent",
-                borderColor: lineProfit,
-                borderWidth: 2,
-                fill: false,
-                label: t("vinfastParts:trendProfit", "Lợi nhuận gộp"),
-              },
-              {
-                type: "bar",
-                data: trendBuy,
-                color: colorExpense,
-                label: t("vinfastParts:trendBuy", "Giá vốn"),
-              },
-              {
-                type: "bar",
-                data: trendSell,
-                color: colorRevenue,
-                label: t("vinfastParts:trendSell", "Doanh thu"),
-              },
-            ]}
-          />
-        ) : isLoading ? (
-          <ChartSkeleton type="bar" />
-        ) : (
-          <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-            {t("common:noData", "Chưa có dữ liệu")}
-          </div>
-        )}
-      </div>
-      <div className="flex gap-4 mt-[10px] justify-center flex-wrap">
-        <LegendItem
-          color={colorExpense}
-          label={t("vinfastParts:trendBuy", "Giá vốn")}
-        />
-        <LegendItem
-          color={colorRevenue}
-          label={t("vinfastParts:trendSell", "Doanh thu")}
-        />
-        <LegendItem
-          color={lineProfit}
-          label={t("vinfastParts:trendProfit", "Lợi nhuận gộp")}
-          isLine={true}
-        />
-      </div>
-    </>
+    <V2ComboChart
+      labels={trendLabels}
+      series={series}
+      height={chartHeight}
+      loading={isLoading}
+      formatValue={(v) => money(Number(v))}
+      ariaLabel={title}
+    />
   );
 
   if (variant === "drawer") {
@@ -356,28 +361,4 @@ export function VinfastPartTrendChart({
   }
 
   return <Panel title={title}>{content}</Panel>;
-}
-
-function LegendItem({
-  color,
-  label,
-  isLine,
-}: {
-  color: string;
-  label: string;
-  isLine?: boolean;
-}) {
-  return (
-    <div className="flex items-center text-xs">
-      {isLine ? (
-        <div className="w-4 h-[2px] mr-2" style={{ backgroundColor: color }} />
-      ) : (
-        <div
-          className="w-3 h-3 rounded-[3px] mr-2"
-          style={{ backgroundColor: color }}
-        />
-      )}
-      <span className="text-[color:var(--muted-fg)] font-medium">{label}</span>
-    </div>
-  );
 }
