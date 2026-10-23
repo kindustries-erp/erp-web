@@ -18,13 +18,6 @@ describe("resolveV2Route", () => {
     expect(resolveV2Route("/v2/suppliers")?.id).toBe("suppliers");
   });
 
-  it("registers the invoice route with read permission on erp_invoices", () => {
-    expect(resolveV2Route("/v2/invoices")).toMatchObject({
-      id: "invoices",
-      permission: { collection: "erp_invoices", action: "read" },
-    });
-  });
-
   it("does not match a path that only shares a prefix", () => {
     expect(resolveV2Route("/v2/sales-orders-archive")).toBeNull();
   });

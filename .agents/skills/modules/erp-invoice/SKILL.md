@@ -388,12 +388,11 @@ bun run lint:check
 
 ---
 
-## 7. Trang V2 Hóa đơn (dual-run `/v2/invoices`, đợt 1)
+## 7. Trang V2 Hóa đơn (tạm dừng, giữ code)
 
-Trang V2 nằm tại `src/v2/modules/finance-invoice/`, dựng trên `V2ModulePage`. V1 (`/`) giữ nguyên, không đổi route.
+**Trạng thái hiện tại**: erp-invoice dùng **V1** (`ErpInvoicesPage`, `SpreadsheetPageTemplate`). Route `/v2/invoices` và đăng ký page V2 đã gỡ khỏi `v2RouteConfig.ts` và `v2PageRegistry.tsx` nên /v2/invoices hiện không có trang. Code module V2 vẫn giữ tại `src/v2/modules/finance-invoice/` để làm tiếp khi có thời gian; không có file nào bị xóa.
 
-### 7.1. Phạm vi đợt 1 (chỉ đọc)
-- **Route**: id `invoices`, path `/v2/invoices`, quyền `erp_invoices:read` (`v2RouteConfig.ts`); page đăng ký ở `v2PageRegistry.tsx`; menu Kế toán dùng `href: /v2/invoices`.
+### 7.1. Phạm vi đã làm sẵn trên V2 (chưa đăng ký route)
 - **Tab**: Tổng quan (`InvoiceShapeDashboard`), Hóa đơn mua vào (`IN`), Hóa đơn bán ra (`OUT`).
 - **Drawer chi tiết** (`InvoiceShapeDetailDrawer`): chỉ đọc, mở qua `?overlay=invoice:<id>`, dữ liệu từ `useInvoiceDetailQuery`.
 - **Chưa có** (đợt sau): sửa, hạch toán, bulk, net-off, đồng bộ/import, xuất Excel/PDF, tab Tài chính và Chứng từ liên kết, tải PDF gốc.
@@ -408,7 +407,7 @@ Trang V2 nằm tại `src/v2/modules/finance-invoice/`, dựng trên `V2ModulePa
 ### 7.3. Bảng và preference
 - Table IDs: `erp-invoices-table-IN` / `erp-invoices-table-OUT`. Preference qua `v2ColumnPreferencesStorage` / `v2ViewPresetStorage` (store riêng `useV2TablePreferencesStore`). Cấu hình V1 chỉ được **chép một lần** sang V2 (`migrateV1TablePreferences`, bỏ alias `_2`/`__n`); sau đó không đồng bộ ngược. Sort và filter cột không nằm trong preference V2.
 - Header filter động: `createInvoiceFetchOptions` (`api/queries/useInvoiceColumnOptions.ts`) gọi `financeInvoiceV2Api.getColumnOptions`.
-- Hybrid trên V1: `erp-invoices-tab/hooks/useInvoiceV2Bridge.ts` đẩy query V2 vào store V1 cho trang V1 đang dùng `V2StandardTable`.
+- Cầu nối query V1⇄V2 (`erp-invoices-tab/hooks/useInvoiceV2Bridge.ts`) và cột V2 cho V1 (`useInvoiceV2Columns.tsx`) hiện không còn được V1 dùng; giữ file để tham khảo khi làm tiếp.
 
 ### 7.4. Kiểm thử
 - Unit: `invoiceRowAdapter.test.ts`, `financeInvoiceV2Api.test.ts` (khóa đường dẫn API), `invoiceDashboard.logic.test.ts`, `useInvoiceV2Bridge.test.ts`.
