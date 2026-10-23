@@ -10,8 +10,6 @@ export interface V2RightPanelProps extends V2BaseProps<HTMLElement> {
   logoUrl?: string;
   onSearchClick?: () => void;
   onBranchClick?: () => void;
-  isDark?: boolean;
-  onThemeToggle?: () => void;
   topbarActions?: ReactNode;
   tabs?: V2TabEntry[];
   activeTabId?: string;

@@ -106,6 +106,33 @@ describe("V2MultiCombobox", () => {
     expect(onValueChange).toHaveBeenCalledWith([]);
   });
 
+  it("reserves room for the clear button so it does not overlap the chevron", () => {
+    render(
+      <V2MultiCombobox
+        options={options}
+        value={["b1"]}
+        onValueChange={() => {}}
+        clearable
+      />,
+    );
+    expect(screen.getByRole("combobox")).toHaveClass("pr-14");
+  });
+
+  it("opens the list instead of clearing when the trigger is clicked", () => {
+    const onValueChange = vi.fn();
+    render(
+      <V2MultiCombobox
+        options={options}
+        value={["b1"]}
+        onValueChange={onValueChange}
+        clearable
+      />,
+    );
+    open();
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it("filters options by search text", () => {
     render(
       <V2MultiCombobox options={options} value={[]} onValueChange={() => {}} />,

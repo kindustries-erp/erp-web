@@ -43,7 +43,7 @@ export const V2MultiCombobox: React.FC<V2MultiComboboxProps> = ({
       className={cn(
         "flex h-8 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-        canClear && "pr-8",
+        canClear && "pr-14",
       )}
     >
       <span className="flex min-w-0 flex-1 items-center gap-1">
@@ -148,7 +148,7 @@ export const V2MultiCombobox: React.FC<V2MultiComboboxProps> = ({
         <button
           type="button"
           aria-label={t("v2.form.clearSelection", "Bỏ lựa chọn")}
-          className="absolute right-7 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+          className="absolute right-8 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
           onClick={c.clear}
         >
           <X className="h-3.5 w-3.5" />

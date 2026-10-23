@@ -129,12 +129,15 @@ export const ErpInvoiceGeneralInfoEdit = React.memo(
           )}
 
           {/* 4. Chi nhánh */}
-          <DrawerField label={t("branchId", "Chi nhánh")}>
+          <DrawerField label={t("branch", "Chi nhánh")}>
             <V2MultiCombobox
               options={branchOptions}
               value={form?.branchIds ?? []}
-              onValueChange={(vals) => fieldSet?.("branchIds", vals)}
-              placeholder="-- Chọn chi nhánh --"
+              onValueChange={(vals) => {
+                fieldSet?.("branchIds", vals);
+                fieldSet?.("branchId", vals[0] ?? undefined);
+              }}
+              placeholder={t("selectBranch", "-- Chọn chi nhánh --")}
               clearable
             />
           </DrawerField>
