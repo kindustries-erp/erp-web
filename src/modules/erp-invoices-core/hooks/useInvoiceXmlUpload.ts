@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   erpInvoicesCoreApi,
@@ -42,7 +42,6 @@ export function useInvoiceXmlUpload(
   const [direction, setDirection] = useState<Direction>("IN");
   const [step, setStep] = useState<Step>("select");
   const [files, setFiles] = useState<FileEntry[]>([]);
-  const [dragging, setDragging] = useState(false);
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
 
@@ -121,19 +120,6 @@ export function useInvoiceXmlUpload(
       });
     });
   }
-
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(true);
-  }, []);
-
-  const onDragLeave = useCallback(() => setDragging(false), []);
-
-  const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
-  }, []);
 
   async function handleImport(
     filesToImport?: FileEntry[],
@@ -231,14 +217,10 @@ export function useInvoiceXmlUpload(
     step,
     setStep,
     files,
-    dragging,
     result,
     importError,
     addFiles,
     removeFile,
-    onDragOver,
-    onDragLeave,
-    onDrop,
     handleImport,
     handleReset,
   };

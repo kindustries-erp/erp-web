@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { RefreshCw, FileSpreadsheet } from "lucide-react";
 import toast from "react-hot-toast";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import type { V2DropdownGroup } from "@/v2/shared/components/molecules/v2-dropdown";
+import type { V2DropdownGroup } from "@/v2/shared/components";
 import type { ErpInvoiceDetailDrawerProps } from "./ErpInvoiceDetailDrawer.type";
 import type { PartnerSubTabMode } from "../erp-invoice-partner-tab/ErpInvoicePartnerTabNav";
 

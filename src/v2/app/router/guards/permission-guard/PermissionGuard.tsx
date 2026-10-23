@@ -1,5 +1,5 @@
 import * as React from "react";
-import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2Text } from "@/v2/shared/components";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { PermissionGuardProps } from "./PermissionGuard.type";

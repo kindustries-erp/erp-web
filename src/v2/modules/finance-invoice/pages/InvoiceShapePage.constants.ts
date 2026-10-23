@@ -1,4 +1,4 @@
-import type { V2FilterGroupItem } from "@/v2/shared/components/molecules/v2-view-mode-combobox";
+import type { V2FilterGroupItem } from "@/v2/shared/components";
 import type { InvoiceDirection } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 
 /** Nhóm lọc loại hóa đơn thuế (nằm trong popover chế độ xem) */

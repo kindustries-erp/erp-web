@@ -4,6 +4,10 @@ import { InvoiceXmlImportModal } from "./InvoiceXmlImportModal";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const testQueryClient = () =>
+  new QueryClient({ defaultOptions: { queries: { retry: false } } });
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import type { FileEntry } from "@/modules/erp-invoices-core/hooks/useInvoiceXmlUpload";
 
@@ -57,9 +61,11 @@ describe("InvoiceXmlImportModal", () => {
     });
 
     render(
-      <TooltipProvider>
-        <InvoiceXmlImportModal {...defaultProps} />
-      </TooltipProvider>,
+      <QueryClientProvider client={testQueryClient()}>
+        <TooltipProvider>
+          <InvoiceXmlImportModal {...defaultProps} />
+        </TooltipProvider>
+      </QueryClientProvider>,
     );
 
     // Wait for the UI to update with matched info
@@ -83,9 +89,11 @@ describe("InvoiceXmlImportModal", () => {
     });
 
     render(
-      <TooltipProvider>
-        <InvoiceXmlImportModal {...defaultProps} />
-      </TooltipProvider>,
+      <QueryClientProvider client={testQueryClient()}>
+        <TooltipProvider>
+          <InvoiceXmlImportModal {...defaultProps} />
+        </TooltipProvider>
+      </QueryClientProvider>,
     );
 
     // Wait for the state to settle
@@ -96,5 +104,40 @@ describe("InvoiceXmlImportModal", () => {
 
     const elements = screen.getAllByText(/File mồ côi/i);
     expect(elements.length).toBeGreaterThan(0);
+  });
+
+  it("selects and clears every file from the header checkbox", () => {
+    render(
+      <QueryClientProvider client={testQueryClient()}>
+        <TooltipProvider>
+          <InvoiceXmlImportModal {...defaultProps} />
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+
+    const selectAll = screen.getByLabelText("Chọn tất cả");
+    fireEvent.click(selectAll);
+    expect(
+      screen.getByText("Chọn ít nhất 1 file để import"),
+    ).toBeInTheDocument();
+
+    fireEvent.click(selectAll);
+    expect(screen.getByText("2")).toBeInTheDocument();
+  });
+
+  it("confirms with the selected files", () => {
+    render(
+      <QueryClientProvider client={testQueryClient()}>
+        <TooltipProvider>
+          <InvoiceXmlImportModal {...defaultProps} />
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Xác nhận Import/ }));
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    const [selected] = onConfirm.mock.calls[0];
+    expect(selected).toHaveLength(2);
   });
 });

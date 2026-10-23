@@ -96,13 +96,39 @@ vi.mock("@/shared/components/ui/tabs", () => ({
   ),
 }));
 
+vi.mock("@/shared/components/ViewModeCombobox", () => ({
+  ViewModeCombobox: ({
+    filterGroup,
+  }: {
+    filterGroup?: {
+      value: string;
+      onChange: (val: string) => void;
+      items: { value: string; label: React.ReactNode }[];
+    };
+  }) => (
+    <div data-testid="view-mode-combobox" data-value={filterGroup?.value}>
+      {filterGroup?.items.map((item) => (
+        <button
+          key={item.value}
+          role="tab"
+          data-state={filterGroup.value === item.value ? "active" : "inactive"}
+          onClick={() => filterGroup.onChange(item.value)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, def?: string) => {
+    t: (key: string, def?: any) => {
       if (key === "nav:items.vinfastPartsDashboard") return "Tổng quan";
       if (key === "nav:items.vinfastPartsOtoStock") return "Phụ tùng ôtô";
       if (key === "nav:items.vinfastPartsXemayStock") return "Phụ tùng xe máy";
-      return def || key;
+      const fallback = typeof def === "string" ? def : def?.defaultValue;
+      return fallback || key;
     },
   }),
 }));

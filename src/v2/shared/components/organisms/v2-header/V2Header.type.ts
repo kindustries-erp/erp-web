@@ -11,5 +11,8 @@ export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
   userName?: string;
   userRole?: string;
   tenantName?: string;
-  onReturnToV1?: () => void;
+  branchName?: string;
+  logoUrl?: string;
+  onBranchClick?: () => void;
+  showLanguageSwitcher?: boolean;
 }

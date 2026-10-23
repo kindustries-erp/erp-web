@@ -1,7 +1,9 @@
 import * as React from "react";
-import { V2FilePreviewPanel } from "@/v2/shared/components/organisms/v2-file-preview-panel";
-import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import {
+  V2FilePreviewPanel,
+  DrawerSection,
+  V2StandardDrawer,
+} from "@/v2/shared/components";
 import { Badge } from "@/v2/shared/ui";
 import { sampleInvoiceXml } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";

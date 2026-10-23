@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Check, ChevronDown, X } from "lucide-react";
+import { V2Spinner } from "@/v2/shared/components/atoms/v2-spinner";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { Input } from "@/v2/shared/ui";
@@ -14,6 +15,8 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
   placeholder,
   searchable = true,
   searchPlaceholder,
+  onSearchChange,
+  loading = false,
   clearable = false,
   emptyLabel,
   disabled = false,
@@ -59,11 +62,24 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
             searchPlaceholder ?? t("v2.form.searchPlaceholder", "Tìm kiếm...")
           }
           className="h-8 text-sm"
-          onChange={(event) => c.setQuery(event.target.value)}
+          onChange={(event) => {
+            c.setQuery(event.target.value);
+            onSearchChange?.(event.target.value);
+          }}
         />
       )}
-      <ul role="listbox" className="max-h-60 overflow-y-auto">
-        {c.filtered.length === 0 && (
+      <ul
+        role="listbox"
+        aria-busy={loading}
+        className="max-h-60 overflow-y-auto"
+      >
+        {loading && (
+          <li className="flex items-center justify-center gap-2 px-2 py-3 text-sm text-muted-foreground">
+            <V2Spinner size="sm" />
+            {t("v2.form.searching", "Đang tìm...")}
+          </li>
+        )}
+        {!loading && c.filtered.length === 0 && (
           <li className="px-2 py-3 text-center text-sm text-muted-foreground">
             {emptyLabel ?? t("v2.form.noResults", "Không có kết quả")}
           </li>

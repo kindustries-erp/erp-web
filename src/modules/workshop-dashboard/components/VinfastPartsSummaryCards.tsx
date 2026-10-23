@@ -2,10 +2,7 @@ import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Panel } from "@/shared/components/Panel";
-import {
-  V2ComboChart,
-  type V2ComboSeries,
-} from "@/v2/shared/components/organisms/v2-chart";
+import { V2ComboChart, type V2ComboSeries } from "@/v2/shared/components";
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { KpiSparkline } from "@/shared/components/KpiSparkline";

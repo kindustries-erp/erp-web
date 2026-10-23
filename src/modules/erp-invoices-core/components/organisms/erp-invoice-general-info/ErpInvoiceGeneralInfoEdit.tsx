@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Building2, CreditCard } from "lucide-react";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
-import { V2MultiCombobox } from "@/v2/shared/components/molecules/v2-multi-combobox";
+import { V2MultiCombobox } from "@/v2/shared/components";
 import { CopyButton } from "@/shared/components/CopyButton";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { BufferedTextarea } from "@/shared/components/BufferedTextarea";

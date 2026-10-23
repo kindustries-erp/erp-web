@@ -19,7 +19,7 @@ import {
   useUnifiedTableFilter,
   type UnifiedTableFilterReturn,
 } from "@/shared/hooks/useUnifiedTableFilter";
-import { V2MultiCombobox } from "@/v2/shared/components/molecules/v2-multi-combobox";
+import { V2MultiCombobox } from "@/v2/shared/components";
 import { ActiveFilterChips } from "./FilterPanel/ActiveFilterChips";
 import { ColumnFilterCard } from "./FilterPanel/ColumnFilterCard";
 

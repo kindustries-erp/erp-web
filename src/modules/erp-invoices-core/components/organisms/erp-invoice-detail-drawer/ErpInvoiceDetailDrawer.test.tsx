@@ -2,7 +2,7 @@ import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
-import { resetDrawerStack } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import { resetDrawerStack } from "@/v2/shared/components";
 import { ErpInvoiceDetailDrawer } from "./ErpInvoiceDetailDrawer";
 
 vi.mock("./ErpInvoiceDetailDrawer.hook", () => ({

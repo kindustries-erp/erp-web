@@ -1,5 +1,5 @@
 import React from "react";
-import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import { V2StandardDrawer } from "@/v2/shared/components";
 import { ErpInvoiceSettlementProvider } from "../erp-invoice-settlement-tab";
 import type { ErpInvoiceDetailDrawerProps } from "./ErpInvoiceDetailDrawer.type";
 import { useErpInvoiceDetailDrawer } from "./ErpInvoiceDetailDrawer.hook";

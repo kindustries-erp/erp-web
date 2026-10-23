@@ -1,12 +1,14 @@
 import * as React from "react";
-import { V2Progress } from "@/v2/shared/components/atoms/v2-progress";
-import { V2Switch } from "@/v2/shared/components/atoms/v2-switch";
-import { buildV2DatePresets } from "@/v2/shared/components/molecules/v2-date-picker";
-import { V2DateRangePicker } from "@/v2/shared/components/molecules/v2-date-picker";
-import type { V2DateRangeValue } from "@/v2/shared/components/molecules/v2-date-picker";
-import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
-import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import {
+  V2Progress,
+  V2Switch,
+  buildV2DatePresets,
+  V2DateRangePicker,
+  type V2DateRangeValue,
+  DrawerField,
+  DrawerSection,
+  V2StandardDrawer,
+} from "@/v2/shared/components";
 
 interface Props {
   open: boolean;
