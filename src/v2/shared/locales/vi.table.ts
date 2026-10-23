@@ -81,7 +81,7 @@ export const v2ViTable = {
   selectionActions: "Thao tác ({{count}})",
   deselectAll: "Bỏ chọn ({{count}})",
   viewMode: "Chế độ xem",
-  createView: "Tạo chế độ xem",
+  createView: "Tạo chế độ xem mới",
   editView: "Sửa chế độ xem",
   deleteView: "Xóa chế độ xem",
   filterGroupTitle: "Bộ lọc dữ liệu",

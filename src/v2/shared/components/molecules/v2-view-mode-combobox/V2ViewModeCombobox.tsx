@@ -80,9 +80,9 @@ export const V2ViewModeCombobox: React.FC<V2ViewModeComboboxProps> = ({
               setOpen(false);
             }}
             leftIcon={<Plus className="h-3.5 w-3.5" />}
-            className="mt-1 h-7 w-full justify-start border-t border-border/60 px-2 text-xs"
+            className="mt-1 h-7 w-full justify-start border-t border-border/60 px-2 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary transition-colors"
           >
-            {t("v2.table.createView", "Tạo chế độ xem")}
+            {t("v2.table.createView", "Tạo chế độ xem mới")}
           </V2Button>
         )}
       </PopoverContent>

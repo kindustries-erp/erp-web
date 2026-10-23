@@ -37,13 +37,15 @@ export interface V2ColumnFilterSpec {
 export interface V2ColumnSummary<T> {
   /** Loại số liệu hiển thị trong ô tổng */
   variant: V2SubtotalVariant;
+  /** Nhãn hiển thị nếu variant === 'label', ví dụ "Tổng cộng:" */
+  label?: string;
   /** Lấy số để cộng; mặc định đọc theo `key` của cột (hỗ trợ "a.b") */
   accessor?: (row: T) => unknown;
   /** Chế độ `server`: tổng toàn bộ do consumer truyền (từ API); `client` tự tính */
   total?: number;
   /** Tiêu đề chỉ số trong popover, ví dụ "SL nhập kho" */
   metricTitle?: string;
-  /** Đơn vị sau số, ví dụ "kg" */
+  /** Đơn vị sau số, ví dụ "kg", "dòng" */
   unit?: string;
 }
 

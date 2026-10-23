@@ -83,7 +83,7 @@ export const v2EnTable: V2Dictionary["v2"]["table"] = {
   selectionActions: "Actions ({{count}})",
   deselectAll: "Deselect ({{count}})",
   viewMode: "View mode",
-  createView: "Create view",
+  createView: "Create new view",
   editView: "Edit view",
   deleteView: "Delete view",
   filterGroupTitle: "Data filter",
