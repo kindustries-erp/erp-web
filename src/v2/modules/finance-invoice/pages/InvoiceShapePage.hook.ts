@@ -5,10 +5,9 @@ import {
   readV2ViewState,
   type V2ViewPresetState,
 } from "@/v2/shared/components";
-import { buildInvoiceColumns } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-table/invoiceShape.columns";
 import type { InvoiceView } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-table/invoiceShape.columns";
 import type { TaxTab } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
-import { findInvoice } from "@/v2/modules/finance-invoice/domain/rules/invoiceShape.logic";
+import { useInvoiceDetailQuery } from "@/v2/modules/finance-invoice/api/queries/useInvoiceDetailQuery";
 import { DETAIL_PREFIX } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-overlays/InvoiceShapeOverlays";
 import {
   TAX_TABS,
@@ -29,7 +28,7 @@ const toInvoiceView = (saved: V2ViewPresetState): InvoiceView => {
     : "overview";
 };
 
-/** State nghiệp vụ của trang hóa đơn: tab thuế, chế độ xem, lựa chọn, overlay và cột */
+/** State của trang hóa đơn: tab thuế, chế độ xem, lựa chọn, overlay và hóa đơn đang mở */
 export const useInvoiceShapePage = () => {
   // Khôi phục từ bảng hóa đơn mua vào (IN); mỗi bảng vẫn lưu view riêng
   const [saved] = React.useState(() => readV2ViewState(invoiceTableId("IN")));
@@ -41,16 +40,8 @@ export const useInvoiceShapePage = () => {
   );
   const [selected, setSelected] = React.useState<string[]>([]);
   const [resetCount, setResetCount] = React.useState(0);
-  const [bulkOpen, setBulkOpen] = React.useState(false);
-  const [importOpen, setImportOpen] = React.useState(false);
   const overlay = useV2OverlayState();
   const { open: openOverlay } = overlay;
-
-  const columns = React.useMemo(
-    () =>
-      buildInvoiceColumns(view, (id) => openOverlay(`${DETAIL_PREFIX}${id}`)),
-    [view, openOverlay],
-  );
 
   const bumpResetCount = () => setResetCount((count) => count + 1);
 
@@ -65,6 +56,7 @@ export const useInvoiceShapePage = () => {
   const detailId = overlay.stack
     .find((id) => id.startsWith(DETAIL_PREFIX))
     ?.slice(DETAIL_PREFIX.length);
+  const detail = useInvoiceDetailQuery(detailId);
 
   return {
     taxTab,
@@ -74,15 +66,10 @@ export const useInvoiceShapePage = () => {
     setSelected,
     resetCount,
     bumpResetCount,
-    bulkOpen,
-    setBulkOpen,
-    importOpen,
-    setImportOpen,
     overlay,
     openOverlay,
-    columns,
     changeTaxTab,
-    invoice: detailId ? findInvoice(detailId) : undefined,
+    invoice: detail.data,
   };
 };
 

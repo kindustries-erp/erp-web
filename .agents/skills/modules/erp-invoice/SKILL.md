@@ -385,3 +385,31 @@ bun run lint:check
 - Form chi tiết hóa đơn (`ErpInvoiceGeneralInfoEdit`, field "Chi nhánh") dùng `V2MultiCombobox` với `branchIds`; khi đổi, đồng bộ `branchId = branchIds[0]` để `ErpInvoiceAccountingSection` đọc đúng.
 - Lưu ý popover trong drawer: `V2MultiCombobox` dùng Radix Popover nằm trong `V2DrawerSheet` (Radix Dialog modal). Các package `@radix-ui/react-focus-scope`, `react-dismissable-layer`, `react-focus-guards`, `react-portal`, `react-presence` phải chỉ có 1 bản (khai báo trong `overrides` của `package.json`); nhiều bản làm focus trap đóng popover ngay khi mở (không chọn được option).
 - Chưa làm: drawer bulk-edit vẫn chọn đơn (gửi 0/1 phần tử); cần chuyển sang `V2MultiCombobox`.
+
+---
+
+## 7. Trang V2 Hóa đơn (tạm dừng, giữ code)
+
+**Trạng thái hiện tại**: erp-invoice dùng **V1** (`ErpInvoicesPage`, `SpreadsheetPageTemplate`). Route `/v2/invoices` và đăng ký page V2 đã gỡ khỏi `v2RouteConfig.ts` và `v2PageRegistry.tsx` nên /v2/invoices hiện không có trang. Code module V2 vẫn giữ tại `src/v2/modules/finance-invoice/` để làm tiếp khi có thời gian; không có file nào bị xóa.
+
+### 7.1. Phạm vi đã làm sẵn trên V2 (chưa đăng ký route)
+- **Tab**: Tổng quan (`InvoiceShapeDashboard`), Hóa đơn mua vào (`IN`), Hóa đơn bán ra (`OUT`).
+- **Drawer chi tiết** (`InvoiceShapeDetailDrawer`): chỉ đọc, mở qua `?overlay=invoice:<id>`, dữ liệu từ `useInvoiceDetailQuery`.
+- **Chưa có** (đợt sau): sửa, hạch toán, bulk, net-off, đồng bộ/import, xuất Excel/PDF, tab Tài chính và Chứng từ liên kết, tải PDF gốc.
+
+### 7.2. Dữ liệu và API
+- Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`, đường dẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
+- Endpoint dùng: `GET /` (list), `GET /:id` (chi tiết, bọc `data`), `GET /column-options`, `GET /stats?direction` (KPI tháng), `GET /dashboard/stats` (cashTrend cashIn/cashOut/vatIn/vatOut), `GET /dashboard/partners`.
+- DTO: `api/dtos/invoice.dto.ts`. Số tiền API là chuỗi decimal; `api/adapters/invoiceRowAdapter.ts` (`toInvoiceRow`, `invoiceTotalsToSummary`) chuyển sang shape cột V2 `FakeInvoice`. Tổng toàn bộ kết quả là `grandTotal*`.
+- Dashboard: `domain/rules/invoiceDashboard.logic.ts` (thuần, có test) dựng KPI (VAT = tổng - trước thuế; VAT ròng = VAT đầu ra - VAT đầu vào), chuỗi biểu đồ và cơ cấu đối tác top 5 theo số bán ra.
+- Dữ liệu mẫu (`api/sampleMode.ts`, `isInvoiceSampleMode`) chỉ dùng khi `MODE=test` hoặc thiếu `VITE_API_BASE_URL`. **Lỗi API thật không được thay bằng dữ liệu mẫu.**
+
+### 7.3. Bảng và preference
+- Table IDs: `erp-invoices-table-IN` / `erp-invoices-table-OUT`. Preference qua `v2ColumnPreferencesStorage` / `v2ViewPresetStorage` (store riêng `useV2TablePreferencesStore`). Cấu hình V1 chỉ được **chép một lần** sang V2 (`migrateV1TablePreferences`, bỏ alias `_2`/`__n`); sau đó không đồng bộ ngược. Sort và filter cột không nằm trong preference V2.
+- Header filter động: `createInvoiceFetchOptions` (`api/queries/useInvoiceColumnOptions.ts`) gọi `financeInvoiceV2Api.getColumnOptions`.
+- Cầu nối query V1⇄V2 (`erp-invoices-tab/hooks/useInvoiceV2Bridge.ts`) và cột V2 cho V1 (`useInvoiceV2Columns.tsx`) hiện không còn được V1 dùng; giữ file để tham khảo khi làm tiếp.
+
+### 7.4. Kiểm thử
+- Unit: `invoiceRowAdapter.test.ts`, `financeInvoiceV2Api.test.ts` (khóa đường dẫn API), `invoiceDashboard.logic.test.ts`, `useInvoiceV2Bridge.test.ts`.
+- Integration: `tests/integration/ErpInvoiceV2ModulePage.test.tsx` (dữ liệu mẫu).
+- Chưa kiểm tay trên trình duyệt với dữ liệu thật.

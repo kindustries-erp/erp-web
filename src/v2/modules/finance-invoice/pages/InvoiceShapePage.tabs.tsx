@@ -1,20 +1,18 @@
 import * as React from "react";
-import {
-  Download,
-  DownloadCloud,
-  FileCheck,
-  KeyRound,
-  Settings,
-} from "lucide-react";
 import type { V2ModuleTab } from "@/v2/shared/components";
 import type {
   FakeInvoice,
   InvoiceDirection,
 } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
-import type { InvoiceView } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-table/invoiceShape.columns";
-import { useFakeInvoices } from "@/v2/modules/finance-invoice/api/queries/useInvoiceShapeQuery";
+import { buildInvoiceColumns } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-table/invoiceShape.columns";
+import { useInvoiceList } from "@/v2/modules/finance-invoice/api/queries/useInvoiceShapeQuery";
+import { createInvoiceFetchOptions } from "@/v2/modules/finance-invoice/api/queries/useInvoiceColumnOptions";
 import { InvoiceShapeDashboard } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-dashboard/InvoiceShapeDashboard";
 import { DETAIL_PREFIX } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-overlays/InvoiceShapeOverlays";
+import {
+  v2ColumnPreferencesStorage,
+  v2ViewPresetStorage,
+} from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import {
   TAX_FILTER_TITLE,
   TAX_TABS,
@@ -35,12 +33,15 @@ const buildListTab = (
     selected,
     setSelected,
     resetCount,
-    bumpResetCount,
-    setBulkOpen,
-    columns,
     changeTaxTab,
     openOverlay,
   } = state;
+
+  const columns = buildInvoiceColumns(
+    view,
+    (id) => openOverlay(`${DETAIL_PREFIX}${id}`),
+    direction,
+  );
 
   return {
     key: direction.toLowerCase(),
@@ -48,14 +49,19 @@ const buildListTab = (
     kind: "list",
     resetKey: String(resetCount),
     initialQuery: { pageSize: 20 },
-    useData: (query) => useFakeInvoices(direction, taxTab, query),
+    useData: (query) => useInvoiceList(direction, taxTab, query),
     table: {
       tableId: invoiceTableId(direction),
       columns,
       getRowKey: (row) => row.id,
+      mode: "server",
+      fetchOptions: createInvoiceFetchOptions(direction),
+      preferencesStorage: v2ColumnPreferencesStorage,
+      viewPresetStorage: v2ViewPresetStorage,
       enableRowSelection: true,
       selectedKeys: selected,
       onSelectionChange: setSelected,
+      emptyLabel: "Không tìm thấy hóa đơn nào phù hợp",
       rowActions: (row) => [
         {
           items: [
@@ -63,7 +69,6 @@ const buildListTab = (
               label: "Xem chi tiết",
               onClick: () => openOverlay(`${DETAIL_PREFIX}${row.id}`),
             },
-            { label: "Hạch toán", onClick: () => openOverlay("posting") },
           ],
         },
       ],
@@ -78,60 +83,10 @@ const buildListTab = (
         viewModes: {
           items: VIEW_MODES,
           activeKey: view,
-          onSelect: (key) => setView(key as InvoiceView),
+          onSelect: (key) => setView(key as any),
         },
-        bulkActions: [
-          {
-            groupLabel: "Hàng loạt",
-            items: [
-              {
-                label: "Gán chi nhánh, ghi chú",
-                onClick: () => setBulkOpen(true),
-              },
-              { label: "Hạch toán", onClick: () => openOverlay("posting") },
-            ],
-          },
-        ],
         filterPanel: {},
-        create: {
-          label: "Đồng bộ",
-          icon: <DownloadCloud className="h-4 w-4" />,
-          onClick: bumpResetCount,
-          actions: [
-            {
-              groupLabel: "Tra cứu",
-              items: [
-                {
-                  label: "Xuất Excel",
-                  icon: <Download className="h-3.5 w-3.5" />,
-                  onClick: () => openOverlay("export"),
-                },
-              ],
-            },
-            {
-              groupLabel: "Thao tác",
-              items: [
-                {
-                  label: "Đăng nhập Cổng Thuế",
-                  icon: <KeyRound className="h-3.5 w-3.5" />,
-                },
-                {
-                  label: "Đồng bộ & Tải PDF gốc NCC",
-                  icon: <FileCheck className="h-3.5 w-3.5" />,
-                },
-              ],
-            },
-            {
-              groupLabel: "Cấu hình",
-              items: [
-                {
-                  label: "Cấu hình hóa đơn mua vào",
-                  icon: <Settings className="h-3.5 w-3.5" />,
-                },
-              ],
-            },
-          ],
-        },
+        enableFullscreen: true,
       },
     },
   };
