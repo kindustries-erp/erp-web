@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
+import { V2MultiCombobox } from "@/v2/shared/components/molecules/v2-multi-combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -21,7 +22,10 @@ import {
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import { CATEGORY_ACCOUNT_HINTS } from "@/modules/erp-invoices-core/components/organisms/erp-invoices-tab/utils";
-import { useBulkEditAssignments } from "./useBulkEditAssignments";
+import {
+  useBulkEditAssignments,
+  type BranchAssignments,
+} from "./useBulkEditAssignments";
 import type {
   BranchOption,
   BulkEditDrawerProps,
@@ -70,6 +74,10 @@ const NotesInputCell = React.memo(function NotesInputCell({
     />
   );
 });
+
+/** So sánh hai danh sách chi nhánh không phụ thuộc thứ tự */
+const sameBranchIds = (a: string[], b: string[]): boolean =>
+  a.length === b.length && [...a].sort().join(",") === [...b].sort().join(",");
 
 const EMPTY_INVOICES: ErpInvoice[] = [];
 
@@ -136,7 +144,7 @@ export function BulkEditDrawer({
   }, [invoiceCategories]);
 
   // --- Apply-all fields ---
-  const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
+  const [bulkBranchIds, setBulkBranchIds] = useState<string[]>([]);
   const [bulkCategoryId, setBulkCategoryId] = useState<string | null>(null);
   const [bulkNotesValue, setBulkNotesValue] = useState("");
 
@@ -167,7 +175,7 @@ export function BulkEditDrawer({
   // Reset ô áp dụng chung và tìm kiếm mỗi lần mở (không đụng assignments)
   useEffect(() => {
     if (!open) return;
-    setBulkBranchId(null);
+    setBulkBranchIds([]);
     setBulkCategoryId(null);
     setBulkNotesValue("");
     setInvoiceSearch("");
@@ -178,7 +186,7 @@ export function BulkEditDrawer({
     () =>
       selectedIds.some(
         (id) =>
-          (branchAssignments[id] ?? "") !== (initBranch[id] ?? "") ||
+          !sameBranchIds(branchAssignments[id] ?? [], initBranch[id] ?? []) ||
           (categoryAssignments[id] ?? "") !== (initCategory[id] ?? "") ||
           (notesAssignments[id] ?? "") !== (initNotes[id] ?? ""),
       ),
@@ -253,10 +261,10 @@ export function BulkEditDrawer({
         header: t("bulkEditBranch", "Chi nhánh"),
         size: 160,
         cell: (inv) => (
-          <Combobox
+          <V2MultiCombobox
             options={branches}
-            value={branchAssignments[inv.id] ?? ""}
-            onChange={(v) => handleBranchChange(inv.id, v ?? "")}
+            value={branchAssignments[inv.id] ?? []}
+            onValueChange={(v) => handleBranchChange(inv.id, v)}
             placeholder={t("bulkEditBranchPlaceholder", "Chọn chi nhánh...")}
           />
         ),
@@ -290,13 +298,13 @@ export function BulkEditDrawer({
 
   // Apply-all handlers
   const applyAllBranch = useCallback(() => {
-    if (!bulkBranchId) return;
-    const updated: Record<string, string> = {};
+    if (bulkBranchIds.length === 0) return;
+    const updated: BranchAssignments = {};
     selectedIds.forEach((id) => {
-      updated[id] = bulkBranchId;
+      updated[id] = bulkBranchIds;
     });
     setBranchAssignments(updated);
-  }, [bulkBranchId, selectedIds]);
+  }, [bulkBranchIds, selectedIds]);
 
   const applyAllCategory = useCallback(() => {
     if (!bulkCategoryId) return;
@@ -349,24 +357,32 @@ export function BulkEditDrawer({
       }
 
       // Branch: group các invoice có thay đổi theo giá trị mới
-      const branchGroups: Record<string, string[]> = {};
+      const branchGroups = new Map<
+        string,
+        { branchIds: string[]; ids: string[] }
+      >();
       selectedIds.forEach((id) => {
-        const newVal = branchAssignments[id] ?? "";
-        if (newVal !== (initBranch[id] ?? "")) {
-          if (!branchGroups[newVal]) branchGroups[newVal] = [];
-          branchGroups[newVal].push(id);
+        const newVal = [...(branchAssignments[id] ?? [])].sort();
+        if (!sameBranchIds(newVal, initBranch[id] ?? [])) {
+          const key = newVal.join(",");
+          if (!branchGroups.has(key)) {
+            branchGroups.set(key, { branchIds: newVal, ids: [] });
+          }
+          branchGroups.get(key)!.ids.push(id);
         }
       });
-      if (Object.keys(branchGroups).length > 0) {
+      if (branchGroups.size > 0) {
         tasks.push(
           Promise.all(
-            Object.entries(branchGroups).map(async ([bId, ids]) => {
-              const res = await erpInvoicesCoreApi.bulkSetBranch(
-                ids,
-                bId || null,
-              );
-              branchUpdated += res.updated || ids.length;
-            }),
+            Array.from(branchGroups.values()).map(
+              async ({ branchIds, ids }) => {
+                const res = await erpInvoicesCoreApi.bulkSetBranch(
+                  ids,
+                  branchIds,
+                );
+                branchUpdated += res.updated || ids.length;
+              },
+            ),
           ).then(() => {}),
         );
       }
@@ -550,14 +566,15 @@ export function BulkEditDrawer({
             </label>
             <div className="flex items-center gap-1">
               <div className="flex-1 min-w-0">
-                <Combobox
+                <V2MultiCombobox
                   options={branches}
-                  value={bulkBranchId ?? ""}
-                  onChange={(v) => setBulkBranchId(v ?? null)}
+                  value={bulkBranchIds}
+                  onValueChange={setBulkBranchIds}
                   placeholder={t(
                     "bulkEditBranchPlaceholderCommon",
                     "Chọn chi nhánh...",
                   )}
+                  clearable
                 />
               </div>
               <Tooltip content={t("bulkEditApplyAll", "Áp dụng tất cả")}>
@@ -566,7 +583,7 @@ export function BulkEditDrawer({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 shrink-0 text-slate-400 hover:text-primary"
-                  disabled={!bulkBranchId}
+                  disabled={bulkBranchIds.length === 0}
                   onClick={applyAllBranch}
                 >
                   <CopyCheck size={16} />

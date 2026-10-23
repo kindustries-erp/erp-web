@@ -505,7 +505,7 @@ export function InvoiceBulkPostingDrawer({
       }
 
       for (const [bId, ids] of Object.entries(branchGroups)) {
-        await erpInvoicesCoreApi.bulkSetBranch(ids, bId);
+        await erpInvoicesCoreApi.bulkSetBranch(ids, bId ? [bId] : []);
       }
 
       for (const inv of selectedInvoices) {

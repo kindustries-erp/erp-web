@@ -33,6 +33,7 @@ export interface ErpInvoiceItemRow {
   licensePlate?: string | null;
   settlementOrder?: string | null;
   branchId?: string | null;
+  branchIds?: string[];
   taxInvoiceStatus?: number | null;
   branchName?: string | null;
   itemCode?: string | null;
@@ -96,6 +97,7 @@ export interface ErpInvoiceItemListResponse {
 export interface ErpInvoice {
   id: string;
   branchId?: string | null;
+  branchIds?: string[];
   invoiceNo: string;
   serialNo?: string | null;
   invoiceDate: string;
@@ -182,6 +184,7 @@ export interface ErpInvoice {
 
 export interface CreateErpInvoicePayload {
   branchId?: string;
+  branchIds?: string[];
   invoiceNo: string;
   serialNo?: string;
   invoiceDate: string;
@@ -665,11 +668,12 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
-  bulkSetBranch: async (ids: string[], branchId: string | null) => {
+  /** branchIds rỗng = không gán chi nhánh nào */
+  bulkSetBranch: async (ids: string[], branchIds: string[]) => {
     const { data } = await axiosInstance.patch<{
       updated: number;
       ids: string[];
-    }>(`${BASE}/bulk-set-branch`, { ids, branchId });
+    }>(`${BASE}/bulk-set-branch`, { ids, branchIds });
     return data;
   },
 

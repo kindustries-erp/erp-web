@@ -148,6 +148,7 @@ export const v2En: V2Dictionary = {
       searchPlaceholder: "Search...",
       noResults: "No results",
       clearSelection: "Clear selection",
+      selectedCount: "{{count}} selected",
       pickDate: "Pick a date",
       pickDateRange: "Pick a date range",
       clearDate: "Clear date",

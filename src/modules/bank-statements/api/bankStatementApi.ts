@@ -52,6 +52,7 @@ export const bankStatementApi = {
     pageSize?: number;
     sourceType?: "BANK" | "CASH";
     branchId?: string;
+    branchIds?: string[];
     bankAccountId?: string;
     cashBookId?: string;
     startDate?: string;
@@ -154,6 +155,7 @@ export const bankStatementApi = {
     endDate?: string;
     sourceType?: "BANK" | "CASH";
     branchId?: string;
+    branchIds?: string[];
     bankAccountId?: string;
     cashBookId?: string;
     search?: string;
@@ -197,6 +199,7 @@ export const bankStatementApi = {
     endDate?: string;
     sourceType?: "BANK" | "CASH";
     branchId?: string;
+    branchIds?: string[];
     tagIds?: string[];
     column_search?: string;
     column_filters?: string;

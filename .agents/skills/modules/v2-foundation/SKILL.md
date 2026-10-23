@@ -60,7 +60,7 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 | :--- | :--- | :--- |
 | Atom | `V2Switch`, `V2Textarea`, `V2Skeleton`, `V2Progress` (+ `ui/progress`), `V2NumberInput`, `V2CopyButton`, `V2Sparkline` | `switch`, `textarea`, `Skeleton`, `progress`, ô nhập số, `CopyButton`, `KpiSparkline` |
 | Molecule | `V2Combobox`, `V2DatePicker`, `V2DateRangePicker` (+ `buildV2DatePresets`), `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2StatCard`, `V2Panel`, `V2ChartFrame` | `Combobox`, `DatePicker`, `EmptyState`, `Attachment`, `SearchInput`, `KpiCard`, `Panel` |
-| Organism | `V2BarChart`, `V2LineChart`, `V2DonutChart` (`organisms/v2-chart/`), `V2FilePreviewPanel` | `BarChart`, `LineChart`, `DonutChart`, `FilePreviewDrawer` |
+| Organism | `V2BarChart`, `V2LineChart`, `V2DonutChart`, `V2ComboChart` (`organisms/v2-chart/`), `V2FilePreviewPanel` | `BarChart`, `LineChart`, `DonutChart`, Combo/Mixed Chart, `FilePreviewDrawer` |
 | Template | `V2ModulePage` | `PageLayout`, `SpreadsheetPageTemplate`, `DashboardTemplate` |
 
 - `V2StandardTable` có thêm `toolbar.search` (ô tìm kiếm toàn cục, ghi vào `query.search`, chế độ client lọc theo mọi cột; hỗ trợ `;` nhiều từ khóa và `"..."` khớp chính xác).
@@ -69,10 +69,11 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 
 ## 6. Biểu đồ (`organisms/v2-chart`, skill `dataviz`)
 
+- `V2ComboChart`: Biểu đồ hỗn hợp (Mixed Bar + Line) hiển thị song song Cột (Doanh thu/Chi phí) và Đường (Lợi nhuận/Dòng tiền ròng/Chênh lệch). Hỗ trợ `tension: 0.3`, dot viền nổi bật `theme.surface`, trục Y phụ (`secondaryAxis`), tooltip index-based và switch dạng bảng.
 - Bảng màu `utils/v2ChartPalette.ts`: **5 màu cố định** (cam, lục lam, vàng, hồng, lục), không có xanh dương (No Blue Mandate) và không có đỏ (dành cho trạng thái lỗi), đã chạy validator ở cả sáng/tối. Thứ tự cố định, không xoay vòng; vượt 5 chuỗi/mảng thì `capV2Series`/`foldSlices` gộp vào "Khác".
-- Quy cách: cột tối đa 24px bo 4px ở đầu dữ liệu, đường 2px, chấm 8px có viền màu nền, vùng area ~10%, khe 2px giữa các mảng xếp chồng và donut. Legend luôn có từ 2 chuỗi. Mọi biểu đồ có chế độ xem dạng bảng (`V2ChartFrame`).
+- Quy cách: cột tối đa 24px bo 4px ở đầu dữ liệu, đường 2px, chấm 8px có viền màu nền, vùng area ~10%, khe 2px giữa các mảng xếp chồng và donut. Legend luôn có từ 2 chuỗi (phân biệt icon Cột và icon Đường qua `isLine`). Mọi biểu đồ có chế độ xem dạng bảng (`V2ChartFrame`).
 - Theme sáng/tối lấy từ `useV2ChartTheme` (đọc class `dark` và biến CSS).
-- Test: jsdom không có canvas, nên mock `react-chartjs-2` và test các hàm dựng dữ liệu/tùy chọn trong `V2Chart.options.ts`.
+- Test: jsdom không có canvas, nên mock `react-chartjs-2` và test các hàm dựng dữ liệu/tùy chọn trong `V2Chart.options.ts` và `V2ComboChart.test.tsx`.
 
 ## 7. Parity với erp-invoice (đã kiểm bằng story mẫu)
 

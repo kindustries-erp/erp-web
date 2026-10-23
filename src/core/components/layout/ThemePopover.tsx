@@ -1,4 +1,5 @@
 import { useAppStore, AppTheme } from "@/core/config/appStore";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useT } from "@/core/i18n";
 import { Popover } from "@/core/components/ui/Popover";
 import { Button } from "@/shared/components/ui/Button";
@@ -87,7 +88,13 @@ const THEME_OPTIONS: {
 
 export function ThemePopover({ children }: { children: React.ReactNode }) {
   const { appTheme, setAppTheme } = useAppStore();
+  const { employee } = useAuthStore();
   const t = useT();
+
+  const isAdmin = employee?.email === "admin@liouni.com";
+  const visibleOptions = THEME_OPTIONS.filter(
+    (opt) => isAdmin || (opt.value !== "shell" && opt.value !== "orcaq"),
+  );
 
   return (
     <Popover
@@ -96,7 +103,7 @@ export function ThemePopover({ children }: { children: React.ReactNode }) {
           <p className="px-2.5 py-1.5 text-[11px] font-medium text-[color:var(--muted-fg)] uppercase tracking-wide">
             {t("nav.bottom.themeStyle")}
           </p>
-          {THEME_OPTIONS.map((opt) => (
+          {visibleOptions.map((opt) => (
             <Button
               key={opt.value}
               variant="ghost"

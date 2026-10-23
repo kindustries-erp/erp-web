@@ -101,6 +101,11 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   function mapInvoiceToForm(inv: ErpInvoice): CreateErpInvoicePayload {
     return {
       branchId: inv.branchId ?? undefined,
+      branchIds: inv.branchIds?.length
+        ? inv.branchIds
+        : inv.branchId
+          ? [inv.branchId]
+          : [],
       invoiceNo: inv.invoiceNo,
       serialNo: inv.serialNo ?? undefined,
       invoiceDate: inv.invoiceDate,
@@ -420,19 +425,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
     if (!form.invoiceDate) {
       const errMsg = t("errorInvoiceDateRequired", "Ngày hóa đơn là bắt buộc.");
-      setFormError(errMsg);
-      toast.error(errMsg);
-      return;
-    }
-
-    // Validate branch only if accounting is enabled with posting lines
-    if (
-      (form as any).accountingEnabled &&
-      postingState.lines.length > 0 &&
-      !form.branchId
-    ) {
-      const errMsg =
-        "Vui lòng chọn chi nhánh trước khi lưu và hạch toán kế toán.";
       setFormError(errMsg);
       toast.error(errMsg);
       return;
