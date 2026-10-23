@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  deriveSyncPanelStatus,
   reconcileSyncStatus,
   type VinfastSyncStatus,
 } from "../hooks/vinfastSyncStatus";
@@ -71,5 +72,23 @@ describe("reconcileSyncStatus", () => {
     expect(reconcileSyncStatus(idle, false, undefined)).toEqual({
       isSyncing: false,
     });
+  });
+});
+
+describe("deriveSyncPanelStatus", () => {
+  it("is running while a sync is in progress, whatever the last log says", () => {
+    expect(deriveSyncPanelStatus(true, 0, "error")).toBe("running");
+  });
+
+  it("is error when the last line is an error", () => {
+    expect(deriveSyncPanelStatus(false, 30, "error")).toBe("error");
+  });
+
+  it("is done at 100% without an error", () => {
+    expect(deriveSyncPanelStatus(false, 100, "success")).toBe("done");
+  });
+
+  it("is idle before any run", () => {
+    expect(deriveSyncPanelStatus(false, 0, undefined)).toBe("idle");
   });
 });

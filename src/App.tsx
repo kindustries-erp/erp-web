@@ -6,7 +6,7 @@ import { V2ShellLayout } from "@/core/components/layout/V2ShellLayout";
 import { SlidePanel } from "@/shared/components/SlidePanel";
 import { SerialGenerationProgress } from "@/shared/components/SerialGenerationProgress";
 import { useSerialGenerationProgress } from "@/modules/goods-receipts-core/hooks/useSerialGenerationProgress";
-import { Toast } from "@/shared/components/Toast";
+import { V2Toaster } from "@/v2/shared/components";
 import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
@@ -473,7 +473,7 @@ export default function App() {
       </V2ShellLayout>
       <SlidePanel />
       <TopProgressBar />
-      <Toast />
+      <V2Toaster />
       <ReloadPrompt />
       <AppContextMenu />
       <DocumentDependencyModal />

@@ -1,9 +1,11 @@
 import * as React from "react";
 import { Building2, Plus, Users } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
-import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
-import { V2ModulePage } from "@/v2/shared/components/templates/v2-module-page";
-import type { V2ModuleTab } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage.type";
+import {
+  V2Button,
+  V2ConfirmModal,
+  V2ModulePage,
+  type V2ModuleTab,
+} from "@/v2/shared/components";
 import { useBusinessPartnersQuery } from "../api/queries/useBusinessPartnersQuery";
 import type {
   BusinessPartner,

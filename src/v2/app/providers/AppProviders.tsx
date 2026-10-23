@@ -2,9 +2,12 @@ import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Lock, LogIn } from "lucide-react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
-import { V2DocumentDependencyModal } from "@/v2/shared/components/molecules/v2-document-dependency-modal";
-import { V2Toaster } from "@/v2/shared/components/molecules/v2-toaster";
+import {
+  V2Button,
+  V2Text,
+  V2DocumentDependencyModal,
+  V2Toaster,
+} from "@/v2/shared/components";
 import { loadV2ServerPreferences } from "@/v2/shared/preferences/v2ServerPreferences";
 import { TooltipProvider } from "@/v2/shared/ui";
 import { AppProvidersProps } from "./AppProviders.type";

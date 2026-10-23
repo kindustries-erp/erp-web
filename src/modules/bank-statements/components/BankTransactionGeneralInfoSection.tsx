@@ -10,7 +10,7 @@ import {
   Calendar,
   FileText,
 } from "lucide-react";
-import { V2MultiCombobox } from "@/v2/shared/components/molecules/v2-multi-combobox";
+import { V2MultiCombobox } from "@/v2/shared/components";
 import { CopyButton } from "@/shared/components/CopyButton";
 import { BufferedTextarea } from "@/shared/components/BufferedTextarea";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";

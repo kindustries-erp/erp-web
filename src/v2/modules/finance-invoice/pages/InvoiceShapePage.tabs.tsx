@@ -6,7 +6,7 @@ import {
   KeyRound,
   Settings,
 } from "lucide-react";
-import type { V2ModuleTab } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage.type";
+import type { V2ModuleTab } from "@/v2/shared/components";
 import type {
   FakeInvoice,
   InvoiceDirection,

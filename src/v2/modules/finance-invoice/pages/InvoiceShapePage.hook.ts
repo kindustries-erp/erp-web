@@ -1,8 +1,10 @@
 import * as React from "react";
 import { useV2OverlayState } from "@/v2/shared/hooks/useV2OverlayState";
 import { resetV2TableUrl } from "@/v2/shared/utils/v2TableUrl";
-import { readV2ViewState } from "@/v2/shared/components/organisms/v2-standard-table/utils/v2ViewPresets";
-import type { V2ViewPresetState } from "@/v2/shared/components/organisms/v2-standard-table/toolbar/V2StandardTable.toolbar.type";
+import {
+  readV2ViewState,
+  type V2ViewPresetState,
+} from "@/v2/shared/components";
 import { buildInvoiceColumns } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-table/invoiceShape.columns";
 import type { InvoiceView } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-table/invoiceShape.columns";
 import type { TaxTab } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";

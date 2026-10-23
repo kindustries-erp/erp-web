@@ -1,16 +1,28 @@
 import * as React from "react";
-import { V2Header } from "@/v2/shared/components/organisms/v2-header";
-import { V2BottomNav } from "@/v2/shared/components/organisms/v2-bottom-nav";
-import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import {
+  LayoutGrid,
+  Sliders,
+  Check,
+  RotateCcw,
+  AlertCircle,
+} from "lucide-react";
+import { cn } from "@/v2/shared/utils/cn";
+import {
+  V2Header,
+  V2BottomNav,
+  V2Modal,
+  V2Button,
+  V2Text,
+  type V2SidebarNavItem,
+} from "@/v2/shared/components";
 import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import {
-  filterV2NavItems,
-  filterV2NavSections,
-  getV2NavItems,
-  getV2NavigationSections,
-} from "./v2Navigation";
+  useV2MobileNavStore,
+  MAX_PINNED_MOBILE_NAV,
+} from "@/v2/shared/stores/useV2MobileNavStore";
+import { filterV2NavSections, getV2NavigationSections } from "./v2Navigation";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
 export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
@@ -20,22 +32,87 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   userName,
   userRole,
   tenantName,
+  branchName,
+  logoUrl,
+  sections,
   navItems,
   onNavigate,
+  onBranchClick,
+  onClickLogo,
+  contentClassName,
 }) => {
   const { t, locale } = useV2Translation();
   const can = useV2PermissionChecker();
   const [catalogOpen, setCatalogOpen] = React.useState(false);
+  const [isCustomizing, setIsCustomizing] = React.useState(false);
+  const [limitWarning, setLimitWarning] = React.useState<string | null>(null);
 
-  const dynamicNavItems = React.useMemo(
-    () => filterV2NavItems(getV2NavItems(t), can),
-    [t, locale, can],
-  );
-  const catalogSections = React.useMemo(
-    () => filterV2NavSections(getV2NavigationSections(t), can),
-    [t, locale, can],
-  );
-  const effectiveNavItems = navItems ?? dynamicNavItems;
+  const { pinnedIds, setPinnedIds, resetToDefault } = useV2MobileNavStore();
+
+  const effectiveSections = React.useMemo(() => {
+    if (sections && sections.length > 0) {
+      return sections;
+    }
+    return filterV2NavSections(getV2NavigationSections(t), can);
+  }, [sections, t, locale, can]);
+
+  // Toàn bộ các module/mục con có thể truy cập
+  const allAvailableItems = React.useMemo(() => {
+    const list: V2SidebarNavItem[] = [];
+    effectiveSections.forEach((sec) => {
+      sec.items.forEach((item) => {
+        if (!list.some((existing) => existing.id === item.id)) {
+          list.push(item);
+        }
+      });
+    });
+    return list;
+  }, [effectiveSections]);
+
+  // Bộ 5 mục mặc định thông minh
+  const default5Items = React.useMemo(() => {
+    const primaryItems = effectiveSections
+      .map((sec) => sec.items[0])
+      .filter(Boolean);
+    const combined: V2SidebarNavItem[] = [];
+    for (const item of [...primaryItems, ...allAvailableItems]) {
+      if (!combined.some((ex) => ex.id === item.id)) {
+        combined.push(item);
+      }
+      if (combined.length >= MAX_PINNED_MOBILE_NAV) break;
+    }
+    return combined;
+  }, [effectiveSections, allAvailableItems]);
+
+  // Danh sách IDs đang được chọn thực tế (nếu store rỗng thì lấy từ default5Items)
+  const currentSelectedIds = React.useMemo(() => {
+    if (pinnedIds && pinnedIds.length > 0) {
+      return pinnedIds;
+    }
+    return default5Items.map((it) => it.id);
+  }, [pinnedIds, default5Items]);
+
+  // 5 Quick action items thực tế hiển thị
+  const quick5Items = React.useMemo(() => {
+    return currentSelectedIds
+      .map((id) => allAvailableItems.find((it) => it.id === id))
+      .filter(Boolean) as V2SidebarNavItem[];
+  }, [currentSelectedIds, allAvailableItems]);
+
+  // Thanh điều hướng cố định 6 items: 5 quick actions + 1 Tất cả
+  const effectiveNavItems = React.useMemo(() => {
+    if (navItems) return navItems;
+
+    const allMenuItem: V2SidebarNavItem = {
+      id: "catalog",
+      label: t("v2.nav.items.allModules", "Tất cả"),
+      icon: LayoutGrid,
+      href: "#catalog",
+    };
+
+    return [...quick5Items, allMenuItem];
+  }, [navItems, quick5Items, t]);
+
   const handleMobileNavigate = (item: (typeof effectiveNavItems)[number]) => {
     if (item.id === "catalog") {
       setCatalogOpen(true);
@@ -43,11 +120,54 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
     }
     onNavigate?.(item);
   };
-  const bottomActiveId = effectiveNavItems.some(
-    (item) => item.id === activeNavId,
-  )
-    ? activeNavId
-    : "catalog";
+
+  // Xử lý bật/tắt chọn mục trong chế độ Tùy chỉnh: Chặn khi đủ 5 mục và phát thông báo
+  const handleToggleItem = (itemId: string) => {
+    if (currentSelectedIds.includes(itemId)) {
+      // Bỏ chọn mục đã có
+      const nextIds = currentSelectedIds.filter((id) => id !== itemId);
+      setPinnedIds(nextIds);
+      setLimitWarning(null);
+    } else {
+      // Cố gắng chọn mục mới khi đã đủ 5 mục -> CHẶN & THÔNG BÁO
+      if (currentSelectedIds.length >= MAX_PINNED_MOBILE_NAV) {
+        const warningMsg = t(
+          "v2.nav.maxShortcutsDesc",
+          "Đã chọn đủ 5/5 mục lối tắt. Vui lòng bỏ chọn bớt một mục trước khi chọn mục mới.",
+        );
+        setLimitWarning(warningMsg);
+        useV2ToastStore.getState().showToast({
+          title: t("v2.nav.maxShortcutsTitle", "Đã đạt giới hạn lối tắt"),
+          description: warningMsg,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Chưa đủ 5 mục -> Cho phép thêm
+      const nextIds = [...currentSelectedIds, itemId];
+      setPinnedIds(nextIds);
+      setLimitWarning(null);
+    }
+  };
+
+  const bottomActiveId = React.useMemo(() => {
+    if (effectiveNavItems.some((item) => item.id === activeNavId)) {
+      return activeNavId;
+    }
+    const parentSection = effectiveSections.find((sec) =>
+      sec.items.some((item) => item.id === activeNavId),
+    );
+    if (parentSection) {
+      const matched = effectiveNavItems.find(
+        (item) =>
+          parentSection.items.some((secItem) => secItem.id === item.id) ||
+          item.label === parentSection.label,
+      );
+      if (matched) return matched.id;
+    }
+    return "catalog";
+  }, [effectiveNavItems, activeNavId, effectiveSections]);
 
   const fallbackBreadcrumbs = React.useMemo(
     () => [{ label: t("v2.nav.items.dashboard", "Tổng quan") }],
@@ -67,8 +187,17 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
         userName={effectiveUserName}
         userRole={userRole}
         tenantName={tenantName}
+        branchName={branchName}
+        logoUrl={logoUrl}
+        onBranchClick={onBranchClick ?? onClickLogo}
       />
-      <main className="flex-1 overflow-y-auto p-4 pb-20 focus:outline-none">
+      <main
+        tabIndex={-1}
+        className={cn(
+          "flex-1 overflow-y-auto px-2 py-2.5 pb-20 focus:outline-none sm:px-4 sm:py-4",
+          contentClassName,
+        )}
+      >
         {children}
       </main>
       <V2BottomNav
@@ -78,31 +207,145 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
       />
       <V2Modal
         open={catalogOpen}
-        onOpenChange={setCatalogOpen}
-        title={t("v2.nav.items.catalog", "Danh mục")}
+        onOpenChange={(open) => {
+          setCatalogOpen(open);
+          if (!open) {
+            setIsCustomizing(false);
+            setLimitWarning(null);
+          }
+        }}
+        title={t("v2.nav.items.catalogTitle", "Danh mục phân hệ")}
         size="full"
       >
-        <div className="space-y-4">
-          {catalogSections.map((section) => (
-            <section key={section.id} className="space-y-2">
-              <V2Text variant="section-title" color="muted">
+        <div className="space-y-4 pb-6">
+          {/* Quick actions customization header */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
+                <Sliders className="h-3.5 w-3.5 text-primary" />
+                <span>
+                  {t("v2.nav.customize", "Tùy chỉnh lối tắt")}{" "}
+                  <span className="text-muted-fg font-normal">
+                    ({currentSelectedIds.length}/{MAX_PINNED_MOBILE_NAV})
+                  </span>
+                </span>
+              </div>
+              <span className="text-[11px] text-muted-fg mt-0.5">
+                {isCustomizing
+                  ? "Chọn tối đa 5 mục thao tác nhanh ngoài Bottom Nav"
+                  : `Đang ghim ${currentSelectedIds.length} mục lối tắt ở Bottom Nav`}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {isCustomizing ? (
+                <>
+                  <V2Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-2 text-xs text-muted-fg"
+                    onClick={() => {
+                      resetToDefault();
+                      setLimitWarning(null);
+                    }}
+                    title="Khôi phục mặc định"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </V2Button>
+                  <V2Button
+                    size="sm"
+                    variant="default"
+                    className="h-8 px-3 text-xs gap-1"
+                    onClick={() => {
+                      setIsCustomizing(false);
+                      setLimitWarning(null);
+                    }}
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    <span>{t("v2.common.done", "Xong")}</span>
+                  </V2Button>
+                </>
+              ) : (
+                <V2Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs gap-1"
+                  onClick={() => {
+                    if (pinnedIds.length === 0) {
+                      setPinnedIds(default5Items.map((it) => it.id));
+                    }
+                    setIsCustomizing(true);
+                  }}
+                >
+                  <Sliders className="h-3.5 w-3.5" />
+                  <span>Sửa</span>
+                </V2Button>
+              )}
+            </div>
+          </div>
+
+          {/* Warning banner khi người dùng cố chọn vượt quá 5 mục */}
+          {limitWarning && (
+            <div
+              data-testid="limit-warning-banner"
+              className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs font-medium flex items-center gap-2 animate-in fade-in"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{limitWarning}</span>
+            </div>
+          )}
+
+          {effectiveSections.map((section) => (
+            <section key={section.id} className="space-y-2.5">
+              <V2Text
+                variant="section-title"
+                color="muted"
+                className="text-xs font-semibold tracking-wider uppercase"
+              >
                 {section.label}
               </V2Text>
               <div className="grid grid-cols-2 gap-2">
-                {section.items.map((item) => (
-                  <V2Button
-                    key={item.id}
-                    variant="outline"
-                    className="h-auto justify-start gap-2 py-3"
-                    onClick={() => {
-                      setCatalogOpen(false);
-                      onNavigate?.(item);
-                    }}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="truncate">{item.label}</span>
-                  </V2Button>
-                ))}
+                {section.items.map((item) => {
+                  const isSelected = currentSelectedIds.includes(item.id);
+                  return (
+                    <V2Button
+                      key={item.id}
+                      variant={
+                        isCustomizing
+                          ? isSelected
+                            ? "secondary"
+                            : "outline"
+                          : activeNavId === item.id
+                            ? "secondary"
+                            : "outline"
+                      }
+                      className={cn(
+                        "h-auto justify-between gap-2 py-2.5 px-3 text-left transition-all",
+                        isCustomizing &&
+                          isSelected &&
+                          "border-primary bg-primary/10 text-primary font-medium",
+                        !isCustomizing &&
+                          activeNavId === item.id &&
+                          "border-primary/50 text-primary font-medium",
+                      )}
+                      onClick={() => {
+                        if (isCustomizing) {
+                          handleToggleItem(item.id);
+                        } else {
+                          setCatalogOpen(false);
+                          onNavigate?.(item);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <item.icon className="h-4 w-4 shrink-0 text-muted-fg" />
+                        <span className="truncate text-xs">{item.label}</span>
+                      </div>
+                      {isCustomizing && isSelected && (
+                        <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                      )}
+                    </V2Button>
+                  );
+                })}
               </div>
             </section>
           ))}

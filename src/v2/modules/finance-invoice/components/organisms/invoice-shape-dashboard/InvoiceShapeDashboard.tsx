@@ -1,12 +1,12 @@
 import * as React from "react";
-import { V2Sparkline } from "@/v2/shared/components/atoms/v2-sparkline";
-import { V2Panel } from "@/v2/shared/components/molecules/v2-panel";
-import { V2StatCard } from "@/v2/shared/components/molecules/v2-stat-card";
 import {
+  V2Sparkline,
+  V2Panel,
+  V2StatCard,
   V2BarChart,
   V2DonutChart,
   V2LineChart,
-} from "@/v2/shared/components/organisms/v2-chart";
+} from "@/v2/shared/components";
 import {
   CASH_TREND,
   MONTH_LABELS,

@@ -1,10 +1,12 @@
 import * as React from "react";
-import { V2Progress } from "@/v2/shared/components/atoms/v2-progress";
-import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
-import { V2DatePicker } from "@/v2/shared/components/molecules/v2-date-picker";
-import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
-import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import {
+  V2Progress,
+  V2Combobox,
+  V2DatePicker,
+  DrawerField,
+  DrawerSection,
+  V2StandardDrawer,
+} from "@/v2/shared/components";
 
 const ACCOUNTS = [
   { value: "156", label: "156 - Hàng hóa" },

@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { V2TableQuery } from "@/v2/shared/types/v2-table";
-import type { V2ModuleListData } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage.type";
+import type { V2ModuleListData } from "@/v2/shared/components";
 import type {
   FakeInvoice,
   InvoiceDirection,

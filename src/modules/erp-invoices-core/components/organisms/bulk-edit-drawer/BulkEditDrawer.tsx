@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
-import { V2MultiCombobox } from "@/v2/shared/components/molecules/v2-multi-combobox";
+import { V2MultiCombobox } from "@/v2/shared/components";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";

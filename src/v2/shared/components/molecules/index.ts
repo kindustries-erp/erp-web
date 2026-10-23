@@ -48,3 +48,8 @@ export * from "./v2-panel";
 export * from "./v2-chart-frame";
 export * from "./v2-env-stamp";
 export * from "./v2-theme-toggle";
+export * from "./v2-toaster";
+export * from "./v2-document-dependency-modal";
+export * from "./v2-form-controls";
+export * from "./v2-subtotal-summary-cell";
+export * from "./v2-sync-progress";

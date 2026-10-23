@@ -23,7 +23,7 @@ interface FifoFlatTableProps {
   optionsMap?: Record<string, { label: string; value: string }[]>;
 }
 
-const COLUMN_COUNT = 18;
+const COLUMN_COUNT = 17;
 
 /** Bảng FIFO: khung, tiêu đề, các dòng và hàng tổng. */
 export function FifoFlatTable({
@@ -36,7 +36,7 @@ export function FifoFlatTable({
   const { t } = useTranslation(["vinfastParts", "common"]);
 
   return (
-    <div className="w-full overflow-x-auto overflow-y-visible border border-slate-200 rounded-md bg-white relative">
+    <div className="w-full overflow-x-auto overflow-y-visible border border-border/30 dark:border-zinc-800/40 rounded-lg bg-card/40 dark:bg-zinc-950/40 backdrop-blur-sm relative">
       <Table className="w-full text-sm text-left whitespace-nowrap min-w-max border-collapse">
         <FifoTableHeader tableState={tableState} optionsMap={optionsMap} />
 
@@ -45,7 +45,7 @@ export function FifoFlatTable({
             <TableRow>
               <TableCell
                 colSpan={COLUMN_COUNT}
-                className="text-center py-6 text-slate-500"
+                className="text-center py-6 text-slate-500 dark:text-zinc-400"
               >
                 {t("common:noData", "Không có dữ liệu")}
               </TableCell>

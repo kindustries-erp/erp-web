@@ -1,7 +1,9 @@
 import * as React from "react";
-import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { V2StandardTable } from "@/v2/shared/components/organisms/v2-standard-table";
-import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table";
+import {
+  DrawerSection,
+  V2StandardTable,
+  type V2Column,
+} from "@/v2/shared/components";
 
 interface LinkedDoc {
   id: string;

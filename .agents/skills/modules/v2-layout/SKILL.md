@@ -213,6 +213,36 @@ export interface V2SidebarProps {
 }
 ```
 
+### 4.4. `V2HeaderProps` ([`V2Header.type.ts`](erp/erp-web/src/v2/shared/components/organisms/v2-header/V2Header.type.ts))
+```typescript
+export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
+  title?: string;
+  breadcrumbs?: V2HeaderBreadcrumb[];
+  userName?: string;
+  userRole?: string;
+  tenantName?: string;
+  branchName?: string;
+  logoUrl?: string;
+  onBranchClick?: () => void;
+  onReturnToV1?: () => void;
+  showLanguageSwitcher?: boolean;
+  showReturnToV1?: boolean;
+}
+```
+
+### 4.5. `V2AppLayoutMobile` ([`V2AppLayout.mobile.tsx`](erp/erp-web/src/v2/app/layouts/v2-app-layout/V2AppLayout.mobile.tsx))
+- **Mobile Topbar**: Ẩn các nút rườm rà (`showLanguageSwitcher=false`, `showReturnToV1=false`), kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
+- **Main Spacing**: Giảm padding lồng ghép từ 36px xuống `px-2 py-2.5 pb-20 sm:px-4 sm:py-4`, tương thích mượt mà với `PageLayout` (`px-2 sm:px-5`).
+- **Thanh Điều Hướng 6 Items Chuẩn**:
+  - Cố định hiển thị **đúng 6 menu items** phân bổ đều (`grid grid-flow-col auto-cols-fr h-16`), vừa vặn hoàn hảo trên mọi kích thước màn hình điện thoại mà không cần cuộn ngang.
+  - **5 Items đầu**: Là các lối tắt (Quick Actions) do người dùng chọn và tùy chỉnh (hoặc tự động chọn 5 mục hữu ích nhất theo quyền).
+  - **Item thứ 6**: Cố định là **"Tất cả"** (`id: "catalog"`, icon `LayoutGrid`) mở Modal/Drawer danh mục toàn bộ hệ thống.
+- **Store Quản Lý Lối Tắt Cá Nhân Hóa (`useV2MobileNavStore`)**:
+  - Lưu trữ 5 mục ghim vào LocalStorage qua `persist` với key `v2_mobile_nav_pinned`.
+  - Hỗ trợ `setPinnedIds`, `togglePinnedId` (tối đa 5), `resetToDefault`.
+- **Giao Diện Tùy Chỉnh Lối Tắt**:
+  - Nút "Tùy chỉnh lối tắt" tích hợp trong Modal Danh mục, cho phép người dùng chọn bất kỳ tiểu mục nào trong toàn bộ ERP (Garage, Kho, Mua hàng, Kế toán...) để đưa ra thanh Bottom Nav.
+
 ---
 
 ## 5. Kiến Trúc Đa Ngôn Ngữ (i18n VI/EN) Trong V2 Layout
@@ -333,6 +363,40 @@ cd erp/erp-web && bun run storybook
 - **Đồng bộ hóa văn bản phụ trợ với `V2Text`**:
   - Thay vì dùng thẻ HTML thô (`<span>`, `<h4>`, `<div>`), sử dụng `V2Text` kết hợp các biến thể chuẩn (`variant="body-sm"`, `variant="code"`, `variant="section-title"`) và `color="muted"` / `color="inherit"`.
   - Giữ nguyên 100% diện mạo visual parity (kích thước font 12px, font-mono khi đếm số, spacing), đồng thời tự động thích ứng với Dark Theme OS thông qua semantic token `text-muted-fg`.
+
+### 4.8. Chuẩn Hóa Hệ Sinh Thái Thông Báo: `V2Toaster` & Top-Center Positioning
+- **Hệ thống Toast Duy nhất**: Toàn bộ ứng dụng (kể cả các màn hình cũ, Axios responses qua `useUIStore.showToast`) đều được bridge trực tiếp sang `useV2ToastStore.getState().showToast(...)` và render bởi `V2Toaster`.
+- **Định vị Top-Center (`fixed top-4 left-1/2 -translate-x-1/2 z-[1100]`)**:
+  - Tự động căn giữa màn hình theo phương ngang, nằm ngang tầm mắt người dùng.
+  - Tuyệt đối không che lấp thanh công cụ bên phải của Drawer Header (nút Chỉnh sửa, Điều hướng, Đóng) cũng như Topbar Breadcrumbs bên trái.
+  - Tự động responsive trên thiết bị di động (`max-w-[calc(100vw-32px)]`).
+- **Giao diện Dark Theme Chuẩn V2 (Glassmorphism & High Contrast)**:
+  - Khung thẻ kính mờ: `backdrop-blur-md shadow-xl rounded-xl border`.
+  - Biến thể `success`: Nền xanh ngọc ánh sáng sang trọng (`dark:bg-[#07271a]/95 dark:border-emerald-500/30 dark:text-emerald-100`), icon `CheckCircle2` ngọc sáng `text-emerald-500 dark:text-emerald-400`.
+  - Biến thể `destructive`: Nền đỏ cảnh báo dịu mắt (`dark:bg-[#2b0d12]/95 dark:border-rose-500/30 dark:text-rose-100`), icon `XCircle` màu đỏ `text-rose-500 dark:text-rose-400`.
+- **Loại bỏ Nút "Quay lại ERP V1"**: Toàn bộ các layout V2 (Mobile Drawer Catalog, Desktop Header, Welcome Page) đã xóa triệt để nút "Quay lại ERP V1", đảm bảo giao diện V2 thuần khiết và thống nhất.
+
+### 4.9. Kỷ Luật Master Barrel Import: `@/v2/shared/components`
+- **Quy tắc Duy nhất**: Bất kỳ component V2 nào (Atoms, Molecules, Organisms, Templates) khi được import vào các Pages, Layouts, Features Modules, Adapters hay Test files đều **bắt buộc phải import từ `@/v2/shared/components`**:
+  ```tsx
+  import {
+    V2Button,
+    V2Text,
+    V2Modal,
+    V2StandardDrawer,
+    V2StandardTable,
+    V2Header,
+    V2Sidebar,
+    V2BottomNav,
+    V2Combobox,
+    V2DatePicker,
+    V2Toaster,
+    type V2Column,
+    type V2SidebarNavItem,
+  } from "@/v2/shared/components";
+  ```
+- **Cấm hoàn toàn Deep Imports**: Không được import phân mảnh dạng `@/v2/shared/components/atoms/...`, `@/v2/shared/components/molecules/...`, `@/v2/shared/components/organisms/...`.
+- **Đảm bảo Sub-Barrels**: `src/v2/shared/components/organisms/index.ts` và `src/v2/shared/components/molecules/index.ts` phải luôn luôn re-export đầy đủ 100% các component con để phục vụ Master Barrel.
 
 ---
 

@@ -52,10 +52,10 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-2 bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+              className="h-8 gap-2 bg-white hover:bg-slate-50 text-slate-700 border-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700"
               onClick={() => setExportOpen(true)}
             >
-              <DownloadCloud className="w-4 h-4 text-emerald-600" />
+              <DownloadCloud className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>{t("common:exportExcel", "Xuất Excel")}</span>
             </Button>
           </div>

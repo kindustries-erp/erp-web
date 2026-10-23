@@ -1,14 +1,14 @@
 import * as React from "react";
-import { V2NumberInput } from "@/v2/shared/components/atoms/v2-number-input";
-import { V2Switch } from "@/v2/shared/components/atoms/v2-switch";
-import { V2Textarea } from "@/v2/shared/components/atoms/v2-textarea";
-import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
-import { V2DatePicker } from "@/v2/shared/components/molecules/v2-date-picker";
 import {
+  V2NumberInput,
+  V2Switch,
+  V2Textarea,
+  V2Combobox,
+  V2DatePicker,
   DrawerField,
   DrawerRow,
-} from "@/v2/shared/components/molecules/v2-drawer-field";
-import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
+  DrawerSection,
+} from "@/v2/shared/components";
 import {
   BRANCHES,
   formatMoney,

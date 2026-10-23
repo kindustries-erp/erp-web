@@ -1,7 +1,5 @@
 import { Badge } from "@/v2/shared/ui";
-import { V2Tooltip } from "@/v2/shared/components/atoms/v2-tooltip";
-import { V2TableText } from "@/v2/shared/components/molecules/v2-table-text";
-import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table";
+import { V2Tooltip, V2TableText, type V2Column } from "@/v2/shared/components";
 import { ColumnValueType, TableColumnAlign } from "@/v2/shared/types/v2-table";
 import type { BusinessPartner } from "../../../domain/entities/businessPartner";
 import { isBusinessPartnerInactive } from "../../../domain/rules/businessPartnerRules";

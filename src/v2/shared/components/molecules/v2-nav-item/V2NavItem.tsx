@@ -24,7 +24,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         onClick={onClick}
         aria-label={label}
         className={cn(
-          "group h-auto flex flex-1 flex-col items-center justify-center py-1 px-2 text-xs font-medium transition-colors select-none rounded-none hover:bg-transparent",
+          "group h-auto flex flex-1 flex-col items-center justify-center py-1 px-0.5 text-xs font-medium transition-colors select-none rounded-none hover:bg-transparent min-w-0 w-full",
           isActive
             ? "text-primary font-semibold"
             : "text-muted-fg hover:text-foreground",
@@ -33,7 +33,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         {...props}
       >
         <div className="relative inline-flex items-center justify-center">
-          <V2NavIcon icon={icon} isActive={isActive} size={22} />
+          <V2NavIcon icon={icon} isActive={isActive} size={20} />
           {typeof badgeCount === "number" && badgeCount > 0 && (
             <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
               {badgeCount > 99 ? "99+" : badgeCount}
@@ -44,7 +44,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           as="span"
           variant="caption"
           truncate
-          className="mt-1 max-w-[64px] text-inherit font-inherit"
+          className="mt-1 max-w-[58px] text-[10px] leading-tight text-inherit font-inherit"
         >
           {label}
         </V2Text>

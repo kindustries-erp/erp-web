@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
-import type { V2TabEntry } from "@/v2/shared/components/molecules/v2-tab-bar";
 import {
+  type V2TabEntry,
   LayoutDashboard,
   Boxes,
   Users,
@@ -26,7 +26,7 @@ import {
   Mail,
   Sliders,
   type V2IconType as LucideIcon,
-} from "@/v2/shared/components/atoms";
+} from "@/v2/shared/components";
 
 const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   dashboard: LayoutDashboard,

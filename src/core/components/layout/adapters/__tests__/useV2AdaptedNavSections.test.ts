@@ -4,7 +4,7 @@ import { useV2AdaptedNavSections } from "../useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "../useV2AdaptedTabs";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource } from "@/modules/system/types/rbac";
-import { Sliders } from "@/v2/shared/components/atoms";
+import { Sliders } from "@/v2/shared/components";
 
 vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: vi.fn(),
