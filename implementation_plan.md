@@ -1,3 +1,42 @@
+# Enhance Glassmorphism cho V2 Drawer
+
+**Track**: `T1` — shared drawer visual refinement.
+**RequestFeedback**: `false` — plan approved for implementation.
+
+## Web Frontend
+
+- [x] **Task 3.3.1: Đồng bộ drawer glass tokens light/dark và V1 fallback**
+  - **DoD**: Sheet dùng blur 20px và shadow nhẹ theo theme; overlay blur 1px ở cả hai theme; light surface alpha 0.35, dark alpha 0.75, overlay alpha 0.2; fallback hoạt động trên route V1.
+  - **Files**: `src/v2/shared/ui/sheet/sheet.tsx`, `src/v2/shared/styles/v2-theme.css`, `src/styles/panels.css`, `src/styles/themes/orcaq.css`
+  - **Verification**: Scoped Sheet test và drawer desktop/mobile tests.
+- [x] **Task 3.3.2: Khóa glass style contract bằng regression tests**
+  - **DoD**: Sheet test xác nhận background token, blur/saturate/contrast classes, overlay dark tối thiểu và drawer marker; desktop/mobile drawer regressions pass.
+  - **Files**: `src/v2/shared/ui/sheet/sheet.test.tsx`
+  - **Verification**: `bunx vitest run src/v2/shared/ui/sheet/sheet.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/desktop/V2StandardDrawer.desktop-content.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/mobile/V2StandardDrawer.mobile.test.tsx`
+
+## QC & Knowledge
+
+- [x] **Task 4.1.1: Chạy typecheck và final gate checks**
+  - **Verification**: Scoped (3 files/12 tests) và full suite (571 files/2,528 tests; 2 files/12 tests skipped) PASS; `bun run build`, `bun run check:ci` PASS. `verify:final` không gọi do yêu cầu worktree sạch sau commit/rebase.
+- [x] **Task 4.3.1: Cập nhật drawer knowledge và walkthrough**
+  - **DoD**: Ghi nhận token contract, kiểm tra light/dark, QC và giới hạn UI smoke.
+
+## Session Checkpoint
+
+- **Active Task**: Không còn task đang thực hiện.
+- **Tiến độ**: Follow-up theo screenshot tinh chỉnh drawer alpha, blur, overlay và shadow; các lần kiểm tra scoped/build/check:ci đã pass ở từng bước được ghi bên dưới.
+- **Follow-up 2**: Theo yêu cầu nhìn rõ dải màu phía sau, giảm bề mặt light alpha xuống 0.38 và dark xuống 0.58. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- **Follow-up 3**: Cập nhật theo yêu cầu mới: light 0.2, dark 0.7, blur 15px, overlay 15% (bao gồm OrcaQ). Scoped tests (3 files/12 tests), `bun run check:ci`, `bun run build` và `git diff --check` PASS.
+- **Follow-up 4**: Drawer blur tăng lên 20px và thêm blur 4px cho overlay phía sau ở light/dark. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- **Follow-up 5**: Giảm overlay blur xuống 2px, tăng overlay alpha lên 0.2 ở light/dark. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- **Follow-up 6**: Overlay blur 1px, thêm shadow nhẹ qua `--drawer-shadow`, light alpha 0.35 và dark alpha 0.65. Scoped tests (3 files/12 tests), `bun run check:ci`, `bun run build` và `git diff --check` PASS.
+- **Follow-up 7**: Light alpha 0.3, dark alpha 0.7 trên theme và V1 fallback.
+- **Follow-up 8**: Light alpha 0.35, dark alpha 0.75. `bun run build`, `bun run check:ci`, `bun run test` (571 files/2,528 tests passed; 2 files/12 tests skipped), và `git diff --check` PASS.
+- **Git Status**: Thay đổi implementation/docs chưa commit trên `erp-master`, dự kiến commit và rebase trước Final Gate.
+- **Hành động tiếp theo**: Commit thay đổi đã QC, rebase `github-industries/erp-master`, chạy `verify:final`, rồi push.
+
+---
+
 # Business Partners trên ERP Web V2
 
 RequestFeedback: false

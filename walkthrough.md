@@ -1,3 +1,38 @@
+# Enhance Glassmorphism cho V2 Drawer
+
+## Thay đổi
+
+- V2 Sheet dùng `--drawer-blur: 20px`, saturate `190%` và contrast `102%`, đồng bộ filter với V1 mà không ảnh hưởng popup/modal.
+- Bề mặt drawer light dùng alpha `0.35`, dark dùng alpha `0.75`; overlay light/dark dùng alpha `0.2` và blur nhẹ `1px`. Drawer có `--drawer-shadow` nhẹ riêng theo theme.
+- Fallback cho drawer V2 trên route V1 áp dụng alpha light riêng, không đổi V1 slide-panel. OrcaQ dùng cùng blur `20px`.
+- Cập nhật module skill `v2-drawer` ghi nhận token contract.
+
+## Verification
+
+- `bunx vitest run src/v2/shared/ui/sheet/sheet.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/desktop/V2StandardDrawer.desktop-content.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/mobile/V2StandardDrawer.mobile.test.tsx` — 3 files, 12 tests PASS.
+- `bunx tsc --noEmit` — PASS; `bun run build` — PASS (có warning chunk/dynamic import); `bun run check:ci` — PASS.
+- `bun run test` — 571 files PASS, 2 skipped; 2,528 tests PASS, 12 skipped.
+- `bash ../../.agents/scripts/sync-agents.sh --check` — Agent system validation PASS.
+- `bun run verify:final` chưa chạy vì script đòi working tree sạch sau commit/rebase; không có commit/push trong scope.
+- UI smoke light/dark desktop/mobile chưa chạy trong browser; cần phiên đăng nhập.
+
+## Follow-up: Light glass chưa rõ trong screenshot
+
+- Nguyên nhân: light surface alpha `0.82` chỉ cho backdrop xuyên qua 18%; drawer gần full màn hình và nền phía sau sáng đồng màu làm blur khó nhận biết. Sheet trước đó cũng chỉ có blur, thiếu saturate/contrast như V1.
+- Điều chỉnh: light V2 drawer alpha `0.68`, filter `blur(24px) saturate(190%) contrast(102%)`; fallback light giới hạn vào V2 Sheet trên route V1.
+- Follow-up backdrop: dark overlay giảm từ 60% xuống 8%, bỏ blur trên overlay; blur 24px giữ ở sheet surface. Scoped sheet/drawer tests (3 files, 12 tests), `bun run check:ci`, `bun run build`, và `git diff --check` pass. Build hiện có cảnh báo chunk size và dynamic/static imports.
+- Verification follow-up 1: 3 scoped files / 12 tests PASS; `bun run check:ci` PASS; `bun run build` PASS. Full suite phía trên đã chạy trước follow-up style-only.
+- Follow-up 2: giảm surface alpha light từ 0.68 xuống 0.38, dark từ 0.88 xuống 0.58. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- Follow-up 3: theo yêu cầu mới, surface alpha light 0.2/dark 0.7, blur 15px và overlay 15%; OrcaQ dùng cùng blur 15px. Scoped tests (3 files/12 tests), `bun run check:ci` và `bun run build` PASS. Build hiện có cảnh báo chunk size và dynamic/static imports.
+- Follow-up 4: tăng drawer blur lên 20px, thêm overlay backdrop blur 4px ở light/dark. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- Follow-up 5: giảm overlay blur xuống 2px và tăng overlay alpha lên 0.2 ở light/dark. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- Follow-up 6: overlay blur 1px, shadow nhẹ theo theme, light alpha 0.35 và dark alpha 0.65. Scoped tests (3 files/12 tests), `bun run check:ci` và `bun run build` PASS. Build có warning chunk size và dynamic/static imports.
+- Follow-up 7: light alpha 0.3, dark alpha 0.7 ở theme tokens và V1 fallback.
+- Follow-up 8: light alpha 0.35, dark alpha 0.75.
+- Delivery QC: `bun run build`, `bun run check:ci`, `bun run test` (571 files/2,528 tests passed; 2 files/12 tests skipped), `git diff --check` PASS. Final Gate sẽ chạy sau commit và rebase.
+
+---
+
 # Business Partners trên ERP Web V2
 
 ## Kết quả
