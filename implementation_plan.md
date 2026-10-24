@@ -17,7 +17,7 @@
 ## QC & Knowledge
 
 - [x] **Task 4.1.1: Chạy typecheck và final gate checks**
-  - **Verification**: Scoped (3 files/12 tests) và full suite (571 files/2,528 tests; 2 files/12 tests skipped) PASS; `bun run build`, `bun run check:ci` PASS. `verify:final` không gọi do yêu cầu worktree sạch sau commit/rebase.
+  - **Verification**: Final Gate pass trên `4a34a7e5`; build, check:style và full suite (573 files/2,542 tests passed; 2 files/12 tests skipped) PASS.
 - [x] **Task 4.3.1: Cập nhật drawer knowledge và walkthrough**
   - **DoD**: Ghi nhận token contract, kiểm tra light/dark, QC và giới hạn UI smoke.
 
@@ -32,8 +32,8 @@
 - **Follow-up 6**: Overlay blur 1px, thêm shadow nhẹ qua `--drawer-shadow`, light alpha 0.35 và dark alpha 0.65. Scoped tests (3 files/12 tests), `bun run check:ci`, `bun run build` và `git diff --check` PASS.
 - **Follow-up 7**: Light alpha 0.3, dark alpha 0.7 trên theme và V1 fallback.
 - **Follow-up 8**: Light alpha 0.35, dark alpha 0.75. `bun run build`, `bun run check:ci`, `bun run test` (571 files/2,528 tests passed; 2 files/12 tests skipped), và `git diff --check` PASS.
-- **Git Status**: Thay đổi implementation/docs chưa commit trên `erp-master`, dự kiến commit và rebase trước Final Gate.
-- **Hành động tiếp theo**: Commit thay đổi đã QC, rebase `github-industries/erp-master`, chạy `verify:final`, rồi push.
+- **Git Status**: Code commit `4a34a7e5` đã push lên `github-industries/erp-master`; checkpoint docs này sẽ được commit riêng.
+- **Hành động tiếp theo**: Push checkpoint docs sau Final Gate.
 
 ---
 

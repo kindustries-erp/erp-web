@@ -11,9 +11,9 @@
 
 - `bunx vitest run src/v2/shared/ui/sheet/sheet.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/desktop/V2StandardDrawer.desktop-content.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/mobile/V2StandardDrawer.mobile.test.tsx` — 3 files, 12 tests PASS.
 - `bunx tsc --noEmit` — PASS; `bun run build` — PASS (có warning chunk/dynamic import); `bun run check:ci` — PASS.
-- `bun run test` — 571 files PASS, 2 skipped; 2,528 tests PASS, 12 skipped.
+- `bun run test` — Final Gate: 573 files passed, 2 skipped; 2,542 tests passed, 12 skipped.
 - `bash ../../.agents/scripts/sync-agents.sh --check` — Agent system validation PASS.
-- `bun run verify:final` chưa chạy vì script đòi working tree sạch sau commit/rebase; không có commit/push trong scope.
+- `bun run verify:final` — PASS trên commit `4a34a7e5` sau rebase.
 - UI smoke light/dark desktop/mobile chưa chạy trong browser; cần phiên đăng nhập.
 
 ## Follow-up: Light glass chưa rõ trong screenshot
@@ -186,4 +186,4 @@ UI smoke chưa chạy vì browser hiện không có phiên đăng nhập (route 
 ## Git
 
 - Branch: `erp-master`.
-- Chưa commit hoặc push.
+- Code commit `4a34a7e5` đã push lên `github-industries/erp-master`; checkpoint docs được cập nhật sau push.
