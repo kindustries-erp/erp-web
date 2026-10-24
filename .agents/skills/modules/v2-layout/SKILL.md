@@ -230,11 +230,14 @@ export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
   onReturnToV1?: () => void;
   showLanguageSwitcher?: boolean;
   showReturnToV1?: boolean;
+  userMenuNode?: React.ReactNode;
+  notificationNode?: React.ReactNode;
 }
 ```
 
 ### 4.5. `V2AppLayoutMobile` ([`V2AppLayout.mobile.tsx`](erp/erp-web/src/v2/app/layouts/v2-app-layout/V2AppLayout.mobile.tsx))
-- **Mobile Topbar**: Ẩn các nút rườm rà (`showLanguageSwitcher=false`, `showReturnToV1=false`), kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
+- **Mobile Topbar**: Tích hợp `userMenuNode` (mở UserMenuPopover đầy đủ tính năng: hồ sơ, cài đặt, theme, ngôn ngữ, đăng xuất) và `notificationNode`. Kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
+- **Cài đặt Giao diện & Ngôn ngữ Nhanh (Catalog Modal)**: Tích hợp card Quick Settings ngay đầu modal danh mục cho phép đổi nhanh Sáng / Tối / Midnight và công tắc Ngôn ngữ thông qua props `currentTheme` và `onThemeChange`.
 - **Main Spacing**: Giảm padding lồng ghép từ 36px xuống `px-2 py-2.5 pb-20 sm:px-4 sm:py-4`, tương thích mượt mà với `PageLayout` (`px-2 sm:px-5`).
 - **Thanh Điều Hướng 6 Items Chuẩn**:
   - Cố định hiển thị **đúng 6 menu items** phân bổ đều (`grid grid-flow-col auto-cols-fr h-16`), vừa vặn hoàn hảo trên mọi kích thước màn hình điện thoại mà không cần cuộn ngang.

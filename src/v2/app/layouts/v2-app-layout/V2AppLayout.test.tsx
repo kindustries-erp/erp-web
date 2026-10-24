@@ -149,4 +149,69 @@ describe("V2AppLayout Switcher", () => {
 
     expect(screen.getAllByText("Tổng quan").length).toBeGreaterThan(0);
   });
+
+  it("render userMenuNode và notificationNode trên mobile header", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 390,
+    });
+
+    render(
+      <V2AppLayout
+        userMenuNode={<div data-testid="mobile-user-menu">User Menu</div>}
+        notificationNode={
+          <div data-testid="mobile-notification">Notification</div>
+        }
+      >
+        <div>Content</div>
+      </V2AppLayout>,
+    );
+
+    expect(screen.getByTestId("mobile-user-menu")).toBeInTheDocument();
+    expect(screen.getByTestId("mobile-notification")).toBeInTheDocument();
+  });
+
+  it("hiển thị bộ chọn theme và ngôn ngữ trong mobile catalog modal và gọi onThemeChange", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 390,
+    });
+
+    const handleThemeChange = vi.fn();
+    render(
+      <V2AppLayout
+        currentTheme="classic-light"
+        onThemeChange={handleThemeChange}
+      >
+        <div>Content</div>
+      </V2AppLayout>,
+    );
+
+    const catalogBtn = screen.getByText("Tất cả");
+    fireEvent.click(catalogBtn);
+
+    // Kiểm tra card cài đặt giao diện & ngôn ngữ
+    expect(
+      screen.getByTestId("mobile-appearance-settings"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Giao diện")).toBeInTheDocument();
+    expect(screen.getByText("Ngôn ngữ")).toBeInTheDocument();
+
+    // Thử click chuyển theme sang Dark
+    const darkBtn = screen.getByText("Tối");
+    fireEvent.click(darkBtn);
+    expect(handleThemeChange).toHaveBeenCalledWith("classic-dark");
+
+    // Thử click chuyển theme sang Midnight
+    const midnightBtn = screen.getByText("Midnight");
+    fireEvent.click(midnightBtn);
+    expect(handleThemeChange).toHaveBeenCalledWith("midnight");
+
+    // Thử click chuyển theme sang Sáng
+    const lightBtn = screen.getByText("Sáng");
+    fireEvent.click(lightBtn);
+    expect(handleThemeChange).toHaveBeenCalledWith("classic-light");
+  });
 });

@@ -17,6 +17,8 @@ export const V2Header: React.FC<V2HeaderProps> = ({
   logoUrl,
   onBranchClick,
   showLanguageSwitcher = false,
+  userMenuNode,
+  notificationNode,
   className,
   ...props
 }) => {
@@ -80,21 +82,26 @@ export const V2Header: React.FC<V2HeaderProps> = ({
         )}
       </div>
 
-      {/* Right Actions: Language Switcher & Company / User info */}
-      <div className="flex items-center gap-1.5 shrink-0 max-w-[55%] justify-end">
+      {/* Right Actions: Notification, Language Switcher, User Menu / Badge */}
+      <div className="flex items-center gap-1.5 shrink-0 max-w-[65%] justify-end">
+        {notificationNode}
         {showLanguageSwitcher && <V2LanguageSwitcher />}
 
-        <V2UserBadge
-          name={userName}
-          role={userRole}
-          tenantName={tenantName || branchName}
-          avatarUrl={logoUrl}
-          onClick={onBranchClick}
-          className={cn(
-            "min-w-0 max-w-full",
-            onBranchClick && "cursor-pointer active:scale-95 transition-all",
-          )}
-        />
+        {userMenuNode ? (
+          userMenuNode
+        ) : (
+          <V2UserBadge
+            name={userName}
+            role={userRole}
+            tenantName={tenantName || branchName}
+            avatarUrl={logoUrl}
+            onClick={onBranchClick}
+            className={cn(
+              "min-w-0 max-w-full",
+              onBranchClick && "cursor-pointer active:scale-95 transition-all",
+            )}
+          />
+        )}
       </div>
     </header>
   );

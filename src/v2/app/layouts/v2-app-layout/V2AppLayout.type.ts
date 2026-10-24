@@ -30,4 +30,6 @@ export interface V2AppLayoutProps extends V2BaseProps {
   userMenuNode?: ReactNode;
   notificationNode?: ReactNode;
   onClickLogo?: () => void;
+  currentTheme?: string;
+  onThemeChange?: (theme: any) => void;
 }

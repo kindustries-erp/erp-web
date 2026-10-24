@@ -57,6 +57,8 @@ export {
   Globe,
   Languages,
   Sliders,
+  Palette,
+  Sparkles,
   Filter,
   Download,
   Upload,
