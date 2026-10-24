@@ -55,4 +55,17 @@ describe("V2Input", () => {
     render(<V2Input ref={ref} placeholder="Ref test" />);
     expect(ref.current).toBeInstanceOf(HTMLInputElement);
   });
+
+  it("renders variant search without box border", () => {
+    render(
+      <V2Input
+        placeholder="Search..."
+        variant="search"
+        data-testid="search-input"
+      />,
+    );
+    const input = screen.getByTestId("search-input");
+    expect(input.className).toContain("border-0");
+    expect(input.className).toContain("bg-transparent");
+  });
 });

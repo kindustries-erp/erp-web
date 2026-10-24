@@ -405,8 +405,19 @@ export function DeleteOrderAction() {
       onCancel={() => setOpen(false)}
     />
   );
-}
-```
+### 9.4. Universal Search Organism: `V2UniversalSearchModal`
+- **Đường dẫn**: `@/v2/shared/components/organisms/v2-universal-search-modal`
+- **Hiệu ứng Glass & Blur Chuẩn (Kế thừa 1:1 từ V1)**:
+  - **Dynamic Background**: `var(--popup-bg, rgba(246, 248, 252, 0.72))` tự động thích ứng hoàn hảo theo theme (`classic`, `midnight`, `orcaq`, `default`).
+  - **Backdrop Filter**: `blur(20px) saturate(180%)` cùng `-webkit-backdrop-filter: blur(20px) saturate(180%)`.
+  - **Border & Dividers**: `border border-[color:var(--popup-border,rgba(226,232,240,0.8))] dark:border-white/10`.
+  - **Specular Inset Shadow**:
+    - Light: `shadow-[0_24px_48px_-12px_rgba(15,23,42,0.22),0_4px_16px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset]`
+    - Dark: `dark:shadow-[0_20px_48px_-8px_rgba(0,0,0,0.65),0_4px_16px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.06)_inset]`
+  - **Overlay**: Sử dụng `hideOverlay` để mở modal dạng floating Spotlight / Command Palette không làm mờ toàn màn hình.
+- **Platform Split**:
+  - Desktop: Spotlight card cố định ở `top-[15vh] max-w-[560px]`.
+  - Mobile: Bottom Sheet `h-[88dvh] max-h-[88dvh] rounded-t-2xl`.
 
 ---
 

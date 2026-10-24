@@ -62,6 +62,7 @@ src/v2/
     └── components/                     # [Atomic Components] (Import 1 chiều từ shared/ui)
         ├── atoms/                      # [Level 1 - Core Atoms]
         │   ├── v2-button/              # Nút chuẩn hoá (loading, icons, fullWidth, variants V1+V2)
+        │   ├── v2-input/               # Ô nhập liệu chuẩn hoá (variants: default, search, ghost, icon slots, forwardRef)
         │   ├── v2-text/                # Chữ chuẩn hoá (auto HTML mapping, truncate, copyable, required)
         │   ├── v2-sidebar-toggle-btn/  # Nút thu gọn / mở rộng Sidebar 26x26px
         │   ├── v2-sidebar-icon/        # Container bọc icon điều hướng Sidebar
@@ -86,7 +87,8 @@ src/v2/
             ├── v2-sidebar/             # Card 1: Sidebar hoàn chỉnh (210px / 58px) bo góc 16px
             ├── v2-right-panel/         # Card 2: Right Panel hoàn chỉnh bo góc 16px
             ├── v2-tab-bar/             # Thanh TabBar đa dạng: App tabs ('app'), Sub-navigation pill tabs ('sub'), Button group ('button-group'), Header tabs ('header'), Page tabs ('page')
-            └── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động
+            ├── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động
+            └── v2-universal-search-modal/ # Modal tìm kiếm toàn cục Spotlight (Desktop) & Bottom Sheet (Mobile) thay thế hoàn toàn V1
         │
         └── index.ts                    # Master Barrel Export toàn bộ components V2 (@/v2/shared/components)
 ```

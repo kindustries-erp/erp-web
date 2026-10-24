@@ -72,6 +72,15 @@ export const v2En: V2Dictionary = {
       languageEn: "English",
       mainBranch: "Main Branch",
     },
+    universalSearch: {
+      placeholder: "Search menus, actions...",
+      noResults: "No matching results found",
+      hintNavigate: "navigate",
+      hintOpen: "open",
+      hintClose: "close",
+      title: "Universal Search",
+      escKey: "Esc",
+    },
     tabBar: {
       ariaLabel: "Multi-task tab bar",
       closeTab: "Close tab {{name}}",

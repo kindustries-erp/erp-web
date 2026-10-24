@@ -56,7 +56,9 @@ export const V2Input = React.forwardRef<HTMLInputElement, V2InputProps>(
       className,
       inputClassName,
       containerClassName,
-      sizeVariant = "md",
+      variant = "default",
+      sizeVariant,
+      size,
       leftIcon,
       rightIcon,
       clearable,
@@ -78,7 +80,8 @@ export const V2Input = React.forwardRef<HTMLInputElement, V2InputProps>(
     const hasValue =
       currentVal !== undefined && currentVal !== null && currentVal !== "";
 
-    const sizeStyle = SIZE_STYLES[sizeVariant];
+    const resolvedSize = sizeVariant ?? size ?? "md";
+    const sizeStyle = SIZE_STYLES[resolvedSize] ?? SIZE_STYLES.md;
 
     const setMergedRef = React.useCallback(
       (node: HTMLInputElement | null) => {
@@ -143,6 +146,10 @@ export const V2Input = React.forwardRef<HTMLInputElement, V2InputProps>(
             leftIcon ? sizeStyle.plIcon : sizeStyle.plDefault,
             rightIcon || showClear ? sizeStyle.prIcon : sizeStyle.prDefault,
             error && "border-destructive focus-visible:ring-destructive",
+            variant === "search" &&
+              "border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0",
+            variant === "ghost" &&
+              "border-0 bg-transparent hover:bg-muted/40 focus-visible:ring-0",
             inputClassName,
             className,
           )}

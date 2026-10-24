@@ -8,7 +8,7 @@ import { V2AppLayout } from "@/v2/app/layouts/v2-app-layout";
 import { V2EnvStamp, type V2BreadcrumbItem } from "@/v2/shared/components";
 import { useV2AdaptedNavSections } from "./adapters/useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "./adapters/useV2AdaptedTabs";
-import { UniversalSearchModal } from "./UniversalSearchModal";
+import { V2UniversalSearchModal } from "@/v2/shared/components";
 import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
@@ -292,11 +292,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
       </V2AppLayout>
 
       {/* Global Modals */}
-      <UniversalSearchModal
+      <V2UniversalSearchModal
         open={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
-        navTo={(p) => {
-          navigate(p);
+        onSelect={(item) => {
+          navigate(item.id as PageKey);
           setSearchModalOpen(false);
         }}
       />
