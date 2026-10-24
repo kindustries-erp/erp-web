@@ -32,6 +32,6 @@ describe("erpInvoicesVi locale parts", () => {
       0,
     );
     expect(Object.keys(erpInvoicesVi)).toHaveLength(total);
-    expect(total).toBe(534);
+    expect(total).toBe(554);
   });
 });
