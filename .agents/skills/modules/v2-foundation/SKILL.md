@@ -99,3 +99,31 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 - Menu `V2Dropdown` nằm trong drawer không mở được bằng `fireEvent`/`userEvent` trong jsdom; kiểm tra trạng thái xếp tầng bằng cách khôi phục từ URL (`?overlay=invoice%3AIN-1,posting`) và truy vấn nút với `hidden: true` khi có drawer chồng nhau.
 - Mỗi test dùng URL sạch: `window.history.replaceState(null, "", "/v2/x")` trong `beforeEach`.
 - Story gọi hook phải bọc trong component đặt tên (quy tắc rules-of-hooks của ESLint), không gọi hook trong `render`.
+
+## 10. Hệ thống Theme V2 & Đồng bộ Storybook
+
+- **5 Theme Chuẩn**:
+  - `default` / `shell`: Mặc định sáng (Neutral background `#f4f6f8`, không gắn class theme, `dark: false`).
+  - `classic-light`: Cổ điển sáng (Class `.theme-classic`, `dark: false`).
+  - `classic-dark`: Cổ điển tối (Teal scheme `#14b8a6`, class `.theme-classic`, `.theme-classic-dark`, `dark: true`).
+  - `orcaq`: OrcaQ (Flat DB style, class `.theme-orcaq`, `dark: false`).
+  - `midnight`: Midnight Dark (Deep Night Violet `#a78bfa`, class `.theme-midnight`, `dark: true`).
+- **applyV2Theme**:
+  - Quản lý chính xác danh sách class `.theme-classic`, `.theme-classic-dark`, `.theme-orcaq`, `.theme-midnight` và `.dark`.
+  - Tuyệt đối không để `window.matchMedia` của hệ điều hành ép sang `.dark` khi người dùng chủ động chọn Light theme (`default`, `classic-light`, `orcaq`).
+- **Storybook Decorator (.storybook/preview.tsx)**:
+  - Toolbar `theme` cung cấp đầy đủ 5 theme trên.
+  - Tự động đồng bộ `useAppStore.getState().setAppTheme(mappedTheme)` và `setLocale(selectedLocale)`.
+  - Body và Canvas container áp dụng `bg-background text-foreground` giúp các Radix portal (Modal, Drawer, Popover) hiển thị màu nền chuẩn xác.
+
+## 11. Quy chuẩn Elevation (Box Shadow), Popover và Date Filter V2
+
+- **Loại bỏ viền trắng cứng ở Dark Mode (Elevation by Shadow)**:
+  - Bảng dữ liệu `V2StandardTable`: dùng `border border-border/20 dark:border-transparent shadow-[var(--card-shadow)]` để thay thế viền trắng cứng `border-border/60`. Bảng nổi khối tự nhiên và sang trọng trên nền tối.
+  - Popover & Filter: dùng `border border-border/20 dark:border-transparent shadow-[var(--popup-shadow)]`. `--popup-border` trong các theme dark là `transparent`, `--popup-shadow` đạt độ sâu `0 24px 48px -8px rgba(0,0,0,0.8), 0 8px 24px -4px rgba(0,0,0,0.5)`.
+- **Date Filter trong Table Header (`V2DateRangeSlot`)**:
+  - Tuyệt đối không dùng thẻ `<Input type="date">` mặc định của trình duyệt.
+  - Bắt buộc dùng 2 component `V2DatePicker` (Từ ngày, Đến ngày) với `triggerClassName="text-xs px-2 gap-1.5 h-8 font-normal"`.
+  - Hỗ trợ chọn nhanh bằng presets, chọn trực quan qua popup `V2Calendar`, ràng buộc `minDate`/`maxDate` và định dạng chuẩn ngày tháng tiếng Việt.
+
+

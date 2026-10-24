@@ -1,6 +1,12 @@
 import * as React from "react";
-import { ArrowDownAZ, ArrowUpAZ, ListFilter } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import {
+  ArrowDownAZ,
+  ArrowUpAZ,
+  ListFilter,
+  V2Button,
+  V2Icon,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { Popover, PopoverContent, PopoverTrigger } from "@/v2/shared/ui";
 import {
@@ -57,7 +63,14 @@ export const V2ColumnHeaderFilter: React.FC<V2ColumnHeaderFilterProps> = (
             props.className,
           )}
         >
-          <span className="truncate">{label}</span>
+          <V2Text
+            as="span"
+            variant="body-sm"
+            truncate
+            className="font-[inherit] uppercase tracking-[inherit]"
+          >
+            {label}
+          </V2Text>
           <span
             className={cn(
               "relative flex h-5 min-w-[20px] items-center justify-center gap-0.5 rounded-md px-0.5 transition-colors",
@@ -68,13 +81,13 @@ export const V2ColumnHeaderFilter: React.FC<V2ColumnHeaderFilterProps> = (
             )}
           >
             {(!hasActiveModifiers || isFilterActive) && (
-              <ListFilter className="h-3.5 w-3.5" />
+              <V2Icon icon={ListFilter} size={14} />
             )}
             {isSortActive &&
               (sort === TableSortState.ASC ? (
-                <ArrowDownAZ className="h-3.5 w-3.5" />
+                <V2Icon icon={ArrowDownAZ} size={14} />
               ) : (
-                <ArrowUpAZ className="h-3.5 w-3.5" />
+                <V2Icon icon={ArrowUpAZ} size={14} />
               ))}
             {hasActiveModifiers && (
               <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">

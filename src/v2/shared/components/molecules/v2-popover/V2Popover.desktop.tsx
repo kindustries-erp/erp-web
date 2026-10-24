@@ -1,5 +1,5 @@
 import * as React from "react";
-import { X } from "lucide-react";
+import { X, V2Icon, V2Text } from "@/v2/shared/components/atoms";
 import {
   Popover,
   PopoverTrigger,
@@ -45,7 +45,7 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
           // Non-modal popover portals to <body>; a modal Dialog (e.g. drawer) sets body pointer-events:none, so re-enable clicks here.
           "pointer-events-auto relative min-w-[240px] max-w-[420px] p-4 text-foreground",
           glass &&
-            "bg-[var(--popup-bg,rgba(246,248,252,0.72))] backdrop-blur-[var(--glass-blur,16px)] border border-[color:var(--popup-border,rgba(226,232,240,0.8))] shadow-[var(--popup-shadow)]",
+            "bg-[var(--popup-bg,rgba(246,248,252,0.72))] backdrop-blur-[var(--glass-blur,16px)] border border-[color:var(--popup-border,rgba(226,232,240,0.8))] dark:border-transparent shadow-[var(--popup-shadow)]",
           className,
         )}
       >
@@ -53,9 +53,9 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
         {(title || !hideCloseButton) && (
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/50">
             {title ? (
-              <div className="text-xs font-semibold text-foreground">
+              <V2Text variant="body-sm" weight="semibold">
                 {title}
-              </div>
+              </V2Text>
             ) : (
               <div />
             )}
@@ -64,7 +64,7 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
                 aria-label={closeAriaLabel}
                 className="rounded-md p-1 opacity-70 hover:opacity-100 hover:bg-surface-hover text-muted-fg hover:text-foreground cursor-pointer transition-opacity"
               >
-                <X className="h-3.5 w-3.5" />
+                <V2Icon icon={X} size={14} />
               </PopoverClose>
             )}
           </div>

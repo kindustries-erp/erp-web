@@ -1,4 +1,5 @@
 export * from "./v2-button";
+export * from "./v2-input";
 export * from "./v2-text";
 export * from "./v2-nav-icon";
 export * from "./v2-sidebar-icon";
