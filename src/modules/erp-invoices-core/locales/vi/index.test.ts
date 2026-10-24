@@ -5,6 +5,7 @@ import { erpInvoicesViActions } from "./actions";
 import { erpInvoicesViBulk } from "./bulk";
 import { erpInvoicesViSettlement } from "./settlement";
 import { erpInvoicesViNetoff } from "./netoff";
+import { erpInvoicesViLookup } from "./lookup";
 
 const PARTS = [
   erpInvoicesViPage,
@@ -12,6 +13,7 @@ const PARTS = [
   erpInvoicesViBulk,
   erpInvoicesViSettlement,
   erpInvoicesViNetoff,
+  erpInvoicesViLookup,
 ];
 
 describe("erpInvoicesVi locale parts", () => {
@@ -32,6 +34,6 @@ describe("erpInvoicesVi locale parts", () => {
       0,
     );
     expect(Object.keys(erpInvoicesVi)).toHaveLength(total);
-    expect(total).toBe(554);
+    expect(total).toBe(573);
   });
 });

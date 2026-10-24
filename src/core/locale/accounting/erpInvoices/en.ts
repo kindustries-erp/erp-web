@@ -296,4 +296,26 @@ export const erpInvoicesEn = {
   taxStatusWasReplaced: "Was Replaced",
   taxStatusWasAdjusted: "Was Adjusted",
   taxStatusCancelled: "Cancelled",
+
+  // Lookup info & original PDF
+  lookupTitle: "Lookup info",
+  lookupNoInfo: "No lookup info",
+  lookupNoXml: "No XML on the system; manual lookup only",
+  lookupProvider: "Provider",
+  lookupCode: "Lookup code",
+  lookupUrl: "Lookup address",
+  lookupHintsTitle: "Additional info",
+  lookupCopy: "Copy",
+  lookupCopied: "Copied",
+  lookupCopyFailed: "Could not copy",
+  lookupOpenPortal: "Open lookup portal",
+  lookupDownloadPdf: "Download original PDF",
+  lookupUploadPdf: "Upload downloaded PDF",
+  lookupUploadHint:
+    "Download the PDF from the provider portal, then upload it here",
+  downloadPdfSuccess: "Original PDF downloaded",
+  downloadPdfFailed: "Failed to download original PDF",
+  uploadPdfSuccess: "PDF uploaded",
+  uploadPdfFailed: "Failed to upload PDF",
+  invalidPdfFile: "File must be a PDF",
 };
