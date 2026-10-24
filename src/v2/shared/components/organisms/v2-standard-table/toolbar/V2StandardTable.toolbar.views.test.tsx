@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
+import { useV2TablePreferencesStore } from "@/v2/shared/preferences/useV2TablePreferencesStore";
 import { V2StandardTableDesktop } from "../desktop/V2StandardTable.desktop";
 import { mockViewport, renderTable } from "../mocks/V2StandardTable.fixture";
 import type { V2TableToolbarConfig } from "../V2StandardTable.type";
@@ -25,6 +26,7 @@ describe("V2StandardTable toolbar: chế độ xem tùy chỉnh", () => {
   beforeEach(() => {
     mockViewport(false);
     window.localStorage.clear();
+    useV2TablePreferencesStore.setState({ tables: {} });
   });
   afterEach(() => vi.restoreAllMocks());
 
