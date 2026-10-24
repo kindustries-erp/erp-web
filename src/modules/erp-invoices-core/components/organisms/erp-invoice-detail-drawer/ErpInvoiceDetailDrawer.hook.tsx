@@ -98,6 +98,7 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     fieldSet?.("pendingDocumentChanges", [...current, ...newChanges]);
     toast.success(
       t(
+        "toastLinkedBankSuccess",
         "Đã thêm giao dịch ngân hàng vào danh sách cấn trừ (chờ Lưu thay đổi).",
       ),
     );
@@ -112,7 +113,9 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     ]);
     fieldSet?.("purchaseOrderId", po.id);
     toast.success(
-      t("Đã chọn đơn mua hàng {{poNo}} để liên kết (chờ Lưu thay đổi).", {
+      t("toastLinkedPoSuccess", {
+        defaultValue:
+          "Đã chọn đơn mua hàng {{poNo}} để liên kết (chờ Lưu thay đổi).",
         poNo: po.poNo,
       }),
     );
@@ -127,7 +130,9 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     ]);
     fieldSet?.("salesOrderId", so.id);
     toast.success(
-      t("Đã chọn đơn bán hàng {{soNo}} để liên kết (chờ Lưu thay đổi).", {
+      t("toastLinkedSoSuccess", {
+        defaultValue:
+          "Đã chọn đơn bán hàng {{soNo}} để liên kết (chờ Lưu thay đổi).",
         soNo: so.soNo,
       }),
     );
@@ -144,7 +149,9 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     ]);
     fieldSet?.("settlementOrder", code);
     toast.success(
-      t("Đã chọn vụ việc garage {{code}} để liên kết (chờ Lưu thay đổi).", {
+      t("toastLinkedCaseSuccess", {
+        defaultValue:
+          "Đã chọn vụ việc garage {{code}} để liên kết (chờ Lưu thay đổi).",
         code,
       }),
     );
@@ -219,10 +226,10 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
 
     if (onSyncDetail) {
       groups.push({
-        groupLabel: "ĐỒNG BỘ",
+        groupLabel: t("groupSync", "ĐỒNG BỘ"),
         items: [
           {
-            label: "Đồng bộ từ GĐT",
+            label: t("syncGdt", "Đồng bộ từ GĐT"),
             icon: (
               <RefreshCw
                 className={`w-4 h-4 text-teal-400 ${loadingDetail ? "animate-spin" : ""}`}
@@ -237,10 +244,10 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
 
     if (detailInvoice?.id) {
       groups.push({
-        groupLabel: "XUẤT DỮ LIỆU",
+        groupLabel: t("groupExport", "XUẤT DỮ LIỆU"),
         items: [
           {
-            label: "Xuất Excel hóa đơn",
+            label: t("exportInvoiceExcel", "Xuất Excel hóa đơn"),
             icon: (
               <FileSpreadsheet
                 className={`w-4 h-4 text-emerald-500 ${exportingExcel ? "animate-spin" : ""}`}
@@ -262,6 +269,7 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     detailInvoice,
     exportingExcel,
     handleExportSingleExcel,
+    t,
   ]);
 
   return {

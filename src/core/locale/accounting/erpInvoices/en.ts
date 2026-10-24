@@ -267,4 +267,33 @@ export const erpInvoicesEn = {
   customFieldsOut: "Output Invoice Configuration",
   configTitleIn: "Input Invoices",
   configTitleOut: "Output Invoices",
+
+  // Drawer Detail & Actions
+  internalTitle: "Internal Details",
+  groupSync: "SYNC",
+  syncGdt: "Sync from Tax Portal",
+  groupExport: "EXPORT",
+  exportInvoiceExcel: "Export Invoice to Excel",
+  exportingExcel: "Exporting Excel file...",
+  exportExcelSuccess: "Excel file exported successfully!",
+  exportExcelError: "Failed to export Excel file",
+  drawerSectionHistory: "Audit Trail & Operations History",
+  emptyHistory: "No history recorded yet.",
+
+  // Toasts
+  toastLinkedBankSuccess:
+    "Added bank transaction to settlement list (pending save).",
+  toastLinkedPoSuccess:
+    "Selected purchase order {{poNo}} to link (pending save).",
+  toastLinkedSoSuccess: "Selected sales order {{soNo}} to link (pending save).",
+  toastLinkedCaseSuccess:
+    "Selected garage case {{code}} to link (pending save).",
+
+  // Tax Statuses
+  taxStatusNew: "New",
+  taxStatusReplaced: "Replaced",
+  taxStatusAdjusted: "Adjusted",
+  taxStatusWasReplaced: "Was Replaced",
+  taxStatusWasAdjusted: "Was Adjusted",
+  taxStatusCancelled: "Cancelled",
 };
