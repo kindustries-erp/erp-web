@@ -9,7 +9,10 @@ export const V2Skeleton: React.FC<V2SkeletonProps> = ({
 }) => (
   <div
     aria-hidden
-    className={cn("animate-pulse rounded-md bg-muted", className)}
+    className={cn(
+      "animate-pulse rounded-md bg-slate-200/70 dark:bg-slate-800/60 border border-slate-200/40 dark:border-slate-700/40",
+      className,
+    )}
     {...props}
   />
 );
