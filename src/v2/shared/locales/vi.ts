@@ -125,6 +125,26 @@ export const v2Vi = {
       processing: "Đang xử lý...",
     },
     exportExcel: {
+      condition: {
+        title: "Điều kiện xuất dữ liệu",
+        modeLabel: "Chế độ xuất dữ liệu",
+        modePeriod: "Theo kỳ",
+        modePeriodDesc: "Chọn khoảng thời gian theo kỳ hoặc ngày tùy chỉnh",
+        modeCurrentFilter: "Theo filter hiện tại",
+        modeCurrentFilterDesc: "Giữ nguyên toàn bộ bộ lọc đang xem trên bảng",
+        periodMonth: "Theo tháng",
+        periodQuarter: "Theo quý",
+        periodCustom: "Tùy chỉnh",
+        month: "Kỳ",
+        quarter: "Quý",
+        selectQuarter: "Chọn quý...",
+        dateFrom: "Từ ngày",
+        dateTo: "Đến ngày",
+        filterSummary: "Tóm tắt bộ lọc bảng",
+        filterConditions: "Điều kiện lọc",
+        filterCount: "{{count}} điều kiện lọc",
+        noFilter: "Không có bộ lọc nào",
+      },
       columnSelector: {
         title: "Cột xuất Excel",
         selectAll: "Chọn tất cả",
@@ -144,11 +164,7 @@ export const v2Vi = {
         allRange: "Tất cả",
       },
       form: {
-        periodLabel: "Kỳ (cho sheet Chi tiết)",
         selectPeriod: "Chọn kỳ...",
-        allRange: "Tất cả thời gian",
-        customRange: "Tùy chỉnh từ ngày/đến ngày",
-        dateRange: "Khoảng ngày",
         start: "Xuất Excel",
         starting: "Đang khởi tạo...",
         missingDateRange: "Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.",
@@ -158,6 +174,14 @@ export const v2Vi = {
         downloadFailed: "Không thể tải lại file XLSX.",
       },
       vinfastParts: {
+        filter: {
+          vehicleType: "Loại xe",
+          vehicleAll: "Tất cả",
+          vehicleCar: "Ô tô",
+          vehicleMotorbike: "Xe máy",
+          keyword: "Từ khóa",
+          noKeyword: "Không có",
+        },
         title: "Xuất Excel tồn kho phụ tùng (FIFO)",
         subtitle:
           "File Excel trình bày theo phương pháp FIFO — giá vốn tính theo lô nhập cũ nhất. Sheet Tổng hợp xuất toàn bộ lịch sử, Sheet Chi tiết sẽ theo khoảng ngày đã chọn.",

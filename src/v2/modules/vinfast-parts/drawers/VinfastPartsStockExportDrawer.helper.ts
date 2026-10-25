@@ -1,8 +1,10 @@
 import { format, isValid, parseISO } from "date-fns";
-import { PERIOD_OPTS } from "@/modules/finance/utils/financeHelpers";
-import type { VinfastPartsStockExportHistoryItem } from "@/pages/api/vinfastPartsStockExportApi";
-import type { V2ComboboxOption } from "@/v2/shared/components/molecules/v2-combobox";
+import type {
+  VinfastPartsStockExportHistoryItem,
+  VinfastPartsStockExportQuery,
+} from "@/pages/api/vinfastPartsStockExportApi";
 import type { V2ExportHistoryItem } from "@/v2/shared/components/molecules/v2-export-history-list";
+import type { V2ExportMode } from "@/v2/shared/components/molecules/v2-export-condition-section";
 
 export function toDisplayDate(iso?: string): string {
   if (!iso) return "-";
@@ -18,20 +20,82 @@ export function toDisplayRange(dateFrom?: string, dateTo?: string): string {
   return `${from} - ${to}`;
 }
 
-export interface VinfastExportPeriodLabels {
-  allRange: string;
-  customRange: string;
+export interface VinfastExportPayloadInput {
+  exportMode: V2ExportMode;
+  /** Bộ lọc đang áp dụng trên bảng (vehicleType, search, columnFilters...) */
+  baseQuery: Partial<VinfastPartsStockExportQuery>;
+  dateFrom: string;
+  dateTo: string;
+  selectedColumns: string[];
 }
 
-/** Tùy chọn kỳ: "Tất cả", 24 tháng gần nhất, "Tùy chỉnh" */
-export function buildPeriodOptions(
-  labels: VinfastExportPeriodLabels,
-): V2ComboboxOption[] {
-  return [
-    { value: "all", label: labels.allRange },
-    ...PERIOD_OPTS,
-    { value: "custom", label: labels.customRange },
-  ];
+/**
+ * "Theo kỳ" ghi đè khoảng ngày bằng kỳ đã chọn.
+ * "Theo filter hiện tại" giữ nguyên bộ lọc bảng, không ghi đè ngày.
+ */
+export function buildExportPayload({
+  exportMode,
+  baseQuery,
+  dateFrom,
+  dateTo,
+  selectedColumns,
+}: VinfastExportPayloadInput): VinfastPartsStockExportQuery {
+  if (exportMode === "by-current-filter") {
+    return { ...baseQuery, selectedColumns };
+  }
+  return { ...baseQuery, dateFrom, dateTo, selectedColumns };
+}
+
+export interface VinfastFilterSummaryLabels {
+  vehicleTypeAll: string;
+  vehicleTypeCar: string;
+  vehicleTypeMotorbike: string;
+  noKeyword: string;
+  keywordLabel: string;
+  vehicleTypeLabel: string;
+}
+
+export interface VinfastFilterSummary {
+  rows: Array<{ label: string; value: string }>;
+  filterCount: number;
+}
+
+function countActiveColumnFilters(raw?: string): number {
+  if (!raw) return 0;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return Object.values(parsed).filter((value) =>
+      Array.isArray(value) ? value.length > 0 : Boolean(value),
+    ).length;
+  } catch {
+    return 0;
+  }
+}
+
+/** Tóm tắt bộ lọc bảng để hiển thị ở chế độ "Theo filter hiện tại" */
+export function buildFilterSummary(
+  baseQuery: Partial<VinfastPartsStockExportQuery>,
+  labels: VinfastFilterSummaryLabels,
+): VinfastFilterSummary {
+  const vehicleValue =
+    baseQuery.vehicleType === "oto" || baseQuery.vehicleType === "CAR"
+      ? labels.vehicleTypeCar
+      : baseQuery.vehicleType === "xemay" ||
+          baseQuery.vehicleType === "MOTORBIKE"
+        ? labels.vehicleTypeMotorbike
+        : labels.vehicleTypeAll;
+
+  const keyword = baseQuery.search?.trim();
+  const columnFilterCount = countActiveColumnFilters(baseQuery.columnFilters);
+  const filterCount = columnFilterCount + (keyword ? 1 : 0);
+
+  return {
+    rows: [
+      { label: labels.vehicleTypeLabel, value: vehicleValue },
+      { label: labels.keywordLabel, value: keyword || labels.noKeyword },
+    ],
+    filterCount,
+  };
 }
 
 export interface VinfastExportHistoryLabels {

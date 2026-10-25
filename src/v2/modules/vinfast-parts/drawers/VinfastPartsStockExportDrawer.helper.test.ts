@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { VinfastPartsStockExportHistoryItem } from "@/pages/api/vinfastPartsStockExportApi";
 import {
-  buildPeriodOptions,
+  buildExportPayload,
+  buildFilterSummary,
   toHistoryViewItem,
   type VinfastExportHistoryLabels,
+  type VinfastFilterSummaryLabels,
 } from "./VinfastPartsStockExportDrawer.helper";
 
 const labels: VinfastExportHistoryLabels = {
@@ -80,17 +82,80 @@ describe("toHistoryViewItem", () => {
   });
 });
 
-describe("buildPeriodOptions", () => {
-  it("wraps monthly options with the all-range and custom entries", () => {
-    const options = buildPeriodOptions({
-      allRange: "Tất cả",
-      customRange: "Tùy chỉnh",
+describe("buildExportPayload", () => {
+  const baseQuery = { vehicleType: "oto", search: "lọc" };
+  const columns = ["sku", "amount"];
+
+  it("overrides the table range with the selected period in by-period mode", () => {
+    expect(
+      buildExportPayload({
+        exportMode: "by-period",
+        baseQuery,
+        dateFrom: "2026-10-01",
+        dateTo: "2026-10-31",
+        selectedColumns: columns,
+      }),
+    ).toEqual({
+      vehicleType: "oto",
+      search: "lọc",
+      dateFrom: "2026-10-01",
+      dateTo: "2026-10-31",
+      selectedColumns: columns,
     });
-    expect(options[0]).toEqual({ value: "all", label: "Tất cả" });
-    expect(options[options.length - 1]).toEqual({
-      value: "custom",
-      label: "Tùy chỉnh",
+  });
+
+  it("keeps the table query and sends no period override in current-filter mode", () => {
+    const payload = buildExportPayload({
+      exportMode: "by-current-filter",
+      baseQuery: { ...baseQuery, dateFrom: "2026-09-01" },
+      dateFrom: "2026-10-01",
+      dateTo: "2026-10-31",
+      selectedColumns: columns,
     });
-    expect(options.length).toBeGreaterThan(2);
+    expect(payload.dateFrom).toBe("2026-09-01");
+    expect(payload.dateTo).toBeUndefined();
+    expect(payload.selectedColumns).toEqual(columns);
+  });
+});
+
+describe("buildFilterSummary", () => {
+  const labels: VinfastFilterSummaryLabels = {
+    vehicleTypeLabel: "Loại xe",
+    vehicleTypeAll: "Tất cả",
+    vehicleTypeCar: "Ô tô",
+    vehicleTypeMotorbike: "Xe máy",
+    keywordLabel: "Từ khóa",
+    noKeyword: "Không có",
+  };
+
+  it("maps vehicle type and keyword into summary rows", () => {
+    const summary = buildFilterSummary(
+      { vehicleType: "xemay", search: " sku1 " },
+      labels,
+    );
+    expect(summary.rows).toEqual([
+      { label: "Loại xe", value: "Xe máy" },
+      { label: "Từ khóa", value: "sku1" },
+    ]);
+    expect(summary.filterCount).toBe(1);
+  });
+
+  it("counts only column filters that have values", () => {
+    const summary = buildFilterSummary(
+      {
+        vehicleType: undefined,
+        columnFilters: JSON.stringify({ sku: ["A"], name: [], uom: "" }),
+      },
+      labels,
+    );
+    expect(summary.rows[0].value).toBe("Tất cả");
+    expect(summary.rows[1].value).toBe("Không có");
+    expect(summary.filterCount).toBe(1);
+  });
+
+  it("returns zero filters for malformed column filter JSON", () => {
+    expect(
+      buildFilterSummary({ columnFilters: "{bad" }, labels).filterCount,
+    ).toBe(0);
   });
 });

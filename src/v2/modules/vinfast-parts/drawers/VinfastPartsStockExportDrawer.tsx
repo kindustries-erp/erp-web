@@ -81,19 +81,24 @@ export function VinfastPartsStockExportDrawer({
       }
       conditions={
         <VinfastPartsStockExportConditions
+          exportMode={vm.exportMode}
+          onExportModeChange={vm.setExportMode}
+          periodType={vm.periodType}
+          onPeriodTypeChange={vm.handlePeriodTypeChange}
           period={vm.period}
-          periodOptions={vm.periodOptions}
           onPeriodChange={vm.handlePeriodChange}
-          dateRange={{
-            from: vm.dateFrom || undefined,
-            to: vm.dateTo || undefined,
-          }}
-          onDateRangeChange={(range) => {
-            vm.setDateFrom(range.from ?? "");
-            vm.setDateTo(range.to ?? "");
-          }}
+          periodOptions={vm.periodOptions}
+          quarter={vm.quarter}
+          onQuarterChange={vm.handleQuarterChange}
+          quarterOptions={vm.quarterOptions}
+          dateFrom={vm.dateFrom}
+          onDateFromChange={vm.setDateFrom}
+          dateTo={vm.dateTo}
+          onDateToChange={vm.setDateTo}
+          filterSummaryRows={vm.filterSummary.rows}
+          filterCount={vm.filterSummary.filterCount}
           starting={vm.starting}
-          disabled={vm.selectedColumns.length === 0}
+          noColumnSelected={vm.selectedColumns.length === 0}
           onStart={() => void vm.handleStartExport()}
         />
       }

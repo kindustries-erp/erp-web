@@ -112,7 +112,9 @@ src/
 
 ### 3.4. Drawer Xuất Báo Cáo Excel Chạy Ngầm (V2: `src/v2/modules/vinfast-parts/drawers/VinfastPartsStockExportDrawer.tsx`)
 - Drawer đã chuyển sang V2 (`V2ExportExcelDrawer`, layout 2 cột `lg`). Đường dẫn V1 `src/pages/components/VinfastPartsStockExportDrawer.tsx` chỉ còn re-export để giữ nơi mount.
-- Cấu trúc: `.hook.ts` (điều phối), `.period.hook.ts` (kỳ/khoảng ngày), `.history.hook.ts` (query lịch sử + SSE, poll 10s khi job chạy và SSE không khỏe), `.helper.ts` (map dòng lịch sử), `.columns.config.ts` (nhóm cột Tổng hợp / Sổ cái FIFO, mặc định chọn đủ), `Conditions.tsx` (cột phải: kỳ, khoảng ngày, nút Xuất).
+- Cấu trúc: `.hook.ts` (điều phối), `.period.hook.ts` (chế độ xuất, kỳ tháng/quý/tùy chỉnh, khoảng ngày), `.history.hook.ts` (query lịch sử + SSE, poll 10s khi job chạy và SSE không khỏe, map `historyItems`), `.helper.ts` (`buildExportPayload`, `buildFilterSummary`, map dòng lịch sử), `.columns.config.ts` (nhóm cột Tổng hợp / Sổ cái FIFO, mặc định chọn đủ), `Conditions.tsx` (mỏng, bọc `V2ExportConditionSection` từ shared).
+- Điều kiện xuất (cột phải) dùng chung `V2ExportConditionSection` (`molecules/v2-export-condition-section`): radio card "Theo kỳ" / "Theo filter hiện tại" → khi theo kỳ: tab pill Theo tháng / Theo quý / Tùy chỉnh + Kỳ hoặc Quý + Từ/Đến ngày; khi theo filter: `V2ExportFilterSummary` (loại xe, từ khóa, số điều kiện lọc cột). Không còn lựa chọn "Tất cả thời gian": xuất toàn bộ thời gian = "Theo filter hiện tại" (không ghi đè ngày).
+- Payload: "Theo kỳ" ghi đè `dateFrom/dateTo`; "Theo filter hiện tại" giữ nguyên `buildBaseQuery()` và không gửi ngày ghi đè. Nút Xuất bị khóa khi chưa chọn cột nào.
 - Cột trái: `V2ColumnSelector` (chọn cột theo nhóm) + `V2ExportHistoryList` (lịch sử + `V2TablePagination`). Nút Xuất bị khóa khi chưa chọn cột nào. Gửi `selectedColumns` trong payload `startBackgroundExport`.
 - Tích hợp với Zustand store `useVinfastPartsStockExportProgressStore`; SSE `/api/v1/vinfast-parts/stock/export/excel/progress/stream`.
 - Toast dùng `react-hot-toast` (Toaster V1 đang mount ở `App.tsx`); `V2Toaster` chỉ mount trong shell `/v2/`.

@@ -1,7 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { vinfastPartsStockExportApi } from "@/pages/api/vinfastPartsStockExportApi";
 import { useVinfastPartsStockExportProgressStore } from "@/shared/stores/useVinfastPartsStockExportProgressStore";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { toHistoryViewItem } from "./VinfastPartsStockExportDrawer.helper";
 
 interface UseVinfastPartsStockExportHistoryOptions {
   open: boolean;
@@ -18,6 +20,7 @@ export function useVinfastPartsStockExportHistory({
   page,
   pageSize,
 }: UseVinfastPartsStockExportHistoryOptions) {
+  const { t } = useV2Translation();
   const progress = useVinfastPartsStockExportProgressStore();
   const terminalRefreshGuardRef = useRef<string | null>(null);
 
@@ -74,5 +77,33 @@ export function useVinfastPartsStockExportHistory({
     }
   }, [progress.isRunning]);
 
-  return { historyQuery, progress };
+  const historyItems = useMemo(
+    () =>
+      (historyQuery.data?.items ?? []).map((row) =>
+        toHistoryViewItem(
+          row,
+          {
+            jobId: progress.jobId,
+            current: progress.current,
+            total: progress.total,
+          },
+          {
+            allRange: t("v2.exportExcel.history.allRange", "Tất cả"),
+            statusReady: t(
+              "v2.exportExcel.history.statusReady",
+              "Sẵn sàng tải",
+            ),
+            statusFailed: t("v2.exportExcel.history.statusFailed", "Thất bại"),
+            statusRunning: (percent) =>
+              t("v2.exportExcel.history.statusRunning", {
+                defaultValue: "Đang tạo {{percent}}%",
+                percent,
+              }),
+          },
+        ),
+      ),
+    [historyQuery.data, progress.current, progress.jobId, progress.total, t],
+  );
+
+  return { historyQuery, historyItems };
 }

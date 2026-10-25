@@ -11,7 +11,10 @@ import {
   VINFAST_STOCK_EXPORT_COLUMN_GROUPS,
   VINFAST_STOCK_EXPORT_DEFAULT_COLUMNS,
 } from "./VinfastPartsStockExportDrawer.columns.config";
-import { toHistoryViewItem } from "./VinfastPartsStockExportDrawer.helper";
+import {
+  buildExportPayload,
+  buildFilterSummary,
+} from "./VinfastPartsStockExportDrawer.helper";
 import { useVinfastPartsStockExportHistory } from "./VinfastPartsStockExportDrawer.history.hook";
 import { useVinfastPartsStockExportPeriod } from "./VinfastPartsStockExportDrawer.period.hook";
 
@@ -36,7 +39,7 @@ export function useVinfastPartsStockExportDrawer({
   const [starting, setStarting] = useState(false);
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
 
-  const { historyQuery, progress } = useVinfastPartsStockExportHistory({
+  const { historyQuery, historyItems } = useVinfastPartsStockExportHistory({
     open,
     page,
     pageSize,
@@ -55,37 +58,30 @@ export function useVinfastPartsStockExportDrawer({
     [t],
   );
 
-  const historyItems = useMemo(
-    () =>
-      (historyQuery.data?.items ?? []).map((row) =>
-        toHistoryViewItem(
-          row,
-          {
-            jobId: progress.jobId,
-            current: progress.current,
-            total: progress.total,
-          },
-          {
-            allRange: t("v2.exportExcel.history.allRange", "Tất cả"),
-            statusReady: t(
-              "v2.exportExcel.history.statusReady",
-              "Sẵn sàng tải",
-            ),
-            statusFailed: t("v2.exportExcel.history.statusFailed", "Thất bại"),
-            statusRunning: (percent) =>
-              t("v2.exportExcel.history.statusRunning", {
-                defaultValue: "Đang tạo {{percent}}%",
-                percent,
-              }),
-          },
-        ),
-      ),
-    [historyQuery.data, progress.current, progress.jobId, progress.total, t],
-  );
+  // buildBaseQuery đọc state bảng hiện tại, nên tính lại mỗi lần render
+  const filterSummary = buildFilterSummary(buildBaseQuery(), {
+    vehicleTypeLabel: t(
+      "v2.exportExcel.vinfastParts.filter.vehicleType",
+      "Loại xe",
+    ),
+    vehicleTypeAll: t(
+      "v2.exportExcel.vinfastParts.filter.vehicleAll",
+      "Tất cả",
+    ),
+    vehicleTypeCar: t("v2.exportExcel.vinfastParts.filter.vehicleCar", "Ô tô"),
+    vehicleTypeMotorbike: t(
+      "v2.exportExcel.vinfastParts.filter.vehicleMotorbike",
+      "Xe máy",
+    ),
+    keywordLabel: t("v2.exportExcel.vinfastParts.filter.keyword", "Từ khóa"),
+    noKeyword: t("v2.exportExcel.vinfastParts.filter.noKeyword", "Không có"),
+  });
 
   const handleStartExport = async () => {
-    const { period: selected, dateFrom, dateTo } = period;
-    if (selected !== "all" && (!dateFrom || !dateTo)) {
+    if (
+      period.exportMode === "by-period" &&
+      (!period.dateFrom || !period.dateTo)
+    ) {
       toast.error(
         t(
           "v2.exportExcel.form.missingDateRange",
@@ -97,12 +93,15 @@ export function useVinfastPartsStockExportDrawer({
 
     try {
       setStarting(true);
-      const result = await vinfastPartsStockExportApi.startBackgroundExport({
-        ...buildBaseQuery(),
-        dateFrom,
-        dateTo,
-        selectedColumns,
-      });
+      const result = await vinfastPartsStockExportApi.startBackgroundExport(
+        buildExportPayload({
+          exportMode: period.exportMode,
+          baseQuery: buildBaseQuery(),
+          dateFrom: period.dateFrom,
+          dateTo: period.dateTo,
+          selectedColumns,
+        }),
+      );
       const fallback = result.reused
         ? t(
             "v2.exportExcel.form.reused",
@@ -144,6 +143,7 @@ export function useVinfastPartsStockExportDrawer({
 
   return {
     ...period,
+    filterSummary,
     columnGroups,
     selectedColumns,
     setSelectedColumns,

@@ -126,6 +126,27 @@ export const v2En: V2Dictionary = {
       processing: "Processing...",
     },
     exportExcel: {
+      condition: {
+        title: "Export conditions",
+        modeLabel: "Export mode",
+        modePeriod: "By period",
+        modePeriodDesc: "Pick a time range by month, quarter or custom dates",
+        modeCurrentFilter: "Current table filter",
+        modeCurrentFilterDesc:
+          "Keep the filters and search currently applied to the table",
+        periodMonth: "By month",
+        periodQuarter: "By quarter",
+        periodCustom: "Custom",
+        month: "Period",
+        quarter: "Quarter",
+        selectQuarter: "Select quarter...",
+        dateFrom: "From date",
+        dateTo: "To date",
+        filterSummary: "Table filter summary",
+        filterConditions: "Filter conditions",
+        filterCount: "{{count}} filter condition(s)",
+        noFilter: "No filters applied",
+      },
       columnSelector: {
         title: "Excel columns",
         selectAll: "Select all",
@@ -145,11 +166,7 @@ export const v2En: V2Dictionary = {
         allRange: "All",
       },
       form: {
-        periodLabel: "Period (for detail sheet)",
         selectPeriod: "Select period...",
-        allRange: "All time",
-        customRange: "Custom from/to date",
-        dateRange: "Date range",
         start: "Export Excel",
         starting: "Starting...",
         missingDateRange: "Please select both start and end dates.",
@@ -159,6 +176,14 @@ export const v2En: V2Dictionary = {
         downloadFailed: "Could not download the XLSX file.",
       },
       vinfastParts: {
+        filter: {
+          vehicleType: "Vehicle type",
+          vehicleAll: "All",
+          vehicleCar: "Car",
+          vehicleMotorbike: "Motorbike",
+          keyword: "Keyword",
+          noKeyword: "None",
+        },
         title: "Export parts stock Excel (FIFO)",
         subtitle:
           "The Excel file is built with FIFO costing: cost is taken from the oldest purchase lots first. The summary sheet covers the full history; the detail sheet follows the selected date range.",
