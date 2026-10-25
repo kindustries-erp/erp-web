@@ -73,10 +73,12 @@ export const BankTransactionGeneralInfoSection = React.memo(
       return names.join(", ");
     })();
 
-    const effectiveDescription =
+    // Ghi chú ERP (note) có thể sửa; diễn giải ngân hàng (description) chỉ đọc
+    const effectiveNote =
       editMode && description !== undefined
         ? description
-        : transaction.description || transaction.accountingDescription || "";
+        : transaction.note || "";
+    const bankDescription = transaction.description || "";
 
     const sourceAccountLabel =
       transaction.sourceType === "BANK"
@@ -179,17 +181,32 @@ export const BankTransactionGeneralInfoSection = React.memo(
               </div>
             </div>
 
-            {/* Nội dung / Ghi chú (BufferedTextarea) */}
+            {/* Diễn giải ngân hàng (chỉ đọc) */}
+            <div>
+              <div className="text-xs text-muted-foreground mb-0.5">
+                {t("bankStatement.bankDescription", {
+                  defaultValue: "Diễn giải ngân hàng",
+                })}
+              </div>
+              <div className="flex items-start gap-1.5 font-medium break-words text-foreground text-sm">
+                <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/70" />
+                <span className="whitespace-pre-wrap">
+                  {bankDescription || "—"}
+                </span>
+              </div>
+            </div>
+
+            {/* Ghi chú ERP (BufferedTextarea) */}
             <DrawerField
-              label={t("bankStatement.notes", {
-                defaultValue: "Ghi chú / Diễn giải",
+              label={t("bankStatement.erpNote", {
+                defaultValue: "Ghi chú ERP",
               })}
             >
               <BufferedTextarea
                 className="w-full text-sm"
-                value={effectiveDescription}
+                value={effectiveNote}
                 onChange={(val) => onDescriptionChange?.(val)}
-                placeholder="Nhập ghi chú / diễn giải..."
+                placeholder="Nhập ghi chú ERP..."
                 rows={3}
               />
             </DrawerField>
@@ -290,19 +307,35 @@ export const BankTransactionGeneralInfoSection = React.memo(
             </div>
           </div>
 
-          {/* Ghi chú / Diễn giải */}
+          {/* Diễn giải ngân hàng (chỉ đọc) */}
           <div>
             <div className="text-xs text-muted-foreground mb-0.5">
-              {t("bankStatement.notes", {
-                defaultValue: "Ghi chú / Diễn giải",
+              {t("bankStatement.bankDescription", {
+                defaultValue: "Diễn giải ngân hàng",
               })}
             </div>
-            {effectiveDescription ? (
+            {bankDescription ? (
               <div className="flex items-start gap-1.5 font-medium break-words text-foreground text-sm">
                 <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/70" />
-                <span className="whitespace-pre-wrap">
-                  {effectiveDescription}
-                </span>
+                <span className="whitespace-pre-wrap">{bankDescription}</span>
+              </div>
+            ) : (
+              <div className="flex items-start gap-1.5 font-medium text-muted-foreground/60 text-sm">
+                <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/40" />
+                <span>—</span>
+              </div>
+            )}
+          </div>
+
+          {/* Ghi chú ERP */}
+          <div>
+            <div className="text-xs text-muted-foreground mb-0.5">
+              {t("bankStatement.erpNote", { defaultValue: "Ghi chú ERP" })}
+            </div>
+            {effectiveNote ? (
+              <div className="flex items-start gap-1.5 font-medium break-words text-foreground text-sm">
+                <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/70" />
+                <span className="whitespace-pre-wrap">{effectiveNote}</span>
               </div>
             ) : (
               <div className="flex items-start gap-1.5 font-medium text-muted-foreground/60 text-sm">

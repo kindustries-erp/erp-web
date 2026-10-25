@@ -11,7 +11,7 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardDrawer) theo ki
 
 1. **Atomic Design 5 Tầng Phân Minh**:
    - **L1 (Atoms & UI Primitives)**:
-     - `src/v2/shared/ui/sheet/`: Radix Dialog nâng cấp với keyframes `slide-in-from-right`, `slide-out-to-right`, `slide-in-from-bottom`, `slide-out-to-bottom` sử dụng đường cong gia tốc `cubic-bezier(0.16, 1, 0.3, 1)`. Biến thể `floating` (Desktop) và `fullscreen` (Esc/Maximize). `SheetOverlay` sáng sủa trong suốt 96% theo chuẩn V1 với token CSS `bg-[var(--drawer-overlay-bg,rgba(15,23,42,0.04))]` (loại bỏ hoàn toàn `backdrop-blur` và `bg-black/35` gây đục/tối màn hình cha).
+     - `src/v2/shared/ui/sheet/`: Radix Dialog nâng cấp với keyframes `slide-in-from-right`, `slide-out-to-right`, `slide-in-from-bottom`, `slide-out-to-bottom` sử dụng đường cong gia tốc `cubic-bezier(0.16, 1, 0.3, 1)`. Biến thể `floating` (Desktop) và `fullscreen` (Esc/Maximize). `SheetOverlay` lấy màu từ `--drawer-overlay-bg`, hiện dùng alpha 0.2 và blur nhẹ 1px.
      - `src/v2/shared/components/atoms/v2-button/`: 100% buttons trong Drawer đều sử dụng `V2Button` (nút đóng, maximize, toggle right panel, chevron collapse, copy row, trigger action popover, actions footer).
      - `src/v2/shared/components/atoms/v2-text/`: 100% text/nhãn/title trong Drawer đều sử dụng `V2Text` (`drawer-title`, `drawer-subtitle`, `section-title`, `body-sm`).
    - **L2 (Molecules)**:
@@ -295,6 +295,13 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 
 
 ## Component dùng chung trong V2StandardDrawer
+
+### Glass surface và theme tokens
+
+- `SheetContent` dùng `--drawer-bg` cho bề mặt translucent, `--drawer-blur: 20px`, saturate `190%`, contrast `102%`, shadow nhẹ theo theme (`--drawer-shadow`). Light surface dùng alpha `0.35`, dark surface dùng alpha `0.75`; overlay dùng alpha `0.2` và blur nhẹ `1px` ở cả hai theme.
+- Light và dark theme định nghĩa alpha background riêng để giữ contrast đồng thời cho thấy backdrop. V2 drawer mount trên route V1 nhận fallback token từ `src/styles/panels.css`.
+- OrcaQ dùng cùng blur `20px` theo yêu cầu glass đồng nhất giữa theme.
+- `SheetOverlay` là lớp dim độc lập; overlay alpha 0.2 và blur 1px, còn blur glass 20px được áp dụng trên Sheet content.
 
 - `V2TabItemData.rightPanel` chọn panel phải theo tab active; nếu không đặt, drawer dùng `V2StandardDrawerProps.rightPanel` làm fallback. `rightTabs` vẫn có ưu tiên nội dung riêng của sub-tab phải. Quy tắc áp dụng đồng nhất trên Desktop và Mobile.
 - ERP Invoice detail drawer dùng API này để giữ panel chung theo tab và chuyển sang panel đối soát khi sub-tab Chứng từ liên kết được chọn. Luồng nghiệp vụ vẫn do module invoice hiện tại quản lý.

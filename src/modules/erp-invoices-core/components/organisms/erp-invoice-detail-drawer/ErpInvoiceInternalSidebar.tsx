@@ -1,14 +1,15 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import toast from "react-hot-toast";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
 import { ErpInvoiceGeneralInfoSection } from "../erp-invoice-general-info";
 import { ErpInvoiceDefaultAttributesSection } from "../erp-invoice-default-attributes-section";
 import { ProviderLookupInfoCard } from "../../molecules/provider-lookup-info-card";
-import {
-  erpInvoicesCoreApi,
-  type CreateErpInvoicePayload,
-  type ErpInvoice,
+import { useOriginalPdfLookupInfo } from "../../../hooks/useOriginalPdfLookupInfo";
+import { useDownloadOriginalPdf } from "../../../hooks/useDownloadOriginalPdf";
+import { useManualUploadPdf } from "../../../hooks/useManualUploadPdf";
+import type {
+  CreateErpInvoicePayload,
+  ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 export interface ErpInvoiceInternalSidebarProps {
@@ -39,52 +40,42 @@ export function ErpInvoiceInternalSidebar({
   onRefreshDetail,
 }: ErpInvoiceInternalSidebarProps) {
   const { t } = useTranslation("erpInvoices");
-  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const isPurchase = direction === "IN" && Boolean(detailInvoice);
+  const lookup = useOriginalPdfLookupInfo(detailInvoice?.id, {
+    enabled: isPurchase,
+  });
+  const downloadPdf = useDownloadOriginalPdf();
+  const uploadPdf = useManualUploadPdf();
 
-  const handleDownloadOriginalPdf = useCallback(
-    async (invId: string) => {
-      try {
-        setIsDownloadingPdf(true);
-        await erpInvoicesCoreApi.downloadOriginalPdf(invId);
-        toast.success(
-          t("downloadPdfSuccess", "Tải PDF gốc nhà cung cấp thành công"),
-        );
-        onRefreshDetail?.();
-      } catch (err: any) {
-        toast.error(
-          err?.response?.data?.message ||
-            t("downloadPdfFailed", "Tải PDF gốc nhà cung cấp thất bại"),
-        );
-      } finally {
-        setIsDownloadingPdf(false);
-      }
-    },
-    [onRefreshDetail, t],
-  );
+  const handleDownloadOriginalPdf = async (invId: string) => {
+    await downloadPdf.mutateAsync(invId);
+    onRefreshDetail?.();
+  };
 
-  const hasLookupInfo = Boolean(
-    detailInvoice &&
-    (detailInvoice.providerCode ||
-      detailInvoice.lookupCode ||
-      detailInvoice.lookupUrl ||
-      detailInvoice.pdfSource),
-  );
+  const handleUploadPdf = async (invId: string, file: File) => {
+    await uploadPdf.mutateAsync({ invoiceId: invId, file });
+    onRefreshDetail?.();
+  };
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 0. THÔNG TIN TRA CỨU & PDF GỐC NHÀ CUNG CẤP */}
-      {hasLookupInfo && detailInvoice && (
+      {/* 0. THÔNG TIN TRA CỨU & PDF GỐC NHÀ CUNG CẤP (chỉ HĐ mua vào) */}
+      {isPurchase && detailInvoice && (
         <ProviderLookupInfoCard
           invoiceId={detailInvoice.id}
-          invoiceNo={detailInvoice.invoiceNo}
-          providerCode={detailInvoice.providerCode}
-          lookupCode={detailInvoice.lookupCode}
-          lookupUrl={detailInvoice.lookupUrl}
+          providerCode={lookup.data?.providerCode ?? detailInvoice.providerCode}
+          providerName={lookup.data?.providerName}
+          lookupCode={lookup.data?.lookupCode ?? detailInvoice.lookupCode}
+          lookupUrl={lookup.data?.lookupUrl ?? detailInvoice.lookupUrl}
+          hints={lookup.data?.hints ?? []}
+          hasXml={lookup.data?.hasXml ?? Boolean(detailInvoice.xmlFileKey)}
           pdfFileKey={detailInvoice.pdfFileKey}
           pdfSource={detailInvoice.pdfSource}
           pdfError={detailInvoice.pdfError}
           onDownloadPdf={handleDownloadOriginalPdf}
-          isDownloading={isDownloadingPdf}
+          isDownloading={downloadPdf.isPending}
+          onUploadPdf={handleUploadPdf}
+          isUploading={uploadPdf.isPending}
         />
       )}
 

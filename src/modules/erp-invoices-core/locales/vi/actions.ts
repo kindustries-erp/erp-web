@@ -99,4 +99,34 @@ export const erpInvoicesViActions = {
   importActionStart: "Bắt đầu Import ({{count}} file)",
   importActionMore: "Import thêm",
   importActionViewCreated: "Xem hóa đơn vừa tạo",
+
+  // Drawer Detail & Actions
+  internalTitle: "Thông tin nội bộ",
+  groupSync: "ĐỒNG BỘ",
+  syncGdt: "Đồng bộ từ GĐT",
+  groupExport: "XUẤT DỮ LIỆU",
+  exportInvoiceExcel: "Xuất Excel hóa đơn",
+  exportingExcel: "Đang xuất file Excel...",
+  exportExcelSuccess: "Xuất file Excel thành công!",
+  exportExcelError: "Lỗi xuất file Excel",
+  drawerSectionHistory: "Nhật ký kiểm toán & thao tác",
+  emptyHistory: "Chưa có ghi nhận lịch sử.",
+
+  // Toasts
+  toastLinkedBankSuccess:
+    "Đã thêm giao dịch ngân hàng vào danh sách cấn trừ (chờ Lưu thay đổi).",
+  toastLinkedPoSuccess:
+    "Đã chọn đơn mua hàng {{poNo}} để liên kết (chờ Lưu thay đổi).",
+  toastLinkedSoSuccess:
+    "Đã chọn đơn bán hàng {{soNo}} để liên kết (chờ Lưu thay đổi).",
+  toastLinkedCaseSuccess:
+    "Đã chọn vụ việc garage {{code}} để liên kết (chờ Lưu thay đổi).",
+
+  // Tax Statuses
+  taxStatusNew: "Mới",
+  taxStatusReplaced: "Thay thế",
+  taxStatusAdjusted: "Điều chỉnh",
+  taxStatusWasReplaced: "Bị thay thế",
+  taxStatusWasAdjusted: "Bị điều chỉnh",
+  taxStatusCancelled: "Bị hủy",
 };

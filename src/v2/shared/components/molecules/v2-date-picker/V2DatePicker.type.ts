@@ -7,6 +7,7 @@ interface V2DatePickerBaseProps {
   clearable?: boolean;
   disabled?: boolean;
   className?: string;
+  triggerClassName?: string;
   "aria-label"?: string;
 }
 

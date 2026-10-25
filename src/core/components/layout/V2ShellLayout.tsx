@@ -8,7 +8,7 @@ import { V2AppLayout } from "@/v2/app/layouts/v2-app-layout";
 import { V2EnvStamp, type V2BreadcrumbItem } from "@/v2/shared/components";
 import { useV2AdaptedNavSections } from "./adapters/useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "./adapters/useV2AdaptedTabs";
-import { UniversalSearchModal } from "./UniversalSearchModal";
+import { V2UniversalSearchModal } from "@/v2/shared/components";
 import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
@@ -22,8 +22,14 @@ interface V2ShellLayoutProps {
 }
 
 export function V2ShellLayout({ children }: V2ShellLayoutProps) {
-  const { currentPage, navigate, companyProfileOpen, setCompanyProfileOpen } =
-    useAppStore();
+  const {
+    currentPage,
+    navigate,
+    companyProfileOpen,
+    setCompanyProfileOpen,
+    appTheme,
+    setAppTheme,
+  } = useAppStore();
   const { employee, profile } = useAuthStore();
   const { data: companyProfile } = useCompanyProfile();
   const t = useT();
@@ -223,7 +229,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         <div className="w-[22px] h-[22px] min-w-[22px] bg-primary rounded-full flex items-center justify-center text-primary-foreground text-[8px] font-semibold flex-shrink-0">
           {av}
         </div>
-        <span className="text-muted-fg font-medium text-xs whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
+        <span className="hidden sm:inline-block text-muted-fg font-medium text-xs whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
           {displayName}
         </span>
         <svg
@@ -233,7 +239,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="text-faint flex-shrink-0 opacity-70"
+          className="hidden sm:block text-faint flex-shrink-0 opacity-70"
           aria-hidden="true"
         >
           <polyline points="7 10 12 5 17 10" />
@@ -284,6 +290,8 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         contentClassName="pb-10"
         userMenuNode={userMenuNode}
         notificationNode={notificationNode}
+        currentTheme={appTheme}
+        onThemeChange={setAppTheme}
         onClickLogo={() => setCompanyProfileOpen(true)}
         onSearchClick={() => setSearchModalOpen(true)}
         onBranchClick={() => setCompanyProfileOpen(true)}
@@ -292,11 +300,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
       </V2AppLayout>
 
       {/* Global Modals */}
-      <UniversalSearchModal
+      <V2UniversalSearchModal
         open={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
-        navTo={(p) => {
-          navigate(p);
+        onSelect={(item) => {
+          navigate(item.id as PageKey);
           setSearchModalOpen(false);
         }}
       />

@@ -69,3 +69,31 @@ describe("erpInvoicesCoreApi query methods with POST", () => {
     );
   });
 });
+
+describe("erpInvoicesCoreApi original PDF manual upload", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("posts the PDF as multipart field 'file' to manual-upload", async () => {
+    vi.mocked(axiosInstance.post).mockResolvedValue({
+      data: {
+        invoiceId: "inv-1",
+        pdfFileKey: "invoices/pdf/inv-1.pdf",
+        pdfSource: "manual_upload",
+      },
+    } as any);
+    const file = new File(["%PDF-1.4"], "hd.pdf", { type: "application/pdf" });
+
+    const res = await erpInvoicesCoreApi.uploadManualPdf("inv-1", file);
+
+    const [url, body, config] = vi.mocked(axiosInstance.post).mock.calls[0];
+    expect(url).toContain("/original-pdf/inv-1/manual-upload");
+    expect(body).toBeInstanceOf(FormData);
+    expect((body as FormData).get("file")).toBeInstanceOf(File);
+    expect(config).toEqual({
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    expect(res.pdfSource).toBe("manual_upload");
+  });
+});

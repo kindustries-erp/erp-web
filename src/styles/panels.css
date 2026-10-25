@@ -69,9 +69,22 @@
   transform: none;
 }
 
+/* Make V2 sheets translucent on V1 routes without changing V1 slide-panel. */
+:root:not(.dark):not(.theme-orcaq):not(.theme-midnight)
+  [data-v2-standard-drawer] {
+  --drawer-bg: rgba(255, 255, 255, 0.35);
+  --drawer-blur: 28px;
+  --drawer-shadow:
+    0 0 32px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
 /* V2StandardDrawer can run from V1 routes, where v2-theme.css is not loaded. */
 .theme-midnight [data-v2-standard-drawer] {
-  --drawer-bg: rgba(22, 25, 31, 0.96);
+  --drawer-bg: rgba(22, 25, 34, 0.85);
+  --drawer-blur: 24px;
+  --drawer-shadow:
+    0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --drawer-overlay-bg: rgba(0, 0, 0, 0.2);
   --drawer-border: rgba(255, 255, 255, 0.08);
   --drawer-header-bg: rgba(27, 31, 39, 0.94);
   --drawer-header-scrolled-bg: rgba(27, 31, 39, 0.98);
@@ -103,7 +116,11 @@
   --primary-accent: #2dd4bf;
   --accent: rgba(20, 184, 166, 0.15);
   --accent-foreground: #2dd4bf;
-  --drawer-bg: #16191f;
+  --drawer-bg: rgba(22, 25, 31, 0.85);
+  --drawer-blur: 24px;
+  --drawer-shadow:
+    0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --drawer-overlay-bg: rgba(0, 0, 0, 0.2);
   --drawer-border: rgba(255, 255, 255, 0.08);
   --drawer-header-bg: rgba(27, 31, 39, 0.94);
   --drawer-header-scrolled-bg: rgba(27, 31, 39, 0.98);

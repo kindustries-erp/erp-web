@@ -44,7 +44,7 @@ src/v2/modules/business-partners/
 ## 4. Preference bảng (dùng chung V2)
 
 - Store: `src/v2/shared/preferences/useV2TablePreferencesStore.ts`, persist key `v2_table_preferences`.
-- Đồng bộ server: `PATCH /api/v1/app/preferences` với key `v2:<tableId>` (không ghi đè shape V1 ở key `<tableId>`). Nạp lại khi đăng nhập qua `loadFromServer()`.
+- Đồng bộ server: `PATCH /api/v1/app/table-preferences/:tableId` (mỗi bảng một bản ghi riêng, tách khỏi blob V1 `tableConfigs`). Nạp lại khi đăng nhập qua `loadV2ServerPreferences()`.
 - Migration một lần từ `erp_preferences` (V1): `migrationVersion` = 1. Map key view hệ thống `legal_tax` → `legal`, `all_columns` → `all`.
 - Storage cho bảng: `v2ColumnPreferencesStorage`, `v2ViewPresetStorage`, `applyV2SystemView`.
 

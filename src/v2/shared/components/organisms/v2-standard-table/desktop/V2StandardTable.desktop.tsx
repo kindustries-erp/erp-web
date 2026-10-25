@@ -56,7 +56,7 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
           <div
             ref={scroll.scrollRef}
             className={cn(
-              "relative flex min-h-0 w-full flex-1 flex-col overflow-auto rounded-xl border border-border/60 bg-surface transition-shadow duration-150",
+              "relative flex min-h-0 w-full flex-1 flex-col overflow-auto rounded-xl border border-border/20 dark:border-transparent bg-surface shadow-[var(--card-shadow)] transition-shadow duration-150",
               scroll.isScrolledTop &&
                 "shadow-[inset_0_4px_6px_-2px_rgba(0,0,0,0.05)]",
               scroll.isScrolledBottom &&

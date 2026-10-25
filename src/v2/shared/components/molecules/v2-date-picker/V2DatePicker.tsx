@@ -1,5 +1,11 @@
 import * as React from "react";
-import { CalendarDays, X } from "lucide-react";
+import {
+  CalendarDays,
+  X,
+  V2Button,
+  V2Icon,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
@@ -21,6 +27,7 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
   clearable = false,
   disabled = false,
   className,
+  triggerClassName,
   "aria-label": ariaLabel,
 }) => {
   const { t } = useV2Translation();
@@ -30,17 +37,18 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
   const canClear = clearable && selected !== undefined && !disabled;
 
   const trigger = (
-    <button
+    <V2Button
       type="button"
+      variant="outline"
       aria-label={ariaLabel ?? hint}
       disabled={disabled}
-      className={cn(dateTriggerClass, canClear && "pr-8")}
+      className={cn(dateTriggerClass, canClear && "pr-8", triggerClassName)}
     >
-      <CalendarDays aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
-      <span className={cn("truncate", !selected && "text-muted-foreground")}>
+      <V2Icon icon={CalendarDays} size={16} className="shrink-0 opacity-60" />
+      <V2Text variant="body-sm" truncate color={selected ? "default" : "muted"}>
         {selected ? formatDisplayDate(value) : hint}
-      </span>
-    </button>
+      </V2Text>
+    </V2Button>
   );
 
   return (
@@ -70,14 +78,15 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
         }
       />
       {canClear && (
-        <button
-          type="button"
+        <V2Button
+          variant="ghost"
+          size="icon-xs"
           aria-label={t("v2.form.clearDate", "Xóa ngày")}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+          className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded p-0 text-muted-fg hover:text-foreground"
           onClick={() => onValueChange(null)}
         >
-          <X className="h-3.5 w-3.5" />
-        </button>
+          <V2Icon icon={X} size={14} />
+        </V2Button>
       )}
     </div>
   );

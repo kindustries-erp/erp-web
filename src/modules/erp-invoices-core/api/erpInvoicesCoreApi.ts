@@ -436,6 +436,11 @@ export interface OriginalPdfDownloadResponse {
   pdfError: string | null;
 }
 
+export interface OriginalPdfLookupHint {
+  label: string;
+  value: string;
+}
+
 export interface OriginalPdfLookupInfoResponse {
   invoiceId: string;
   invoiceNo: string;
@@ -447,6 +452,14 @@ export interface OriginalPdfLookupInfoResponse {
   pdfSource: string | null;
   pdfFileKey: string | null;
   pdfError: string | null;
+  hasXml: boolean;
+  hints: OriginalPdfLookupHint[];
+}
+
+export interface ManualPdfUploadResponse {
+  invoiceId: string;
+  pdfFileKey: string;
+  pdfSource: string;
 }
 
 export interface SyncAdvancedPayload {
@@ -487,6 +500,20 @@ export const erpInvoicesCoreApi = {
   ): Promise<OriginalPdfLookupInfoResponse> => {
     const { data } = await axiosInstance.get<OriginalPdfLookupInfoResponse>(
       `${BASE}/original-pdf/${invoiceId}/lookup-info`,
+    );
+    return data;
+  },
+
+  uploadManualPdf: async (
+    invoiceId: string,
+    file: File,
+  ): Promise<ManualPdfUploadResponse> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await axiosInstance.post<ManualPdfUploadResponse>(
+      `${BASE}/original-pdf/${invoiceId}/manual-upload`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
     );
     return data;
   },

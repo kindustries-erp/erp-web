@@ -15,4 +15,6 @@ export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
   logoUrl?: string;
   onBranchClick?: () => void;
   showLanguageSwitcher?: boolean;
+  userMenuNode?: React.ReactNode;
+  notificationNode?: React.ReactNode;
 }

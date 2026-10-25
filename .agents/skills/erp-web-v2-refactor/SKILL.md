@@ -65,8 +65,8 @@ src/v2/modules/<module>/
 | Toast | `useV2ToastStore` (+ `V2Toaster` đã mount ở `AppProviders`) | `src/v2/shared/stores/useV2ToastStore.ts` |
 | Modal chứng từ phụ thuộc (409) | `useV2DocumentDependencyStore` (+ `V2DocumentDependencyModal` đã mount) | `src/v2/shared/stores/`, `molecules/v2-document-dependency-modal/` |
 | Cấu hình cột/view theo bảng | `v2ColumnPreferencesStorage`, `v2ViewPresetStorage`, `applyV2SystemView` | `src/v2/shared/preferences/v2TablePreferenceStorages.ts` |
-| Đồng bộ preference lên server | `scheduleTablePreferenceSync` (key `v2:<tableId>`) | `src/v2/shared/preferences/v2TablePreferences.sync.ts` |
-| Nạp preference + ngôn ngữ khi đăng nhập | `loadV2ServerPreferences()` (một GET) | `src/v2/shared/preferences/v2ServerPreferences.ts` |
+| Đồng bộ preference lên server | `scheduleTablePreferenceSync` (PATCH `/api/v1/app/table-preferences/:tableId`, mỗi bảng một bản ghi) | `src/v2/shared/preferences/v2TablePreferences.sync.ts` |
+| Nạp preference + ngôn ngữ khi đăng nhập | `loadV2ServerPreferences()` (GET bảng + GET ngôn ngữ) | `src/v2/shared/preferences/v2ServerPreferences.ts` |
 | Ngôn ngữ V2 | `useV2LocaleStore` (seed một lần từ `erp-app` của V1) | `src/v2/shared/stores/useV2LocaleStore.ts` |
 | Dịch | `useV2Translation` (chỉ đọc dict V2 và module registry) | `src/v2/shared/hooks/useV2Translation.ts` |
 | Quyền | `useV2HasPermission` | `src/v2/shared/hooks/useV2HasPermission.ts` |
@@ -121,7 +121,7 @@ Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_tabl
 | Toast tạo/sửa/xóa thành công và thất bại | ✅ | Theo module (không qua interceptor toàn cục) |
 | Toast thiếu thông tin, lỗi tải danh sách, lỗi tải chi tiết | ✅ | |
 | Modal chứng từ phụ thuộc khi xóa (409) | ✅ | `V2DocumentDependencyModal` |
-| Cột/view lưu theo bảng, đồng bộ server | ✅ | Key `v2:<tableId>` |
+| Cột/view lưu theo bảng, đồng bộ server | ✅ | Bảng `core_user_table_preferences`, API `/app/table-preferences/:tableId` |
 | Chặn trang khi thiếu quyền đọc | ✅ | Route guard `PermissionGuard` |
 | Cờ 403 toàn cục, luồng impersonation | ❌ | Hạ tầng auth, không thuộc module (ghi nhận, chưa làm) |
 

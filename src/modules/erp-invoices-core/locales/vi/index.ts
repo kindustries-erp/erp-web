@@ -4,6 +4,7 @@ import { erpInvoicesViActions } from "./actions";
 import { erpInvoicesViBulk } from "./bulk";
 import { erpInvoicesViSettlement } from "./settlement";
 import { erpInvoicesViNetoff } from "./netoff";
+import { erpInvoicesViLookup } from "./lookup";
 
 export const erpInvoicesVi = {
   ...erpInvoicesViPage,
@@ -11,4 +12,5 @@ export const erpInvoicesVi = {
   ...erpInvoicesViBulk,
   ...erpInvoicesViSettlement,
   ...erpInvoicesViNetoff,
+  ...erpInvoicesViLookup,
 };

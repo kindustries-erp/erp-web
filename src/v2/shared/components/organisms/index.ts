@@ -6,3 +6,4 @@ export * from "./v2-right-panel";
 export * from "./v2-sidebar";
 export * from "./v2-standard-drawer";
 export * from "./v2-standard-table";
+export * from "./v2-universal-search-modal";

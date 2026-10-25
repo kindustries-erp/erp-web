@@ -71,6 +71,15 @@ export const v2Vi = {
       languageEn: "English",
       mainBranch: "Chi nhánh chính",
     },
+    universalSearch: {
+      placeholder: "Tìm kiếm menu, tác vụ...",
+      noResults: "Không tìm thấy kết quả phù hợp",
+      hintNavigate: "di chuyển",
+      hintOpen: "mở",
+      hintClose: "đóng",
+      title: "Tìm kiếm toàn cục",
+      escKey: "Esc",
+    },
     tabBar: {
       ariaLabel: "Thanh tab đa nhiệm",
       closeTab: "Đóng tab {{name}}",
