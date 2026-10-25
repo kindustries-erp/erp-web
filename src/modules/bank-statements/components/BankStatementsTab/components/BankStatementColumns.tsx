@@ -16,6 +16,9 @@ import {
   renderNetOffCell,
   renderRemainingCell,
   renderInvoiceSubjectCell,
+  renderInvoiceNoCell,
+  renderInvoiceSerialCell,
+  renderInvoiceDateCell,
   renderPartnerCell,
 } from "./BankStatementCellRenderers";
 import { resolveBranchIds } from "@/shared/utils/branchIds";
@@ -372,6 +375,42 @@ export function useBankStatementColumns({
         ),
         size: 200,
         cell: (row: any) => renderInvoiceSubjectCell(row, t),
+      },
+      {
+        key: "invoiceNo",
+        header: headerFilter(
+          "invoiceNo",
+          t("bankStatement.columns.invoiceNo", {
+            defaultValue: "Số hóa đơn",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 150,
+        cell: (row: any) => renderInvoiceNoCell(row, t),
+      },
+      {
+        key: "invoiceSerial",
+        header: (
+          <span className="w-full block text-center">
+            {t("bankStatement.columns.invoiceSerial", {
+              defaultValue: "Ký hiệu HĐ",
+            })}
+          </span>
+        ),
+        size: 120,
+        cell: (row: any) => renderInvoiceSerialCell(row, t),
+      },
+      {
+        key: "invoiceDate",
+        header: (
+          <span className="w-full block text-center">
+            {t("bankStatement.columns.invoiceDate", {
+              defaultValue: "Ngày HĐ",
+            })}
+          </span>
+        ),
+        size: 120,
+        cell: (row: any) => renderInvoiceDateCell(row, t),
       },
       {
         key: "correspondentName",

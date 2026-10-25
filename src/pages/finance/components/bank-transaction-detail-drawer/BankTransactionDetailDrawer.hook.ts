@@ -132,7 +132,7 @@ export function useBankTransactionDetailDrawer(
           : [];
       postingState.setAllState({
         postingDate: tx?.postingDate || defaultPostingDate,
-        description: tx?.description || baseDescription,
+        description: tx?.postingDescription || baseDescription,
         lines:
           pLines.length > 0
             ? pLines.map((l: any) => ({
