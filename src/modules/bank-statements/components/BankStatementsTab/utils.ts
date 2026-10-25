@@ -16,6 +16,9 @@ export const DEFAULT_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
   correspondentAccount: false,
   correspondentBank: false,
   branch: true,
+  cashflowClassification: true,
+  cashflowPurpose: true,
+  note: true,
 };
 
 export const AUDIT_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
@@ -34,6 +37,9 @@ export const AUDIT_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
   correspondentAccount: false,
   correspondentBank: false,
   branch: true,
+  cashflowClassification: true,
+  cashflowPurpose: true,
+  note: true,
 };
 
 export const BANK_STATEMENT_COLUMN_VIEW_PRESETS: TableViewPreset[] = [
@@ -62,7 +68,7 @@ export const BANK_STATEMENT_COLUMN_VIEW_PRESETS: TableViewPreset[] = [
 ];
 
 export interface ColumnGroupDef {
-  groupKey: "general" | "amount" | "reconciliation" | "partner";
+  groupKey: "general" | "amount" | "reconciliation" | "partner" | "cashflow";
   titleKey: string;
   titleDefault: string;
   columns: Array<{
@@ -189,6 +195,31 @@ export const BANK_STATEMENT_COLUMN_GROUPS: ColumnGroupDef[] = [
         labelKey: "bankStatement.columns.correspondentBank",
         labelDefault: "Ngân hàng đối tác",
         defaultVisible: false,
+      },
+    ],
+  },
+  {
+    groupKey: "cashflow",
+    titleKey: "bankStatement.viewConfigGroupCashflow",
+    titleDefault: "Phân loại & Ghi chú",
+    columns: [
+      {
+        key: "cashflowClassification",
+        labelKey: "bankStatement.columns.classification",
+        labelDefault: "Phân loại",
+        defaultVisible: true,
+      },
+      {
+        key: "cashflowPurpose",
+        labelKey: "bankStatement.columns.purpose",
+        labelDefault: "Mục đích",
+        defaultVisible: true,
+      },
+      {
+        key: "note",
+        labelKey: "bankStatement.columns.note",
+        labelDefault: "Ghi chú",
+        defaultVisible: true,
       },
     ],
   },
