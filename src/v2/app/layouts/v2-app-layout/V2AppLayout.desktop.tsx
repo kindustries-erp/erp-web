@@ -35,6 +35,8 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   userMenuNode,
   notificationNode,
   onClickLogo,
+  collapsed,
+  onToggleCollapse,
 }) => {
   const { t, locale } = useV2Translation();
   const can = useV2PermissionChecker();
@@ -79,6 +81,8 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         onNavigate={onNavigate}
         appName={appName}
         onClickLogo={onClickLogo}
+        collapsed={collapsed}
+        onToggleCollapse={onToggleCollapse}
         userMenuNode={userMenuNode}
         notificationNode={notificationNode}
         user={{

@@ -71,6 +71,7 @@ src/
 
 ### 3.1. Template Trang Kho (`VinfastPartsStockTemplate.tsx`)
 - **Khung giao diện**: Kế thừa `<SpreadsheetPageTemplate>` với `tableId="vinfast-parts-stock-${vehicleType}"`.
+- **Nút hành động đầu trang** (giống trang hóa đơn): nút chính tách đôi "Đồng bộ" (`onCreate` mở `VinfastPartsSyncDrawer`, icon `DownloadCloud`); menu ▾ chỉ có nhóm TRA CỨU → "Xuất Excel" (mở `VinfastPartsStockExportDrawer`). Cấu hình trong `VinfastPartsStockTable.tsx` (`createLabel`, `createIcon`, `onCreate`) và `VinfastPartsStockTable.actions.tsx` (`createActions`).
 - **Bộ lọc & Sắp xếp Header Cột (`TableColumnHeaderFilter`)**:
   - Hỗ trợ tìm kiếm nhanh theo từng cột (`column_search`).
   - Lọc đa giá trị (`column_filters`) với cơ chế tải danh sách giá trị distinct qua `fetchColumnOptions` (`/api/v1/vinfast-parts/stock/column-options`).
@@ -110,10 +111,18 @@ src/
 - Kết nối SSE endpoint `/api/v1/vinfast-parts/sync/progress` để cập nhật thanh tiến trình theo thời gian thực.
 - Section "Tiến trình" bọc `V2SyncProgress` (`src/v2/shared/components/molecules/v2-sync-progress/`) trong `DrawerSection` V1, dùng chung với drawer "Đồng bộ hóa đơn" (`InvoiceSyncProgressSection`). Trạng thái suy bằng `deriveSyncPanelStatus` (`pages/hooks/vinfastSyncStatus.ts`): đang chạy > lỗi (dòng cuối có `level: "error"`) > hoàn tất (100%). Log lưu `{ at, message, level? }`, giờ hiển thị lấy từ `at`.
 
-### 3.4. Drawer Xuất Báo Cáo Excel Chạy Ngầm (`VinfastPartsStockExportDrawer.tsx`)
-- Tích hợp với Zustand store `useVinfastPartsStockExportProgressStore`.
-- Lắng nghe SSE stream `/api/v1/vinfast-parts/stock/export/excel/progress/stream`.
-- Hiển thị lịch sử các lần xuất trước, cho phép tải lại ngay lập tức nếu file còn hiệu lực (chưa quá 24h).
+### 3.4. Drawer Xuất Báo Cáo Excel Chạy Ngầm (V2: `src/v2/modules/vinfast-parts/drawers/VinfastPartsStockExportDrawer.tsx`)
+- Drawer đã chuyển sang V2 (`V2ExportExcelDrawer`, layout 2 cột `lg`). Đường dẫn V1 `src/pages/components/VinfastPartsStockExportDrawer.tsx` chỉ còn re-export để giữ nơi mount.
+- Cấu trúc: `.hook.ts` (điều phối), `.period.hook.ts` (chế độ xuất, kỳ tháng/quý/tùy chỉnh, khoảng ngày), `.history.hook.ts` (query lịch sử + SSE, poll 10s khi job chạy và SSE không khỏe, map `historyItems`), `.helper.ts` (`buildExportPayload`, `buildFilterSummary`, map dòng lịch sử), `.columns.config.ts` (nhóm cột Tổng hợp / Sổ cái FIFO, mặc định chọn đủ), `Conditions.tsx` (mỏng, bọc `V2ExportConditionSection` từ shared).
+- Điều kiện xuất (cột phải) dùng chung `V2ExportConditionSection` (`molecules/v2-export-condition-section`): radio card "Theo kỳ" / "Theo filter hiện tại" → khi theo kỳ: tab pill Theo tháng / Theo quý / Tùy chỉnh + Kỳ hoặc Quý + Từ/Đến ngày; khi theo filter: `V2ExportFilterSummary` (loại xe, từ khóa, số điều kiện lọc cột). Không còn lựa chọn "Tất cả thời gian": xuất toàn bộ thời gian = "Theo filter hiện tại" (không ghi đè ngày).
+- Payload: "Theo kỳ" ghi đè `dateFrom/dateTo`; "Theo filter hiện tại" giữ nguyên `buildBaseQuery()` và không gửi ngày ghi đè. Nút Xuất bị khóa khi chưa chọn cột nào.
+- Cột trái: `V2ColumnSelector` (chọn cột theo nhóm) + `V2ExportHistoryList` (lịch sử + `V2TablePagination`). Nút Xuất bị khóa khi chưa chọn cột nào. Gửi `selectedColumns` trong payload `startBackgroundExport`.
+- Data layer nằm trong module V2 (không import V1): `api/vinfastStockExportApi.ts` (`v2HttpClient`), `api/dtos/vinfastStockExport.dto.ts`, `stores/useVinfastStockExportProgressStore.ts` (zustand), `hooks/useVinfastStockExportProgress.ts` (SSE `${V2_API_BASE_URL}/api/v1/vinfast-parts/stock/export/excel/progress/stream` + tải file blob). Các file V1 tương ứng đã xóa.
+- Toast dùng `useV2ToastStore` (`V2Toaster` đã mount ở `App.tsx`, dùng được cả V1 lẫn V2). Chuỗi hiển thị qua `useV2Translation` với key `v2.vinfastParts.export.*` (module locale `vinfastParts.locale.ts`) và `v2.exportExcel.*` (dùng chung).
+- Icon lấy qua registry `@/v2/shared/components/atoms` (`FileSpreadsheet`, `RefreshCw`, `Play`), không import `lucide-react` trực tiếp.
+- Validate: "Từ ngày" có `maxDate = Đến ngày`, "Đến ngày" có `minDate = Từ ngày`; khi `Từ ngày > Đến ngày` hiện `V2AlertBanner` và khóa nút Xuất; hook chặn thêm bằng toast `destructive`.
+- Nhãn kỳ: tháng `Tháng M/YYYY`, quý `Quý N/YYYY` (không còn kèm khoảng ngày trong nhãn).
+- Hiển thị lịch sử các lần xuất trước, tải lại ngay nếu file còn hiệu lực (chưa quá 24h).
 
 ---
 

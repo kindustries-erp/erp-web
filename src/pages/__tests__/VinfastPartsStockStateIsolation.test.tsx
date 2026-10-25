@@ -55,11 +55,14 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@/pages/hooks/useVinfastPartsStockExportProgress", () => ({
-  useVinfastPartsStockExportProgress: () => ({
-    downloadReadyFile: vi.fn(),
+vi.mock(
+  "@/v2/modules/vinfast-parts/hooks/useVinfastStockExportProgress",
+  () => ({
+    useVinfastStockExportProgress: () => ({
+      downloadReadyFile: vi.fn(),
+    }),
   }),
-}));
+);
 
 vi.mock("@/core/api/axiosInstance", () => ({
   default: {

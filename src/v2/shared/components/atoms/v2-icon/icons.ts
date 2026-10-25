@@ -54,6 +54,8 @@ export {
   Maximize,
   Minimize,
   RefreshCw,
+  Play,
+  FileSpreadsheet,
   Globe,
   Languages,
   Sliders,

@@ -214,4 +214,54 @@ describe("V2AppLayout Switcher", () => {
     fireEvent.click(lightBtn);
     expect(handleThemeChange).toHaveBeenCalledWith("classic-light");
   });
+
+  it("chuyển tiếp collapsed, onToggleCollapse và userMenuNode render prop xuống desktop sidebar", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 1280,
+    });
+
+    const handleToggle = vi.fn();
+    const renderUserMenu = vi.fn(({ collapsed }: { collapsed: boolean }) => (
+      <div data-testid="desktop-user-menu">
+        <span>Avatar</span>
+        {!collapsed && <span>User Name</span>}
+      </div>
+    ));
+
+    const { rerender } = render(
+      <V2AppLayout
+        collapsed={false}
+        onToggleCollapse={handleToggle}
+        userMenuNode={renderUserMenu}
+      >
+        <div>Content</div>
+      </V2AppLayout>,
+    );
+
+    const sidebar = screen.getByTestId("v2-sidebar");
+    expect(sidebar).toHaveClass("w-[210px]");
+    expect(screen.getByText("User Name")).toBeInTheDocument();
+    expect(renderUserMenu).toHaveBeenCalledWith({ collapsed: false });
+
+    const toggleBtn = screen.getByTestId("v2-sidebar-toggle-btn");
+    fireEvent.click(toggleBtn);
+    expect(handleToggle).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <V2AppLayout
+        collapsed={true}
+        onToggleCollapse={handleToggle}
+        userMenuNode={renderUserMenu}
+      >
+        <div>Content</div>
+      </V2AppLayout>,
+    );
+
+    expect(sidebar).toHaveClass("w-[58px]");
+    expect(sidebar).toHaveAttribute("data-collapsed", "true");
+    expect(screen.queryByText("User Name")).not.toBeInTheDocument();
+    expect(renderUserMenu).toHaveBeenCalledWith({ collapsed: true });
+  });
 });

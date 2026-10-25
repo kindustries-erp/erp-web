@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-interface VinfastPartsStockExportProgressState {
+export interface VinfastStockExportProgressState {
   jobId: string | null;
   current: number;
   total: number;
@@ -13,7 +13,7 @@ interface VinfastPartsStockExportProgressState {
   lastEventAt: number | null;
   sseConnected: boolean;
 
-  updateProgress: (data: Partial<VinfastPartsStockExportProgressState>) => void;
+  updateProgress: (data: Partial<VinfastStockExportProgressState>) => void;
   resetProgress: () => void;
   setSseConnected: (connected: boolean) => void;
 }
@@ -32,22 +32,16 @@ const initialState = {
   sseConnected: false,
 };
 
-export const useVinfastPartsStockExportProgressStore =
-  create<VinfastPartsStockExportProgressState>((set) => ({
+/** Tiến độ xuất Excel tồn kho Vinfast của phiên hiện tại (cập nhật qua SSE) */
+export const useVinfastStockExportProgressStore =
+  create<VinfastStockExportProgressState>((set) => ({
     ...initialState,
 
     updateProgress: (data) =>
-      set((state) => ({
-        ...state,
-        ...data,
-        lastEventAt: Date.now(),
-      })),
+      set((state) => ({ ...state, ...data, lastEventAt: Date.now() })),
 
     resetProgress: () =>
-      set((state) => ({
-        ...initialState,
-        sseConnected: state.sseConnected,
-      })),
+      set((state) => ({ ...initialState, sseConnected: state.sseConnected })),
 
     setSseConnected: (connected) => set({ sseConnected: connected }),
   }));

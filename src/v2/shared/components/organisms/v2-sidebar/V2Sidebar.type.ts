@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { V2BaseProps } from "@/v2/shared/types";
+import type { V2UserMenuRenderProp } from "@/v2/shared/components/molecules/v2-sidebar-bottom";
 
 export interface V2SidebarItem {
   id: string;
@@ -35,6 +36,6 @@ export interface V2SidebarProps extends V2BaseProps<HTMLElement> {
   onClickLogo?: () => void;
   onUserClick?: () => void;
   onNotificationClick?: () => void;
-  userMenuNode?: React.ReactNode;
+  userMenuNode?: V2UserMenuRenderProp;
   notificationNode?: React.ReactNode;
 }

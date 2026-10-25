@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from "react";
 import type { TFunction } from "i18next";
-import { Eye, RefreshCw, DownloadCloud } from "lucide-react";
+import { Download, Eye } from "lucide-react";
 import { ViewModeCombobox } from "@/shared/components/ViewModeCombobox";
 import type { TableViewPreset } from "@/shared/hooks/useUserPreferences";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
@@ -32,7 +32,6 @@ export function useVinfastPartsStockActions({
   stockTab,
   setStockTab,
   onSelectSku,
-  onOpenSync,
   onOpenExport,
   presets,
   activePresetKey,
@@ -122,30 +121,21 @@ export function useVinfastPartsStockActions({
     ],
   );
 
+  // Nút chính là "Đồng bộ" (onOpenSync); menu chỉ còn các thao tác phụ, giống trang hóa đơn
   const createActions = useMemo<ActionDropdownItem[]>(
     () => [
-      {
-        groupLabel: t("vinfastParts:SYSTEM", "HỆ THỐNG"),
-        items: [
-          {
-            label: t("vinfastParts:SYNC_LEDGER", "Đồng bộ sổ cái"),
-            icon: <RefreshCw className="w-4 h-4 text-primary" />,
-            onClick: onOpenSync,
-          },
-        ],
-      },
       {
         groupLabel: t("vinfastParts:SEARCH", "TRA CỨU"),
         items: [
           {
-            label: t("vinfastParts:DOWNLOAD_REPORT", "Tải bảng kê"),
-            icon: <DownloadCloud className="w-4 h-4 text-emerald-600" />,
+            label: t("vinfastParts:EXPORT_EXCEL", "Xuất Excel"),
+            icon: <Download className="w-4 h-4 text-green-600" />,
             onClick: onOpenExport,
           },
         ],
       },
     ],
-    [t, onOpenSync, onOpenExport],
+    [t, onOpenExport],
   );
 
   return {

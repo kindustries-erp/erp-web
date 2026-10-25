@@ -165,6 +165,8 @@ Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `business
 
 Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/skills/modules/<module>/SKILL.md` của module.
 
+- `vinfast-parts` (drawer xuất Excel tồn kho): đã V2 thuần (data layer, toast, icon, locale module, validate ngày). Các drawer khác của module chưa kiểm parity.
+
 ## 9. Hạn chế đã biết
 
 - Generator chỉ sinh khung. Nhãn, quy tắc nghiệp vụ, quyền và endpoint thực phải chỉnh tay.

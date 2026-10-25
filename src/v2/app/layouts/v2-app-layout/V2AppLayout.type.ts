@@ -5,6 +5,7 @@ import type {
   V2BreadcrumbItem,
   V2TabEntry,
 } from "@/v2/shared/components";
+import type { V2UserMenuRenderProp } from "@/v2/shared/components/molecules/v2-sidebar-bottom";
 import type { V2BaseProps } from "@/v2/shared/types";
 
 export interface V2AppLayoutProps extends V2BaseProps {
@@ -27,9 +28,11 @@ export interface V2AppLayoutProps extends V2BaseProps {
   appName?: string;
   logoUrl?: string;
   contentClassName?: string;
-  userMenuNode?: ReactNode;
+  userMenuNode?: V2UserMenuRenderProp;
   notificationNode?: ReactNode;
   onClickLogo?: () => void;
   currentTheme?: string;
   onThemeChange?: (theme: any) => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }

@@ -204,7 +204,7 @@ export interface V2RightPanelProps {
 
 ### 4.3. `V2SidebarProps` ([`V2Sidebar.type.ts`](erp/erp-web/src/v2/shared/components/organisms/v2-sidebar/V2Sidebar.type.ts))
 ```typescript
-export interface V2SidebarProps {
+export interface V2SidebarProps extends V2BaseProps<HTMLElement> {
   sections?: V2SidebarSectionData[];
   items?: V2SidebarItem[];
   activeId?: string;
@@ -212,9 +212,25 @@ export interface V2SidebarProps {
   user?: V2SidebarUserData;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  appName?: string;
+  onClickLogo?: () => void;
+  onUserClick?: () => void;
+  onNotificationClick?: () => void;
+  userMenuNode?: V2UserMenuRenderProp; // ReactNode | ((props: { collapsed: boolean }) => ReactNode)
+  notificationNode?: ReactNode;
   className?: string;
 }
 ```
+
+#### 🎯 Cơ chế Header Toggle Button & UserMenu Render Prop khi Collapsed:
+- **Đỉnh Sidebar (`V2SidebarHeader`)**:
+  - Khi `isCollapsed = true`: Logo ERP được thay thế trực tiếp bằng nút toggle expand `<V2SidebarToggleBtn isCollapsed={true} />` (28x28px, icon `ChevronRight`, bo góc chuẩn) căn giữa hoàn hảo trong header 58px.
+  - Khi `isCollapsed = false`: Header hiển thị Logo ERP + Tên app bên trái và nút collapse bên phải.
+- **Chân Sidebar (`V2SidebarBottom`)**:
+  - Nhận `userMenuNode` dạng Render Prop: `({ collapsed }) => ReactNode`.
+  - Khi `collapsed = true`: Ẩn hoàn toàn email/tên người dùng (`displayName`) và chevron, chỉ hiển thị Avatar tròn 22x22px căn giữa (`justify-center w-full`) và chuông thông báo bên dưới.
+- **Đồng bộ trạng thái**:
+  - `V2AppLayoutProps` nhận `collapsed` và `onToggleCollapse`, kết nối trực tiếp với Zustand `useAppStore` (`sidebarCollapsed`, `toggleSidebar`) trong `V2ShellLayout`.
 
 ### 4.4. `V2HeaderProps` ([`V2Header.type.ts`](erp/erp-web/src/v2/shared/components/organisms/v2-header/V2Header.type.ts))
 ```typescript
@@ -230,7 +246,7 @@ export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
   onReturnToV1?: () => void;
   showLanguageSwitcher?: boolean;
   showReturnToV1?: boolean;
-  userMenuNode?: React.ReactNode;
+  userMenuNode?: V2UserMenuRenderProp;
   notificationNode?: React.ReactNode;
 }
 ```
