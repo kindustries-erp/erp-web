@@ -262,31 +262,6 @@ export function useBankStatementColumns({
         cell: (row: any) => renderCopyableText(row.description, t),
       },
       {
-        key: "cashflowClassification",
-        header: headerFilter(
-          "cashflowClassification",
-          t("bankStatement.columns.classification", {
-            defaultValue: "Phân loại",
-          }),
-          { showBlankOption: true },
-        ),
-        size: 160,
-        cell: (row: any) =>
-          getClassificationLabel(t, row.cashflowClassification),
-      },
-      {
-        key: "cashflowPurpose",
-        header: headerFilter(
-          "cashflowPurpose",
-          t("bankStatement.columns.purpose", {
-            defaultValue: "Mục đích",
-          }),
-          { showBlankOption: true },
-        ),
-        size: 160,
-        cell: (row: any) => getPurposeLabel(t, row.cashflowPurpose),
-      },
-      {
         key: "thu",
         header: headerFilter.amount(
           "thu",
@@ -318,6 +293,43 @@ export function useBankStatementColumns({
         ),
         className: "text-right font-medium",
         size: 140,
+      },
+      {
+        key: "cashflowClassification",
+        header: headerFilter(
+          "cashflowClassification",
+          t("bankStatement.columns.classification", {
+            defaultValue: "Phân loại",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 160,
+        cell: (row: any) =>
+          getClassificationLabel(t, row.cashflowClassification),
+      },
+      {
+        key: "cashflowPurpose",
+        header: headerFilter(
+          "cashflowPurpose",
+          t("bankStatement.columns.purpose", {
+            defaultValue: "Mục đích",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 160,
+        cell: (row: any) => getPurposeLabel(t, row.cashflowPurpose),
+      },
+      {
+        key: "note",
+        header: headerFilter(
+          "note",
+          t("bankStatement.columns.note", {
+            defaultValue: "Ghi chú",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 250,
+        cell: (row: any) => renderCopyableText(row.note, t),
       },
       {
         key: "netOffAmount",

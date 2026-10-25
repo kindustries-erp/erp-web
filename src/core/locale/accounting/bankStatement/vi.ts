@@ -26,6 +26,7 @@ export const bankStatementVi = {
     seqNo: "Số CT",
     classification: "Phân loại",
     purpose: "Mục đích",
+    note: "Ghi chú",
   },
   cashflowAttributes: "PHÂN LOẠI DÒNG TIỀN",
   classification: "Phân loại",
