@@ -22,6 +22,11 @@ export const V2Header: React.FC<V2HeaderProps> = ({
   className,
   ...props
 }) => {
+  const resolvedUserMenuNode =
+    typeof userMenuNode === "function"
+      ? userMenuNode({ collapsed: false })
+      : userMenuNode;
+
   return (
     <header
       data-testid="v2-header"
@@ -87,8 +92,8 @@ export const V2Header: React.FC<V2HeaderProps> = ({
         {notificationNode}
         {showLanguageSwitcher && <V2LanguageSwitcher />}
 
-        {userMenuNode ? (
-          userMenuNode
+        {resolvedUserMenuNode ? (
+          resolvedUserMenuNode
         ) : (
           <V2UserBadge
             name={userName}
