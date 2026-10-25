@@ -45,12 +45,15 @@ export function migrateV1TablePreferences(): void {
   const state = useV2TablePreferencesStore.getState();
   if (state.migrationVersion >= V2_PREFERENCES_MIGRATION_VERSION) return;
 
-  const migrated = Object.fromEntries(
-    Object.entries(readV1TablePreferences())
-      .filter(([tableId]) => !/(_2|__\d+)$/.test(tableId))
-      .filter(([tableId]) => !state.tables[tableId])
-      .map(([tableId, legacy]) => [tableId, mapV1TablePreference(legacy)]),
-  );
+  const migrated: Record<string, V2TablePreferenceEntry> = {};
+  for (const [tableId, legacy] of Object.entries(readV1TablePreferences())) {
+    if (/(_2|__\d+)$/.test(tableId) || state.tables[tableId]) continue;
+    try {
+      migrated[tableId] = mapV1TablePreference(legacy);
+    } catch {
+      // Bảng V1 hỏng thì bỏ qua, không chặn các bảng còn lại
+    }
+  }
 
   useV2TablePreferencesStore.setState({
     tables: { ...state.tables, ...migrated },
@@ -58,4 +61,8 @@ export function migrateV1TablePreferences(): void {
   });
 }
 
-migrateV1TablePreferences();
+try {
+  migrateV1TablePreferences();
+} catch {
+  // Lỗi preference không được làm sập app
+}

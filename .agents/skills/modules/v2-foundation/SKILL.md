@@ -28,6 +28,14 @@ Nguyên tắc: module chỉ viết **logic nghiệp vụ** (hook nhận query, t
 
 Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đổi `page`/lọc trên URL (bảng uncontrolled). Back chỉ đóng/mở drawer và đổi tab.
 
+### Preferences bảng (`src/v2/shared/preferences/`)
+
+- `useV2TablePreferencesStore` (zustand persist, key localStorage `v2_table_preferences`): `tables[tableId] = { columns?, views? }`, `migrationVersion`. `patchTable(tableId, patch)` lưu local rồi đẩy nền lên server qua `v2TablePreferences.sync.ts` (`PATCH /api/v1/app/table-preferences/:tableId`, debounce 500ms, lỗi mạng bỏ qua).
+- Migrate từ V1 (`erp_preferences`, chỉ đọc qua `v2TablePreferences.migrate.ts`): chạy đúng một lần khi `migrationVersion < V2_PREFERENCES_MIGRATION_VERSION` (hiện là 1). Bảng đã có cấu hình V2 được giữ nguyên; alias `_2` / `__n` bị bỏ qua.
+- Chống sập: `mapV1TablePreference` kiểm tra kiểu (`views`, `columnOrder`, `columnVisibility`, `columnSizing`, `activeView`), bỏ qua view thiếu `key`/`label` string. Mỗi bảng migrate trong try/catch, lời gọi migrate khi import cũng được bọc. Dữ liệu V1 sai kiểu không còn làm sập app.
+- Xoá cache: `clearV2TablePreferencesCache({ includeV1? })` (`v2TablePreferences.reset.ts`) reset state và xoá key `v2_table_preferences`; `includeV1: true` xoá thêm `erp_preferences`. Không gọi server. Chưa có nút UI, chỉ gọi từ code.
+- Test: `v2TablePreferences.migrate.test.ts`, `v2TablePreferences.reset.test.ts`, `useV2TablePreferencesStore.test.ts`.
+
 ## 3. i18n theo module (`shared/locales/moduleRegistry.ts`)
 
 `registerV2ModuleLocale("invoice", { vi, en })` đăng ký khóa dưới `v2.invoice.*`; `useV2Translation` tra từ điển chung trước rồi tới module. Namespace không được trùng khóa chung (`common`, `table`, `drawer`, `form`, `chart`, `preview`, `guard`...), trùng sẽ ném lỗi. Đăng ký lại cùng namespace thì ghi đè.
@@ -81,7 +89,7 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 
 **Chưa có (cần làm riêng):**
 - Chứng từ liên kết đa tầng: V1 `DrawerDocumentTraceability` dài khoảng 2.900 dòng (canvas, pipeline, bảng, liên kết/gỡ liên kết). V2 mới có `DrawerRelatedDeck` làm khung; story mẫu dùng bảng rút gọn.
-- Lưu cấu hình cột/view lên server (V2 chỉ có localStorage), chọn nhanh theo lịch trong bộ lọc cột (đã có sẵn khe ngày với mốc `today/last7/last30/thisMonth`).
+- Lưu cấu hình cột/view lên server: đã có đường ghi (PATCH nền, xem mục Preferences bảng), nhưng chưa xác minh chiều tải về khi mở trang (`applyServerTables` cần kiểm tra ai gọi). Chọn nhanh theo lịch trong bộ lọc cột (đã có sẵn khe ngày với mốc `today/last7/last30/thisMonth`).
 - Nhiều tab cùng một trang (`instanceIndex`) như V1.
 - Bảng không đồng bộ lại khi Back đổi query trên URL.
 
