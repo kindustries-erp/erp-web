@@ -14,6 +14,8 @@ export interface VinfastPartsStockExportQuery {
   sorts?: string;
   columnSearch?: string;
   columnFilters?: string;
+  /** Key cột Excel cần xuất; bỏ trống = xuất đủ cột */
+  selectedColumns?: string[];
 }
 
 export interface VinfastPartsStockExportStartResult {

@@ -54,3 +54,5 @@ export * from "./v2-form-controls";
 export * from "./v2-subtotal-summary-cell";
 export * from "./v2-sync-progress";
 export * from "./v2-notification-popover";
+export * from "./v2-column-selector";
+export * from "./v2-export-history-list";

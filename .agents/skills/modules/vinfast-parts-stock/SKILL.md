@@ -110,10 +110,13 @@ src/
 - Kết nối SSE endpoint `/api/v1/vinfast-parts/sync/progress` để cập nhật thanh tiến trình theo thời gian thực.
 - Section "Tiến trình" bọc `V2SyncProgress` (`src/v2/shared/components/molecules/v2-sync-progress/`) trong `DrawerSection` V1, dùng chung với drawer "Đồng bộ hóa đơn" (`InvoiceSyncProgressSection`). Trạng thái suy bằng `deriveSyncPanelStatus` (`pages/hooks/vinfastSyncStatus.ts`): đang chạy > lỗi (dòng cuối có `level: "error"`) > hoàn tất (100%). Log lưu `{ at, message, level? }`, giờ hiển thị lấy từ `at`.
 
-### 3.4. Drawer Xuất Báo Cáo Excel Chạy Ngầm (`VinfastPartsStockExportDrawer.tsx`)
-- Tích hợp với Zustand store `useVinfastPartsStockExportProgressStore`.
-- Lắng nghe SSE stream `/api/v1/vinfast-parts/stock/export/excel/progress/stream`.
-- Hiển thị lịch sử các lần xuất trước, cho phép tải lại ngay lập tức nếu file còn hiệu lực (chưa quá 24h).
+### 3.4. Drawer Xuất Báo Cáo Excel Chạy Ngầm (V2: `src/v2/modules/vinfast-parts/drawers/VinfastPartsStockExportDrawer.tsx`)
+- Drawer đã chuyển sang V2 (`V2ExportExcelDrawer`, layout 2 cột `lg`). Đường dẫn V1 `src/pages/components/VinfastPartsStockExportDrawer.tsx` chỉ còn re-export để giữ nơi mount.
+- Cấu trúc: `.hook.ts` (điều phối), `.period.hook.ts` (kỳ/khoảng ngày), `.history.hook.ts` (query lịch sử + SSE, poll 10s khi job chạy và SSE không khỏe), `.helper.ts` (map dòng lịch sử), `.columns.config.ts` (nhóm cột Tổng hợp / Sổ cái FIFO, mặc định chọn đủ), `Conditions.tsx` (cột phải: kỳ, khoảng ngày, nút Xuất).
+- Cột trái: `V2ColumnSelector` (chọn cột theo nhóm) + `V2ExportHistoryList` (lịch sử + `V2TablePagination`). Nút Xuất bị khóa khi chưa chọn cột nào. Gửi `selectedColumns` trong payload `startBackgroundExport`.
+- Tích hợp với Zustand store `useVinfastPartsStockExportProgressStore`; SSE `/api/v1/vinfast-parts/stock/export/excel/progress/stream`.
+- Toast dùng `react-hot-toast` (Toaster V1 đang mount ở `App.tsx`); `V2Toaster` chỉ mount trong shell `/v2/`.
+- Hiển thị lịch sử các lần xuất trước, tải lại ngay nếu file còn hiệu lực (chưa quá 24h).
 
 ---
 
