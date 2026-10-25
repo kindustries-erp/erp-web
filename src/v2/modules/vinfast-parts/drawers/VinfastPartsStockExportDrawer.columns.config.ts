@@ -10,14 +10,13 @@ export interface VinfastStockExportColumnGroupConfig {
   columns: VinfastStockExportColumnConfig[];
 }
 
-const COLUMN_LABEL = (key: string) =>
-  `v2.exportExcel.vinfastParts.columns.${key}`;
+const COLUMN_LABEL = (key: string) => `v2.vinfastParts.export.columns.${key}`;
 
 export const VINFAST_STOCK_EXPORT_COLUMN_GROUPS: VinfastStockExportColumnGroupConfig[] =
   [
     {
       key: "summary",
-      labelKey: "v2.exportExcel.vinfastParts.groups.summary",
+      labelKey: "v2.vinfastParts.export.groups.summary",
       columns: [
         "stt",
         "sku",
@@ -30,7 +29,7 @@ export const VINFAST_STOCK_EXPORT_COLUMN_GROUPS: VinfastStockExportColumnGroupCo
     },
     {
       key: "ledger",
-      labelKey: "v2.exportExcel.vinfastParts.groups.ledger",
+      labelKey: "v2.vinfastParts.export.groups.ledger",
       columns: [
         "partSku",
         "partName",

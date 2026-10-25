@@ -1,11 +1,70 @@
 import { describe, expect, it } from "vitest";
 import {
+  generateMonthOptions,
   generateQuarterOptions,
+  initMonth,
   initQuarter,
+  isDateRangeInvalid,
+  monthFirstDay,
+  monthFromExactRange,
+  monthLastDay,
   quarterFirstDay,
   quarterFromExactRange,
   quarterLastDay,
 } from "./exportPeriod";
+
+describe("exportPeriod month helpers", () => {
+  it("returns first and last day of a month, including leap February", () => {
+    expect(monthFirstDay("2026-10")).toBe("2026-10-01");
+    expect(monthLastDay("2026-10")).toBe("2026-10-31");
+    expect(monthLastDay("2028-02")).toBe("2028-02-29");
+    expect(monthFirstDay("")).toBe("");
+    expect(monthLastDay("")).toBe("");
+  });
+
+  it("derives the month from an exact range only", () => {
+    expect(monthFromExactRange("2026-10-01", "2026-10-31")).toBe("2026-10");
+    expect(monthFromExactRange("2026-10-01", "2026-10-30")).toBe("");
+    expect(monthFromExactRange("2026-09-01", "2026-10-31")).toBe("");
+  });
+
+  it("initMonth uses the given date", () => {
+    expect(initMonth(new Date(2026, 8, 15))).toBe("2026-09");
+  });
+
+  it("lists months newest first with the default Vietnamese label", () => {
+    const options = generateMonthOptions(2, new Date(2026, 0, 10));
+    expect(options).toEqual([
+      { value: "2026-01", label: "Tháng 1/2026" },
+      { value: "2025-12", label: "Tháng 12/2025" },
+    ]);
+  });
+
+  it("uses a custom label formatter when provided", () => {
+    const options = generateMonthOptions(
+      1,
+      new Date(2026, 0, 10),
+      (m, y) => `M${m}-${y}`,
+    );
+    expect(options[0].label).toBe("M1-2026");
+  });
+});
+
+describe("exportPeriod date range validation", () => {
+  it("flags a start date after the end date", () => {
+    expect(isDateRangeInvalid("2026-10-02", "2026-10-01")).toBe(true);
+  });
+
+  it("accepts equal dates and ordered dates", () => {
+    expect(isDateRangeInvalid("2026-10-01", "2026-10-01")).toBe(false);
+    expect(isDateRangeInvalid("2026-10-01", "2026-10-31")).toBe(false);
+  });
+
+  it("does not flag a range with a missing side", () => {
+    expect(isDateRangeInvalid("2026-10-01", "")).toBe(false);
+    expect(isDateRangeInvalid(undefined, "2026-10-01")).toBe(false);
+  });
+});
 
 describe("exportPeriod quarter helpers", () => {
   it("returns first and last day of a quarter", () => {

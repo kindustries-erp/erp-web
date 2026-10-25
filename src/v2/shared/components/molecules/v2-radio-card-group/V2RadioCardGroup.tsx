@@ -1,5 +1,6 @@
 import * as React from "react";
 import { V2Text } from "@/v2/shared/components/atoms";
+import { RadioGroup, RadioGroupItem } from "@/v2/shared/ui/radio-group";
 import { cn } from "@/v2/shared/utils/cn";
 import type { V2RadioCardGroupProps } from "./V2RadioCardGroup.type";
 
@@ -11,65 +12,61 @@ export function V2RadioCardGroup<T extends string>({
   onValueChange,
   className,
 }: V2RadioCardGroupProps<T>) {
+  const idPrefix = React.useId();
+
   return (
-    <div
-      role="radiogroup"
+    <RadioGroup
+      name={name}
       aria-label={ariaLabel}
-      className={cn("grid gap-2", className)}
+      value={value}
+      onValueChange={(next) => onValueChange(next as T)}
+      className={cn("gap-2", className)}
     >
       {options.map((option) => {
         const checked = option.value === value;
+        const itemId = `${idPrefix}-${option.value}`;
         return (
-          <label
+          <div
             key={option.value}
             className={cn(
-              "flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 transition-colors",
-              "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/40",
+              "flex items-start gap-2.5 rounded-lg border p-2.5 transition-colors",
               checked
-                ? "border-foreground bg-muted/40 text-foreground"
-                : "border-border/70 text-muted-foreground hover:border-border hover:bg-muted/20",
-              option.disabled && "cursor-not-allowed opacity-50",
+                ? "border-primary/50 bg-primary/10 dark:border-teal-500/40 dark:bg-teal-500/[0.08]"
+                : "border-border/50 hover:bg-muted/20",
+              option.disabled && "opacity-50",
             )}
           >
-            <input
-              type="radio"
-              name={name}
+            <RadioGroupItem
+              id={itemId}
               value={option.value}
-              checked={checked}
               disabled={option.disabled}
-              onChange={() => onValueChange(option.value)}
-              className="sr-only"
+              className="mt-0.5"
             />
-            <span
-              aria-hidden
-              className={cn(
-                "mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border",
-                checked ? "border-foreground" : "border-border",
-              )}
-            >
-              {checked && (
-                <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
-              )}
-            </span>
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="flex items-center gap-1.5 font-medium text-foreground">
-                {option.icon}
-                <V2Text variant="body-sm" className="font-medium">
-                  {option.label}
-                </V2Text>
-              </span>
-              {option.description && (
-                <V2Text
-                  variant="body-sm"
-                  className="text-[11px] leading-normal text-muted-foreground"
-                >
-                  {option.description}
-                </V2Text>
-              )}
-            </span>
-          </label>
+            <V2Text asChild>
+              <label
+                htmlFor={itemId}
+                className={cn(
+                  "flex min-w-0 flex-1 flex-col gap-0.5",
+                  option.disabled ? "cursor-not-allowed" : "cursor-pointer",
+                )}
+              >
+                <span className="flex items-center gap-1.5">
+                  {option.icon}
+                  <V2Text
+                    variant="body-sm"
+                    className="font-medium text-foreground"
+                  >
+                    {option.label}
+                  </V2Text>
+                </span>
+                {option.description && (
+                  <V2Text variant="helper">{option.description}</V2Text>
+                )}
+              </label>
+            </V2Text>
+          </div>
         );
       })}
-    </div>
+    </RadioGroup>
   );
 }

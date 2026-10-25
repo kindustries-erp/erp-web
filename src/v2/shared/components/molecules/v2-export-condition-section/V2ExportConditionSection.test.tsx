@@ -59,4 +59,32 @@ describe("V2ExportConditionSection", () => {
     render(<V2ExportConditionSection {...base} startDisabled />);
     expect(screen.getByRole("button", { name: "Xuất Excel" })).toBeDisabled();
   });
+
+  it("shows an alert and blocks export when from date is after to date", () => {
+    render(
+      <V2ExportConditionSection
+        {...base}
+        dateFrom="2026-10-15"
+        dateTo="2026-10-01"
+      />,
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Từ ngày phải nhỏ hơn hoặc bằng Đến ngày",
+    );
+    expect(screen.getByRole("button", { name: "Xuất Excel" })).toBeDisabled();
+  });
+
+  it("does not flag an invalid range in by-current-filter mode", () => {
+    render(
+      <V2ExportConditionSection
+        {...base}
+        exportMode="by-current-filter"
+        dateFrom="2026-10-15"
+        dateTo="2026-10-01"
+      />,
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });

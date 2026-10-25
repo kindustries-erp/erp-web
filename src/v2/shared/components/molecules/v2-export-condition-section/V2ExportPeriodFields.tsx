@@ -103,6 +103,7 @@ export const V2ExportPeriodFields: React.FC<V2ExportPeriodFieldsProps> = ({
           <V2DatePicker
             value={dateFrom || null}
             onValueChange={(value) => onDateFromChange(value ?? "")}
+            maxDate={dateTo || undefined}
             placeholder="dd/mm/yyyy"
             clearable
           />
@@ -114,6 +115,7 @@ export const V2ExportPeriodFields: React.FC<V2ExportPeriodFieldsProps> = ({
           <V2DatePicker
             value={dateTo || null}
             onValueChange={(value) => onDateToChange(value ?? "")}
+            minDate={dateFrom || undefined}
             placeholder="dd/mm/yyyy"
             clearable
           />

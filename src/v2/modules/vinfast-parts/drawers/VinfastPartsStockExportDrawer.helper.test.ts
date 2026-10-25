@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { VinfastPartsStockExportHistoryItem } from "@/pages/api/vinfastPartsStockExportApi";
+import type { VinfastPartsStockExportHistoryItem } from "../api/dtos/vinfastStockExport.dto";
 import {
   buildExportPayload,
   buildFilterSummary,

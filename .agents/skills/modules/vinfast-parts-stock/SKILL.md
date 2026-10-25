@@ -116,8 +116,11 @@ src/
 - Điều kiện xuất (cột phải) dùng chung `V2ExportConditionSection` (`molecules/v2-export-condition-section`): radio card "Theo kỳ" / "Theo filter hiện tại" → khi theo kỳ: tab pill Theo tháng / Theo quý / Tùy chỉnh + Kỳ hoặc Quý + Từ/Đến ngày; khi theo filter: `V2ExportFilterSummary` (loại xe, từ khóa, số điều kiện lọc cột). Không còn lựa chọn "Tất cả thời gian": xuất toàn bộ thời gian = "Theo filter hiện tại" (không ghi đè ngày).
 - Payload: "Theo kỳ" ghi đè `dateFrom/dateTo`; "Theo filter hiện tại" giữ nguyên `buildBaseQuery()` và không gửi ngày ghi đè. Nút Xuất bị khóa khi chưa chọn cột nào.
 - Cột trái: `V2ColumnSelector` (chọn cột theo nhóm) + `V2ExportHistoryList` (lịch sử + `V2TablePagination`). Nút Xuất bị khóa khi chưa chọn cột nào. Gửi `selectedColumns` trong payload `startBackgroundExport`.
-- Tích hợp với Zustand store `useVinfastPartsStockExportProgressStore`; SSE `/api/v1/vinfast-parts/stock/export/excel/progress/stream`.
-- Toast dùng `react-hot-toast` (Toaster V1 đang mount ở `App.tsx`); `V2Toaster` chỉ mount trong shell `/v2/`.
+- Data layer nằm trong module V2 (không import V1): `api/vinfastStockExportApi.ts` (`v2HttpClient`), `api/dtos/vinfastStockExport.dto.ts`, `stores/useVinfastStockExportProgressStore.ts` (zustand), `hooks/useVinfastStockExportProgress.ts` (SSE `${V2_API_BASE_URL}/api/v1/vinfast-parts/stock/export/excel/progress/stream` + tải file blob). Các file V1 tương ứng đã xóa.
+- Toast dùng `useV2ToastStore` (`V2Toaster` đã mount ở `App.tsx`, dùng được cả V1 lẫn V2). Chuỗi hiển thị qua `useV2Translation` với key `v2.vinfastParts.export.*` (module locale `vinfastParts.locale.ts`) và `v2.exportExcel.*` (dùng chung).
+- Icon lấy qua registry `@/v2/shared/components/atoms` (`FileSpreadsheet`, `RefreshCw`, `Play`), không import `lucide-react` trực tiếp.
+- Validate: "Từ ngày" có `maxDate = Đến ngày`, "Đến ngày" có `minDate = Từ ngày`; khi `Từ ngày > Đến ngày` hiện `V2AlertBanner` và khóa nút Xuất; hook chặn thêm bằng toast `destructive`.
+- Nhãn kỳ: tháng `Tháng M/YYYY`, quý `Quý N/YYYY` (không còn kèm khoảng ngày trong nhãn).
 - Hiển thị lịch sử các lần xuất trước, tải lại ngay nếu file còn hiệu lực (chưa quá 24h).
 
 ---

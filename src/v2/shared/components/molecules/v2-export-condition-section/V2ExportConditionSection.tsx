@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Play } from "lucide-react";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+
+import { Play, V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { V2AlertBanner } from "@/v2/shared/components/molecules/v2-alert-banner";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import {
   V2RadioCardGroup,
@@ -8,6 +9,7 @@ import {
 } from "@/v2/shared/components/molecules/v2-radio-card-group";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { isDateRangeInvalid } from "@/v2/shared/utils/exportPeriod";
 import { V2ExportFilterSummary } from "./V2ExportFilterSummary";
 import { V2ExportPeriodFields } from "./V2ExportPeriodFields";
 import type {
@@ -45,6 +47,8 @@ export const V2ExportConditionSection: React.FC<
   className,
 }) => {
   const { t } = useV2Translation();
+  const rangeInvalid =
+    exportMode === "by-period" && isDateRangeInvalid(dateFrom, dateTo);
 
   const modeOptions: V2RadioCardOption<V2ExportMode>[] = [
     {
@@ -114,6 +118,15 @@ export const V2ExportConditionSection: React.FC<
           />
         )}
 
+        {rangeInvalid && (
+          <V2AlertBanner role="alert" className="text-destructive">
+            {t(
+              "v2.exportExcel.condition.invalidRange",
+              "Từ ngày phải nhỏ hơn hoặc bằng Đến ngày",
+            )}
+          </V2AlertBanner>
+        )}
+
         {children}
 
         <V2Button
@@ -121,7 +134,7 @@ export const V2ExportConditionSection: React.FC<
           fullWidth
           isLoading={starting}
           loadingText={t("v2.exportExcel.form.starting", "Đang khởi tạo...")}
-          disabled={startDisabled || starting}
+          disabled={startDisabled || starting || rangeInvalid}
           leftIcon={<Play className="h-4 w-4" />}
           onClick={onStart}
         >

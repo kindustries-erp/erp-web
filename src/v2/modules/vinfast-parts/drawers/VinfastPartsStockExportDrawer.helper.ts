@@ -2,7 +2,7 @@ import { format, isValid, parseISO } from "date-fns";
 import type {
   VinfastPartsStockExportHistoryItem,
   VinfastPartsStockExportQuery,
-} from "@/pages/api/vinfastPartsStockExportApi";
+} from "../api/dtos/vinfastStockExport.dto";
 import type { V2ExportHistoryItem } from "@/v2/shared/components/molecules/v2-export-history-list";
 import type { V2ExportMode } from "@/v2/shared/components/molecules/v2-export-condition-section";
 

@@ -1,13 +1,18 @@
 import * as React from "react";
-import { FileSpreadsheet, RefreshCw } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms";
+
+import {
+  FileSpreadsheet,
+  RefreshCw,
+  V2Button,
+} from "@/v2/shared/components/atoms";
 import { V2ExportExcelDrawer } from "@/v2/shared/components/organisms/v2-export-excel-drawer";
 import { V2ExportHistoryList } from "@/v2/shared/components/molecules/v2-export-history-list";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import type { VinfastPartsStockExportQuery } from "@/pages/api/vinfastPartsStockExportApi";
+import type { VinfastPartsStockExportQuery } from "../api/dtos/vinfastStockExport.dto";
 import { VINFAST_STOCK_EXPORT_DEFAULT_COLUMNS } from "./VinfastPartsStockExportDrawer.columns.config";
 import { useVinfastPartsStockExportDrawer } from "./VinfastPartsStockExportDrawer.hook";
 import { VinfastPartsStockExportConditions } from "./VinfastPartsStockExportConditions";
+import "../vinfastParts.locale";
 
 export interface VinfastPartsStockExportDrawerProps {
   open: boolean;
@@ -28,11 +33,11 @@ export function VinfastPartsStockExportDrawer({
       open={open}
       onClose={onClose}
       title={t(
-        "v2.exportExcel.vinfastParts.title",
+        "v2.vinfastParts.export.title",
         "Xuất Excel tồn kho phụ tùng (FIFO)",
       )}
       subtitle={t(
-        "v2.exportExcel.vinfastParts.subtitle",
+        "v2.vinfastParts.export.subtitle",
         "File Excel trình bày theo phương pháp FIFO.",
       )}
       icon={<FileSpreadsheet className="h-4 w-4" />}

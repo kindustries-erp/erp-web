@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { vinfastPartsStockExportApi } from "@/pages/api/vinfastPartsStockExportApi";
-import { useVinfastPartsStockExportProgressStore } from "@/shared/stores/useVinfastPartsStockExportProgressStore";
+import { vinfastStockExportApi } from "../api/vinfastStockExportApi";
+import { useVinfastStockExportProgressStore } from "../stores/useVinfastStockExportProgressStore";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { toHistoryViewItem } from "./VinfastPartsStockExportDrawer.helper";
 
@@ -21,13 +21,12 @@ export function useVinfastPartsStockExportHistory({
   pageSize,
 }: UseVinfastPartsStockExportHistoryOptions) {
   const { t } = useV2Translation();
-  const progress = useVinfastPartsStockExportProgressStore();
+  const progress = useVinfastStockExportProgressStore();
   const terminalRefreshGuardRef = useRef<string | null>(null);
 
   const historyQuery = useQuery({
     queryKey: ["vinfast-parts-stock-export-history", page, pageSize],
-    queryFn: () =>
-      vinfastPartsStockExportApi.listBackgroundHistory(page, pageSize),
+    queryFn: () => vinfastStockExportApi.listBackgroundHistory(page, pageSize),
     enabled: open,
     staleTime: 30_000,
     refetchOnWindowFocus: false,

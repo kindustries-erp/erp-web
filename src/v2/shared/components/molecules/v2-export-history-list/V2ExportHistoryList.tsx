@@ -1,5 +1,5 @@
 import * as React from "react";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { V2Button, V2Stack, V2Text } from "@/v2/shared/components/atoms";
 import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
 import { Badge } from "@/v2/shared/ui/badge";
 import { cn } from "@/v2/shared/utils/cn";
@@ -35,7 +35,7 @@ export const V2ExportHistoryList: React.FC<V2ExportHistoryListProps> = ({
   const busy = Boolean(downloadingId);
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <V2Stack gap="xs" className={cn("gap-2", className)}>
       {items.length === 0 && !isLoading ? (
         <V2Text
           variant="body-sm"
@@ -44,17 +44,24 @@ export const V2ExportHistoryList: React.FC<V2ExportHistoryListProps> = ({
           {emptyLabel}
         </V2Text>
       ) : (
-        <ul className="divide-y divide-border/60 rounded-lg border border-border/60">
+        <V2Stack
+          role="list"
+          className="divide-y divide-border/60 rounded-lg border border-border/60"
+        >
           {items.map((item) => (
-            <li key={item.id} className="flex items-center gap-3 px-3 py-2">
-              <div className="min-w-0 flex-1">
+            <V2Stack
+              key={item.id}
+              role="listitem"
+              className="flex-row items-center gap-3 px-3 py-2"
+            >
+              <V2Stack gap="none" className="min-w-0 flex-1">
                 <V2Text variant="body-sm" truncate className="font-medium">
                   {item.fileName}
                 </V2Text>
                 <V2Text variant="body-sm" className="text-muted-foreground">
                   {item.periodLabel} · {item.createdAt}
                 </V2Text>
-              </div>
+              </V2Stack>
               <Badge variant={TONE_BADGE[item.statusTone]}>
                 {item.statusLabel}
               </Badge>
@@ -68,9 +75,9 @@ export const V2ExportHistoryList: React.FC<V2ExportHistoryListProps> = ({
               >
                 {downloadLabel}
               </V2Button>
-            </li>
+            </V2Stack>
           ))}
-        </ul>
+        </V2Stack>
       )}
       <V2TablePagination
         page={page}
@@ -79,6 +86,6 @@ export const V2ExportHistoryList: React.FC<V2ExportHistoryListProps> = ({
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
       />
-    </div>
+    </V2Stack>
   );
 };

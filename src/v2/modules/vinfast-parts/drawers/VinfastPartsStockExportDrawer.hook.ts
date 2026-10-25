@@ -1,12 +1,11 @@
 import { useMemo, useState } from "react";
-import toast from "react-hot-toast";
-import {
-  vinfastPartsStockExportApi,
-  type VinfastPartsStockExportQuery,
-} from "@/pages/api/vinfastPartsStockExportApi";
-import { useVinfastPartsStockExportProgress } from "@/pages/hooks/useVinfastPartsStockExportProgress";
 import type { V2ColumnSelectorGroup } from "@/v2/shared/components/molecules/v2-column-selector";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
+import { isDateRangeInvalid } from "@/v2/shared/utils/exportPeriod";
+import { vinfastStockExportApi } from "../api/vinfastStockExportApi";
+import type { VinfastPartsStockExportQuery } from "../api/dtos/vinfastStockExport.dto";
+import { useVinfastStockExportProgress } from "../hooks/useVinfastStockExportProgress";
 import {
   VINFAST_STOCK_EXPORT_COLUMN_GROUPS,
   VINFAST_STOCK_EXPORT_DEFAULT_COLUMNS,
@@ -29,7 +28,7 @@ export function useVinfastPartsStockExportDrawer({
 }: UseVinfastPartsStockExportDrawerOptions) {
   const { t } = useV2Translation();
   const period = useVinfastPartsStockExportPeriod();
-  const { downloadReadyFile } = useVinfastPartsStockExportProgress();
+  const { downloadReadyFile } = useVinfastStockExportProgress();
 
   const [selectedColumns, setSelectedColumns] = useState<string[]>(
     VINFAST_STOCK_EXPORT_DEFAULT_COLUMNS,
@@ -60,40 +59,47 @@ export function useVinfastPartsStockExportDrawer({
 
   // buildBaseQuery đọc state bảng hiện tại, nên tính lại mỗi lần render
   const filterSummary = buildFilterSummary(buildBaseQuery(), {
-    vehicleTypeLabel: t(
-      "v2.exportExcel.vinfastParts.filter.vehicleType",
-      "Loại xe",
-    ),
-    vehicleTypeAll: t(
-      "v2.exportExcel.vinfastParts.filter.vehicleAll",
-      "Tất cả",
-    ),
-    vehicleTypeCar: t("v2.exportExcel.vinfastParts.filter.vehicleCar", "Ô tô"),
+    vehicleTypeLabel: t("v2.vinfastParts.export.filter.vehicleType", "Loại xe"),
+    vehicleTypeAll: t("v2.vinfastParts.export.filter.vehicleAll", "Tất cả"),
+    vehicleTypeCar: t("v2.vinfastParts.export.filter.vehicleCar", "Ô tô"),
     vehicleTypeMotorbike: t(
-      "v2.exportExcel.vinfastParts.filter.vehicleMotorbike",
+      "v2.vinfastParts.export.filter.vehicleMotorbike",
       "Xe máy",
     ),
-    keywordLabel: t("v2.exportExcel.vinfastParts.filter.keyword", "Từ khóa"),
-    noKeyword: t("v2.exportExcel.vinfastParts.filter.noKeyword", "Không có"),
+    keywordLabel: t("v2.vinfastParts.export.filter.keyword", "Từ khóa"),
+    noKeyword: t("v2.vinfastParts.export.filter.noKeyword", "Không có"),
   });
 
+  const notify = (variant: "success" | "destructive", title: string) =>
+    useV2ToastStore.getState().showToast({ title, variant });
+
   const handleStartExport = async () => {
-    if (
-      period.exportMode === "by-period" &&
-      (!period.dateFrom || !period.dateTo)
-    ) {
-      toast.error(
-        t(
-          "v2.exportExcel.form.missingDateRange",
-          "Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.",
-        ),
-      );
-      return;
+    if (period.exportMode === "by-period") {
+      if (!period.dateFrom || !period.dateTo) {
+        notify(
+          "destructive",
+          t(
+            "v2.exportExcel.form.missingDateRange",
+            "Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.",
+          ),
+        );
+        return;
+      }
+      if (isDateRangeInvalid(period.dateFrom, period.dateTo)) {
+        notify(
+          "destructive",
+          t(
+            "v2.exportExcel.form.invalidDateRange",
+            "Từ ngày phải nhỏ hơn hoặc bằng Đến ngày.",
+          ),
+        );
+        return;
+      }
     }
 
     try {
       setStarting(true);
-      const result = await vinfastPartsStockExportApi.startBackgroundExport(
+      const result = await vinfastStockExportApi.startBackgroundExport(
         buildExportPayload({
           exportMode: period.exportMode,
           baseQuery: buildBaseQuery(),
@@ -108,11 +114,12 @@ export function useVinfastPartsStockExportDrawer({
             "Đã tìm thấy file cũ. Bạn có thể tải lại ngay.",
           )
         : t("v2.exportExcel.form.started", "Đã bắt đầu tiến trình xuất Excel.");
-      toast.success(result.message || fallback);
+      notify("success", result.message || fallback);
       await historyQuery.refetch();
-    } catch (error: any) {
-      toast.error(
-        error?.message ||
+    } catch (error: unknown) {
+      notify(
+        "destructive",
+        (error instanceof Error && error.message) ||
           t("v2.exportExcel.form.startFailed", "Không thể bắt đầu xuất Excel."),
       );
     } finally {
@@ -128,9 +135,10 @@ export function useVinfastPartsStockExportDrawer({
       setDownloadingJobId(jobId);
       await downloadReadyFile(jobId, row.fileName);
       await historyQuery.refetch();
-    } catch (error: any) {
-      toast.error(
-        error?.message ||
+    } catch (error: unknown) {
+      notify(
+        "destructive",
+        (error instanceof Error && error.message) ||
           t(
             "v2.exportExcel.form.downloadFailed",
             "Không thể tải lại file XLSX.",

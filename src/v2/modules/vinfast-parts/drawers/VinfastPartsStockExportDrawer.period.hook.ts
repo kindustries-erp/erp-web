@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  PERIOD_OPTS,
-  initPeriod,
-  periodFirstDay,
-  periodFromExactRange,
-  periodLastDay,
-} from "@/modules/finance/utils/financeHelpers";
 import type { V2ExportMode } from "@/v2/shared/components/molecules/v2-export-condition-section";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
+  generateMonthOptions,
   generateQuarterOptions,
+  initMonth,
   initQuarter,
+  monthFirstDay,
+  monthFromExactRange,
+  monthLastDay,
   quarterFirstDay,
   quarterFromExactRange,
   quarterLastDay,
@@ -21,27 +20,45 @@ import {
  * Chọn tháng hoặc quý sẽ cập nhật khoảng ngày; sửa ngày thủ công sẽ suy ra lại kỳ tương ứng.
  */
 export function useVinfastPartsStockExportPeriod() {
+  const { t } = useV2Translation();
   const [exportMode, setExportMode] = useState<V2ExportMode>("by-period");
   const [periodType, setPeriodType] = useState<V2ExportPeriodType>("month");
-  const [period, setPeriod] = useState(initPeriod());
+  const [period, setPeriod] = useState(initMonth());
   const [quarter, setQuarter] = useState(initQuarter());
-  const [dateFrom, setDateFrom] = useState(periodFirstDay(period));
-  const [dateTo, setDateTo] = useState(periodLastDay(period));
+  const [dateFrom, setDateFrom] = useState(monthFirstDay(period));
+  const [dateTo, setDateTo] = useState(monthLastDay(period));
 
-  const periodOptions = useMemo(() => PERIOD_OPTS, []);
+  const periodOptions = useMemo(
+    () =>
+      generateMonthOptions(24, new Date(), (month, year) =>
+        t("v2.exportExcel.condition.monthLabel", {
+          defaultValue: "Tháng {{month}}/{{year}}",
+          month,
+          year,
+        }),
+      ),
+    [t],
+  );
+
   const quarterOptions = useMemo(
     () =>
-      generateQuarterOptions(3).map(({ value, label }) => ({ value, label })),
-    [],
+      generateQuarterOptions(3, new Date(), (quarterNum, year) =>
+        t("v2.exportExcel.condition.quarterLabel", {
+          defaultValue: "Quý {{quarter}}/{{year}}",
+          quarter: quarterNum,
+          year,
+        }),
+      ),
+    [t],
   );
 
   const handlePeriodTypeChange = (next: V2ExportPeriodType) => {
     setPeriodType(next);
     if (next === "month") {
-      const active = period || initPeriod();
+      const active = period || initMonth();
       setPeriod(active);
-      setDateFrom(periodFirstDay(active));
-      setDateTo(periodLastDay(active));
+      setDateFrom(monthFirstDay(active));
+      setDateTo(monthLastDay(active));
     } else if (next === "quarter") {
       const active = quarter || initQuarter();
       setQuarter(active);
@@ -53,8 +70,8 @@ export function useVinfastPartsStockExportPeriod() {
   const handlePeriodChange = (value: string) => {
     setPeriod(value);
     if (value) {
-      setDateFrom(periodFirstDay(value));
-      setDateTo(periodLastDay(value));
+      setDateFrom(monthFirstDay(value));
+      setDateTo(monthLastDay(value));
     }
   };
 
@@ -68,7 +85,7 @@ export function useVinfastPartsStockExportPeriod() {
 
   useEffect(() => {
     if (periodType === "month") {
-      const next = periodFromExactRange(dateFrom, dateTo) || "";
+      const next = monthFromExactRange(dateFrom, dateTo);
       setPeriod((prev) => (prev === next ? prev : next));
     } else if (periodType === "quarter") {
       const next = quarterFromExactRange(dateFrom, dateTo);

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { V2Button, V2Stack, V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { Checkbox } from "@/v2/shared/ui/checkbox";
 import { cn } from "@/v2/shared/utils/cn";
@@ -38,7 +38,7 @@ export const V2ColumnSelector: React.FC<V2ColumnSelectorProps> = ({
   };
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <V2Stack gap="xs" className={cn("gap-3", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <V2Text variant="body-sm" className="text-muted-foreground">
           {t("v2.exportExcel.columnSelector.selectedCount", {
@@ -79,37 +79,43 @@ export const V2ColumnSelector: React.FC<V2ColumnSelectorProps> = ({
               : "indeterminate";
 
         return (
-          <fieldset key={group.key} className="space-y-2">
-            <label className="flex items-center gap-2 font-medium">
-              <Checkbox
-                checked={groupState}
-                onCheckedChange={(checked) =>
-                  toggleGroup(groupKeys, checked === true)
-                }
-              />
-              <V2Text variant="body-sm" className="font-semibold">
-                {group.label}
-              </V2Text>
-            </label>
+          <V2Stack
+            key={group.key}
+            role="group"
+            aria-label={group.label}
+            gap="xs"
+          >
+            <V2Text asChild>
+              <label className="flex items-center gap-2">
+                <Checkbox
+                  checked={groupState}
+                  onCheckedChange={(checked) =>
+                    toggleGroup(groupKeys, checked === true)
+                  }
+                />
+                <V2Text variant="body-sm" weight="semibold">
+                  {group.label}
+                </V2Text>
+              </label>
+            </V2Text>
             <div className="grid grid-cols-1 gap-1.5 pl-6 sm:grid-cols-2">
               {group.columns.map((column) => (
-                <label
-                  key={column.key}
-                  className="flex items-center gap-2 rounded px-1 py-0.5 hover:bg-surface-hover"
-                >
-                  <Checkbox
-                    checked={selected.has(column.key)}
-                    onCheckedChange={(checked) =>
-                      toggleKey(column.key, checked === true)
-                    }
-                  />
-                  <V2Text variant="body-sm">{column.label}</V2Text>
-                </label>
+                <V2Text asChild key={column.key}>
+                  <label className="flex items-center gap-2 rounded px-1 py-0.5 hover:bg-surface-hover">
+                    <Checkbox
+                      checked={selected.has(column.key)}
+                      onCheckedChange={(checked) =>
+                        toggleKey(column.key, checked === true)
+                      }
+                    />
+                    <V2Text variant="body-sm">{column.label}</V2Text>
+                  </label>
+                </V2Text>
               ))}
             </div>
-          </fieldset>
+          </V2Stack>
         );
       })}
-    </div>
+    </V2Stack>
   );
 };
