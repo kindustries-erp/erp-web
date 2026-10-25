@@ -63,7 +63,7 @@ export function useBankTransactionDetailDrawer(
   const isPosted = transaction?.postingStatus === "POSTED";
   const baseDescription = useMemo(
     () =>
-      transaction?.accountingDescription ||
+      transaction?.note ||
       transaction?.description ||
       transaction?.referenceNumber ||
       "",
@@ -167,9 +167,7 @@ export function useBankTransactionDetailDrawer(
       setAccountingEnabled(isPosted);
       setFormError(null);
       setEditBranchIds(resolveTransactionBranchIds(transaction));
-      setEditDescription(
-        transaction.description || transaction.accountingDescription || "",
-      );
+      setEditDescription(transaction.note || "");
       setCashflowClassification(transaction.cashflowClassification ?? null);
       setCashflowPurpose(transaction.cashflowPurpose ?? null);
       hydratePostingState(transaction);
@@ -188,8 +186,8 @@ export function useBankTransactionDetailDrawer(
       if (!transactionId) throw new Error("Missing transaction ID");
       const oBranchIds = resolveTransactionBranchIds(transaction);
       const branchChanged = !isSameBranchIds(editBranchIds, oBranchIds);
-      const oDesc =
-        transaction.description || transaction.accountingDescription || "";
+      // Ghi chú ERP = note; diễn giải ngân hàng (description) chỉ đọc
+      const oDesc = transaction.note || "";
       const oClassification = transaction.cashflowClassification ?? null;
       const oPurpose = transaction.cashflowPurpose ?? null;
       if (
@@ -201,8 +199,7 @@ export function useBankTransactionDetailDrawer(
         await bankStatementApi.updateTransaction(transactionId, {
           // Chỉ gửi chi nhánh khi người dùng thực sự đổi, tránh xóa nhầm khi chỉ sửa mô tả
           ...(branchChanged ? { branchIds: editBranchIds } : {}),
-          description: editDescription,
-          accountingDescription: editDescription,
+          note: editDescription,
           cashflowClassification,
           cashflowPurpose: cashflowClassification ? cashflowPurpose : null,
         });
