@@ -71,6 +71,7 @@ src/
 
 ### 3.1. Template Trang Kho (`VinfastPartsStockTemplate.tsx`)
 - **Khung giao diện**: Kế thừa `<SpreadsheetPageTemplate>` với `tableId="vinfast-parts-stock-${vehicleType}"`.
+- **Nút hành động đầu trang** (giống trang hóa đơn): nút chính tách đôi "Đồng bộ" (`onCreate` mở `VinfastPartsSyncDrawer`, icon `DownloadCloud`); menu ▾ chỉ có nhóm TRA CỨU → "Xuất Excel" (mở `VinfastPartsStockExportDrawer`). Cấu hình trong `VinfastPartsStockTable.tsx` (`createLabel`, `createIcon`, `onCreate`) và `VinfastPartsStockTable.actions.tsx` (`createActions`).
 - **Bộ lọc & Sắp xếp Header Cột (`TableColumnHeaderFilter`)**:
   - Hỗ trợ tìm kiếm nhanh theo từng cột (`column_search`).
   - Lọc đa giá trị (`column_filters`) với cơ chế tải danh sách giá trị distinct qua `fetchColumnOptions` (`/api/v1/vinfast-parts/stock/column-options`).

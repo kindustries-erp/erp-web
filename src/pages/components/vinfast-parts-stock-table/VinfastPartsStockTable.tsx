@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { FileText } from "lucide-react";
+import { DownloadCloud, FileText } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
@@ -109,7 +109,11 @@ export const VinfastPartsStockTable = React.memo(
           activeFilterCount={logic.tableState.activeFilterCount}
           onClearAllFilters={() => logic.tableState.resetFilters()}
           customActionsNode={actions.customActionsNode}
-          createLabel={t("vinfastParts:CREATE_NEW", "Tạo mới")}
+          onCreate={() => logic.setSyncDrawerOpen(true)}
+          createLabel={t("vinfastParts:SYNC", "Đồng bộ")}
+          createIcon={
+            <DownloadCloud className="w-4 h-4 mr-1 text-primary-fg/80" />
+          }
           createActions={actions.createActions}
           rowActions={actions.getRowActions}
           summaryRow={summaryRow}
