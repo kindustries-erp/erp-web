@@ -8,6 +8,7 @@ import {
   DialogFooter,
 } from "@/v2/shared/ui/dialog";
 import { cn } from "@/v2/shared/utils/cn";
+import { FLOATING_SURFACE_CLASS } from "@/v2/shared/ui/floating-surface";
 import type { V2ModalProps, V2ModalSize } from "./V2Modal.type";
 
 const SIZE_CLASSES: Record<V2ModalSize, string> = {
@@ -43,6 +44,7 @@ export const V2ModalDesktop: React.FC<V2ModalProps> = ({
         hideOverlay={hideOverlay}
         closeAriaLabel={closeAriaLabel}
         className={cn(
+          FLOATING_SURFACE_CLASS,
           "max-h-[85vh] flex flex-col p-0 overflow-hidden",
           SIZE_CLASSES[size],
           className,

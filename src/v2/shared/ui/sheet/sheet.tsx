@@ -3,6 +3,10 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
+import {
+  FLOATING_OVERLAY_CLASS,
+  FLOATING_SURFACE_CLASS,
+} from "@/v2/shared/ui/floating-surface";
 
 const Sheet = SheetPrimitive.Root;
 const SheetTrigger = SheetPrimitive.Trigger;
@@ -16,7 +20,8 @@ const SheetOverlay = React.forwardRef<
   <SheetPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-[var(--drawer-overlay-bg,rgba(15,23,42,0.2))] dark:bg-black/[0.2] backdrop-blur-[1px]",
+      "fixed inset-0 z-50",
+      FLOATING_OVERLAY_CLASS,
       "data-[state=open]:animate-fade-in-0 data-[state=closed]:animate-fade-out-0",
       className,
     )}
@@ -28,9 +33,9 @@ SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 export const sheetVariants = cva(
   cn(
-    "fixed z-50 flex flex-col bg-[var(--drawer-bg,rgba(255,255,255,0.85))]",
-    "backdrop-blur-[var(--drawer-blur,20px)] backdrop-saturate-[190%] backdrop-contrast-[102%] text-foreground transition ease-in-out duration-300",
-    "shadow-[var(--drawer-shadow,var(--panel-shadow,0_12px_30px_rgba(15,23,42,0.16)))]",
+    "fixed z-50 flex flex-col",
+    FLOATING_SURFACE_CLASS,
+    "text-foreground transition ease-in-out duration-300",
   ),
   {
     variants: {

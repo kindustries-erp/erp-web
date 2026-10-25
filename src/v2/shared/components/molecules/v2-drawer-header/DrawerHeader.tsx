@@ -10,6 +10,7 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
 import type { DrawerHeaderProps } from "./DrawerHeader.type";
 
 export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
@@ -48,10 +49,11 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
     <div
       className={cn(
         "flex items-center justify-between px-3 sm:px-4 md:px-[18px] py-2.5",
-        "border-b border-border/50 dark:border-white/[0.06] backdrop-blur-md shrink-0 gap-2 transition-shadow duration-200",
+        "border-b border-border/50 dark:border-white/[0.06] shrink-0 gap-2 transition-shadow duration-200",
+        GLASS_BAR_CLASS,
         isScrolledTop
-          ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)] dark:shadow-[0_4px_18px_-4px_rgba(0,0,0,0.45),0_2px_5px_-2px_rgba(0,0,0,0.3)] bg-[var(--drawer-header-scrolled-bg,rgba(246,248,252,0.92))]"
-          : "shadow-none bg-[var(--drawer-header-bg,rgba(246,248,252,0.75))]",
+          ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)] dark:shadow-[0_4px_18px_-4px_rgba(0,0,0,0.45),0_2px_5px_-2px_rgba(0,0,0,0.3)]"
+          : "shadow-none",
         className,
       )}
     >

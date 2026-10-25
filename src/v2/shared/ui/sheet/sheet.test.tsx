@@ -70,8 +70,8 @@ describe("V2 Sheet Primitive", () => {
       "data-v2-standard-drawer",
     );
     expect(document.querySelector("[data-v2-sheet-overlay]")).toHaveClass(
-      "dark:bg-black/[0.2]",
-      "backdrop-blur-[1px]",
+      "bg-[var(--overlay-bg,transparent)]",
+      "backdrop-blur-[var(--overlay-blur,0px)]",
     );
   });
 
