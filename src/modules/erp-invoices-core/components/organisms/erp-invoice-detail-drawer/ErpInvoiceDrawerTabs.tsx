@@ -190,7 +190,7 @@ export function useInvoiceDrawerTabs(
             <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
               <DrawerAuditTimeline
                 items={auditItems}
-                emptyLabel={t("Chưa có ghi nhận lịch sử.")}
+                emptyLabel={t("emptyHistory", "Chưa có ghi nhận lịch sử.")}
               />
             </div>
           </DrawerSection>

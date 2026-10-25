@@ -337,6 +337,14 @@ export interface ErpInvoice {
 
 ---
 
+### 4.1 Thông tin tra cứu & upload PDF (hóa đơn mua vào)
+
+- Hook React Query (`hooks/`): `useOriginalPdfLookupInfo(id)` (useQuery, key `erp-invoice-lookup-info`), `useDownloadOriginalPdf()`, `useManualUploadPdf()` (useMutation, invalidate `erp-invoices`).
+- Thẻ `molecules/provider-lookup-info-card/`: tên NCC, mã tra cứu và hints (mỗi dòng có nút sao chép `LookupHintRow`), nút mở cổng, tải PDF gốc, tải lên PDF đã tải (`ManualPdfUploadButton`, chỉ chấp nhận PDF ≤10MB). Props nhận dữ liệu từ parent, không gọi API trực tiếp.
+- Drawer chi tiết: `ErpInvoiceInternalSidebar` hiển thị thẻ cho mọi hóa đơn mua vào, lấy dữ liệu từ `useOriginalPdfLookupInfo`.
+- Danh sách: hành động "Thông tin tra cứu" trên dòng hóa đơn mua vào chưa có PDF, điều kiện trong `lookupAction.helper.ts` (`shouldShowLookupAction`).
+- i18n: key `lookup*`, `downloadPdf*`, `uploadPdf*`, `invalidPdfFile` trong `locales/vi/lookup.ts` và `core/locale/accounting/erpInvoices/en.ts`.
+
 ## 5. Tích hợp Liên Module
 
 1. **`purchase-orders-core`**:
@@ -413,3 +421,22 @@ bun run lint:check
 - Unit: `invoiceRowAdapter.test.ts`, `financeInvoiceV2Api.test.ts` (khóa đường dẫn API), `invoiceDashboard.logic.test.ts`, `useInvoiceV2Bridge.test.ts`.
 - Integration: `tests/integration/ErpInvoiceV2ModulePage.test.tsx` (dữ liệu mẫu).
 - Chưa kiểm tay trên trình duyệt với dữ liệu thật.
+
+---
+
+## 8. Cấu trúc i18n & Cơ chế Đồng Bộ Ngôn Ngữ V1/V2 (Dual-Run Locale Bridge)
+
+### 8.1. Cầu nối đồng bộ tự động 2 chiều (react-i18n.ts)
+- **Vấn đề đã xử lý**: Trong kiến trúc Dual-Run, `ErpInvoiceDetailDrawer` (V1) nhúng `V2StandardDrawer` và `DrawerConfirmCloseModal` (V2). `V2StandardDrawer` đọc ngôn ngữ qua `useV2Translation()` (`useV2LocaleStore`), còn app V1 dùng `useAppStore` (`erp-app`) và `react-i18next`. Trước đây 2 store này bị lệch, dẫn đến việc Confirm Close Modal hiển thị tiếng Anh ("Confirm closing form") trong khi giao diện app đang là tiếng Việt.
+- **Giải pháp**: Thiết lập cầu nối 2 chiều tại `src/core/i18n/react-i18n.ts`:
+  1. Khi app nạp: `useV2LocaleStore` đồng bộ ngay với `useAppStore.getState().locale`.
+  2. Khi `useAppStore` đổi: tự động gọi `useV2LocaleStore.getState().setLocale(state.locale)`.
+  3. Khi `useV2LocaleStore` đổi (từ V2 language switcher): tự động cập nhật `useAppStore.setLocale(state.locale)` và `i18n.changeLanguage(state.locale)`.
+  4. Unit test bảo vệ: `src/core/i18n/__tests__/reactI18nSync.test.ts`.
+
+### 8.2. Chuẩn hóa i18n Drawer chi tiết hóa đơn (`erp-invoices-core`)
+- **Drawer Title**: Dùng `t("internalTitle", "Thông tin nội bộ")` (khai báo tại `actions.ts` và `en.ts`).
+- **Action Groups**: Menu 3 chấm dùng `t("groupSync", "ĐỒNG BỘ")`, `t("syncGdt", "Đồng bộ từ GĐT")`, `t("groupExport", "XUẤT DỮ LIỆU")`, `t("exportInvoiceExcel", "Xuất Excel hóa đơn")`.
+- **Status Badges**: `formatTaxInvoiceStatus(status, t)` hỗ trợ đa ngôn ngữ linh hoạt ("Mới" / "New", "Thay thế" / "Replaced", "Điều chỉnh" / "Adjusted", "Bị thay thế" / "Was Replaced", "Bị điều chỉnh" / "Was Adjusted", "Bị hủy" / "Cancelled").
+- **Toasts**: Các thao tác liên kết PO, SO, ngân hàng và vụ việc garage sử dụng các khóa `toastLinkedBankSuccess`, `toastLinkedPoSuccess`, `toastLinkedSoSuccess`, `toastLinkedCaseSuccess`.
+

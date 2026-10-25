@@ -62,6 +62,7 @@ src/v2/
     └── components/                     # [Atomic Components] (Import 1 chiều từ shared/ui)
         ├── atoms/                      # [Level 1 - Core Atoms]
         │   ├── v2-button/              # Nút chuẩn hoá (loading, icons, fullWidth, variants V1+V2)
+        │   ├── v2-input/               # Ô nhập liệu chuẩn hoá (variants: default, search, ghost, icon slots, forwardRef)
         │   ├── v2-text/                # Chữ chuẩn hoá (auto HTML mapping, truncate, copyable, required)
         │   ├── v2-sidebar-toggle-btn/  # Nút thu gọn / mở rộng Sidebar 26x26px
         │   ├── v2-sidebar-icon/        # Container bọc icon điều hướng Sidebar
@@ -86,7 +87,8 @@ src/v2/
             ├── v2-sidebar/             # Card 1: Sidebar hoàn chỉnh (210px / 58px) bo góc 16px
             ├── v2-right-panel/         # Card 2: Right Panel hoàn chỉnh bo góc 16px
             ├── v2-tab-bar/             # Thanh TabBar đa dạng: App tabs ('app'), Sub-navigation pill tabs ('sub'), Button group ('button-group'), Header tabs ('header'), Page tabs ('page')
-            └── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động
+            ├── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động
+            └── v2-universal-search-modal/ # Modal tìm kiếm toàn cục Spotlight (Desktop) & Bottom Sheet (Mobile) thay thế hoàn toàn V1
         │
         └── index.ts                    # Master Barrel Export toàn bộ components V2 (@/v2/shared/components)
 ```
@@ -228,11 +230,14 @@ export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
   onReturnToV1?: () => void;
   showLanguageSwitcher?: boolean;
   showReturnToV1?: boolean;
+  userMenuNode?: React.ReactNode;
+  notificationNode?: React.ReactNode;
 }
 ```
 
 ### 4.5. `V2AppLayoutMobile` ([`V2AppLayout.mobile.tsx`](erp/erp-web/src/v2/app/layouts/v2-app-layout/V2AppLayout.mobile.tsx))
-- **Mobile Topbar**: Ẩn các nút rườm rà (`showLanguageSwitcher=false`, `showReturnToV1=false`), kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
+- **Mobile Topbar**: Tích hợp `userMenuNode` (mở UserMenuPopover đầy đủ tính năng: hồ sơ, cài đặt, theme, ngôn ngữ, đăng xuất) và `notificationNode`. Kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
+- **Cài đặt Giao diện & Ngôn ngữ Nhanh (Catalog Modal)**: Tích hợp card Quick Settings ngay đầu modal danh mục cho phép đổi nhanh Sáng / Tối / Midnight và công tắc Ngôn ngữ thông qua props `currentTheme` và `onThemeChange`.
 - **Main Spacing**: Giảm padding lồng ghép từ 36px xuống `px-2 py-2.5 pb-20 sm:px-4 sm:py-4`, tương thích mượt mà với `PageLayout` (`px-2 sm:px-5`).
 - **Thanh Điều Hướng 6 Items Chuẩn**:
   - Cố định hiển thị **đúng 6 menu items** phân bổ đều (`grid grid-flow-col auto-cols-fr h-16`), vừa vặn hoàn hảo trên mọi kích thước màn hình điện thoại mà không cần cuộn ngang.

@@ -8,6 +8,19 @@ vi.mock("@/v2/shared/api/v2HttpClient", () => ({
   v2HttpClient: { get: vi.fn() },
 }));
 
+const TABLES_URL = "/api/v1/app/table-preferences";
+const USER_URL = "/api/v1/app/preferences";
+
+const mockResponses = (
+  tables: () => Promise<unknown>,
+  user: () => Promise<unknown>,
+) =>
+  vi
+    .mocked(v2HttpClient.get)
+    .mockImplementation((url: string) =>
+      url === TABLES_URL ? tables() : user(),
+    );
+
 describe("loadV2ServerPreferences", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -15,34 +28,44 @@ describe("loadV2ServerPreferences", () => {
     useV2TablePreferencesStore.setState({ tables: {}, migrationVersion: 1 });
   });
 
-  it("makes one request and applies both table configs and language", async () => {
-    vi.mocked(v2HttpClient.get).mockResolvedValue({
-      data: {
+  it("loads each table's config and the language from the server", async () => {
+    mockResponses(
+      async () => ({
         data: {
-          language: "en",
-          tableConfigs: {
-            "v2:erp-customers-table": {
+          data: {
+            "erp-customers-table": {
               columns: { visibility: { code: true }, order: [], sizing: {} },
             },
-            "erp-vendors-table": { columnOrder: ["v1-only"] },
           },
         },
-      },
-    });
+      }),
+      async () => ({ data: { data: { language: "en" } } }),
+    );
 
     await loadV2ServerPreferences();
 
-    expect(v2HttpClient.get).toHaveBeenCalledTimes(1);
+    expect(v2HttpClient.get).toHaveBeenCalledWith(TABLES_URL);
+    expect(v2HttpClient.get).toHaveBeenCalledWith(USER_URL);
     expect(useV2LocaleStore.getState().locale).toBe("en");
     expect(
       useV2TablePreferencesStore.getState().tables["erp-customers-table"],
     ).toMatchObject({ columns: { visibility: { code: true } } });
-    expect(
-      useV2TablePreferencesStore.getState().tables["erp-vendors-table"],
-    ).toBeUndefined();
   });
 
-  it("keeps local state when the request fails", async () => {
+  it("still applies the language when the table request fails", async () => {
+    mockResponses(
+      async () => {
+        throw new Error("offline");
+      },
+      async () => ({ data: { data: { language: "en" } } }),
+    );
+
+    await expect(loadV2ServerPreferences()).resolves.toBeUndefined();
+    expect(useV2LocaleStore.getState().locale).toBe("en");
+    expect(useV2TablePreferencesStore.getState().tables).toEqual({});
+  });
+
+  it("keeps local state when both requests fail", async () => {
     vi.mocked(v2HttpClient.get).mockRejectedValue(new Error("offline"));
 
     await expect(loadV2ServerPreferences()).resolves.toBeUndefined();

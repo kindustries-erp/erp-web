@@ -9,6 +9,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Base Theme Layer for V2 & Storybook Canvas ── */
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+}
+
 /* ── Global focus ring reset for V2 ── */
 @layer utilities {
   *:focus,

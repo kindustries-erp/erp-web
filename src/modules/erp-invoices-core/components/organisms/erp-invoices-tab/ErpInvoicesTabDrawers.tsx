@@ -24,6 +24,7 @@ import {
 } from "@/modules/system/api/attachmentsApi";
 import { type useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
 import { type useErpInvoiceUrlSync } from "@/modules/erp-invoices-core/hooks/useErpInvoiceUrlSync";
+import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
 
 export interface InvoiceDrawersProps {
   direction: "IN" | "OUT";
@@ -124,7 +125,7 @@ export function InvoiceDrawers({
             <div className="flex flex-col gap-4">
               {formHook.loadingDetail ? (
                 <div className="space-y-4">
-                  <div className="h-[200px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+                  <V2Skeleton className="h-[200px] w-full rounded-lg" />
                 </div>
               ) : (
                 <ErpInvoiceInternalSidebar
@@ -147,7 +148,7 @@ export function InvoiceDrawers({
           <div className="flex flex-col gap-4">
             {formHook.loadingDetail ? (
               <div className="space-y-4">
-                <div className="h-[350px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+                <V2Skeleton className="h-[350px] w-full rounded-lg" />
               </div>
             ) : (
               <>

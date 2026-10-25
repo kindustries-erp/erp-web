@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
+import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { TabBarPillItem } from "./TabBarPillItem";
 import { useSlidingTabIndicator } from "./useSlidingTabIndicator";
@@ -60,7 +61,8 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
         }
         className={cn(
           "relative flex items-center px-3 py-1.5 border-b border-border/70 dark:border-white/[0.06]",
-          "bg-[var(--drawer-header-bg,rgba(246,248,252,0.85))] backdrop-blur-md shrink-0 w-full overflow-hidden",
+          GLASS_BAR_CLASS,
+          "shrink-0 w-full overflow-hidden",
           className,
         )}
       >
@@ -80,7 +82,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
         </div>
         {/* Subtle edge fade indicator for horizontal scroll hint */}
         <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--drawer-header-bg,rgba(246,248,252,0.85))] to-transparent z-20"
+          className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--table-header-bg,rgba(244,246,248,0.65))] to-transparent z-20"
           aria-hidden="true"
         />
       </div>

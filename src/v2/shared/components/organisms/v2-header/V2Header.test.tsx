@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { V2Button } from "@/v2/shared/components/atoms";
 import { V2Header } from "./V2Header";
 
 describe("V2Header Organism", () => {
@@ -40,5 +41,21 @@ describe("V2Header Organism", () => {
     const companyEl = screen.getByText("Greenway Corp");
     fireEvent.click(companyEl);
     expect(handleBranch).toHaveBeenCalledTimes(1);
+  });
+
+  it("render userMenuNode và notificationNode khi được truyền vào", () => {
+    render(
+      <V2Header
+        userMenuNode={
+          <V2Button data-testid="custom-user-menu">User Menu</V2Button>
+        }
+        notificationNode={
+          <V2Button data-testid="custom-notification">Bell</V2Button>
+        }
+      />,
+    );
+
+    expect(screen.getByTestId("custom-user-menu")).toBeInTheDocument();
+    expect(screen.getByTestId("custom-notification")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
+import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { TabBarPillItem } from "./TabBarPillItem";
 import { useSlidingTabIndicator } from "./useSlidingTabIndicator";
@@ -60,7 +61,8 @@ export const TabBarPillViewDesktop: React.FC<TabBarPillViewProps> = ({
         }
         className={cn(
           "flex items-center justify-between px-3 sm:px-4 md:px-[18px] py-1.5",
-          "border-b border-border/70 dark:border-white/[0.06] bg-[var(--drawer-header-bg,rgba(246,248,252,0.85))] backdrop-blur-md shrink-0 w-full gap-2",
+          "border-b border-border/70 dark:border-white/[0.06] shrink-0 w-full gap-2",
+          GLASS_BAR_CLASS,
           className,
         )}
       >

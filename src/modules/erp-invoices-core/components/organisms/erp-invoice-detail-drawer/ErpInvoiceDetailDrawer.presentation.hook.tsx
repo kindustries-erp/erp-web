@@ -72,10 +72,10 @@ export function useErpInvoiceDetailDrawerPresentation(
             : "border-slate-200 bg-slate-50 text-slate-700";
     return (
       <Badge variant="ghost" className={`border ${badgeClass}`}>
-        {formatTaxInvoiceStatus(status)}
+        {formatTaxInvoiceStatus(status, t)}
       </Badge>
     );
-  }, [detailInvoice]);
+  }, [detailInvoice, t]);
 
   const defaultRightPanel = useMemo(() => {
     if (props.rightPanel) return props.rightPanel;

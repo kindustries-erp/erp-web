@@ -3,6 +3,10 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
+import {
+  FLOATING_OVERLAY_CLASS,
+  FLOATING_SURFACE_CLASS,
+} from "@/v2/shared/ui/floating-surface";
 
 const Sheet = SheetPrimitive.Root;
 const SheetTrigger = SheetPrimitive.Trigger;
@@ -16,10 +20,12 @@ const SheetOverlay = React.forwardRef<
   <SheetPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-[var(--drawer-overlay-bg,rgba(15,23,42,0.04))] dark:bg-black/60 dark:backdrop-blur-[2px]",
+      "fixed inset-0 z-50",
+      FLOATING_OVERLAY_CLASS,
       "data-[state=open]:animate-fade-in-0 data-[state=closed]:animate-fade-out-0",
       className,
     )}
+    data-v2-sheet-overlay
     {...props}
   />
 ));
@@ -27,9 +33,9 @@ SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 export const sheetVariants = cva(
   cn(
-    "fixed z-50 flex flex-col bg-[var(--drawer-bg,rgba(255,255,255,0.85))]",
-    "backdrop-blur-[var(--glass-blur,16px)] text-foreground transition ease-in-out duration-300",
-    "shadow-[var(--panel-shadow,0_20px_40px_rgba(15,23,42,0.18))]",
+    "fixed z-50 flex flex-col",
+    FLOATING_SURFACE_CLASS,
+    "text-foreground transition ease-in-out duration-300",
   ),
   {
     variants: {
@@ -39,9 +45,9 @@ export const sheetVariants = cva(
           "inset-x-0 bottom-0 border-t border-[color:var(--drawer-border,var(--border))] dark:border-t-white/[0.08] data-[state=closed]:animate-slide-out-to-bottom data-[state=open]:animate-slide-in-from-bottom",
         left: "inset-y-0 left-0 h-full border-r border-[color:var(--drawer-border,var(--border))] dark:border-r-white/[0.08] data-[state=closed]:animate-fade-out-0 data-[state=open]:animate-fade-in-0",
         right:
-          "inset-y-0 right-0 h-full border-l border-[color:var(--drawer-border,var(--border))] dark:border-l-white/[0.08] dark:shadow-[-16px_0_40px_rgba(0,0,0,0.7)] data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
+          "inset-y-0 right-0 h-full border-l border-[color:var(--drawer-border,var(--border))] dark:border-l-white/[0.08] data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
         floating:
-          "top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5 h-[calc(100dvh-26px)] rounded-2xl border border-[color:var(--drawer-border,var(--border))] dark:border-white/[0.08] shadow-[var(--panel-shadow,0_20px_40px_rgba(15,23,42,0.18))] dark:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.06)] data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
+          "top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5 h-[calc(100dvh-26px)] rounded-2xl border border-[color:var(--drawer-border,var(--border))] dark:border-white/[0.08] shadow-[var(--drawer-shadow,var(--panel-shadow,0_12px_30px_rgba(15,23,42,0.16)))] data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
         fullscreen:
           "inset-0 w-full h-full rounded-none border-0 shadow-none data-[state=closed]:animate-slide-out-to-right data-[state=open]:animate-slide-in-from-right",
       },
