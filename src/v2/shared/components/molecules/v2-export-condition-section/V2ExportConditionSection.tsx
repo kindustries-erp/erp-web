@@ -77,7 +77,7 @@ export const V2ExportConditionSection: React.FC<
       title={t("v2.exportExcel.condition.title", "Điều kiện xuất dữ liệu")}
       collapsible
       defaultCollapsed={false}
-      className={cn(className)}
+      className={cn("border-transparent dark:border-transparent", className)}
     >
       <div className="space-y-4">
         <div className="space-y-1.5">

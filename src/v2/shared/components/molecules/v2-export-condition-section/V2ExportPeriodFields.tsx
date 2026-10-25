@@ -39,6 +39,10 @@ export const V2ExportPeriodFields: React.FC<V2ExportPeriodFieldsProps> = ({
   onDateToChange,
 }) => {
   const { t } = useV2Translation();
+  // Chỉ một lịch mở tại một thời điểm: mở "Đến ngày" sẽ đóng "Từ ngày" và ngược lại
+  const [openPicker, setOpenPicker] = React.useState<"from" | "to" | null>(
+    null,
+  );
 
   return (
     <div className="space-y-3">
@@ -103,6 +107,8 @@ export const V2ExportPeriodFields: React.FC<V2ExportPeriodFieldsProps> = ({
           <V2DatePicker
             value={dateFrom || null}
             onValueChange={(value) => onDateFromChange(value ?? "")}
+            open={openPicker === "from"}
+            onOpenChange={(next) => setOpenPicker(next ? "from" : null)}
             maxDate={dateTo || undefined}
             placeholder="dd/mm/yyyy"
             clearable
@@ -115,6 +121,8 @@ export const V2ExportPeriodFields: React.FC<V2ExportPeriodFieldsProps> = ({
           <V2DatePicker
             value={dateTo || null}
             onValueChange={(value) => onDateToChange(value ?? "")}
+            open={openPicker === "to"}
+            onOpenChange={(next) => setOpenPicker(next ? "to" : null)}
             minDate={dateFrom || undefined}
             placeholder="dd/mm/yyyy"
             clearable

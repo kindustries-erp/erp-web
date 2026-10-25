@@ -31,8 +31,8 @@ export function V2RadioCardGroup<T extends string>({
             className={cn(
               "flex items-start gap-2.5 rounded-lg border p-2.5 transition-colors",
               checked
-                ? "border-primary/50 bg-primary/10 dark:border-teal-500/40 dark:bg-teal-500/[0.08]"
-                : "border-border/50 hover:bg-muted/20",
+                ? "border-primary/40 bg-primary/10 dark:border-teal-500/30 dark:bg-teal-500/[0.08]"
+                : "border-transparent bg-muted/20 hover:bg-muted/40",
               option.disabled && "opacity-50",
             )}
           >

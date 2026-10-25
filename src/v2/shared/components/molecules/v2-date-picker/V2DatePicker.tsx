@@ -29,9 +29,16 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
   className,
   triggerClassName,
   "aria-label": ariaLabel,
+  open: controlledOpen,
+  onOpenChange,
 }) => {
   const { t } = useV2Translation();
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    else setInternalOpen(next);
+  };
   const selected = parseIsoDate(value);
   const hint = placeholder ?? t("v2.form.pickDate", "Chọn ngày");
   const canClear = clearable && selected !== undefined && !disabled;
