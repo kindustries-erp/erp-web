@@ -20,7 +20,7 @@ const SheetOverlay = React.forwardRef<
   <SheetPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50",
+      "fixed inset-0 z-[450]",
       FLOATING_OVERLAY_CLASS,
       "data-[state=open]:animate-fade-in-0 data-[state=closed]:animate-fade-out-0",
       className,
@@ -33,7 +33,7 @@ SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 export const sheetVariants = cva(
   cn(
-    "fixed z-50 flex flex-col",
+    "fixed z-[450] flex flex-col",
     FLOATING_SURFACE_CLASS,
     "text-foreground transition ease-in-out duration-300",
   ),

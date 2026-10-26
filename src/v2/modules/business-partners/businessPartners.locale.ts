@@ -37,6 +37,7 @@ registerV2ModuleLocale("partners", {
     listLoadError: "Không thể tải danh sách đối tác",
     picker: {
       placeholder: "Chọn đối tượng...",
+      createNew: "+ Tạo đối tác mới",
       searchPlaceholder: "Tìm theo tên hoặc MST",
       empty: "Không có đối tượng phù hợp",
       fromInvoice: "Từ hóa đơn",
@@ -111,6 +112,7 @@ registerV2ModuleLocale("partners", {
     listLoadError: "Unable to load business partners",
     picker: {
       placeholder: "Select counterparty...",
+      createNew: "+ New counterparty",
       searchPlaceholder: "Search by name or tax code",
       empty: "No matching counterparty",
       fromInvoice: "From invoice",

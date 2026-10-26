@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { businessPartnersV2Api } from "../../../api/businessPartnersApi";
 import { BusinessPartnerPicker } from "./BusinessPartnerPicker";
@@ -54,5 +54,20 @@ describe("BusinessPartnerPicker", () => {
     renderPicker({ value: "master:p-1", selectedLabel: "Công ty ABC" });
 
     expect(await screen.findByText("Công ty ABC")).toBeTruthy();
+  });
+
+  it("opens the create drawer from the picker", async () => {
+    vi.spyOn(businessPartnersV2Api, "listSelectOptions").mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+      totalPages: 0,
+    });
+
+    renderPicker({ direction: "OUT" });
+    fireEvent.click(screen.getByRole("button", { name: "+ Tạo đối tác mới" }));
+
+    expect(await screen.findByRole("dialog")).toBeTruthy();
   });
 });

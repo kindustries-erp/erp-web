@@ -41,6 +41,8 @@ Dùng ngoài module: `src/modules/bank-statements/components/BankTransactionPart
 
 ## 3. Luồng dữ liệu
 
+- Tạo nhanh trong ô chọn: picker có nút "+ Tạo đối tác mới" mở `BusinessPartnerDrawer` (partnerId null); `onCreated` trả đối tác vừa tạo về picker, picker chọn `master:<id>`. Drawer chỉ gọi `onCreated` khi tạo mới; sửa thì vẫn đóng như cũ.
+- Z-index: sheet v2 (`ui/sheet`) và popover desktop v2 nằm `z-[450]` để hiện trên drawer v1 (`z-400`).
 - Đồng bộ có xem trước: nút "Đồng bộ từ hóa đơn" mở `BusinessPartnerSyncDialog` (organism), dialog gọi `syncFromInvoices(true)` để liệt kê, chỉ gọi `syncFromInvoices(false)` khi người dùng bấm "Tạo đối tác". Nút xác nhận bị khóa khi không có đối tác mới.
 - API mới: `GET /business-partners/options` (`listSelectOptions(direction, search, page)`), `POST /business-partners/sync-from-invoices` (`syncFromInvoices(dryRun)`). Hook: `useBusinessPartnerSelectOptionsQuery` (khóa `businessPartnerKeys.selectOptions`), `useSyncBusinessPartnersMutation` (làm mới toàn bộ `businessPartnerKeys.all` và toast thành công/lỗi).
 
