@@ -2,6 +2,24 @@ import axiosInstance from "@/core/api/axiosInstance";
 
 export type InvoicePartnerType = "CUSTOMER" | "SUPPLIER";
 
+/** Một khoản sao kê còn phần chưa cấn trừ hóa đơn (số tiền dạng chuỗi từ backend) */
+export interface UnallocatedPaymentItem {
+  id: string;
+  transDate: string;
+  referenceNumber: string | null;
+  description: string | null;
+  note: string | null;
+  cashflowPurpose: string | null;
+  amount: string;
+  netOffAmount: string;
+  unallocatedAmount: string;
+}
+
+export interface UnallocatedPaymentResult {
+  items: UnallocatedPaymentItem[];
+  total: number;
+}
+
 export interface InvoiceDebtItem {
   taxCode: string;
   partnerName: string;
@@ -195,6 +213,18 @@ export const invoiceDebtsApi = {
       {
         params,
       },
+    );
+    return data;
+  },
+
+  /** Khoản sao kê gắn đối tác nhưng chưa cấn trừ hóa đơn nào */
+  getUnallocatedPayments: async (
+    taxCode: string,
+    partnerType?: InvoicePartnerType,
+  ): Promise<UnallocatedPaymentResult> => {
+    const { data } = await axiosInstance.get<UnallocatedPaymentResult>(
+      `${BASE}/${encodeURIComponent(taxCode)}/unallocated-payments`,
+      { params: { partner_type: partnerType } },
     );
     return data;
   },
