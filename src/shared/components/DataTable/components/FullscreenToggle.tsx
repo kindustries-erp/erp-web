@@ -1,6 +1,6 @@
 import React from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
+import { V2ToolbarIconButton } from "@/v2/shared/components";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 
@@ -14,30 +14,27 @@ export function FullscreenToggle({
   onToggle,
 }: FullscreenToggleProps) {
   const t = useT();
+  const label = isFullscreen
+    ? t("table.exitFullscreen", "Thu nhỏ lại (Esc)")
+    : t("table.fullscreen", "Toàn màn hình");
+
   return (
-    <Tooltip
-      content={
-        isFullscreen
-          ? t("table.exitFullscreen", "Thu nhỏ lại (Esc)")
-          : t("table.fullscreen", "Toàn màn hình")
-      }
-    >
-      <Button
-        type="button"
-        variant="secondary"
-        size="icon"
-        className="h-8 w-8 px-0 cursor-pointer shrink-0"
+    <Tooltip content={label}>
+      <V2ToolbarIconButton
+        label={label}
+        icon={
+          isFullscreen ? (
+            <Minimize2 className="h-4 w-4 text-primary" />
+          ) : (
+            <Maximize2 className="h-4 w-4" />
+          )
+        }
+        active={isFullscreen}
         onClick={(e) => {
           e.stopPropagation();
           onToggle();
         }}
-      >
-        {isFullscreen ? (
-          <Minimize2 className="h-4 w-4 text-primary" />
-        ) : (
-          <Maximize2 className="h-4 w-4" />
-        )}
-      </Button>
+      />
     </Tooltip>
   );
 }
