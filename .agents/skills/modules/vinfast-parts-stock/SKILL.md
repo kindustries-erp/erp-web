@@ -81,15 +81,26 @@ src/
   2. `sku`: Mã phụ tùng — sử dụng `<TableText>` bật copy, tooltip, mở drawer chi tiết khi nhấp chuột.
   3. `name`: Tên phụ tùng — hiển thị kèm tooltip.
   4. `uom`: Đơn vị tính (ĐVT).
-  5. `qtyOpening`: Tồn đầu kỳ.
-  6. `qtyIn`: Số lượng nhập trong kỳ.
-  7. `qtyOut`: Số lượng xuất trong kỳ.
-  8. `qtyBalance`: Số dư tồn cuối kỳ (nổi bật màu sắc nếu tồn > 0).
-  9. `avgCost`: Đơn giá bình quân / FIFO (`money()`).
-  10. `totalAmount`: Giá trị tồn kho (`money()`).
-  11. `actions`: Menu thao tác dòng `<ActionDropdown>`:
-      - **Xem sổ cái FIFO**: Mở Drawer phân rã đơn vị FIFO (`FifoUnitLedgerSection`).
-      - **Xem chi tiết phụ tùng**: Mở `VinfastPartsStockDetailDrawer`.
+  5. `qtyIn`: Số lượng nhập trong kỳ (`text-emerald-700 dark:text-emerald-400`).
+  6. `qtyOut`: Số lượng xuất trong kỳ (`text-rose-700 dark:text-rose-400`).
+  7. `qtyBalance`: Số dư tồn cuối kỳ — sử dụng `text-slate-900 dark:text-zinc-100 tabular-nums font-bold` (nổi bật rõ nét trong Dark Theme, nếu âm chuyển sang `text-rose-600 dark:text-rose-400`).
+  8. Dòng tổng cộng (Summary Row): Đồng bộ màu sắc tương tự, `qtyBalance` dùng `text-slate-900 dark:text-zinc-100 font-bold`.
+
+### 3.1.1. Cấu hình Xuất Excel Báo Cáo Phụ Tùng (Chuẩn Hóa Theo Sao Kê Ngân Hàng)
+- **Sheet 1 ("Tổng Hợp Tồn Kho")**:
+  - Banner hàng đầu: Row 1 Tiêu đề in hoa, Row 2 Diễn giải kỳ (`Kỳ báo cáo: Từ ngày... đến ngày...` / `Toàn bộ thời gian`) + Phân loại xe (`Tất cả` / `Ô tô` / `Xe máy`).
+  - Cột: `STT`, `Mã Phụ Tùng`, `Tên Phụ Tùng`, `ĐVT`, `Loại Xe` (`vehicleType`), `Tồn Đầu Kỳ` (`qtyOpening`), `Tổng Nhập` (`qtyIn`), `Tổng Xuất` (`qtyOut`), `Tồn Cuối Kỳ` (`qtyBalance`).
+  - **Công thức Excel động (Dynamic Formulas)**:
+    - Cột `Tổng Nhập`: Lấy số liệu từ Sổ Cái qua hàm `=SUMIFS('Sổ Cái Chi Tiết FIFO'!$F$7:$F$N, 'Sổ Cái Chi Tiết FIFO'!$A$7:$A$N, B7, 'Sổ Cái Chi Tiết FIFO'!$E$7:$E$N, "Nhập")`.
+    - Cột `Tổng Xuất`: Lấy số liệu từ Sổ Cái qua hàm `=SUMIFS('Sổ Cái Chi Tiết FIFO'!$F$7:$F$N, 'Sổ Cái Chi Tiết FIFO'!$A$7:$A$N, B7, 'Sổ Cái Chi Tiết FIFO'!$E$7:$E$N, "Xuất")`.
+    - Cột `Tồn Cuối Kỳ`: Dùng công thức `= Đầu kỳ + Nhập - Xuất` (`=F7+G7-H7`).
+- **Sheet 2 ("Sổ Cái Chi Tiết FIFO")**:
+  - Gồm 11 cột sổ cái phụ tùng (bổ sung cột `Loại Xe`, cột `Chiều` ghi "Nhập" / "Xuất") và Khối Hóa đơn chi tiết (`erp_invoice_items`):
+    `[HĐ] Chi nhánh`, `[HĐ] Ngày HĐ`, `[HĐ] Số HĐ`, `[HĐ] Ký hiệu HĐ`, `[HĐ] MST HĐ` (tách riêng MST), `[HĐ] Đối tác HĐ` (chỉ ghi tên), `[HĐ] Tên dòng hàng`, `[HĐ] SL HĐ`, `[HĐ] Đơn giá HĐ (VND)`, `[HĐ] Thuế VAT (%)`, `[HĐ] Thành tiền HĐ (VND)`.
+  - Styling: Header xanh Emerald (`FF065F46`), data cell xanh nhạt (`FFF0FDF4`), viền trái nét đôi (`double border`).
+- **Drawer xuất Excel (`VinfastPartsStockExportDrawer`)**:
+  - Phân nhóm 3 group cột rõ ràng: `summary` (Tổng hợp tồn kho), `ledger` (Sổ cái chi tiết FIFO), `invoice` (Dòng hóa đơn mua / bán liên quan).
+  - Mục **Điều kiện xuất dữ liệu**: Tích hợp `V2Combobox` phân loại phụ tùng: "Tất cả" (`ALL`), "Phụ tùng ô tô" (`CAR`), "Phụ tùng xe máy" (`MOTORBIKE`). Khi chọn, tự động map vào payload query xuất Excel ngầm.
 
 ### 3.2. Sổ Cái Phân Rã Đơn Vị FIFO (`fifo-unit-ledger/`)
 - Hiển thị theo nguyên tắc: Mỗi 1 số lượng nhập được tách thành 1 dòng đơn vị (`Unit 1..N`).

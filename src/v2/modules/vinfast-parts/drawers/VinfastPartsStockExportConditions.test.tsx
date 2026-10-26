@@ -55,4 +55,12 @@ describe("VinfastPartsStockExportConditions", () => {
     expect(screen.getByText("Loại xe")).toBeInTheDocument();
     expect(screen.queryByText("Từ ngày")).not.toBeInTheDocument();
   });
+
+  it("renders the vehicle type combobox", () => {
+    render(
+      <VinfastPartsStockExportConditions {...baseProps} vehicleType="CAR" />,
+    );
+
+    expect(screen.getByText("Loại phụ tùng")).toBeInTheDocument();
+  });
 });

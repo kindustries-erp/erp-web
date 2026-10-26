@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { V2ColumnSelectorGroup } from "@/v2/shared/components/molecules/v2-column-selector";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
@@ -34,11 +34,20 @@ export function useVinfastPartsStockExportDrawer({
   const [selectedColumns, setSelectedColumns] = useState<string[]>(
     VINFAST_STOCK_EXPORT_DEFAULT_COLUMNS,
   );
+  const [vehicleType, setVehicleType] = useState<string>(
+    () => buildBaseQuery().vehicleType || "ALL",
+  );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [starting, setStarting] = useState(false);
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
   const [trackedJobId, setTrackedJobId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setVehicleType(buildBaseQuery().vehicleType || "ALL");
+    }
+  }, [open, buildBaseQuery]);
 
   const { historyQuery, historyItems } = useVinfastPartsStockExportHistory({
     open,
@@ -138,6 +147,7 @@ export function useVinfastPartsStockExportDrawer({
           dateFrom: period.dateFrom,
           dateTo: period.dateTo,
           selectedColumns,
+          vehicleType,
         }),
       );
 
@@ -190,6 +200,8 @@ export function useVinfastPartsStockExportDrawer({
     refreshHistory: () => void historyQuery.refetch(),
     starting,
     downloadingJobId,
+    vehicleType,
+    setVehicleType,
     handleStartExport,
     handleDownload,
   };
