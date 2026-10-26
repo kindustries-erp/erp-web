@@ -28,14 +28,20 @@ src/v2/modules/business-partners/
 │   ├── molecules/business-partner-status-badge/   # Nhãn Hoạt động/Ngưng dùng ở cột bảng và tiêu đề drawer
 │   └── organisms/
 │       ├── business-partner-table/     # Cột bảng + 3 chế độ xem hệ thống
-│       └── business-partner-form/      # Các section form + control (view/edit)
+│       ├── business-partner-form/      # Các section form + control (view/edit)
+│       └── business-partner-picker/    # Ô chọn đối tượng cho sao kê (V2Combobox, tìm trên server, giá trị mã hóa)
+├── domain/rules/partnerSelection.ts    # Mã hóa lựa chọn (master:<id> | invoice:<MST>:<tên>) và đổi thành payload API (partnerId | invoicePartner)
 ├── drawers/                            # Drawer chi tiết/tạo mới (hook + drawer, ghép organism form)
-├── pages/                              # BusinessPartnersPage + useBusinessPartnersPage
+├── pages/                              # BusinessPartnersPage (có nút "Đồng bộ từ hóa đơn") + useBusinessPartnersPage
 ├── tests/integration/                  # Page + form + mutation với service mock
-└── businessPartners.locale.ts          # i18n VI/EN (registerV2ModuleLocale "partners")
+└── businessPartners.locale.ts          # i18n VI/EN (registerV2ModuleLocale "partners"), gồm picker và sync
 ```
 
+Dùng ngoài module: `src/modules/bank-statements/components/BankTransactionPartnerField.tsx` (ô "Đối tượng" trong drawer sao kê v1, gọi picker v2) và `src/pages/finance/components/bank-transaction-detail-drawer/BankTransactionDetailDrawer.hook.ts` (gửi `partnerId`/`invoicePartner` khi đối tượng đổi).
+
 ## 3. Luồng dữ liệu
+
+- API mới: `GET /business-partners/options` (`listSelectOptions(direction, search, page)`), `POST /business-partners/sync-from-invoices` (`syncFromInvoices(dryRun)`). Hook: `useBusinessPartnerSelectOptionsQuery` (khóa `businessPartnerKeys.selectOptions`), `useSyncBusinessPartnersMutation` (làm mới toàn bộ `businessPartnerKeys.all` và toast thành công/lỗi).
 
 - Mọi request đi qua `src/v2/shared/api/v2HttpClient.ts`: gắn Bearer token, refresh 401 (single-flight), retry GET khi 502/503/504 hoặc lỗi mạng, mở modal khi 409 `DOCUMENT_IN_USE`.
 - Lỗi và thành công của mutation hiện toast qua `useV2ToastStore` (`V2Toaster` mount ở `AppProviders`). Thông báo lỗi ưu tiên `message` từ server, không có thì dùng chuỗi đã dịch.

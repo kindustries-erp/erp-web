@@ -14,6 +14,8 @@ import type {
   BusinessPartnerPayloadDto,
   ColumnOptionsResultDto,
   NextCodeDto,
+  PartnerSelectOptionsDto,
+  SyncFromInvoicesDto,
 } from "./dtos/businessPartner.dto";
 
 const BASE = "/api/v1/business-partners";
@@ -66,6 +68,33 @@ export const toBusinessPartnerPayload = (
 });
 
 export const businessPartnersV2Api = {
+  /** Danh sách chọn đối tượng cho sao kê: danh mục + người mua/bán từ hóa đơn. direction: OUT = khách hàng, IN = NCC */
+  listSelectOptions: async (
+    direction: "IN" | "OUT",
+    search: string | undefined,
+    page: number,
+  ) => {
+    const { data } = await v2HttpClient.get<PartnerSelectOptionsDto>(
+      `${BASE}/options`,
+      {
+        params: {
+          direction,
+          search: search?.trim() || undefined,
+          page,
+          pageSize: OPTIONS_PAGE_SIZE,
+        },
+      },
+    );
+    return data;
+  },
+  /** Đồng bộ đối tác từ hóa đơn. dryRun = true chỉ xem trước. */
+  syncFromInvoices: async (dryRun: boolean) => {
+    const { data } = await v2HttpClient.post<SyncFromInvoicesDto>(
+      `${BASE}/sync-from-invoices`,
+      { dryRun },
+    );
+    return data;
+  },
   list: async (partnerType: BusinessPartnerType, query: V2TableQuery) => {
     const { data } = await v2HttpClient.get<BusinessPartnerListResultDto>(
       BASE,
