@@ -62,7 +62,7 @@ src/v2/modules/<module>/
 | :--- | :--- | :--- |
 | Gọi API (token, refresh 401, retry GET, mở modal 409) | `v2HttpClient` | `src/v2/shared/api/v2HttpClient.ts` |
 | Thông báo lỗi từ server | `extractV2ApiError`, `isDocumentInUseError` | `src/v2/shared/utils/v2ApiError.ts` |
-| Toast | `useV2ToastStore` (+ `V2Toaster` đã mount ở `AppProviders`) | `src/v2/shared/stores/useV2ToastStore.ts` |
+| Toast | `useV2ToastStore` (+ `V2Toaster` đã mount ở `AppProviders`, hỗ trợ 4 variants glassmorphism adaptive Light/Dark theme) | `src/v2/shared/stores/useV2ToastStore.ts`, `molecules/v2-toaster/` |
 | Modal chứng từ phụ thuộc (409) | `useV2DocumentDependencyStore` (+ `V2DocumentDependencyModal` đã mount) | `src/v2/shared/stores/`, `molecules/v2-document-dependency-modal/` |
 | Cấu hình cột/view theo bảng | `v2ColumnPreferencesStorage`, `v2ViewPresetStorage`, `applyV2SystemView` | `src/v2/shared/preferences/v2TablePreferenceStorages.ts` |
 | Đồng bộ preference lên server | `scheduleTablePreferenceSync` (PATCH `/api/v1/app/table-preferences/:tableId`, mỗi bảng một bản ghi) | `src/v2/shared/preferences/v2TablePreferences.sync.ts` |
