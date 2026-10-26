@@ -10,6 +10,10 @@ export interface InvoiceDebtItem {
   totalAmount: number;
   paidAmount: number;
   balanceAmount: number;
+  /** Tiền sao kê gắn đối tượng nhưng chưa cấn trừ hóa đơn nào */
+  unallocatedAmount?: number;
+  /** Còn phải thu/trả sau khi trừ phần chưa phân bổ; có thể âm khi trả trước */
+  netBalanceAmount?: number;
   maxAgingDays: number;
   weightedAgingDays?: number;
   latestInvoiceDate: string | null;

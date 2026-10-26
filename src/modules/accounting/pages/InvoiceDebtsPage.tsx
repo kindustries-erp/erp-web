@@ -486,6 +486,33 @@ export function InvoiceDebtsPage() {
         },
       },
 
+      // 6b. Chưa phân bổ: tiền sao kê đã gắn đối tượng nhưng chưa cấn trừ hóa đơn nào
+      {
+        key: "unallocatedAmount",
+        className: "text-right font-mono text-xs",
+        header: t("debts:columns.unallocated", "Chưa phân bổ"),
+        size: 150,
+        enableResizing: true,
+        cell: (row) => money(Number(row.unallocatedAmount) || 0),
+      },
+      // 6c. Còn lại sau trừ phân bổ (có thể âm khi trả trước)
+      {
+        key: "netBalanceAmount",
+        className: "text-right font-mono text-xs",
+        header: t("debts:columns.netBalance", "Còn lại sau phân bổ"),
+        size: 170,
+        enableResizing: true,
+        cell: (row) => {
+          const net =
+            row.netBalanceAmount ??
+            (Number(row.balanceAmount) || 0) -
+              (Number(row.unallocatedAmount) || 0);
+          return (
+            <span className="tabular-nums font-semibold">{money(net)}</span>
+          );
+        },
+      },
+
       // 7. Nợ 0-30 ngày - Xanh lá Emerald
       {
         key: "aging0To30",
