@@ -157,13 +157,14 @@ describe("toHistoryViewItem", () => {
 });
 
 describe("BANK_STATEMENT_EXPORT_DEFAULT_COLUMNS", () => {
-  it("gồm 24 cột, trong đó có 3 cột phân loại / mục đích / ghi chú", () => {
-    expect(BANK_STATEMENT_EXPORT_DEFAULT_COLUMNS).toHaveLength(24);
+  it("gồm 25 cột, trong đó có 3 cột phân loại / mục đích / ghi chú và đối tượng", () => {
+    expect(BANK_STATEMENT_EXPORT_DEFAULT_COLUMNS).toHaveLength(25);
     expect(BANK_STATEMENT_EXPORT_DEFAULT_COLUMNS).toEqual(
       expect.arrayContaining([
         "cashflowClassification",
         "cashflowPurpose",
         "note",
+        "businessPartner",
       ]),
     );
   });

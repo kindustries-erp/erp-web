@@ -48,16 +48,20 @@ export const BankTransactionDetailDrawer = React.memo(
           onBranchChange={drawer.setEditBranchIds}
           description={drawer.editDescription}
           onDescriptionChange={drawer.setEditDescription}
-        />
-        <BankTransactionPartnerField
-          editMode={drawer.editMode}
-          direction={Number(drawer.transaction.creditAmount) > 0 ? "OUT" : "IN"}
-          value={drawer.editPartnerValue}
-          label={drawer.editPartnerLabel}
-          onChange={(value, label) => {
-            drawer.setEditPartnerValue(value);
-            drawer.setEditPartnerLabel(label);
-          }}
+          partnerField={
+            <BankTransactionPartnerField
+              editMode={drawer.editMode}
+              direction={
+                Number(drawer.transaction.creditAmount) > 0 ? "OUT" : "IN"
+              }
+              value={drawer.editPartnerValue}
+              label={drawer.editPartnerLabel}
+              onChange={(value, label) => {
+                drawer.setEditPartnerValue(value);
+                drawer.setEditPartnerLabel(label);
+              }}
+            />
+          }
         />
         <BankTransactionCashflowSection
           classification={drawer.cashflowClassification}

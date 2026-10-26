@@ -29,6 +29,7 @@ export const BANK_STATEMENT_EXPORT_COLUMN_GROUPS: BankStatementExportColumnGroup
         "cashflowClassification",
         "cashflowPurpose",
         "note",
+        "businessPartner",
         "branchName",
       ]),
     },

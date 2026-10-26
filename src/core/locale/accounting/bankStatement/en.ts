@@ -26,6 +26,7 @@ export const bankStatementEn = {
     seqNo: "Sequence No",
     classification: "Classification",
     purpose: "Purpose",
+    businessPartner: "Counterparty",
     note: "Note",
   },
   cashflowAttributes: "CASHFLOW CLASSIFICATION",
