@@ -88,6 +88,7 @@ Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_tabl
 - **Xóa:** xóa mềm, luôn có `V2ConfirmModal`.
 - **Lỗi:** mutation hiện toast; 409 `DOCUMENT_IN_USE` do modal chung xử lý (mutation không toast lại).
 - **Preference:** giữ nguyên `tableId` của V1 (`erp-<x>-table`) để người dùng không mất cấu hình cột.
+- **Popover (dropdown, lịch):** tự đóng khi click ra ngoài và chỉ một popover mở tại một thời điểm. Dùng hook `useV2PopoverDismiss` (`src/v2/shared/hooks/useV2PopoverDismiss.ts`), không tự gắn listener `pointerdown`. Áp dụng cho `V2Combobox`, `V2DatePicker`, `V2DateRangePicker`.
 
 ---
 
@@ -161,10 +162,11 @@ bunx tsc --noEmit && bun run check:ci && bun run test src/v2
 
 ## 8b. Trạng thái migrate (cập nhật mỗi lần migrate)
 
-Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `business-partners`, `finance-invoice`, `inventory`, `production-bom`, `vinfast-parts`. **Trạng thái từng module (đủ parity hay còn thiếu) chưa được xác minh trong tài liệu này**; trước khi dựa vào, kiểm tra parity bằng playbook mục 5.
+Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `bank-statements`, `business-partners`, `finance-invoice`, `inventory`, `production-bom`, `vinfast-parts`. **Trạng thái từng module (đủ parity hay còn thiếu) chưa được xác minh trong tài liệu này**; trước khi dựa vào, kiểm tra parity bằng playbook mục 5.
 
 Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/skills/modules/<module>/SKILL.md` của module.
 
+- `bank-statements` (chỉ drawer xuất Excel sao kê / sổ quỹ, trang sao kê vẫn V1): drawer V2 `V2ExportExcelDrawer` ở `drawers/BankStatementExportDrawer.tsx`, sinh khung bằng plop `v2-module` (`wire = false`), đã bỏ phần CRUD thừa. V1 chỉ giữ wrapper. Chưa có route `/v2` cho module.
 - `vinfast-parts` (drawer xuất Excel tồn kho): đã V2 thuần (data layer, toast, icon, locale module, validate ngày). Các drawer khác của module chưa kiểm parity.
 
 ## 9. Hạn chế đã biết

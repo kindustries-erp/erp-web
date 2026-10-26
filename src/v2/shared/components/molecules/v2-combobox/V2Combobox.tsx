@@ -2,6 +2,7 @@ import * as React from "react";
 import { Check, ChevronDown, X } from "lucide-react";
 import { V2Spinner } from "@/v2/shared/components/atoms/v2-spinner";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { Input } from "@/v2/shared/ui";
 import { cn } from "@/v2/shared/utils/cn";
@@ -25,6 +26,14 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
 }) => {
   const { t } = useV2Translation();
   const c = useV2Combobox({ options, value, searchable, onValueChange });
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  // Click ra ngoài thì đóng; mở combobox này sẽ đóng popover đang mở khác
+  useV2PopoverDismiss({
+    open: c.open,
+    onClose: () => c.setOpen(false),
+    containerRef,
+    panelSelector: "[data-v2-combobox-panel]",
+  });
   const hint = placeholder ?? t("v2.form.selectPlaceholder", "Chọn...");
   const canClear = clearable && value !== null && !disabled;
 
@@ -50,7 +59,11 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
   );
 
   const content = (
-    <div className="flex flex-col gap-1" onKeyDown={c.onKeyDown}>
+    <div
+      className="flex flex-col gap-1"
+      data-v2-combobox-panel=""
+      onKeyDown={c.onKeyDown}
+    >
       {searchable && (
         <Input
           autoFocus
@@ -120,7 +133,7 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
   );
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <div ref={containerRef} className={cn("relative w-full", className)}>
       <V2Popover
         trigger={trigger}
         content={content}

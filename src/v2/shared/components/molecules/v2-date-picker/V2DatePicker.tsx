@@ -7,6 +7,7 @@ import {
   V2Text,
 } from "@/v2/shared/components/atoms";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Calendar, dateTriggerClass } from "./V2Calendar";
@@ -41,22 +42,13 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
   };
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // Click ra ngoài (kể cả trong drawer modal) thì đóng lịch. Lắng nghe ở capture
-  // trên document để không phụ thuộc layer của Radix khi nằm trong Dialog.
-  React.useEffect(() => {
-    if (!open) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as Element | null;
-      if (!target) return;
-      if (containerRef.current?.contains(target)) return;
-      if (target.closest?.("[data-v2-date-panel]")) return;
-      setOpen(false);
-    };
-    document.addEventListener("pointerdown", handlePointerDown, true);
-    return () =>
-      document.removeEventListener("pointerdown", handlePointerDown, true);
-    // setOpen được tạo lại mỗi render; chỉ cần theo dõi trạng thái mở
-  }, [open]);
+  // Click ra ngoài thì đóng lịch; mở lịch này sẽ đóng popover đang mở khác
+  useV2PopoverDismiss({
+    open,
+    onClose: () => setOpen(false),
+    containerRef,
+    panelSelector: "[data-v2-date-panel]",
+  });
   const selected = parseIsoDate(value);
   const hint = placeholder ?? t("v2.form.pickDate", "Chọn ngày");
   const canClear = clearable && selected !== undefined && !disabled;
