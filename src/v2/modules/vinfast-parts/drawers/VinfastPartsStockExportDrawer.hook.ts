@@ -14,6 +14,7 @@ import {
   buildExportPayload,
   buildFilterSummary,
 } from "./VinfastPartsStockExportDrawer.helper";
+import { useVinfastPartsStockExportAutoDownload } from "./VinfastPartsStockExportDrawer.autoDownload.hook";
 import { useVinfastPartsStockExportHistory } from "./VinfastPartsStockExportDrawer.history.hook";
 import { useVinfastPartsStockExportPeriod } from "./VinfastPartsStockExportDrawer.period.hook";
 
@@ -37,6 +38,7 @@ export function useVinfastPartsStockExportDrawer({
   const [pageSize, setPageSize] = useState(10);
   const [starting, setStarting] = useState(false);
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
+  const [trackedJobId, setTrackedJobId] = useState<string | null>(null);
 
   const { historyQuery, historyItems } = useVinfastPartsStockExportHistory({
     open,
@@ -49,15 +51,14 @@ export function useVinfastPartsStockExportDrawer({
       VINFAST_STOCK_EXPORT_COLUMN_GROUPS.map((group) => ({
         key: group.key,
         label: t(group.labelKey, group.key),
-        columns: group.columns.map((column) => ({
-          key: column.key,
-          label: t(column.labelKey, column.key),
+        columns: group.columns.map((c) => ({
+          key: c.key,
+          label: t(c.labelKey, c.key),
         })),
       })),
     [t],
   );
 
-  // buildBaseQuery đọc state bảng hiện tại, nên tính lại mỗi lần render
   const filterSummary = buildFilterSummary(buildBaseQuery(), {
     vehicleTypeLabel: t("v2.vinfastParts.export.filter.vehicleType", "Loại xe"),
     vehicleTypeAll: t("v2.vinfastParts.export.filter.vehicleAll", "Tất cả"),
@@ -73,6 +74,37 @@ export function useVinfastPartsStockExportDrawer({
   const notify = (variant: "success" | "destructive", title: string) =>
     useV2ToastStore.getState().showToast({ title, variant });
 
+  const handleDownload = async (jobId: string, customFileName?: string) => {
+    if (downloadingJobId) return;
+    const row = historyQuery.data?.items.find((item) => item.jobId === jobId);
+    if (row && !row.canDownload) return;
+
+    try {
+      setDownloadingJobId(jobId);
+      await downloadReadyFile(jobId, customFileName || row?.fileName);
+      await historyQuery.refetch();
+    } catch (error: unknown) {
+      notify(
+        "destructive",
+        (error instanceof Error && error.message) ||
+          t(
+            "v2.exportExcel.form.downloadFailed",
+            "Không thể tải lại file XLSX.",
+          ),
+      );
+    } finally {
+      setDownloadingJobId(null);
+    }
+  };
+
+  useVinfastPartsStockExportAutoDownload({
+    open,
+    trackedJobId,
+    historyItems: historyQuery.data?.items,
+    download: handleDownload,
+    onTrackedDone: () => setTrackedJobId(null),
+  });
+
   const handleStartExport = async () => {
     if (period.exportMode === "by-period") {
       if (!period.dateFrom || !period.dateTo) {
@@ -80,7 +112,7 @@ export function useVinfastPartsStockExportDrawer({
           "destructive",
           t(
             "v2.exportExcel.form.missingDateRange",
-            "Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.",
+            "Vui lòng chọn đầy đủ ngày bắt đầu và kết thúc.",
           ),
         );
         return;
@@ -108,13 +140,28 @@ export function useVinfastPartsStockExportDrawer({
           selectedColumns,
         }),
       );
-      const fallback = result.reused
-        ? t(
-            "v2.exportExcel.form.reused",
-            "Đã tìm thấy file cũ. Bạn có thể tải lại ngay.",
-          )
-        : t("v2.exportExcel.form.started", "Đã bắt đầu tiến trình xuất Excel.");
-      notify("success", result.message || fallback);
+
+      if (result.reused) {
+        notify(
+          "success",
+          result.message ||
+            t(
+              "v2.vinfastParts.export.progress.reused",
+              "Đã tìm thấy file cũ. Đang tự động tải xuống.",
+            ),
+        );
+        void handleDownload(result.jobId);
+      } else {
+        setTrackedJobId(result.jobId);
+        notify(
+          "success",
+          result.message ||
+            t(
+              "v2.exportExcel.form.started",
+              "Đã bắt đầu tiến trình xuất Excel.",
+            ),
+        );
+      }
       await historyQuery.refetch();
     } catch (error: unknown) {
       notify(
@@ -124,28 +171,6 @@ export function useVinfastPartsStockExportDrawer({
       );
     } finally {
       setStarting(false);
-    }
-  };
-
-  const handleDownload = async (jobId: string) => {
-    const row = historyQuery.data?.items.find((item) => item.jobId === jobId);
-    if (!row?.canDownload || downloadingJobId) return;
-
-    try {
-      setDownloadingJobId(jobId);
-      await downloadReadyFile(jobId, row.fileName);
-      await historyQuery.refetch();
-    } catch (error: unknown) {
-      notify(
-        "destructive",
-        (error instanceof Error && error.message) ||
-          t(
-            "v2.exportExcel.form.downloadFailed",
-            "Không thể tải lại file XLSX.",
-          ),
-      );
-    } finally {
-      setDownloadingJobId(null);
     }
   };
 
