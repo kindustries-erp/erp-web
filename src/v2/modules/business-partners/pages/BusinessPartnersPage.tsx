@@ -7,7 +7,7 @@ import {
   type V2ModuleTab,
 } from "@/v2/shared/components";
 import { useBusinessPartnersQuery } from "../api/queries/useBusinessPartnersQuery";
-import { useSyncBusinessPartnersMutation } from "../api/mutations/useSyncBusinessPartnersMutation";
+import { BusinessPartnerSyncDialog } from "../components/organisms/business-partner-sync-dialog";
 import type {
   BusinessPartner,
   BusinessPartnerType,
@@ -28,7 +28,7 @@ export function BusinessPartnersPage({
   partnerType,
 }: BusinessPartnersPageProps) {
   const state = useBusinessPartnersPage(partnerType);
-  const syncMutation = useSyncBusinessPartnersMutation(state.t);
+  const [syncOpen, setSyncOpen] = React.useState(false);
   const supplier = partnerType === "VENDOR";
   const title = state.t(
     supplier ? "v2.partners.suppliersTitle" : "v2.partners.customersTitle",
@@ -110,8 +110,7 @@ export function BusinessPartnersPage({
             <V2Button
               size="sm"
               variant="outline"
-              disabled={syncMutation.isPending}
-              onClick={() => syncMutation.mutate()}
+              onClick={() => setSyncOpen(true)}
             >
               {state.t("v2.partners.sync.button", "Đồng bộ từ hóa đơn")}
             </V2Button>
@@ -132,6 +131,11 @@ export function BusinessPartnersPage({
       }
       overlays={
         <>
+          <BusinessPartnerSyncDialog
+            open={syncOpen}
+            onOpenChange={setSyncOpen}
+            t={state.t}
+          />
           {state.drawer && (
             <BusinessPartnerDrawer
               open

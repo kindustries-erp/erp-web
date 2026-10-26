@@ -41,6 +41,7 @@ Dùng ngoài module: `src/modules/bank-statements/components/BankTransactionPart
 
 ## 3. Luồng dữ liệu
 
+- Đồng bộ có xem trước: nút "Đồng bộ từ hóa đơn" mở `BusinessPartnerSyncDialog` (organism), dialog gọi `syncFromInvoices(true)` để liệt kê, chỉ gọi `syncFromInvoices(false)` khi người dùng bấm "Tạo đối tác". Nút xác nhận bị khóa khi không có đối tác mới.
 - API mới: `GET /business-partners/options` (`listSelectOptions(direction, search, page)`), `POST /business-partners/sync-from-invoices` (`syncFromInvoices(dryRun)`). Hook: `useBusinessPartnerSelectOptionsQuery` (khóa `businessPartnerKeys.selectOptions`), `useSyncBusinessPartnersMutation` (làm mới toàn bộ `businessPartnerKeys.all` và toast thành công/lỗi).
 
 - Mọi request đi qua `src/v2/shared/api/v2HttpClient.ts`: gắn Bearer token, refresh 401 (single-flight), retry GET khi 502/503/504 hoặc lỗi mạng, mở modal khi 409 `DOCUMENT_IN_USE`.
