@@ -486,6 +486,33 @@ export function InvoiceDebtsPage() {
         },
       },
 
+      // 6b. Chưa phân bổ: tiền sao kê đã gắn đối tượng nhưng chưa cấn trừ hóa đơn nào
+      {
+        key: "unallocatedAmount",
+        className: "text-right font-mono text-xs",
+        header: t("debts:columns.unallocated", "Chưa phân bổ"),
+        size: 150,
+        enableResizing: true,
+        cell: (row) => money(Number(row.unallocatedAmount) || 0),
+      },
+      // 6c. Còn lại sau trừ phân bổ (có thể âm khi trả trước)
+      {
+        key: "netBalanceAmount",
+        className: "text-right font-mono text-xs",
+        header: t("debts:columns.netBalance", "Còn lại sau phân bổ"),
+        size: 170,
+        enableResizing: true,
+        cell: (row) => {
+          const net =
+            row.netBalanceAmount ??
+            (Number(row.balanceAmount) || 0) -
+              (Number(row.unallocatedAmount) || 0);
+          return (
+            <span className="tabular-nums font-semibold">{money(net)}</span>
+          );
+        },
+      },
+
       // 7. Nợ 0-30 ngày - Xanh lá Emerald
       {
         key: "aging0To30",
@@ -854,6 +881,7 @@ export function InvoiceDebtsPage() {
     let subtotalInvoices = 0;
     let subtotalAmount = 0;
     let subtotalBal = 0;
+    let subtotalUnalloc = 0;
     let subtotalA0_30 = 0;
     let subtotalA31_60 = 0;
     let subtotalA61_90 = 0;
@@ -863,6 +891,7 @@ export function InvoiceDebtsPage() {
       subtotalInvoices += Number(r.invoiceCount) || 0;
       subtotalAmount += Number(r.totalAmount) || 0;
       subtotalBal += Number(r.balanceAmount) || 0;
+      subtotalUnalloc += Number(r.unallocatedAmount) || 0;
       subtotalA0_30 += Number(r.aging0To30) || 0;
       subtotalA31_60 += Number(r.aging31To60) || 0;
       subtotalA61_90 += Number(r.aging61To90) || 0;
@@ -995,6 +1024,21 @@ export function InvoiceDebtsPage() {
               ? "font-bold text-emerald-600 dark:text-emerald-400"
               : "font-bold text-destructive"
           }
+        />
+      ),
+      unallocatedAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:columns.unallocated", "Chưa phân bổ")}
+          itemTitle={t("debts:partner", "Đối tác")}
+          itemUnit={t("debts:unitPartner", "đối tác")}
+          subtotalAmount={subtotalUnalloc}
+          grandTotalAmount={listHook.summary.grandTotalUnallocated ?? 0}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          valueClassName="font-bold text-amber-700 dark:text-amber-400"
         />
       ),
       aging0To30: (

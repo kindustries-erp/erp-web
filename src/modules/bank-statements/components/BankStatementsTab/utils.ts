@@ -21,6 +21,7 @@ export const DEFAULT_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
   branch: true,
   cashflowClassification: true,
   cashflowPurpose: true,
+  businessPartner: true,
   note: true,
 };
 
@@ -45,6 +46,7 @@ export const AUDIT_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
   branch: true,
   cashflowClassification: true,
   cashflowPurpose: true,
+  businessPartner: true,
   note: true,
 };
 
@@ -69,6 +71,7 @@ export const FULL_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
   branch: true,
   cashflowClassification: true,
   cashflowPurpose: true,
+  businessPartner: true,
   note: true,
 };
 
@@ -272,6 +275,12 @@ export const BANK_STATEMENT_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "cashflowPurpose",
         labelKey: "bankStatement.columns.purpose",
         labelDefault: "Mục đích",
+        defaultVisible: true,
+      },
+      {
+        key: "businessPartner",
+        labelKey: "bankStatement.columns.businessPartner",
+        labelDefault: "Đối tượng",
         defaultVisible: true,
       },
       {

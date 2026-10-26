@@ -190,6 +190,17 @@ export const debtsVi = {
     },
   },
 
+  unallocated: {
+    loadError: "Không thể tải khoản chưa phân bổ",
+    empty: "Không có khoản chưa phân bổ",
+    total: "Tổng chưa phân bổ",
+    date: "Ngày GD",
+    reference: "Số tham chiếu",
+    description: "Diễn giải",
+    amount: "Số tiền",
+    netOff: "Đã cấn trừ",
+    remaining: "Chưa phân bổ",
+  },
   drawer: {
     title: "Hồ sơ công nợ đối tác",
     partnerInfoTitle: "Thông tin đối tác",
@@ -207,6 +218,7 @@ export const debtsVi = {
     invoicesListTitle: "Danh sách hóa đơn chi tiết",
     tabInvoices: "1. Danh sách hóa đơn",
     tabAnalytics: "2. Biến động & Phân tích",
+    tabUnallocated: "3. Khoản chưa phân bổ",
     monthlyBreakdownTitle: "Ma trận công nợ theo kỳ phát sinh / tháng",
     analyticsTitle: "Phân tích tài chính & Cơ cấu công nợ",
     agingDistribution: "Cơ cấu phân bổ tuổi nợ",

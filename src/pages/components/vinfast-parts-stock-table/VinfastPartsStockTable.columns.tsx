@@ -85,7 +85,8 @@ export function useVinfastPartsStockColumns({
         ),
         size: 120,
         enableResizing: true,
-        className: "text-right font-medium text-emerald-700 tabular-nums",
+        className:
+          "text-right font-medium text-emerald-700 dark:text-emerald-400 tabular-nums",
         headerClassName: "text-right",
         cell: (row) => Number(row.qtyIn || 0).toLocaleString("vi-VN"),
       },
@@ -97,7 +98,8 @@ export function useVinfastPartsStockColumns({
         ),
         size: 120,
         enableResizing: true,
-        className: "text-right font-medium text-rose-700 tabular-nums",
+        className:
+          "text-right font-medium text-rose-700 dark:text-rose-400 tabular-nums",
         headerClassName: "text-right",
         cell: (row) => Number(row.qtyOut || 0).toLocaleString("vi-VN"),
       },
@@ -109,9 +111,21 @@ export function useVinfastPartsStockColumns({
         ),
         size: 120,
         enableResizing: true,
-        className: "text-right font-bold text-slate-800 tabular-nums",
+        className:
+          "text-right font-bold text-slate-900 dark:text-zinc-100 tabular-nums",
         headerClassName: "text-right",
-        cell: (row) => Number(row.qtyBalance || 0).toLocaleString("vi-VN"),
+        cell: (row) => {
+          const val = Number(row.qtyBalance || 0);
+          return (
+            <span
+              className={
+                val < 0 ? "text-rose-600 dark:text-rose-400" : undefined
+              }
+            >
+              {val.toLocaleString("vi-VN")}
+            </span>
+          );
+        },
       },
     ],
     [headerFilter, t, vehicleType, onSelectSku],

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Check, Copy } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
+import { V2Button } from "@/v2/shared/components";
 
 interface LookupHintRowProps {
   label: string;
@@ -17,31 +17,33 @@ export function LookupHintRow({
 }: LookupHintRowProps) {
   const { t } = useTranslation("erpInvoices");
   return (
-    <div className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 dark:border-slate-800 dark:bg-slate-950">
+    <div className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-surface/80 px-2.5 py-1.5 dark:border-white/[0.06] dark:bg-zinc-900/60">
       <div className="min-w-0">
-        <div className="text-[11px] text-slate-500">{label}</div>
-        <div className="select-all truncate font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">
+        <div className="text-[11px] text-muted-foreground">{label}</div>
+        <div className="select-all truncate font-mono text-xs font-semibold text-foreground">
           {value}
         </div>
       </div>
-      <Button
+      <V2Button
         type="button"
         variant="ghost"
-        size="sm"
+        size="xs"
         onClick={() => onCopy(value)}
         aria-label={t("lookupCopy", "Sao chép") + ` ${label}`}
         title={t("lookupCopy", "Sao chép")}
-        className="h-6 shrink-0 px-1.5 text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+        className="h-6 shrink-0 px-1.5 text-xs text-muted-foreground hover:text-foreground"
+        leftIcon={
+          copied ? (
+            <Check className="h-3.5 w-3.5 text-emerald-600" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )
+        }
       >
-        {copied ? (
-          <Check className="h-3.5 w-3.5 text-emerald-600" />
-        ) : (
-          <Copy className="h-3.5 w-3.5" />
-        )}
-        <span className="ml-1 text-[11px]">
+        <span className="text-[11px]">
           {copied ? t("lookupCopied", "Đã chép") : t("lookupCopy", "Chép")}
         </span>
-      </Button>
+      </V2Button>
     </div>
   );
 }

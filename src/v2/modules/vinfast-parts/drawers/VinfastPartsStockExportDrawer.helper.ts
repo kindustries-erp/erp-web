@@ -27,11 +27,13 @@ export interface VinfastExportPayloadInput {
   dateFrom: string;
   dateTo: string;
   selectedColumns: string[];
+  vehicleType?: string;
 }
 
 /**
  * "Theo kỳ" ghi đè khoảng ngày bằng kỳ đã chọn.
  * "Theo filter hiện tại" giữ nguyên bộ lọc bảng, không ghi đè ngày.
+ * vehicleType: nếu là ALL thì undefined, ngược lại gán đúng loại (CAR/MOTORBIKE).
  */
 export function buildExportPayload({
   exportMode,
@@ -39,11 +41,24 @@ export function buildExportPayload({
   dateFrom,
   dateTo,
   selectedColumns,
+  vehicleType,
 }: VinfastExportPayloadInput): VinfastPartsStockExportQuery {
+  const resolvedVehicleType =
+    vehicleType !== undefined
+      ? vehicleType === "ALL"
+        ? undefined
+        : vehicleType
+      : baseQuery.vehicleType;
+
+  const base: Partial<VinfastPartsStockExportQuery> = {
+    ...baseQuery,
+    vehicleType: resolvedVehicleType,
+  };
+
   if (exportMode === "by-current-filter") {
-    return { ...baseQuery, selectedColumns };
+    return { ...base, selectedColumns };
   }
-  return { ...baseQuery, dateFrom, dateTo, selectedColumns };
+  return { ...base, dateFrom, dateTo, selectedColumns };
 }
 
 export interface VinfastFilterSummaryLabels {

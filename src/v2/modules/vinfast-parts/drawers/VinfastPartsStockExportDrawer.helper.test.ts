@@ -104,6 +104,44 @@ describe("buildExportPayload", () => {
     });
   });
 
+  it("handles vehicleType combobox selection correctly", () => {
+    // When vehicleType is ALL -> undefined
+    expect(
+      buildExportPayload({
+        exportMode: "by-period",
+        baseQuery,
+        dateFrom: "2026-10-01",
+        dateTo: "2026-10-31",
+        selectedColumns: columns,
+        vehicleType: "ALL",
+      }).vehicleType,
+    ).toBeUndefined();
+
+    // When vehicleType is CAR -> CAR
+    expect(
+      buildExportPayload({
+        exportMode: "by-period",
+        baseQuery,
+        dateFrom: "2026-10-01",
+        dateTo: "2026-10-31",
+        selectedColumns: columns,
+        vehicleType: "CAR",
+      }).vehicleType,
+    ).toBe("CAR");
+
+    // When vehicleType is MOTORBIKE -> MOTORBIKE
+    expect(
+      buildExportPayload({
+        exportMode: "by-period",
+        baseQuery,
+        dateFrom: "2026-10-01",
+        dateTo: "2026-10-31",
+        selectedColumns: columns,
+        vehicleType: "MOTORBIKE",
+      }).vehicleType,
+    ).toBe("MOTORBIKE");
+  });
+
   it("keeps the table query and sends no period override in current-filter mode", () => {
     const payload = buildExportPayload({
       exportMode: "by-current-filter",

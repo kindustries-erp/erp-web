@@ -7,6 +7,7 @@ import {
   type V2ModuleTab,
 } from "@/v2/shared/components";
 import { useBusinessPartnersQuery } from "../api/queries/useBusinessPartnersQuery";
+import { BusinessPartnerSyncDialog } from "../components/organisms/business-partner-sync-dialog";
 import type {
   BusinessPartner,
   BusinessPartnerType,
@@ -27,6 +28,7 @@ export function BusinessPartnersPage({
   partnerType,
 }: BusinessPartnersPageProps) {
   const state = useBusinessPartnersPage(partnerType);
+  const [syncOpen, setSyncOpen] = React.useState(false);
   const supplier = partnerType === "VENDOR";
   const title = state.t(
     supplier ? "v2.partners.suppliersTitle" : "v2.partners.customersTitle",
@@ -104,22 +106,36 @@ export function BusinessPartnersPage({
       tabs={tabs}
       actions={
         state.canCreate ? (
-          <V2Button
-            size="sm"
-            leftIcon={<Plus className="h-4 w-4" />}
-            onClick={() => state.open(null, "edit")}
-          >
-            {state.t(
-              supplier
-                ? "v2.partners.createSupplier"
-                : "v2.partners.createCustomer",
-              supplier ? "Thêm nhà cung cấp" : "Thêm khách hàng",
-            )}
-          </V2Button>
+          <div className="flex items-center gap-2">
+            <V2Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSyncOpen(true)}
+            >
+              {state.t("v2.partners.sync.button", "Đồng bộ từ hóa đơn")}
+            </V2Button>
+            <V2Button
+              size="sm"
+              leftIcon={<Plus className="h-4 w-4" />}
+              onClick={() => state.open(null, "edit")}
+            >
+              {state.t(
+                supplier
+                  ? "v2.partners.createSupplier"
+                  : "v2.partners.createCustomer",
+                supplier ? "Thêm nhà cung cấp" : "Thêm khách hàng",
+              )}
+            </V2Button>
+          </div>
         ) : undefined
       }
       overlays={
         <>
+          <BusinessPartnerSyncDialog
+            open={syncOpen}
+            onOpenChange={setSyncOpen}
+            t={state.t}
+          />
           {state.drawer && (
             <BusinessPartnerDrawer
               open

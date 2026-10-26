@@ -335,6 +335,18 @@ export function useBankStatementColumns({
         cell: (row: any) => renderCopyableText(row.note, t),
       },
       {
+        key: "businessPartner",
+        header: headerFilter(
+          "businessPartner",
+          t("bankStatement.columns.businessPartner", {
+            defaultValue: "Đối tượng",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 200,
+        cell: (row: any) => row.partner?.name || "—",
+      },
+      {
         key: "netOffAmount",
         header: headerFilter.client(
           "netOffAmount",

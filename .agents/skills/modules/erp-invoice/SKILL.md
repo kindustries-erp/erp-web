@@ -340,7 +340,7 @@ export interface ErpInvoice {
 ### 4.1 Thông tin tra cứu & upload PDF (hóa đơn mua vào)
 
 - Hook React Query (`hooks/`): `useOriginalPdfLookupInfo(id)` (useQuery, key `erp-invoice-lookup-info`), `useDownloadOriginalPdf()`, `useManualUploadPdf()` (useMutation, invalidate `erp-invoices`).
-- Thẻ `molecules/provider-lookup-info-card/`: tên NCC, mã tra cứu và hints (mỗi dòng có nút sao chép `LookupHintRow`), nút mở cổng, tải PDF gốc, tải lên PDF đã tải (`ManualPdfUploadButton`, chỉ chấp nhận PDF ≤10MB). Props nhận dữ liệu từ parent, không gọi API trực tiếp.
+- Thẻ `molecules/provider-lookup-info-card/`: Chuẩn hóa bằng `<DrawerSection>` (V2) collapsible, hiển thị tên NCC + badge trạng thái PDF (`OriginalPdfStatusBadge` dùng V2 Badge & `V2Tooltip`) trên header; mã tra cứu và hints (`LookupHintRow` dùng `V2Button`), nút mở cổng (`V2Button`), tải PDF gốc (`V2Button`), tải lên PDF đã tải (`ManualPdfUploadButton` dùng `V2Button`, chỉ chấp nhận PDF ≤10MB). Props nhận dữ liệu từ parent, không gọi API trực tiếp.
 - Drawer chi tiết: `ErpInvoiceInternalSidebar` hiển thị thẻ cho mọi hóa đơn mua vào, lấy dữ liệu từ `useOriginalPdfLookupInfo`.
 - Danh sách: hành động "Thông tin tra cứu" trên dòng hóa đơn mua vào chưa có PDF, điều kiện trong `lookupAction.helper.ts` (`shouldShowLookupAction`).
 - i18n: key `lookup*`, `downloadPdf*`, `uploadPdf*`, `invalidPdfFile` trong `locales/vi/lookup.ts` và `core/locale/accounting/erpInvoices/en.ts`.

@@ -33,6 +33,13 @@ export const LocalDevelopment: Story = {
   },
 };
 
+export const GreenwayStaging: Story = {
+  args: {
+    forcedEnv: "greenway",
+    customLabel: "GREENWAY DEMO",
+  },
+};
+
 export const CustomLabel: Story = {
   args: {
     customLabel: "STAGING DEMO",

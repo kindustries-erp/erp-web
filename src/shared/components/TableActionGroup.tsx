@@ -1,7 +1,14 @@
-import { useCallback } from "react";
-import { RefreshCcw, Plus, ChevronDown, Loader2 } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
-import { FilterButton } from "@/shared/components/FilterPanel";
+import React, { useCallback } from "react";
+import { RefreshCw, Plus } from "lucide-react";
+import {
+  V2Button,
+  V2ToolbarIconButton,
+  V2TableFilterButton,
+  V2SplitButton,
+} from "@/v2/shared/components";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import { setPortalTarget } from "./portalStore";
 import { useT } from "@/core/i18n";
 
 interface TableActionGroupProps {
@@ -15,15 +22,12 @@ interface TableActionGroupProps {
   onCreate?: () => void;
   createLabel?: string;
   createIcon?: React.ReactNode;
-  createActions?: import("@/shared/components/ActionDropdown").ActionDropdownItem[];
+  createActions?: ActionDropdownItem[];
 
   extraActions?: React.ReactNode;
   children?: React.ReactNode;
   portalId?: string;
 }
-
-import { setPortalTarget } from "./portalStore";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 
 export function TableActionGroup({
   onRefresh,
@@ -41,89 +45,98 @@ export function TableActionGroup({
 }: TableActionGroupProps) {
   const t = useT();
 
-  const refCallback = useCallback(
+  const columnRefCallback = useCallback(
     (el: Element | null) => {
+      setPortalTarget(`${portalId}-column`, el);
+      // Fallback cho legacy portal target
       setPortalTarget(portalId, el);
     },
     [portalId],
   );
+
+  const fullscreenRefCallback = useCallback(
+    (el: Element | null) => {
+      setPortalTarget(`${portalId}-fullscreen`, el);
+    },
+    [portalId],
+  );
+
   return (
     <div className="flex items-center gap-2 w-full flex-wrap justify-start sm:justify-end">
       {extraActions}
       {children}
 
-      {(onFilterToggle || (activeFilterCount > 0 && onClearAllFilters)) && (
-        <FilterButton
-          onClick={onFilterToggle}
-          activeCount={activeFilterCount}
-          onClear={onClearAllFilters}
-        />
-      )}
-
+      {/* 1. Slot Cột (Column Visibility) - Đặt TRƯỚC Bộ lọc */}
       <div
-        ref={refCallback}
-        className="empty:hidden flex items-center justify-center"
+        ref={columnRefCallback}
+        className="empty:hidden flex items-center justify-center shrink-0"
       />
 
-      {onRefresh && (
-        <Button
-          variant="secondary"
-          size="icon"
-          className="h-8 w-8 px-0 shrink-0"
-          onClick={onRefresh}
-          disabled={loading}
-          title={t("Tải lại")}
+      {/* Nút xóa nhanh tất cả bộ lọc khi có filter active */}
+      {activeFilterCount > 0 && onClearAllFilters && (
+        <V2Button
+          variant="destructive-outline"
+          size="xs"
+          onClick={onClearAllFilters}
+          className="shrink-0"
         >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCcw className="h-4 w-4" />
-          )}
-        </Button>
+          <span>{t("Bộ lọc")}</span>{" "}
+          <span className="font-semibold">({activeFilterCount})</span> ✕
+        </V2Button>
       )}
 
-      {onCreate && (!createActions || createActions.length === 0) && (
-        <Button onClick={onCreate} className="h-8 px-3 shrink-0">
-          {createIcon || <Plus className="h-4 w-4 mr-1" />}
-          {t(createLabel)}
-        </Button>
-      )}
-
-      {!onCreate && createActions && createActions.length > 0 && (
-        <ActionDropdown
-          items={createActions}
-          align="end"
-          customTrigger={
-            <Button className="h-8 px-3 shrink-0">
-              {createIcon}
-              {t(createLabel)}
-              <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
-            </Button>
-          }
+      {/* 2. Nút Bộ Lọc (Filter) - Đặt SAU Cột, TRƯỚC Toàn màn hình */}
+      {onFilterToggle && (
+        <V2TableFilterButton
+          onClick={onFilterToggle}
+          activeCount={activeFilterCount}
         />
       )}
 
-      {onCreate && createActions && createActions.length > 0 && (
-        <div className="flex items-center shrink-0">
-          <Button
-            onClick={onCreate}
-            className="h-8 rounded-r-none px-3 border-r-0 focus:z-10"
-          >
-            {createIcon || <Plus className="h-4 w-4 mr-1" />}
-            {t(createLabel)}
-          </Button>
-          <div className="w-[1px] h-8 bg-primary-foreground/20 z-10" />
-          <ActionDropdown
-            items={createActions}
-            align="end"
-            customTrigger={
-              <Button className="h-8 w-8 px-0 rounded-l-none border-l-0 focus:z-10">
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            }
-          />
-        </div>
+      {/* 3. Slot Toàn màn hình (Fullscreen) - Đặt SAU Bộ lọc, TRƯỚC Tải lại */}
+      <div
+        ref={fullscreenRefCallback}
+        className="empty:hidden flex items-center justify-center shrink-0"
+      />
+
+      {/* 4. Nút Làm mới (Refresh) - Chuẩn V2 icon button */}
+      {onRefresh && (
+        <V2ToolbarIconButton
+          label={t("Tải lại")}
+          icon={
+            <RefreshCw
+              className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+            />
+          }
+          disabled={loading}
+          onClick={onRefresh}
+        />
       )}
+
+      {/* 5. Nút Hành động chính / Tạo mới / Đồng bộ - Chuẩn V2 Split Button */}
+      {createActions && createActions.length > 0 ? (
+        <V2SplitButton
+          label={t(createLabel)}
+          icon={createIcon || <Plus className="h-4 w-4 mr-1" />}
+          onClick={onCreate}
+          renderMenu={(trigger) => (
+            <ActionDropdown
+              items={createActions}
+              align="end"
+              customTrigger={trigger}
+            />
+          )}
+        />
+      ) : onCreate ? (
+        <V2Button
+          onClick={onCreate}
+          size="sm"
+          className="h-8 px-3 shrink-0"
+          leftIcon={createIcon || <Plus className="h-4 w-4 mr-1" />}
+        >
+          {t(createLabel)}
+        </V2Button>
+      ) : null}
     </div>
   );
 }

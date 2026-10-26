@@ -102,6 +102,8 @@ export function VinfastPartsStockExportDrawer({
           onDateToChange={vm.setDateTo}
           filterSummaryRows={vm.filterSummary.rows}
           filterCount={vm.filterSummary.filterCount}
+          vehicleType={vm.vehicleType}
+          onVehicleTypeChange={vm.setVehicleType}
           starting={vm.starting}
           noColumnSelected={vm.selectedColumns.length === 0}
           onStart={() => void vm.handleStartExport()}
