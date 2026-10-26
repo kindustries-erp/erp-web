@@ -1,5 +1,12 @@
 import * as React from "react";
-import { V2Button, V2Stack, V2Text } from "@/v2/shared/components/atoms";
+import {
+  Download,
+  FileSpreadsheet,
+  V2Button,
+  V2Icon,
+  V2Stack,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
 import { Badge } from "@/v2/shared/ui/badge";
 import { cn } from "@/v2/shared/utils/cn";
@@ -44,21 +51,24 @@ export const V2ExportHistoryList: React.FC<V2ExportHistoryListProps> = ({
           {emptyLabel}
         </V2Text>
       ) : (
-        <V2Stack
-          role="list"
-          className="divide-y divide-border/60 rounded-lg border border-border/60"
-        >
+        <V2Stack role="list" gap="xs" className="gap-1.5">
           {items.map((item) => (
             <V2Stack
               key={item.id}
               role="listitem"
-              className="flex-row items-center gap-3 px-3 py-2"
+              className="flex-row items-center gap-3 rounded-lg bg-surface px-3 py-2 transition-colors hover:bg-surface-hover"
             >
+              <span
+                aria-hidden
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary"
+              >
+                <V2Icon icon={FileSpreadsheet} size={16} />
+              </span>
               <V2Stack gap="none" className="min-w-0 flex-1">
                 <V2Text variant="body-sm" truncate className="font-medium">
                   {item.fileName}
                 </V2Text>
-                <V2Text variant="body-sm" className="text-muted-foreground">
+                <V2Text variant="caption" className="text-muted-fg">
                   {item.periodLabel} · {item.createdAt}
                 </V2Text>
               </V2Stack>
@@ -71,6 +81,7 @@ export const V2ExportHistoryList: React.FC<V2ExportHistoryListProps> = ({
                 disabled={!item.canDownload || busy}
                 isLoading={downloadingId === item.id}
                 loadingText={downloadingLabel}
+                leftIcon={<Download className="h-3.5 w-3.5" />}
                 onClick={() => onDownload(item.id)}
               >
                 {downloadLabel}

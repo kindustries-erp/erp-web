@@ -63,4 +63,13 @@ describe("V2ExportHistoryList", () => {
     );
     expect(screen.getByRole("button", { name: "Tải file" })).toBeDisabled();
   });
+
+  it("không bọc danh sách bằng khung viền; mỗi file là thẻ mềm riêng", () => {
+    render(<V2ExportHistoryList {...baseProps} items={[item]} />);
+
+    const list = screen.getByRole("list");
+    expect(list.className).not.toMatch(/\bborder\b/);
+    expect(list.className).not.toMatch(/divide-y/);
+    expect(screen.getByRole("listitem").className).toMatch(/bg-surface/);
+  });
 });

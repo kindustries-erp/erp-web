@@ -96,6 +96,37 @@ vi.mock("@/shared/components/ui/tabs", () => ({
   ),
 }));
 
+vi.mock("@/v2/shared/components", async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    V2ViewModeCombobox: ({
+      filterGroup,
+    }: {
+      filterGroup?: {
+        activeKey: string;
+        onChange: (val: string) => void;
+        items: { key: string; label: React.ReactNode }[];
+      };
+    }) => (
+      <div data-testid="view-mode-combobox" data-value={filterGroup?.activeKey}>
+        {filterGroup?.items.map((item) => (
+          <button
+            key={item.key}
+            role="tab"
+            data-state={
+              filterGroup.activeKey === item.key ? "active" : "inactive"
+            }
+            onClick={() => filterGroup.onChange(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    ),
+  };
+});
+
 vi.mock("@/shared/components/ViewModeCombobox", () => ({
   ViewModeCombobox: ({
     filterGroup,
