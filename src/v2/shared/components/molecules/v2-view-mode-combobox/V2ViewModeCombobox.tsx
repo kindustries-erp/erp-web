@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/v2/shared/ui";
 import { V2FilterGroupList } from "./V2ViewModeCombobox.filter";
 import { getTriggerLabel } from "./V2ViewModeCombobox.helper";
 import { V2ViewModeList } from "./V2ViewModeCombobox.list";
+import { cn } from "@/v2/shared/utils/cn";
 import type { V2ViewModeComboboxProps } from "./V2ViewModeCombobox.type";
 
 const NO_ITEMS: NonNullable<V2ViewModeComboboxProps["items"]> = [];
@@ -41,7 +42,10 @@ export const V2ViewModeCombobox: React.FC<V2ViewModeComboboxProps> = ({
                 t("v2.table.filterGroupTitle", "Bộ lọc dữ liệu"))
           }
           title={label}
-          className={className}
+          className={cn(
+            "bg-surface hover:bg-surface-hover dark:hover:bg-white/[0.05] border-border/80 dark:border-white/[0.06] text-foreground rounded-lg shadow-2xs font-medium",
+            className,
+          )}
           leftIcon={<SlidersHorizontal className="h-3.5 w-3.5" />}
           rightIcon={<ChevronDown className="h-3 w-3 opacity-60" />}
         >
