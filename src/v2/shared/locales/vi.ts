@@ -245,6 +245,23 @@ export const v2Vi = {
       emptyTitle: "Chưa có dữ liệu",
     },
     table: v2ViTable,
+    auth: {
+      title: "Đăng nhập",
+      subtitle: "Đăng nhập vào hệ thống ERP",
+      emailLabel: "Email",
+      emailPlaceholder: "Nhập email của bạn",
+      passwordLabel: "Mật khẩu",
+      passwordPlaceholder: "Nhập mật khẩu",
+      submitButton: "Đăng nhập",
+      submitting: "Đang đăng nhập...",
+      errorEmailRequired: "Vui lòng nhập email",
+      errorEmailFormat: "Email không đúng định dạng",
+      errorPasswordRequired: "Vui lòng nhập mật khẩu",
+      errorInvalid: "Email hoặc mật khẩu không chính xác",
+      devAdminFill: "Admin Dev (Điền nhanh)",
+      switchLanguageVi: "Chuyển sang Tiếng Việt",
+      switchLanguageEn: "Switch to English",
+    },
   },
 };
 
