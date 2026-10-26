@@ -52,6 +52,8 @@ export interface InvoiceDebtSummary {
   grandTotalAmount: number;
   grandTotalPaid: number;
   grandTotalBalance: number;
+  /** Tổng tiền chưa phân bổ của toàn bộ kết quả đang lọc */
+  grandTotalUnallocated?: number;
   grandTotalAging0To30?: number;
   grandTotalAging31To60?: number;
   grandTotalAging61To90?: number;
