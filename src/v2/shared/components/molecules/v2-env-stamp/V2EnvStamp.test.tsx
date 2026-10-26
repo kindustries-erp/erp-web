@@ -24,11 +24,19 @@ describe("V2EnvStamp Molecule", () => {
     expect(screen.getByText("DEMO SERVER")).toBeInTheDocument();
   });
 
-  it("renders local prod data environment stamp", () => {
+  it("renders local prod data environment stamp with glass style", () => {
     render(<V2EnvStamp forcedEnv="prod-dev" />);
-    expect(screen.getByTestId("v2-env-stamp")).toBeInTheDocument();
+    const stamp = screen.getByTestId("v2-env-stamp");
+    expect(stamp).toBeInTheDocument();
     expect(screen.getByText("⚠️ GREENWAY (PROD DATA)")).toBeInTheDocument();
-    expect(screen.getByTestId("v2-env-stamp")).toHaveClass("bg-red-600");
+    expect(stamp).toHaveClass("bg-rose-500/15");
+    expect(stamp).toHaveClass("backdrop-blur-[var(--glass-blur,16px)]");
+  });
+
+  it("renders greenway environment stamp with emerald glass style", () => {
+    render(<V2EnvStamp forcedEnv="greenway" />);
+    const stamp = screen.getByTestId("v2-env-stamp");
+    expect(stamp).toHaveClass("bg-emerald-500/10");
   });
 
   it("does not render when in production", () => {
