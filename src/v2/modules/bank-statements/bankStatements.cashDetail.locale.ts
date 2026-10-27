@@ -1,0 +1,103 @@
+/** Nhãn drawer chi tiết giao dịch tiền mặt và thông điệp lỗi lưu (vi/en) */
+export const cashDetailLocale = {
+  vi: {
+    cashDetail: {
+      title: "Chi tiết giao dịch tiền mặt",
+      saveSuccess: "Đã lưu thông tin giao dịch",
+      tabs: {
+        details: "1. Chi tiết",
+        partner: "2. Theo đối tượng",
+        history: "3. Lịch sử",
+      },
+      actions: {
+        close: "Đóng",
+        cancel: "Hủy",
+        save: "Lưu thay đổi",
+        edit: "Chỉnh sửa",
+      },
+      labels: {
+        source: "Sổ quỹ",
+        date: "Ngày giao dịch",
+        partner: "Đối tượng",
+        description: "Diễn giải",
+        amount: "Số tiền",
+        reference: "Số tham chiếu",
+        direction: "Loại",
+        branch: "Chi nhánh",
+        note: "Ghi chú",
+        classification: "Phân loại",
+        purpose: "Mục đích",
+        generalInfo: "Thông tin chung",
+        cashflow: "Phân loại dòng tiền",
+        empty: "—",
+      },
+      direction: {
+        in: "Thu",
+        out: "Chi",
+      },
+      history: {
+        title: "Nhật ký thao tác",
+        empty: "Chưa có thao tác nào",
+        created: "Khởi tạo / Import sao kê",
+        posted: "Hạch toán sổ cái",
+        createdMessage: "Số tham chiếu {{reference}}",
+        postedMessage: "Bút toán số {{reference}}",
+      },
+      error: {
+        updateInfo: "Lỗi lưu thông tin giao dịch",
+        post: "Lỗi lưu hạch toán",
+        unpost: "Lỗi bỏ hạch toán",
+      },
+    },
+  },
+  en: {
+    cashDetail: {
+      title: "Cash transaction detail",
+      saveSuccess: "Transaction info saved",
+      tabs: {
+        details: "1. Details",
+        partner: "2. By counterparty",
+        history: "3. History",
+      },
+      actions: {
+        close: "Close",
+        cancel: "Cancel",
+        save: "Save changes",
+        edit: "Edit",
+      },
+      labels: {
+        source: "Cash book",
+        date: "Transaction date",
+        partner: "Counterparty",
+        description: "Description",
+        amount: "Amount",
+        reference: "Reference",
+        direction: "Type",
+        branch: "Branch",
+        note: "Note",
+        classification: "Classification",
+        purpose: "Purpose",
+        generalInfo: "General information",
+        cashflow: "Cashflow classification",
+        empty: "—",
+      },
+      direction: {
+        in: "Receipt",
+        out: "Payment",
+      },
+      history: {
+        title: "Activity log",
+        empty: "No activity yet",
+        created: "Created / statement imported",
+        posted: "Posted to general ledger",
+        createdMessage: "Reference {{reference}}",
+        postedMessage: "Journal entry {{reference}}",
+      },
+      error: {
+        updateInfo: "Could not save transaction info",
+        post: "Could not save accounting entry",
+        unpost: "Could not unpost transaction",
+      },
+    },
+  },
+};

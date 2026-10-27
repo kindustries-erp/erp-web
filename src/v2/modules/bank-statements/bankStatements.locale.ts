@@ -1,9 +1,11 @@
+import { cashDetailLocale } from "./bankStatements.cashDetail.locale";
 import { cashflowLocale } from "./bankStatements.cashflow.locale";
 import { registerV2ModuleLocale } from "@/v2/shared/locales";
 
 registerV2ModuleLocale("bankStatements", {
   vi: {
     ...cashflowLocale.vi,
+    ...cashDetailLocale.vi,
     export: {
       title: "Xuất Excel sao kê ngân hàng",
       cashTitle: "Xuất Excel sổ quỹ tiền mặt",
@@ -67,6 +69,7 @@ registerV2ModuleLocale("bankStatements", {
   },
   en: {
     ...cashflowLocale.en,
+    ...cashDetailLocale.en,
     export: {
       title: "Export bank statement Excel",
       cashTitle: "Export cash book Excel",

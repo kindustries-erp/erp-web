@@ -4,16 +4,22 @@ import type {
   CashTransactionPostRequestDto,
   CashTransactionUpdateDto,
 } from "./dtos/cashTransaction.dto";
-import type { TraceabilityGraphDto } from "./dtos/traceability.dto";
+import type { TraceabilityGraphData } from "@/v2/shared/components/organisms/v2-document-traceability/types/traceability.type";
 
 const BASE = "/api/v1/bank-transactions-core";
 
 export interface CashTransactionListQuery {
   page?: number;
   pageSize?: number;
-  sourceType?: "CASH";
+  sourceType?: "BANK" | "CASH";
   correspondentAccount?: string;
   correspondentName?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+  column_search?: string;
+  column_filters?: string;
 }
 
 export interface CashTransactionListResponse {
@@ -74,8 +80,8 @@ export const cashTransactionApi = {
     return data;
   },
 
-  getTraceabilityGraph: async (id: string): Promise<TraceabilityGraphDto> => {
-    const { data } = await v2HttpClient.get<TraceabilityGraphDto>(
+  getTraceabilityGraph: async (id: string): Promise<TraceabilityGraphData> => {
+    const { data } = await v2HttpClient.get<TraceabilityGraphData>(
       `${BASE}/transactions/${id}/traceability-graph`,
     );
     return data;

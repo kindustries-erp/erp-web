@@ -30,13 +30,6 @@ export const cashflowLocale = {
         OTHER: "Khác",
       },
     },
-    cashDetail: {
-      error: {
-        updateInfo: "Lỗi lưu thông tin giao dịch",
-        post: "Lỗi lưu hạch toán",
-        unpost: "Lỗi bỏ hạch toán",
-      },
-    },
   },
   en: {
     cashflow: {
@@ -66,13 +59,6 @@ export const cashflowLocale = {
         CAPITAL: "Capital contribution / Profit distribution",
         INTERNAL_TRANSFER: "Internal transfer",
         OTHER: "Other",
-      },
-    },
-    cashDetail: {
-      error: {
-        updateInfo: "Could not save transaction info",
-        post: "Could not save accounting entry",
-        unpost: "Could not unpost transaction",
       },
     },
   },
