@@ -15,7 +15,7 @@ const TONE_CLASS: Record<EdgeLabelTone, string> = {
 };
 
 /** Cạnh nối hai chứng từ, nhãn đặt trên đường đi và tự tránh các khung giai đoạn */
-export function V2TraceEdge({
+export const V2TraceEdge = React.memo(function V2TraceEdge({
   sourceX,
   sourceY,
   targetX,
@@ -50,7 +50,7 @@ export function V2TraceEdge({
               zIndex: animated ? 1100 : 1000,
             }}
             className={cn(
-              "nodrag nopan select-none rounded-lg border border-border bg-surface/95 px-2 py-0.5 text-foreground shadow-sm backdrop-blur-xs transition-all hover:border-border   ",
+              "nodrag nopan select-none rounded-lg border border-border bg-surface/95 px-2 py-0.5 text-foreground shadow-sm hover:border-border   ",
               animated && "shadow-md",
             )}
           >
@@ -101,4 +101,4 @@ export function V2TraceEdge({
       )}
     </>
   );
-}
+});

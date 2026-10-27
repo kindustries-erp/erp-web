@@ -8,7 +8,9 @@ import type { TraceStageFlowNode } from "../../types/traceability.flow.type";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 /** Khung nền một giai đoạn trên canvas, kèm nút thêm liên kết khi được phép sửa */
-export function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
+export const V2TraceStageGroup = React.memo(function V2TraceStageGroup({
+  data,
+}: NodeProps<TraceStageFlowNode>) {
   const { t } = useV2Translation();
   const { stage, count, allowEdit, allowedDocTypes, actions } = data;
   const stageName = t(stage.titleKey);
@@ -27,7 +29,7 @@ export function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
   return (
     <div
       className={cn(
-        "relative h-full w-full rounded-2xl border-2 border-dashed pointer-events-none transition-all",
+        "relative h-full w-full rounded-2xl border-2 border-dashed pointer-events-none",
         stage.accentBorder,
         stage.bgCls,
       )}
@@ -72,4 +74,4 @@ export function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
       </div>
     </div>
   );
-}
+});

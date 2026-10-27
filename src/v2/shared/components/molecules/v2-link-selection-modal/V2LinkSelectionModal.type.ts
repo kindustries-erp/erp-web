@@ -10,5 +10,5 @@ export interface V2LinkSelectionModalProps {
   /** Nút phụ bên phải Hủy (ví dụ "Xác nhận" khi chọn nhiều dòng) */
   footerActions?: React.ReactNode;
   /** Cỡ modal; mặc định 2xl để đủ rộng cho bảng nhiều cột */
-  size?: "xl" | "2xl" | "full";
+  size?: "xl" | "2xl" | "screen" | "full";
 }

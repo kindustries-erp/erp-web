@@ -20,7 +20,12 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 const COPIED_MS = 1500;
 
 /** Thẻ một chứng từ: nhãn loại, số chứng từ, đối tác, ngày và số tiền */
-export function V2TraceNode({ data, selected }: NodeProps<TraceDocFlowNode>) {
+/** React Flow gọi lại node khi kéo; memo để thẻ không kéo không render lại */
+export const V2TraceNode = React.memo(function V2TraceNode({
+  data,
+  selected,
+  dragging,
+}: NodeProps<TraceDocFlowNode>) {
   const { t } = useV2Translation();
   const { node, allowEdit, actions } = data;
   const meta = getTraceabilityVisualMeta(node);
@@ -85,11 +90,12 @@ export function V2TraceNode({ data, selected }: NodeProps<TraceDocFlowNode>) {
     <div
       onDoubleClick={handleOpen}
       className={cn(
-        "group relative z-10 w-[290px] cursor-pointer overflow-hidden rounded-xl bg-surface text-left transition-all duration-200 ",
+        "group relative z-10 w-[290px] cursor-pointer overflow-hidden rounded-xl bg-surface text-left transition-[border-color,box-shadow] duration-200 ",
         meta.cardBorderCls,
-        node.isCurrent
-          ? "border-2 border-border shadow-md ring-2 ring-foreground  "
-          : selected
+        // Khi đang kéo: bỏ bóng và viền dày để trình duyệt không vẽ lại bóng mờ mỗi khung hình
+        dragging
+          ? "border border-border"
+          : node.isCurrent || selected
             ? "border-2 border-border shadow-md ring-2 ring-foreground  "
             : "border border-border shadow-2xs hover:border-border hover:shadow-sm  dark:hover:border-border",
         node.restricted &&
@@ -150,4 +156,4 @@ export function V2TraceNode({ data, selected }: NodeProps<TraceDocFlowNode>) {
       </div>
     </div>
   );
-}
+});

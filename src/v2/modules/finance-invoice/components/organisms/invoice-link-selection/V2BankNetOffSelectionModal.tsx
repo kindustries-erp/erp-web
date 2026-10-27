@@ -57,6 +57,7 @@ export function V2BankNetOffSelectionModal({
     <V2LinkSelectionModal
       open={open}
       onClose={onClose}
+      size="screen"
       title={t("v2.invoiceLinkSelection.bank.title")}
       footerActions={
         <V2Button

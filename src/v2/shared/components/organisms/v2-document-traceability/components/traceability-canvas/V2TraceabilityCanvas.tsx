@@ -25,6 +25,16 @@ const NODE_TYPES = {
   stageGroupNode: V2TraceStageGroup,
 };
 
+/** Nút điều khiển của React Flow theo token V2 (thay màu trắng mặc định của thư viện) */
+const CONTROLS_THEME = {
+  "--xy-controls-button-background-color-default": "var(--surface)",
+  "--xy-controls-button-background-color-hover-default": "var(--surface-hover)",
+  "--xy-controls-button-color-default": "var(--foreground)",
+  "--xy-controls-button-color-hover-default": "var(--foreground)",
+  "--xy-controls-button-border-color-default": "var(--border)",
+  "--xy-controls-box-shadow-default": "none",
+} as React.CSSProperties;
+
 const EDGE_TYPES = {
   labeledSmoothStep: V2TraceEdge,
 };
@@ -88,6 +98,7 @@ function CanvasInner({
       onNodeClick={canvas.onNodeClick}
       onPaneClick={canvas.onPaneClick}
       onReconnect={canvas.onReconnect}
+      style={CONTROLS_THEME}
       nodeTypes={NODE_TYPES}
       edgeTypes={EDGE_TYPES}
       edgesReconnectable
@@ -106,14 +117,14 @@ function CanvasInner({
       <Background color="var(--border)" gap={20} size={1} />
       <Controls
         showInteractive={false}
-        className="!m-3.5 !overflow-hidden !rounded-lg !border-border !bg-surface !shadow-sm dark:!border-border dark:!bg-muted"
+        className="!m-3.5 !overflow-hidden !rounded-lg !border-border !bg-surface !shadow-sm"
       >
         {onToggleDirection && (
           <ControlButton
             onClick={onToggleDirection}
             title={toggleLabel}
             aria-label={toggleLabel}
-            className="!flex !items-center !justify-center hover:!bg-muted dark:hover:!bg-muted"
+            className="!flex !items-center !justify-center hover:!bg-surface-hover"
           >
             <RotateCw className="h-3 w-3 text-muted-fg " />
           </ControlButton>

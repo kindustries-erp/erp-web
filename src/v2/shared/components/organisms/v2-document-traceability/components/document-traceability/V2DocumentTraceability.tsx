@@ -19,7 +19,7 @@ import type { V2DocumentTraceabilityProps } from "./V2DocumentTraceability.type"
 
 const CANVAS_HEIGHT = "h-[480px]";
 /** Toàn màn hình: sơ đồ chiếm phần còn lại của modal (trừ thanh công cụ và tiêu đề) */
-const FULLSCREEN_HEIGHT = "h-[calc(90vh-170px)]";
+const FULLSCREEN_HEIGHT = "h-[calc(94vh-170px)]";
 
 /** Sơ đồ chứng từ liên kết hoàn chỉnh: thanh công cụ, ba chế độ xem, và xác nhận gỡ liên kết */
 export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
@@ -156,7 +156,8 @@ export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
     return (
       <V2Modal
         open
-        size="full"
+        size="screen"
+        hideCloseButton
         onOpenChange={(open) => !open && trace.exitFullscreen()}
       >
         {content}
