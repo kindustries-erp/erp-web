@@ -32,13 +32,32 @@ description: Tri thức frontend cho drawer xuất Excel sao kê ngân hàng / s
 - Hook phân kỳ (`period.hook.ts`) đang trùng với mẫu của `vinfast-parts`. Có thể gom về một hook dùng chung trong `src/v2/shared/` khi có module thứ ba.
 - `bankStatementApi` (V1) vẫn còn các hàm export cũ không còn được gọi.
 
-## Nền tảng drawer chi tiết giao dịch (V2, chưa dùng)
-- Chưa có consumer: drawer chi tiết (V1 `pages/finance/components/bank-transaction-detail-drawer/`) vẫn chạy. Phần V2 chỉ có API, domain và mutation, chưa có UI.
-- `domain/value-objects/cashflowAttributes.ts`: phân loại và mục đích dòng tiền, `isPurposeAllowed`. Không chứa nhãn.
-- `domain/entities/cashTransaction.ts`: `PostingDraftLine`, `CashClassificationDraft`, mã lỗi hạch toán `PostingValidationError`.
-- `domain/rules/`: `buildDefaultPostingLines`, `validatePosting` (thiếu ngày, không có dòng, thiếu TK, lệch Nợ/Có), `buildTransactionPatch` (chỉ gửi trường đổi, trả null khi không đổi gì), `buildAuditItems` (trả `AuditEntry`, UI tự dịch nhãn theo `kind`).
-- `api/cashTransactionApi.ts`: chi tiết, PATCH, post/unpost, danh sách theo đối tác, đồ thị chứng từ, link/unlink hóa đơn cấn trừ. Dùng `v2HttpClient`.
-- `api/mutations/useSaveCashTransactionMutation.ts`: PATCH rồi post/unpost, không nguyên tử. Lỗi là `CashTransactionSaveError` mang `step` (`UPDATE_INFO` | `POST` | `UNPOST`) và `serverMessage`. UI map `step` sang `v2.bankStatements.cashDetail.error.*`.
-- `components/helpers/cashflowOptions.helper.ts`: nhãn và danh sách option, khóa `v2.bankStatements.cashflow.*` (định nghĩa trong `bankStatements.cashflow.locale.ts`, gộp vào `bankStatements.locale.ts`).
-- Dùng chung: `src/v2/shared/utils/branchIds.ts` (`resolveBranchIds`, `isSameBranchIds`).
-- Việc còn lại: hook và drawer V2, parity với V1 (hạch toán, chứng từ liên kết, bảng kê đối tác, biến động), wiring theo cầu nối.
+## Drawer chi tiết giao dịch tiền mặt (V2, đã nối)
+- Nối tại `modules/bank-statements/components/BankStatementsTab/components/BankStatementDrawers.tsx`: `type === "cash"` dùng `CashTransactionDetailDrawer` (export từ `@/v2/modules/bank-statements`), tab bank vẫn dùng drawer V1 `BankTransactionDetailDrawer`. Không có file cầu nối riêng.
+- Chọn dòng ở bảng kê đối tượng gọi `onSelectTransaction` → mở giao dịch khác ngay trong drawer.
+- Khóa tab từ nơi mở (`txn_details`, `txn_partner`, `partner`, `accounting`...) đi qua `resolveDetailTab`; tab Theo đối tượng ẩn khi không có tên hoặc tài khoản đối ứng (`canShowPartnerTabs`).
+- Tab: Chi tiết (`CashVoucherSummary`), Hạch toán (`CashPostingSection` + `V2PostingLinesEditor`), Theo đối tượng (`CashPartnerTransactions`, `CashPartnerAnalytics`), Chứng từ liên kết (`CashTraceabilitySection` dùng `V2DocumentTraceability` và `CashInvoiceNetOffModal`), Lịch sử (`buildAuditItems`).
+- Lưu: `buildTransactionPatch` (chỉ gửi trường đổi) + `buildPostingRequest` (POST/UNPOST/SKIP) qua `useSaveCashTransactionMutation`; lỗi báo đúng bước (`CashTransactionSaveError.step`). Lỗi lưu hiển thị ở chân drawer, không dùng prop `error` của `V2StandardDrawer` (prop đó thay toàn bộ thân).
+- Bỏ hạch toán và gỡ liên kết có xác nhận trước khi gọi API.
+- Hook trạng thái: `drawers/CashTransactionDetailDrawer.hook.ts`; nháp hạch toán: `drawers/useCashPostingDraft.ts`; helper thuần: `drawers/CashTransactionDetailDrawer.helper.ts`.
+- Khóa i18n: `v2.bankStatements.cashDetail.*` (`bankStatements.cashDetail.locale.ts`), `v2.bankStatements.cashflow.*`, `v2.bankStatements.cashNetOff.*`, `v2.bankStatements.cashPartner.*`, gộp vào `bankStatements.locale.ts`. Test có kiểm tra parity vi/en.
+
+## Rule nghiệp vụ (domain/rules, value-objects)
+- `buildDefaultPostingLines`, `validatePosting` (ngày, dòng, tài khoản, cân bằng), `summarizeJournalEntry`.
+- `netOffAllocation`: mặc định số cấn trừ trừ dần theo hạn mức, kẹp `[0, còn lại]`, kiểm tra vượt hạn mức, `invoiceRemaining`.
+- `partnerTransactionQuery`: đổi trạng thái bảng đối tượng thành tham số API, số còn lại, nguồn tiền.
+- `partnerAnalytics`: tổng thu/chi/ròng, tự cộng từ chuỗi theo kỳ khi API thiếu tổng.
+- `cashflowAttributes` (value-object): phân loại và mục đích, không chứa nhãn.
+
+## Hợp đồng API dùng (V2 client)
+- `api/cashTransactionApi.ts`: chi tiết, PATCH, post/unpost, danh sách theo đối tượng (`items`, `total`), đồ thị chứng từ, link/unlink hóa đơn.
+- `api/partnerStatsApi.ts`: `dashboard-stats`, `transactions/column-options` (có `column_filters`).
+- `api/accountingLookupApi.ts`: `chart-of-accounts` (mảng hoặc `{items}`), `journal-entries/:id`.
+- `api/branchOptionsApi.ts`: `GET /branches` (`items` hoặc `data`).
+
+## Còn lại
+- Tag của giao dịch (`EntityTagSelector`) chưa có bản V2: chưa hiện trong drawer tiền mặt.
+- Drawer bank vẫn là V1; các nơi khác gọi `BankTransactionDetailDrawer` (garage, hóa đơn, sổ nhật ký, đối tác dòng tiền) chưa đổi.
+- Bảng kê đối tượng và biến động dùng chung dữ liệu bank và cash (V1 cũng vậy); chưa lọc theo nguồn tiền.
+- Biến động hiện bảng theo kỳ không có dòng tổng (tổng nằm ở các thẻ phía trên).
+- Chưa smoke test trên trình duyệt `/cashflow?tab=cash`.
