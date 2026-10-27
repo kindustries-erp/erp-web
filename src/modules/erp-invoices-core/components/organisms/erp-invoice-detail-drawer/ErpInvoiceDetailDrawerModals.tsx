@@ -1,9 +1,11 @@
 import React from "react";
 import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { VoucherNetoffSelectionModal } from "../voucher-netoff-selection-modal";
-import { PurchaseOrderSelectionModal } from "../purchase-order-selection-modal";
-import { SalesOrderSelectionModal } from "../sales-order-selection-modal";
 import { GarageCaseSelectionModal } from "../garage-case-selection-modal";
+import {
+  V2BankNetOffSelectionModal,
+  V2PurchaseOrderSelectionModal,
+  V2SalesOrderSelectionModal,
+} from "@/v2/modules/finance-invoice/components/organisms/invoice-link-selection";
 
 export interface ErpInvoiceDetailDrawerModalsProps {
   detailInvoice: ErpInvoice | null;
@@ -21,6 +23,10 @@ export interface ErpInvoiceDetailDrawerModalsProps {
   handleSelectGarageCase: (kase: any) => void;
 }
 
+/**
+ * Các modal chọn chứng từ mở từ drawer hóa đơn. Sao kê, PO và SO dùng bản V2
+ * (lồng đúng trong drawer V2); Garage còn là bản V1 cho đến khi migrate.
+ */
 export const ErpInvoiceDetailDrawerModals = React.memo(
   function ErpInvoiceDetailDrawerModals({
     detailInvoice,
@@ -41,16 +47,17 @@ export const ErpInvoiceDetailDrawerModals = React.memo(
 
     return (
       <>
-        <VoucherNetoffSelectionModal
+        <V2BankNetOffSelectionModal
           open={showNetOffModal}
           onClose={() => setShowNetOffModal(false)}
-          invoice={detailInvoice}
-          onSelect={handleSelectBankNetOff}
-          existingVoucherIds={(detailInvoice.voucherNetOffs || []).map(
+          side={detailInvoice.direction === "OUT" ? "RECEIPT" : "PAYMENT"}
+          invoiceId={detailInvoice.id}
+          existingTxnIds={(detailInvoice.voucherNetOffs || []).map(
             (v) => v.bankTransactionId,
           )}
+          onSelect={handleSelectBankNetOff}
         />
-        <PurchaseOrderSelectionModal
+        <V2PurchaseOrderSelectionModal
           open={showPoModal}
           onClose={() => setShowPoModal(false)}
           onSelect={handleSelectPo}
@@ -58,7 +65,7 @@ export const ErpInvoiceDetailDrawerModals = React.memo(
             detailInvoice.purchaseOrderId ? [detailInvoice.purchaseOrderId] : []
           }
         />
-        <SalesOrderSelectionModal
+        <V2SalesOrderSelectionModal
           open={showSoModal}
           onClose={() => setShowSoModal(false)}
           onSelect={handleSelectSo}
