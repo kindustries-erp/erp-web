@@ -38,6 +38,20 @@ registerV2ModuleLocale("invoiceLinkSelection", {
       confirm: "Xác nhận cấn trừ",
       summary: "Đã chọn {{count}} giao dịch • {{total}}",
       nothingSelected: "Chưa chọn giao dịch nào",
+      source: { bank: "Sao kê", cash: "Sổ quỹ" },
+      suggest: {
+        toggle: "Gợi ý khớp",
+        col: "Gợi ý",
+        badge: {
+          PERFECT: "Khớp hoàn toàn",
+          HIGH: "Khớp cao",
+          LIKELY: "Có khả năng khớp",
+          POSSIBLE: "Có thể khớp",
+          NOTICE_STRONG: "Cần xem xét",
+          NOTICE: "Lưu ý",
+        },
+      },
+
       col: {
         date: "Ngày",
         reference: "Số tham chiếu",
@@ -45,6 +59,7 @@ registerV2ModuleLocale("invoiceLinkSelection", {
         gross: "Số tiền",
         remaining: "Còn lại",
         netOff: "Cấn trừ lần này",
+        suggest: "Gợi ý",
       },
     },
   },
@@ -84,6 +99,20 @@ registerV2ModuleLocale("invoiceLinkSelection", {
       confirm: "Confirm net-off",
       summary: "Selected {{count}} transactions • {{total}}",
       nothingSelected: "No transaction selected",
+      source: { bank: "Bank statement", cash: "Cash book" },
+      suggest: {
+        toggle: "Suggested matches",
+        col: "Suggestion",
+        badge: {
+          PERFECT: "Perfect match",
+          HIGH: "High match",
+          LIKELY: "Likely match",
+          POSSIBLE: "Possible match",
+          NOTICE_STRONG: "Needs review",
+          NOTICE: "Notice",
+        },
+      },
+
       col: {
         date: "Date",
         reference: "Reference",
@@ -91,6 +120,7 @@ registerV2ModuleLocale("invoiceLinkSelection", {
         gross: "Amount",
         remaining: "Remaining",
         netOff: "Net off now",
+        suggest: "Suggestion",
       },
     },
   },

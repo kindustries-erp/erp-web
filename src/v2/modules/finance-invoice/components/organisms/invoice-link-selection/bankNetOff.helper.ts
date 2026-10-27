@@ -1,4 +1,7 @@
-import type { BankTransactionLinkDto } from "@/v2/modules/finance-invoice/api/linkSources/linkSourceDto";
+import type {
+  BankTransactionLinkDto,
+  NetOffSuggestionDto,
+} from "@/v2/modules/finance-invoice/api/linkSources/linkSourceDto";
 
 /** Chiều cấn trừ: PAYMENT = chi tiền (giao dịch có debit), RECEIPT = thu tiền (có credit) */
 export type NetOffSide = "RECEIPT" | "PAYMENT";
@@ -51,4 +54,49 @@ export function buildNetOffItems(
 
 export function sumSelected(selected: Record<string, NetOffSelection>): number {
   return Object.values(selected).reduce((sum, row) => sum + row.amount, 0);
+}
+
+/**
+ * Đổi một gợi ý thành dòng giao dịch cùng dạng với bảng sao kê.
+ * Đã cấn trừ = gốc − còn lại, để `remainingOf` cho cùng kết quả với backend.
+ */
+export function suggestionToTxn(
+  item: NetOffSuggestionDto,
+): BankTransactionLinkDto {
+  const { txn } = item;
+  const gross = txn.debitAmount > 0 ? txn.debitAmount : txn.creditAmount;
+  return {
+    id: txn.id,
+    transDate: txn.transDate,
+    referenceNumber: txn.referenceNumber,
+    correspondentName: txn.correspondentName,
+    debitAmount: txn.debitAmount,
+    creditAmount: txn.creditAmount,
+    netOffAmount: Math.max(0, gross - txn.remainingAmount),
+  };
+}
+
+/**
+ * Gộp lựa chọn mới của bảng vào lựa chọn hiện có: giữ các dòng đã chọn ở nguồn/trang khác
+ * (không nằm trong `visibleIds`), thay phần của bảng hiện tại theo `keys`.
+ */
+export function mergeSelectionKeys(
+  current: Record<string, NetOffSelection>,
+  visibleIds: string[],
+  keys: string[],
+  rowById: (id: string) => BankTransactionLinkDto | undefined,
+  isLinked: (id: string) => boolean,
+): Record<string, NetOffSelection> {
+  const visible = new Set(visibleIds);
+  const next: Record<string, NetOffSelection> = {};
+  for (const [id, row] of Object.entries(current)) {
+    if (!visible.has(id)) next[id] = row;
+  }
+  for (const key of keys) {
+    if (isLinked(key)) continue;
+    const txn = rowById(key) ?? current[key]?.txn;
+    if (!txn) continue;
+    next[key] = current[key] ?? { txn, amount: remainingOf(txn) };
+  }
+  return next;
 }

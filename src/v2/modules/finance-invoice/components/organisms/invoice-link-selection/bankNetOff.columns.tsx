@@ -66,6 +66,23 @@ export function buildBankNetOffColumns(
       ),
     },
     {
+      key: "suggest",
+      label: t("v2.invoiceLinkSelection.bank.col.suggest"),
+      size: 120,
+      cell: (row) => {
+        const badge = picker.suggestionBadge(row.id);
+        return badge ? (
+          <V2Text as="span" className="text-xs font-medium text-primary">
+            {t(`v2.invoiceLinkSelection.bank.suggest.badge.${badge}`)}
+          </V2Text>
+        ) : (
+          <V2Text as="span" className="text-xs text-muted-fg">
+            —
+          </V2Text>
+        );
+      },
+    },
+    {
       key: "netOff",
       label: t("v2.invoiceLinkSelection.bank.col.netOff"),
       size: 170,

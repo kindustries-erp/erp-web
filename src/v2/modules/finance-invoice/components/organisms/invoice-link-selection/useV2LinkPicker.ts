@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { V2TableQuery } from "@/v2/shared/types/v2-table";
 import { useQuery } from "@tanstack/react-query";
 import type {
   LinkPageDto,
@@ -28,6 +29,8 @@ export interface V2LinkPickerState<T> {
   setSearch: (text: string) => void;
   setPage: (page: number) => void;
   setPageSize: (size: number) => void;
+  /** Nhận thay đổi trang/cỡ trang/tìm kiếm từ thanh công cụ của bảng (chế độ server) */
+  onTableQueryChange: (query: V2TableQuery) => void;
   isLinked: (id: string) => boolean;
   choose: (row: T) => void;
 }
@@ -88,6 +91,11 @@ export function useV2LinkPicker<T extends { id: string }>({
       setPage(1);
     },
     isLinked: (id: string) => existingIds.includes(id),
+    onTableQueryChange: (query: V2TableQuery) => {
+      setSearchText(query.search ?? "");
+      setPage(query.page);
+      setPageSize(query.pageSize);
+    },
     choose,
   };
 }

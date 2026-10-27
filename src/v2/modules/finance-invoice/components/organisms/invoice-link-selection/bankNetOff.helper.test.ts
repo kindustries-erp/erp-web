@@ -4,8 +4,10 @@ import {
   clampAmount,
   grossAmount,
   matchesSide,
+  mergeSelectionKeys,
   remainingOf,
   sumSelected,
+  suggestionToTxn,
   toAmount,
 } from "./bankNetOff.helper";
 import type { BankTransactionLinkDto } from "@/v2/modules/finance-invoice/api/linkSources/linkSourceDto";
@@ -61,5 +63,53 @@ describe("bankNetOff helpers", () => {
     };
     expect(buildNetOffItems(selected)).toEqual([{ id: "a", amount: 100 }]);
     expect(sumSelected(selected)).toBe(100);
+  });
+});
+
+describe("suggestion mapping and selection merge", () => {
+  const suggestion = {
+    txn: {
+      id: "g1",
+      transDate: "2026-10-26",
+      referenceNumber: "UNC-9",
+      correspondentName: "A",
+      debitAmount: 1000,
+      creditAmount: 0,
+      remainingAmount: 600,
+    },
+    score: { score: 90, badge: "HIGH" as const },
+  };
+
+  it("maps a suggestion to a row whose remaining amount matches the backend", () => {
+    const row = suggestionToTxn(suggestion);
+    expect(row.netOffAmount).toBe(400);
+    expect(remainingOf(row)).toBe(600);
+  });
+
+  it("keeps selections from other pages and replaces the visible ones", () => {
+    const hidden = { txn: txn({ id: "h", debitAmount: "500" }), amount: 200 };
+    const old = { txn: txn({ id: "v", debitAmount: "300" }), amount: 100 };
+    const fresh = txn({ id: "n", debitAmount: "900" });
+    const next = mergeSelectionKeys(
+      { h: hidden, v: old },
+      ["v", "n"],
+      ["n"],
+      (id) => (id === "n" ? fresh : undefined),
+      () => false,
+    );
+    expect(Object.keys(next).sort()).toEqual(["h", "n"]);
+    expect(next.h.amount).toBe(200);
+    expect(next.n.amount).toBe(900);
+  });
+
+  it("never selects a linked row", () => {
+    const next = mergeSelectionKeys(
+      {},
+      ["x"],
+      ["x"],
+      () => txn({ id: "x", debitAmount: "10" }),
+      (id) => id === "x",
+    );
+    expect(next).toEqual({});
   });
 });

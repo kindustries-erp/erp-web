@@ -9,7 +9,15 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { V2BankNetOffSelectionModal } from "./V2BankNetOffSelectionModal";
+
+vi.mock(
+  "@/v2/modules/finance-invoice/api/linkSources/netOffSuggestionApi",
+  () => ({
+    netOffSuggestionApi: { list: vi.fn() },
+  }),
+);
 import { bankTransactionLinkApi } from "@/v2/modules/finance-invoice/api/linkSources/bankTransactionLinkApi";
+import { netOffSuggestionApi } from "@/v2/modules/finance-invoice/api/linkSources/netOffSuggestionApi";
 import type { BankTransactionLinkDto } from "@/v2/modules/finance-invoice/api/linkSources/linkSourceDto";
 
 vi.mock(
@@ -119,5 +127,51 @@ describe("V2BankNetOffSelectionModal", () => {
     expect(
       screen.getByRole("button", { name: "Xác nhận cấn trừ" }),
     ).toBeDisabled();
+  });
+
+  it("loads the cash book when the cash-book source is chosen", async () => {
+    renderModal();
+    await screen.findByText("UNC-100");
+    fireEvent.click(screen.getByRole("button", { name: "Sổ quỹ" }));
+    await waitFor(() =>
+      expect(bankTransactionLinkApi.list).toHaveBeenLastCalledWith(
+        expect.anything(),
+        "CASH",
+      ),
+    );
+  });
+
+  it("keeps a selection when switching the source", async () => {
+    renderModal();
+    await screen.findByText("UNC-100");
+    fireEvent.click(rowCheckbox("UNC-100"));
+    fireEvent.click(screen.getByRole("button", { name: "Sổ quỹ" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sao kê" }));
+    expect(
+      await screen.findByRole("button", { name: /Xác nhận cấn trừ \(1\)/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows only the suggested transactions when suggestions are on", async () => {
+    vi.mocked(netOffSuggestionApi.list).mockResolvedValue([
+      {
+        txn: {
+          id: "pay-1",
+          transDate: "2026-10-26",
+          referenceNumber: "UNC-100",
+          correspondentName: "NCC A",
+          debitAmount: 1000,
+          creditAmount: 0,
+          remainingAmount: 600,
+        },
+        score: { score: 95, badge: "PERFECT" },
+      },
+    ]);
+    renderModal({ invoiceId: "inv-1" });
+    await screen.findByText("UNC-300");
+    fireEvent.click(screen.getByRole("button", { name: "Gợi ý khớp" }));
+    expect(await screen.findByText("Khớp hoàn toàn")).toBeInTheDocument();
+    expect(screen.queryByText("UNC-300")).toBeNull();
+    expect(screen.getByText("UNC-100")).toBeInTheDocument();
   });
 });

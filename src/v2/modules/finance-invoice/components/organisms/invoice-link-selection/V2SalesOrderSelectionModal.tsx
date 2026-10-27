@@ -88,9 +88,6 @@ export function V2SalesOrderSelectionModal({
       open={open}
       onClose={onClose}
       title={t("v2.invoiceLinkSelection.salesOrder.title")}
-      searchPlaceholder={t(
-        "v2.invoiceLinkSelection.salesOrder.searchPlaceholder",
-      )}
       emptyLabel={t("v2.invoiceLinkSelection.salesOrder.empty")}
       loadErrorLabel={t("v2.invoiceLinkSelection.salesOrder.loadError")}
       tableId="v2-invoice-link-sales-orders"

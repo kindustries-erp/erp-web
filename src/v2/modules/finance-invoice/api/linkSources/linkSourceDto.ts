@@ -41,3 +41,29 @@ export interface BankTransactionLinkDto {
   creditAmount?: string | number | null;
   netOffAmount?: string | number | null;
 }
+
+/** Mức khớp của một gợi ý cấn trừ (theo backend) */
+export type NetOffSuggestionBadge =
+  | "PERFECT"
+  | "HIGH"
+  | "LIKELY"
+  | "POSSIBLE"
+  | "NOTICE_STRONG"
+  | "NOTICE";
+
+/** Gợi ý cấn trừ cho một hóa đơn: giao dịch và mức khớp */
+export interface NetOffSuggestionDto {
+  txn: {
+    id: string;
+    transDate: string;
+    referenceNumber?: string | null;
+    correspondentName?: string | null;
+    debitAmount: number;
+    creditAmount: number;
+    remainingAmount: number;
+  };
+  score: {
+    score: number;
+    badge: NetOffSuggestionBadge;
+  };
+}

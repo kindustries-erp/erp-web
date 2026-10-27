@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
-import { V2SearchInput } from "@/v2/shared/components/molecules/v2-search-input";
-import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2LinkSelectionModal } from "@/v2/shared/components/molecules/v2-link-selection-modal";
 import {
   V2StandardTable,
@@ -10,13 +9,11 @@ import {
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2LinkPickerState } from "./useV2LinkPicker";
 import "./invoice-link-selection.locale";
-import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 export interface V2LinkPickerModalProps<T extends { id: string }> {
   open: boolean;
   onClose: () => void;
   title: string;
-  searchPlaceholder: string;
   emptyLabel: string;
   loadErrorLabel: string;
   tableId: string;
@@ -25,12 +22,14 @@ export interface V2LinkPickerModalProps<T extends { id: string }> {
   picker: V2LinkPickerState<T>;
 }
 
-/** Khung chung của mọi modal chọn chứng từ: ô tìm, bảng một dòng được chọn, phân trang */
+/**
+ * Khung chung của modal chọn chứng từ: bảng chế độ server (tìm kiếm và phân trang nằm trong
+ * thanh công cụ của bảng), chọn một dòng bằng nút trong ô.
+ */
 export function V2LinkPickerModal<T extends { id: string }>({
   open,
   onClose,
   title,
-  searchPlaceholder,
   emptyLabel,
   loadErrorLabel,
   tableId,
@@ -69,26 +68,17 @@ export function V2LinkPickerModal<T extends { id: string }>({
 
   return (
     <V2LinkSelectionModal open={open} onClose={onClose} title={title}>
-      <V2SearchInput
-        value={picker.search}
-        onChange={picker.setSearch}
-        placeholder={searchPlaceholder}
-      />
       <V2StandardTable<T>
         tableId={tableId}
-        mode="client"
+        mode="server"
         items={picker.rows}
+        total={picker.total}
+        initialQuery={{ page: picker.page, pageSize: picker.pageSize }}
+        onQueryChange={picker.onTableQueryChange}
         columns={allColumns}
         getRowKey={(row) => row.id}
         loading={picker.loading}
         emptyLabel={picker.failed ? loadErrorLabel : emptyLabel}
-      />
-      <V2TablePagination
-        page={picker.page}
-        pageSize={picker.pageSize}
-        total={picker.total}
-        onPageChange={picker.setPage}
-        onPageSizeChange={picker.setPageSize}
       />
     </V2LinkSelectionModal>
   );
