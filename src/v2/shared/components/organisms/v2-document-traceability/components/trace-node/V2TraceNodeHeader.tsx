@@ -49,7 +49,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
   const actionClass = "h-6 w-6 nodrag nopan transition-colors";
 
   return (
-    <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800/80">
+    <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2 ">
       <div className="flex min-w-0 items-center gap-1.5">
         <V2Text
           as="span"
@@ -80,7 +80,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
         )}
         <V2Text
           as="span"
-          className="truncate font-mono text-xs font-bold text-slate-900 dark:text-slate-100"
+          className="truncate font-mono text-xs font-bold text-foreground "
         >
           {docNo}
         </V2Text>
@@ -92,7 +92,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             onClick={props.onCopy}
             onPointerDown={stopDrag}
             onMouseDown={stopDrag}
-            className="nodrag nopan h-5 w-5 text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-200"
+            className="nodrag nopan h-5 w-5 text-muted-fg transition-colors hover:text-muted-fg "
             title={
               copied
                 ? t("v2.traceability.node.copied")
@@ -100,7 +100,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             }
           >
             {copied ? (
-              <Check className="h-3 w-3 text-emerald-600" />
+              <Check className="h-3 w-3 text-success" />
             ) : (
               <Copy className="h-3 w-3" />
             )}
@@ -112,7 +112,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
         {isCurrent && (
           <V2Text
             as="span"
-            className="rounded bg-slate-900 px-1.5 py-0.5 text-[9px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
+            className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-semibold text-foreground  "
           >
             {t("v2.traceability.node.current")}
           </V2Text>
@@ -124,7 +124,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             size="icon-xs"
             className={cn(
               actionClass,
-              "text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40",
+              "text-muted-fg hover:bg-destructive/10 hover:text-destructive ",
             )}
             title={t("v2.traceability.node.unlink")}
             onClick={props.onUnlink}
@@ -136,7 +136,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
         )}
         {restricted ? (
           <div
-            className="cursor-not-allowed rounded p-1 text-slate-400"
+            className="cursor-not-allowed rounded p-1 text-muted-fg"
             title={`${t("v2.traceability.node.noPermission")} (${props.requiredResource})`}
           >
             <Lock className="h-3.5 w-3.5" />
@@ -150,7 +150,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
               size="icon-xs"
               className={cn(
                 actionClass,
-                "text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800",
+                "text-muted-fg hover:bg-muted hover:text-foreground ",
               )}
               title={
                 isManual

@@ -103,19 +103,19 @@ function CanvasInner({
       elementsSelectable
       proOptions={{ hideAttribution: true }}
     >
-      <Background color="#cbd5e1" gap={20} size={1} />
+      <Background color="var(--border)" gap={20} size={1} />
       <Controls
         showInteractive={false}
-        className="!m-3.5 !overflow-hidden !rounded-lg !border-slate-200 !bg-white !shadow-sm dark:!border-slate-700 dark:!bg-slate-900"
+        className="!m-3.5 !overflow-hidden !rounded-lg !border-border !bg-surface !shadow-sm dark:!border-border dark:!bg-muted"
       >
         {onToggleDirection && (
           <ControlButton
             onClick={onToggleDirection}
             title={toggleLabel}
             aria-label={toggleLabel}
-            className="!flex !items-center !justify-center hover:!bg-slate-100 dark:hover:!bg-slate-800"
+            className="!flex !items-center !justify-center hover:!bg-muted dark:hover:!bg-muted"
           >
-            <RotateCw className="h-3 w-3 text-slate-700 dark:text-slate-200" />
+            <RotateCw className="h-3 w-3 text-muted-fg " />
           </ControlButton>
         )}
       </Controls>

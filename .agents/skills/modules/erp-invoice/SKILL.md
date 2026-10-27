@@ -254,7 +254,8 @@ src/modules/erp-invoices-core/
     - `onOpenNetOffModal`/`onOpenPoModal`/`onOpenSoModal`/`onOpenGarageCaseModal` là `useCallback` ổn định, và `setTraceabilityCount` chỉ cập nhật khi số đếm đổi, để `CanvasView` không tính lại layout khi drawer render.
     - `settlementRightPanel` dùng chung cây `div > ErpInvoiceInternalSidebar` với `defaultRightPanel` (chỉ thêm `debtSlot`), nên đổi sub-tab "Chứng từ liên kết" không mount lại sidebar.
     - `useTraceabilityLogic` chỉ gọi `fetchGraph` một lần khi mount; refetch silent chỉ khi thoát edit mode (chuyển true → false).
-  - **Sơ đồ V2 (chưa nối)**: `src/v2/shared/components/organisms/v2-document-traceability/` đã có canvas, pipeline, bảng kê, thanh công cụ, xác nhận gỡ liên kết và entry `V2DocumentTraceability`. Drawer hóa đơn vẫn dùng bản V1 cho đến khi nối (Task 3.1). Mở chứng từ qua callback `onOpenDocument`, không dùng event `window` của V1.
+  - **Sơ đồ V2 (đã nối vào drawer)**: toàn màn hình mở bằng `V2Modal size="full"` (Radix lồng trong drawer, không `fixed`); màu dùng token V2 (`text-success` thu, `text-warning` chi, `text-destructive` lỗi, `bg-surface`/`border-border`), không dùng màu Tailwind thô.
+  - **Sơ đồ V2 (ghi chú cũ)**: `src/v2/shared/components/organisms/v2-document-traceability/` đã có canvas, pipeline, bảng kê, thanh công cụ, xác nhận gỡ liên kết và entry `V2DocumentTraceability`. Drawer hóa đơn vẫn dùng bản V1 cho đến khi nối (Task 3.1). Mở chứng từ qua callback `onOpenDocument`, không dùng event `window` của V1.
   5. `erp-invoice-pdf-upload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer (`erp-invoice-pdf-preview`) hoặc tải xuống.
   6. `erp-invoice-default-attributes-section`: Tích hợp 2 drawer sections: `Thuộc tính chung` (Global) và `Danh mục & Thuộc tính` (Category) từ Module Config.
 
@@ -414,6 +415,7 @@ bun run lint:check
 ### 7.1b. Modal chọn chứng từ ghép nối trên V2 (Đợt 2)
 - `src/v2/shared/components/molecules/v2-link-selection-modal/`: khung `V2LinkSelectionModal` (bọc `V2Modal`, footer Hủy).
 - `src/v2/modules/finance-invoice/components/organisms/invoice-link-selection/`: `V2LinkPickerModal` (bảng một dòng, nút "Chọn" trong ô), hook `useV2LinkPicker`, `V2PurchaseOrderSelectionModal`, `V2SalesOrderSelectionModal`. PO/SO: chọn là xong.
+- Tab cấn trừ: một nhóm ba nút loại trừ nhau Sao kê | Sổ quỹ | Gợi ý khớp (`NetOffView`); lựa chọn giữ khi đổi tab. Modal cỡ `2xl` (`V2LinkSelectionModal` mặc định).
 - Sao kê / Sổ quỹ (`V2BankNetOffSelectionModal`, hook `useV2BankNetOffPicker`, helper `bankNetOff.helper.ts`, cột `bankNetOff.columns.tsx`): chọn nhiều dòng, số tiền cấn trừ từng dòng kẹp trong phần còn lại, xác nhận một lần → `onSelect([{id, amount}])`. Đổi nguồn Sao kê/Sổ quỹ (`sourceType` BANK/CASH) giữ lựa chọn; nút "Gợi ý khớp" lấy `POST /api/v1/erp-invoices/smart-net-off-suggestions` (`useV2NetOffSuggestions`) và chỉ hiện các gợi ý, kèm nhãn mức khớp. Phân trang/tìm kiếm dùng bảng server của V2 (không có thanh riêng).
 - Chưa có: giao dịch ngoài sổ (nhập tay, danh mục), panel phải/công nợ của drawer, Garage.
 - API chỉ đọc: `api/linkSources/` (`purchaseOrderLinkApi`, `salesOrderLinkApi`) qua `v2HttpClient`.

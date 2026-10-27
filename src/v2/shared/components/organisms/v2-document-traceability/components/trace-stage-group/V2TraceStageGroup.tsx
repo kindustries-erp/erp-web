@@ -45,7 +45,7 @@ export function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
           </V2Text>
           <V2Text
             as="span"
-            className="font-mono text-[11px] font-medium text-slate-500 dark:text-slate-400"
+            className="font-mono text-[11px] font-medium text-muted-fg "
           >
             ({count})
           </V2Text>
@@ -56,7 +56,7 @@ export function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
             type="button"
             variant="ghost"
             size="xs"
-            className="h-6 gap-1 border border-slate-200 bg-white/80 px-2 text-[11px] text-slate-500 shadow-2xs hover:bg-white hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800"
+            className="h-6 gap-1 border border-border bg-surface/80 px-2 text-[11px] text-muted-fg shadow-2xs hover:bg-surface hover:text-foreground  "
             title={t("v2.traceability.stage.addLinkTo", { stage: stageName })}
             onClick={() =>
               actions.onAddLink?.(

@@ -120,6 +120,7 @@ export function useV2Traceability({
       setDirection((d) => (d === "horizontal" ? "vertical" : "horizontal")),
     isFullscreen,
     toggleFullscreen: () => setIsFullscreen((f) => !f),
+    exitFullscreen: () => setIsFullscreen(false),
     linkSelectorOpen,
     setLinkSelectorOpen,
     unlinkingNode,

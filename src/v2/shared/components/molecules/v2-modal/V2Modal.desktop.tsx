@@ -16,6 +16,7 @@ const SIZE_CLASSES: Record<V2ModalSize, string> = {
   md: "max-w-[480px]",
   lg: "max-w-[560px]",
   xl: "max-w-[680px]",
+  "2xl": "max-w-[1100px] w-[94vw]",
   full: "max-w-[92vw] w-[92vw] max-h-[90vh]",
 };
 

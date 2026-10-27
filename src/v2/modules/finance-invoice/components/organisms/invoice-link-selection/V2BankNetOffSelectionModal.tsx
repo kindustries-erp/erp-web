@@ -6,10 +6,12 @@ import { V2StandardTable } from "@/v2/shared/components/organisms/v2-standard-ta
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { formatAmount } from "@/v2/shared/utils/v2TableFormat";
 import type { BankTransactionLinkDto } from "@/v2/modules/finance-invoice/api/linkSources/linkSourceDto";
-import type { BankLinkSource } from "@/v2/modules/finance-invoice/api/linkSources/bankTransactionLinkApi";
 import type { NetOffSide } from "./bankNetOff.helper";
 import { buildBankNetOffColumns } from "./bankNetOff.columns";
-import { useV2BankNetOffPicker } from "./useV2BankNetOffPicker";
+import {
+  useV2BankNetOffPicker,
+  type NetOffView,
+} from "./useV2BankNetOffPicker";
 import "./invoice-link-selection.locale";
 
 export interface V2BankNetOffSelectionModalProps {
@@ -23,7 +25,12 @@ export interface V2BankNetOffSelectionModalProps {
   onSelect: (items: { id: string; amount: number }[]) => void;
 }
 
-const SOURCES: BankLinkSource[] = ["BANK", "CASH"];
+/** Ba tab loại trừ nhau; gợi ý chỉ hiện khi có hóa đơn */
+const TABS: { view: NetOffView; labelKey: string }[] = [
+  { view: "BANK", labelKey: "v2.invoiceLinkSelection.bank.source.bank" },
+  { view: "CASH", labelKey: "v2.invoiceLinkSelection.bank.source.cash" },
+  { view: "SUGGEST", labelKey: "v2.invoiceLinkSelection.bank.suggest.toggle" },
+];
 
 /** Modal chọn nhiều giao dịch sao kê hoặc sổ quỹ để cấn trừ, nhập số tiền từng dòng rồi xác nhận một lần */
 export function V2BankNetOffSelectionModal({
@@ -65,42 +72,25 @@ export function V2BankNetOffSelectionModal({
       }
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1 rounded-lg border border-slate-200/90 bg-slate-100 p-0.5 dark:border-slate-700/80 dark:bg-slate-800/90">
-          {SOURCES.map((source) => (
-            <V2Button
-              key={source}
-              type="button"
-              variant={
-                !picker.suggestionsOnly && picker.source === source
-                  ? "pill-tab"
-                  : "ghost"
-              }
-              size="pill-sm"
-              aria-pressed={!picker.suggestionsOnly && picker.source === source}
-              disabled={picker.suggestionsOnly}
-              onClick={() => picker.setSource(source)}
-            >
-              {t(
-                `v2.invoiceLinkSelection.bank.source.${source === "BANK" ? "bank" : "cash"}`,
-              )}
-            </V2Button>
-          ))}
-          {picker.hasSuggestions && (
-            <V2Button
-              type="button"
-              variant={picker.suggestionsOnly ? "pill-tab" : "ghost"}
-              size="pill-sm"
-              aria-pressed={picker.suggestionsOnly}
-              onClick={picker.toggleSuggestionsOnly}
-            >
-              {t("v2.invoiceLinkSelection.bank.suggest.toggle")}
-            </V2Button>
-          )}
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-0.5">
+          {TABS.map((tab) => {
+            if (tab.view === "SUGGEST" && !picker.hasSuggestions) return null;
+            const active = picker.view === tab.view;
+            return (
+              <V2Button
+                key={tab.view}
+                type="button"
+                variant={active ? "pill-tab" : "ghost"}
+                size="pill-sm"
+                aria-pressed={active}
+                onClick={() => picker.setView(tab.view)}
+              >
+                {t(tab.labelKey)}
+              </V2Button>
+            );
+          })}
         </div>
-        <V2Text
-          as="span"
-          className="font-mono text-xs text-slate-600 dark:text-slate-300"
-        >
+        <V2Text as="span" className="font-mono text-xs text-muted-fg ">
           {picker.count === 0
             ? t("v2.invoiceLinkSelection.bank.nothingSelected")
             : t("v2.invoiceLinkSelection.bank.summary", {

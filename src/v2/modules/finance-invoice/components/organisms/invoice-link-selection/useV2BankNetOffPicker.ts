@@ -30,6 +30,9 @@ export interface UseV2BankNetOffPickerOptions {
   onClose: () => void;
 }
 
+/** Tab của modal cấn trừ: sao kê, sổ quỹ, hoặc gợi ý khớp */
+export type NetOffView = "BANK" | "CASH" | "SUGGEST";
+
 /** Trạng thái bảng cấn trừ sao kê/sổ quỹ, đưa xuống các cột và modal */
 export type V2BankNetOffPickerState = ReturnType<typeof useV2BankNetOffPicker>;
 
@@ -45,8 +48,10 @@ export function useV2BankNetOffPicker({
   onSelect,
   onClose,
 }: UseV2BankNetOffPickerOptions) {
-  const [source, setSource] = useState<BankLinkSource>("BANK");
-  const [suggestionsOnly, setSuggestionsOnly] = useState(false);
+  // Một trạng thái cho cả ba tab: Sao kê, Sổ quỹ, Gợi ý khớp (loại trừ nhau)
+  const [view, setView] = useState<NetOffView>("BANK");
+  const suggestionsOnly = view === "SUGGEST";
+  const source: BankLinkSource = view === "CASH" ? "CASH" : "BANK";
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [search, setSearchText] = useState("");
@@ -55,8 +60,7 @@ export function useV2BankNetOffPicker({
   // Mỗi lần mở lại bắt đầu từ sao kê, trang đầu, không lọc, không chọn sẵn
   useEffect(() => {
     if (open) {
-      setSource("BANK");
-      setSuggestionsOnly(false);
+      setView("BANK");
       setPage(1);
       setSearchText("");
       setSelected({});
@@ -125,13 +129,13 @@ export function useV2BankNetOffPicker({
   };
 
   return {
-    source,
-    setSource: (next: BankLinkSource) => {
-      setSource(next);
+    view,
+    setView: (next: NetOffView) => {
+      setView(next);
       setPage(1);
     },
+    source,
     suggestionsOnly,
-    toggleSuggestionsOnly: () => setSuggestionsOnly((v) => !v),
     hasSuggestions: Boolean(invoiceId),
     suggestionBadge: suggestions.badgeOf,
     rows,

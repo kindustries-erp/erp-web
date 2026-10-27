@@ -10,19 +10,19 @@ import {
 const TAX_STATUS_VISUAL: Record<number, { key: string; cls: string }> = {
   3: {
     key: "v2.traceability.taxStatus.adjusted",
-    cls: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-700",
+    cls: "bg-warning-bg text-warning border-warning/30   ",
   },
   2: {
     key: "v2.traceability.taxStatus.replacing",
-    cls: "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-700",
+    cls: "bg-primary/10 text-primary border-primary/30   ",
   },
   5: {
     key: "v2.traceability.taxStatus.adjustedByOther",
-    cls: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+    cls: "bg-muted text-muted-fg border-border   ",
   },
   4: {
     key: "v2.traceability.taxStatus.replacedByOther",
-    cls: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+    cls: "bg-muted text-muted-fg border-border   ",
   },
 };
 

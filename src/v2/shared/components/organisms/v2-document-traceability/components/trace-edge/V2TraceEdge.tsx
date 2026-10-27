@@ -9,9 +9,9 @@ import {
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 const TONE_CLASS: Record<EdgeLabelTone, string> = {
-  in: "text-emerald-600 dark:text-emerald-400 font-bold",
-  out: "text-[#ea580c] dark:text-orange-400 font-bold",
-  neutral: "text-slate-900 dark:text-slate-100 font-bold",
+  in: "text-success font-bold",
+  out: "text-warning  font-bold",
+  neutral: "text-foreground  font-bold",
 };
 
 /** Cạnh nối hai chứng từ, nhãn đặt trên đường đi và tự tránh các khung giai đoạn */
@@ -50,7 +50,7 @@ export function V2TraceEdge({
               zIndex: animated ? 1100 : 1000,
             }}
             className={cn(
-              "nodrag nopan select-none rounded-lg border border-slate-200/90 bg-white/95 px-2 py-0.5 text-slate-800 shadow-sm backdrop-blur-xs transition-all hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200",
+              "nodrag nopan select-none rounded-lg border border-border bg-surface/95 px-2 py-0.5 text-foreground shadow-sm backdrop-blur-xs transition-all hover:border-border   ",
               animated && "shadow-md",
             )}
           >
@@ -58,7 +58,7 @@ export function V2TraceEdge({
               <div className="flex max-w-[130px] flex-col items-center justify-center px-1 py-0.5 text-center leading-tight">
                 <V2Text
                   as="span"
-                  className="whitespace-nowrap text-[9px] font-medium tracking-tight text-slate-500 dark:text-slate-400"
+                  className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg "
                 >
                   {parts.title}
                 </V2Text>
@@ -79,13 +79,13 @@ export function V2TraceEdge({
               <div className="flex max-w-[130px] flex-col items-center justify-center px-1 py-0.5 text-center leading-tight">
                 <V2Text
                   as="span"
-                  className="whitespace-nowrap text-[9px] font-medium tracking-tight text-slate-700 dark:text-slate-300"
+                  className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg "
                 >
                   {parts.title}
                 </V2Text>
                 <V2Text
                   as="span"
-                  className="whitespace-nowrap text-[9px] italic text-slate-500 dark:text-slate-400"
+                  className="whitespace-nowrap text-[9px] italic text-muted-fg "
                 >
                   {parts.note}
                 </V2Text>

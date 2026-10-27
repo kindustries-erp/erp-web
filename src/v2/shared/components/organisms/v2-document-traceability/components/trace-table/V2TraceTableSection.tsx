@@ -28,7 +28,7 @@ export function V2TraceTableSection({
 }: V2TraceTableSectionProps) {
   return (
     <section className="space-y-2.5">
-      <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
+      <div className="flex items-center gap-2 text-xs font-semibold text-foreground ">
         <V2Text as="span">{title}</V2Text>
         {items.length > 0 && <Badge variant="secondary">{items.length}</Badge>}
       </div>

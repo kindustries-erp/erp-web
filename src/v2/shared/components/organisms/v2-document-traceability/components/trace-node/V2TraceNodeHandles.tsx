@@ -2,7 +2,7 @@ import React from "react";
 import { Handle, Position } from "@xyflow/react";
 
 const HANDLE_CLASS =
-  "z-30 h-3 w-3 cursor-crosshair border-2 border-white !bg-slate-400 opacity-0 transition-opacity group-hover:opacity-100";
+  "z-30 h-3 w-3 cursor-crosshair border-2 border-surface !bg-muted-fg opacity-0 transition-opacity group-hover:opacity-100";
 
 /** Bốn điểm nối của thẻ chứng từ; trái/trên là đích, phải/dưới là nguồn */
 export function V2TraceNodeHandles() {

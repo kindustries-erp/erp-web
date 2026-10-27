@@ -83,7 +83,7 @@ export function V2TracePipeline({
               ))}
             </StageColumn>
             {index < TRACEABILITY_STAGES.length - 1 && (
-              <div className="flex-shrink-0 pt-8 text-slate-300 dark:text-slate-700">
+              <div className="flex-shrink-0 pt-8 text-foreground ">
                 <ArrowRight className="h-4 w-4" />
               </div>
             )}
@@ -115,8 +115,8 @@ function StageColumn({
 }: StageColumnProps) {
   const { t } = useV2Translation();
   return (
-    <div className="flex w-[300px] flex-shrink-0 flex-col gap-2 rounded-xl border border-slate-200/90 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-900/40">
-      <div className="flex items-center justify-between border-b border-slate-200/70 pb-2 dark:border-slate-800">
+    <div className="flex w-[300px] flex-shrink-0 flex-col gap-2 rounded-xl border border-border bg-muted p-3  ">
+      <div className="flex items-center justify-between border-b border-border pb-2 ">
         <div className="flex min-w-0 items-center gap-1.5">
           <V2Text
             as="span"
@@ -129,7 +129,7 @@ function StageColumn({
           </V2Text>
           <V2Text
             as="span"
-            className="font-mono text-xs font-medium text-slate-500"
+            className="font-mono text-xs font-medium text-muted-fg"
           >
             ({count})
           </V2Text>
@@ -139,7 +139,7 @@ function StageColumn({
             type="button"
             variant="ghost"
             size="icon-xs"
-            className="h-5 w-5 text-slate-400 hover:text-slate-700"
+            className="h-5 w-5 text-muted-fg hover:text-muted-fg"
             title={addLabel}
             aria-label={addLabel}
             onClick={onAdd}
@@ -149,7 +149,7 @@ function StageColumn({
         )}
       </div>
       {count === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-200 bg-white/40 py-8 text-center text-xs text-slate-400">
+        <div className="rounded-lg border border-dashed border-border bg-surface/40 py-8 text-center text-xs text-muted-fg">
           {emptyLabel}
         </div>
       ) : (

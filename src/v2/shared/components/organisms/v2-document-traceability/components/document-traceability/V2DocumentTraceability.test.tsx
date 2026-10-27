@@ -95,4 +95,13 @@ describe("V2DocumentTraceability", () => {
     fireEvent.click(screen.getByText("Quy trình"));
     expect(screen.queryByTitle("Gỡ liên kết chứng từ này")).toBeNull();
   });
+
+  it("opens the canvas in a full-size dialog and returns inline on exit", () => {
+    renderEntry();
+    fireEvent.click(screen.getByLabelText("Toàn màn hình"));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Thoát toàn màn hình"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByLabelText("Toàn màn hình")).toBeInTheDocument();
+  });
 });

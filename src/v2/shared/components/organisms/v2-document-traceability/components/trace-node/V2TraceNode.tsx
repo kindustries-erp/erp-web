@@ -70,8 +70,8 @@ export function V2TraceNode({ data, selected }: NodeProps<TraceDocFlowNode>) {
   const amountCls =
     meta.amountCls ??
     (node.netOffAmount
-      ? "text-emerald-700 dark:text-emerald-400 font-semibold"
-      : "text-slate-800 dark:text-slate-200 font-semibold");
+      ? "text-success font-semibold"
+      : "text-foreground  font-semibold");
 
   const partner = node.partnerName || node.title || "—";
   const subtitle =
@@ -85,15 +85,15 @@ export function V2TraceNode({ data, selected }: NodeProps<TraceDocFlowNode>) {
     <div
       onDoubleClick={handleOpen}
       className={cn(
-        "group relative z-10 w-[290px] cursor-pointer overflow-hidden rounded-xl bg-white text-left transition-all duration-200 dark:bg-slate-900",
+        "group relative z-10 w-[290px] cursor-pointer overflow-hidden rounded-xl bg-surface text-left transition-all duration-200 ",
         meta.cardBorderCls,
         node.isCurrent
-          ? "border-2 border-slate-700 shadow-md ring-2 ring-slate-900 dark:border-slate-300 dark:ring-slate-100"
+          ? "border-2 border-border shadow-md ring-2 ring-foreground  "
           : selected
-            ? "border-2 border-slate-800 shadow-md ring-2 ring-slate-800/15 dark:border-slate-200 dark:ring-slate-200/15"
-            : "border border-slate-200/90 shadow-2xs hover:border-slate-400 hover:shadow-sm dark:border-slate-800 dark:hover:border-slate-600",
+            ? "border-2 border-border shadow-md ring-2 ring-foreground  "
+            : "border border-border shadow-2xs hover:border-border hover:shadow-sm  dark:hover:border-border",
         node.restricted &&
-          "cursor-default border-dashed border-slate-300 bg-slate-50/70 opacity-80 dark:bg-slate-900/50",
+          "cursor-default border-dashed border-border bg-muted opacity-80 ",
       )}
     >
       <V2TraceNodeHandles />
@@ -115,11 +115,11 @@ export function V2TraceNode({ data, selected }: NodeProps<TraceDocFlowNode>) {
       />
 
       <div className="space-y-2 p-3">
-        <div className="line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="line-clamp-1 text-[11px] text-muted-fg ">
           {node.restricted ? (
             <V2Text
               as="span"
-              className="flex items-center gap-1 italic text-slate-400"
+              className="flex items-center gap-1 italic text-muted-fg"
             >
               <Lock className="h-3 w-3" />{" "}
               {t("v2.traceability.node.restricted")}
@@ -129,12 +129,12 @@ export function V2TraceNode({ data, selected }: NodeProps<TraceDocFlowNode>) {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-100 pt-1 font-mono text-xs dark:border-slate-800/60">
-          <V2Text as="span" className="font-sans text-[11px] text-slate-400">
+        <div className="flex items-center justify-between border-t border-border pt-1 font-mono text-xs ">
+          <V2Text as="span" className="font-sans text-[11px] text-muted-fg">
             {formatTraceDate(node.date)}
           </V2Text>
           {node.restricted ? (
-            <V2Text as="span" className="font-normal text-slate-400">
+            <V2Text as="span" className="font-normal text-muted-fg">
               ***
             </V2Text>
           ) : (

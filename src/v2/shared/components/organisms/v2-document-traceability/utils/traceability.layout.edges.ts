@@ -8,7 +8,7 @@ import type {
   TraceFlowEdge,
 } from "../types/traceability.flow.type";
 
-const EDGE_STROKE = "#94a3b8";
+const EDGE_STROKE = "var(--muted-fg)";
 
 export interface EdgeHandles {
   sourceHandle: string;

@@ -24,13 +24,13 @@ export interface TraceTableColumnOptions {
 function renderSignedAmount(node: TraceabilityNode, value: number) {
   if (node.restricted)
     return (
-      <V2Text as="span" className="font-mono text-xs text-slate-400">
+      <V2Text as="span" className="font-mono text-xs text-muted-fg">
         ***
       </V2Text>
     );
   if (!value)
     return (
-      <V2Text as="span" className="text-xs text-slate-400">
+      <V2Text as="span" className="text-xs text-muted-fg">
         —
       </V2Text>
     );
@@ -41,7 +41,7 @@ function renderSignedAmount(node: TraceabilityNode, value: number) {
       as="span"
       className={cn(
         "font-mono text-xs",
-        meta.amountCls ?? "font-semibold text-slate-900 dark:text-slate-100",
+        meta.amountCls ?? "font-semibold text-foreground ",
       )}
     >
       {text}
@@ -93,7 +93,7 @@ export function buildTraceTableColumns({
       size: 110,
       align: TableColumnAlign.RIGHT,
       cell: (node) => (
-        <V2Text as="span" className="font-mono text-xs text-slate-500">
+        <V2Text as="span" className="font-mono text-xs text-muted-fg">
           {formatTraceDate(node.date)}
         </V2Text>
       ),
@@ -112,7 +112,7 @@ export function buildTraceTableColumns({
             onDetailClick={canOpen ? () => onOpen(node) : undefined}
             className={cn(
               "font-mono text-xs font-medium",
-              canOpen ? "text-primary" : "text-slate-900 dark:text-slate-100",
+              canOpen ? "text-primary" : "text-foreground ",
             )}
           />
         );
@@ -125,7 +125,7 @@ export function buildTraceTableColumns({
       accessor: (node) => node.partnerName || node.title || "",
       cell: (node) =>
         node.restricted ? (
-          <V2Text as="span" className="text-xs italic text-slate-400">
+          <V2Text as="span" className="text-xs italic text-muted-fg">
             {t("v2.traceability.node.restricted")}
           </V2Text>
         ) : (
@@ -133,7 +133,7 @@ export function buildTraceTableColumns({
             text={node.partnerName || node.title || "—"}
             enableCopy
             tooltip
-            className="text-xs text-slate-700 dark:text-slate-300"
+            className="text-xs text-muted-fg "
           />
         ),
     },

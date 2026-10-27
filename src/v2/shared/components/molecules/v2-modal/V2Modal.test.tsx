@@ -108,3 +108,14 @@ describe("V2Modal Molecule", () => {
     expect(handleOpenChange).toHaveBeenCalledWith(false);
   });
 });
+
+describe("V2Modal size 2xl", () => {
+  it("uses the wide 2xl width class", () => {
+    render(
+      <V2Modal open onOpenChange={() => undefined} title="Rộng" size="2xl">
+        <p>nội dung</p>
+      </V2Modal>,
+    );
+    expect(screen.getByRole("dialog").className).toContain("max-w-[1100px]");
+  });
+});

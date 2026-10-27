@@ -45,12 +45,11 @@ export function V2TracePipelineCard({
   return (
     <div
       className={cn(
-        "group rounded-lg border bg-white p-3 transition-all dark:bg-slate-900",
+        "group rounded-lg border bg-surface p-3 transition-all ",
         node.isCurrent
-          ? "border-slate-500 shadow-xs ring-2 ring-slate-900 dark:ring-slate-100"
-          : "border-slate-200/90 shadow-2xs hover:border-slate-400",
-        node.restricted &&
-          "border-dashed bg-slate-50 opacity-80 dark:bg-slate-900/50",
+          ? "border-border shadow-xs ring-2 ring-foreground "
+          : "border-border shadow-2xs hover:border-border",
+        node.restricted && "border-dashed bg-muted opacity-80 ",
       )}
     >
       <div className="mb-1.5 flex items-center justify-between gap-1">
@@ -69,7 +68,7 @@ export function V2TracePipelineCard({
             type="button"
             variant="ghost"
             size="xs"
-            className="h-auto truncate px-1 font-mono text-xs font-bold text-slate-900 dark:text-slate-100"
+            className="h-auto truncate px-1 font-mono text-xs font-bold text-foreground "
             onClick={() => void copyText(node.docNo)}
             title={t("v2.traceability.node.copy")}
           >
@@ -83,7 +82,7 @@ export function V2TracePipelineCard({
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="h-5 w-5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+              className="h-5 w-5 text-muted-fg hover:bg-destructive/10 hover:text-destructive"
               title={t("v2.traceability.node.unlink")}
               onClick={() => onUnlink?.(node)}
             >
@@ -91,14 +90,14 @@ export function V2TracePipelineCard({
             </V2Button>
           )}
           {node.restricted ? (
-            <Lock className="h-3 w-3 text-slate-400" />
+            <Lock className="h-3 w-3 text-muted-fg" />
           ) : (
             canOpen && (
               <V2Button
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                className="h-5 w-5 text-slate-400 hover:text-slate-900"
+                className="h-5 w-5 text-muted-fg hover:text-foreground"
                 title={
                   isManual
                     ? t("v2.traceability.node.editManual")
@@ -117,27 +116,24 @@ export function V2TracePipelineCard({
         </div>
       </div>
 
-      <div className="mb-2 truncate text-[11px] text-slate-500">
+      <div className="mb-2 truncate text-[11px] text-muted-fg">
         {node.restricted
           ? t("v2.traceability.node.restricted")
           : node.partnerName || node.title || "—"}
       </div>
 
-      <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 font-mono text-[11px] dark:border-slate-800/80">
-        <V2Text as="span" className="font-sans text-slate-400">
+      <div className="flex items-center justify-between border-t border-border pt-1.5 font-mono text-[11px] ">
+        <V2Text as="span" className="font-sans text-muted-fg">
           {formatTraceDate(node.date)}
         </V2Text>
         {node.restricted ? (
-          <V2Text as="span" className="text-slate-400">
+          <V2Text as="span" className="text-muted-fg">
             ***
           </V2Text>
         ) : (
           <V2Text
             as="span"
-            className={
-              meta.amountCls ??
-              "font-semibold text-slate-800 dark:text-slate-200"
-            }
+            className={meta.amountCls ?? "font-semibold text-foreground "}
             title={t(meta.fullTitleKey)}
           >
             {amountText}

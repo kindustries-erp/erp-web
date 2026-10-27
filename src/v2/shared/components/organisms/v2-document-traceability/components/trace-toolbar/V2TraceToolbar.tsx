@@ -42,10 +42,7 @@ export function V2TraceToolbar(props: V2TraceToolbarProps) {
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <V2Text
-        as="div"
-        className="text-xs font-medium text-slate-600 dark:text-slate-300"
-      >
+      <V2Text as="div" className="text-xs font-medium text-muted-fg ">
         {t("v2.traceability.toolbar.total", { count: linkedCount })}
       </V2Text>
 
@@ -59,7 +56,7 @@ export function V2TraceToolbar(props: V2TraceToolbarProps) {
           />
         )}
 
-        <div className="flex items-center gap-1 rounded-lg border border-slate-200/90 bg-slate-100 p-0.5 dark:border-slate-700/80 dark:bg-slate-800/90">
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-0.5  ">
           {VIEW_KEYS.map(({ mode, key }) => (
             <V2Button
               key={mode}

@@ -50,7 +50,7 @@ export function V2TraceLinkTypeMenu({
         <div className="min-w-[260px] p-2.5">
           <V2Text
             as="div"
-            className="mb-1.5 border-b border-slate-100 px-1 pb-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:text-slate-400"
+            className="mb-1.5 border-b border-border px-1 pb-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider text-muted-fg  "
           >
             {t("v2.traceability.toolbar.linkTypeTitle")}
           </V2Text>
@@ -74,12 +74,12 @@ export function V2TraceLinkTypeMenu({
                     </V2Text>
                     <V2Text
                       as="span"
-                      className="text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-white"
+                      className="text-muted-fg group-hover:text-foreground  dark:group-hover:text-foreground"
                     >
                       {t(meta.fullTitleKey)}
                     </V2Text>
                   </V2Text>
-                  <Plus className="h-3.5 w-3.5 text-slate-400 group-hover:text-primary" />
+                  <Plus className="h-3.5 w-3.5 text-muted-fg group-hover:text-primary" />
                 </V2Button>
               );
             })}

@@ -5,24 +5,24 @@ import {
 } from "./traceability.visual";
 
 describe("getTraceabilityVisualMeta", () => {
-  it("shows an outbound invoice as a receipt (emerald)", () => {
+  it("shows an outbound invoice as a receipt (success token)", () => {
     const meta = getTraceabilityVisualMeta({
       docType: "INVOICE",
       title: "Hóa đơn bán hàng",
     });
     expect(meta.label).toBe("HĐ BÁN");
     expect(meta.isInvoiceOut).toBe(true);
-    expect(meta.badgeCls).toContain("emerald");
+    expect(meta.badgeCls).toContain("text-success");
   });
 
-  it("shows an inbound invoice as a payment (orange)", () => {
+  it("shows an inbound invoice as a payment (warning token)", () => {
     const meta = getTraceabilityVisualMeta({
       docType: "INVOICE",
       title: "Hóa đơn mua",
     });
     expect(meta.label).toBe("HĐ MUA");
     expect(meta.isInvoiceIn).toBe(true);
-    expect(meta.badgeCls).toContain("#ea580c");
+    expect(meta.badgeCls).toContain("text-warning");
   });
 
   it("maps a tax status code to its i18n key", () => {
@@ -65,10 +65,10 @@ describe("getTraceabilityVisualMeta", () => {
     expect(meta.label).toBe("CHI NGOÀI");
   });
 
-  it("uses DOC_TYPE_META for other document types", () => {
+  it("uses DOC_TYPE_META for other document types (neutral tokens)", () => {
     const meta = getTraceabilityVisualMeta({ docType: "INVENTORY_ITEM" });
     expect(meta.label).toBe("ITEM");
-    expect(meta.badgeCls).toContain("cyan");
+    expect(meta.badgeCls).toContain("text-foreground");
   });
 });
 

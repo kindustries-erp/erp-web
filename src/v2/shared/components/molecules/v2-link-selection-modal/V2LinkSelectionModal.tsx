@@ -15,6 +15,7 @@ export function V2LinkSelectionModal({
   description,
   children,
   footerActions,
+  size = "2xl",
 }: V2LinkSelectionModalProps) {
   const { t } = useV2Translation();
   return (
@@ -23,7 +24,7 @@ export function V2LinkSelectionModal({
       onOpenChange={(next) => !next && onClose()}
       title={title}
       description={description}
-      size="xl"
+      size={size}
       footer={
         <div className="flex w-full items-center justify-end gap-2">
           <V2Button type="button" variant="secondary" onClick={onClose}>

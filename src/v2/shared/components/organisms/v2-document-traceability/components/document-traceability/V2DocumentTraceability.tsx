@@ -3,6 +3,7 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
 import { V2AlertBanner } from "@/v2/shared/components/molecules/v2-alert-banner";
 import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
+import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2Traceability } from "../../hooks/useV2Traceability";
 import {
@@ -17,6 +18,8 @@ import { V2TraceToolbar } from "../trace-toolbar";
 import type { V2DocumentTraceabilityProps } from "./V2DocumentTraceability.type";
 
 const CANVAS_HEIGHT = "h-[480px]";
+/** Toàn màn hình: sơ đồ chiếm phần còn lại của modal (trừ thanh công cụ và tiêu đề) */
+const FULLSCREEN_HEIGHT = "h-[calc(90vh-170px)]";
 
 /** Sơ đồ chứng từ liên kết hoàn chỉnh: thanh công cụ, ba chế độ xem, và xác nhận gỡ liên kết */
 export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
@@ -65,13 +68,8 @@ export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
     onAddLink?.(undefined, type);
   };
 
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-3",
-        isFullscreen && "fixed inset-0 z-[60] overflow-auto bg-background p-4",
-      )}
-    >
+  const content = (
+    <div className="flex flex-col gap-3">
       <V2TraceToolbar
         linkedCount={linkedCount}
         canLink={canLink}
@@ -90,12 +88,17 @@ export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
       )}
 
       {trace.loading || !graph ? (
-        <V2Skeleton className={cn("w-full rounded-xl", CANVAS_HEIGHT)} />
+        <V2Skeleton
+          className={cn(
+            "w-full rounded-xl",
+            isFullscreen ? FULLSCREEN_HEIGHT : CANVAS_HEIGHT,
+          )}
+        />
       ) : viewMode === "canvas" ? (
         <div
           className={cn(
-            "w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950",
-            isFullscreen ? "h-[calc(100vh-120px)]" : CANVAS_HEIGHT,
+            "w-full overflow-hidden rounded-xl border border-border bg-surface  ",
+            isFullscreen ? FULLSCREEN_HEIGHT : CANVAS_HEIGHT,
           )}
         >
           <V2TraceabilityCanvas
@@ -147,4 +150,18 @@ export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
       />
     </div>
   );
+
+  // Toàn màn hình dùng Radix Dialog lồng trong drawer (không fixed/portal ra body: bị drawer chặn)
+  if (isFullscreen) {
+    return (
+      <V2Modal
+        open
+        size="full"
+        onOpenChange={(open) => !open && trace.exitFullscreen()}
+      >
+        {content}
+      </V2Modal>
+    );
+  }
+  return content;
 }
