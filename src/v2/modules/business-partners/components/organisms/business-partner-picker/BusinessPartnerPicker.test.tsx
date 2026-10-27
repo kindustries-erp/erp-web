@@ -64,6 +64,9 @@ describe("BusinessPartnerPicker", () => {
       pageSize: 20,
       totalPages: 0,
     });
+    vi.spyOn(businessPartnersV2Api, "nextCode").mockResolvedValue({
+      nextCode: "KH-0001",
+    });
 
     renderPicker({ direction: "OUT" });
     fireEvent.click(screen.getByRole("button", { name: "+ Tạo đối tác mới" }));

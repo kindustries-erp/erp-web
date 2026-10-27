@@ -199,6 +199,7 @@ export const debtsVi = {
     description: "Diễn giải",
     amount: "Số tiền",
     netOff: "Đã cấn trừ",
+    netOffAction: "Cấn trừ",
     remaining: "Chưa phân bổ",
   },
   drawer: {

@@ -6,7 +6,7 @@ import type {
   InvoiceDetailSubTabKey,
   PartnerSubTabMode,
 } from "../erp-invoice-partner-tab";
-import { ErpInvoiceSettlementRightPanel } from "../erp-invoice-settlement-right-panel";
+import { ErpInvoiceSettlementDebtSection } from "../erp-invoice-settlement-right-panel";
 import { ErpInvoiceInternalSidebar } from "./ErpInvoiceInternalSidebar";
 import type { ErpInvoiceDetailDrawerProps } from "./ErpInvoiceDetailDrawer.type";
 import { formatTaxInvoiceStatus } from "./ErpInvoiceDetailDrawer.state";
@@ -35,7 +35,6 @@ export function useErpInvoiceDetailDrawerPresentation(
     pendingTagIds,
     onPendingTagsChange,
     onSyncDetail,
-    startEdit,
     children,
     activeTabKey,
   } = props;
@@ -109,20 +108,27 @@ export function useErpInvoiceDetailDrawerPresentation(
     onSyncDetail,
   ]);
 
+  // Cùng cây `div > ErpInvoiceInternalSidebar` với defaultRightPanel (chỉ thêm debtSlot)
+  // để chuyển sub-tab "Chứng từ liên kết" không unmount/mount lại toàn bộ sidebar.
   const settlementRightPanel = useMemo(() => {
     if (!detailInvoice) return undefined;
     return (
-      <ErpInvoiceSettlementRightPanel
-        invoice={detailInvoice}
-        form={form}
-        editMode={editMode}
-        fieldSet={fieldSet}
-        direction={direction}
-        onRefresh={onSyncDetail}
-        onStartEdit={startEdit}
-        pendingTagIds={pendingTagIds}
-        onPendingTagsChange={onPendingTagsChange}
-      />
+      <div className="flex flex-col gap-4">
+        <ErpInvoiceInternalSidebar
+          form={form as any}
+          editMode={editMode}
+          fieldSet={fieldSet as any}
+          invoiceId={detailInvoice.id}
+          pendingTagIds={pendingTagIds}
+          onPendingTagsChange={onPendingTagsChange}
+          direction={
+            direction || (detailInvoice.direction as "IN" | "OUT") || "IN"
+          }
+          detailInvoice={detailInvoice}
+          onRefreshDetail={onSyncDetail}
+          debtSlot={<ErpInvoiceSettlementDebtSection />}
+        />
+      </div>
     );
   }, [
     detailInvoice,
@@ -131,7 +137,6 @@ export function useErpInvoiceDetailDrawerPresentation(
     fieldSet,
     direction,
     onSyncDetail,
-    startEdit,
     pendingTagIds,
     onPendingTagsChange,
   ]);

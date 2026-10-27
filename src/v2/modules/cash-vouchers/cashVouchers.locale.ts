@@ -1,0 +1,51 @@
+import { registerV2ModuleLocale } from "@/v2/shared/locales";
+
+/** Khóa dùng dạng `v2.cashVouchers.<nhóm>.<khóa>` */
+registerV2ModuleLocale("cashVouchers", {
+  vi: {
+    form: {
+      create: "Tạo mới phiếu thu/chi tiền mặt",
+      general: "Thông tin chung",
+      cashBook: "Sổ quỹ",
+      cashBookPlaceholder: "Chọn sổ quỹ",
+      transDate: "Ngày giao dịch",
+      datePlaceholder: "Chọn ngày",
+      correspondentName: "Người nộp/nhận",
+      correspondentPlaceholder: "Nhập tên người nộp/nhận",
+      amount: "Số tiền",
+      debitAmount: "Thu (phát sinh Nợ)",
+      creditAmount: "Chi (phát sinh Có)",
+      amountRule: "Nhập đúng một trong hai: Thu hoặc Chi",
+      content: "Nội dung",
+      description: "Diễn giải",
+      descriptionPlaceholder: "Nhập diễn giải...",
+      required: "Trường này là bắt buộc",
+      missingInfo: "Thiếu thông tin",
+      saveSuccess: "Đã lưu phiếu thu/chi",
+      saveError: "Không thể lưu phiếu",
+    },
+  },
+  en: {
+    form: {
+      create: "Create cash receipt/payment voucher",
+      general: "General information",
+      cashBook: "Cash book",
+      cashBookPlaceholder: "Select cash book",
+      transDate: "Transaction date",
+      datePlaceholder: "Select date",
+      correspondentName: "Payer/payee",
+      correspondentPlaceholder: "Enter payer/payee name",
+      amount: "Amount",
+      debitAmount: "Receipt (debit)",
+      creditAmount: "Payment (credit)",
+      amountRule: "Enter exactly one: Receipt or Payment",
+      content: "Content",
+      description: "Description",
+      descriptionPlaceholder: "Enter description...",
+      required: "This field is required",
+      missingInfo: "Missing information",
+      saveSuccess: "Voucher saved",
+      saveError: "Could not save voucher",
+    },
+  },
+});

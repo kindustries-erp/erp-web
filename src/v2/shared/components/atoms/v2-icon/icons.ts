@@ -31,6 +31,8 @@ export {
   Target,
   PackageCheck,
   Wallet,
+  Landmark,
+  Banknote,
   Settings,
   UserSquare2,
   Paperclip,

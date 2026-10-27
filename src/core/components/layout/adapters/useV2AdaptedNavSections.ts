@@ -3,9 +3,11 @@ import { useT } from "@/core/i18n";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
-import type {
-  V2SidebarSectionData,
-  V2SidebarItem,
+import {
+  type V2SidebarSectionData,
+  type V2SidebarItem,
+  Landmark,
+  Banknote,
 } from "@/v2/shared/components";
 import {
   Boxes,
@@ -544,6 +546,22 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/settings-branch",
         });
       }
+      if (canReadBankStatements) {
+        items.push({
+          id: "settings-bank",
+          label: t("thietlap.tabs.ngan-hang", "Tài khoản ngân hàng"),
+          icon: Landmark,
+          href: "/settings-bank",
+        });
+      }
+      if (canReadCashStatements) {
+        items.push({
+          id: "settings-cash-fund",
+          label: t("thietlap.tabs.quy", "Quỹ tiền mặt"),
+          icon: Banknote,
+          href: "/settings-cash-fund",
+        });
+      }
       if (canReadSysTags) {
         items.push({
           id: "sys-tags",
@@ -606,6 +624,8 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     isAdminEmail,
     canReadAdminUsers,
     canReadActivityLogs,
+    canReadBankStatements,
+    canReadCashStatements,
     canReadSysTags,
     canReadCustomFields,
     t,

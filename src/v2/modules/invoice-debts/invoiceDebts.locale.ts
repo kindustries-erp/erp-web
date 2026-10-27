@@ -1,4 +1,5 @@
 import { registerV2ModuleLocale } from "@/v2/shared/locales";
+import { invoiceDebtsNetOffLocale } from "./invoiceDebtsNetOff.locale";
 
 /** Chữ hiển thị của module; khóa dùng dạng `v2.invoiceDebts.<nhóm>.<khóa>` */
 registerV2ModuleLocale("invoiceDebts", {
@@ -65,6 +66,7 @@ registerV2ModuleLocale("invoiceDebts", {
       saveError: "Không thể lưu dữ liệu",
       loadError: "Không thể tải dữ liệu",
     },
+    netOff: invoiceDebtsNetOffLocale.vi,
     delete: {
       title: "Xác nhận xóa",
       message: "Bạn có chắc muốn xóa?",
@@ -135,6 +137,7 @@ registerV2ModuleLocale("invoiceDebts", {
       saveError: "Unable to save",
       loadError: "Unable to load data",
     },
+    netOff: invoiceDebtsNetOffLocale.en,
     delete: {
       title: "Confirm delete",
       message: "Are you sure you want to delete?",

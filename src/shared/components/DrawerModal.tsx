@@ -216,11 +216,13 @@ export function DrawerModal({
     else onClose();
   }, [confirmOnClose, onClose]);
 
-  // Close on Escape
+  // Close on Escape. Bỏ qua khi drawer V2 đang mở chồng lên (Esc đóng drawer V2 trước)
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") requestClose();
+      if (e.key !== "Escape") return;
+      if (document.querySelector("[data-v2-standard-drawer]")) return;
+      requestClose();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);

@@ -27,8 +27,8 @@ export const V2TableRowHoverActions = React.memo(
     return (
       <div
         className={cn(
-          "pointer-events-auto absolute right-3.5 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1 rounded-xl border border-[color:var(--popup-border,rgba(226,232,240,0.8))] bg-[var(--popup-bg,rgba(246,248,252,0.72))] p-0.5 opacity-0 shadow-md backdrop-blur-xl transition-opacity focus-within:opacity-100 group-hover:opacity-100",
-          menuOpen && "opacity-100",
+          "pointer-events-auto absolute right-3.5 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1 rounded-xl border border-[color:var(--popup-border,rgba(226,232,240,0.8))] bg-[var(--popup-bg,rgba(246,248,252,0.72))] p-0.5 opacity-0 shadow-md transition-opacity focus-within:opacity-100 group-hover:opacity-100 focus-within:backdrop-blur-xl group-hover:backdrop-blur-xl",
+          menuOpen && "opacity-100 backdrop-blur-xl",
         )}
         onClick={(event) => event.stopPropagation()}
       >

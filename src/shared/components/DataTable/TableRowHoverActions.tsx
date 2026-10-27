@@ -168,13 +168,15 @@ export const TableRowHoverActions = React.memo(function TableRowHoverActions({
       )}
       onClick={(e) => e.stopPropagation()}
     >
+      {/* Kính chỉ bật khi pill hiện: pill ẩn ở mỗi dòng không được tạo lớp compositing */}
       <div
-        style={{
-          background: "var(--popup-bg, rgba(246, 248, 252, 0.78))",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        }}
-        className="inline-flex items-center gap-1 p-1 rounded-xl border border-[color:var(--popup-border)] shadow-[0_8px_24px_-4px_rgba(15,23,42,0.16),0_2px_6px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset]"
+        style={{ background: "var(--popup-bg, rgba(246, 248, 252, 0.78))" }}
+        className={cn(
+          "inline-flex items-center gap-1 p-1 rounded-xl border border-[color:var(--popup-border)] shadow-[0_8px_24px_-4px_rgba(15,23,42,0.16),0_2px_6px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset]",
+          isMenuOpen
+            ? "backdrop-blur-[20px] backdrop-saturate-[180%]"
+            : "group-hover:backdrop-blur-[20px] group-hover:backdrop-saturate-[180%] group-hover/row:backdrop-blur-[20px] group-hover/row:backdrop-saturate-[180%]",
+        )}
       >
         {/* Quick action buttons */}
         {quickActions.map((action, index) => {

@@ -5,7 +5,6 @@ import {
   type V2ComboboxOption,
 } from "@/v2/shared/components/molecules/v2-combobox";
 import { V2DatePicker } from "@/v2/shared/components/molecules/v2-date-picker";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2ExportPeriodType } from "@/v2/shared/utils/exportPeriod";
 
@@ -18,6 +17,9 @@ export interface V2ExportPeriodFieldsProps {
   quarter: string;
   onQuarterChange: (quarter: string) => void;
   quarterOptions: V2ComboboxOption[];
+  year?: string;
+  onYearChange?: (year: string) => void;
+  yearOptions?: V2ComboboxOption[];
   dateFrom: string;
   onDateFromChange: (value: string) => void;
   dateTo: string;
@@ -33,6 +35,9 @@ export const V2ExportPeriodFields: React.FC<V2ExportPeriodFieldsProps> = ({
   quarter,
   onQuarterChange,
   quarterOptions,
+  year,
+  onYearChange,
+  yearOptions = [],
   dateFrom,
   onDateFromChange,
   dateTo,
@@ -44,60 +49,120 @@ export const V2ExportPeriodFields: React.FC<V2ExportPeriodFieldsProps> = ({
     null,
   );
 
+  const periodTypeOptions: V2ComboboxOption[] = React.useMemo(
+    () => [
+      {
+        value: "month",
+        label: t("v2.exportExcel.condition.periodMonth", "Theo tháng"),
+      },
+      {
+        value: "quarter",
+        label: t("v2.exportExcel.condition.periodQuarter", "Theo quý"),
+      },
+      {
+        value: "year",
+        label: t("v2.exportExcel.condition.periodYear", "Theo năm"),
+      },
+      {
+        value: "custom",
+        label: t("v2.exportExcel.condition.periodCustom", "Tùy chỉnh"),
+      },
+    ],
+    [t],
+  );
+
   return (
     <div className="space-y-3">
-      <V2TabBar
-        variant="sub"
-        tabs={[
-          {
-            key: "month",
-            label: t("v2.exportExcel.condition.periodMonth", "Theo tháng"),
-          },
-          {
-            key: "quarter",
-            label: t("v2.exportExcel.condition.periodQuarter", "Theo quý"),
-          },
-          {
-            key: "custom",
-            label: t("v2.exportExcel.condition.periodCustom", "Tùy chỉnh"),
-          },
-        ]}
-        activeTabKey={periodType}
-        onTabChange={(key) => onPeriodTypeChange(key as V2ExportPeriodType)}
-      />
-
-      {periodType === "month" && (
+      {/* Hàng 1: Loại kỳ (50%) & Kỳ/Quý/Năm (50%) theo tỷ lệ 1:1 */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <V2Text variant="label">
-            {t("v2.exportExcel.condition.month", "Kỳ")}
+            {t("v2.exportExcel.condition.periodType", "Loại kỳ")}
           </V2Text>
           <V2Combobox
-            options={periodOptions}
-            value={period || null}
-            onValueChange={(value) => onPeriodChange(value ?? "")}
-            placeholder={t("v2.exportExcel.form.selectPeriod", "Chọn kỳ...")}
-            searchable={false}
-          />
-        </div>
-      )}
-
-      {periodType === "quarter" && (
-        <div className="space-y-1.5">
-          <V2Text variant="label">
-            {t("v2.exportExcel.condition.quarter", "Quý")}
-          </V2Text>
-          <V2Combobox
-            options={quarterOptions}
-            value={quarter || null}
-            onValueChange={(value) => onQuarterChange(value ?? "")}
+            options={periodTypeOptions}
+            value={periodType}
+            onValueChange={(val) =>
+              onPeriodTypeChange(val as V2ExportPeriodType)
+            }
             placeholder={t(
-              "v2.exportExcel.condition.selectQuarter",
-              "Chọn quý...",
+              "v2.exportExcel.condition.selectPeriodType",
+              "Chọn loại kỳ...",
             )}
             searchable={false}
           />
         </div>
-      )}
+
+        {periodType === "month" && (
+          <div className="space-y-1.5">
+            <V2Text variant="label">
+              {t("v2.exportExcel.condition.month", "Kỳ")}
+            </V2Text>
+            <V2Combobox
+              options={periodOptions}
+              value={period || null}
+              onValueChange={(value) => onPeriodChange(value ?? "")}
+              placeholder={t("v2.exportExcel.form.selectPeriod", "Chọn kỳ...")}
+              searchable={false}
+            />
+          </div>
+        )}
+
+        {periodType === "quarter" && (
+          <div className="space-y-1.5">
+            <V2Text variant="label">
+              {t("v2.exportExcel.condition.quarter", "Quý")}
+            </V2Text>
+            <V2Combobox
+              options={quarterOptions}
+              value={quarter || null}
+              onValueChange={(value) => onQuarterChange(value ?? "")}
+              placeholder={t(
+                "v2.exportExcel.condition.selectQuarter",
+                "Chọn quý...",
+              )}
+              searchable={false}
+            />
+          </div>
+        )}
+
+        {periodType === "year" && (
+          <div className="space-y-1.5">
+            <V2Text variant="label">
+              {t("v2.exportExcel.condition.year", "Năm")}
+            </V2Text>
+            <V2Combobox
+              options={yearOptions}
+              value={year || null}
+              onValueChange={(value) => onYearChange?.(value ?? "")}
+              placeholder={t(
+                "v2.exportExcel.condition.selectYear",
+                "Chọn năm...",
+              )}
+              searchable={false}
+            />
+          </div>
+        )}
+
+        {periodType === "custom" && (
+          <div className="space-y-1.5">
+            <V2Text variant="label">
+              {t("v2.exportExcel.condition.month", "Kỳ")}
+            </V2Text>
+            <V2Combobox
+              options={[]}
+              value={null}
+              onValueChange={() => {}}
+              disabled
+              placeholder={t(
+                "v2.exportExcel.condition.customPeriodHint",
+                "Theo khoảng ngày bên dưới",
+              )}
+              searchable={false}
+            />
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">

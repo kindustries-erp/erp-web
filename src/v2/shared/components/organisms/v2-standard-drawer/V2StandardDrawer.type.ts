@@ -113,6 +113,8 @@ export interface V2StandardDrawerProps {
   id?: string;
   stackOffsetPx?: number;
   disableStackOffset?: boolean;
+  /** z-index tầng đầu, dùng khi drawer V2 mở chồng lên drawer v1 */
+  baseZIndex?: number;
 
   // Class overrides & Options
   className?: string;

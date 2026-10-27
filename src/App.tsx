@@ -14,7 +14,7 @@ import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage, pageToPath } from "@/shared/utils/pageUrl";
 import { useEnvStore } from "@/core/store/useEnvStore";
 import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
-import { Login } from "@/pages/Login";
+import { V2LoginPage } from "@/v2/modules/auth/pages/login/V2LoginPage";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { VinfastPartsTrackingPage } from "@/pages/VinfastPartsTrackingPage";
@@ -441,7 +441,7 @@ export default function App() {
     );
   }
 
-  if (!isLoggedIn) return <Login />;
+  if (!isLoggedIn) return <V2LoginPage />;
 
   return (
     <TooltipProvider>

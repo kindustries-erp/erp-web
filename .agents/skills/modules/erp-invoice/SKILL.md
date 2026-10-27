@@ -249,6 +249,14 @@ src/modules/erp-invoices-core/
     - `activeTabKey="linked_docs"`: tự động chuyển hướng sang tab `invoice_details` với sub-tab `linked_docs`.
     - `activeTabKey="accounting"`: tự động chuyển hướng sang tab `invoice_details` với sub-tab `accounting`.
     - `partnerViewMode` `lines`/`invoices`: mở tab `invoice_partner`.
+  - **Tối ưu hiệu năng đã áp dụng (drawer chi tiết)**:
+    - `ErpInvoiceSettlementProvider` nhận `loadSelectionData={false}` từ drawer: không tải 50 dòng sao kê và gợi ý cấn trừ khi mở drawer; chỉ dữ liệu công nợ được nạp. Query `getTransactions` vẫn chỉ bật khi sub-tab `bank_statement` đang mở.
+    - `onOpenNetOffModal`/`onOpenPoModal`/`onOpenSoModal`/`onOpenGarageCaseModal` là `useCallback` ổn định, và `setTraceabilityCount` chỉ cập nhật khi số đếm đổi, để `CanvasView` không tính lại layout khi drawer render.
+    - `settlementRightPanel` dùng chung cây `div > ErpInvoiceInternalSidebar` với `defaultRightPanel` (chỉ thêm `debtSlot`), nên đổi sub-tab "Chứng từ liên kết" không mount lại sidebar.
+    - `useTraceabilityLogic` chỉ gọi `fetchGraph` một lần khi mount; refetch silent chỉ khi thoát edit mode (chuyển true → false).
+    - **Kéo node canvas chậm (Layerize)**: nguyên nhân là các lớp `backdrop-filter` phía sau drawer (bảng hóa đơn `DataTable` V1 có sticky header/footer kính, và pill hành động ẩn ở mỗi dòng). Quy tắc: pill hành động ẩn không được có `backdrop-filter` khi chưa hover (`TableRowHoverActions`, `V2TableRowHoverActions`); khi có drawer V2 mở, `components.css` tắt kính của bảng nền (`body:has([data-v2-standard-drawer][data-state="open"])`). Không thêm `backdrop-blur` mới vào danh sách/bảng nằm dưới drawer.
+  - **Sơ đồ V2 (đã nối vào drawer)**: toàn màn hình mở bằng `V2Modal size="full"` (Radix lồng trong drawer, không `fixed`); màu dùng token V2 (`text-success` thu, `text-warning` chi, `text-destructive` lỗi, `bg-surface`/`border-border`), không dùng màu Tailwind thô.
+  - **Sơ đồ V2 (ghi chú cũ)**: `src/v2/shared/components/organisms/v2-document-traceability/` đã có canvas, pipeline, bảng kê, thanh công cụ, xác nhận gỡ liên kết và entry `V2DocumentTraceability`. Drawer hóa đơn vẫn dùng bản V1 cho đến khi nối (Task 3.1). Mở chứng từ qua callback `onOpenDocument`, không dùng event `window` của V1.
   5. `erp-invoice-pdf-upload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer (`erp-invoice-pdf-preview`) hoặc tải xuống.
   6. `erp-invoice-default-attributes-section`: Tích hợp 2 drawer sections: `Thuộc tính chung` (Global) và `Danh mục & Thuộc tính` (Category) từ Module Config.
 
@@ -404,6 +412,15 @@ bun run lint:check
 - **Tab**: Tổng quan (`InvoiceShapeDashboard`), Hóa đơn mua vào (`IN`), Hóa đơn bán ra (`OUT`).
 - **Drawer chi tiết** (`InvoiceShapeDetailDrawer`): chỉ đọc, mở qua `?overlay=invoice:<id>`, dữ liệu từ `useInvoiceDetailQuery`.
 - **Chưa có** (đợt sau): sửa, hạch toán, bulk, net-off, đồng bộ/import, xuất Excel/PDF, tab Tài chính và Chứng từ liên kết, tải PDF gốc.
+
+### 7.1b. Modal chọn chứng từ ghép nối trên V2 (Đợt 2)
+- `src/v2/shared/components/molecules/v2-link-selection-modal/`: khung `V2LinkSelectionModal` (bọc `V2Modal`, footer Hủy).
+- `src/v2/modules/finance-invoice/components/organisms/invoice-link-selection/`: `V2LinkPickerModal` (bảng một dòng, nút "Chọn" trong ô), hook `useV2LinkPicker`, `V2PurchaseOrderSelectionModal`, `V2SalesOrderSelectionModal`. PO/SO: chọn là xong.
+- Tab cấn trừ: một nhóm ba nút loại trừ nhau Sao kê | Sổ quỹ | Gợi ý khớp (`NetOffView`); lựa chọn giữ khi đổi tab. Modal cỡ `2xl` (`V2LinkSelectionModal` mặc định).
+- Sao kê / Sổ quỹ (`V2BankNetOffSelectionModal`, hook `useV2BankNetOffPicker`, helper `bankNetOff.helper.ts`, cột `bankNetOff.columns.tsx`): chọn nhiều dòng, số tiền cấn trừ từng dòng kẹp trong phần còn lại, xác nhận một lần → `onSelect([{id, amount}])`. Đổi nguồn Sao kê/Sổ quỹ (`sourceType` BANK/CASH) giữ lựa chọn; nút "Gợi ý khớp" lấy `POST /api/v1/erp-invoices/smart-net-off-suggestions` (`useV2NetOffSuggestions`) và chỉ hiện các gợi ý, kèm nhãn mức khớp. Phân trang/tìm kiếm dùng bảng server của V2 (không có thanh riêng).
+- Chưa có: giao dịch ngoài sổ (nhập tay, danh mục), panel phải/công nợ của drawer, Garage.
+- API chỉ đọc: `api/linkSources/` (`purchaseOrderLinkApi`, `salesOrderLinkApi`) qua `v2HttpClient`.
+- Chưa có: Garage, giao dịch ngoài sổ. Drawer hóa đơn V1 vẫn dùng modal V1 cho đến khi nối (Task 3.1).
 
 ### 7.2. Dữ liệu và API
 - Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`, đường dẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).

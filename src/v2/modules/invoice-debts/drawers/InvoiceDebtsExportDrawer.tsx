@@ -102,6 +102,9 @@ export function InvoiceDebtsExportDrawer({
           quarter={vm.quarter}
           onQuarterChange={vm.handleQuarterChange}
           quarterOptions={vm.quarterOptions}
+          year={vm.year}
+          onYearChange={vm.handleYearChange}
+          yearOptions={vm.yearOptions}
           dateFrom={vm.dateFrom}
           onDateFromChange={vm.setDateFrom}
           dateTo={vm.dateTo}

@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   invoiceDebtsApi,
   type InvoicePartnerType,
 } from "@/modules/accounting/api/invoiceDebtsApi";
+import { Button } from "@/shared/components/ui/Button";
+import {
+  DebtNetOffDrawer,
+  type NetOffTransaction,
+} from "@/v2/modules/invoice-debts";
 
 export interface InvoicePartnerUnallocatedSectionProps {
   taxCode: string;
@@ -24,6 +30,9 @@ export function InvoicePartnerUnallocatedSection({
   enabled,
 }: InvoicePartnerUnallocatedSectionProps) {
   const { t } = useTranslation(["debts", "common"]);
+  const [netOffTarget, setNetOffTarget] = useState<NetOffTransaction | null>(
+    null,
+  );
   const { data, isLoading, isError } = useQuery({
     queryKey: ["invoice-partner-unallocated", partnerType, taxCode],
     queryFn: () => invoiceDebtsApi.getUnallocatedPayments(taxCode, partnerType),
@@ -85,6 +94,7 @@ export function InvoicePartnerUnallocatedSection({
               <th className="px-2 py-1.5 text-right">
                 {t("debts:unallocated.remaining", "Chưa phân bổ")}
               </th>
+              <th className="px-2 py-1.5" />
             </tr>
           </thead>
           <tbody>
@@ -111,11 +121,36 @@ export function InvoicePartnerUnallocatedSection({
                 <td className="px-2 py-1.5 text-right tabular-nums font-semibold">
                   {money(row.unallocatedAmount)}
                 </td>
+                <td className="px-2 py-1.5 text-right">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setNetOffTarget({
+                        id: row.id,
+                        transDate: row.transDate,
+                        referenceNumber: row.referenceNumber,
+                        description: row.description,
+                        unallocatedAmount: Number(row.unallocatedAmount),
+                      })
+                    }
+                  >
+                    {t("debts:unallocated.netOffAction", "Cấn trừ")}
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <DebtNetOffDrawer
+        open={netOffTarget !== null}
+        onClose={() => setNetOffTarget(null)}
+        taxCode={taxCode}
+        partnerType={partnerType}
+        transaction={netOffTarget}
+      />
     </div>
   );
 }
