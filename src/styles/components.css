@@ -281,6 +281,15 @@ body:has([data-v2-standard-drawer][data-state="open"])
   -webkit-backdrop-filter: none !important;
 }
 
+/* Đang kéo node trên canvas chứng từ: tắt dash animation của cạnh được chọn để không repaint SVG mỗi khung hình */
+.react-flow.is-dragging .react-flow__edge.animated path {
+  animation: none;
+}
+
+.react-flow.is-dragging .react-flow__edgelabel-renderer > div {
+  box-shadow: none;
+}
+
 /* ── Fullscreen Modal Animations ── */
 @keyframes fullscreenModalIn {
   from {

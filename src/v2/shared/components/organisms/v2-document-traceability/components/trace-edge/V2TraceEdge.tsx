@@ -6,12 +6,11 @@ import {
   parseEdgeLabel,
   type EdgeLabelTone,
 } from "../../utils/traceability.edge-label";
-import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 const TONE_CLASS: Record<EdgeLabelTone, string> = {
   in: "text-success font-bold",
-  out: "text-warning  font-bold",
-  neutral: "text-foreground  font-bold",
+  out: "text-warning font-bold",
+  neutral: "text-foreground font-bold",
 };
 
 /** Cạnh nối hai chứng từ, nhãn đặt trên đường đi và tự tránh các khung giai đoạn */
@@ -50,45 +49,35 @@ export const V2TraceEdge = React.memo(function V2TraceEdge({
               zIndex: animated ? 1100 : 1000,
             }}
             className={cn(
-              "nodrag nopan select-none rounded-lg border border-border bg-surface/95 px-2 py-0.5 text-foreground shadow-sm hover:border-border   ",
+              "nodrag nopan select-none rounded-lg border border-border bg-surface/95 px-2 py-0.5 text-foreground shadow-sm hover:border-border",
               animated && "shadow-md",
             )}
           >
             {parts.kind === "amount" && (
               <div className="flex max-w-[130px] flex-col items-center justify-center px-1 py-0.5 text-center leading-tight">
-                <V2Text
-                  as="span"
-                  className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg "
-                >
+                <span className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg">
                   {parts.title}
-                </V2Text>
+                </span>
                 {parts.value && (
-                  <V2Text
-                    as="span"
+                  <span
                     className={cn(
                       "whitespace-nowrap font-mono text-[10px]",
                       TONE_CLASS[parts.tone],
                     )}
                   >
                     {parts.value}
-                  </V2Text>
+                  </span>
                 )}
               </div>
             )}
             {parts.kind === "note" && (
               <div className="flex max-w-[130px] flex-col items-center justify-center px-1 py-0.5 text-center leading-tight">
-                <V2Text
-                  as="span"
-                  className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg "
-                >
+                <span className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg">
                   {parts.title}
-                </V2Text>
-                <V2Text
-                  as="span"
-                  className="whitespace-nowrap text-[9px] italic text-muted-fg "
-                >
+                </span>
+                <span className="whitespace-nowrap text-[9px] italic text-muted-fg">
                   {parts.note}
-                </V2Text>
+                </span>
               </div>
             )}
             {parts.kind === "plain" && (

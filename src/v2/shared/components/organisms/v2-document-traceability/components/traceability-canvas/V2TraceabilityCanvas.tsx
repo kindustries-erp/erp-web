@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "@xyflow/react/dist/style.css";
 import {
   Background,
@@ -39,6 +39,8 @@ const EDGE_TYPES = {
   labeledSmoothStep: V2TraceEdge,
 };
 
+const FIT_VIEW_OPTIONS = { padding: 0.15 };
+
 export interface V2TraceabilityCanvasProps extends TraceabilityCanvasActions {
   graph: TraceabilityGraphData;
   direction: TraceabilityLayoutDirection;
@@ -70,6 +72,8 @@ function CanvasInner({
   onEditManualSettlement,
 }: V2TraceabilityCanvasProps) {
   const { t } = useV2Translation();
+  // Chỉ đổi hai lần mỗi lần kéo (bắt đầu/kết thúc), không đổi theo từng khung hình
+  const [isDragging, setIsDragging] = useState(false);
   const canvas = useTraceabilityCanvas({
     graph,
     direction,
@@ -95,6 +99,9 @@ function CanvasInner({
       edges={canvas.edges}
       onNodesChange={canvas.onNodesChange}
       onEdgesChange={canvas.onEdgesChange}
+      className={isDragging ? "is-dragging" : undefined}
+      onNodeDragStart={() => setIsDragging(true)}
+      onNodeDragStop={() => setIsDragging(false)}
       onNodeClick={canvas.onNodeClick}
       onPaneClick={canvas.onPaneClick}
       onReconnect={canvas.onReconnect}
@@ -106,10 +113,11 @@ function CanvasInner({
       edgesFocusable
       elevateEdgesOnSelect
       fitView
-      fitViewOptions={{ padding: 0.15 }}
+      fitViewOptions={FIT_VIEW_OPTIONS}
       minZoom={0.6}
       maxZoom={1.2}
       nodesDraggable
+      nodeDragThreshold={1}
       nodesConnectable
       elementsSelectable
       proOptions={{ hideAttribution: true }}
