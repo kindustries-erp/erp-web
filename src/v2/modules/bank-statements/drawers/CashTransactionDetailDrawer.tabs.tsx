@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { DrawerSection, type V2TabItemData } from "@/v2/shared/components";
 import { DrawerAuditTimeline } from "@/v2/shared/components/molecules/v2-drawer-audit-timeline";
 import type { DrawerAuditItem } from "@/v2/shared/components/molecules/v2-drawer-audit-timeline/DrawerAuditTimeline.type";
@@ -8,13 +9,16 @@ import type { CashDetailTab } from "../domain/rules/resolveDetailTab";
 export interface CashDetailTabsInput {
   transaction: CashTransactionDto;
   historyItems: DrawerAuditItem[];
+  /** Nội dung tab Hạch toán, dựng ở drawer vì cần state nháp */
+  accounting: ReactNode;
   t: (key: string, options?: Record<string, unknown>) => string;
 }
 
-/** Tab của drawer. Đợt này gồm Chi tiết và Lịch sử; tab đối tượng được thêm ở đợt D. */
+/** Tab của drawer: Chi tiết, Hạch toán, Lịch sử. Tab đối tượng được thêm ở đợt D. */
 export function buildCashDetailTabs({
   transaction,
   historyItems,
+  accounting,
   t,
 }: CashDetailTabsInput): V2TabItemData[] {
   return [
@@ -22,6 +26,11 @@ export function buildCashDetailTabs({
       key: "details" satisfies CashDetailTab,
       label: t("v2.bankStatements.cashDetail.tabs.details"),
       content: <CashVoucherSummary transaction={transaction} t={t} />,
+    },
+    {
+      key: "accounting" satisfies CashDetailTab,
+      label: t("v2.bankStatements.cashDetail.tabs.accounting"),
+      content: accounting,
     },
     {
       key: "history" satisfies CashDetailTab,

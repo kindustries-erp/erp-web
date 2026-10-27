@@ -64,3 +64,27 @@ export function buildHistoryItems(
     };
   });
 }
+
+/** Mã lỗi hạch toán → khóa thông điệp i18n */
+export const POSTING_ERROR_KEY = {
+  MISSING_POSTING_DATE: "missingPostingDate",
+  NO_LINES: "noLines",
+  MISSING_ACCOUNT: "missingAccount",
+  UNBALANCED: "unbalanced",
+} as const;
+
+/** Danh mục tài khoản → lựa chọn cho ô chọn tài khoản, nhãn dạng "mã - tên" */
+export const toAccountOptions = (
+  accounts: { id: string; accountCode: string; accountName: string }[],
+) =>
+  accounts.map((a) => ({
+    value: a.id,
+    label: `${a.accountCode} - ${a.accountName}`,
+  }));
+
+/** Thông điệp lỗi kiểm tra hạch toán trước khi gửi (ngày, dòng, tài khoản, cân bằng) */
+export const postingErrorMessage = (
+  code: keyof typeof POSTING_ERROR_KEY,
+  t: (key: string) => string,
+): string =>
+  t(`v2.bankStatements.cashDetail.posting.errors.${POSTING_ERROR_KEY[code]}`);

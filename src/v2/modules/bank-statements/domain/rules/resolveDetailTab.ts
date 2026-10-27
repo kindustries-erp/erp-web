@@ -1,4 +1,4 @@
-export type CashDetailTab = "details" | "partner" | "history";
+export type CashDetailTab = "details" | "accounting" | "partner" | "history";
 
 /**
  * Đổi khóa tab từ nơi mở drawer sang tab V2.
@@ -8,6 +8,8 @@ export function resolveDetailTab(
   key: string | null | undefined,
 ): CashDetailTab {
   switch (key) {
+    case "accounting":
+      return "accounting";
     case "partner":
     case "txn_partner":
       return "partner";

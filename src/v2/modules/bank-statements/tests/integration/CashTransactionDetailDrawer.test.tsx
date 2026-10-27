@@ -2,18 +2,34 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getTransaction, updateTransaction, listBranches } = vi.hoisted(() => ({
+const {
+  getTransaction,
+  updateTransaction,
+  postTransaction,
+  unpostTransaction,
+  listBranches,
+  listAccounts,
+} = vi.hoisted(() => ({
   getTransaction: vi.fn(),
   updateTransaction: vi.fn(),
+  postTransaction: vi.fn(),
+  unpostTransaction: vi.fn(),
   listBranches: vi.fn(),
+  listAccounts: vi.fn(),
 }));
 
 vi.mock("../../api/cashTransactionApi", () => ({
   cashTransactionApi: {
     getTransaction,
     updateTransaction,
-    postTransaction: vi.fn(),
-    unpostTransaction: vi.fn(),
+    postTransaction,
+    unpostTransaction,
+  },
+}));
+vi.mock("../../api/accountingLookupApi", () => ({
+  accountingLookupApi: {
+    listChartOfAccounts: listAccounts,
+    getJournalEntry: vi.fn(),
   },
 }));
 vi.mock("../../api/branchOptionsApi", () => ({

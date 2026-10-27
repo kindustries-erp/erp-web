@@ -65,6 +65,7 @@ describe("resolveDetailTab", () => {
     expect(resolveDetailTab("txn_partner")).toBe("partner");
     expect(resolveDetailTab("partner")).toBe("partner");
     expect(resolveDetailTab("history")).toBe("history");
+    expect(resolveDetailTab("accounting")).toBe("accounting");
   });
 
   it("khóa lạ hoặc rỗng về tab Chi tiết", () => {
