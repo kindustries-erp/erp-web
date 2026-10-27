@@ -249,6 +249,12 @@ src/modules/erp-invoices-core/
     - `activeTabKey="linked_docs"`: tự động chuyển hướng sang tab `invoice_details` với sub-tab `linked_docs`.
     - `activeTabKey="accounting"`: tự động chuyển hướng sang tab `invoice_details` với sub-tab `accounting`.
     - `partnerViewMode` `lines`/`invoices`: mở tab `invoice_partner`.
+  - **Tối ưu hiệu năng đã áp dụng (drawer chi tiết)**:
+    - `ErpInvoiceSettlementProvider` nhận `loadSelectionData={false}` từ drawer: không tải 50 dòng sao kê và gợi ý cấn trừ khi mở drawer; chỉ dữ liệu công nợ được nạp. Query `getTransactions` vẫn chỉ bật khi sub-tab `bank_statement` đang mở.
+    - `onOpenNetOffModal`/`onOpenPoModal`/`onOpenSoModal`/`onOpenGarageCaseModal` là `useCallback` ổn định, và `setTraceabilityCount` chỉ cập nhật khi số đếm đổi, để `CanvasView` không tính lại layout khi drawer render.
+    - `settlementRightPanel` dùng chung cây `div > ErpInvoiceInternalSidebar` với `defaultRightPanel` (chỉ thêm `debtSlot`), nên đổi sub-tab "Chứng từ liên kết" không mount lại sidebar.
+    - `useTraceabilityLogic` chỉ gọi `fetchGraph` một lần khi mount; refetch silent chỉ khi thoát edit mode (chuyển true → false).
+  - **Sơ đồ V2 (chưa nối)**: `src/v2/shared/components/organisms/v2-document-traceability/` đã có canvas, pipeline, bảng kê, thanh công cụ, xác nhận gỡ liên kết và entry `V2DocumentTraceability`. Drawer hóa đơn vẫn dùng bản V1 cho đến khi nối (Task 3.1). Mở chứng từ qua callback `onOpenDocument`, không dùng event `window` của V1.
   5. `erp-invoice-pdf-upload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer (`erp-invoice-pdf-preview`) hoặc tải xuống.
   6. `erp-invoice-default-attributes-section`: Tích hợp 2 drawer sections: `Thuộc tính chung` (Global) và `Danh mục & Thuộc tính` (Category) từ Module Config.
 
