@@ -12,5 +12,5 @@ export const cashTransactionKeys = {
       correspondentName,
     ] as const,
   traceability: (id: string | null | undefined) =>
-    ["bank-traceability-graph", id] as const,
+    ["v2-traceability-graph", id] as const,
 };

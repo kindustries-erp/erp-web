@@ -4,6 +4,7 @@ import {
   clampNetOffAmount,
   defaultNetOffAmount,
   exceedsNetOffLimit,
+  invoiceRemaining,
 } from "./netOffAllocation";
 import { canShowPartnerTabs } from "./partnerTabVisibility";
 import { resolveDetailTab } from "./resolveDetailTab";
@@ -43,6 +44,11 @@ describe("netOffAllocation", () => {
     expect(clampNetOffAmount(NaN, 100)).toBe(0);
   });
 
+  it("số còn lại của hóa đơn trừ phần đã cấn trừ, không âm", () => {
+    expect(invoiceRemaining(1000, 300)).toBe(700);
+    expect(invoiceRemaining(100, 150)).toBe(0);
+  });
+
   it("báo vượt khi tổng các khoản lớn hơn số còn cấn trừ", () => {
     expect(exceedsNetOffLimit([60, 50], 100)).toBe(true);
     expect(exceedsNetOffLimit([60, 40], 100)).toBe(false);
@@ -66,6 +72,7 @@ describe("resolveDetailTab", () => {
     expect(resolveDetailTab("partner")).toBe("partner");
     expect(resolveDetailTab("history")).toBe("history");
     expect(resolveDetailTab("accounting")).toBe("accounting");
+    expect(resolveDetailTab("traceability")).toBe("traceability");
   });
 
   it("khóa lạ hoặc rỗng về tab Chi tiết", () => {

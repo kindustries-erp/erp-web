@@ -2,6 +2,11 @@ import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-moda
 import { V2AlertBanner } from "@/v2/shared/components/molecules/v2-alert-banner";
 import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { CashPostingSection } from "../components/organisms/cash-posting-section";
+import { CashTraceabilitySection } from "../components/organisms/cash-traceability-section";
+import {
+  existingInvoiceIdsOf,
+  netOffCapacityOf,
+} from "./CashTransactionDetailDrawer.helper";
 import { CashGeneralInfo } from "../components/organisms/cash-general-info";
 import { buildCashDetailActions } from "./CashTransactionDetailDrawer.actions";
 import { buildCashDetailTabs } from "./CashTransactionDetailDrawer.tabs";
@@ -18,6 +23,15 @@ export function CashTransactionDetailDrawer(
   const state = useCashTransactionDetailDrawer(props);
   const { t, tx, draft } = state;
   const editing = state.mode === "edit";
+  const traceability = tx ? (
+    <CashTraceabilitySection
+      transactionId={tx.id}
+      editMode={editing}
+      direction={Number(tx.creditAmount) > 0 ? "OUT" : "IN"}
+      existingInvoiceIds={existingInvoiceIdsOf(tx)}
+      maxAvailableAmount={netOffCapacityOf(tx)}
+    />
+  ) : null;
   const accounting = (
     <CashPostingSection
       posting={state.posting}
@@ -52,6 +66,7 @@ export function CashTransactionDetailDrawer(
                 transaction: tx,
                 historyItems: state.historyItems,
                 accounting,
+                traceability,
                 t,
               })
             : []

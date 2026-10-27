@@ -88,3 +88,22 @@ export const postingErrorMessage = (
   t: (key: string) => string,
 ): string =>
   t(`v2.bankStatements.cashDetail.posting.errors.${POSTING_ERROR_KEY[code]}`);
+
+/** Số tiền còn có thể cấn trừ: số lớn hơn giữa Thu/Chi trừ đi các khoản đã cấn trừ */
+export const netOffCapacityOf = (tx: CashTransactionDto): number => {
+  const amount = Math.max(
+    Number(tx.creditAmount || 0),
+    Number(tx.debitAmount || 0),
+  );
+  const used = (tx.invoiceNetOffs ?? []).reduce(
+    (sum, n) => sum + Number(n.netOffAmount || 0),
+    0,
+  );
+  return Math.max(0, Math.round((amount - used) * 100) / 100);
+};
+
+/** Mã hóa đơn đã cấn trừ, để modal không cho chọn lại */
+export const existingInvoiceIdsOf = (tx: CashTransactionDto): string[] =>
+  (tx.invoiceNetOffs ?? [])
+    .map((n) => n.invoiceId ?? n.invoice?.id)
+    .filter((id): id is string => Boolean(id));

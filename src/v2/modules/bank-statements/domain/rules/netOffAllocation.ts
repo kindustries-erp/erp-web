@@ -23,3 +23,11 @@ export function exceedsNetOffLimit(
   const total = amounts.reduce((sum, a) => sum + toCents(a), 0);
   return total > toCents(maxAvailable);
 }
+
+/** Số còn lại của hóa đơn sau các khoản đã cấn trừ, không âm */
+export function invoiceRemaining(total: number, netOff: number): number {
+  return Math.max(
+    0,
+    Math.round((Number(total || 0) - Number(netOff || 0)) * 100) / 100,
+  );
+}

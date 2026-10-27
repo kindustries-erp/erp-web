@@ -11,14 +11,17 @@ export interface CashDetailTabsInput {
   historyItems: DrawerAuditItem[];
   /** Nội dung tab Hạch toán, dựng ở drawer vì cần state nháp */
   accounting: ReactNode;
+  /** Nội dung tab Chứng từ liên kết (sơ đồ truy vết và cấn trừ) */
+  traceability: ReactNode;
   t: (key: string, options?: Record<string, unknown>) => string;
 }
 
-/** Tab của drawer: Chi tiết, Hạch toán, Lịch sử. Tab đối tượng được thêm ở đợt D. */
+/** Tab của drawer: Chi tiết, Hạch toán, Chứng từ liên kết, Lịch sử. Tab đối tượng được thêm ở đợt D. */
 export function buildCashDetailTabs({
   transaction,
   historyItems,
   accounting,
+  traceability,
   t,
 }: CashDetailTabsInput): V2TabItemData[] {
   return [
@@ -31,6 +34,11 @@ export function buildCashDetailTabs({
       key: "accounting" satisfies CashDetailTab,
       label: t("v2.bankStatements.cashDetail.tabs.accounting"),
       content: accounting,
+    },
+    {
+      key: "traceability" satisfies CashDetailTab,
+      label: t("v2.bankStatements.cashDetail.tabs.traceability"),
+      content: traceability,
     },
     {
       key: "history" satisfies CashDetailTab,

@@ -67,7 +67,7 @@ describe("useInvoiceNetOffMutations", () => {
       queryKey: ["bank-transaction", "t1"],
     });
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: ["bank-traceability-graph", "t1"],
+      queryKey: ["v2-traceability-graph", "t1"],
     });
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: ["bank-transactions"],
