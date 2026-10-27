@@ -73,8 +73,9 @@ export function useDebtNetOffDrawer(props: DebtNetOffDrawerProps) {
   const toggleInvoice = (invoice: NetOffOpenInvoice) => {
     setAmounts((prev) => {
       if (invoice.id in prev) {
-        const { [invoice.id]: _removed, ...rest } = prev;
-        return rest;
+        const next = { ...prev };
+        delete next[invoice.id];
+        return next;
       }
       // Gợi ý mặc định: phần nhỏ hơn giữa số dư hóa đơn và số chưa phân bổ còn lại
       const suggested = Math.min(invoice.balanceAmount, remainingAmount);
