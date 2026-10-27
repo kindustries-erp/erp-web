@@ -199,6 +199,7 @@ export const debtsEn = {
     description: "Description",
     amount: "Amount",
     netOff: "Netted off",
+    netOffAction: "Offset",
     remaining: "Unallocated",
   },
   drawer: {
