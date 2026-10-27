@@ -79,7 +79,8 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
   const handleFetchGraph = useCallback(async (id: string) => {
     const res = await erpInvoicesCoreApi.getTraceabilityGraph(id);
     if (res && Array.isArray(res.nodes)) {
-      setTraceabilityCount(Math.max(0, res.nodes.length - 1));
+      const next = Math.max(0, res.nodes.length - 1);
+      setTraceabilityCount((prev) => (prev === next ? prev : next));
     }
     return res;
   }, []);

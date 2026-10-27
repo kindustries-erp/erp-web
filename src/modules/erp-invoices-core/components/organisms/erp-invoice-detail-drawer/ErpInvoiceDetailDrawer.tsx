@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { V2StandardDrawer } from "@/v2/shared/components";
 import { ErpInvoiceSettlementProvider } from "../erp-invoice-settlement-tab";
 import type { ErpInvoiceDetailDrawerProps } from "./ErpInvoiceDetailDrawer.type";
@@ -49,15 +49,32 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     actionGroups,
     footerLeft,
   } = useErpInvoiceDetailDrawer(props);
+  // Handler ổn định: tránh đổi reference làm ReactFlow re-layout khi drawer rerender
+  const onOpenNetOffModal = useCallback(
+    () => setShowNetOffModal(true),
+    [setShowNetOffModal],
+  );
+  const onOpenPoModal = useCallback(
+    () => setShowPoModal(true),
+    [setShowPoModal],
+  );
+  const onOpenSoModal = useCallback(
+    () => setShowSoModal(true),
+    [setShowSoModal],
+  );
+  const onOpenGarageCaseModal = useCallback(
+    () => setShowGarageCaseModal(true),
+    [setShowGarageCaseModal],
+  );
   const { drawerTitle, titleExtra, defaultRightPanel, tabs } =
     useErpInvoiceDetailDrawerPresentation(props, {
       partnerDefaultSubTab,
       handleFetchGraph,
       traceabilityCount,
-      onOpenNetOffModal: () => setShowNetOffModal(true),
-      onOpenPoModal: () => setShowPoModal(true),
-      onOpenSoModal: () => setShowSoModal(true),
-      onOpenGarageCaseModal: () => setShowGarageCaseModal(true),
+      onOpenNetOffModal,
+      onOpenPoModal,
+      onOpenSoModal,
+      onOpenGarageCaseModal,
     });
 
   return (
@@ -69,6 +86,7 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
       direction={direction}
       onRefresh={onSyncDetail}
       enabled={open}
+      loadSelectionData={false}
     >
       <V2StandardDrawer
         open={open}
