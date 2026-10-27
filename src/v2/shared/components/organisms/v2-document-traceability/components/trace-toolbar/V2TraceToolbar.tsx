@@ -7,6 +7,7 @@ import type {
   TraceabilityViewMode,
 } from "../../types/traceability.type";
 import { V2TraceLinkTypeMenu } from "./V2TraceLinkTypeMenu";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 export interface V2TraceToolbarProps {
   linkedCount: number;
@@ -41,9 +42,12 @@ export function V2TraceToolbar(props: V2TraceToolbarProps) {
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <div className="text-xs font-medium text-slate-600 dark:text-slate-300">
+      <V2Text
+        as="div"
+        className="text-xs font-medium text-slate-600 dark:text-slate-300"
+      >
         {t("v2.traceability.toolbar.total", { count: linkedCount })}
-      </div>
+      </V2Text>
 
       <div className="flex flex-wrap items-center gap-2">
         {canLink && (

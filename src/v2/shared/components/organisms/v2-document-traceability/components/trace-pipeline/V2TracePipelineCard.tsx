@@ -17,6 +17,7 @@ import {
   getTraceabilityVisualMeta,
   isManualSettlementNode,
 } from "../../utils/traceability.visual";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 export interface V2TracePipelineCardProps {
   node: TraceabilityNode;
@@ -54,7 +55,8 @@ export function V2TracePipelineCard({
     >
       <div className="mb-1.5 flex items-center justify-between gap-1">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span
+          <V2Text
+            as="span"
             className={cn(
               "flex items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider",
               meta.badgeCls,
@@ -62,15 +64,17 @@ export function V2TracePipelineCard({
             title={t(meta.fullTitleKey)}
           >
             {meta.label}
-          </span>
-          <button
+          </V2Text>
+          <V2Button
             type="button"
-            className="truncate font-mono text-xs font-bold text-slate-900 dark:text-slate-100"
+            variant="ghost"
+            size="xs"
+            className="h-auto truncate px-1 font-mono text-xs font-bold text-slate-900 dark:text-slate-100"
             onClick={() => void copyText(node.docNo)}
             title={t("v2.traceability.node.copy")}
           >
             {node.docNo}
-          </button>
+          </V2Button>
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-1">
@@ -120,13 +124,16 @@ export function V2TracePipelineCard({
       </div>
 
       <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 font-mono text-[11px] dark:border-slate-800/80">
-        <span className="font-sans text-slate-400">
+        <V2Text as="span" className="font-sans text-slate-400">
           {formatTraceDate(node.date)}
-        </span>
+        </V2Text>
         {node.restricted ? (
-          <span className="text-slate-400">***</span>
+          <V2Text as="span" className="text-slate-400">
+            ***
+          </V2Text>
         ) : (
-          <span
+          <V2Text
+            as="span"
             className={
               meta.amountCls ??
               "font-semibold text-slate-800 dark:text-slate-200"
@@ -134,7 +141,7 @@ export function V2TracePipelineCard({
             title={t(meta.fullTitleKey)}
           >
             {amountText}
-          </span>
+          </V2Text>
         )}
       </div>
     </div>

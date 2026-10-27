@@ -13,6 +13,7 @@ import type {
 import type { TraceabilityCanvasActions } from "../../types/traceability.flow.type";
 import { getStageForDocType } from "../../utils/traceability.helper";
 import { V2TracePipelineCard } from "./V2TracePipelineCard";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 export interface V2TracePipelineProps extends TraceabilityCanvasActions {
   graph: TraceabilityGraphData;
@@ -117,17 +118,21 @@ function StageColumn({
     <div className="flex w-[300px] flex-shrink-0 flex-col gap-2 rounded-xl border border-slate-200/90 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-900/40">
       <div className="flex items-center justify-between border-b border-slate-200/70 pb-2 dark:border-slate-800">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span
+          <V2Text
+            as="span"
             className={cn(
               "rounded border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider",
               stage.badgeCls,
             )}
           >
             {t(stage.shortTitleKey)}
-          </span>
-          <span className="font-mono text-xs font-medium text-slate-500">
+          </V2Text>
+          <V2Text
+            as="span"
+            className="font-mono text-xs font-medium text-slate-500"
+          >
             ({count})
-          </span>
+          </V2Text>
         </div>
         {canAdd && (
           <V2Button

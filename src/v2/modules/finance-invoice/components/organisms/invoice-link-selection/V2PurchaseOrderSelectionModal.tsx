@@ -7,6 +7,7 @@ import type { PurchaseOrderLinkDto } from "@/v2/modules/finance-invoice/api/link
 import { useV2LinkPicker } from "./useV2LinkPicker";
 import { V2LinkPickerModal } from "./V2LinkPickerModal";
 import { formatLinkDate } from "./invoice-link-selection.format";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 export interface V2PurchaseOrderSelectionModalProps {
   open: boolean;
@@ -53,7 +54,9 @@ export function V2PurchaseOrderSelectionModal({
         label: t("v2.invoiceLinkSelection.purchaseOrder.col.supplier"),
         size: 260,
         cell: (row) => (
-          <span className="text-xs">{row.supplierName || "—"}</span>
+          <V2Text as="span" className="text-xs">
+            {row.supplierName || "—"}
+          </V2Text>
         ),
       },
       {
@@ -61,16 +64,20 @@ export function V2PurchaseOrderSelectionModal({
         label: t("v2.invoiceLinkSelection.purchaseOrder.col.orderDate"),
         size: 120,
         cell: (row) => (
-          <span className="font-mono text-xs">
+          <V2Text as="span" className="font-mono text-xs">
             {formatLinkDate(row.orderDate)}
-          </span>
+          </V2Text>
         ),
       },
       {
         key: "status",
         label: t("v2.invoiceLinkSelection.purchaseOrder.col.status"),
         size: 120,
-        cell: (row) => <span className="text-xs">{row.status || "—"}</span>,
+        cell: (row) => (
+          <V2Text as="span" className="text-xs">
+            {row.status || "—"}
+          </V2Text>
+        ),
       },
     ],
     [t],

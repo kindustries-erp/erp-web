@@ -5,6 +5,7 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type { TraceStageFlowNode } from "../../types/traceability.flow.type";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 /** Khung nền một giai đoạn trên canvas, kèm nút thêm liên kết khi được phép sửa */
 export function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
@@ -33,17 +34,21 @@ export function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
     >
       <div className="pointer-events-auto absolute left-3.5 right-3.5 top-2.5 flex items-center justify-between">
         <div className="flex min-w-0 items-center gap-2">
-          <span
+          <V2Text
+            as="span"
             className={cn(
               "rounded-md border px-2 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider",
               stage.badgeCls,
             )}
           >
             {t(stage.shortTitleKey)}
-          </span>
-          <span className="font-mono text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          </V2Text>
+          <V2Text
+            as="span"
+            className="font-mono text-[11px] font-medium text-slate-500 dark:text-slate-400"
+          >
             ({count})
-          </span>
+          </V2Text>
         </div>
 
         {canAdd && (
@@ -61,7 +66,7 @@ export function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
             }
           >
             <Plus className="h-3 w-3" />
-            <span>{t("v2.traceability.stage.addLink")}</span>
+            <V2Text as="span">{t("v2.traceability.stage.addLink")}</V2Text>
           </V2Button>
         )}
       </div>

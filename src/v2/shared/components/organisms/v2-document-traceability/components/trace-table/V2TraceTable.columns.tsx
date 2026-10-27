@@ -12,6 +12,7 @@ import {
   formatTraceDate,
 } from "../../utils/traceability.format";
 import { getTraceabilityVisualMeta } from "../../utils/traceability.visual";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 export interface TraceTableColumnOptions {
   t: TranslateFn;
@@ -22,19 +23,29 @@ export interface TraceTableColumnOptions {
 /** Số tiền có dấu theo chiều thu/chi; `value` là số đã chọn (gốc hoặc đã cấn trừ) */
 function renderSignedAmount(node: TraceabilityNode, value: number) {
   if (node.restricted)
-    return <span className="font-mono text-xs text-slate-400">***</span>;
-  if (!value) return <span className="text-xs text-slate-400">—</span>;
+    return (
+      <V2Text as="span" className="font-mono text-xs text-slate-400">
+        ***
+      </V2Text>
+    );
+  if (!value)
+    return (
+      <V2Text as="span" className="text-xs text-slate-400">
+        —
+      </V2Text>
+    );
   const meta = getTraceabilityVisualMeta(node);
   const text = `${meta.amountPrefix ?? ""}${formatTraceAmount(value)}`;
   return (
-    <span
+    <V2Text
+      as="span"
       className={cn(
         "font-mono text-xs",
         meta.amountCls ?? "font-semibold text-slate-900 dark:text-slate-100",
       )}
     >
       {text}
-    </span>
+    </V2Text>
   );
 }
 
@@ -57,7 +68,8 @@ export function buildTraceTableColumns({
       cell: (node) => {
         const meta = getTraceabilityVisualMeta(node);
         return (
-          <span
+          <V2Text
+            as="span"
             className={cn(
               "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold",
               meta.badgeCls,
@@ -71,7 +83,7 @@ export function buildTraceTableColumns({
               <ArrowUpRight className="h-2.5 w-2.5 opacity-70" />
             )}
             {meta.label}
-          </span>
+          </V2Text>
         );
       },
     },
@@ -81,9 +93,9 @@ export function buildTraceTableColumns({
       size: 110,
       align: TableColumnAlign.RIGHT,
       cell: (node) => (
-        <span className="font-mono text-xs text-slate-500">
+        <V2Text as="span" className="font-mono text-xs text-slate-500">
           {formatTraceDate(node.date)}
-        </span>
+        </V2Text>
       ),
     },
     {
@@ -113,9 +125,9 @@ export function buildTraceTableColumns({
       accessor: (node) => node.partnerName || node.title || "",
       cell: (node) =>
         node.restricted ? (
-          <span className="text-xs italic text-slate-400">
+          <V2Text as="span" className="text-xs italic text-slate-400">
             {t("v2.traceability.node.restricted")}
-          </span>
+          </V2Text>
         ) : (
           <V2TableText
             text={node.partnerName || node.title || "—"}

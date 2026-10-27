@@ -30,3 +30,14 @@ export interface SalesOrderLinkDto {
   orderDate: string;
   status?: string | null;
 }
+
+/** Giao dịch sao kê dùng để cấn trừ; số tiền backend trả về dạng chuỗi */
+export interface BankTransactionLinkDto {
+  id: string;
+  transDate?: string | null;
+  referenceNumber?: string | null;
+  correspondentName?: string | null;
+  debitAmount?: string | number | null;
+  creditAmount?: string | number | null;
+  netOffAmount?: string | number | null;
+}

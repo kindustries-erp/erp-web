@@ -12,6 +12,7 @@ import {
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { cn } from "@/v2/shared/utils/cn";
 import type { TraceabilityVisualMeta } from "../../utils/traceability.visual";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 export interface V2TraceNodeHeaderProps {
   meta: TraceabilityVisualMeta;
@@ -50,7 +51,8 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-800/80">
       <div className="flex min-w-0 items-center gap-1.5">
-        <span
+        <V2Text
+          as="span"
           className={cn(
             "flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider",
             meta.badgeCls,
@@ -64,27 +66,33 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             <ArrowUpRight className="h-2.5 w-2.5 opacity-80" />
           )}
           {meta.label}
-        </span>
+        </V2Text>
         {statusLabel && (
-          <span
+          <V2Text
+            as="span"
             className={cn(
               "rounded border px-1 py-0.5 font-mono text-[9px] font-bold tracking-tight",
               meta.statusBadgeCls,
             )}
           >
             {statusLabel}
-          </span>
+          </V2Text>
         )}
-        <span className="truncate font-mono text-xs font-bold text-slate-900 dark:text-slate-100">
+        <V2Text
+          as="span"
+          className="truncate font-mono text-xs font-bold text-slate-900 dark:text-slate-100"
+        >
           {docNo}
-        </span>
+        </V2Text>
         {docNo !== "***" && (
-          <button
+          <V2Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             onClick={props.onCopy}
             onPointerDown={stopDrag}
             onMouseDown={stopDrag}
-            className="nodrag nopan rounded p-0.5 text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-200"
+            className="nodrag nopan h-5 w-5 text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-200"
             title={
               copied
                 ? t("v2.traceability.node.copied")
@@ -96,15 +104,18 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             ) : (
               <Copy className="h-3 w-3" />
             )}
-          </button>
+          </V2Button>
         )}
       </div>
 
       <div className="flex flex-shrink-0 items-center gap-1">
         {isCurrent && (
-          <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[9px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
+          <V2Text
+            as="span"
+            className="rounded bg-slate-900 px-1.5 py-0.5 text-[9px] font-semibold text-white dark:bg-slate-100 dark:text-slate-900"
+          >
             {t("v2.traceability.node.current")}
-          </span>
+          </V2Text>
         )}
         {canUnlink && (
           <V2Button

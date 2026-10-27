@@ -15,6 +15,7 @@ import {
 } from "../../utils/traceability.format";
 import { V2TraceNodeHandles } from "./V2TraceNodeHandles";
 import { V2TraceNodeHeader } from "./V2TraceNodeHeader";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 const COPIED_MS = 1500;
 
@@ -116,25 +117,34 @@ export function V2TraceNode({ data, selected }: NodeProps<TraceDocFlowNode>) {
       <div className="space-y-2 p-3">
         <div className="line-clamp-1 text-[11px] text-slate-500 dark:text-slate-400">
           {node.restricted ? (
-            <span className="flex items-center gap-1 italic text-slate-400">
+            <V2Text
+              as="span"
+              className="flex items-center gap-1 italic text-slate-400"
+            >
               <Lock className="h-3 w-3" />{" "}
               {t("v2.traceability.node.restricted")}
-            </span>
+            </V2Text>
           ) : (
             subtitle
           )}
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-100 pt-1 font-mono text-xs dark:border-slate-800/60">
-          <span className="font-sans text-[11px] text-slate-400">
+          <V2Text as="span" className="font-sans text-[11px] text-slate-400">
             {formatTraceDate(node.date)}
-          </span>
+          </V2Text>
           {node.restricted ? (
-            <span className="font-normal text-slate-400">***</span>
+            <V2Text as="span" className="font-normal text-slate-400">
+              ***
+            </V2Text>
           ) : (
-            <span className={amountCls} title={t(meta.fullTitleKey)}>
+            <V2Text
+              as="span"
+              className={amountCls}
+              title={t(meta.fullTitleKey)}
+            >
               {amountText}
-            </span>
+            </V2Text>
           )}
         </div>
       </div>

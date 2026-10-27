@@ -10,6 +10,7 @@ import {
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2LinkPickerState } from "./useV2LinkPicker";
 import "./invoice-link-selection.locale";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 export interface V2LinkPickerModalProps<T extends { id: string }> {
   open: boolean;
@@ -48,9 +49,9 @@ export function V2LinkPickerModal<T extends { id: string }>({
         // Nút trực tiếp trong ô (không dùng menu hàng): menu lồng trong modal không mở ổn định
         cell: (row) =>
           picker.isLinked(row.id) ? (
-            <span className="text-xs text-muted-fg">
+            <V2Text as="span" className="text-xs text-muted-fg">
               {t("v2.invoiceLinkSelection.picker.linked")}
-            </span>
+            </V2Text>
           ) : (
             <V2Button
               type="button"

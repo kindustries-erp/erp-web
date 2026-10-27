@@ -413,9 +413,10 @@ bun run lint:check
 
 ### 7.1b. Modal chọn chứng từ ghép nối trên V2 (Đợt 2)
 - `src/v2/shared/components/molecules/v2-link-selection-modal/`: khung `V2LinkSelectionModal` (bọc `V2Modal`, footer Hủy).
-- `src/v2/modules/finance-invoice/components/organisms/invoice-link-selection/`: `V2LinkPickerModal` (bảng một dòng, nút "Chọn" trong ô), hook `useV2LinkPicker`, `V2PurchaseOrderSelectionModal`, `V2SalesOrderSelectionModal`. Chọn là xong (không cần bấm xác nhận).
+- `src/v2/modules/finance-invoice/components/organisms/invoice-link-selection/`: `V2LinkPickerModal` (bảng một dòng, nút "Chọn" trong ô), hook `useV2LinkPicker`, `V2PurchaseOrderSelectionModal`, `V2SalesOrderSelectionModal`. PO/SO: chọn là xong.
+- Sao kê (`V2BankNetOffSelectionModal`, hook `useV2BankNetOffPicker`, helper `bankNetOff.helper.ts`): chọn nhiều dòng, số tiền cấn trừ từng dòng kẹp trong phần còn lại, xác nhận một lần → `onSelect([{id, amount}])`. Chỉ tab ON_SYSTEM; gợi ý, sổ quỹ, nhập tay chưa có.
 - API chỉ đọc: `api/linkSources/` (`purchaseOrderLinkApi`, `salesOrderLinkApi`) qua `v2HttpClient`.
-- Chưa có: Garage, Sao kê / Sổ quỹ. Drawer hóa đơn V1 vẫn dùng modal V1 cho đến khi nối (Task 3.1).
+- Chưa có: Garage, sổ quỹ, gợi ý cấn trừ, giao dịch ngoài sổ. Drawer hóa đơn V1 vẫn dùng modal V1 cho đến khi nối (Task 3.1).
 
 ### 7.2. Dữ liệu và API
 - Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`, đường dẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
