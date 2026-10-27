@@ -11,14 +11,7 @@ import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSumma
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import {
-  ReceiptText,
-  Eye,
-  FileText,
-  Download,
-  FileSpreadsheet,
-} from "lucide-react";
-import toast from "react-hot-toast";
+import { ReceiptText, Eye, FileText, FileSpreadsheet } from "lucide-react";
 import type { TabItem } from "@/shared/components/PageLayout";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { useInvoiceDebtsList } from "../hooks/useInvoiceDebtsList";
@@ -142,71 +135,6 @@ export function InvoiceDebtsPage() {
   const openDetail = useCallback((taxCode: string, partnerName?: string) => {
     setSelectedPartner({ taxCode, partnerName });
   }, []);
-
-  const handleQuickExport = useCallback(async () => {
-    try {
-      toast.loading(
-        t("debts:exportDrawer.toast.downloading", "Đang xuất file Excel..."),
-        { id: "quick-export-debt" },
-      );
-      const blob = await invoiceDebtsApi.exportExcel({
-        partner_type: listHook.partnerType,
-        search: listHook.search || undefined,
-        date_from: listHook.dateFrom || undefined,
-        date_to: listHook.dateTo || undefined,
-        column_search:
-          Object.keys(listHook.columnSearch).length > 0
-            ? JSON.stringify(listHook.columnSearch)
-            : undefined,
-        column_filters:
-          Object.keys(listHook.columnFilters).length > 0
-            ? JSON.stringify(listHook.columnFilters)
-            : undefined,
-      });
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = blobUrl;
-      a.download = `Bao_cao_cong_no_${activeTab === "suppliers" ? "nha_cung_cap" : "khach_hang"}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (document.body.contains(a)) {
-          document.body.removeChild(a);
-        }
-        window.URL.revokeObjectURL(blobUrl);
-      }, 2000);
-      toast.success(
-        t("debts:exportDrawer.toast.downloading", "Đã tải xuống file Excel."),
-        { id: "quick-export-debt" },
-      );
-    } catch (e: any) {
-      toast.error(
-        e?.message ||
-          t(
-            "debts:exportDrawer.error.downloadFailed",
-            "Không thể xuất file Excel.",
-          ),
-        { id: "quick-export-debt" },
-      );
-    }
-  }, [activeTab, listHook, t]);
-
-  const createActions = useMemo<ActionDropdownItem[]>(
-    () => [
-      {
-        groupLabel: t("common:search", "Tra cứu"),
-        items: [
-          {
-            label: t("debts:exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
-            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: () => setExportDrawerOpen(true),
-          },
-        ],
-      },
-    ],
-    [t],
-  );
 
   // 4. Server-Side Column Header Filter Builder
   const headerFilter = useMemo(
@@ -1234,13 +1162,11 @@ export function InvoiceDebtsPage() {
             listHook.setPage(1);
           }}
           onRefresh={() => listHook.refetch()}
-          createLabel={t(
-            "debts:exportCurrentView",
-            "Xuất nhanh dữ liệu hiện tại",
-          )}
-          createIcon={<Download className="w-4 h-4 mr-1 text-primary-fg/80" />}
-          onCreate={handleQuickExport}
-          createActions={createActions}
+          createLabel={t("debts:exportExcel", "Xuất Excel")}
+          createIcon={
+            <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
+          }
+          onCreate={() => setExportDrawerOpen(true)}
           activeFilterCount={listHook.activeFilterCount}
           onClearAllFilters={listHook.clearAllFilters}
           rowActions={getRowActions}

@@ -34,6 +34,9 @@ export const V2ExportConditionSection: React.FC<
   quarter,
   onQuarterChange,
   quarterOptions,
+  year,
+  onYearChange,
+  yearOptions,
   dateFrom,
   onDateFromChange,
   dateTo,
@@ -106,6 +109,9 @@ export const V2ExportConditionSection: React.FC<
             quarter={quarter}
             onQuarterChange={onQuarterChange}
             quarterOptions={quarterOptions}
+            year={year}
+            onYearChange={onYearChange}
+            yearOptions={yearOptions}
             dateFrom={dateFrom}
             onDateFromChange={onDateFromChange}
             dateTo={dateTo}

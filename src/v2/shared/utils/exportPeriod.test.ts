@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   generateMonthOptions,
   generateQuarterOptions,
+  generateYearOptions,
   initMonth,
   initQuarter,
+  initYear,
   isDateRangeInvalid,
   monthFirstDay,
   monthFromExactRange,
@@ -11,6 +13,9 @@ import {
   quarterFirstDay,
   quarterFromExactRange,
   quarterLastDay,
+  yearFirstDay,
+  yearFromExactRange,
+  yearLastDay,
 } from "./exportPeriod";
 
 describe("exportPeriod month helpers", () => {
@@ -99,5 +104,42 @@ describe("exportPeriod quarter helpers", () => {
       "2025-Q1",
     ]);
     expect(options[0].label).toBe("Quý 2/2026 (01/04 - 30/06/2026)");
+  });
+});
+
+describe("exportPeriod year helpers", () => {
+  it("returns first and last day of a year", () => {
+    expect(yearFirstDay("2026")).toBe("2026-01-01");
+    expect(yearLastDay("2026")).toBe("2026-12-31");
+    expect(yearFirstDay("")).toBe("");
+    expect(yearLastDay("")).toBe("");
+  });
+
+  it("derives the year from an exact range only", () => {
+    expect(yearFromExactRange("2026-01-01", "2026-12-31")).toBe("2026");
+    expect(yearFromExactRange("2026-01-01", "2026-12-30")).toBe("");
+    expect(yearFromExactRange("2025-01-01", "2026-12-31")).toBe("");
+  });
+
+  it("initYear uses the given date", () => {
+    expect(initYear(new Date(2026, 5, 10))).toBe("2026");
+  });
+
+  it("lists years newest first with default Vietnamese label", () => {
+    const options = generateYearOptions(2, new Date(2026, 0, 1));
+    expect(options).toEqual([
+      { value: "2026", label: "Năm 2026" },
+      { value: "2025", label: "Năm 2025" },
+      { value: "2024", label: "Năm 2024" },
+    ]);
+  });
+
+  it("supports custom label formatter for year options", () => {
+    const options = generateYearOptions(
+      1,
+      new Date(2026, 0, 1),
+      (y) => `FY${y}`,
+    );
+    expect(options[0].label).toBe("FY2026");
   });
 });

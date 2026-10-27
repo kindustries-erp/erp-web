@@ -21,6 +21,9 @@ export interface V2ExportConditionSectionProps {
   quarter: string;
   onQuarterChange: (quarter: string) => void;
   quarterOptions: V2ComboboxOption[];
+  year?: string;
+  onYearChange?: (year: string) => void;
+  yearOptions?: V2ComboboxOption[];
   dateFrom: string;
   onDateFromChange: (value: string) => void;
   dateTo: string;

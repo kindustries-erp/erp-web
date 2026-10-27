@@ -4,14 +4,19 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   generateMonthOptions,
   generateQuarterOptions,
+  generateYearOptions,
   initMonth,
   initQuarter,
+  initYear,
   monthFirstDay,
   monthFromExactRange,
   monthLastDay,
   quarterFirstDay,
   quarterFromExactRange,
   quarterLastDay,
+  yearFirstDay,
+  yearFromExactRange,
+  yearLastDay,
   type V2ExportPeriodType,
 } from "@/v2/shared/utils/exportPeriod";
 
@@ -25,6 +30,7 @@ export function useInvoiceDebtsExportPeriod() {
   const [periodType, setPeriodType] = useState<V2ExportPeriodType>("month");
   const [period, setPeriod] = useState(initMonth());
   const [quarter, setQuarter] = useState(initQuarter());
+  const [year, setYear] = useState(initYear());
   const [dateFrom, setDateFrom] = useState(monthFirstDay(period));
   const [dateTo, setDateTo] = useState(monthLastDay(period));
 
@@ -52,6 +58,17 @@ export function useInvoiceDebtsExportPeriod() {
     [t],
   );
 
+  const yearOptions = useMemo(
+    () =>
+      generateYearOptions(4, new Date(), (y) =>
+        t("v2.exportExcel.condition.yearLabel", {
+          defaultValue: "Năm {{year}}",
+          year: y,
+        }),
+      ),
+    [t],
+  );
+
   const handlePeriodTypeChange = (next: V2ExportPeriodType) => {
     setPeriodType(next);
     if (next === "month") {
@@ -64,6 +81,11 @@ export function useInvoiceDebtsExportPeriod() {
       setQuarter(active);
       setDateFrom(quarterFirstDay(active));
       setDateTo(quarterLastDay(active));
+    } else if (next === "year") {
+      const active = year || initYear();
+      setYear(active);
+      setDateFrom(yearFirstDay(active));
+      setDateTo(yearLastDay(active));
     }
   };
 
@@ -83,6 +105,14 @@ export function useInvoiceDebtsExportPeriod() {
     }
   };
 
+  const handleYearChange = (value: string) => {
+    setYear(value);
+    if (value) {
+      setDateFrom(yearFirstDay(value));
+      setDateTo(yearLastDay(value));
+    }
+  };
+
   useEffect(() => {
     if (periodType === "month") {
       const next = monthFromExactRange(dateFrom, dateTo);
@@ -90,6 +120,9 @@ export function useInvoiceDebtsExportPeriod() {
     } else if (periodType === "quarter") {
       const next = quarterFromExactRange(dateFrom, dateTo);
       setQuarter((prev) => (prev === next ? prev : next));
+    } else if (periodType === "year") {
+      const next = yearFromExactRange(dateFrom, dateTo);
+      setYear((prev) => (prev === next ? prev : next));
     }
   }, [dateFrom, dateTo, periodType]);
 
@@ -104,6 +137,9 @@ export function useInvoiceDebtsExportPeriod() {
     quarter,
     handleQuarterChange,
     quarterOptions,
+    year,
+    handleYearChange,
+    yearOptions,
     dateFrom,
     setDateFrom,
     dateTo,
