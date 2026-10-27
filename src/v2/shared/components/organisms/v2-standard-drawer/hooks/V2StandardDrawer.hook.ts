@@ -63,6 +63,7 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
   const stack = useV2DrawerStack(props.id, open, {
     stackOffsetPx: props.stackOffsetPx,
     disableStackOffset: props.disableStackOffset || isFullscreen,
+    baseZIndex: props.baseZIndex,
   });
 
   // Right panel collapsible

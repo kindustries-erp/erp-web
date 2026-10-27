@@ -1,4 +1,5 @@
 import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import { V2_ABOVE_V1_DRAWER_Z_INDEX } from "@/v2/shared/components/organisms/v2-standard-drawer/utils/v2DrawerStack";
 import { DebtNetOffInvoiceSection } from "./DebtNetOffInvoiceSection";
 import { DebtNetOffTransactionSection } from "./DebtNetOffTransactionSection";
 import {
@@ -21,6 +22,7 @@ export function DebtNetOffDrawer(props: DebtNetOffDrawerProps) {
       subtitle={props.taxCode}
       layout="1-column"
       size="lg"
+      baseZIndex={V2_ABOVE_V1_DRAWER_Z_INDEX}
       loading={state.loading}
       actions={[
         {
