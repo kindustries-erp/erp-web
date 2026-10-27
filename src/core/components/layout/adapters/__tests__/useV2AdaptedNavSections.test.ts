@@ -4,7 +4,7 @@ import { useV2AdaptedNavSections } from "../useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "../useV2AdaptedTabs";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource } from "@/modules/system/types/rbac";
-import { Sliders } from "@/v2/shared/components";
+import { Banknote, Landmark, Sliders } from "@/v2/shared/components";
 
 vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: vi.fn(),
@@ -86,6 +86,62 @@ describe("useV2AdaptedNavSections - custom-fields in sec-settings", () => {
     const settingsSec = result.current.find((s) => s.id === "sec-settings");
 
     expect(settingsSec).toBeUndefined();
+  });
+});
+
+describe("useV2AdaptedNavSections - bank & cash fund in sec-settings", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("includes settings-bank when user has BANK_STATEMENTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.BANK_STATEMENTS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const settingsSec = result.current.find((s) => s.id === "sec-settings");
+    const bankItem = settingsSec?.items.find(
+      (item) => item.id === "settings-bank",
+    );
+
+    expect(bankItem).toBeDefined();
+    expect(bankItem?.href).toBe("/settings-bank");
+    expect(bankItem?.label).toBe("Tài khoản ngân hàng");
+    expect(bankItem?.icon).toBe(Landmark);
+  });
+
+  it("includes settings-cash-fund when user has CASH_STATEMENTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.CASH_STATEMENTS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const settingsSec = result.current.find((s) => s.id === "sec-settings");
+    const cashFundItem = settingsSec?.items.find(
+      (item) => item.id === "settings-cash-fund",
+    );
+
+    expect(cashFundItem).toBeDefined();
+    expect(cashFundItem?.href).toBe("/settings-cash-fund");
+    expect(cashFundItem?.label).toBe("Quỹ tiền mặt");
+    expect(cashFundItem?.icon).toBe(Banknote);
+  });
+
+  it("excludes settings-bank and settings-cash-fund without their permissions", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ADMIN_USERS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const settingsSec = result.current.find((s) => s.id === "sec-settings");
+
+    expect(
+      settingsSec?.items.find((item) => item.id === "settings-bank"),
+    ).toBeUndefined();
+    expect(
+      settingsSec?.items.find((item) => item.id === "settings-cash-fund"),
+    ).toBeUndefined();
   });
 });
 
