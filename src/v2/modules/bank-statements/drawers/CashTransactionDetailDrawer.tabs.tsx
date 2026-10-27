@@ -13,15 +13,18 @@ export interface CashDetailTabsInput {
   accounting: ReactNode;
   /** Nội dung tab Chứng từ liên kết (sơ đồ truy vết và cấn trừ) */
   traceability: ReactNode;
+  /** Nội dung tab Theo đối tượng; không truyền thì tab không hiện */
+  partner?: ReactNode;
   t: (key: string, options?: Record<string, unknown>) => string;
 }
 
-/** Tab của drawer: Chi tiết, Hạch toán, Chứng từ liên kết, Lịch sử. Tab đối tượng được thêm ở đợt D. */
+/** Tab của drawer: Chi tiết, Hạch toán, Theo đối tượng (khi có đối ứng), Chứng từ liên kết, Lịch sử. */
 export function buildCashDetailTabs({
   transaction,
   historyItems,
   accounting,
   traceability,
+  partner,
   t,
 }: CashDetailTabsInput): V2TabItemData[] {
   return [
@@ -35,6 +38,15 @@ export function buildCashDetailTabs({
       label: t("v2.bankStatements.cashDetail.tabs.accounting"),
       content: accounting,
     },
+    ...(partner === undefined
+      ? []
+      : [
+          {
+            key: "partner" satisfies CashDetailTab,
+            label: t("v2.bankStatements.cashDetail.tabs.partner"),
+            content: partner,
+          },
+        ]),
     {
       key: "traceability" satisfies CashDetailTab,
       label: t("v2.bankStatements.cashDetail.tabs.traceability"),

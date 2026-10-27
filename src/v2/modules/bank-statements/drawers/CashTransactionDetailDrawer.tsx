@@ -15,6 +15,9 @@ import {
   type CashTransactionDetailDrawerProps,
 } from "./CashTransactionDetailDrawer.hook";
 import type { CashDetailTab } from "../domain/rules/resolveDetailTab";
+import { canShowPartnerTabs } from "../domain/rules/partnerTabVisibility";
+import { CashPartnerAnalytics } from "../components/organisms/cash-partner-analytics";
+import { CashPartnerTransactions } from "../components/organisms/cash-partner-transactions";
 
 /** Chi tiết giao dịch tiền mặt (V2): tab Chi tiết và Lịch sử, cột phải thông tin chung, sửa và lưu */
 export function CashTransactionDetailDrawer(
@@ -23,6 +26,23 @@ export function CashTransactionDetailDrawer(
   const state = useCashTransactionDetailDrawer(props);
   const { t, tx, draft } = state;
   const editing = state.mode === "edit";
+  const showPartner = tx ? canShowPartnerTabs(tx) : false;
+  const activeKey =
+    state.activeTab === "partner" && !showPartner ? "details" : state.activeTab;
+  const partner =
+    tx && showPartner ? (
+      <div className="space-y-4">
+        <CashPartnerTransactions
+          correspondentAccount={tx.correspondentAccount ?? ""}
+          correspondentName={tx.correspondentName ?? ""}
+          onSelectTransaction={props.onSelectTransaction}
+        />
+        <CashPartnerAnalytics
+          correspondentAccount={tx.correspondentAccount ?? ""}
+          correspondentName={tx.correspondentName ?? ""}
+        />
+      </div>
+    ) : undefined;
   const traceability = tx ? (
     <CashTraceabilitySection
       transactionId={tx.id}
@@ -67,11 +87,12 @@ export function CashTransactionDetailDrawer(
                 historyItems: state.historyItems,
                 accounting,
                 traceability,
+                partner,
                 t,
               })
             : []
         }
-        activeTabKey={state.activeTab satisfies CashDetailTab}
+        activeTabKey={activeKey satisfies CashDetailTab}
         onTabChange={(key) => state.setActiveTab(key as CashDetailTab)}
         rightPanel={
           tx && draft ? (

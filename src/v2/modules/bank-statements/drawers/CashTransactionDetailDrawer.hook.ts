@@ -33,6 +33,8 @@ export interface CashTransactionDetailDrawerProps {
   /** Khóa tab từ nơi mở drawer (`txn_details`, `txn_partner`, `partner`...) */
   defaultTabKey?: string;
   initialMode?: "view" | "edit";
+  /** Mở giao dịch khác từ bảng kê đối tượng */
+  onSelectTransaction?: (id: string) => void;
 }
 
 export function useCashTransactionDetailDrawer(

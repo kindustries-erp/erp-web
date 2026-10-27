@@ -23,7 +23,7 @@ export interface CashTransactionListQuery {
 }
 
 export interface CashTransactionListResponse {
-  data: CashTransactionDto[];
+  items: CashTransactionDto[];
   total: number;
 }
 

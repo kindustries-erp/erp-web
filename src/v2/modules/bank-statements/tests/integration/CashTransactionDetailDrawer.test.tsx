@@ -133,4 +133,21 @@ describe("CashTransactionDetailDrawer (tích hợp)", () => {
       await screen.findByText("Lỗi lưu thông tin giao dịch: Sai chi nhánh"),
     ).toBeTruthy();
   });
+
+  it("ẩn tab Theo đối tượng khi phiếu không có tên đối ứng", async () => {
+    getTransaction.mockResolvedValue({
+      ...TX,
+      correspondentName: null,
+      correspondentAccount: null,
+    });
+    renderDrawer();
+    await screen.findByText("Quỹ ĐT");
+    expect(screen.queryByText("3. Theo đối tượng")).toBeNull();
+  });
+
+  it("hiện tab Theo đối tượng khi có tên đối ứng", async () => {
+    renderDrawer();
+    await screen.findByText("Quỹ ĐT");
+    expect(screen.getByText("3. Theo đối tượng")).toBeTruthy();
+  });
 });

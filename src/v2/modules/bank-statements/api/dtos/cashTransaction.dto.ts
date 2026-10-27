@@ -75,6 +75,8 @@ export interface CashTransactionDto {
   journalEntryId?: string | null;
   lines?: CashTransactionPostingLineDto[] | null;
   invoiceNetOffs?: CashTransactionNetOffDto[] | null;
+  /** Tổng đã cấn trừ, có trong dòng danh sách theo đối tượng */
+  netOffAmount?: number | string | null;
   createdAt?: string | null;
 }
 

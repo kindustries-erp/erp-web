@@ -7,9 +7,9 @@ export const cashDetailLocale = {
       tabs: {
         details: "1. Chi tiết",
         accounting: "2. Hạch toán",
-        traceability: "3. Chứng từ liên kết",
-        partner: "2. Theo đối tượng",
-        history: "4. Lịch sử",
+        traceability: "4. Chứng từ liên kết",
+        partner: "3. Theo đối tượng",
+        history: "5. Lịch sử",
       },
       actions: {
         close: "Đóng",
@@ -83,9 +83,9 @@ export const cashDetailLocale = {
       tabs: {
         details: "1. Details",
         accounting: "2. Accounting",
-        traceability: "3. Linked documents",
-        partner: "2. By counterparty",
-        history: "4. History",
+        traceability: "4. Linked documents",
+        partner: "3. By counterparty",
+        history: "5. History",
       },
       actions: {
         close: "Close",
