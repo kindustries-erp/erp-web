@@ -9,8 +9,7 @@ import { triggerContextMenu } from "@/shared/components/ContextMenu";
 import { Building2 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
-import { useQuery } from "@tanstack/react-query";
-import { getBranchesApi } from "@/modules/branches/api/branchApi";
+import { useEnsureValidCurrentBranch } from "@/core/components/layout/hooks/useEnsureValidCurrentBranch";
 import { V2UniversalSearchModal, V2QuickSearch } from "@/v2/shared/components";
 import { GlobalSystemOperationIndicator } from "@/core/components/GlobalSystemOperationIndicator";
 
@@ -21,8 +20,6 @@ export function Topbar() {
     setMobileSidebarOpen,
     customBreadcrumbs,
     setCompanyProfileOpen,
-    currentBranchId,
-    setCurrentBranchId,
   } = useAppStore();
   const impersonation = useAuthStore((s) => s.impersonation);
   const stopImpersonationAction = useAuthStore(
@@ -34,10 +31,7 @@ export function Topbar() {
   const crumbs = customBreadcrumbs ??
     BREADCRUMBS[currentPage] ?? [[currentPage]];
 
-  const { data: branches = [] } = useQuery({
-    queryKey: ["branches:list"],
-    queryFn: getBranchesApi,
-  });
+  useEnsureValidCurrentBranch();
 
   const [searchModalOpen, setSearchModalOpen] = React.useState(false);
 
@@ -52,12 +46,6 @@ export function Topbar() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
-  React.useEffect(() => {
-    if (!currentBranchId && branches.length > 0) {
-      setCurrentBranchId(branches[0].id);
-    }
-  }, [branches, currentBranchId, setCurrentBranchId]);
 
   return (
     <div className="topbar flex items-center gap-[10px] flex-shrink-0">

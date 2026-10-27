@@ -36,14 +36,16 @@ export const CreateCashTransactionDrawer = ({
     enabled: isOpen,
   });
 
+  const selectedCashBook = cashBooks?.find((cb) => cb.id === cashBookId);
+
   const { mutate: createTransaction, isPending } = useMutation({
     mutationFn: () => {
-      if (!currentBranchId) throw new Error("Branch not selected");
       if (!cashBookId) throw new Error("Cash book not selected");
       if (!transDate) throw new Error("Transaction date is required");
 
       return bankStatementApi.createManualTransaction({
-        branchId: currentBranchId,
+        // Sổ quỹ thuộc đúng 1 chi nhánh; currentBranchId có thể đã cũ (localStorage)
+        branchId: selectedCashBook?.branchId ?? currentBranchId ?? undefined,
         sourceType: "CASH",
         cashBookId,
         transDate,
