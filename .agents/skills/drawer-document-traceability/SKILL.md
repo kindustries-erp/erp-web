@@ -205,9 +205,42 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
 
 ---
 
+## 10. Quy Chuẩn Tối Ưu Hiệu Năng Kéo Thả Canvas (Drag Performance Standard)
+
+Để đảm bảo Canvas đạt chuẩn mượt mà 60–120fps khi kéo thả node (không bị giật lag, đơ cứng hay kẹt chuột):
+
+1. **Uncontrolled Canvas Pattern (`defaultNodes` & `defaultEdges`)**:
+   - **Tuyệt đối không dùng Controlled State (`nodes={canvas.nodes}` + `onNodesChange={canvas.onNodesChange}`)**: Việc gọi `setNodes` trên từng pixel chuột di chuyển sẽ ép React re-render toàn bộ Canvas và Sub-components 60–120 lần/giây, gây nghẽn hoàn toàn luồng JS chính.
+   - **Bắt buộc dùng Uncontrolled Mode**: Truyền `defaultNodes={layout.nodes}` và `defaultEdges={layout.edges}` vào `<ReactFlow>`. React Flow sẽ tự cập nhật CSS `transform` trực tiếp lên DOM node qua Zustand store nội bộ mà không gây bất kỳ React re-render nào khi drag chuột (0 re-render/frame).
+   - **Đồng bộ qua `useReactFlow()`**: Khi đồ thị (`graph.rootId`) hoặc hướng (`direction`) hoặc bộ lọc thay đổi, dùng `setNodes` / `setEdges` trong `useEffect` để đồng bộ lại đồ thị, đồng thời bảo tồn tọa độ mà người dùng đã kéo thả (`posMap`).
+   - Bật `onlyRenderVisibleElements` để React Flow tự động culling các node nằm ngoài viewport.
+
+2. **Bảo tồn 100% Hiệu Ứng Thẩm Mỹ `backdrop-blur-[12px]` của Hệ Thống ERP**:
+   - Khi áp dụng Uncontrolled Pattern, CPU/JS thread hoàn toàn rảnh rỗi và GPU chỉ cần đảm nhận CSS `transform` phần cứng. Vì vậy, hệ thống **hoàn toàn giữ nguyên thiết kế kính mờ `backdrop-blur-[12px]`** của `<DrawerSection>` chuẩn ERP mà không làm sụt giảm FPS.
+
+3. **Tuyệt đối không dùng `extent: "parent"` trên Document Node**:
+   - Khung giai đoạn (Swimlane) có chiều rộng cố định (`330px`), thẻ chứng từ rộng `290px`.
+   - Nếu bật `extent: "parent"`, node sẽ bị kẹt cứng sau 20px di chuyển và React Flow phải tính toán ma trận va chạm bounding-box liên tục gây lag giật.
+   - Luôn giữ `parentId: stageNodeId(stage)` để định danh phân cấp và nối dây tự động, nhưng **KHÔNG** đặt `extent: "parent"` để người dùng kéo thả tự do.
+
+4. **Đóng băng CSS Transitions khi đang kéo thả (`dragging`)**:
+   - Thẻ node (`V2TraceNode`) phải áp dụng `!transition-none will-change-transform shadow-none` khi `dragging === true` để trình duyệt không phải nội suy style trong lúc chuột đang di chuyển.
+
+5. **Tối ưu hóa nhãn dây nối (`V2TraceEdge`)**:
+   - Nhãn cạnh nối trong `EdgeLabelRenderer` phải dùng thẻ native nhẹ (`<span className="...">`), tuyệt đối không dùng các component typography nặng chứa state, context hay hooks (`V2Text`).
+
+6. **Static Memoization**:
+   - Cấu hình `fitViewOptions` phải được khai báo dạng hằng số module tĩnh (`const FIT_VIEW_OPTIONS = { padding: 0.15 };`) bên ngoài component để không tạo object reference mới làm re-render React Flow.
+
+---
+
 ## Summary Checklist trước khi hoàn thành:
 
-- [ ] Đã bật `flush: true` trên tab item trong `relatedTabs` của `StandardFormDrawer` để canvas tràn viền tối đa chưa?
+- [ ] Canvas đã sử dụng Uncontrolled Mode (`defaultNodes` / `defaultEdges`) và `onlyRenderVisibleElements` chưa?
+- [ ] Giữ nguyên 100% phong cách thiết kế kính mờ `backdrop-blur-[12px]` của `DrawerSection` chuẩn ERP chưa?
+- [ ] Document nodes đã được gỡ bỏ `extent: "parent"` để cho phép kéo thả tự do mượt mà chưa?
+- [ ] Thẻ node đã có `!transition-none will-change-transform` khi `dragging` chưa?
+- [ ] Nhãn dây nối (`V2TraceEdge`) đã dùng thẻ thuần nhẹ thay cho các component nặng chứa hooks chưa?
 - [ ] Đã truyền prop `editMode={mode === "edit"}` để đồng bộ quyền ghép nối/gỡ liên kết với Drawer cha chưa?
 - [ ] Thao tác gỡ liên kết (`onUnlinkNode`) đã được staging trên Client-side và chỉ lưu theo batch khi submit form chưa?
 - [ ] Các loại chứng từ được phép ghép nối (`allowedDocTypes`) đã được khai báo phù hợp với nghiệp vụ của module chưa?
