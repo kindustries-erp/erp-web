@@ -1,6 +1,12 @@
 import { buildModuleData } from "./plop-helpers/v2ModuleData.mjs";
 import { insertAtMarker } from "./plop-helpers/v2Wiring.mjs";
 import { moduleFileMap, wiringPlan } from "./plop-helpers/v2ModuleFiles.mjs";
+import {
+  COMPONENT_LAYERS,
+  addBarrelExport,
+  buildComponentData,
+  componentFileMap,
+} from "./plop-helpers/v2ComponentFiles.mjs";
 
 export default function (plop) {
   // Handlebars Helper: eq
@@ -366,6 +372,49 @@ export default function (plop) {
           });
         }
       }
+      return actions;
+    },
+  });
+
+  // 6. GENERATOR: Component V2 dùng chung (src/v2/shared/components/<layer>)
+  plop.setGenerator("v2-component", {
+    description:
+      "Tạo component V2 dùng chung (index, component, type, test, stories) và nối barrel của tầng",
+    prompts: [
+      {
+        type: "list",
+        name: "layer",
+        message: "Tầng Atomic:",
+        choices: COMPONENT_LAYERS,
+        default: "molecules",
+      },
+      {
+        type: "input",
+        name: "name",
+        message: "Tên component (PascalCase, bắt đầu V2, vd: V2TraceabilityCanvas):",
+        validate: (value) =>
+          /^V2[A-Z][A-Za-z0-9]*$/.test(value) || "Phải bắt đầu bằng V2 và PascalCase",
+      },
+      {
+        type: "input",
+        name: "description",
+        message: "Mô tả ngắn (dùng cho JSDoc):",
+      },
+    ],
+    actions: (answers) => {
+      // Ném lỗi trước khi ghi file nào, đầu vào sai không để lại component dở dang
+      const data = buildComponentData(answers);
+      const actions = componentFileMap(data).map(([template, path]) => ({
+        type: "add",
+        path,
+        templateFile: `plop-templates/v2-component/${template}`,
+        data,
+      }));
+      actions.push({
+        type: "modify",
+        path: `src/v2/shared/components/${data.layer}/index.ts`,
+        transform: (content) => addBarrelExport(content, data.folder),
+      });
       return actions;
     },
   });

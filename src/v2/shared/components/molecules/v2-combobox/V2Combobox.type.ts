@@ -15,6 +15,10 @@ export interface V2ComboboxProps {
   /** Có ô lọc trong danh sách (mặc định true). Đặt false để dùng như select thường */
   searchable?: boolean;
   searchPlaceholder?: string;
+  /** Gọi mỗi khi người dùng gõ, để module tìm trên server và thay `options` */
+  onSearchChange?: (query: string) => void;
+  /** Đang tải kết quả tìm kiếm: hiện spinner và thông báo "Đang tìm..." */
+  loading?: boolean;
   /** Hiện nút bỏ lựa chọn khi đã chọn */
   clearable?: boolean;
   emptyLabel?: string;

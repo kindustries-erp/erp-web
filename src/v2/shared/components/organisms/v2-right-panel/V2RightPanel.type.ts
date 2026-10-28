@@ -7,6 +7,7 @@ export interface V2RightPanelProps extends V2BaseProps<HTMLElement> {
   breadcrumbs?: V2BreadcrumbItem[];
   branchName?: string;
   companyName?: string;
+  logoUrl?: string;
   onSearchClick?: () => void;
   onBranchClick?: () => void;
   topbarActions?: ReactNode;
@@ -14,5 +15,6 @@ export interface V2RightPanelProps extends V2BaseProps<HTMLElement> {
   activeTabId?: string;
   onTabSelect?: (id: string) => void;
   onTabClose?: (id: string) => void;
+  contentClassName?: string;
   children?: ReactNode;
 }

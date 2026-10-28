@@ -40,9 +40,9 @@ export const erpInvoicesEn = {
   // View Tabs
   dashboard: "Overview",
   inbound: "Inbound Invoices",
-  inboundLines: "Inbound Item Details",
+  inboundLines: "Inbound Goods & Services Schedule",
   outbound: "Outbound Invoices",
-  outboundLines: "Outbound Item Details",
+  outboundLines: "Outbound Goods & Services Schedule",
   draftInvoices: "Draft Invoices",
   tabAll: "All",
   tabNew: "New",
@@ -53,6 +53,7 @@ export const erpInvoicesEn = {
   tabObjectDetails: "Object Details",
   tabFinancials: "Financials",
   tabLinkedDocs: "Linked Documents",
+  tabLinkedFinance: "Linked Documents",
   tabAttachments: "Attachments",
   tabAccounting: "Accounting",
   tabHistory: "History & Audit",
@@ -142,8 +143,8 @@ export const erpInvoicesEn = {
   groupThaoTac: "Actions",
   actionDetail: "Detail",
   actionPartnerTransactions: "Object Details",
-  tabGoodsItems: "Item Details",
-  tabGoodsItemsTitle: "List of Goods & Services Details",
+  tabGoodsItems: "Goods & Services Schedule",
+  tabGoodsItemsTitle: "Goods & Services Schedule Details",
   tabInvoicesList: "Details by Subject",
   tabInvoicesListTitle: "Invoice Details by Subject",
   partnerObjectDetails: "Object Details",
@@ -233,12 +234,12 @@ export const erpInvoicesEn = {
   "tabs.allLines": "All Lines",
   "tabs.normalLines": "Items",
   "tabs.discountLines": "Discounts",
-  inboundLinesTitle: "Inbound Invoice Line Items",
+  inboundLinesTitle: "Inbound Goods & Services Schedule",
   inboundLinesDesc:
-    "Track and reconcile individual line items, descriptions, quantities and VAT rates of inbound invoices",
-  outboundLinesTitle: "Outbound Invoice Line Items",
+    "Track and reconcile individual line items, descriptions, quantities and VAT rates of inbound goods and services",
+  outboundLinesTitle: "Outbound Goods & Services Schedule",
   outboundLinesDesc:
-    "Track and reconcile individual line items, descriptions, quantities and VAT rates of outbound invoices",
+    "Track and reconcile individual line items, descriptions, quantities and VAT rates of outbound goods and services",
   "columns.invoiceNo": "Invoice No",
   "columns.serialNo": "Serial",
   "columns.invoiceDate": "Invoice Date",
@@ -266,4 +267,55 @@ export const erpInvoicesEn = {
   customFieldsOut: "Output Invoice Configuration",
   configTitleIn: "Input Invoices",
   configTitleOut: "Output Invoices",
+
+  // Drawer Detail & Actions
+  internalTitle: "Internal Details",
+  groupSync: "SYNC",
+  syncGdt: "Sync from Tax Portal",
+  groupExport: "EXPORT",
+  exportInvoiceExcel: "Export Invoice to Excel",
+  exportingExcel: "Exporting Excel file...",
+  exportExcelSuccess: "Excel file exported successfully!",
+  exportExcelError: "Failed to export Excel file",
+  drawerSectionHistory: "Audit Trail & Operations History",
+  emptyHistory: "No history recorded yet.",
+
+  // Toasts
+  toastLinkedBankSuccess:
+    "Added bank transaction to settlement list (pending save).",
+  toastLinkedPoSuccess:
+    "Selected purchase order {{poNo}} to link (pending save).",
+  toastLinkedSoSuccess: "Selected sales order {{soNo}} to link (pending save).",
+  toastLinkedCaseSuccess:
+    "Selected garage case {{code}} to link (pending save).",
+
+  // Tax Statuses
+  taxStatusNew: "New",
+  taxStatusReplaced: "Replaced",
+  taxStatusAdjusted: "Adjusted",
+  taxStatusWasReplaced: "Was Replaced",
+  taxStatusWasAdjusted: "Was Adjusted",
+  taxStatusCancelled: "Cancelled",
+
+  // Lookup info & original PDF
+  lookupTitle: "Lookup info",
+  lookupNoInfo: "No lookup info",
+  lookupNoXml: "No XML on the system; manual lookup only",
+  lookupProvider: "Provider",
+  lookupCode: "Lookup code",
+  lookupUrl: "Lookup address",
+  lookupHintsTitle: "Additional info",
+  lookupCopy: "Copy",
+  lookupCopied: "Copied",
+  lookupCopyFailed: "Could not copy",
+  lookupOpenPortal: "Open lookup portal",
+  lookupDownloadPdf: "Download original PDF",
+  lookupUploadPdf: "Upload downloaded PDF",
+  lookupUploadHint:
+    "Download the PDF from the provider portal, then upload it here",
+  downloadPdfSuccess: "Original PDF downloaded",
+  downloadPdfFailed: "Failed to download original PDF",
+  uploadPdfSuccess: "PDF uploaded",
+  uploadPdfFailed: "Failed to upload PDF",
+  invalidPdfFile: "File must be a PDF",
 };

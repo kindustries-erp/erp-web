@@ -1,17 +1,21 @@
-export function formatTaxInvoiceStatus(val?: number | null) {
+export function formatTaxInvoiceStatus(
+  val?: number | null,
+  t?: (key: string, fallback: string) => string,
+) {
+  const translate = t || ((_k: string, fb: string) => fb);
   switch (val) {
     case 1:
-      return "Mới";
+      return translate("taxStatusNew", "Mới");
     case 2:
-      return "Thay thế";
+      return translate("taxStatusReplaced", "Thay thế");
     case 3:
-      return "Điều chỉnh";
+      return translate("taxStatusAdjusted", "Điều chỉnh");
     case 4:
-      return "Bị thay thế";
+      return translate("taxStatusWasReplaced", "Bị thay thế");
     case 5:
-      return "Bị điều chỉnh";
+      return translate("taxStatusWasAdjusted", "Bị điều chỉnh");
     case 6:
-      return "Bị hủy";
+      return translate("taxStatusCancelled", "Bị hủy");
     default:
       return val?.toString() || "—";
   }

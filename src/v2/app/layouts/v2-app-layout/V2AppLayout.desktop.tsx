@@ -1,7 +1,6 @@
 import * as React from "react";
 import { LayoutDashboard } from "lucide-react";
-import { V2Sidebar } from "@/v2/shared/components/organisms/v2-sidebar";
-import { V2RightPanel } from "@/v2/shared/components/organisms/v2-right-panel";
+import { V2Sidebar, V2RightPanel } from "@/v2/shared/components";
 import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
@@ -30,6 +29,14 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   onTabClose,
   onSearchClick,
   onBranchClick,
+  appName,
+  logoUrl,
+  contentClassName,
+  userMenuNode,
+  notificationNode,
+  onClickLogo,
+  collapsed,
+  onToggleCollapse,
 }) => {
   const { t, locale } = useV2Translation();
   const can = useV2PermissionChecker();
@@ -64,7 +71,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   return (
     <div
       data-testid="v2-app-layout-desktop"
-      className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-[#f4f4f4] dark:bg-background text-foreground select-none"
+      className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-[#f4f4f4] dark:bg-[color:var(--app-shell-bg,#131418)] text-foreground select-none"
     >
       {/* Card 1: Sidebar floating card */}
       <V2Sidebar
@@ -72,6 +79,12 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         items={navItems}
         activeId={activeNavId}
         onNavigate={onNavigate}
+        appName={appName}
+        onClickLogo={onClickLogo}
+        collapsed={collapsed}
+        onToggleCollapse={onToggleCollapse}
+        userMenuNode={userMenuNode}
+        notificationNode={notificationNode}
         user={{
           displayName: effectiveUserName,
           avatarInitials: effectiveUserName
@@ -86,8 +99,10 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         breadcrumbs={breadcrumbs ?? fallbackBreadcrumbs}
         branchName={effectiveBranchName}
         companyName={tenantName}
+        logoUrl={logoUrl}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
+        contentClassName={contentClassName}
         tabs={tabs ?? fallbackTabs}
         activeTabId={activeTabId ?? "dashboard"}
         onTabSelect={onTabSelect ?? (() => {})}

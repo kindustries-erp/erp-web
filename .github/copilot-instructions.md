@@ -4,7 +4,7 @@
 
 1. `AGENTS.md` (router gộp của repo này)
 2. `.agents/AGENTS.md`
-3. `.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+3. `.agents/skills/erp-web-current-truth/SKILL.md`
 4. Workflow liên quan trong `.agents/workflows/` (ví dụ `plan-and-task.md`, `standardize-table.md`)
 
 ## Working rules

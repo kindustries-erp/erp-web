@@ -6,12 +6,11 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { PageKey } from "@/shared/types";
 import { triggerContextMenu } from "@/shared/components/ContextMenu";
-import { Building2, Search } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
-import { useQuery } from "@tanstack/react-query";
-import { getBranchesApi } from "@/modules/branches/api/branchApi";
-import { UniversalSearchModal } from "./UniversalSearchModal";
+import { useEnsureValidCurrentBranch } from "@/core/components/layout/hooks/useEnsureValidCurrentBranch";
+import { V2UniversalSearchModal, V2QuickSearch } from "@/v2/shared/components";
 import { GlobalSystemOperationIndicator } from "@/core/components/GlobalSystemOperationIndicator";
 
 export function Topbar() {
@@ -21,8 +20,6 @@ export function Topbar() {
     setMobileSidebarOpen,
     customBreadcrumbs,
     setCompanyProfileOpen,
-    currentBranchId,
-    setCurrentBranchId,
   } = useAppStore();
   const impersonation = useAuthStore((s) => s.impersonation);
   const stopImpersonationAction = useAuthStore(
@@ -34,10 +31,7 @@ export function Topbar() {
   const crumbs = customBreadcrumbs ??
     BREADCRUMBS[currentPage] ?? [[currentPage]];
 
-  const { data: branches = [] } = useQuery({
-    queryKey: ["branches:list"],
-    queryFn: getBranchesApi,
-  });
+  useEnsureValidCurrentBranch();
 
   const [searchModalOpen, setSearchModalOpen] = React.useState(false);
 
@@ -52,12 +46,6 @@ export function Topbar() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
-  React.useEffect(() => {
-    if (!currentBranchId && branches.length > 0) {
-      setCurrentBranchId(branches[0].id);
-    }
-  }, [branches, currentBranchId, setCurrentBranchId]);
 
   return (
     <div className="topbar flex items-center gap-[10px] flex-shrink-0">
@@ -124,27 +112,16 @@ export function Topbar() {
 
       {/* Search pill button */}
       <div className="hidden md:block">
-        <button
-          type="button"
-          onClick={() => setSearchModalOpen(true)}
-          className="flex items-center gap-2 px-2.5 h-[26px] rounded-lg border border-border bg-surface text-[11px] text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer select-none"
-          title={`${t("nav.searchPlaceholder")} (⌘K)`}
-        >
-          <Search className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
-          <span className="font-normal">{t("nav.searchPlaceholder")}</span>
-          <kbd className="ml-1 text-[9px] font-mono border border-border/80 rounded px-1 py-0.2 bg-black/[0.03] dark:bg-white/[0.05] text-[color:var(--faint)]">
-            ⌘K
-          </kbd>
-        </button>
+        <V2QuickSearch onClick={() => setSearchModalOpen(true)} />
       </div>
 
       {/* Global System Operation Indicator */}
       <GlobalSystemOperationIndicator />
 
-      <UniversalSearchModal
+      <V2UniversalSearchModal
         open={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
-        navTo={navigate}
+        onSelect={(item) => navigate(item.id as any)}
       />
 
       {/* Impersonation banner */}

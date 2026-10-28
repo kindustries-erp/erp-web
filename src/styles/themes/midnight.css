@@ -1,27 +1,28 @@
 /* ══════════════════════════════════════════
-   Midnight Theme v2 — Neutral (Zinc) Dark
-   Professional pure-neutral dark theme
+   Midnight Theme — Deep Night & Soft Violet
+   Enhanced with Dark Classic Elevation & Soft Violet Accent Scheme
    ══════════════════════════════════════════ */
 .theme-midnight {
-  /* ── Palette (pure neutral zinc — no blue undertone) ── */
-  --background: #09090b;
-  --surface: #18181b;
-  --surface-hover: #27272a;
-  --border: #3f3f46;
-  --border-light: #27272a;
-  --foreground: #f4f4f5;
-  --muted: #131316;
-  --muted-fg: #a1a1aa;
-  --faint: #52525b;
-  --primary: #ffffff;
-  --primary-fg: #09090b;
-  --accent: #fafafa;
+  /* ── Palette (Deep Night Violet Elevation) ── */
+  --background: #12151e;
+  --surface: #181c26;
+  --surface-hover: #212634;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.04);
+  --table-border: rgba(255, 255, 255, 0.05);
+  --foreground: #f4f5f7;
+  --muted: #12151e;
+  --muted-fg: #9ba1b0;
+  --faint: #636a7e;
+  --primary: #a78bfa;
+  --primary-fg: #0e1118;
+  --primary-accent: #c4b5fd;
 
   /* ── Scrollbar ── */
-  --scrollbar-thumb: #3f3f46;
-  --scrollbar-thumb-hover: #52525b;
+  --scrollbar-thumb: #2d3345;
+  --scrollbar-thumb-hover: #3f475e;
 
-  /* ── Semantic colors (status only — emerald/rose/amber) ── */
+  /* ── Semantic colors ── */
   --up-bg: rgba(16, 185, 129, 0.12);
   --up-fg: #34d399;
   --down-bg: rgba(244, 63, 94, 0.14);
@@ -33,59 +34,62 @@
   --destructive: #ef4444;
   --destructive-fg: #ffffff;
 
-  --card-shadow: 0 10px 38px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.28);
+  --card-shadow:
+    0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.35);
+  --card-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   --panel-shadow:
-    3px 12px 28px -12px rgba(0, 0, 0, 0.65),
-    1px 4px 12px -8px rgba(0, 0, 0, 0.45);
+    0 16px 40px -8px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4);
 
-  /* ── Glass chrome (frosted neutral, blur on) ── */
-  --glass-chrome: rgba(24, 24, 27, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  /* ── Glass chrome ── */
+  --glass-chrome: rgba(18, 21, 30, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.07);
   --glass-blur: 18px;
 
   /* ── Popups & dropdowns ── */
-  --popup-bg: rgba(24, 24, 27, 0.72);
-  --popup-bg-hover: rgba(255, 255, 255, 0.06);
-  --popup-border: rgba(63, 63, 70, 0.6);
+  --popup-bg: rgba(22, 25, 35, 0.94);
+  --popup-bg-hover: rgba(139, 92, 246, 0.1);
+  --popup-border: rgba(255, 255, 255, 0.08);
   --popup-shadow:
-    0 18px 44px -8px rgba(0, 0, 0, 0.55), 0 5px 14px rgba(0, 0, 0, 0.35);
+    0 18px 44px -8px rgba(0, 0, 0, 0.65), 0 6px 16px rgba(0, 0, 0, 0.4);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(9, 9, 11, 0.78);
-  --tooltip-bg: #27272a;
+  --modal-bg: rgba(18, 21, 30, 0.94);
+  --tooltip-bg: #212634;
 
   /* ── Table sticky glass ── */
-  --table-header-bg: rgba(24, 24, 27, 0.72);
-  --table-footer-bg: rgba(24, 24, 27, 0.78);
+  --table-header-bg: rgba(22, 26, 36, 0.88);
+  --table-footer-bg: rgba(22, 26, 36, 0.92);
 
-  /* ── Drawer frosted glass & overlay ── */
-  --drawer-overlay-bg: rgba(0, 0, 0, 0.3);
-  --drawer-bg: rgba(14, 14, 16, 0.86);
+  /* ── Drawer frosted glass & overlay (V2 Standard Drawer) ── */
+  --drawer-overlay-bg: rgba(0, 0, 0, 0.65);
+  --drawer-bg: #161922;
   --drawer-border: rgba(255, 255, 255, 0.08);
-  --drawer-header-bg: rgba(24, 24, 27, 0.84);
-  --drawer-header-scrolled-bg: rgba(24, 24, 27, 0.94);
-  --drawer-footer-bg: rgba(24, 24, 27, 0.84);
-  --drawer-footer-scrolled-bg: rgba(24, 24, 27, 0.94);
-  --drawer-section-bg: rgba(20, 20, 22, 0.62);
+  --drawer-header-bg: rgba(20, 23, 33, 0.92);
+  --drawer-header-scrolled-bg: rgba(20, 23, 33, 0.96);
+  --drawer-footer-bg: rgba(20, 23, 33, 0.92);
+  --drawer-footer-scrolled-bg: rgba(20, 23, 33, 0.96);
+  --drawer-section-bg: #1c202c;
 
   /* ── App shell & Sidebar ── */
-  --app-shell-bg: #070708;
+  --app-shell-bg: #12151e;
   --app-shell-border: transparent;
-  --sidebar-bg: #0b0b0d;
-  --sidebar-border: #1f1f22;
-  --sidebar-active-bg: rgba(255, 255, 255, 0.1);
-  --sidebar-active-fg: #fafafa;
-  --main-panel-bg: var(--background);
-  --main-panel-border: #1f1f22;
+  --sidebar-bg: #12151e;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-hover-bg: rgba(139, 92, 246, 0.14);
+  --sidebar-hover-fg: #c4b5fd;
+  --sidebar-active-bg: rgba(139, 92, 246, 0.14);
+  --sidebar-active-fg: #a78bfa;
+  --main-panel-bg: #12151e;
+  --main-panel-border: rgba(255, 255, 255, 0.06);
 
   /* ── Tab / breadcrumb tokens ── */
-  --orcaq-tab-bg: #0b0b0d;
-  --orcaq-tab-active-bg: #18181b;
-  --orcaq-tab-active-fg: #f4f4f5;
-  --orcaq-tab-inactive-fg: #a1a1aa;
-  --orcaq-breadcrumb-bg: #0b0b0d;
-  --orcaq-breadcrumb-border: #1f1f22;
-  --orcaq-accent: #e4e4e7;
+  --orcaq-tab-bg: #12151e;
+  --orcaq-tab-active-bg: #181c26;
+  --orcaq-tab-active-fg: #f4f5f7;
+  --orcaq-tab-inactive-fg: #9ba1b0;
+  --orcaq-breadcrumb-bg: #12151e;
+  --orcaq-breadcrumb-border: rgba(255, 255, 255, 0.06);
+  --orcaq-accent: #a78bfa;
 }
 
 /* ── Midnight: border-radius 8px globally (except tab bar) ── */
@@ -156,53 +160,48 @@
 .theme-midnight .dark\:bg-zinc-400,
 .theme-midnight .bg-slate-500,
 .theme-midnight .bg-slate-600 {
-  background-color: #3f3f46 !important;
+  background-color: #2d3345 !important;
 }
 .theme-midnight .bg-slate-100,
 .theme-midnight .bg-zinc-100,
 .theme-midnight .bg-neutral-100,
 .theme-midnight .bg-gray-200,
 .theme-midnight .bg-slate-200 {
-  background-color: #27272a !important;
+  background-color: #212634 !important;
 }
 .theme-midnight .border-slate-200 {
-  border-color: #3f3f46 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 .theme-midnight .ring-slate-200,
 .theme-midnight .ring-slate-800,
 .theme-midnight .dark\:ring-slate-800 {
-  --tw-ring-color: #27272a !important;
+  --tw-ring-color: #212634 !important;
 }
 .theme-midnight .bg-slate-50,
 .theme-midnight .bg-zinc-50,
 .theme-midnight .bg-neutral-50 {
-  background-color: #18181b !important;
+  background-color: #181c26 !important;
 }
 .theme-midnight .dark\:bg-zinc-800,
 .theme-midnight .dark\:bg-neutral-800,
 .theme-midnight .dark\:bg-zinc-950\/50,
 .theme-midnight .dark\:bg-zinc-950\/40 {
-  background-color: #18181b !important;
+  background-color: #181c26 !important;
 }
 .theme-midnight .dark\:text-zinc-200,
 .theme-midnight .dark\:text-neutral-200 {
-  color: #f4f4f5 !important;
+  color: #f4f5f7 !important;
 }
 .theme-midnight .dark\:border-zinc-700,
 .theme-midnight .dark\:border-neutral-700 {
-  border-color: #3f3f46 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 .theme-midnight .dark\:data-\[state\=active\]\:bg-zinc-800 {
-  background-color: #18181b !important;
+  background-color: #181c26 !important;
 }
 /* ── Midnight: catch ALL white/light backgrounds — class-based + inline styles ── */
 .theme-midnight .bg-white,
-.theme-midnight [class*="bg-white"],
-.theme-midnight [class*=":bg-white"],
-.theme-midnight [class*="bg-background"],
-.theme-midnight [class*=":bg-background"],
-.theme-midnight [class*="bg-surface"][class*="50"],
-.theme-midnight [class*="bg-surface"][class*="100"],
+.theme-midnight .dark\:bg-white,
 .theme-midnight [style*="background-color: white" i],
 .theme-midnight [style*="background-color: #fff" i],
 .theme-midnight [style*="background-color: rgb(255, 255, 255)" i],
@@ -210,8 +209,8 @@
 .theme-midnight [style*="background: #fff" i],
 .theme-midnight [style*="background-color:#ffffff" i],
 .theme-midnight [style*="background-color:#FFFFFF" i] {
-  background-color: #18181b !important;
-  background: #18181b !important;
+  background-color: #181c26 !important;
+  background: #181c26 !important;
 }
 .theme-midnight [class*="bg-slate-50"],
 .theme-midnight [class*="bg-zinc-50"],
@@ -223,7 +222,7 @@
 .theme-midnight [class*="bg-gray-100"],
 .theme-midnight [class*="bg-gray-200"],
 .theme-midnight [class*="bg-slate-200"] {
-  background-color: #27272a !important;
+  background-color: #212634 !important;
 }
 
 /* ── Midnight: force dark appearance for ALL form controls (fix "input trắng bóc") ── */
@@ -244,16 +243,16 @@
 .theme-midnight .form-textarea,
 .theme-midnight [class*="Input__input"],
 .theme-midnight [class*="input"] {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-color: #3f3f46 !important;
+  background-color: #181c26 !important;
+  color: #f4f5f7 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
   background-image: none !important;
 }
 .theme-midnight input::placeholder,
 .theme-midnight textarea::placeholder,
 .theme-midnight .form-input::placeholder,
 .theme-midnight .form-textarea::placeholder {
-  color: #52525b !important;
+  color: #636a7e !important;
 }
 .theme-midnight input:focus,
 .theme-midnight textarea:focus,
@@ -263,9 +262,9 @@
 .theme-midnight .form-input:focus,
 .theme-midnight .form-select:focus,
 .theme-midnight .form-textarea:focus {
-  border-color: #71717a !important;
+  border-color: #8b5cf6 !important;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(113, 113, 122, 0.2);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25) !important;
 }
 /* Catch inline-styled text/foreground white-on-white text too */
 .theme-midnight [style*="color: #000" i],
@@ -273,31 +272,31 @@
 .theme-midnight [style*="color: rgb(0, 0, 0)" i],
 .theme-midnight [style*="color: #111827" i],
 .theme-midnight [style*="color: #0f172a" i] {
-  color: #f4f4f5 !important;
+  color: #f4f5f7 !important;
 }
 
-/* ── Midnight: dim white inset "tráng" borders on cards/popups → zinc chìm ── */
+/* ── Midnight: dim white inset "tráng" borders on cards/popups → viền tinh tế ── */
 .theme-midnight .card-shadow {
   box-shadow:
     4px 12px 28px -12px rgba(0, 0, 0, 0.6),
     0 2px 6px rgba(0, 0, 0, 0.4),
-    0 0 0 1px #3f3f46 inset !important;
+    0 0 0 1px rgba(255, 255, 255, 0.07) inset !important;
 }
 .theme-midnight .popup-content {
   box-shadow:
     0 14px 36px -8px rgba(0, 0, 0, 0.55),
     0 4px 12px rgba(0, 0, 0, 0.35),
-    0 0 0 1px #3f3f46 inset !important;
+    0 0 0 1px rgba(255, 255, 255, 0.07) inset !important;
 }
 .theme-midnight .partner-card {
-  background: rgba(24, 24, 27, 0.88) !important;
+  background: rgba(24, 28, 38, 0.92) !important;
   box-shadow:
     0 10px 24px -10px rgba(0, 0, 0, 0.6),
-    0 0 0 1px #3f3f46 inset !important;
+    0 0 0 1px rgba(255, 255, 255, 0.07) inset !important;
 }
 .theme-midnight .context-menu {
   box-shadow:
     0 16px 40px -8px rgba(0, 0, 0, 0.55),
     0 4px 12px rgba(0, 0, 0, 0.35),
-    0 0 0 1px #3f3f46 inset !important;
+    0 0 0 1px rgba(255, 255, 255, 0.07) inset !important;
 }

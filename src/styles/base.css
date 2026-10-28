@@ -51,21 +51,39 @@ body::before {
   overflow: hidden;
 }
 
-/* ── Scrollbar ── */
+/* ── Scrollbar (Slim & Refined) ── */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb, #e2e8f0);
+  background: var(--scrollbar-thumb, #cbd5e1);
   border-radius: 99px;
   cursor: pointer;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover, #cbd5e1);
+  background: var(--scrollbar-thumb-hover, #94a3b8);
+}
+
+/* ── Ultra-slim 4px Scrollbar for Tables & Drawers ── */
+.slide-panel ::-webkit-scrollbar,
+[data-v2-standard-drawer] ::-webkit-scrollbar,
+.spreadsheet-container ::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, rgba(255, 255, 255, 0.16));
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, rgba(255, 255, 255, 0.28));
 }
 
 /* ── Keyframes ── */

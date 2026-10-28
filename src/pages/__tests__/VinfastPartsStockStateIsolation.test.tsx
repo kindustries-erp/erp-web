@@ -15,23 +15,54 @@ window.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
-vi.mock("@/shared/components/PillTabs", () => ({
-  PillTabs: ({
-    value,
-    onValueChange,
-    items,
+vi.mock("@/v2/shared/components", async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    V2ViewModeCombobox: ({
+      filterGroup,
+    }: {
+      filterGroup?: {
+        activeKey: string;
+        onChange: (key: string) => void;
+        items: { key: string; label: React.ReactNode }[];
+      };
+    }) => (
+      <div data-testid="view-mode-combobox" data-value={filterGroup?.activeKey}>
+        {filterGroup?.items.map((item) => (
+          <button
+            key={item.key}
+            role="tab"
+            data-state={
+              filterGroup.activeKey === item.key ? "active" : "inactive"
+            }
+            onClick={() => filterGroup.onChange(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    ),
+  };
+});
+
+vi.mock("@/shared/components/ViewModeCombobox", () => ({
+  ViewModeCombobox: ({
+    filterGroup,
   }: {
-    value: string;
-    onValueChange: (val: string) => void;
-    items: { value: string; label: React.ReactNode }[];
+    filterGroup?: {
+      value: string;
+      onChange: (val: string) => void;
+      items: { value: string; label: React.ReactNode }[];
+    };
   }) => (
-    <div data-testid="pill-tabs" data-value={value}>
-      {items.map((item) => (
+    <div data-testid="view-mode-combobox" data-value={filterGroup?.value}>
+      {filterGroup?.items.map((item) => (
         <button
           key={item.value}
           role="tab"
-          data-state={value === item.value ? "active" : "inactive"}
-          onClick={() => onValueChange(item.value)}
+          data-state={filterGroup.value === item.value ? "active" : "inactive"}
+          onClick={() => filterGroup.onChange(item.value)}
         >
           {item.label}
         </button>
@@ -55,11 +86,14 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@/pages/hooks/useVinfastPartsStockExportProgress", () => ({
-  useVinfastPartsStockExportProgress: () => ({
-    downloadReadyFile: vi.fn(),
+vi.mock(
+  "@/v2/modules/vinfast-parts/hooks/useVinfastStockExportProgress",
+  () => ({
+    useVinfastStockExportProgress: () => ({
+      downloadReadyFile: vi.fn(),
+    }),
   }),
-}));
+);
 
 vi.mock("@/core/api/axiosInstance", () => ({
   default: {

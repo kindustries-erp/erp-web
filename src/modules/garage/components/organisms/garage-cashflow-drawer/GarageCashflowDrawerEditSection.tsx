@@ -133,6 +133,12 @@ export const GarageCashflowDrawerEditSection: React.FC<DrawerSectionProps> = (
           onChange={handleCaseChange}
           fallbackLabel={caseFallbackLabel}
           fallbackTooltipContent={caseTooltip}
+          customerCode={props.initialData?.customerCode}
+          licensePlate={
+            formData.licensePlate || props.initialData?.licensePlate
+          }
+          supplierId={props.initialData?.supplierId}
+          partnerName={formData.partnerName || props.initialData?.partnerName}
         />
       </DrawerField>
       <DrawerField label={t("garage:cashflowDrawer.partnerName", "Đối tác")}>

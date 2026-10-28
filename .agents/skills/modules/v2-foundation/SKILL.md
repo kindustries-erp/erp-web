@@ -28,6 +28,14 @@ Nguyên tắc: module chỉ viết **logic nghiệp vụ** (hook nhận query, t
 
 Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đổi `page`/lọc trên URL (bảng uncontrolled). Back chỉ đóng/mở drawer và đổi tab.
 
+### Preferences bảng (`src/v2/shared/preferences/`)
+
+- `useV2TablePreferencesStore` (zustand persist, key localStorage `v2_table_preferences`): `tables[tableId] = { columns?, views? }`, `migrationVersion`. `patchTable(tableId, patch)` lưu local rồi đẩy nền lên server qua `v2TablePreferences.sync.ts` (`PATCH /api/v1/app/table-preferences/:tableId`, debounce 500ms, lỗi mạng bỏ qua).
+- Migrate từ V1 (`erp_preferences`, chỉ đọc qua `v2TablePreferences.migrate.ts`): chạy đúng một lần khi `migrationVersion < V2_PREFERENCES_MIGRATION_VERSION` (hiện là 1). Bảng đã có cấu hình V2 được giữ nguyên; alias `_2` / `__n` bị bỏ qua.
+- Chống sập: `mapV1TablePreference` kiểm tra kiểu (`views`, `columnOrder`, `columnVisibility`, `columnSizing`, `activeView`), bỏ qua view thiếu `key`/`label` string. Mỗi bảng migrate trong try/catch, lời gọi migrate khi import cũng được bọc. Dữ liệu V1 sai kiểu không còn làm sập app.
+- Xoá cache: `clearV2TablePreferencesCache({ includeV1? })` (`v2TablePreferences.reset.ts`) reset state và xoá key `v2_table_preferences`; `includeV1: true` xoá thêm `erp_preferences`. Không gọi server. Chưa có nút UI, chỉ gọi từ code.
+- Test: `v2TablePreferences.migrate.test.ts`, `v2TablePreferences.reset.test.ts`, `useV2TablePreferencesStore.test.ts`.
+
 ## 3. i18n theo module (`shared/locales/moduleRegistry.ts`)
 
 `registerV2ModuleLocale("invoice", { vi, en })` đăng ký khóa dưới `v2.invoice.*`; `useV2Translation` tra từ điển chung trước rồi tới module. Namespace không được trùng khóa chung (`common`, `table`, `drawer`, `form`, `chart`, `preview`, `guard`...), trùng sẽ ném lỗi. Đăng ký lại cùng namespace thì ghi đè.
@@ -59,8 +67,8 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 | Tầng | Thành phần | Thay cho (V1) |
 | :--- | :--- | :--- |
 | Atom | `V2Switch`, `V2Textarea`, `V2Skeleton`, `V2Progress` (+ `ui/progress`), `V2NumberInput`, `V2CopyButton`, `V2Sparkline` | `switch`, `textarea`, `Skeleton`, `progress`, ô nhập số, `CopyButton`, `KpiSparkline` |
-| Molecule | `V2Combobox`, `V2DatePicker`, `V2DateRangePicker` (+ `buildV2DatePresets`), `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2StatCard`, `V2Panel`, `V2ChartFrame` | `Combobox`, `DatePicker`, `EmptyState`, `Attachment`, `SearchInput`, `KpiCard`, `Panel` |
-| Organism | `V2BarChart`, `V2LineChart`, `V2DonutChart` (`organisms/v2-chart/`), `V2FilePreviewPanel` | `BarChart`, `LineChart`, `DonutChart`, `FilePreviewDrawer` |
+| Molecule | `V2Combobox` (`onSearchChange` để tìm trên server, `loading` hiện spinner; mặc định lọc phía client), `V2DatePicker`, `V2DateRangePicker` (+ `buildV2DatePresets`), `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2StatCard`, `V2Panel`, `V2ChartFrame`, `V2SyncProgress` (thanh % + console nhật ký, có dark theme; bọc bằng `DrawerSection` ở drawer) | `Combobox`, `DatePicker`, `EmptyState`, `Attachment`, `SearchInput`, `KpiCard`, `Panel`, khối "Tiến trình" của drawer đồng bộ |
+| Organism | `V2BarChart`, `V2LineChart`, `V2DonutChart`, `V2ComboChart` (`organisms/v2-chart/`), `V2FilePreviewPanel` | `BarChart`, `LineChart`, `DonutChart`, Combo/Mixed Chart, `FilePreviewDrawer` |
 | Template | `V2ModulePage` | `PageLayout`, `SpreadsheetPageTemplate`, `DashboardTemplate` |
 
 - `V2StandardTable` có thêm `toolbar.search` (ô tìm kiếm toàn cục, ghi vào `query.search`, chế độ client lọc theo mọi cột; hỗ trợ `;` nhiều từ khóa và `"..."` khớp chính xác).
@@ -69,10 +77,11 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 
 ## 6. Biểu đồ (`organisms/v2-chart`, skill `dataviz`)
 
+- `V2ComboChart`: Biểu đồ hỗn hợp (Mixed Bar + Line) hiển thị song song Cột (Doanh thu/Chi phí) và Đường (Lợi nhuận/Dòng tiền ròng/Chênh lệch). Hỗ trợ `tension: 0.3`, dot viền nổi bật `theme.surface`, trục Y phụ (`secondaryAxis`), tooltip index-based và switch dạng bảng.
 - Bảng màu `utils/v2ChartPalette.ts`: **5 màu cố định** (cam, lục lam, vàng, hồng, lục), không có xanh dương (No Blue Mandate) và không có đỏ (dành cho trạng thái lỗi), đã chạy validator ở cả sáng/tối. Thứ tự cố định, không xoay vòng; vượt 5 chuỗi/mảng thì `capV2Series`/`foldSlices` gộp vào "Khác".
-- Quy cách: cột tối đa 24px bo 4px ở đầu dữ liệu, đường 2px, chấm 8px có viền màu nền, vùng area ~10%, khe 2px giữa các mảng xếp chồng và donut. Legend luôn có từ 2 chuỗi. Mọi biểu đồ có chế độ xem dạng bảng (`V2ChartFrame`).
+- Quy cách: cột tối đa 24px bo 4px ở đầu dữ liệu, đường 2px, chấm 8px có viền màu nền, vùng area ~10%, khe 2px giữa các mảng xếp chồng và donut. Legend luôn có từ 2 chuỗi (phân biệt icon Cột và icon Đường qua `isLine`). Mọi biểu đồ có chế độ xem dạng bảng (`V2ChartFrame`).
 - Theme sáng/tối lấy từ `useV2ChartTheme` (đọc class `dark` và biến CSS).
-- Test: jsdom không có canvas, nên mock `react-chartjs-2` và test các hàm dựng dữ liệu/tùy chọn trong `V2Chart.options.ts`.
+- Test: jsdom không có canvas, nên mock `react-chartjs-2` và test các hàm dựng dữ liệu/tùy chọn trong `V2Chart.options.ts` và `V2ComboChart.test.tsx`.
 
 ## 7. Parity với erp-invoice (đã kiểm bằng story mẫu)
 
@@ -80,7 +89,7 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 
 **Chưa có (cần làm riêng):**
 - Chứng từ liên kết đa tầng: V1 `DrawerDocumentTraceability` dài khoảng 2.900 dòng (canvas, pipeline, bảng, liên kết/gỡ liên kết). V2 mới có `DrawerRelatedDeck` làm khung; story mẫu dùng bảng rút gọn.
-- Lưu cấu hình cột/view lên server (V2 chỉ có localStorage), chọn nhanh theo lịch trong bộ lọc cột (đã có sẵn khe ngày với mốc `today/last7/last30/thisMonth`).
+- Lưu cấu hình cột/view lên server: đã có đường ghi (PATCH nền, xem mục Preferences bảng), nhưng chưa xác minh chiều tải về khi mở trang (`applyServerTables` cần kiểm tra ai gọi). Chọn nhanh theo lịch trong bộ lọc cột (đã có sẵn khe ngày với mốc `today/last7/last30/thisMonth`).
 - Nhiều tab cùng một trang (`instanceIndex`) như V1.
 - Bảng không đồng bộ lại khi Back đổi query trên URL.
 
@@ -98,3 +107,31 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 - Menu `V2Dropdown` nằm trong drawer không mở được bằng `fireEvent`/`userEvent` trong jsdom; kiểm tra trạng thái xếp tầng bằng cách khôi phục từ URL (`?overlay=invoice%3AIN-1,posting`) và truy vấn nút với `hidden: true` khi có drawer chồng nhau.
 - Mỗi test dùng URL sạch: `window.history.replaceState(null, "", "/v2/x")` trong `beforeEach`.
 - Story gọi hook phải bọc trong component đặt tên (quy tắc rules-of-hooks của ESLint), không gọi hook trong `render`.
+
+## 10. Hệ thống Theme V2 & Đồng bộ Storybook
+
+- **5 Theme Chuẩn**:
+  - `default` / `shell`: Mặc định sáng (Neutral background `#f4f6f8`, không gắn class theme, `dark: false`).
+  - `classic-light`: Cổ điển sáng (Class `.theme-classic`, `dark: false`).
+  - `classic-dark`: Cổ điển tối (Teal scheme `#14b8a6`, class `.theme-classic`, `.theme-classic-dark`, `dark: true`).
+  - `orcaq`: OrcaQ (Flat DB style, class `.theme-orcaq`, `dark: false`).
+  - `midnight`: Midnight Dark (Deep Night Violet `#a78bfa`, class `.theme-midnight`, `dark: true`).
+- **applyV2Theme**:
+  - Quản lý chính xác danh sách class `.theme-classic`, `.theme-classic-dark`, `.theme-orcaq`, `.theme-midnight` và `.dark`.
+  - Tuyệt đối không để `window.matchMedia` của hệ điều hành ép sang `.dark` khi người dùng chủ động chọn Light theme (`default`, `classic-light`, `orcaq`).
+- **Storybook Decorator (.storybook/preview.tsx)**:
+  - Toolbar `theme` cung cấp đầy đủ 5 theme trên.
+  - Tự động đồng bộ `useAppStore.getState().setAppTheme(mappedTheme)` và `setLocale(selectedLocale)`.
+  - Body và Canvas container áp dụng `bg-background text-foreground` giúp các Radix portal (Modal, Drawer, Popover) hiển thị màu nền chuẩn xác.
+
+## 11. Quy chuẩn Elevation (Box Shadow), Popover và Date Filter V2
+
+- **Loại bỏ viền trắng cứng ở Dark Mode (Elevation by Shadow)**:
+  - Bảng dữ liệu `V2StandardTable`: dùng `border border-border/20 dark:border-transparent shadow-[var(--card-shadow)]` để thay thế viền trắng cứng `border-border/60`. Bảng nổi khối tự nhiên và sang trọng trên nền tối.
+  - Popover & Filter: dùng `border border-border/20 dark:border-transparent shadow-[var(--popup-shadow)]`. `--popup-border` trong các theme dark là `transparent`, `--popup-shadow` đạt độ sâu `0 24px 48px -8px rgba(0,0,0,0.8), 0 8px 24px -4px rgba(0,0,0,0.5)`.
+- **Date Filter trong Table Header (`V2DateRangeSlot`)**:
+  - Tuyệt đối không dùng thẻ `<Input type="date">` mặc định của trình duyệt.
+  - Bắt buộc dùng 2 component `V2DatePicker` (Từ ngày, Đến ngày) với `triggerClassName="text-xs px-2 gap-1.5 h-8 font-normal"`.
+  - Hỗ trợ chọn nhanh bằng presets, chọn trực quan qua popup `V2Calendar`, ràng buộc `minDate`/`maxDate` và định dạng chuẩn ngày tháng tiếng Việt.
+
+

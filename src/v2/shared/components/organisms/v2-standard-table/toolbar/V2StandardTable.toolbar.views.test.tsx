@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
+import { useV2TablePreferencesStore } from "@/v2/shared/preferences/useV2TablePreferencesStore";
 import { V2StandardTableDesktop } from "../desktop/V2StandardTable.desktop";
 import { mockViewport, renderTable } from "../mocks/V2StandardTable.fixture";
 import type { V2TableToolbarConfig } from "../V2StandardTable.type";
@@ -25,13 +26,14 @@ describe("V2StandardTable toolbar: chế độ xem tùy chỉnh", () => {
   beforeEach(() => {
     mockViewport(false);
     window.localStorage.clear();
+    useV2TablePreferencesStore.setState({ tables: {} });
   });
   afterEach(() => vi.restoreAllMocks());
 
   it("tạo chế độ xem qua hộp thoại rồi thấy trong danh sách", () => {
     renderTable(V2StandardTableDesktop, { toolbar: makeConfig() });
     fireEvent.click(screen.getByRole("button", { name: "Chế độ xem" }));
-    fireEvent.click(screen.getByRole("button", { name: "Tạo chế độ xem" }));
+    fireEvent.click(screen.getByRole("button", { name: "Tạo chế độ xem mới" }));
     fireEvent.change(screen.getByRole("textbox", { name: /Tên chế độ xem/ }), {
       target: { value: "Của tôi" },
     });
@@ -46,7 +48,7 @@ describe("V2StandardTable toolbar: chế độ xem tùy chỉnh", () => {
   it("xóa chế độ xem tùy chỉnh phải qua xác nhận", () => {
     renderTable(V2StandardTableDesktop, { toolbar: makeConfig() });
     fireEvent.click(screen.getByRole("button", { name: "Chế độ xem" }));
-    fireEvent.click(screen.getByRole("button", { name: "Tạo chế độ xem" }));
+    fireEvent.click(screen.getByRole("button", { name: "Tạo chế độ xem mới" }));
     fireEvent.change(screen.getByRole("textbox", { name: /Tên chế độ xem/ }), {
       target: { value: "Tạm" },
     });

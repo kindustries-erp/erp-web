@@ -20,14 +20,14 @@ type Story = StoryObj<typeof V2SidebarHeader>;
 
 export const Expanded: Story = {
   args: {
-    appName: "Liouni ERP",
+    appName: "ERP",
     isCollapsed: false,
   },
 };
 
 export const Collapsed: Story = {
   args: {
-    appName: "Liouni ERP",
+    appName: "ERP",
     isCollapsed: true,
   },
 };

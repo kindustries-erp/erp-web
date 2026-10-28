@@ -4,6 +4,7 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useT } from "@/core/i18n";
 import { Popover } from "@/core/components/ui/Popover";
 import { cn, getBuildVersionLabel } from "@/shared/utils";
+import { useIsMobile } from "@/shared/hooks/useIsMobile";
 
 import {
   getActiveSystemLanguages,
@@ -11,7 +12,8 @@ import {
 } from "@/core/config/languages";
 
 const THEME_OPTIONS: { value: AppTheme; labelKey: string }[] = [
-  { value: "classic", labelKey: "nav.bottom.themeClassic" },
+  { value: "classic-light", labelKey: "nav.bottom.themeClassicLight" },
+  { value: "classic-dark", labelKey: "nav.bottom.themeClassicDark" },
   { value: "shell", labelKey: "nav.bottom.themeShell" },
   { value: "orcaq", labelKey: "nav.bottom.themeOrca" },
   { value: "midnight", labelKey: "nav.bottom.themeMidnight" },
@@ -22,12 +24,20 @@ export function UserMenuPopover({
   onOpenProfile,
   onOpenSettings,
   onOpenChangelog,
+  side,
+  align,
 }: {
   children: React.ReactNode;
   onOpenProfile?: () => void;
   onOpenSettings?: () => void;
   onOpenChangelog?: () => void;
+  side?: "top" | "bottom" | "left" | "right";
+  align?: "start" | "center" | "end";
 }) {
+  const isMobile = useIsMobile();
+  const effectiveSide = side ?? (isMobile ? "bottom" : "top");
+  const effectiveAlign = align ?? (isMobile ? "end" : "start");
+
   const { appTheme, setAppTheme, locale, setLocale } = useAppStore();
   const { logoutAction, employee } = useAuthStore();
   const t = useT();
@@ -38,6 +48,10 @@ export function UserMenuPopover({
 
   const displayName = employee?.full_name ?? t("nav.bottom.userFallback");
   const email = employee?.email ?? "";
+  const isAdmin = email === "admin@liouni.com";
+  const visibleThemes = THEME_OPTIONS.filter(
+    (opt) => isAdmin || (opt.value !== "shell" && opt.value !== "orcaq"),
+  );
 
   const currentThemeLabel =
     THEME_OPTIONS.find((o) => o.value === appTheme)?.labelKey ?? "";
@@ -49,7 +63,7 @@ export function UserMenuPopover({
   const buildVersionLabel = getBuildVersionLabel();
 
   const content = (
-    <div className="flex">
+    <div className="flex flex-col sm:flex-row max-h-[85vh] overflow-y-auto">
       {/* Main menu */}
       <div className="w-56 p-1.5">
         {/* User info header */}
@@ -251,14 +265,14 @@ export function UserMenuPopover({
 
       {/* Side sub-menu panel */}
       {subMenu && (
-        <div className="w-44 p-1.5 border-l border-[color:var(--border)]">
+        <div className="w-full sm:w-44 p-1.5 border-t sm:border-t-0 sm:border-l border-[color:var(--border)]">
           <p className="px-2.5 py-1.5 text-[10px] font-medium text-[color:var(--foreground)] dark:text-zinc-400 dark:opacity-100 opacity-70 uppercase tracking-wide">
             {subMenu === "appearance"
               ? t("nav.bottom.themeStyle")
               : t("nav.bottom.languageLabel")}
           </p>
           {subMenu === "appearance" &&
-            THEME_OPTIONS.map((opt) => (
+            visibleThemes.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => setAppTheme(opt.value)}
@@ -324,8 +338,8 @@ export function UserMenuPopover({
   return (
     <Popover
       content={content}
-      side="top"
-      align="start"
+      side={effectiveSide}
+      align={effectiveAlign}
       open={open}
       onOpenChange={(v) => {
         setOpen(v);

@@ -43,22 +43,27 @@ export const ErpInvoiceGeneralInfoSection = React.memo(
           (invoice as any)?.buyerPersonalTaxCode
     )?.trim();
 
-    const branchId =
-      form?.branchId || invoice?.branchId || (invoice as any)?.branch?.id || "";
-    const branchObj = (invoice as any)?.branch;
-    const matchedOption = branchOptions.find((o) => o.value === branchId);
+    const branchIds: string[] = (form?.branchIds as string[] | undefined)
+      ?.length
+      ? (form?.branchIds as string[])
+      : invoice?.branchIds?.length
+        ? invoice.branchIds
+        : [
+            form?.branchId ||
+              invoice?.branchId ||
+              (invoice as any)?.branch?.id ||
+              "",
+          ].filter(Boolean);
 
     const branchLabel = useMemo(() => {
-      if (branchObj?.name) return branchObj.name;
-      if (branchObj?.branchName) return branchObj.branchName;
-      if (matchedOption?.label) {
-        return matchedOption.label.split(" — ")[1] || matchedOption.label;
-      }
-      if (branchId && !branchId.includes("-")) {
-        return branchId;
-      }
-      return "—";
-    }, [branchObj, matchedOption, branchId]);
+      if (branchIds.length === 0) return "—";
+      const names = branchIds.map((id) => {
+        const option = branchOptions.find((o) => o.value === id);
+        if (option?.label) return option.label.split(" — ")[1] || option.label;
+        return id;
+      });
+      return names.join(", ");
+    }, [branchIds, branchOptions]);
 
     const invoiceDate = invoice?.invoiceDate || form?.invoiceDate || "";
     const serialNo = invoice?.serialNo || form?.serialNo || "";

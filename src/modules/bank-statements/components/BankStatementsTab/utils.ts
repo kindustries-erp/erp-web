@@ -12,10 +12,17 @@ export const DEFAULT_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
   netOffAmount: false,
   remainingAmount: false,
   invoiceSubject: false,
+  invoiceNo: false,
+  invoiceSerial: false,
+  invoiceDate: false,
   correspondentName: false,
   correspondentAccount: false,
   correspondentBank: false,
   branch: true,
+  cashflowClassification: true,
+  cashflowPurpose: true,
+  businessPartner: true,
+  note: true,
 };
 
 export const AUDIT_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
@@ -30,10 +37,42 @@ export const AUDIT_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
   netOffAmount: true,
   remainingAmount: true,
   invoiceSubject: true,
+  invoiceNo: true,
+  invoiceSerial: true,
+  invoiceDate: true,
   correspondentName: true,
   correspondentAccount: false,
   correspondentBank: false,
   branch: true,
+  cashflowClassification: true,
+  cashflowPurpose: true,
+  businessPartner: true,
+  note: true,
+};
+
+export const FULL_BANK_COLUMN_VISIBILITY: Record<string, boolean> = {
+  index: true,
+  account: true,
+  transDate: true,
+  referenceNumber: true,
+  description: true,
+  thu: true,
+  chi: true,
+  balance: true,
+  netOffAmount: true,
+  remainingAmount: true,
+  invoiceSubject: true,
+  invoiceNo: true,
+  invoiceSerial: true,
+  invoiceDate: true,
+  correspondentName: true,
+  correspondentAccount: true,
+  correspondentBank: true,
+  branch: true,
+  cashflowClassification: true,
+  cashflowPurpose: true,
+  businessPartner: true,
+  note: true,
 };
 
 export const BANK_STATEMENT_COLUMN_VIEW_PRESETS: TableViewPreset[] = [
@@ -59,10 +98,21 @@ export const BANK_STATEMENT_COLUMN_VIEW_PRESETS: TableViewPreset[] = [
     isDefault: true,
     isCustom: false,
   },
+  {
+    key: "full",
+    label: "Đầy đủ",
+    filters: {},
+    columnFilters: {},
+    columnVisibility: {
+      ...FULL_BANK_COLUMN_VISIBILITY,
+    },
+    isDefault: true,
+    isCustom: false,
+  },
 ];
 
 export interface ColumnGroupDef {
-  groupKey: "general" | "amount" | "reconciliation" | "partner";
+  groupKey: "general" | "amount" | "reconciliation" | "partner" | "cashflow";
   titleKey: string;
   titleDefault: string;
   columns: Array<{
@@ -165,6 +215,24 @@ export const BANK_STATEMENT_COLUMN_GROUPS: ColumnGroupDef[] = [
         labelDefault: "Đối tượng HĐ VAT",
         defaultVisible: false,
       },
+      {
+        key: "invoiceNo",
+        labelKey: "bankStatement.columns.invoiceNo",
+        labelDefault: "Số hóa đơn",
+        defaultVisible: false,
+      },
+      {
+        key: "invoiceSerial",
+        labelKey: "bankStatement.columns.invoiceSerial",
+        labelDefault: "Ký hiệu HĐ",
+        defaultVisible: false,
+      },
+      {
+        key: "invoiceDate",
+        labelKey: "bankStatement.columns.invoiceDate",
+        labelDefault: "Ngày HĐ",
+        defaultVisible: false,
+      },
     ],
   },
   {
@@ -189,6 +257,37 @@ export const BANK_STATEMENT_COLUMN_GROUPS: ColumnGroupDef[] = [
         labelKey: "bankStatement.columns.correspondentBank",
         labelDefault: "Ngân hàng đối tác",
         defaultVisible: false,
+      },
+    ],
+  },
+  {
+    groupKey: "cashflow",
+    titleKey: "bankStatement.viewConfigGroupCashflow",
+    titleDefault: "Phân loại & Ghi chú",
+    columns: [
+      {
+        key: "cashflowClassification",
+        labelKey: "bankStatement.columns.classification",
+        labelDefault: "Phân loại",
+        defaultVisible: true,
+      },
+      {
+        key: "cashflowPurpose",
+        labelKey: "bankStatement.columns.purpose",
+        labelDefault: "Mục đích",
+        defaultVisible: true,
+      },
+      {
+        key: "businessPartner",
+        labelKey: "bankStatement.columns.businessPartner",
+        labelDefault: "Đối tượng",
+        defaultVisible: true,
+      },
+      {
+        key: "note",
+        labelKey: "bankStatement.columns.note",
+        labelDefault: "Ghi chú",
+        defaultVisible: true,
       },
     ],
   },

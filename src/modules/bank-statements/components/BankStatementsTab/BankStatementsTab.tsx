@@ -1,17 +1,18 @@
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-  useEffect,
-} from "react";
-import { useTranslation } from "react-i18next";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useAppStore } from "@/core/config/appStore";
 import { CashflowDashboard } from "@/pages/CashflowDashboard";
 import { BankStatementSection } from "./BankStatementSection";
+import {
+  readBankStatementTab,
+  type BankStatementTab,
+} from "./bankStatementTab.helper";
+import {
+  useBankStatementPageTabs,
+  useBankStatementRoutedTab,
+} from "./useBankStatementTabs";
 
 export interface BankStatementsTabProps {
-  initialTab?: "dashboard" | "bank" | "cash";
+  initialTab?: BankStatementTab;
   type?: "bank" | "cash";
   instanceIndex?: 1 | 2;
 }
@@ -21,53 +22,22 @@ export function BankStatementsTab({
   type: propType,
   instanceIndex = 1,
 }: BankStatementsTabProps) {
-  const { t } = useTranslation();
-
-  const getInitialTab = (): "dashboard" | "bank" | "cash" => {
+  const getInitialTab = (): BankStatementTab => {
     if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get("tab");
-      if (
-        tabParam === "dashboard" ||
-        tabParam === "bank" ||
-        tabParam === "cash"
-      ) {
-        return tabParam;
-      }
+      const routedTab = readBankStatementTab(window.location.href);
+      if (routedTab) return routedTab;
     }
     return propType || propInitialTab || "dashboard";
   };
 
-  const [currentTabKey, setCurrentTabKey] = useState<
-    "dashboard" | "bank" | "cash"
-  >(getInitialTab);
+  const [currentTabKey, setCurrentTabKey] =
+    useState<BankStatementTab>(getInitialTab);
   const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
 
-  const pageTabs = useMemo(
-    () => [
-      {
-        value: "dashboard",
-        label: t("nav.items.cashflowDashboard", {
-          defaultValue: "Tổng quan dòng tiền",
-        }),
-      },
-      {
-        value: "bank",
-        label: t("bankStatement.bankTitle", {
-          defaultValue: "Sao kê ngân hàng",
-        }),
-      },
-      {
-        value: "cash",
-        label: t("bankStatement.cashTitle", {
-          defaultValue: "Sổ quỹ tiền mặt",
-        }),
-      },
-    ],
-    [t],
-  );
+  useBankStatementRoutedTab(setCurrentTabKey);
+  const pageTabs = useBankStatementPageTabs();
 
   const mountedViewsRef = useRef<Record<string, boolean>>({
     dashboard: currentTabKey === "dashboard",
@@ -85,7 +55,7 @@ export function BankStatementsTab({
         clearTimeout(debounceUrlTimerRef.current);
       const validTab = (
         newTab === "bank" || newTab === "cash" ? newTab : "dashboard"
-      ) as "dashboard" | "bank" | "cash";
+      ) as BankStatementTab;
       setCurrentTabKey(validTab);
 
       if (typeof window !== "undefined") {
@@ -95,8 +65,8 @@ export function BankStatementsTab({
         const newUrl = url.toString();
         window.history.replaceState(null, "", newUrl);
 
-        const currentInstanceId =
-          instanceIndex === 2 ? "bank-statement__2" : "bank-statement";
+        // Id instance theo trang đang mở (cashflow, bank-statement, cash-statement...)
+        const currentInstanceId = useAppStore.getState().currentInstanceId;
         debounceUrlTimerRef.current = setTimeout(() => {
           useAppStore
             .getState()
@@ -114,8 +84,7 @@ export function BankStatementsTab({
         url.searchParams.set("tab", currentTabKey);
         const fullUrl = url.toString();
         window.history.replaceState(null, "", fullUrl);
-        const currentInstanceId =
-          instanceIndex === 2 ? "bank-statement__2" : "bank-statement";
+        const currentInstanceId = useAppStore.getState().currentInstanceId;
         useAppStore
           .getState()
           .updateCurrentTabUrl?.(currentInstanceId, fullUrl);
@@ -123,15 +92,8 @@ export function BankStatementsTab({
     }
 
     const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get("tab");
-      if (
-        tabParam === "dashboard" ||
-        tabParam === "bank" ||
-        tabParam === "cash"
-      ) {
-        setCurrentTabKey(tabParam);
-      }
+      const tab = readBankStatementTab(window.location.href);
+      if (tab) setCurrentTabKey(tab);
     };
 
     window.addEventListener("popstate", handlePopState);

@@ -51,7 +51,7 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
   const { title, subtitle, meta } = slots;
 
   return (
-    <div className={cn("flex min-h-0 flex-col gap-2", props.className)}>
+    <div className={cn("flex h-full min-h-0 flex-col gap-2", props.className)}>
       <V2TableToolbar
         activeFilterCount={state.activeFilterCount}
         onClearAllFilters={state.resetAll}
@@ -62,100 +62,102 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         loading={loading}
         search={{ value: state.query.search ?? "", onChange: state.setSearch }}
       />
-      {view.rows.length === 0 && loading ? (
-        <V2TableSkeletonCards
-          loadingLabel={t("v2.table.loading", "Đang tải dữ liệu...")}
-        />
-      ) : view.rows.length === 0 ? (
-        <V2Text
-          as="p"
-          variant="body-sm"
-          color="muted"
-          className="py-10 text-center"
-        >
-          {props.emptyLabel ?? t("v2.table.empty", "Không có dữ liệu")}
-        </V2Text>
-      ) : (
-        <ul className={cn("flex flex-col gap-2", loading && "opacity-60")}>
-          {view.rows.map((row, rowIndex) => {
-            const key = getRowKey(row);
-            const index = view.startIndex + rowIndex + 1;
-            const groups = rowActions?.(row) ?? [];
-            return (
-              <li
-                key={key}
-                data-state={selected.has(key) ? "selected" : undefined}
-                className={cn(
-                  "flex flex-col gap-2 rounded-xl border border-border/60 bg-surface p-3 data-[state=selected]:bg-primary/5",
-                  props.getRowClassName?.(row, index),
-                )}
-              >
-                <div className="flex items-start gap-2">
-                  {props.enableRowSelection && (
-                    <V2TableSelectCheckbox
-                      aria-label={t("v2.table.selectRow", "Chọn dòng")}
-                      checked={selected.has(key)}
-                      onCheckedChange={(value) =>
-                        selection.toggleKey(key, Boolean(value))
-                      }
-                    />
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+        {view.rows.length === 0 && loading ? (
+          <V2TableSkeletonCards
+            loadingLabel={t("v2.table.loading", "Đang tải dữ liệu...")}
+          />
+        ) : view.rows.length === 0 ? (
+          <V2Text
+            as="p"
+            variant="body-sm"
+            color="muted"
+            className="py-10 text-center"
+          >
+            {props.emptyLabel ?? t("v2.table.empty", "Không có dữ liệu")}
+          </V2Text>
+        ) : (
+          <ul className={cn("flex flex-col gap-2", loading && "opacity-60")}>
+            {view.rows.map((row, rowIndex) => {
+              const key = getRowKey(row);
+              const index = view.startIndex + rowIndex + 1;
+              const groups = rowActions?.(row) ?? [];
+              return (
+                <li
+                  key={key}
+                  data-state={selected.has(key) ? "selected" : undefined}
+                  className={cn(
+                    "flex flex-col gap-2 rounded-xl border border-border/60 bg-surface p-3 data-[state=selected]:bg-primary/5",
+                    props.getRowClassName?.(row, index),
                   )}
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[10px] tabular-nums text-muted-fg">
-                      #{index}
-                    </div>
-                    <div className="truncate text-sm font-semibold">
-                      {title?.cell(row, index)}
-                    </div>
-                    {subtitle && (
-                      <div className="truncate text-xs text-muted-fg">
-                        {subtitle.cell(row, index)}
+                >
+                  <div className="flex items-start gap-2">
+                    {props.enableRowSelection && (
+                      <V2TableSelectCheckbox
+                        aria-label={t("v2.table.selectRow", "Chọn dòng")}
+                        checked={selected.has(key)}
+                        onCheckedChange={(value) =>
+                          selection.toggleKey(key, Boolean(value))
+                        }
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[10px] tabular-nums text-muted-fg">
+                        #{index}
                       </div>
+                      <div className="truncate text-sm font-semibold">
+                        {title?.cell(row, index)}
+                      </div>
+                      {subtitle && (
+                        <div className="truncate text-xs text-muted-fg">
+                          {subtitle.cell(row, index)}
+                        </div>
+                      )}
+                    </div>
+                    {hasRowActions(groups) && (
+                      <V2Dropdown
+                        groups={groups}
+                        align="end"
+                        trigger={
+                          <V2Button
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label={t(
+                              "v2.table.moreActions",
+                              "Thao tác khác",
+                            )}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </V2Button>
+                        }
+                      />
                     )}
                   </div>
-                  {hasRowActions(groups) && (
-                    <V2Dropdown
-                      groups={groups}
-                      align="end"
-                      trigger={
-                        <V2Button
-                          variant="ghost"
-                          size="icon-xs"
-                          aria-label={t(
-                            "v2.table.moreActions",
-                            "Thao tác khác",
-                          )}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </V2Button>
-                      }
-                    />
+                  {meta.length > 0 && (
+                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                      {meta.map((column) => (
+                        <div key={column.key} className="min-w-0">
+                          <dt className="text-muted-fg">{column.label}</dt>
+                          <dd className="truncate [&>div]:items-start [&>div]:text-left">
+                            {column.cell(row, index)}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
                   )}
-                </div>
-                {meta.length > 0 && (
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                    {meta.map((column) => (
-                      <div key={column.key} className="min-w-0">
-                        <dt className="text-muted-fg">{column.label}</dt>
-                        <dd className="truncate [&>div]:items-start [&>div]:text-left">
-                          {column.cell(row, index)}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
       <V2TablePagination
         page={state.query.page}
         pageSize={state.query.pageSize}
         total={view.total}
         onPageChange={state.setPage}
         onPageSizeChange={state.setPageSize}
-        className="mt-2"
+        className="mt-2 shrink-0"
       />
       <V2Modal
         open={panel.open}

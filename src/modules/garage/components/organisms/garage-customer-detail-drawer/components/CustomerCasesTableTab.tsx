@@ -21,6 +21,7 @@ interface CustomerCasesTableTabProps {
   onOpenSettlementModal: (c: any) => void;
   onOpenInvoiceLinkingModal: (c: any) => void;
   onSyncFromKgara?: (caseId: string) => void;
+  onCreateCashflow?: (params: any) => void;
 }
 
 export const CustomerCasesTableTab = React.memo(function CustomerCasesTableTab({
@@ -37,6 +38,7 @@ export const CustomerCasesTableTab = React.memo(function CustomerCasesTableTab({
   onOpenSettlementModal,
   onOpenInvoiceLinkingModal,
   onSyncFromKgara,
+  onCreateCashflow,
 }: CustomerCasesTableTabProps) {
   const { t } = useTranslation(["garage", "debts", "common"]);
 
@@ -77,6 +79,7 @@ export const CustomerCasesTableTab = React.memo(function CustomerCasesTableTab({
           onOpenSettlementModal,
           onOpenInvoiceLinkingModal,
           onSyncFromKgara,
+          onCreateCashflow,
         },
         t,
         debtType,
@@ -87,6 +90,7 @@ export const CustomerCasesTableTab = React.memo(function CustomerCasesTableTab({
       onOpenInvoiceLinkingModal,
       onOpenSettlementModal,
       onSyncFromKgara,
+      onCreateCashflow,
       t,
     ],
   );

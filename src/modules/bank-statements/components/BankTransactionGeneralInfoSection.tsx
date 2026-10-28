@@ -1,4 +1,5 @@
 import React from "react";
+import { resolveTransactionBranchIds } from "@/modules/bank-statements/utils/transactionBranchIds";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
@@ -9,7 +10,7 @@ import {
   Calendar,
   FileText,
 } from "lucide-react";
-import { Combobox } from "@/shared/components/Combobox";
+import { V2MultiCombobox } from "@/v2/shared/components";
 import { CopyButton } from "@/shared/components/CopyButton";
 import { BufferedTextarea } from "@/shared/components/BufferedTextarea";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
@@ -19,26 +20,29 @@ import { formatGMT7 } from "@/shared/utils/format";
 export interface BankTransactionGeneralInfoSectionProps {
   transaction: any | null;
   editMode?: boolean;
-  branchId?: string;
-  onBranchChange?: (branchId: string) => void;
+  branchIds?: string[];
+  onBranchChange?: (branchIds: string[]) => void;
   description?: string;
   onDescriptionChange?: (description: string) => void;
   className?: string;
   defaultCollapsed?: boolean;
   showTags?: boolean;
+  /** Ô bổ sung ngay dưới Chi nhánh (ví dụ ô Đối tượng) */
+  partnerField?: React.ReactNode;
 }
 
 export const BankTransactionGeneralInfoSection = React.memo(
   function BankTransactionGeneralInfoSection({
     transaction,
     editMode = false,
-    branchId,
+    branchIds,
     onBranchChange,
     description,
     onDescriptionChange,
     className = "space-y-3 text-sm",
     defaultCollapsed = false,
     showTags = true,
+    partnerField,
   }: BankTransactionGeneralInfoSectionProps) {
     const { t } = useTranslation();
 
@@ -52,33 +56,32 @@ export const BankTransactionGeneralInfoSection = React.memo(
 
     const partnerName = transaction.correspondentName?.trim() || "";
 
-    const effectiveBranchId =
-      editMode && branchId !== undefined
-        ? branchId
-        : transaction.branchId || transaction.branch?.id || "";
-
-    const branchObj = transaction.branch;
-    const matchedOption = branchOptions.find(
-      (o) => o.value === effectiveBranchId,
-    );
+    const effectiveBranchIds: string[] =
+      editMode && branchIds !== undefined
+        ? branchIds
+        : resolveTransactionBranchIds(transaction);
 
     const branchLabel = (() => {
-      if (branchObj?.name) return branchObj.name;
-      if (branchObj?.branchName) return branchObj.branchName;
-      if (matchedOption?.label) {
-        return matchedOption.label.split(" — ")[1] || matchedOption.label;
+      if (effectiveBranchIds.length === 0) {
+        return transaction.branch?.name || transaction.branchName || "—";
       }
-      if (transaction.branchName) return transaction.branchName;
-      if (effectiveBranchId && !effectiveBranchId.includes("-")) {
-        return effectiveBranchId;
-      }
-      return "—";
+      const names = effectiveBranchIds.map((id) => {
+        const option = branchOptions.find((o) => o.value === id);
+        if (option?.label) return option.label.split(" — ")[1] || option.label;
+        if (transaction.branch?.id === id && transaction.branch?.name) {
+          return transaction.branch.name;
+        }
+        return id;
+      });
+      return names.join(", ");
     })();
 
-    const effectiveDescription =
+    // Ghi chú ERP (note) có thể sửa; diễn giải ngân hàng (description) chỉ đọc
+    const effectiveNote =
       editMode && description !== undefined
         ? description
-        : transaction.description || transaction.accountingDescription || "";
+        : transaction.note || "";
+    const bankDescription = transaction.description || "";
 
     const sourceAccountLabel =
       transaction.sourceType === "BANK"
@@ -142,14 +145,19 @@ export const BankTransactionGeneralInfoSection = React.memo(
             <DrawerField
               label={t("bankStatement.branch", { defaultValue: "Chi nhánh" })}
             >
-              <Combobox
-                options={branchOptions}
-                value={effectiveBranchId}
-                onChange={(val) => onBranchChange?.(val)}
-                placeholder="-- Chọn chi nhánh --"
-                allowClear={false}
-              />
+              {editMode && onBranchChange ? (
+                <V2MultiCombobox
+                  options={branchOptions}
+                  value={effectiveBranchIds}
+                  onValueChange={(vals) => onBranchChange(vals)}
+                  placeholder="-- Chọn chi nhánh --"
+                  clearable
+                />
+              ) : (
+                <span className="text-sm">{branchLabel}</span>
+              )}
             </DrawerField>
+            {partnerField}
 
             {/* Tài khoản nguồn */}
             <div>
@@ -177,17 +185,32 @@ export const BankTransactionGeneralInfoSection = React.memo(
               </div>
             </div>
 
-            {/* Nội dung / Ghi chú (BufferedTextarea) */}
+            {/* Diễn giải ngân hàng (chỉ đọc) */}
+            <div>
+              <div className="text-xs text-muted-foreground mb-0.5">
+                {t("bankStatement.bankDescription", {
+                  defaultValue: "Diễn giải ngân hàng",
+                })}
+              </div>
+              <div className="flex items-start gap-1.5 font-medium break-words text-foreground text-sm">
+                <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/70" />
+                <span className="whitespace-pre-wrap">
+                  {bankDescription || "—"}
+                </span>
+              </div>
+            </div>
+
+            {/* Ghi chú ERP (BufferedTextarea) */}
             <DrawerField
-              label={t("bankStatement.notes", {
-                defaultValue: "Ghi chú / Diễn giải",
+              label={t("bankStatement.erpNote", {
+                defaultValue: "Ghi chú ERP",
               })}
             >
               <BufferedTextarea
                 className="w-full text-sm"
-                value={effectiveDescription}
+                value={effectiveNote}
                 onChange={(val) => onDescriptionChange?.(val)}
-                placeholder="Nhập ghi chú / diễn giải..."
+                placeholder="Nhập ghi chú ERP..."
                 rows={3}
               />
             </DrawerField>
@@ -263,6 +286,7 @@ export const BankTransactionGeneralInfoSection = React.memo(
               <span>{branchLabel}</span>
             </div>
           </div>
+          {partnerField}
 
           {/* Tài khoản nguồn */}
           <div>
@@ -288,19 +312,35 @@ export const BankTransactionGeneralInfoSection = React.memo(
             </div>
           </div>
 
-          {/* Ghi chú / Diễn giải */}
+          {/* Diễn giải ngân hàng (chỉ đọc) */}
           <div>
             <div className="text-xs text-muted-foreground mb-0.5">
-              {t("bankStatement.notes", {
-                defaultValue: "Ghi chú / Diễn giải",
+              {t("bankStatement.bankDescription", {
+                defaultValue: "Diễn giải ngân hàng",
               })}
             </div>
-            {effectiveDescription ? (
+            {bankDescription ? (
               <div className="flex items-start gap-1.5 font-medium break-words text-foreground text-sm">
                 <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/70" />
-                <span className="whitespace-pre-wrap">
-                  {effectiveDescription}
-                </span>
+                <span className="whitespace-pre-wrap">{bankDescription}</span>
+              </div>
+            ) : (
+              <div className="flex items-start gap-1.5 font-medium text-muted-foreground/60 text-sm">
+                <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/40" />
+                <span>—</span>
+              </div>
+            )}
+          </div>
+
+          {/* Ghi chú ERP */}
+          <div>
+            <div className="text-xs text-muted-foreground mb-0.5">
+              {t("bankStatement.erpNote", { defaultValue: "Ghi chú ERP" })}
+            </div>
+            {effectiveNote ? (
+              <div className="flex items-start gap-1.5 font-medium break-words text-foreground text-sm">
+                <FileText className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/70" />
+                <span className="whitespace-pre-wrap">{effectiveNote}</span>
               </div>
             ) : (
               <div className="flex items-start gap-1.5 font-medium text-muted-foreground/60 text-sm">

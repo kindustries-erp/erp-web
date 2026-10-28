@@ -17,7 +17,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
   mainContent,
 }) => {
   const hasRightPanel =
-    h.effectiveLayout === "2-columns" && Boolean(props.rightPanel);
+    h.effectiveLayout === "2-columns" && Boolean(h.activeRightPanel);
   const isRightCollapsed =
     h.isRightPanelCollapsed || Boolean(h.activeTabItem?.hideRightPanel);
 
@@ -25,10 +25,17 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
     <div
       className={cn(
         "flex flex-col lg:flex-row items-start w-full relative transition-all duration-300 ease-in-out",
+        props.fillHeight && "flex-1 min-h-0 items-stretch",
         hasRightPanel && !isRightCollapsed ? "gap-4 lg:gap-6" : "gap-0",
       )}
     >
-      <V2Stack gap="sm" className="flex-1 min-w-0 w-full sm:gap-4">
+      <V2Stack
+        gap="sm"
+        className={cn(
+          "flex-1 min-w-0 w-full sm:gap-4",
+          props.fillHeight && "min-h-0 flex flex-col",
+        )}
+      >
         {props.leftTabs && props.leftTabs.length > 0 && (
           <V2TabBar
             variant="sub"
@@ -40,7 +47,10 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
         )}
         <div
           key={h.activeTabKey || "tab-content"}
-          className="w-full animate-in fade-in-50 duration-200"
+          className={cn(
+            "w-full animate-in fade-in-50 duration-200",
+            props.fillHeight && "flex-1 min-h-0 flex flex-col",
+          )}
         >
           {mainContent}
         </div>
@@ -71,7 +81,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
                 extra={props.rightTabExtra}
               />
             )}
-            {h.activeRightTabItem?.content || props.rightPanel}
+            {h.activeRightPanel}
           </V2Stack>
         </V2Stack>
       )}

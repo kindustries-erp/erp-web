@@ -100,4 +100,4 @@ description: Module tri thức <Tên Module> trong erp-web. Chứa toàn bộ c�
 - [ ] File skill được lưu đúng tại `erp-web/.agents/skills/modules/<module-name>/SKILL.md`.
 - [ ] YAML frontmatter có `name` (trùng tên module) và `description` rõ ràng.
 - [ ] Thư mục `modules` đã được đăng ký trong `.agents/skills.json`.
-- [ ] Đã cập nhật tham chiếu trong `erp-web/.agents/skills/liouni-erp-web-current-truth/SKILL.md`.
+- [ ] Đã cập nhật tham chiếu trong `erp-web/.agents/skills/erp-web-current-truth/SKILL.md`.

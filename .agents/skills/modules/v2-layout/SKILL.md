@@ -62,6 +62,7 @@ src/v2/
     └── components/                     # [Atomic Components] (Import 1 chiều từ shared/ui)
         ├── atoms/                      # [Level 1 - Core Atoms]
         │   ├── v2-button/              # Nút chuẩn hoá (loading, icons, fullWidth, variants V1+V2)
+        │   ├── v2-input/               # Ô nhập liệu chuẩn hoá (variants: default, search, ghost, icon slots, forwardRef)
         │   ├── v2-text/                # Chữ chuẩn hoá (auto HTML mapping, truncate, copyable, required)
         │   ├── v2-sidebar-toggle-btn/  # Nút thu gọn / mở rộng Sidebar 26x26px
         │   ├── v2-sidebar-icon/        # Container bọc icon điều hướng Sidebar
@@ -79,13 +80,17 @@ src/v2/
         │   ├── v2-sidebar-header/      # Header Sidebar h-12 (Logo + App name + Toggle Button)
         │   ├── v2-sidebar-nav-item/    # Hàng menu điều hướng (12px, icon 16px, active pill)
         │   ├── v2-sidebar-section/     # Tiêu đề phân hệ in hoa text-[11px] collapsible
-        │   └── v2-sidebar-bottom/      # Chân Sidebar (Avatar 22px + Tên user + Chuông thông báo)
+        │   ├── v2-sidebar-bottom/      # Chân Sidebar (Avatar 22px + Tên user + Chuông thông báo)
+        │   └── v2-notification-popover/# Popover thông báo V2 (V2Popover, Glassmorphism, tự fallback useQuery)
         │
         └── organisms/                  # [Level 3 - Organisms]
             ├── v2-sidebar/             # Card 1: Sidebar hoàn chỉnh (210px / 58px) bo góc 16px
             ├── v2-right-panel/         # Card 2: Right Panel hoàn chỉnh bo góc 16px
-            ├── v2-tab-bar/             # Thanh TabBar cuộn ngang ở đáy Right Panel
-            └── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động
+            ├── v2-tab-bar/             # Thanh TabBar đa dạng: App tabs ('app'), Sub-navigation pill tabs ('sub'), Button group ('button-group'), Header tabs ('header'), Page tabs ('page')
+            ├── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động
+            └── v2-universal-search-modal/ # Modal tìm kiếm toàn cục Spotlight (Desktop) & Bottom Sheet (Mobile) thay thế hoàn toàn V1
+        │
+        └── index.ts                    # Master Barrel Export toàn bộ components V2 (@/v2/shared/components)
 ```
 
 ---
@@ -199,7 +204,7 @@ export interface V2RightPanelProps {
 
 ### 4.3. `V2SidebarProps` ([`V2Sidebar.type.ts`](erp/erp-web/src/v2/shared/components/organisms/v2-sidebar/V2Sidebar.type.ts))
 ```typescript
-export interface V2SidebarProps {
+export interface V2SidebarProps extends V2BaseProps<HTMLElement> {
   sections?: V2SidebarSectionData[];
   items?: V2SidebarItem[];
   activeId?: string;
@@ -207,9 +212,58 @@ export interface V2SidebarProps {
   user?: V2SidebarUserData;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  appName?: string;
+  onClickLogo?: () => void;
+  onUserClick?: () => void;
+  onNotificationClick?: () => void;
+  userMenuNode?: V2UserMenuRenderProp; // ReactNode | ((props: { collapsed: boolean }) => ReactNode)
+  notificationNode?: ReactNode;
   className?: string;
 }
 ```
+
+#### 🎯 Cơ chế Header Toggle Button & UserMenu Render Prop khi Collapsed:
+- **Đỉnh Sidebar (`V2SidebarHeader`)**:
+  - Khi `isCollapsed = true`: Logo ERP được thay thế trực tiếp bằng nút toggle expand `<V2SidebarToggleBtn isCollapsed={true} />` (28x28px, icon `ChevronRight`, bo góc chuẩn) căn giữa hoàn hảo trong header 58px.
+  - Khi `isCollapsed = false`: Header hiển thị Logo ERP + Tên app bên trái và nút collapse bên phải.
+- **Chân Sidebar (`V2SidebarBottom`)**:
+  - Nhận `userMenuNode` dạng Render Prop: `({ collapsed }) => ReactNode`.
+  - Khi `collapsed = true`: Ẩn hoàn toàn email/tên người dùng (`displayName`) và chevron, chỉ hiển thị Avatar tròn 22x22px căn giữa (`justify-center w-full`) và chuông thông báo bên dưới.
+- **Đồng bộ trạng thái**:
+  - `V2AppLayoutProps` nhận `collapsed` và `onToggleCollapse`, kết nối trực tiếp với Zustand `useAppStore` (`sidebarCollapsed`, `toggleSidebar`) trong `V2ShellLayout`.
+
+### 4.4. `V2HeaderProps` ([`V2Header.type.ts`](erp/erp-web/src/v2/shared/components/organisms/v2-header/V2Header.type.ts))
+```typescript
+export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
+  title?: string;
+  breadcrumbs?: V2HeaderBreadcrumb[];
+  userName?: string;
+  userRole?: string;
+  tenantName?: string;
+  branchName?: string;
+  logoUrl?: string;
+  onBranchClick?: () => void;
+  onReturnToV1?: () => void;
+  showLanguageSwitcher?: boolean;
+  showReturnToV1?: boolean;
+  userMenuNode?: V2UserMenuRenderProp;
+  notificationNode?: React.ReactNode;
+}
+```
+
+### 4.5. `V2AppLayoutMobile` ([`V2AppLayout.mobile.tsx`](erp/erp-web/src/v2/app/layouts/v2-app-layout/V2AppLayout.mobile.tsx))
+- **Mobile Topbar**: Tích hợp `userMenuNode` (mở UserMenuPopover đầy đủ tính năng: hồ sơ, cài đặt, theme, ngôn ngữ, đăng xuất) và `notificationNode`. Kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
+- **Cài đặt Giao diện & Ngôn ngữ Nhanh (Catalog Modal)**: Tích hợp card Quick Settings ngay đầu modal danh mục cho phép đổi nhanh Sáng / Tối / Midnight và công tắc Ngôn ngữ thông qua props `currentTheme` và `onThemeChange`.
+- **Main Spacing**: Giảm padding lồng ghép từ 36px xuống `px-2 py-2.5 pb-20 sm:px-4 sm:py-4`, tương thích mượt mà với `PageLayout` (`px-2 sm:px-5`).
+- **Thanh Điều Hướng 6 Items Chuẩn**:
+  - Cố định hiển thị **đúng 6 menu items** phân bổ đều (`grid grid-flow-col auto-cols-fr h-16`), vừa vặn hoàn hảo trên mọi kích thước màn hình điện thoại mà không cần cuộn ngang.
+  - **5 Items đầu**: Là các lối tắt (Quick Actions) do người dùng chọn và tùy chỉnh (hoặc tự động chọn 5 mục hữu ích nhất theo quyền).
+  - **Item thứ 6**: Cố định là **"Tất cả"** (`id: "catalog"`, icon `LayoutGrid`) mở Modal/Drawer danh mục toàn bộ hệ thống.
+- **Store Quản Lý Lối Tắt Cá Nhân Hóa (`useV2MobileNavStore`)**:
+  - Lưu trữ 5 mục ghim vào LocalStorage qua `persist` với key `v2_mobile_nav_pinned`.
+  - Hỗ trợ `setPinnedIds`, `togglePinnedId` (tối đa 5), `resetToDefault`.
+- **Giao Diện Tùy Chỉnh Lối Tắt**:
+  - Nút "Tùy chỉnh lối tắt" tích hợp trong Modal Danh mục, cho phép người dùng chọn bất kỳ tiểu mục nào trong toàn bộ ERP (Garage, Kho, Mua hàng, Kế toán...) để đưa ra thanh Bottom Nav.
 
 ---
 
@@ -290,6 +344,10 @@ cd erp/erp-web && bun run storybook
 ### 4.4. Quy Chuẩn Thẩm Mỹ TabBar & TabItem (`V2TabBar`, `V2TabItem`)
 Để đảm bảo trải nghiệm người dùng đồng nhất tuyệt đối giữa V1 và V2:
 - **Thanh TabBar (`V2TabBar`)**: Chiều cao chuẩn `h-9` (`36px`), nền `bg-background/80 backdrop-blur-md`, không viền gạch ngang (`border-none`), cuộn ngang ẩn thanh cuộn (`scrollbar-none`).
+- **Thanh Sub-Navigation Pill Tabs (`V2TabBar variant="sub"`)**:
+  - Thiết kế đồng bộ hệ bo góc ERP (Midnight Style): Container ngoài dùng `rounded-lg` (8px), sliding animated indicator dùng `rounded-md` (6px), tab item button dùng `rounded-md` (6px) ôm khít khoảng padding `p-[3px]`.
+  - Huy hiệu số lượng (`badgeCount`) và dot trạng thái luôn giữ `rounded-full` để đảm bảo độ tròn trịa tự nhiên.
+  - Tự động thích ứng màu sắc và độ tương phản cao với Dark Theme (`dark:border-zinc-700/60 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)]`).
 - **Thẻ Tab (`V2TabItem`)**:
   - Tuyệt đối không dùng nền hộp trắng (`bg-card`), không dùng viền chia cột (`border-r`). Nền tab luôn trong suốt (`bg-transparent`) hòa quyện vào Right Panel.
   - Active Tab: `text-foreground font-semibold border-b-2 border-b-primary`.
@@ -314,6 +372,53 @@ cd erp/erp-web && bun run storybook
 - Mẫu hoàn chỉnh dùng dữ liệu giả: `src/v2/modules/finance-invoice/` (story `Use Cases/Tài chính & Hóa đơn/Hóa đơn (V2 module page)`). Không có global searchbox: mọi cột có header filter và sort (lọc qua `filterClientItems`/`sortClientItems`, khai báo ở `INVOICE_FILTER_COLUMNS`). Nút "Đồng bộ" là `toolbar.create` (split button, menu nhóm Tra cứu / Thao tác / Cấu hình).
 - Use case mô phỏng erp-invoice: `src/v2/modules/finance-invoice/pages/ErpInvoiceV2ModulePage.stories.tsx` (story `Use Cases/Tài chính & Hóa đơn/Hóa đơn (V2 module page)`).
 - Thành phần V2 thêm cho form và dashboard: atom `V2Switch`, `V2Textarea`, `V2Skeleton`, `V2Progress`, `V2NumberInput`, `V2CopyButton`, `V2Sparkline`; molecule `V2Combobox`, `V2DatePicker`/`V2DateRangePicker`, `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2Panel`, `V2ChartFrame`; organism `V2BarChart`/`V2LineChart`/`V2DonutChart`, `V2FilePreviewPanel`.
+
+### 4.7. Chuẩn Hóa Pill Tab và Text Trong Sub-Drawers/Tabs: `V2TabBar variant="sub"` & `V2Text`
+- **Master Barrel Import**: Luôn import các thành phần V2 dùng chung trực tiếp từ `@/v2/shared/components`:
+  ```tsx
+  import { V2TabBar, V2Text, type V2TabItemData } from "@/v2/shared/components";
+  ```
+- **Pill Sub-Tabs (`variant="sub"`)**:
+  - Tái sử dụng `V2TabBar` với `variant="sub"` thay thế toàn bộ PillTabs tự chế trong các Drawer (như `GarageCaseDetailsTab`, `BankTransactionDetailTab`, `ErpInvoiceDetailTabNav`, `ErpInvoicePartnerTabNav`, `ErpInvoiceSettlementTab`, `DashboardTabsContent`).
+  - Bo góc chuẩn Midnight theme: vỏ ngoài `rounded-lg` (8px), item và indicator trượt `rounded-md` (6px), padding container `p-1`.
+  - Hỗ trợ Dark Mode tự nhiên qua CSS variables `bg-muted` (`bg-slate-100 dark:bg-slate-800`), viền `border-border/60`, indicator `bg-card dark:bg-slate-700` bóng `shadow-sm`.
+- **Đồng bộ hóa văn bản phụ trợ với `V2Text`**:
+  - Thay vì dùng thẻ HTML thô (`<span>`, `<h4>`, `<div>`), sử dụng `V2Text` kết hợp các biến thể chuẩn (`variant="body-sm"`, `variant="code"`, `variant="section-title"`) và `color="muted"` / `color="inherit"`.
+  - Giữ nguyên 100% diện mạo visual parity (kích thước font 12px, font-mono khi đếm số, spacing), đồng thời tự động thích ứng với Dark Theme OS thông qua semantic token `text-muted-fg`.
+
+### 4.8. Chuẩn Hóa Hệ Sinh Thái Thông Báo: `V2Toaster` & Top-Center Positioning
+- **Hệ thống Toast Duy nhất**: Toàn bộ ứng dụng (kể cả các màn hình cũ, Axios responses qua `useUIStore.showToast`) đều được bridge trực tiếp sang `useV2ToastStore.getState().showToast(...)` và render bởi `V2Toaster`.
+- **Định vị Top-Center (`fixed top-4 left-1/2 -translate-x-1/2 z-[1100]`)**:
+  - Tự động căn giữa màn hình theo phương ngang, nằm ngang tầm mắt người dùng.
+  - Tuyệt đối không che lấp thanh công cụ bên phải của Drawer Header (nút Chỉnh sửa, Điều hướng, Đóng) cũng như Topbar Breadcrumbs bên trái.
+  - Tự động responsive trên thiết bị di động (`max-w-[calc(100vw-32px)]`).
+- **Giao diện Dark Theme Chuẩn V2 (Glassmorphism & High Contrast)**:
+  - Khung thẻ kính mờ: `backdrop-blur-md shadow-xl rounded-xl border`.
+  - Biến thể `success`: Nền xanh ngọc ánh sáng sang trọng (`dark:bg-[#07271a]/95 dark:border-emerald-500/30 dark:text-emerald-100`), icon `CheckCircle2` ngọc sáng `text-emerald-500 dark:text-emerald-400`.
+  - Biến thể `destructive`: Nền đỏ cảnh báo dịu mắt (`dark:bg-[#2b0d12]/95 dark:border-rose-500/30 dark:text-rose-100`), icon `XCircle` màu đỏ `text-rose-500 dark:text-rose-400`.
+- **Loại bỏ Nút "Quay lại ERP V1"**: Toàn bộ các layout V2 (Mobile Drawer Catalog, Desktop Header, Welcome Page) đã xóa triệt để nút "Quay lại ERP V1", đảm bảo giao diện V2 thuần khiết và thống nhất.
+
+### 4.9. Kỷ Luật Master Barrel Import: `@/v2/shared/components`
+- **Quy tắc Duy nhất**: Bất kỳ component V2 nào (Atoms, Molecules, Organisms, Templates) khi được import vào các Pages, Layouts, Features Modules, Adapters hay Test files đều **bắt buộc phải import từ `@/v2/shared/components`**:
+  ```tsx
+  import {
+    V2Button,
+    V2Text,
+    V2Modal,
+    V2StandardDrawer,
+    V2StandardTable,
+    V2Header,
+    V2Sidebar,
+    V2BottomNav,
+    V2Combobox,
+    V2DatePicker,
+    V2Toaster,
+    type V2Column,
+    type V2SidebarNavItem,
+  } from "@/v2/shared/components";
+  ```
+- **Cấm hoàn toàn Deep Imports**: Không được import phân mảnh dạng `@/v2/shared/components/atoms/...`, `@/v2/shared/components/molecules/...`, `@/v2/shared/components/organisms/...`.
+- **Đảm bảo Sub-Barrels**: `src/v2/shared/components/organisms/index.ts` và `src/v2/shared/components/molecules/index.ts` phải luôn luôn re-export đầy đủ 100% các component con để phục vụ Master Barrel.
 
 ---
 

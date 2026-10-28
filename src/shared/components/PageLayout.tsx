@@ -75,8 +75,8 @@ export function PageLayout({
   return (
     <div
       className={cn(
-        "flex flex-col h-full overflow-hidden space-y-4 px-5 pt-[18px]",
-        hideHeader && "px-4 pt-3 space-y-3",
+        "flex flex-col h-full overflow-hidden space-y-3 sm:space-y-4 px-2 sm:px-5 pt-2 sm:pt-[18px]",
+        hideHeader && "px-2 sm:px-4 pt-2 sm:pt-3 space-y-2 sm:space-y-3",
         className,
       )}
     >
@@ -113,7 +113,7 @@ export function PageLayout({
             onValueChange={onTabChange}
             className="w-full z-10 bg-transparent"
           >
-            <TabsList className="bg-transparent border-b border-[color:var(--border)]/60 w-full justify-start rounded-none h-auto p-0 gap-6 mb-2 shadow-none overflow-x-auto scrollbar-none [&>[data-tabs-indicator]]:hidden">
+            <TabsList className="bg-transparent border-b border-[color:var(--border)]/40 dark:border-white/[0.06] w-full justify-start rounded-none h-auto p-0 gap-6 mb-2 shadow-none overflow-x-auto scrollbar-none [&>[data-tabs-indicator]]:hidden">
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}

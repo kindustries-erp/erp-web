@@ -1,6 +1,7 @@
+import * as React from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { V2TableQuery } from "@/v2/shared/types/v2-table";
-import type { V2ModuleListData } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage.type";
+import type { V2ModuleListData } from "@/v2/shared/components";
 import type {
   FakeInvoice,
   InvoiceDirection,
@@ -10,21 +11,49 @@ import {
   INVOICE_ROWS,
   queryInvoices,
 } from "@/v2/modules/finance-invoice/domain/rules/invoiceShape.logic";
+import { v2InvoiceQueryToParams } from "../adapters/invoiceQueryAdapter";
+import { financeInvoiceV2Api } from "../financeInvoiceV2Api";
+import { isInvoiceSampleMode } from "../sampleMode";
+import {
+  invoiceTotalsToSummary,
+  toInvoiceRow,
+} from "../adapters/invoiceRowAdapter";
 
-/** Hook giả có độ trễ để thấy trạng thái tải; có `refetch` cho nút Làm mới */
-export function useFakeInvoices(
+const useSampleMode = isInvoiceSampleMode;
+
+export function useInvoiceList(
   direction: InvoiceDirection,
   taxTab: TaxTab,
   query: V2TableQuery,
+  onError?: (error: unknown) => void,
 ): V2ModuleListData<FakeInvoice> {
+  const sampleMode = useSampleMode();
+  const params = React.useMemo(
+    () => v2InvoiceQueryToParams(direction, taxTab, query),
+    [direction, taxTab, query],
+  );
+
   const result = useQuery({
-    queryKey: ["invoice-shape", direction, taxTab, query],
+    queryKey: ["finance-invoices", direction, taxTab, query, sampleMode],
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 120));
-      return queryInvoices(INVOICE_ROWS[direction], query, taxTab);
+      if (sampleMode) {
+        return queryInvoices(INVOICE_ROWS[direction], query, taxTab);
+      }
+      const res = await financeInvoiceV2Api.list(params);
+      return {
+        items: res.items.map((inv) => toInvoiceRow(inv, direction)),
+        total: res.total,
+        summaries: res.totals && invoiceTotalsToSummary(res.totals),
+      };
     },
     placeholderData: keepPreviousData,
+    staleTime: 30_000,
   });
+
+  React.useEffect(() => {
+    if (result.error) onError?.(result.error);
+  }, [result.error, onError]);
+
   return {
     items: result.data?.items ?? [],
     total: result.data?.total ?? 0,

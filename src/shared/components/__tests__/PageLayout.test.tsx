@@ -163,13 +163,14 @@ describe("PageLayout", () => {
     expect(container.firstChild).toHaveClass("custom-class");
   });
 
-  it("root div has space-y-4 class", () => {
+  it("root div has responsive space-y classes", () => {
     const { container } = render(
       <PageLayout title="Test" icon={<span>📋</span>}>
         <div>content</div>
       </PageLayout>,
     );
 
-    expect(container.firstChild).toHaveClass("space-y-4");
+    expect(container.firstChild).toHaveClass("space-y-3");
+    expect(container.firstChild).toHaveClass("sm:space-y-4");
   });
 });

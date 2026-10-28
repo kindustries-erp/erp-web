@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Loader2 } from "lucide-react";
+import { V2Spinner, V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { Checkbox } from "@/v2/shared/ui";
 import { cn } from "@/v2/shared/utils/cn";
@@ -26,7 +26,7 @@ interface OptionsProps {
 }
 
 const ROW =
-  "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted";
+  "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50";
 
 export const V2FilterOptionsList: React.FC<OptionsProps> = ({
   state,
@@ -54,23 +54,29 @@ export const V2FilterOptionsList: React.FC<OptionsProps> = ({
   if (status === "loading" && options.length === 0) {
     return (
       <div className="flex items-center justify-center gap-2 p-4 text-xs text-muted-fg">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        <span>{t("v2.table.loadingOptions", "Đang tải lựa chọn...")}</span>
+        <V2Spinner size="sm" className="text-muted-fg shrink-0" />
+        <V2Text variant="body-sm" color="muted">
+          {t("v2.table.loadingOptions", "Đang tải lựa chọn...")}
+        </V2Text>
       </div>
     );
   }
   if (status === "error") {
     return (
-      <p className="p-4 text-center text-xs text-destructive">
-        {t("v2.common.error", "Đã xảy ra lỗi")}
-      </p>
+      <div className="p-4 text-center">
+        <V2Text variant="body-sm" color="destructive">
+          {t("v2.common.error", "Đã xảy ra lỗi")}
+        </V2Text>
+      </div>
     );
   }
   if (options.length === 0) {
     return (
-      <p className="p-4 text-center text-xs text-muted-fg">
-        {t("v2.table.noOptions", "Không có lựa chọn")}
-      </p>
+      <div className="p-4 text-center">
+        <V2Text variant="body-sm" color="muted">
+          {t("v2.table.noOptions", "Không có lựa chọn")}
+        </V2Text>
+      </div>
     );
   }
 
@@ -93,11 +99,11 @@ export const V2FilterOptionsList: React.FC<OptionsProps> = ({
             )
           }
         />
-        <span className="text-xs font-medium">
+        <V2Text variant="body-sm" weight="medium">
           {hasSearch
             ? t("v2.table.selectAllMatching", "(Chọn tất cả kết quả tìm kiếm)")
             : t("v2.table.selectAllVisible", "(Chọn tất cả đang hiển thị)")}
-        </span>
+        </V2Text>
       </label>
       {options.map((option) => {
         const label = resolveOptionLabel(option, blankLabel, formatOptionLabel);
@@ -109,15 +115,15 @@ export const V2FilterOptionsList: React.FC<OptionsProps> = ({
                 onChange(toggleValue(selected, option.value))
               }
             />
-            <span className="truncate text-xs" title={label}>
+            <V2Text variant="body-sm" truncate title={label}>
               {label}
-            </span>
+            </V2Text>
           </label>
         );
       })}
       {state.isFetchingNextPage && (
         <div className="flex justify-center p-2 text-muted-fg">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <V2Spinner size="sm" className="h-3.5 w-3.5 text-muted-fg" />
         </div>
       )}
     </div>

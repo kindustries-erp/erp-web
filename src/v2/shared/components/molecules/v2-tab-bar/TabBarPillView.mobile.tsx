@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
+import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { TabBarPillItem } from "./TabBarPillItem";
 import { useSlidingTabIndicator } from "./useSlidingTabIndicator";
@@ -59,8 +60,9 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
           t("v2.tabBar.headerAriaLabel", "Drawer Top Navigation Tabs")
         }
         className={cn(
-          "relative flex items-center px-3 py-1.5 border-b border-border/70",
-          "bg-[var(--drawer-header-bg,rgba(246,248,252,0.85))] backdrop-blur-md shrink-0 w-full overflow-hidden",
+          "relative flex items-center px-3 py-1.5 border-b border-border/70 dark:border-white/[0.06]",
+          GLASS_BAR_CLASS,
+          "shrink-0 w-full overflow-hidden",
           className,
         )}
       >
@@ -73,14 +75,14 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
             role="presentation"
             aria-hidden="true"
             data-tabs-indicator
-            className="pointer-events-none absolute rounded-lg bg-slate-900 dark:bg-primary shadow-xs will-change-[left,width] transition-all duration-200 ease-out z-0"
+            className="pointer-events-none absolute rounded-lg bg-slate-900 dark:bg-teal-500/15 dark:border dark:border-teal-500/35 dark:shadow-[0_2px_10px_rgba(20,184,166,0.18)] shadow-xs will-change-[left,width] transition-all duration-200 ease-out z-0"
             style={{ width: 0, opacity: 0 }}
           />
           {renderPillItems("header")}
         </div>
         {/* Subtle edge fade indicator for horizontal scroll hint */}
         <div
-          className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--drawer-header-bg,rgba(246,248,252,0.85))] to-transparent z-20"
+          className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-[var(--table-header-bg,rgba(244,246,248,0.65))] to-transparent z-20"
           aria-hidden="true"
         />
       </div>
@@ -96,7 +98,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
           t("v2.tabBar.buttonGroupAriaLabel", "Nhóm nút chuyển đổi tab")
         }
         className={cn(
-          "inline-flex items-center gap-1 p-0.5 rounded-lg bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 shadow-xs h-auto select-none overflow-x-auto scrollbar-none w-full [-webkit-overflow-scrolling:touch]",
+          "inline-flex items-center gap-1 p-0.5 rounded-lg bg-slate-100/90 dark:bg-[#161a22]/90 border border-slate-200/70 dark:border-white/[0.06] shadow-xs h-auto select-none overflow-x-auto scrollbar-none w-full [-webkit-overflow-scrolling:touch]",
           className,
         )}
       >
@@ -118,14 +120,14 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
       <div className="relative w-full overflow-x-auto touch-pan-x scrollbar-none [-webkit-overflow-scrolling:touch] py-0.5">
         <div
           ref={subContainerRef}
-          className="relative inline-flex items-center gap-1 p-[3px] rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 shadow-xs h-8"
+          className="relative inline-flex items-center gap-1 p-[3px] rounded-lg bg-slate-100/90 dark:bg-[#161a22]/90 border border-slate-200/70 dark:border-white/[0.06] shadow-xs h-8"
         >
           <div
             ref={subIndicatorRef}
             role="presentation"
             aria-hidden="true"
             data-tabs-indicator
-            className="pointer-events-none absolute rounded-full bg-white dark:bg-zinc-900 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] will-change-[left,width] transition-all duration-180 ease-out z-0"
+            className="pointer-events-none absolute rounded-md bg-white dark:bg-[#1e2430] border border-transparent dark:border-teal-500/30 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4)] will-change-[left,width] transition-all duration-180 ease-out z-0"
             style={{ width: 0, opacity: 0 }}
           />
           {renderPillItems("sub")}

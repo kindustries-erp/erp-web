@@ -1,3 +1,42 @@
+# Enhance Glassmorphism cho V2 Drawer
+
+**Track**: `T1` — shared drawer visual refinement.
+**RequestFeedback**: `false` — plan approved for implementation.
+
+## Web Frontend
+
+- [x] **Task 3.3.1: Đồng bộ drawer glass tokens light/dark và V1 fallback**
+  - **DoD**: Sheet dùng blur 20px và shadow nhẹ theo theme; overlay blur 1px ở cả hai theme; light surface alpha 0.35, dark alpha 0.75, overlay alpha 0.2; fallback hoạt động trên route V1.
+  - **Files**: `src/v2/shared/ui/sheet/sheet.tsx`, `src/v2/shared/styles/v2-theme.css`, `src/styles/panels.css`, `src/styles/themes/orcaq.css`
+  - **Verification**: Scoped Sheet test và drawer desktop/mobile tests.
+- [x] **Task 3.3.2: Khóa glass style contract bằng regression tests**
+  - **DoD**: Sheet test xác nhận background token, blur/saturate/contrast classes, overlay dark tối thiểu và drawer marker; desktop/mobile drawer regressions pass.
+  - **Files**: `src/v2/shared/ui/sheet/sheet.test.tsx`
+  - **Verification**: `bunx vitest run src/v2/shared/ui/sheet/sheet.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/desktop/V2StandardDrawer.desktop-content.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/mobile/V2StandardDrawer.mobile.test.tsx`
+
+## QC & Knowledge
+
+- [x] **Task 4.1.1: Chạy typecheck và final gate checks**
+  - **Verification**: Final Gate pass trên `4a34a7e5`; build, check:style và full suite (573 files/2,542 tests passed; 2 files/12 tests skipped) PASS.
+- [x] **Task 4.3.1: Cập nhật drawer knowledge và walkthrough**
+  - **DoD**: Ghi nhận token contract, kiểm tra light/dark, QC và giới hạn UI smoke.
+
+## Session Checkpoint
+
+- **Active Task**: Không còn task đang thực hiện.
+- **Tiến độ**: Follow-up theo screenshot tinh chỉnh drawer alpha, blur, overlay và shadow; các lần kiểm tra scoped/build/check:ci đã pass ở từng bước được ghi bên dưới.
+- **Follow-up 2**: Theo yêu cầu nhìn rõ dải màu phía sau, giảm bề mặt light alpha xuống 0.38 và dark xuống 0.58. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- **Follow-up 3**: Cập nhật theo yêu cầu mới: light 0.2, dark 0.7, blur 15px, overlay 15% (bao gồm OrcaQ). Scoped tests (3 files/12 tests), `bun run check:ci`, `bun run build` và `git diff --check` PASS.
+- **Follow-up 4**: Drawer blur tăng lên 20px và thêm blur 4px cho overlay phía sau ở light/dark. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- **Follow-up 5**: Giảm overlay blur xuống 2px, tăng overlay alpha lên 0.2 ở light/dark. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- **Follow-up 6**: Overlay blur 1px, thêm shadow nhẹ qua `--drawer-shadow`, light alpha 0.35 và dark alpha 0.65. Scoped tests (3 files/12 tests), `bun run check:ci`, `bun run build` và `git diff --check` PASS.
+- **Follow-up 7**: Light alpha 0.3, dark alpha 0.7 trên theme và V1 fallback.
+- **Follow-up 8**: Light alpha 0.35, dark alpha 0.75. `bun run build`, `bun run check:ci`, `bun run test` (571 files/2,528 tests passed; 2 files/12 tests skipped), và `git diff --check` PASS.
+- **Git Status**: Code commit `4a34a7e5` đã push lên `github-industries/erp-master`; checkpoint docs này sẽ được commit riêng.
+- **Hành động tiếp theo**: Push checkpoint docs sau Final Gate.
+
+---
+
 # Business Partners trên ERP Web V2
 
 RequestFeedback: false
@@ -119,3 +158,64 @@ RequestFeedback: false
 - [x] Dùng chung `DataTable`/style với bảng chi tiết tháng, có scroll scoped và header đồng nhất.
 - [x] Ép cột Loại nghiệp vụ căn trái.
 - [x] Scoped tests và full QC pass.
+
+---
+
+# Chuyển Invoice Detail Drawer sang `V2StandardDrawer`
+
+**Track**: `T2` — migrate giao diện drawer, không migrate toàn bộ module.
+**RequestFeedback**: `false` — plan được người dùng duyệt để triển khai.
+
+## Web Frontend
+
+- [x] **Task 3.3.1: Bổ sung right panel theo tab cho V2StandardDrawer**
+  - **DoD**: Tab V2 có panel phải riêng, fallback về `rightPanel` gốc, nhất quán Desktop/Mobile; tương thích use case hiện có.
+  - **Verification**: 3 scoped test files, 14 tests PASS.
+- [x] **Task 3.3.2: Chuyển Invoice Detail Drawer sang V2StandardDrawer**
+  - **DoD**: Giữ tab/sub-tab, panel phải, actions, loading/error, close confirm, modal, deep link; cả main và standalone consumer dùng cùng drawer.
+  - **Verification**: Module invoice + V2 drawer suite PASS (69 files, 272 tests; 9 skipped); `bunx tsc --noEmit` PASS.
+
+## QC & Knowledge
+
+- [x] **Task 4.1.1: Kiểm tra parity và chất lượng**
+  - **DoD**: Scoped unit/integration tests, typecheck, audit No Blue/i18n/LoC; hướng dẫn kiểm tra UI desktop/mobile.
+  - **Ghi chú**: UI smoke có hướng dẫn trong walkthrough nhưng chưa chạy vì browser session đang ở màn đăng nhập.
+- [x] **Task 4.3.1: Đồng bộ module skills và walkthrough**
+  - **Files**: Module skill `erp-invoice`, `v2-drawer`, `walkthrough.md`.
+  - **Kết quả**: Cập nhật skills; `sync-agents.sh --sync` validation PASS.
+
+## Session Checkpoint
+
+- **Active Task**: Không còn task đang thực hiện.
+- **Tiến độ**: Đã chuyển drawer dùng chung sang V2, giữ tab/panel theo trạng thái; test/typecheck/audit và knowledge sync hoàn tất.
+- **Git Status**: Thay đổi implementation và tài liệu chưa commit trên `erp-master`.
+- **Việc tiếp theo**: Kiểm tra UI thủ công tại route hóa đơn ở desktop/mobile trước khi gộp.
+
+---
+
+# Sửa trạng thái hai nút và hoàn thiện Dark Mode cho V2StandardDrawer
+
+**Track**: `T1` — chỉnh sửa component dùng chung hiện có.
+**RequestFeedback**: `false` — plan được người dùng duyệt để triển khai.
+
+## Web Frontend
+
+- [x] **Task 3.3.1: Sửa mapping trạng thái hai nút hóa đơn**
+  - **DoD**: Hai nút thể hiện active state khớp với nội dung đang hiển thị; test xác nhận state mặc định và chuyển mode.
+  - **Verification**: Scoped Vitest PASS (6 files, 26 tests), gồm navigation mode và shared button group.
+- [x] **Task 3.3.2: Chuẩn hóa Dark Mode của V2StandardDrawer**
+  - **DoD**: Bề mặt shared drawer và nhóm nút dùng token V2 nhất quán trên Desktop/Mobile.
+  - **Verification**: V2 drawer suite PASS (11 files, 45 tests).
+
+## QC & Knowledge
+
+- [x] **Task 4.1.1: Kiểm tra chất lượng và đồng bộ tri thức**
+  - **DoD**: Scoped tests, typecheck, LoC audit; cập nhật skills `v2-drawer` và `erp-invoice` khi cần.
+  - **Verification**: `bunx tsc --noEmit` PASS; `git diff --check` PASS; module skills và walkthrough cập nhật.
+
+## Session Checkpoint
+
+- **Active Task**: Không còn task đang thực hiện.
+- **Tiến độ**: Sửa style button-group theo token; dark surface, viền và shadow dùng theme V2. Scoped tests và typecheck PASS.
+- **Git Status**: Có thay đổi chưa commit từ migration drawer trước; các thay đổi hiện tại được giữ nguyên.
+- **Hành động tiếp theo**: Kiểm tra UI thủ công trên theme sáng/tối ở Desktop/Mobile khi có phiên đăng nhập.

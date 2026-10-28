@@ -1,5 +1,5 @@
 /**
- * Chuẩn hóa tập trung Enum URL Query Parameter Keys cho toàn bộ hệ thống Liouni ERP (erp-web).
+ * Chuẩn hóa tập trung Enum URL Query Parameter Keys cho toàn bộ hệ thống ERP (erp-web).
  * Bắt buộc sử dụng ErpUrlQueryParam thay cho chuỗi string tự do ("tab", "detail", "cf", "sorts", v.v.).
  */
 export enum ErpUrlQueryParam {

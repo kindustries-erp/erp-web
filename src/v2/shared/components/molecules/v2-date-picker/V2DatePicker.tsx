@@ -1,6 +1,13 @@
 import * as React from "react";
-import { CalendarDays, X } from "lucide-react";
+import {
+  CalendarDays,
+  X,
+  V2Button,
+  V2Icon,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Calendar, dateTriggerClass } from "./V2Calendar";
@@ -21,30 +28,48 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
   clearable = false,
   disabled = false,
   className,
+  triggerClassName,
   "aria-label": ariaLabel,
+  open: controlledOpen,
+  onOpenChange,
 }) => {
   const { t } = useV2Translation();
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    else setInternalOpen(next);
+  };
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Click ra ngoài thì đóng lịch; mở lịch này sẽ đóng popover đang mở khác
+  useV2PopoverDismiss({
+    open,
+    onClose: () => setOpen(false),
+    containerRef,
+    panelSelector: "[data-v2-date-panel]",
+  });
   const selected = parseIsoDate(value);
   const hint = placeholder ?? t("v2.form.pickDate", "Chọn ngày");
   const canClear = clearable && selected !== undefined && !disabled;
 
   const trigger = (
-    <button
+    <V2Button
       type="button"
+      variant="outline"
       aria-label={ariaLabel ?? hint}
       disabled={disabled}
-      className={cn(dateTriggerClass, canClear && "pr-8")}
+      className={cn(dateTriggerClass, canClear && "pr-8", triggerClassName)}
     >
-      <CalendarDays aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
-      <span className={cn("truncate", !selected && "text-muted-foreground")}>
+      <V2Icon icon={CalendarDays} size={16} className="shrink-0 opacity-60" />
+      <V2Text variant="body-sm" truncate color={selected ? "default" : "muted"}>
         {selected ? formatDisplayDate(value) : hint}
-      </span>
-    </button>
+      </V2Text>
+    </V2Button>
   );
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <div ref={containerRef} className={cn("relative w-full", className)}>
       <V2Popover
         trigger={trigger}
         open={open}
@@ -57,27 +82,30 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
         className="w-auto p-2"
         triggerClassName="w-full"
         content={
-          <V2Calendar
-            mode="single"
-            selected={selected}
-            defaultMonth={selected}
-            disabled={buildDisabledMatchers(minDate, maxDate)}
-            onSelect={(date) => {
-              onValueChange(date ? toIsoDate(date) : null);
-              setOpen(false);
-            }}
-          />
+          <div data-v2-date-panel="">
+            <V2Calendar
+              mode="single"
+              selected={selected}
+              defaultMonth={selected}
+              disabled={buildDisabledMatchers(minDate, maxDate)}
+              onSelect={(date) => {
+                onValueChange(date ? toIsoDate(date) : null);
+                setOpen(false);
+              }}
+            />
+          </div>
         }
       />
       {canClear && (
-        <button
-          type="button"
+        <V2Button
+          variant="ghost"
+          size="icon-xs"
           aria-label={t("v2.form.clearDate", "Xóa ngày")}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+          className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded p-0 text-muted-fg hover:text-foreground"
           onClick={() => onValueChange(null)}
         >
-          <X className="h-3.5 w-3.5" />
-        </button>
+          <V2Icon icon={X} size={14} />
+        </V2Button>
       )}
     </div>
   );

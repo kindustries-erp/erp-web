@@ -20,13 +20,14 @@ const preview: Preview = {
   globalTypes: {
     theme: {
       name: "Theme",
-      description: "Hệ thống Theme V2",
+      description: "Hệ thống Theme V2 (Đồng bộ 100% với ERP)",
       defaultValue: "default",
       toolbar: {
         icon: "paintbrush",
         items: [
-          { value: "default", title: "Mặc định (Light)" },
-          { value: "classic", title: "Cổ điển (Classic)" },
+          { value: "default", title: "Mặc định (Light / Shell)" },
+          { value: "classic-light", title: "Cổ điển sáng (Light Classic)" },
+          { value: "classic-dark", title: "Cổ điển tối (Dark Classic)" },
           { value: "orcaq", title: "OrcaQ" },
           { value: "midnight", title: "Midnight (Dark)" },
         ],
@@ -55,10 +56,30 @@ const preview: Preview = {
       // 1. Apply V2 Theme classes to document element
       applyV2Theme(selectedTheme);
 
-      // 2. Sync Locale with V2 Store
+      // Ensure document body inherits theme variables for Radix portal mounts
+      if (typeof document !== "undefined") {
+        document.body.style.backgroundColor = "var(--background)";
+        document.body.style.color = "var(--foreground)";
+      }
+
+      // 2. Sync Theme & Locale with ERP Store
       try {
-        if (useAppStore.getState().locale !== selectedLocale) {
-          useAppStore.getState().setLocale(selectedLocale);
+        const appThemeMap: Record<string, any> = {
+          default: "shell",
+          shell: "shell",
+          "classic-light": "classic-light",
+          "classic-dark": "classic-dark",
+          classic: "classic",
+          orcaq: "orcaq",
+          midnight: "midnight",
+        };
+        const mappedAppTheme = appThemeMap[selectedTheme] || "shell";
+        const store = useAppStore.getState();
+        if (store.appTheme !== mappedAppTheme) {
+          store.setAppTheme(mappedAppTheme);
+        }
+        if (store.locale !== selectedLocale) {
+          store.setLocale(selectedLocale);
         }
       } catch {
         // Safe fallback

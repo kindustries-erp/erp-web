@@ -25,9 +25,9 @@ Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đ�
 - **Cấu trúc 6 Tabs trên giao diện chính (`/erp-invoices`)**:
   1. `tab=overview` (mặc định): **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
   2. `tab=in`: **Hóa đơn mua vào** (Header Table, chiều `IN`, Unified View & Filter Dropdown: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` gom chung với `view_mode` Presets).
-  3. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
+  3. `tab=in-lines`: **Bảng kê HHDV mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
   4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, Unified View & Filter Dropdown: `tax_tab` gom chung với `view_mode` Presets).
-  5. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
+  5. `tab=out-lines`: **Bảng kê HHDV bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
   6. `tab=draft`: **Hóa đơn nháp** (`ErpInvoicesDraftPage` - Quản lý hóa đơn SInvoice Viettel nháp).
 - **Tiến trình Đồng bộ Tự động (5-Slot Heartbeat Cron & Live SSE)**:
   - Hệ thống backend tự động đồng bộ định kỳ tại **5 mốc giờ chuẩn: 09:15, 15:15, 16:15, 17:15, 21:15 (Asia/Ho_Chi_Minh)**.
@@ -104,20 +104,29 @@ src/modules/erp-invoices-core/
 │       │   ├── ErpInvoiceItemsSection.columns.tsx # Cột hiển thị chi tiết dòng mặt hàng
 │       │   └── hooks/                         # Hooks hỗ trợ query dòng hàng
 │       ├── erp-invoice-detail-drawer/         # Drawer Chi Tiết Hóa Đơn Chuẩn Hóa
-│       │   ├── ErpInvoiceDetailDrawer.tsx     # Form drawer chính kế thừa StandardFormDrawer (2-columns, xl)
-│       │   ├── ErpInvoiceDetailDrawer.hook.tsx# Hook quản lý form state, mode xem/sửa, auto-calculate
+│       │   ├── ErpInvoiceDetailDrawer.tsx     # Vỏ V2StandardDrawer (3 Top Tabs, 2-columns, xl); dùng chung cho list và standalone
+│       │   ├── ErpInvoiceDetailDrawer.presentation.hook.tsx # Ghép nội dung/tab/panel phải và trạng thái trình bày
+│       │   ├── ErpInvoiceDrawerTabs.tsx       # Helper/Hook builder 3 Top Navigation Tabs cho Drawer (< 160 LoC)
+│       │   ├── ErpInvoiceDetailDrawerModals.tsx# Sub-organism gom 4 selection modals (Bank NetOff, PO, SO, Case < 80 LoC)
+│       │   ├── ErpInvoiceDetailDrawer.hook.tsx# Hook quản lý form state, mode xem/sửa, deep links & auto-calculate
 │       │   ├── ErpInvoiceDetailDrawer.state.ts# Initial state & validation schema
+│       │   ├── ErpInvoiceAccountingSection.tsx# Section hạch toán kế toán chuẩn DrawerSection (tiêu đề, icon BookOpen, badge trạng thái)
 │       │   ├── ErpInvoiceInternalMain.tsx     # Cột Trái: ErpInvoiceAdjustmentSection (trên đầu), Bảng hàng, PDF
-│       │   └── ErpInvoiceInternalSidebar.tsx  # Cột Phải: Thông tin chung, Thuộc tính mặc định, Thuộc tính tùy chỉnh
+│       │   └── ErpInvoiceInternalSidebar.tsx  # Cột Phải: Tra cứu/PDF, Thông tin chung, debtSlot, Thuộc tính mặc định & tùy chỉnh
+│       ├── erp-invoice-settlement-right-panel/# Cột phải tab Chứng từ & Tài chính (tái sử dụng Sidebar + DebtSection)
+│       │   ├── ErpInvoiceSettlementRightPanel.tsx # Container kết hợp Sidebar với debtSlot
+│       │   └── ErpInvoiceSettlementDebtSection.tsx# Section Công nợ & Mục tiêu cấn trừ
 │       ├── erp-invoice-settlement-tab/        # Tab Tài chính & Đối soát hợp nhất trong Drawer
 │       │   ├── ErpInvoiceSettlementTab.tsx    # Giao diện đối soát: Sub-tabs Sao kê & Sổ quỹ
 │       │   ├── ErpInvoiceSettlementTab.hook.ts# Hook tính toán dư nợ, auto-match, net-off actions
 │       │   └── context/                       # Context chia sẻ state chọn giao dịch & số dư
 │       ├── erp-invoice-unified-settlement-table/ # Bảng hợp nhất giao dịch ngân hàng & sổ quỹ
 │       ├── erp-invoice-partner-tab/           # Tab Đối tác & Chi tiết hóa đơn (Chuẩn Atomic 5 tầng < 180 LoC)
-│       │   ├── ErpInvoicePartnerTab.tsx       # Root Organism (< 150 LoC) - Quản lý 4 subtabs, luôn hiển thị Sub-tab 1
-│       │   ├── ErpInvoicePartnerTab.hook.ts   # Custom hook (< 150 LoC) - State sub-tabs, partner info, preview
-│       │   ├── ErpInvoicePartnerTabNav.tsx    # Molecule điều hướng subtabs & view mode toggles (< 150 LoC)
+│       │   ├── ErpInvoicePartnerTab.tsx       # Root Organism điều phối 3 sub-views (details, accounting, linked_docs < 110 LoC)
+│       │   ├── ErpInvoicePartnerTab.hook.ts   # Custom hook - state tab chính/tab con, partner info, preview
+│       │   ├── ErpInvoiceDetailTabNav.tsx     # Molecule điều hướng 3 sub-pills (Chi tiết HĐ, Hạch toán, Chứng từ liên kết < 100 LoC)
+│       │   ├── ErpInvoicePartnerTabNav.tsx    # Barrel & Sub-nav của tab Đối tác (< 100 LoC)
+│       │   ├── ErpInvoiceLinkedDocsSection.tsx# Sub-organism Sơ đồ luồng chứng từ liên kết & Traceability (< 110 LoC)
 │       │   ├── ErpInvoicePartnerTabEmpty.tsx  # Molecule trạng thái rỗng khi đối tác chưa có MST/Tên (< 50 LoC)
 │       │   ├── ErpInvoicePartnerRightPanel.tsx# Section hồ sơ đối tác ở cột phải (< 150 LoC)
 │       │   └── ErpInvoicePartnerLinesSection/ # Sub-organism cho Sub-tab 3 (Chi tiết HHDV đối tác, < 180 LoC/file)
@@ -208,15 +217,46 @@ src/modules/erp-invoices-core/
 
 ### 3.3. Form Drawer Chi Tiết Hóa Đơn (`erp-invoice-detail-drawer`)
 - **Kiến trúc Chia tách Sub-Components**:
-  - `ErpInvoiceDetailDrawer.tsx`: Form drawer chính, tích hợp `StandardFormDrawer` 2 cột hoặc full-width tùy chế độ xem.
+  - `ErpInvoiceDetailDrawer.tsx`: Form drawer chính, tích hợp `V2StandardDrawer` layout 2 cột, size `xl`; cùng component phục vụ drawer từ danh sách và standalone.
+  - `ErpInvoiceDetailDrawer.presentation.hook.tsx`: Quản lý sub-tab chi tiết, tiêu đề/trạng thái và ánh xạ các tab V1 sang `V2StandardDrawer`, bao gồm panel phải theo từng tab.
   - `ErpInvoiceDetailDrawer.hook.tsx`: Quản lý toàn bộ state, validation, tính toán tổng tiền, và gọi API lưu.
   - `ErpInvoiceInternalMain.tsx`: Khu vực làm việc chính gồm Thông tin hóa đơn, Bảng dòng hàng, và Tab Tài chính.
-  - `ErpInvoiceInternalSidebar.tsx`: Cột thông tin phụ gồm Ghi chú, Thuộc tính động Module Config, File đính kèm.
+  - `ErpInvoiceInternalSidebar.tsx`: Cột thông tin phụ gồm Tra cứu/PDF gốc NCC, Thông tin chung, `debtSlot` (khi có), Thuộc tính mặc định Module Config, Thuộc tính tùy chỉnh.
+  - `erp-invoice-settlement-right-panel/`: Gồm `ErpInvoiceSettlementRightPanel.tsx` (tái sử dụng `ErpInvoiceInternalSidebar` kèm `debtSlot`) và `ErpInvoiceSettlementDebtSection.tsx` (Section Công nợ & Mục tiêu cấn trừ).
+- **Quy chuẩn Cột Phải (Right Panel) Đồng Nhất**:
+  - Các tabs trong drawer (`invoice_details`, `invoice_partner`, `history`) đều hiển thị các drawer section ở cột phải:
+    1. *Thông tin tra cứu & PDF gốc NCC* (`ProviderLookupInfoCard` - tự động ẩn nếu không có).
+    2. *Thông tin chung hóa đơn* (`ErpInvoiceGeneralInfoSection`: số HĐ, ngày ký, mẫu số, chi nhánh, tags...).
+    3. *Thuộc tính mặc định* (`ErpInvoiceDefaultAttributesSection`: trạng thái thuế, loại hóa đơn...).
+    4. *Thuộc tính tùy chỉnh* (`ModuleEntityCustomFieldsSection`: custom attributes đa module).
+  - Riêng khi ở sub-tab **Chứng từ liên kết** (`linked_docs`), Right Panel tự động chuyển sang `ErpInvoiceSettlementRightPanel`, bổ sung thêm drawer section **Công nợ & Mục tiêu cấn trừ** (`ErpInvoiceSettlementDebtSection`: tiến độ thanh toán, nợ còn lại, progress bar, nút xác nhận cấn trừ đợt này...) qua prop `debtSlot`.
 - **Các phân khu & Tabs chính**:
   1. `erp-invoice-general-info`: Số HĐ, ký hiệu, ngày lập, chi nhánh, thông tin người bán, thông tin người mua (MST, tên, địa chỉ, CCCD).
   2. `erp-invoice-detail-lines-table`: Bảng dòng mặt hàng động (Tên hàng, mã, ĐVT, số lượng, đơn giá, tiền trước thuế, thuế suất %, tiền thuế, chiết khấu, thành tiền).
-  3. `erp-invoice-settlement-tab` (Tab **Tài chính**): Tích hợp trực tiếp đối soát dòng tiền vào Drawer chi tiết, gồm Sub-Tabs (`1. Sao kê` / `2. Sổ quỹ`), Quick View Presets (`Tất cả`, `Gợi ý khớp`, `Đang chọn`, `Đã cấn trừ`), Bảng hợp nhất `erp-invoice-unified-settlement-table` fit height và Right Panel tính toán công nợ/tiến độ thanh toán.
-  4. `DrawerDocumentTraceability` (Tab **Chứng từ liên kết**): Mạng lưới liên kết đa tầng PO, SO, Bank Txn, Garage Cases.
+  3. `erp-invoice-settlement-tab` (Drawer **Sao kê / Sổ quỹ** mở từ dropdown "Ghép nối chứng từ" → Bank Txn, hoặc action "Đối soát dòng tiền" qua `activeTabKey="financials"`): Tích hợp đối soát dòng tiền, gồm Sub-Tabs (`1. Sao kê` / `2. Sổ quỹ`), Quick View Presets (`Tất cả`, `Gợi ý khớp`, `Đang chọn`, `Đã cấn trừ`), Bảng hợp nhất `erp-invoice-unified-settlement-table`.
+  4. `DrawerDocumentTraceability` (nằm trong sub-tab **Chứng từ liên kết** của tab Chi tiết): Sơ đồ liên kết đa tầng PO, SO, Bank Txn, Garage Cases bọc trong `ErpInvoiceLinkedDocsSection` (DrawerSection collapsible). Dropdown "Ghép nối chứng từ" chọn loại nào thì mở modal chọn tương ứng (Bank → Sao kê, PO, SO, Garage Case).
+  - **3 Top Tabs chính của drawer** (tinh gọn chuẩn hóa):
+    - `invoice_details` (**Chi tiết**): Chứa hàng điều hướng Molecule `ErpInvoiceDetailTabNav` gồm 3 sub-pills:
+      1. `[Chi tiết hóa đơn]` (mặc định): nội dung HĐ, chi tiết mặt hàng, bảng kê và 2 buttons căn phải `[Xem trước HĐ thuần]` | `[Tài liệu & PDF]`.
+      2. `[Hạch toán kế toán]`: `ErpInvoiceAccountingSection` bọc chuẩn `DrawerSection` (icon BookOpen, badge ĐÃ HẠCH TOÁN/ĐANG BẬT/CHƯA HẠCH TOÁN, hỗ trợ view summary & edit định khoản Nợ/Có).
+      3. `[Chứng từ liên kết]`: `ErpInvoiceLinkedDocsSection` (Sơ đồ luồng chứng từ liên kết & Traceability Graph), kèm badge đếm tổng số chứng từ liên kết, tự động chuyển Right Panel sang `ErpInvoiceSettlementRightPanel`.
+    - `invoice_partner` (**Chi tiết theo NCC/KH**, `ErpInvoicePartnerSection`: 3 sub-pill `[Chi tiết theo đối tượng]` | `[Bảng kê HHDV]` | `[Biến động & Phân tích]`).
+    - `history` (**Lịch sử & Kiểm duyệt**): Nhật ký kiểm toán bọc trong `DrawerSection` collapsible (`DrawerAuditTimeline`).
+
+- Hai nút bên phải bind `activeTabKey` với `detailViewMode` (`template`/`pdf`); cùng mode đó điều khiển nội dung preview qua `InvoicePreviewModeContext`. Default là `template`; active có nền token V2 còn inactive để nền trong suốt.
+  - **Deep links tương thích**:
+    - `activeTabKey="financials"` (action "Đối soát dòng tiền"): chuyển sang tab `invoice_details`, tự động kích hoạt sub-tab `linked_docs` và mở modal Sao kê.
+    - `activeTabKey="linked_docs"`: tự động chuyển hướng sang tab `invoice_details` với sub-tab `linked_docs`.
+    - `activeTabKey="accounting"`: tự động chuyển hướng sang tab `invoice_details` với sub-tab `accounting`.
+    - `partnerViewMode` `lines`/`invoices`: mở tab `invoice_partner`.
+  - **Tối ưu hiệu năng đã áp dụng (drawer chi tiết)**:
+    - `ErpInvoiceSettlementProvider` nhận `loadSelectionData={false}` từ drawer: không tải 50 dòng sao kê và gợi ý cấn trừ khi mở drawer; chỉ dữ liệu công nợ được nạp. Query `getTransactions` vẫn chỉ bật khi sub-tab `bank_statement` đang mở.
+    - `onOpenNetOffModal`/`onOpenPoModal`/`onOpenSoModal`/`onOpenGarageCaseModal` là `useCallback` ổn định, và `setTraceabilityCount` chỉ cập nhật khi số đếm đổi, để `CanvasView` không tính lại layout khi drawer render.
+    - `settlementRightPanel` dùng chung cây `div > ErpInvoiceInternalSidebar` với `defaultRightPanel` (chỉ thêm `debtSlot`), nên đổi sub-tab "Chứng từ liên kết" không mount lại sidebar.
+    - `useTraceabilityLogic` chỉ gọi `fetchGraph` một lần khi mount; refetch silent chỉ khi thoát edit mode (chuyển true → false).
+    - **Kéo node canvas chậm (Layerize)**: nguyên nhân là các lớp `backdrop-filter` phía sau drawer (bảng hóa đơn `DataTable` V1 có sticky header/footer kính, và pill hành động ẩn ở mỗi dòng). Quy tắc: pill hành động ẩn không được có `backdrop-filter` khi chưa hover (`TableRowHoverActions`, `V2TableRowHoverActions`); khi có drawer V2 mở, `components.css` tắt kính của bảng nền (`body:has([data-v2-standard-drawer][data-state="open"])`). Không thêm `backdrop-blur` mới vào danh sách/bảng nằm dưới drawer.
+  - **Sơ đồ V2 (đã nối vào drawer)**: toàn màn hình mở bằng `V2Modal size="full"` (Radix lồng trong drawer, không `fixed`); màu dùng token V2 (`text-success` thu, `text-warning` chi, `text-destructive` lỗi, `bg-surface`/`border-border`), không dùng màu Tailwind thô.
+  - **Sơ đồ V2 (ghi chú cũ)**: `src/v2/shared/components/organisms/v2-document-traceability/` đã có canvas, pipeline, bảng kê, thanh công cụ, xác nhận gỡ liên kết và entry `V2DocumentTraceability`. Drawer hóa đơn vẫn dùng bản V1 cho đến khi nối (Task 3.1). Mở chứng từ qua callback `onOpenDocument`, không dùng event `window` của V1.
   5. `erp-invoice-pdf-upload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer (`erp-invoice-pdf-preview`) hoặc tải xuống.
   6. `erp-invoice-default-attributes-section`: Tích hợp 2 drawer sections: `Thuộc tính chung` (Global) và `Danh mục & Thuộc tính` (Category) từ Module Config.
 
@@ -247,6 +287,11 @@ src/modules/erp-invoices-core/
 - **Dùng chung với drawer Excel** (nằm trong `invoice-export-drawer/`): `InvoiceExportDrawerShell` (khung `StandardFormDrawer` 2 cột: trái = lịch sử/thông tin, phải = điều kiện), `InvoiceExportConditionSection` (props mới: `modes`, `selectedCount`, `startLabel`, `startIcon`, `children`), `InvoiceExportModeSelector` (thêm mode `selected`, data-driven theo `modes[]`), `InvoiceExportFileTypeSelector` (checkbox PDF/XML), hook `useInvoiceExportScope` (`InvoiceExportDrawer.scope.hook.ts`: state kỳ/ngày/mode + `buildScopeQuery()`).
 - **`InvoiceFileExportDrawer`** (`invoice-file-export-drawer/`): nút "Tải hóa đơn" (ZIP đồng bộ, không job nền, không lịch sử). Gói chỉ chứa đúng loại đã tick: PDF → chỉ PDF thật; XML → file .xml (kể cả khi nhà cung cấp gửi zip). Mode `selected` (chỉ khi có `selectedIds`, mặc định khi có chọn) gọi `bulkDownloadSelected`; `by-period` / `by-current-filter` gọi `bulkDownloadFiles` (backend chỉ áp `date_from`, `date_to`, `direction`, `status`, `search`).
 - **Điểm mở**: menu header "Xuất PDF" (`handleExportPdf`) và bulk dropdown "Xuất PDF / Tải ZIP" (tiêu đề drawer giữ nguyên); cùng state `fileExportDrawerOpen` trong `useInvoiceBulkActions`, render trong `InvoiceBulkModals`. Đã thay `DrawerModal` "Tải ZIP N hóa đơn đã chọn" cũ; drawer "Tải hàng loạt theo tháng" giữ nguyên.
+
+### 3.7. Biểu Đồ Dashboard Tổng Quan (`InvoiceDashboard` & `V2ComboChart`)
+- **`BranchInvoiceChart`**: Hiển thị biến động Hóa đơn (Doanh thu `OUT` - Cột Emerald `#059669`, Chi phí `IN` - Cột Orange `#ea580c`, Lợi nhuận gộp - Đường Line Teal `#2dd4bf` Dark / `#0d9488` Light với `tension: 0.3` mềm mại).
+- **`BranchVatChart`**: Hiển thị biến động Thuế VAT (VAT Đầu vào, VAT Đầu ra, Chênh lệch).
+- **Chuẩn hóa V2**: Sử dụng component `V2ComboChart` kế thừa `V2ChartFrame` hỗ trợ chuyển đổi tức thì giữa chế độ xem Biểu đồ (Chart View) và Bảng chi tiết (Table View), dot viền tương phản `theme.surface`, và tooltip gom đa chuỗi `interaction: { mode: "index" }`.
 
 ---
 
@@ -300,6 +345,14 @@ export interface ErpInvoice {
 
 ---
 
+### 4.1 Thông tin tra cứu & upload PDF (hóa đơn mua vào)
+
+- Hook React Query (`hooks/`): `useOriginalPdfLookupInfo(id)` (useQuery, key `erp-invoice-lookup-info`), `useDownloadOriginalPdf()`, `useManualUploadPdf()` (useMutation, invalidate `erp-invoices`).
+- Thẻ `molecules/provider-lookup-info-card/`: Chuẩn hóa bằng `<DrawerSection>` (V2) collapsible, hiển thị tên NCC + badge trạng thái PDF (`OriginalPdfStatusBadge` dùng V2 Badge & `V2Tooltip`) trên header; mã tra cứu và hints (`LookupHintRow` dùng `V2Button`), nút mở cổng (`V2Button`), tải PDF gốc (`V2Button`), tải lên PDF đã tải (`ManualPdfUploadButton` dùng `V2Button`, chỉ chấp nhận PDF ≤10MB). Props nhận dữ liệu từ parent, không gọi API trực tiếp.
+- Drawer chi tiết: `ErpInvoiceInternalSidebar` hiển thị thẻ cho mọi hóa đơn mua vào, lấy dữ liệu từ `useOriginalPdfLookupInfo`.
+- Danh sách: hành động "Thông tin tra cứu" trên dòng hóa đơn mua vào chưa có PDF, điều kiện trong `lookupAction.helper.ts` (`shouldShowLookupAction`).
+- i18n: key `lookup*`, `downloadPdf*`, `uploadPdf*`, `invalidPdfFile` trong `locales/vi/lookup.ts` và `core/locale/accounting/erpInvoices/en.ts`.
+
 ## 5. Tích hợp Liên Module
 
 1. **`purchase-orders-core`**:
@@ -323,7 +376,7 @@ export interface ErpInvoice {
 ## 6. Quy tắc Kiểm tra & QC UI Mandate
 
 ### 6.1. Tiêu chuẩn UI & Tương thích
-- Tuân thủ cấu trúc component nguyên tử (Atomic UI components): bảng sử dụng `SpreadsheetPageTemplate`, drawer sử dụng `DrawerModal` / `StandardFormDrawer`.
+- Tuân thủ cấu trúc component nguyên tử (Atomic UI components): bảng sử dụng `SpreadsheetPageTemplate`; drawer chi tiết hóa đơn dùng `V2StandardDrawer`, các drawer nghiệp vụ khác tiếp tục dùng primitive hiện hành của chúng.
 - Luôn hiển thị trạng thái hạch toán `postingStatus` và trạng thái hợp lệ `isValid` bằng `Badge` màu tiêu chuẩn.
 - Các cột số tiền phải format bằng font số chuẩn `tabular-nums` và căn lề phải.
 - Xử lý mượt mà Server-Sent Events (SSE) với cờ keep-alive ping 15s để tránh timeout kết nối.
@@ -339,3 +392,68 @@ bun run type:check
 # Kiểm tra lint và format code
 bun run lint:check
 ```
+
+## Đa chi nhánh (branchIds)
+
+- API gán chi nhánh: `erpInvoicesCoreApi.bulkSetBranch(ids, branchIds: string[])`; `[]` = bỏ gán. Hiển thị cột chi nhánh nối tên bằng ", " từ `branchIds`.
+- Bộ lọc cột chi nhánh là multi-select có lựa chọn "(Trống)" = `__BLANK__`.
+- Component chọn nhiều dùng chung: `V2MultiCombobox` (`src/v2/shared/components/molecules/v2-multi-combobox/`), và filter type `multi-combobox` trong `FilterPanel`.
+- Form chi tiết hóa đơn (`ErpInvoiceGeneralInfoEdit`, field "Chi nhánh") dùng `V2MultiCombobox` với `branchIds`; khi đổi, đồng bộ `branchId = branchIds[0]` để `ErpInvoiceAccountingSection` đọc đúng.
+- Lưu ý popover trong drawer: `V2MultiCombobox` dùng Radix Popover nằm trong `V2DrawerSheet` (Radix Dialog modal). Các package `@radix-ui/react-focus-scope`, `react-dismissable-layer`, `react-focus-guards`, `react-portal`, `react-presence` phải chỉ có 1 bản (khai báo trong `overrides` của `package.json`); nhiều bản làm focus trap đóng popover ngay khi mở (không chọn được option).
+- Chưa làm: drawer bulk-edit vẫn chọn đơn (gửi 0/1 phần tử); cần chuyển sang `V2MultiCombobox`.
+
+---
+
+## 7. Trang V2 Hóa đơn (tạm dừng, giữ code)
+
+**Trạng thái hiện tại**: erp-invoice dùng **V1** (`ErpInvoicesPage`, `SpreadsheetPageTemplate`). Route `/v2/invoices` và đăng ký page V2 đã gỡ khỏi `v2RouteConfig.ts` và `v2PageRegistry.tsx` nên /v2/invoices hiện không có trang. Code module V2 vẫn giữ tại `src/v2/modules/finance-invoice/` để làm tiếp khi có thời gian; không có file nào bị xóa.
+
+### 7.1. Phạm vi đã làm sẵn trên V2 (chưa đăng ký route)
+- **Tab**: Tổng quan (`InvoiceShapeDashboard`), Hóa đơn mua vào (`IN`), Hóa đơn bán ra (`OUT`).
+- **Drawer chi tiết** (`InvoiceShapeDetailDrawer`): chỉ đọc, mở qua `?overlay=invoice:<id>`, dữ liệu từ `useInvoiceDetailQuery`.
+- **Chưa có** (đợt sau): sửa, hạch toán, bulk, net-off, đồng bộ/import, xuất Excel/PDF, tab Tài chính và Chứng từ liên kết, tải PDF gốc.
+
+### 7.1b. Modal chọn chứng từ ghép nối trên V2 (Đợt 2)
+- `src/v2/shared/components/molecules/v2-link-selection-modal/`: khung `V2LinkSelectionModal` (bọc `V2Modal`, footer Hủy).
+- `src/v2/modules/finance-invoice/components/organisms/invoice-link-selection/`: `V2LinkPickerModal` (bảng một dòng, nút "Chọn" trong ô), hook `useV2LinkPicker`, `V2PurchaseOrderSelectionModal`, `V2SalesOrderSelectionModal`. PO/SO: chọn là xong.
+- Tab cấn trừ: một nhóm ba nút loại trừ nhau Sao kê | Sổ quỹ | Gợi ý khớp (`NetOffView`); lựa chọn giữ khi đổi tab. Modal cỡ `2xl` (`V2LinkSelectionModal` mặc định).
+- Sao kê / Sổ quỹ (`V2BankNetOffSelectionModal`, hook `useV2BankNetOffPicker`, helper `bankNetOff.helper.ts`, cột `bankNetOff.columns.tsx`): chọn nhiều dòng, số tiền cấn trừ từng dòng kẹp trong phần còn lại, xác nhận một lần → `onSelect([{id, amount}])`. Đổi nguồn Sao kê/Sổ quỹ (`sourceType` BANK/CASH) giữ lựa chọn; nút "Gợi ý khớp" lấy `POST /api/v1/erp-invoices/smart-net-off-suggestions` (`useV2NetOffSuggestions`) và chỉ hiện các gợi ý, kèm nhãn mức khớp. Phân trang/tìm kiếm dùng bảng server của V2 (không có thanh riêng).
+- Chưa có: giao dịch ngoài sổ (nhập tay, danh mục), panel phải/công nợ của drawer, Garage.
+- API chỉ đọc: `api/linkSources/` (`purchaseOrderLinkApi`, `salesOrderLinkApi`) qua `v2HttpClient`.
+- Chưa có: Garage, giao dịch ngoài sổ. Drawer hóa đơn V1 vẫn dùng modal V1 cho đến khi nối (Task 3.1).
+
+### 7.2. Dữ liệu và API
+- Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`, đường dẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
+- Endpoint dùng: `GET /` (list), `GET /:id` (chi tiết, bọc `data`), `GET /column-options`, `GET /stats?direction` (KPI tháng), `GET /dashboard/stats` (cashTrend cashIn/cashOut/vatIn/vatOut), `GET /dashboard/partners`.
+- DTO: `api/dtos/invoice.dto.ts`. Số tiền API là chuỗi decimal; `api/adapters/invoiceRowAdapter.ts` (`toInvoiceRow`, `invoiceTotalsToSummary`) chuyển sang shape cột V2 `FakeInvoice`. Tổng toàn bộ kết quả là `grandTotal*`.
+- Dashboard: `domain/rules/invoiceDashboard.logic.ts` (thuần, có test) dựng KPI (VAT = tổng - trước thuế; VAT ròng = VAT đầu ra - VAT đầu vào), chuỗi biểu đồ và cơ cấu đối tác top 5 theo số bán ra.
+- Dữ liệu mẫu (`api/sampleMode.ts`, `isInvoiceSampleMode`) chỉ dùng khi `MODE=test` hoặc thiếu `VITE_API_BASE_URL`. **Lỗi API thật không được thay bằng dữ liệu mẫu.**
+
+### 7.3. Bảng và preference
+- Table IDs: `erp-invoices-table-IN` / `erp-invoices-table-OUT`. Preference qua `v2ColumnPreferencesStorage` / `v2ViewPresetStorage` (store riêng `useV2TablePreferencesStore`). Cấu hình V1 chỉ được **chép một lần** sang V2 (`migrateV1TablePreferences`, bỏ alias `_2`/`__n`); sau đó không đồng bộ ngược. Sort và filter cột không nằm trong preference V2.
+- Header filter động: `createInvoiceFetchOptions` (`api/queries/useInvoiceColumnOptions.ts`) gọi `financeInvoiceV2Api.getColumnOptions`.
+- Cầu nối query V1⇄V2 (`erp-invoices-tab/hooks/useInvoiceV2Bridge.ts`) và cột V2 cho V1 (`useInvoiceV2Columns.tsx`) hiện không còn được V1 dùng; giữ file để tham khảo khi làm tiếp.
+
+### 7.4. Kiểm thử
+- Unit: `invoiceRowAdapter.test.ts`, `financeInvoiceV2Api.test.ts` (khóa đường dẫn API), `invoiceDashboard.logic.test.ts`, `useInvoiceV2Bridge.test.ts`.
+- Integration: `tests/integration/ErpInvoiceV2ModulePage.test.tsx` (dữ liệu mẫu).
+- Chưa kiểm tay trên trình duyệt với dữ liệu thật.
+
+---
+
+## 8. Cấu trúc i18n & Cơ chế Đồng Bộ Ngôn Ngữ V1/V2 (Dual-Run Locale Bridge)
+
+### 8.1. Cầu nối đồng bộ tự động 2 chiều (react-i18n.ts)
+- **Vấn đề đã xử lý**: Trong kiến trúc Dual-Run, `ErpInvoiceDetailDrawer` (V1) nhúng `V2StandardDrawer` và `DrawerConfirmCloseModal` (V2). `V2StandardDrawer` đọc ngôn ngữ qua `useV2Translation()` (`useV2LocaleStore`), còn app V1 dùng `useAppStore` (`erp-app`) và `react-i18next`. Trước đây 2 store này bị lệch, dẫn đến việc Confirm Close Modal hiển thị tiếng Anh ("Confirm closing form") trong khi giao diện app đang là tiếng Việt.
+- **Giải pháp**: Thiết lập cầu nối 2 chiều tại `src/core/i18n/react-i18n.ts`:
+  1. Khi app nạp: `useV2LocaleStore` đồng bộ ngay với `useAppStore.getState().locale`.
+  2. Khi `useAppStore` đổi: tự động gọi `useV2LocaleStore.getState().setLocale(state.locale)`.
+  3. Khi `useV2LocaleStore` đổi (từ V2 language switcher): tự động cập nhật `useAppStore.setLocale(state.locale)` và `i18n.changeLanguage(state.locale)`.
+  4. Unit test bảo vệ: `src/core/i18n/__tests__/reactI18nSync.test.ts`.
+
+### 8.2. Chuẩn hóa i18n Drawer chi tiết hóa đơn (`erp-invoices-core`)
+- **Drawer Title**: Dùng `t("internalTitle", "Thông tin nội bộ")` (khai báo tại `actions.ts` và `en.ts`).
+- **Action Groups**: Menu 3 chấm dùng `t("groupSync", "ĐỒNG BỘ")`, `t("syncGdt", "Đồng bộ từ GĐT")`, `t("groupExport", "XUẤT DỮ LIỆU")`, `t("exportInvoiceExcel", "Xuất Excel hóa đơn")`.
+- **Status Badges**: `formatTaxInvoiceStatus(status, t)` hỗ trợ đa ngôn ngữ linh hoạt ("Mới" / "New", "Thay thế" / "Replaced", "Điều chỉnh" / "Adjusted", "Bị thay thế" / "Was Replaced", "Bị điều chỉnh" / "Was Adjusted", "Bị hủy" / "Cancelled").
+- **Toasts**: Các thao tác liên kết PO, SO, ngân hàng và vụ việc garage sử dụng các khóa `toastLinkedBankSuccess`, `toastLinkedPoSuccess`, `toastLinkedSoSuccess`, `toastLinkedCaseSuccess`.
+

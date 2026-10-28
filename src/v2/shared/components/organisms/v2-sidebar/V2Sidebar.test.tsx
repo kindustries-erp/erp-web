@@ -86,6 +86,9 @@ describe("V2Sidebar Organism", () => {
     fireEvent.click(toggleBtn);
 
     expect(aside).toHaveClass("w-[58px]");
+    expect(aside).toHaveAttribute("data-collapsed", "true");
+    expect(screen.queryByTestId("v2-sidebar-logo")).not.toBeInTheDocument();
+    expect(screen.getByTestId("v2-sidebar-toggle-btn")).toBeInTheDocument();
   });
 
   it("updates header and bottom labels when locale changes", () => {

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Info } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -14,8 +15,9 @@ import {
 
 export const V2SubtotalSummaryCell: React.FC<V2SubtotalSummaryCellProps> = ({
   variant,
-  pageValue,
-  totalValue,
+  pageValue = 0,
+  totalValue = 0,
+  label,
   page = 1,
   totalPages = 1,
   cumulativeValue,
@@ -41,13 +43,15 @@ export const V2SubtotalSummaryCell: React.FC<V2SubtotalSummaryCellProps> = ({
     metricTitle ??
     (variant === "amount"
       ? t("v2.subtotal.amount", "Thành tiền")
-      : variant === "count"
+      : variant === "count" || variant === "label"
         ? t("v2.subtotal.lines", "Số dòng")
         : t("v2.subtotal.quantity", "Số lượng"));
 
-  const row = (label: string, value: string, emphasized = false) => (
+  const labelText = label ?? t("v2.subtotal.grandTotalLabel", "Tổng cộng:");
+
+  const row = (rowLabel: string, value: string, emphasized = false) => (
     <div className="flex items-center justify-between gap-4">
-      <span className="min-w-0 truncate text-muted-fg">{label}</span>
+      <span className="min-w-0 truncate text-muted-fg">{rowLabel}</span>
       <span
         className={cn(
           "shrink-0 whitespace-nowrap font-mono tabular-nums",
@@ -126,11 +130,24 @@ export const V2SubtotalSummaryCell: React.FC<V2SubtotalSummaryCellProps> = ({
             type="button"
             variant="ghost"
             size="xs"
-            aria-label={t("v2.subtotal.openDetail", "Xem chi tiết số liệu")}
-            className="h-auto min-w-0 px-1 py-0.5 font-mono tabular-nums"
+            aria-label={
+              variant === "label"
+                ? t("v2.subtotal.openLinesDetail", "Xem chi tiết số dòng")
+                : t("v2.subtotal.openDetail", "Xem chi tiết số liệu")
+            }
+            className="group h-auto min-w-0 items-center gap-1 px-1 py-0.5 text-xs"
             {...popover.triggerHandlers}
           >
-            {fmt(shownValue)}
+            {variant === "label" ? (
+              <span className="font-semibold text-muted-fg transition-colors group-hover:text-foreground">
+                {labelText}
+              </span>
+            ) : (
+              <span className="border-b border-dashed border-current/40 font-mono tabular-nums transition-colors group-hover:border-current group-hover:text-primary">
+                {fmt(shownValue)}
+              </span>
+            )}
+            <Info className="h-3 w-3 text-muted-fg/50 opacity-70 transition-colors group-hover:text-primary group-hover:opacity-100" />
           </V2Button>
         }
       />

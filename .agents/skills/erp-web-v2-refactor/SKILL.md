@@ -62,11 +62,11 @@ src/v2/modules/<module>/
 | :--- | :--- | :--- |
 | Gọi API (token, refresh 401, retry GET, mở modal 409) | `v2HttpClient` | `src/v2/shared/api/v2HttpClient.ts` |
 | Thông báo lỗi từ server | `extractV2ApiError`, `isDocumentInUseError` | `src/v2/shared/utils/v2ApiError.ts` |
-| Toast | `useV2ToastStore` (+ `V2Toaster` đã mount ở `AppProviders`) | `src/v2/shared/stores/useV2ToastStore.ts` |
+| Toast | `useV2ToastStore` (+ `V2Toaster` đã mount ở `AppProviders`, hỗ trợ 4 variants glassmorphism adaptive Light/Dark theme) | `src/v2/shared/stores/useV2ToastStore.ts`, `molecules/v2-toaster/` |
 | Modal chứng từ phụ thuộc (409) | `useV2DocumentDependencyStore` (+ `V2DocumentDependencyModal` đã mount) | `src/v2/shared/stores/`, `molecules/v2-document-dependency-modal/` |
 | Cấu hình cột/view theo bảng | `v2ColumnPreferencesStorage`, `v2ViewPresetStorage`, `applyV2SystemView` | `src/v2/shared/preferences/v2TablePreferenceStorages.ts` |
-| Đồng bộ preference lên server | `scheduleTablePreferenceSync` (key `v2:<tableId>`) | `src/v2/shared/preferences/v2TablePreferences.sync.ts` |
-| Nạp preference + ngôn ngữ khi đăng nhập | `loadV2ServerPreferences()` (một GET) | `src/v2/shared/preferences/v2ServerPreferences.ts` |
+| Đồng bộ preference lên server | `scheduleTablePreferenceSync` (PATCH `/api/v1/app/table-preferences/:tableId`, mỗi bảng một bản ghi) | `src/v2/shared/preferences/v2TablePreferences.sync.ts` |
+| Nạp preference + ngôn ngữ khi đăng nhập | `loadV2ServerPreferences()` (GET bảng + GET ngôn ngữ) | `src/v2/shared/preferences/v2ServerPreferences.ts` |
 | Ngôn ngữ V2 | `useV2LocaleStore` (seed một lần từ `erp-app` của V1) | `src/v2/shared/stores/useV2LocaleStore.ts` |
 | Dịch | `useV2Translation` (chỉ đọc dict V2 và module registry) | `src/v2/shared/hooks/useV2Translation.ts` |
 | Quyền | `useV2HasPermission` | `src/v2/shared/hooks/useV2HasPermission.ts` |
@@ -88,6 +88,7 @@ Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_tabl
 - **Xóa:** xóa mềm, luôn có `V2ConfirmModal`.
 - **Lỗi:** mutation hiện toast; 409 `DOCUMENT_IN_USE` do modal chung xử lý (mutation không toast lại).
 - **Preference:** giữ nguyên `tableId` của V1 (`erp-<x>-table`) để người dùng không mất cấu hình cột.
+- **Popover (dropdown, lịch):** tự đóng khi click ra ngoài và chỉ một popover mở tại một thời điểm. Dùng hook `useV2PopoverDismiss` (`src/v2/shared/hooks/useV2PopoverDismiss.ts`), không tự gắn listener `pointerdown`. Áp dụng cho `V2Combobox`, `V2DatePicker`, `V2DateRangePicker`.
 
 ---
 
@@ -121,7 +122,7 @@ Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_tabl
 | Toast tạo/sửa/xóa thành công và thất bại | ✅ | Theo module (không qua interceptor toàn cục) |
 | Toast thiếu thông tin, lỗi tải danh sách, lỗi tải chi tiết | ✅ | |
 | Modal chứng từ phụ thuộc khi xóa (409) | ✅ | `V2DocumentDependencyModal` |
-| Cột/view lưu theo bảng, đồng bộ server | ✅ | Key `v2:<tableId>` |
+| Cột/view lưu theo bảng, đồng bộ server | ✅ | Bảng `core_user_table_preferences`, API `/app/table-preferences/:tableId` |
 | Chặn trang khi thiếu quyền đọc | ✅ | Route guard `PermissionGuard` |
 | Cờ 403 toàn cục, luồng impersonation | ❌ | Hạ tầng auth, không thuộc module (ghi nhận, chưa làm) |
 
@@ -158,6 +159,15 @@ bunx tsc --noEmit && bun run check:ci && bun run test src/v2
 ```
 
 ---
+
+## 8b. Trạng thái migrate (cập nhật mỗi lần migrate)
+
+Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `bank-statements`, `business-partners`, `finance-invoice`, `inventory`, `production-bom`, `vinfast-parts`. **Trạng thái từng module (đủ parity hay còn thiếu) chưa được xác minh trong tài liệu này**; trước khi dựa vào, kiểm tra parity bằng playbook mục 5.
+
+Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/skills/modules/<module>/SKILL.md` của module.
+
+- `bank-statements` (chỉ drawer xuất Excel sao kê / sổ quỹ, trang sao kê vẫn V1): drawer V2 `V2ExportExcelDrawer` ở `drawers/BankStatementExportDrawer.tsx`, sinh khung bằng plop `v2-module` (`wire = false`), đã bỏ phần CRUD thừa. V1 chỉ giữ wrapper. Chưa có route `/v2` cho module.
+- `vinfast-parts` (drawer xuất Excel tồn kho): đã V2 thuần (data layer, toast, icon, locale module, validate ngày). Các drawer khác của module chưa kiểm parity.
 
 ## 9. Hạn chế đã biết
 

@@ -6,9 +6,9 @@ import {
   Settings,
 } from "lucide-react";
 import {
-  V2SidebarSectionData,
-  V2SidebarNavItem,
-} from "@/v2/shared/components/organisms/v2-sidebar";
+  type V2SidebarSectionData,
+  type V2SidebarNavItem,
+} from "@/v2/shared/components";
 import { V2_ROUTES, type V2RouteDef } from "@/v2/app/router/v2RouteConfig";
 import type { V2PermissionRequirement } from "@/v2/shared/hooks/useV2HasPermission";
 import { NAV_DEFS, SECTION_DEFS } from "./v2Navigation.config";

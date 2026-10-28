@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { V2Button } from "@/v2/shared/components/atoms";
 import { V2Header } from "./V2Header";
 
 describe("V2Header Organism", () => {
@@ -20,14 +21,41 @@ describe("V2Header Organism", () => {
     expect(screen.getByText("Nguyen Van A")).toBeInTheDocument();
   });
 
-  it("gọi onReturnToV1 khi click nút quay lại V1", () => {
-    const handleReturn = vi.fn();
-    render(<V2Header onReturnToV1={handleReturn} />);
+  it("không hiển thị nút quay lại V1 trong header chuẩn V2", () => {
+    render(<V2Header />);
+    expect(
+      screen.queryByRole("button", { name: /Quay lại ERP V1/i }),
+    ).not.toBeInTheDocument();
+  });
 
-    const returnBtn = screen.getByRole("button", {
-      name: /Quay lại ERP V1/i,
-    });
-    fireEvent.click(returnBtn);
-    expect(handleReturn).toHaveBeenCalledTimes(1);
+  it("gọi onBranchClick khi click vào badge công ty/chi nhánh", () => {
+    const handleBranch = vi.fn();
+    render(
+      <V2Header
+        userName="Admin"
+        tenantName="Greenway Corp"
+        onBranchClick={handleBranch}
+      />,
+    );
+
+    const companyEl = screen.getByText("Greenway Corp");
+    fireEvent.click(companyEl);
+    expect(handleBranch).toHaveBeenCalledTimes(1);
+  });
+
+  it("render userMenuNode và notificationNode khi được truyền vào", () => {
+    render(
+      <V2Header
+        userMenuNode={
+          <V2Button data-testid="custom-user-menu">User Menu</V2Button>
+        }
+        notificationNode={
+          <V2Button data-testid="custom-notification">Bell</V2Button>
+        }
+      />,
+    );
+
+    expect(screen.getByTestId("custom-user-menu")).toBeInTheDocument();
+    expect(screen.getByTestId("custom-notification")).toBeInTheDocument();
   });
 });

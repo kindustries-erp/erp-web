@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { FileText, Building2, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { PillTabs } from "@/shared/components/PillTabs";
+import { V2TabBar, V2Text, type V2TabItemData } from "@/v2/shared/components";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { BankTransactionVoucherPreview } from "./components/BankTransactionVoucherPreview";
 import { BankTransactionPartnerSubTab } from "./BankTransactionPartnerSubTab";
@@ -62,29 +62,32 @@ export const BankTransactionDetailTab = React.memo(
 
     const partnerTotal = partnerCountData?.total || 0;
 
-    const navItems = useMemo(
+    const navTabs: V2TabItemData[] = useMemo(
       () => [
         {
-          value: "details" as const,
+          key: "details",
           label: t("bankStatement.subTabDetails", {
             defaultValue: "1. Chi tiết",
           }),
           icon: FileText,
+          alwaysShowIcon: true,
         },
         {
-          value: "partner" as const,
+          key: "partner",
           label: t("bankStatement.subTabPartner", {
             defaultValue: "2. Chi tiết theo đối tượng",
           }),
           icon: Building2,
           badgeCount: partnerTotal > 0 ? partnerTotal : undefined,
+          alwaysShowIcon: true,
         },
         {
-          value: "analytics" as const,
+          key: "analytics",
           label: t("bankStatement.subTabAnalytics", {
             defaultValue: "3. Biến động",
           }),
           icon: TrendingUp,
+          alwaysShowIcon: true,
         },
       ],
       [t, partnerTotal],
@@ -95,22 +98,25 @@ export const BankTransactionDetailTab = React.memo(
         {/* ─── 1. THANH ĐIỀU HƯỚNG TỔNG HỢP: SUB-TABS ─── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5 w-full">
           <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0">
-            <PillTabs<BankTransactionDetailViewMode>
-              size="sm"
-              value={viewMode}
-              onValueChange={handleViewModeChange}
-              items={navItems}
+            <V2TabBar
+              variant="sub"
+              activeTabKey={viewMode}
+              onTabChange={(key) =>
+                handleViewModeChange(key as BankTransactionDetailViewMode)
+              }
+              tabs={navTabs}
+              className="w-auto pb-0"
             />
           </div>
 
           <div className="flex items-center gap-2 flex-wrap shrink-0">
             {viewMode === "partner" && partnerTotal > 0 && (
-              <span className="text-xs font-normal text-muted-foreground">
+              <V2Text as="span" variant="body-sm" color="muted">
                 {partnerTotal}{" "}
                 {t("bankStatement.recordsTransactions", {
                   defaultValue: "giao dịch",
                 })}
-              </span>
+              </V2Text>
             )}
           </div>
         </div>

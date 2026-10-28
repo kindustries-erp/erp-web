@@ -5,8 +5,8 @@ import * as viewportHook from "@/v2/shared/hooks/useViewport";
 import { V2SubtotalSummaryCell } from "./V2SubtotalSummaryCell";
 import { OPEN_DELAY_MS } from "./V2SubtotalSummaryCell.hook";
 
-const trigger = () =>
-  screen.getByRole("button", { name: "Xem chi tiết số liệu" });
+const trigger = (name = /Xem chi tiết số (liệu|dòng)/) =>
+  screen.getByRole("button", { name });
 
 describe("V2SubtotalSummaryCell", () => {
   beforeEach(() => {
@@ -46,6 +46,23 @@ describe("V2SubtotalSummaryCell", () => {
       />,
     );
     expect(trigger()).toHaveTextContent("9.000 đ");
+  });
+
+  it("renders label variant with custom or default label", () => {
+    const { rerender } = render(
+      <V2SubtotalSummaryCell variant="label" pageValue={20} totalValue={500} />,
+    );
+    expect(trigger()).toHaveTextContent("Tổng cộng:");
+
+    rerender(
+      <V2SubtotalSummaryCell
+        variant="label"
+        label="Tổng phát sinh:"
+        pageValue={20}
+        totalValue={500}
+      />,
+    );
+    expect(trigger()).toHaveTextContent("Tổng phát sinh:");
   });
 
   it("hover đủ delay thì mở popover, không mở sớm hơn", () => {

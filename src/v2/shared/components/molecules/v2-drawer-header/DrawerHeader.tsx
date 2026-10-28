@@ -10,6 +10,7 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
 import type { DrawerHeaderProps } from "./DrawerHeader.type";
 
 export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
@@ -48,16 +49,21 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
     <div
       className={cn(
         "flex items-center justify-between px-3 sm:px-4 md:px-[18px] py-2.5",
-        "border-b border-border/70 backdrop-blur-md shrink-0 gap-2 transition-shadow duration-200",
+        "border-b border-border/50 dark:border-white/[0.06] shrink-0 gap-2 transition-shadow duration-200",
+        GLASS_BAR_CLASS,
         isScrolledTop
-          ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)] bg-[var(--drawer-header-scrolled-bg,rgba(246,248,252,0.92))]"
-          : "shadow-none bg-[var(--drawer-header-bg,rgba(246,248,252,0.75))]",
+          ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)] dark:shadow-[0_4px_18px_-4px_rgba(0,0,0,0.45),0_2px_5px_-2px_rgba(0,0,0,0.3)]"
+          : "shadow-none",
         className,
       )}
     >
       {/* Left: Icon, Title, Badge, Subtitle */}
       <div className="flex items-center gap-2 min-w-0 flex-1">
-        {icon && <div className="text-muted-fg shrink-0">{icon}</div>}
+        {icon && (
+          <div className="text-muted-fg dark:text-teal-400 shrink-0">
+            {icon}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <V2Text
@@ -103,7 +109,7 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
         {onToggleEdit && !isEditing && (
           <div
             data-testid="v2-drawer-header-divider"
-            className="h-4 w-px bg-border/70 mx-1 hidden sm:block shrink-0"
+            className="h-4 w-px bg-border/70 dark:bg-white/[0.08] mx-1 hidden sm:block shrink-0"
             aria-hidden="true"
           />
         )}

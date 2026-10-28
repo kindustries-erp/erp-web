@@ -1,6 +1,5 @@
 /**
- * Dữ liệu giả có hình dạng giống erp-invoice, chỉ để chứng minh khung V2 đáp ứng được
- * một module hoàn chỉnh. Không gọi API và không import module thật.
+ * Dữ liệu có hình dạng giống erp-invoice, đáp ứng cả dữ liệu giả định và dữ liệu từ API thật.
  */
 export type InvoiceDirection = "IN" | "OUT";
 export type TaxTab = "all" | "new" | "replacement" | "adjustment";
@@ -17,12 +16,34 @@ export interface FakeInvoice {
   taxCode: string;
   taxTab: Exclude<TaxTab, "all">;
   branchId: string;
+  /** Mọi chi nhánh của hóa đơn (branch_ids), có thể nhiều hơn một */
+  branchIds?: string[];
   preVat: number;
   vat: number;
   total: number;
   paid: number;
   posting: PostingStatus;
   note: string;
+  // Các trường bổ sung từ API thật
+  sellerName?: string | null;
+  sellerTaxCode?: string | null;
+  buyerName?: string | null;
+  buyerTaxCode?: string | null;
+  taxInvoiceStatus?: number | string | null;
+  branchName?: string | null;
+  preVatAmount?: number;
+  vatAmount?: number;
+  totalAmount?: number;
+  discountAmount?: number;
+  netOffAmount?: number;
+  remainingAmount?: number;
+  postingStatus?: string | null;
+  description?: string | null;
+  notes?: string;
+  attachments?: any[];
+  pdfFileKey?: string | null;
+  xmlFileKey?: string | null;
+  originalPdfStatus?: string | null;
 }
 
 export const BRANCHES = [
@@ -30,6 +51,18 @@ export const BRANCHES = [
   { value: "hcm", label: "Chi nhánh TP.HCM" },
   { value: "dn", label: "Chi nhánh Đà Nẵng" },
 ];
+
+/** Nhãn mọi chi nhánh của hóa đơn, nối bằng dấu phẩy; dùng branchId khi chưa có danh sách. */
+export function branchLabelsOf(
+  branchIds: string[] | undefined,
+  branchId: string | null | undefined,
+): string {
+  const ids = branchIds?.length ? branchIds : branchId ? [branchId] : [];
+  return ids
+    .map((id) => BRANCHES.find((b) => b.value === id)?.label)
+    .filter((label): label is string => !!label)
+    .join(", ");
+}
 
 export const POSTING_OPTIONS = [
   { value: "POSTED", label: "Đã hạch toán" },
@@ -83,54 +116,10 @@ export const makeInvoices = (
     };
   });
 
-export const MONTH_LABELS = [
-  "T1",
-  "T2",
-  "T3",
-  "T4",
-  "T5",
-  "T6",
-  "T7",
-  "T8",
-  "T9",
-  "T10",
-  "T11",
-  "T12",
-];
-
-export const CASH_TREND = [
-  {
-    key: "in",
-    label: "Mua vào",
-    data: [120, 150, 90, 180, 140, 200, 170, 160, 190, 210, 180, 230],
-  },
-  {
-    key: "out",
-    label: "Bán ra",
-    data: [200, 170, 210, 260, 230, 300, 280, 250, 310, 330, 290, 360],
-  },
-];
-
-export const VAT_BY_MONTH = [
-  {
-    key: "vat-in",
-    label: "VAT đầu vào",
-    data: [12, 15, 9, 18, 14, 20, 17, 16, 19, 21, 18, 23],
-  },
-  {
-    key: "vat-out",
-    label: "VAT đầu ra",
-    data: [20, 17, 21, 26, 23, 30, 28, 25, 31, 33, 29, 36],
-  },
-];
-
-export const PARTNER_SHARE = {
-  labels: PARTNERS.map(([name]) => name),
-  values: [34, 24, 18, 14, 10],
+export const INVOICE_ROWS: Record<InvoiceDirection, FakeInvoice[]> = {
+  IN: makeInvoices("IN"),
+  OUT: makeInvoices("OUT"),
 };
 
 export const formatMoney = (value: number): string =>
   `${value.toLocaleString("vi-VN")} ₫`;
-
-export const sampleInvoiceXml = (invoice: FakeInvoice): string =>
-  `<?xml version="1.0" encoding="UTF-8"?>\n<HDon>\n  <SHDon>${invoice.invoiceNo}</SHDon>\n  <KHHDon>${invoice.serialNo}</KHHDon>\n  <NLap>${invoice.invoiceDate}</NLap>\n  <TgTCThue>${invoice.preVat}</TgTCThue>\n  <TgTThue>${invoice.vat}</TgTThue>\n  <TgTTTBSo>${invoice.total}</TgTTTBSo>\n</HDon>`;

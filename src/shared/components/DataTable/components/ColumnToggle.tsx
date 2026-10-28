@@ -2,6 +2,7 @@ import React, { useState, type ReactNode } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { Settings2, GripVertical, RotateCcw } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
+import { V2ToolbarIconButton } from "@/v2/shared/components";
 import {
   DndContext,
   closestCenter,
@@ -138,18 +139,16 @@ export function ColumnToggle<T>({ table, onReset }: ColumnToggleProps<T>) {
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <Tooltip content={t("table.columnVisibility", "Tùy chỉnh cột")}>
         <Popover.Trigger asChild>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="h-8 w-8 px-0"
+          <V2ToolbarIconButton
+            label={t("table.columnVisibility", "Tùy chỉnh cột")}
+            icon={<Settings2 className="h-4 w-4" />}
+            active={open}
             onClick={(e) => {
               e.stopPropagation();
               setOpen(true);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-          >
-            <Settings2 className="h-4 w-4" />
-          </Button>
+          />
         </Popover.Trigger>
       </Tooltip>
       <Popover.Portal>

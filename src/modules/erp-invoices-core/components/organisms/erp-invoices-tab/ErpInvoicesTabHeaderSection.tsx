@@ -13,7 +13,9 @@ import {
   Building2,
   FileCheck2,
   FileText,
+  Info,
 } from "lucide-react";
+import { shouldShowLookupAction } from "./lookupAction.helper";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
@@ -365,6 +367,14 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
               void handleDownload(inv.id, "pdf");
             }
           },
+        });
+      }
+
+      if (shouldShowLookupAction(direction, inv, hasPdf)) {
+        traCuuItems.push({
+          label: t("lookupTitle", "Thông tin tra cứu"),
+          icon: <Info className="w-3.5 h-3.5" />,
+          onClick: () => handleOpenInternal(inv, "view"),
         });
       }
 

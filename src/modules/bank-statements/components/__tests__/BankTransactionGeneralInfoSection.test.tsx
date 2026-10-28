@@ -108,8 +108,6 @@ describe("BankTransactionGeneralInfoSection", () => {
 
     expect(screen.getByText("THÔNG TIN CHUNG")).toBeTruthy();
     expect(screen.getByText("Công ty TNHH Minh Long")).toBeTruthy();
-    expect(
-      screen.getByPlaceholderText("Nhập ghi chú / diễn giải..."),
-    ).toBeTruthy();
+    expect(screen.getByPlaceholderText("Nhập ghi chú ERP...")).toBeTruthy();
   });
 });

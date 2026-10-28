@@ -7,6 +7,7 @@ import {
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { type ErpInvoiceStandaloneDrawerProps } from "./ErpInvoiceStandaloneDrawer.type";
 import { useErpInvoiceStandaloneDrawer } from "./ErpInvoiceStandaloneDrawer.hook";
+import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
 
 export function ErpInvoiceStandaloneDrawer({
   isOpen,
@@ -46,7 +47,7 @@ export function ErpInvoiceStandaloneDrawer({
           <div className="flex flex-col gap-4">
             {formHook.loadingDetail ? (
               <div className="space-y-4">
-                <div className="h-[200px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+                <V2Skeleton className="h-[200px] w-full rounded-lg" />
               </div>
             ) : (
               <ErpInvoiceInternalSidebar
@@ -69,7 +70,7 @@ export function ErpInvoiceStandaloneDrawer({
         <div className="flex flex-col gap-4">
           {formHook.loadingDetail ? (
             <div className="space-y-4">
-              <div className="h-[350px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+              <V2Skeleton className="h-[350px] w-full rounded-lg" />
             </div>
           ) : (
             <>

@@ -5,6 +5,7 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
 import type { DrawerFooterProps, DrawerAction } from "./DrawerFooter.type";
 
 function ActionButton({ action }: { action: DrawerAction }) {
@@ -58,10 +59,11 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
       }}
       className={cn(
         "flex items-center justify-between px-3 sm:px-4 md:px-[18px] py-2.5",
-        "border-t border-border/70 backdrop-blur-md shrink-0 gap-2 flex-wrap sm:flex-nowrap transition-shadow duration-200",
+        "border-t border-border/50 dark:border-white/[0.06] shrink-0 gap-2 flex-wrap sm:flex-nowrap transition-shadow duration-200",
+        GLASS_BAR_CLASS,
         isScrolledBottom
-          ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)] bg-[var(--drawer-footer-scrolled-bg,rgba(246,248,252,0.92))]"
-          : "shadow-none bg-[var(--drawer-footer-bg,rgba(246,248,252,0.75))]",
+          ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)] dark:shadow-[0_-4px_18px_-4px_rgba(0,0,0,0.45),0_-2px_5px_-2px_rgba(0,0,0,0.3)]"
+          : "shadow-none",
         className,
       )}
     >
@@ -70,15 +72,16 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
           <V2Dropdown
             groups={actionGroups}
             items={actionDropdownItems}
+            modal={true}
             trigger={
               <V2Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 rightIcon={
                   <ChevronDown className="w-3.5 h-3.5 text-muted-fg" />
                 }
-                className="h-auto px-3 py-1.5 rounded-lg text-xs font-medium border-border/70 bg-surface/80 hover:bg-surface-hover text-foreground shadow-xs cursor-pointer select-none"
+                className="h-auto px-3 py-1.5 rounded-lg text-xs font-medium border border-border/70 dark:border-white/[0.08] bg-surface/80 dark:bg-[#1d2129] hover:bg-surface-hover dark:hover:bg-[#252b34] text-foreground dark:text-zinc-200 dark:hover:text-white shadow-xs cursor-pointer select-none transition-colors"
               >
                 <V2Text
                   as="span"

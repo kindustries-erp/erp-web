@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Building2, ReceiptText, TrendingUp } from "lucide-react";
+import { Building2, ReceiptText, TrendingUp, Wallet } from "lucide-react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { PillTabs } from "@/shared/components/PillTabs";
 import {
@@ -12,6 +12,7 @@ import {
   VietnamInvoiceTemplate,
 } from "@/modules/erp-invoices-core/components";
 import { InvoicePartnerDebtRightPanel } from "../../molecules/invoice-partner-debt-right-panel";
+import { InvoicePartnerUnallocatedSection } from "./InvoicePartnerUnallocatedSection";
 import { useInvoicePartnerDebtDetailDrawer } from "./InvoicePartnerDebtDetailDrawer.hook";
 import type { InvoicePartnerDebtDetailDrawerProps } from "./InvoicePartnerDebtDetailDrawer.type";
 
@@ -38,7 +39,7 @@ export const InvoicePartnerDebtDetailDrawer = React.memo(
         {/* Thanh Điều Hướng Sub-Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
           <div className="flex items-center gap-2">
-            <PillTabs<"invoices" | "analytics">
+            <PillTabs<"invoices" | "analytics" | "unallocated">
               size="sm"
               value={activeSubTab}
               onValueChange={setActiveSubTab}
@@ -60,13 +61,27 @@ export const InvoicePartnerDebtDetailDrawer = React.memo(
                   ),
                   icon: TrendingUp,
                 },
+                {
+                  value: "unallocated",
+                  label: t(
+                    "debts:drawer.tabUnallocated",
+                    "3. Khoản chưa phân bổ",
+                  ),
+                  icon: Wallet,
+                },
               ]}
             />
           </div>
         </div>
 
         {/* Nội Dung Theo Sub-Tab */}
-        {activeSubTab === "invoices" ? (
+        {activeSubTab === "unallocated" ? (
+          <InvoicePartnerUnallocatedSection
+            taxCode={props.taxCode ?? ""}
+            partnerType={props.partnerType}
+            enabled={props.open}
+          />
+        ) : activeSubTab === "invoices" ? (
           <ErpInvoicePartnerInvoicesSection
             taxCode={props.taxCode}
             partnerName={props.partnerName}
