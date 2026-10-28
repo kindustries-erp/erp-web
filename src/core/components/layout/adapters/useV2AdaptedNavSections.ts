@@ -508,81 +508,107 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     // 10. Thiết lập
     if (showSettings) {
       const items: V2SidebarItem[] = [];
+
+      // 10.1 Hộp thư (Direct item tiện ích hệ thống)
       if (canReadEmailInbox && isAdminEmail) {
         items.push({
           id: "email-inbox",
-          label: t("nav.items.emailInbox", "Hòm thư hệ thống"),
+          label: t("nav.items.emailInbox", "Hộp thư"),
           icon: Mail,
           href: "/email-inbox",
         });
       }
+
+      // 10.2 Sub-Group: Quản lý truy cập & bảo mật
+      const accessChildren: V2SidebarItem[] = [];
       if (canReadAdminUsers) {
-        items.push({
+        accessChildren.push({
           id: "erp-users",
-          label: t("nav.items.users", "Người dùng & Tài khoản"),
+          label: t("nav.items.users", "Quản lý người dùng"),
           icon: Users,
           href: "/erp-users",
         });
-        items.push({
+        accessChildren.push({
           id: "erp-permissions-core",
-          label: t("nav.items.phanquyen", "Phân quyền vai trò"),
+          label: t("nav.items.phanquyen", "Phân quyền & Vai trò"),
           icon: Shield,
           href: "/erp-permissions-core",
         });
       }
       if (canReadActivityLogs) {
-        items.push({
+        accessChildren.push({
           id: "erp-activity-logs",
           label: t("nav.items.activitylog", "Nhật ký hoạt động"),
           icon: FileText,
           href: "/erp-activity-logs",
         });
       }
-      if (canReadAdminUsers) {
+      if (accessChildren.length > 0) {
         items.push({
+          id: "sub-access-control",
+          label: t("nav.items.erpAccessControl", "Quản lý truy cập"),
+          icon: Shield,
+          href: accessChildren[0]?.href ?? "/erp-users",
+          children: accessChildren,
+        });
+      }
+
+      // 10.3 Sub-Group: Danh mục & Thiết lập chung
+      const catalogChildren: V2SidebarItem[] = [];
+      if (canReadAdminUsers) {
+        catalogChildren.push({
           id: "settings-branch",
-          label: t("thietlap.tabs.chi-nhanh", "Chi nhánh"),
+          label: t("thietlap.tabs.chi-nhanh", "Danh mục Chi nhánh"),
           icon: Building2,
           href: "/settings-branch",
         });
       }
       if (canReadBankStatements) {
-        items.push({
+        catalogChildren.push({
           id: "settings-bank",
-          label: t("thietlap.tabs.ngan-hang", "Tài khoản ngân hàng"),
+          label: t("thietlap.tabs.ngan-hang", "Danh mục Ngân hàng"),
           icon: Landmark,
           href: "/settings-bank",
         });
       }
       if (canReadCashStatements) {
-        items.push({
+        catalogChildren.push({
           id: "settings-cash-fund",
-          label: t("thietlap.tabs.quy", "Quỹ tiền mặt"),
+          label: t("thietlap.tabs.quy", "Danh mục Quỹ"),
           icon: Banknote,
           href: "/settings-cash-fund",
         });
       }
       if (canReadSysTags) {
-        items.push({
+        catalogChildren.push({
           id: "sys-tags",
-          label: t("nav.items.sysTags", "Thẻ hệ thống (Tags)"),
+          label: t("nav.items.sysTags", "Quản lý thẻ"),
           icon: Settings,
           href: "/sys-tags",
         });
       }
       if (canReadCustomFields) {
-        items.push({
+        catalogChildren.push({
           id: "custom-fields",
           label: t("nav.items.customFields", "Trường tùy chỉnh"),
           icon: Sliders,
           href: "/custom-fields",
         });
       }
+      if (catalogChildren.length > 0) {
+        items.push({
+          id: "sub-general-settings",
+          label: t("nav.items.catalog", "Thiết lập chung"),
+          icon: Settings,
+          href: catalogChildren[0]?.href ?? "/settings-branch",
+          children: catalogChildren,
+        });
+      }
 
       if (items.length > 0) {
         sections.push({
           id: "sec-settings",
-          label: t("nav.sections.settings", "THIẾT LẬP"),
+          label: t("nav.sections.settings", "HỆ THỐNG"),
           items,
         });
       }

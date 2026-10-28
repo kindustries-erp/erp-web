@@ -19,15 +19,29 @@ export type V2PermissionCheck = (
   requirement?: V2PermissionRequirement,
 ) => boolean;
 
-/** Ẩn mục menu mà route cùng `id` đòi quyền người dùng không có */
-export function filterV2NavItems<T extends { id: string }>(
+/** Ẩn mục menu mà route cùng `id` đòi quyền người dùng không có, hỗ trợ đệ quy cho sub-items */
+export function filterV2NavItems<T extends { id: string; children?: T[] }>(
   items: T[],
   can: V2PermissionCheck,
   routes: V2RouteDef[] = V2_ROUTES,
 ): T[] {
-  return items.filter((item) =>
-    can(routes.find((route) => route.id === item.id)?.permission),
-  );
+  return items
+    .map((item) => {
+      if (item.children && item.children.length > 0) {
+        const filteredChildren = filterV2NavItems(item.children, can, routes);
+        return {
+          ...item,
+          children: filteredChildren,
+        };
+      }
+      return item;
+    })
+    .filter((item) => {
+      if (item.children !== undefined) {
+        return item.children.length > 0;
+      }
+      return can(routes.find((route) => route.id === item.id)?.permission);
+    });
 }
 
 /** Như `filterV2NavItems`, và bỏ luôn nhóm không còn mục nào */
