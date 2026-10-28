@@ -65,10 +65,18 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   // Toàn bộ các module/mục con có thể truy cập
   const allAvailableItems = React.useMemo(() => {
     const list: V2SidebarNavItem[] = [];
+    const addItem = (it: V2SidebarNavItem) => {
+      if (!list.some((existing) => existing.id === it.id)) {
+        list.push(it);
+      }
+    };
+
     effectiveSections.forEach((sec) => {
       sec.items.forEach((item) => {
-        if (!list.some((existing) => existing.id === item.id)) {
-          list.push(item);
+        if (item.children && item.children.length > 0) {
+          item.children.forEach(addItem);
+        } else {
+          addItem(item);
         }
       });
     });

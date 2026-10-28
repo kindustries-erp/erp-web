@@ -9,6 +9,7 @@ export * from "./v2-sidebar-bottom";
 export * from "./v2-sidebar-header";
 export * from "./v2-sidebar-nav-item";
 export * from "./v2-sidebar-section";
+export * from "./v2-sidebar-subgroup";
 export * from "./v2-tab-item";
 export * from "./v2-topbar";
 export * from "./v2-user-badge";

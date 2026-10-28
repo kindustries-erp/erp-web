@@ -3,6 +3,7 @@ import { cn } from "@/v2/shared/utils/cn";
 import { V2SidebarHeader } from "@/v2/shared/components/molecules/v2-sidebar-header";
 import { V2SidebarSection } from "@/v2/shared/components/molecules/v2-sidebar-section";
 import { V2SidebarNavItem } from "@/v2/shared/components/molecules/v2-sidebar-nav-item";
+import { V2SidebarSubGroup } from "@/v2/shared/components/molecules/v2-sidebar-subgroup";
 import { V2SidebarBottom } from "@/v2/shared/components/molecules/v2-sidebar-bottom";
 import { V2SidebarProps, V2SidebarSectionData } from "./V2Sidebar.type";
 import { useV2Sidebar } from "./V2Sidebar.hook";
@@ -70,17 +71,31 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
             defaultOpen={openSections[section.id] !== false}
             onToggle={() => toggleSection(section.id)}
           >
-            {section.items.map((item) => (
-              <V2SidebarNavItem
-                key={item.id}
-                label={item.label}
-                icon={item.icon}
-                isActive={activeId === item.id}
-                badgeCount={item.badgeCount}
-                isCollapsed={isCollapsed}
-                onClick={() => onNavigate?.(item)}
-              />
-            ))}
+            {section.items.map((item) => {
+              if (item.children && item.children.length > 0) {
+                return (
+                  <V2SidebarSubGroup
+                    key={item.id}
+                    item={item}
+                    activeId={activeId}
+                    isCollapsed={isCollapsed}
+                    onNavigate={onNavigate}
+                  />
+                );
+              }
+
+              return (
+                <V2SidebarNavItem
+                  key={item.id}
+                  label={item.label}
+                  icon={item.icon}
+                  isActive={activeId === item.id}
+                  badgeCount={item.badgeCount}
+                  isCollapsed={isCollapsed}
+                  onClick={() => onNavigate?.(item)}
+                />
+              );
+            })}
           </V2SidebarSection>
         ))}
       </nav>

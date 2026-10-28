@@ -8,6 +8,8 @@ export interface V2SidebarItem {
   icon: LucideIcon;
   href: string;
   badgeCount?: number;
+  children?: V2SidebarItem[];
+  defaultOpen?: boolean;
 }
 
 export type V2SidebarNavItem = V2SidebarItem;

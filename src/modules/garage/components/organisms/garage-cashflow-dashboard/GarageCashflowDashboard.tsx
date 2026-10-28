@@ -65,7 +65,7 @@ export const GarageCashflowDashboard: React.FC<
         onCreate={handleOpenExport}
         createLabel={t("garage.cashflow.exportExcel", "Xuất Excel")}
         createIcon={
-          <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-600" />
+          <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
         }
         createActions={createActions}
       >
