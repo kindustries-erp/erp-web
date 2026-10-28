@@ -39,7 +39,7 @@ graph LR
      - Nếu task có file spec UI/Hook (`*.spec.tsx`): Dùng `bunx vitest run <spec>` hoặc `bunx vitest related <file> --run`.
      - Nếu là component UI/page/layout thông thường không có spec: Dùng `bunx tsc --noEmit` để type check nhanh (< 3s).
      - **TUYỆT ĐỐI CẤM** chạy full test (`bun run test`) hoặc full build (`bun run build`) ở từng task nhỏ!
-   - *Final Gate (Phase 4)*: Chỉ chạy `bun run verify:final` DUY NHẤT một lần ở Task 4.1.1, **sau khi đã commit và `git pull --rebase`** (script yêu cầu working tree sạch), rồi mới push `--no-verify`.
+   - *Final Gate (Phase 4)*: Commit (pre-commit chạy lint + `vitest related`) → `git pull --rebase` → `git push` (pre-push chạy `type:check`). Full test/build/check:ci chạy trên GitHub CI; xác nhận CI xanh ở Task 4.1.1. `bun run verify:final` là lệnh local tùy chọn.
 
 5. **Session Checkpoint Protocol (Pause & Resume)**:
    - Hỗ trợ tạm dừng và tiếp tục mượt mà. Khi tạm dừng, bắt buộc ghi log vào mục `## ⏸️ Session Checkpoint`.
@@ -118,7 +118,7 @@ Phân chia toàn bộ công việc theo hệ thống đánh số 3 cấp **`X.Y.
 | **Component có file test spec** | `bunx vitest run src/modules/.../<file>.spec.tsx` | Chỉ chạy đúng file spec |
 | **Component / Hook thay đổi** | `bunx vitest related src/modules/.../<file>.tsx --run` | Scoped test |
 | **Page / Drawer / Layout** | `bunx tsc --noEmit` | Kiểm tra type strict |
-| **Final Gate (Task 4.1.1)** | `bun run verify:final` | Chạy DUY NHẤT ở Phase 4 trên commit cuối |
+| **Final Gate (Task 4.1.1)** | CI GitHub xanh: job check, test, build | Xác nhận sau khi push trên commit cuối; `verify:final` local là tùy chọn |
 
 #### Cấu trúc một Task chuẩn:
 ```markdown
@@ -169,7 +169,7 @@ Khi bắt đầu lại phiên làm việc (User gõ `tiếp tục`, `continue`, 
 4. **Thực thi liền mạch**: Bắt tay làm tiếp ngay từ đúng bước trong checkpoint mà không làm lại từ đầu.
 
 #### 4. Nghiệm thu, Cập nhật Tri thức & Báo cáo (Walkthrough & Knowledge Sync)
-- **Nghiệm thu cuối cùng (Final Gate)**: Chạy `bun run verify:final` DUY NHẤT một lần ở cuối toàn bộ kế hoạch, sau khi commit và `git pull --rebase`; sau đó push bằng `--no-verify`.
+- **Nghiệm thu cuối cùng (Final Gate)**: Sau khi commit và `git pull --rebase`, push (pre-push chạy `type:check`) rồi xác nhận CI GitHub xanh trên commit cuối.
 - **Knowledge & Skill Sync (Bắt buộc kiểm tra & cập nhật liền sau khi xong task)**:
   - Nếu có thay đổi cấu trúc component, props, hooks, stores, hoặc semantic tokens: cập nhật ngay file Module Skill tương ứng (như `v2-layout`, `app-store`, `drawer-document-traceability`, ...) hoặc tạo skill mới.
   - Liên kết skill mới vào `erp-web-current-truth`.
@@ -251,10 +251,10 @@ Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tươ
 
 ### Phase 4: QC & Knowledge Sync
 #### 4.1 Automated Tests & CI Check
-- [ ] **Task 4.1.1: Chạy Full Build & Pre-commit Check**
+- [ ] **Task 4.1.1: Xác nhận CI GitHub xanh trên commit cuối**
   - **Phân hệ**: `QC` | **Ưu tiên**: `P0`
-  - **DoD**: 100% test suites pass, không có lỗi ESLint, Prettier và TypeScript.
-  - **Verification**: `bun run verify:final`
+  - **DoD**: CI xanh (job check, test, build): 100% test pass, không lỗi ESLint, Prettier và TypeScript.
+  - **Verification**: CI GitHub của nhánh đích xanh; tùy chọn `bun run verify:final` local.
 
 #### 4.2 Knowledge & Skill Sync
 - [ ] **Task 4.2.1: Đồng bộ Module Skill (Nếu có thay đổi UI/Layout/Store/Contract)**

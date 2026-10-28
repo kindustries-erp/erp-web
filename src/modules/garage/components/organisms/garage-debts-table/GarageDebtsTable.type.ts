@@ -20,8 +20,6 @@ export interface GarageDebtsTableProps {
     licensePlate?: string;
   }) => void;
   onOpenExportDrawer: (context: GarageDebtsExportContext) => void;
-  canSyncGarage?: boolean;
-  onSyncCases?: () => void;
   onCreateCashflow?: (params: CreateCustomerCashflowParams) => void;
 }
 
