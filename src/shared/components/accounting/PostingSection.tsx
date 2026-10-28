@@ -249,17 +249,17 @@ export function PostingSection({
             </div>
           </div>
 
-          <div className="border border-gray-300 rounded-lg overflow-hidden text-sm w-full shadow-sm bg-white">
-            <div className="grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-gray-300">
-              <div className="bg-white">
-                <div className="bg-gray-50 border-b border-gray-200 px-3 py-2 font-bold text-center text-gray-700 text-[13px]">
+          <div className="border border-border-light dark:border-white/[0.06] rounded-lg overflow-hidden text-sm w-full bg-surface dark:bg-zinc-900/30">
+            <div className="grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-border-light dark:divide-white/[0.04]">
+              <div className="bg-transparent">
+                <div className="bg-muted/50 dark:bg-white/[0.03] border-b border-border-light dark:border-white/[0.05] px-3 py-2 font-semibold text-center text-muted-foreground text-xs uppercase tracking-wider">
                   NỢ
                 </div>
                 <div className="px-3 py-3 min-h-[8rem] space-y-1.5">
                   {debitLines.map((l) => (
                     <div
                       key={l.id}
-                      className="flex justify-between items-center text-gray-700 text-[13px] gap-3"
+                      className="flex justify-between items-center text-foreground text-xs gap-3"
                     >
                       <span
                         className="font-medium truncate pr-2"
@@ -267,22 +267,22 @@ export function PostingSection({
                       >
                         {resolveAccountCode(l.accountId)}
                       </span>
-                      <span className="whitespace-nowrap font-medium">
+                      <span className="whitespace-nowrap font-mono font-medium">
                         {money(l.debit)}
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="bg-white">
-                <div className="bg-gray-50 border-b border-gray-200 px-3 py-2 font-bold text-center text-gray-700 text-[13px]">
+              <div className="bg-transparent">
+                <div className="bg-muted/50 dark:bg-white/[0.03] border-b border-border-light dark:border-white/[0.05] px-3 py-2 font-semibold text-center text-muted-foreground text-xs uppercase tracking-wider">
                   CÓ
                 </div>
                 <div className="px-3 py-3 min-h-[8rem] space-y-1.5">
                   {creditLines.map((l) => (
                     <div
                       key={l.id}
-                      className="flex justify-between items-center text-gray-700 text-[13px] gap-3"
+                      className="flex justify-between items-center text-foreground text-xs gap-3"
                     >
                       <span
                         className="font-medium truncate pr-2"
@@ -290,7 +290,7 @@ export function PostingSection({
                       >
                         {resolveAccountCode(l.accountId)}
                       </span>
-                      <span className="whitespace-nowrap font-medium">
+                      <span className="whitespace-nowrap font-mono font-medium">
                         {money(l.credit)}
                       </span>
                     </div>
@@ -298,14 +298,14 @@ export function PostingSection({
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 divide-x divide-gray-300 border-t border-gray-300 bg-gray-50">
+            <div className="grid grid-cols-2 divide-x divide-border-light dark:divide-white/[0.04] border-t border-border-light dark:border-white/[0.06] bg-muted/30 dark:bg-zinc-900/40">
               <div className="px-3 py-2 text-right">
-                <span className="font-bold text-emerald-700 text-[13px]">
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-xs">
                   Tổng Nợ: {totalDebit > 0 ? money(totalDebit) : "0 đ"}
                 </span>
               </div>
               <div className="px-3 py-2 text-right">
-                <span className="font-bold text-emerald-700 text-[13px]">
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-xs">
                   Tổng Có: {totalCredit > 0 ? money(totalCredit) : "0 đ"}
                 </span>
               </div>
@@ -355,25 +355,32 @@ export function PostingSection({
         </div>
       </div>
 
-      <div className="border rounded-md overflow-hidden bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+      <div className="border border-border-light dark:border-white/[0.06] rounded-lg overflow-hidden bg-surface dark:bg-zinc-900/30">
+        <table className="w-full text-xs">
+          <thead className="bg-muted/50 dark:bg-white/[0.03] border-b border-border-light dark:border-white/[0.05] text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             <tr>
-              <th className="px-3 py-2 text-left font-medium w-[30%]">
+              <th className="px-3 py-2 text-left font-semibold w-[30%] border-r border-border-light dark:border-white/[0.04]">
                 Tài khoản
               </th>
-              <th className="px-3 py-2 text-right font-medium w-[20%]">Nợ</th>
-              <th className="px-3 py-2 text-right font-medium w-[20%]">Có</th>
-              <th className="px-3 py-2 text-left font-medium w-[25%]">
+              <th className="px-3 py-2 text-right font-semibold w-[20%] border-r border-border-light dark:border-white/[0.04]">
+                Nợ
+              </th>
+              <th className="px-3 py-2 text-right font-semibold w-[20%] border-r border-border-light dark:border-white/[0.04]">
+                Có
+              </th>
+              <th className="px-3 py-2 text-left font-semibold w-[25%] border-r border-border-light dark:border-white/[0.04]">
                 Diễn giải
               </th>
               <th className="px-3 py-2 w-[5%]"></th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-border-light/60 dark:divide-white/[0.03]">
             {lines.map((line: any) => (
-              <tr key={line.id} className="hover:bg-gray-50">
-                <td className="px-2 py-2 max-w-[220px]">
+              <tr
+                key={line.id}
+                className="hover:bg-muted/40 dark:hover:bg-white/[0.02] transition-colors"
+              >
+                <td className="px-2 py-1.5 max-w-[220px] border-r border-border-light dark:border-white/[0.04]">
                   <Combobox
                     options={accountOptions}
                     value={line.accountId}
@@ -382,10 +389,10 @@ export function PostingSection({
                     className="w-full"
                   />
                 </td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-1.5 border-r border-border-light dark:border-white/[0.04]">
                   <input
                     type="text"
-                    className="w-full h-8 px-2 text-right border rounded"
+                    className="w-full h-8 px-2 text-right border border-input rounded bg-background font-mono text-xs tabular-nums"
                     value={
                       line.debit
                         ? new Intl.NumberFormat("vi-VN").format(line.debit)
@@ -397,10 +404,10 @@ export function PostingSection({
                     }}
                   />
                 </td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-1.5 border-r border-border-light dark:border-white/[0.04]">
                   <input
                     type="text"
-                    className="w-full h-8 px-2 text-right border rounded"
+                    className="w-full h-8 px-2 text-right border border-input rounded bg-background font-mono text-xs tabular-nums"
                     value={
                       line.credit
                         ? new Intl.NumberFormat("vi-VN").format(line.credit)
@@ -412,39 +419,41 @@ export function PostingSection({
                     }}
                   />
                 </td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-1.5 border-r border-border-light dark:border-white/[0.04]">
                   <input
                     type="text"
-                    className="w-full h-8 px-2 border rounded"
+                    className="w-full h-8 px-2 border border-input rounded bg-background text-xs"
                     value={line.description}
                     onChange={(e) =>
                       updateLine(line.id, "description", e.target.value)
                     }
                   />
                 </td>
-                <td className="px-2 py-2 text-center">
+                <td className="px-2 py-1.5 text-center">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-gray-500 hover:text-red-600"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
                     onClick={() => removeLine(line.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </td>
               </tr>
             ))}
           </tbody>
-          <tfoot className="bg-gray-50 border-t font-medium">
+          <tfoot className="bg-muted/40 dark:bg-zinc-900/40 border-t border-border-light dark:border-white/[0.06] font-semibold text-xs">
             <tr>
-              <td className="px-3 py-2 text-right">Tổng cộng:</td>
+              <td className="px-3 py-2 text-right border-r border-border-light dark:border-white/[0.04] text-muted-foreground">
+                Tổng cộng:
+              </td>
               <td
-                className={`px-3 py-2 text-right ${!isBalanced ? "text-red-600" : "text-green-600"}`}
+                className={`px-3 py-2 text-right border-r border-border-light dark:border-white/[0.04] font-mono tabular-nums ${!isBalanced ? "text-destructive font-bold" : "text-emerald-600 dark:text-emerald-400 font-bold"}`}
               >
                 {money(totalDebit)}
               </td>
               <td
-                className={`px-3 py-2 text-right ${!isBalanced ? "text-red-600" : "text-green-600"}`}
+                className={`px-3 py-2 text-right border-r border-border-light dark:border-white/[0.04] font-mono tabular-nums ${!isBalanced ? "text-destructive font-bold" : "text-emerald-600 dark:text-emerald-400 font-bold"}`}
               >
                 {money(totalCredit)}
               </td>
