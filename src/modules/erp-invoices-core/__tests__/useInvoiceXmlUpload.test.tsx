@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { useInvoiceXmlUpload } from "../hooks/useInvoiceXmlUpload";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 
@@ -30,8 +32,21 @@ describe("useInvoiceXmlUpload", () => {
 
   const mockOnImported = vi.fn();
 
+  function createWrapper() {
+    const client = new QueryClient({
+      defaultOptions: { mutations: { retry: false } },
+    });
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      );
+    };
+  }
+
   it("should initialize in select step", () => {
-    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported));
+    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.step).toBe("select");
     expect(result.current.direction).toBe("IN");
@@ -40,7 +55,9 @@ describe("useInvoiceXmlUpload", () => {
   });
 
   it("should add xml files only", () => {
-    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported));
+    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported), {
+      wrapper: createWrapper(),
+    });
 
     const xmlFile = new File([""], "test.xml", { type: "text/xml" });
     const txtFile = new File([""], "test.txt", { type: "text/plain" });
@@ -54,7 +71,9 @@ describe("useInvoiceXmlUpload", () => {
   });
 
   it("should remove file by id", () => {
-    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported));
+    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported), {
+      wrapper: createWrapper(),
+    });
     const xmlFile = new File([""], "test.xml", { type: "text/xml" });
 
     act(() => {
@@ -80,7 +99,9 @@ describe("useInvoiceXmlUpload", () => {
       direction: "IN",
     });
 
-    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported));
+    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported), {
+      wrapper: createWrapper(),
+    });
     const xmlFile = new File([""], "test.xml", { type: "text/xml" });
 
     act(() => {
@@ -98,7 +119,9 @@ describe("useInvoiceXmlUpload", () => {
   });
 
   it("should reset correctly", () => {
-    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported));
+    const { result } = renderHook(() => useInvoiceXmlUpload(mockOnImported), {
+      wrapper: createWrapper(),
+    });
 
     act(() => {
       result.current.handleReset();
