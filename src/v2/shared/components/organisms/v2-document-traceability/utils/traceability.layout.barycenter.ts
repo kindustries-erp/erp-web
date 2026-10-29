@@ -3,7 +3,6 @@ import type {
   TraceabilityNode,
   TraceabilityStageKey,
 } from "../types/traceability.type";
-import { getStageForDocType } from "./traceability.helper";
 
 export interface StageNodeGroup {
   stageKey: TraceabilityStageKey;

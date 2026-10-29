@@ -45,4 +45,3 @@ export function getDocTypeIcon(
       return null;
   }
 }
-
