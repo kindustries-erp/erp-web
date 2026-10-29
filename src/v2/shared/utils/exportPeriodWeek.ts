@@ -1,7 +1,7 @@
 import type {
   V2ExportPeriodOption,
   V2PeriodLabelFormatter,
-} from "./exportPeriod";
+} from "./exportPeriod.types";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 const toIsoDay = (d: Date) =>
