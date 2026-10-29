@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import {
   useInvoiceXmlUpload,
@@ -17,7 +18,6 @@ export interface UseInvoiceImportSyncDrawerParams {
   onClose: () => void;
   onImported: (direction: Direction) => void;
   initialDirection: Direction;
-  t: (key: string, fallback: string) => string;
 }
 
 export function useInvoiceImportSyncDrawer({
@@ -25,8 +25,8 @@ export function useInvoiceImportSyncDrawer({
   onClose,
   onImported,
   initialDirection,
-  t,
 }: UseInvoiceImportSyncDrawerParams) {
+  const { t } = useTranslation("erpInvoices");
   const canEditInvoice = useHasPermission(
     ErpResource.INVOICES,
     ErpAction.UPDATE,
@@ -115,7 +115,13 @@ export function useInvoiceImportSyncDrawer({
     if (res) {
       addSyncLog(
         res.note ||
-          `Đã lấy ${res.imported} hóa đơn mới, bỏ qua ${res.skipped} trùng, xếp hàng ${res.xmlDownloadQueued} file XML.`,
+          t("syncProgressSummary", {
+            defaultValue:
+              "Đã lấy {{imported}} hóa đơn mới, bỏ qua {{skipped}} trùng, xếp hàng {{queued}} file XML.",
+            imported: res.imported,
+            skipped: res.skipped,
+            queued: res.xmlDownloadQueued,
+          }),
         "success",
       );
       onImported(direction);
@@ -138,7 +144,9 @@ export function useInvoiceImportSyncDrawer({
       toast.success(res.message);
     } catch (e: any) {
       const message =
-        e.response?.data?.message || e.message || "Lỗi tải lại XML";
+        e.response?.data?.message ||
+        e.message ||
+        t("bulkXmlError", "Lỗi tải lại XML");
       failSync(message);
       toast.error(message);
     } finally {

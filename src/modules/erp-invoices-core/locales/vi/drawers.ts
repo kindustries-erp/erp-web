@@ -8,4 +8,14 @@ export const erpInvoicesViDrawers = {
   cancelInvoiceMessage: "Bạn có chắc muốn hủy hóa đơn {{invoiceNo}}?",
   cancelInvoiceConfirm: "Đồng ý hủy",
   downloadFileError: "Lỗi tải xuống file",
+  bulkXml: "Tải lại XML",
+  bulkXmlLoading: "Đang xử lý...",
+  bulkXmlError: "Lỗi tải lại XML",
+  importActionPreview: "Xem trước & Import ({{count}} file)",
+  syncDrawerCloseTitle: "Đóng mà không lưu?",
+  syncDrawerCloseMessage: "Thay đổi của bạn sẽ không được lưu.",
+  syncDrawerCloseConfirm: "Đóng",
+  syncDrawerCloseCancel: "Tiếp tục chỉnh sửa",
+  syncProgressSummary:
+    "Đã lấy {{imported}} hóa đơn mới, bỏ qua {{skipped}} trùng, xếp hàng {{queued}} file XML.",
 };

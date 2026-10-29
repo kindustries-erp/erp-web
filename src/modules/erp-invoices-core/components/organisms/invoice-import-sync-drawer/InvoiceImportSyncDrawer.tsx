@@ -23,7 +23,6 @@ export function InvoiceImportSyncDrawer({
     onClose,
     onImported,
     initialDirection,
-    t: (key, fallback) => t(key, fallback),
   });
 
   const actions = buildInvoiceSyncActions({
@@ -111,10 +110,13 @@ export function InvoiceImportSyncDrawer({
       />
       <V2ConfirmModal
         open={s.showDrawerConfirm}
-        title="Đóng mà không lưu?"
-        message="Thay đổi của bạn sẽ không được lưu."
-        confirmLabel="Đóng"
-        cancelLabel="Tiếp tục chỉnh sửa"
+        title={t("syncDrawerCloseTitle", "Đóng mà không lưu?")}
+        message={t(
+          "syncDrawerCloseMessage",
+          "Thay đổi của bạn sẽ không được lưu.",
+        )}
+        confirmLabel={t("syncDrawerCloseConfirm", "Đóng")}
+        cancelLabel={t("syncDrawerCloseCancel", "Tiếp tục chỉnh sửa")}
         variant="danger"
         onConfirm={() => {
           s.setShowDrawerConfirm(false);

@@ -7,6 +7,7 @@ import { erpInvoicesViNetoff } from "./netoff";
 import { erpInvoicesViLookup } from "./lookup";
 import { erpInvoicesViDrawers } from "./drawers";
 import { erpInvoicesViAdvancedSync } from "./advancedSync";
+import { erpInvoicesViPortal } from "./portal";
 
 export const erpInvoicesVi = {
   ...erpInvoicesViPage,
@@ -17,4 +18,5 @@ export const erpInvoicesVi = {
   ...erpInvoicesViLookup,
   ...erpInvoicesViDrawers,
   ...erpInvoicesViAdvancedSync,
+  ...erpInvoicesViPortal,
 };
