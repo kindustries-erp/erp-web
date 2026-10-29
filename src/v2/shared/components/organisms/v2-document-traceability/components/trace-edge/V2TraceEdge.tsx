@@ -6,6 +6,7 @@ import {
   parseEdgeLabel,
   type EdgeLabelTone,
 } from "../../utils/traceability.edge-label";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 
 const TONE_CLASS: Record<EdgeLabelTone, string> = {
   in: "text-success font-bold",
@@ -56,35 +57,48 @@ export const V2TraceEdge = React.memo(function V2TraceEdge({
           >
             {parts.kind === "amount" && (
               <div className="flex max-w-[130px] flex-col items-center justify-center px-1 py-0.5 text-center leading-tight">
-                <span className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg">
+                <V2Text
+                  as="span"
+                  className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg"
+                >
                   {parts.title}
-                </span>
+                </V2Text>
                 {parts.value && (
-                  <span
+                  <V2Text
+                    as="span"
                     className={cn(
                       "whitespace-nowrap font-mono text-[10px]",
                       TONE_CLASS[parts.tone],
                     )}
                   >
                     {parts.value}
-                  </span>
+                  </V2Text>
                 )}
               </div>
             )}
             {parts.kind === "note" && (
               <div className="flex max-w-[130px] flex-col items-center justify-center px-1 py-0.5 text-center leading-tight">
-                <span className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg">
+                <V2Text
+                  as="span"
+                  className="whitespace-nowrap text-[9px] font-medium tracking-tight text-muted-fg"
+                >
                   {parts.title}
-                </span>
-                <span className="whitespace-nowrap text-[9px] italic text-muted-fg">
+                </V2Text>
+                <V2Text
+                  as="span"
+                  className="whitespace-nowrap text-[9px] italic text-muted-fg"
+                >
                   {parts.note}
-                </span>
+                </V2Text>
               </div>
             )}
             {parts.kind === "plain" && (
-              <div className="max-w-[130px] break-words px-1 py-0.5 text-center text-[10px] font-medium leading-tight">
+              <V2Text
+                as="div"
+                className="max-w-[130px] break-words px-1 py-0.5 text-center text-[10px] font-medium leading-tight"
+              >
                 {parts.text}
-              </div>
+              </V2Text>
             )}
           </div>
         </EdgeLabelRenderer>

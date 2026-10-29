@@ -231,7 +231,7 @@ Từ phiên bản V2, hệ thống luồng chứng từ chuyển sang sử dụn
 
 ---
 
-## 11. Quy Chuẩn UI Enhancement & Iconography V2
+## 11. Quy Chuẩn UI Enhancement, Iconography V2 & Theme Harmonization
 
 1. **Bộ Icon Chuyên Biệt Theo Loại Chứng Từ (`traceNode.helper.tsx`)**:
    - Mỗi loại chứng từ hiển thị kèm icon Lucide đặc trưng trong Badge:
@@ -246,22 +246,33 @@ Từ phiên bản V2, hệ thống luồng chứng từ chuyển sang sử dụn
      - `JOURNAL_ENTRY`: `BookOpen`
      - `BATCH` / `RAW_MATERIAL`: `Layers` / `Package`
 
-2. **Thẻ Node Tương Tác Hiện Đại (Micro-Elevation & Active Glow)**:
+2. **Thẻ Node Tương Tác Hiện Đại (Micro-Elevation & Theme Harmonization)**:
    - Hiệu ứng GPU-accelerated hover: `hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 will-change-transform`.
-   - Active highlight khi node được chọn: viền `border-2 border-primary/60 shadow-md shadow-primary/10 ring-2 ring-primary/30`.
+   - Viền thẻ tinh xảo bao quanh 4 cạnh với độ rực nhẹ matching bản chất tài chính:
+     - Chi tiền (HĐ Mua, UNC, Phiếu chi): `border-warning/30 border-l-[3px] border-l-warning hover:border-warning/60`.
+     - Thu tiền (HĐ Bán, GBC, Phiếu thu): `border-success/30 border-l-[3px] border-l-success hover:border-success/60`.
+     - Chứng từ đang xem: `border-2 border-primary/60 border-l-[3px] border-l-primary shadow-md shadow-primary/10 ring-2 ring-primary/30`.
+     - Trung tính (Kho, Sổ cái): `border border-border/80 border-l-[3px] border-l-muted-fg/40 hover:border-border`.
+   - Tự động tương thích 5 Theme (`Default`, `Classic Light`, `Classic Dark`, `OrcaQ`, `Midnight Dark`): ở Dark Theme, các thẻ có nền slate/charcoal sâu thẳm và viền phát sáng nhẹ giống hệt phong cách kiến trúc của 200Lab.
    - Tuyệt đối không dùng `backdrop-filter: blur(...)` bên trong các node canvas để duy trì hiệu năng 60-120fps khi pan/zoom.
 
-3. **Stage Swimlanes Chuẩn Khối Nghiệp Vụ (`V2TraceStageGroup.tsx`)**:
-   - Đường viền mờ sang trọng `border-border/80`, nền chuyển sắc nhẹ `bg-gradient-to-b from-muted/30 via-muted/10 to-transparent`.
-   - Stage Badge dạng Pill đánh số thứ tự luồng trực quan: `01`, `02`, `03`, `04` kèm tiêu đề giai đoạn.
+3. **Stage Swimlanes Chuẩn Khối Nghiệp Vụ (Zone Headers) (`V2TraceStageGroup.tsx`)**:
+   - Đường viền mờ sang trọng `border-border/70`, nền chuyển sắc nhẹ `bg-gradient-to-b from-surface/40 via-surface/10 to-transparent`.
+   - Stage Badge dạng Pill đánh số thứ tự luồng trực quan: `01`, `02`, `03`, `04` kèm Icon phân hệ đặc trưng:
+     - `ORDER_STOCK`: `<Package className="h-3 w-3" />`
+     - `INVOICE`: `<Receipt className="h-3 w-3" />`
+     - `PAYMENT`: `<CreditCard className="h-3 w-3" />`
+     - `GENERAL_LEDGER`: `<BookOpen className="h-3 w-3" />`
 
-4. **Nút Chuyển Hướng Bố Cục Chuẩn Xác (Toolbar & Canvas Controls)**:
-   - Đổi icon chuyển đổi bố cục từ `RotateCw` gây hiểu lầm thành `Rows3` (khi đang ngang, bấm để chuyển sang dọc) và `Columns3` (khi đang dọc, bấm để chuyển sang ngang).
-   - Tích hợp nút chuyển hướng trực tiếp lên thanh công cụ trên cùng (`V2TraceToolbar`) khi ở chế độ `canvas`.
+4. **Nút Chuyển Hướng Bố Cục Chuẩn Xác (Canvas Controls Only)**:
+   - Nút chuyển hướng bố cục chỉ đặt duy nhất tại cụm Controls góc dưới Canvas (đã loại bỏ khỏi Toolbar trên cùng để tránh trùng lặp và rối mắt).
+   - Khắc phục triệt để lỗi icon bị bôi đen đặc ruột do CSS `@xyflow/react` áp dụng `fill: currentColor` bằng các lớp ghi đè:
+     `[&_svg]:!fill-none [&_svg]:!stroke-current [&_rect]:!fill-none [&_svg]:!max-w-[14px] [&_svg]:!max-h-[14px]`.
+   - Hiển thị icon `Rows3` (khi đang ngang để chuyển sang dọc) và `Columns3` (khi đang dọc để chuyển sang ngang) với đường nét rỗng, sắc sảo.
 
-5. **Lưới Chấm Tối Giản & Chú Thích Dòng Tiền (Dot Grid & Legend)**:
-   - Sử dụng `<Background variant={BackgroundVariant.Dots} gap={16} size={1} />` tạo độ sâu không gian mà không gây rối mắt.
-   - Thêm `<V2TraceCanvasLegend />` góc trái dưới giải thích màu sắc dòng tiền:
+5. **Lưới Chấm Tối Giản & Thanh Chú Thích Ngang Đáy (`V2TraceCanvasLegend.tsx`)**:
+   - Sử dụng `<Background variant={BackgroundVariant.Dots} gap={22} size={1.2} />` tạo độ sâu không gian theo token `--border`.
+   - Thanh chú thích nổi dạng viên thuốc tròn trịa (`rounded-full border border-border/80 bg-surface/95 px-4 py-1.5 shadow-sm`) nằm ngang đáy Canvas:
      - 🟢 Dòng tiền vào (Thu)
      - 🟠 Dòng tiền ra (Chi)
      - 🟣 Chứng từ đang chọn (Active)

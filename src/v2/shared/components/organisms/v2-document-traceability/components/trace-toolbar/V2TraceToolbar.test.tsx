@@ -45,35 +45,6 @@ describe("V2TraceToolbar", () => {
     fireEvent.click(screen.getByLabelText("Toàn màn hình"));
     expect(onToggleFullscreen).toHaveBeenCalledTimes(1);
   });
-
-  it("toggles layout direction when in canvas view mode", () => {
-    const onToggleDirection = vi.fn();
-    render(
-      <V2TraceToolbar
-        {...baseProps({
-          viewMode: "canvas",
-          direction: "horizontal",
-          onToggleDirection,
-        })}
-      />,
-    );
-    const btn = screen.getByLabelText("Đổi sang bố cục Dọc");
-    expect(btn).toBeInTheDocument();
-    fireEvent.click(btn);
-    expect(onToggleDirection).toHaveBeenCalledTimes(1);
-  });
-
-  it("hides layout direction toggle when in non-canvas view mode", () => {
-    render(
-      <V2TraceToolbar
-        {...baseProps({
-          viewMode: "table",
-          onToggleDirection: vi.fn(),
-        })}
-      />,
-    );
-    expect(screen.queryByLabelText("Đổi sang bố cục Dọc")).toBeNull();
-  });
 });
 
 describe("V2TraceLinkTypeMenu", () => {

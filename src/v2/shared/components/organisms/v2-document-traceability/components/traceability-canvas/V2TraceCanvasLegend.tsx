@@ -9,7 +9,7 @@ export const V2TraceCanvasLegend = React.memo(function V2TraceCanvasLegend() {
   return (
     <div
       data-testid="v2-trace-canvas-legend"
-      className="pointer-events-auto absolute bottom-3.5 right-3.5 z-20 flex flex-wrap items-center gap-3.5 rounded-lg border border-border/80 bg-surface/90 px-3 py-1.5 shadow-2xs backdrop-blur-xs"
+      className="pointer-events-auto absolute bottom-3.5 right-3.5 z-20 flex flex-wrap items-center gap-4 rounded-full border border-border/80 bg-surface/95 px-4 py-1.5 shadow-sm"
     >
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-success ring-2 ring-success/20" />
@@ -34,4 +34,3 @@ export const V2TraceCanvasLegend = React.memo(function V2TraceCanvasLegend() {
     </div>
   );
 });
-

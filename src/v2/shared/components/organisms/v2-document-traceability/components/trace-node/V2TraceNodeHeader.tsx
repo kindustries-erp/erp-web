@@ -152,7 +152,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
               size="icon-xs"
               className={cn(
                 actionClass,
-                "text-muted-fg hover:bg-muted hover:text-foreground ",
+                "text-muted-fg hover:bg-muted hover:text-foreground",
               )}
               title={
                 isManual

@@ -135,7 +135,7 @@ function CanvasInner({
               onClick={onToggleDirection}
               title={toggleLabel}
               aria-label={toggleLabel}
-              className="!flex !items-center !justify-center hover:!bg-surface-hover"
+              className="!flex !items-center !justify-center hover:!bg-surface-hover [&_rect]:!fill-none [&_svg]:!max-h-[14px] [&_svg]:!max-w-[14px] [&_svg]:!fill-none [&_svg]:!stroke-current"
             >
               {direction === "horizontal" ? (
                 <Rows3 className="h-3.5 w-3.5 text-muted-fg" />

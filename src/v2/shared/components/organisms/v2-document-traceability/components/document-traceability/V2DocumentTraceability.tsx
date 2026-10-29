@@ -79,8 +79,6 @@ export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
         onSelectLinkType={selectLinkType}
         viewMode={viewMode}
         onViewModeChange={trace.setViewMode}
-        direction={direction}
-        onToggleDirection={trace.toggleDirection}
         isFullscreen={isFullscreen}
         onToggleFullscreen={trace.toggleFullscreen}
       />
