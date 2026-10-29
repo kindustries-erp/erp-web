@@ -21,6 +21,7 @@ export const v2EnTable: V2Dictionary["v2"]["table"] = {
   clearFilter: "Clear filter",
   advancedFilter: "Advanced filter",
   filterColumn: "Filter column {{label}}",
+  filterCount: "Filter ({{count}})",
   clearAllFilters: "Clear filters ({{count}})",
   blank: "(Blank)",
   selectAllMatching: "(Select all search results)",

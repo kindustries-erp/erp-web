@@ -198,6 +198,12 @@ export const erpInvoicesEn = {
   // Bulk Edit Drawer
   bulkActions: "Actions",
   bulkAssignAll: "Bulk Assign",
+  bulkAccountingGroup: "Accounting Operations",
+  bulkPostAll: "Bulk Post",
+  bulkSuggestNetOff: "Suggest Statement Net-Off",
+  bulkUnpostAll: "Bulk Unpost",
+  bulkDownloadGroup: "Download & Export",
+  bulkExportPdfZip: "Export PDF / Download ZIP",
 
   // Sinvoice Draft Sync - toasts & notifications
   "sinvoiceDraft.syncSuccess":

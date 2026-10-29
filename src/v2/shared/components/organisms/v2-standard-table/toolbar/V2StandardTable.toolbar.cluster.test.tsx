@@ -63,4 +63,30 @@ describe("V2TableToolbarCluster", () => {
     expect(filterBtnIdx).toBeGreaterThanOrEqual(0);
     expect(colBtnIdx).toBeLessThan(filterBtnIdx);
   });
+
+  it("renders only V2TableFilterChip and not duplicate filter button when activeFilterCount > 0", () => {
+    const onFilterToggle = vi.fn();
+    const onClearAllFilters = vi.fn();
+    render(
+      <V2TableToolbarCluster
+        {...baseProps}
+        activeFilterCount={2}
+        onClearAllFilters={onClearAllFilters}
+        config={{ onFilterToggle }}
+      />,
+    );
+
+    expect(screen.getByText("(2)")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Xóa bộ lọc (2)" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Bộ lọc (2)" }));
+    expect(onFilterToggle).toHaveBeenCalledTimes(1);
+
+    const standaloneFilterButtons = screen
+      .getAllByRole("button")
+      .filter((b) => b.getAttribute("aria-label") === "Bộ lọc");
+    expect(standaloneFilterButtons).toHaveLength(0);
+  });
 });
