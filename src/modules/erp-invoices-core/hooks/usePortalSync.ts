@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { parseISO, isValid, isBefore, differenceInDays } from "date-fns";
+import { parseISO, isValid, isBefore } from "date-fns";
 import {
   erpInvoicesCoreApi,
   type PortalSyncResult,
@@ -55,23 +55,23 @@ export function usePortalSync() {
   );
 
   const sync = useCallback(
-    async (type: "purchase" | "sold") => {
-      if (!dateFrom || !dateTo) {
+    async (
+      type: "purchase" | "sold",
+      range?: { dateFrom: string; dateTo: string },
+    ) => {
+      const from = range?.dateFrom ?? dateFrom;
+      const to = range?.dateTo ?? dateTo;
+      if (!from || !to) {
         toast.error("Vui lòng chọn từ ngày và đến ngày");
         return;
       }
 
-      const dFrom = parseISO(dateFrom);
-      const dTo = parseISO(dateTo);
+      const dFrom = parseISO(from);
+      const dTo = parseISO(to);
 
       if (isValid(dFrom) && isValid(dTo)) {
         if (isBefore(dTo, dFrom)) {
           toast.error("Ngày đến không được nhỏ hơn ngày từ");
-          return;
-        }
-        const diff = differenceInDays(dTo, dFrom);
-        if (diff > 30) {
-          toast.error("Chỉ được chọn khoảng thời gian tối đa 30 ngày");
           return;
         }
       } else {
@@ -83,8 +83,8 @@ export function usePortalSync() {
       setResult(null);
       try {
         const res = await erpInvoicesCoreApi.portalSync({
-          dateFrom,
-          dateTo,
+          dateFrom: from,
+          dateTo: to,
           type,
         });
         setResult(res);

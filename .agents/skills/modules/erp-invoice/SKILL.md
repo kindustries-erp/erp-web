@@ -32,6 +32,10 @@ Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đ�
 - **Tiến trình Đồng bộ Tự động (5-Slot Heartbeat Cron & Live SSE)**:
   - Hệ thống backend tự động đồng bộ định kỳ tại **5 mốc giờ chuẩn: 09:15, 15:15, 16:15, 17:15, 21:15 (Asia/Ho_Chi_Minh)**.
   - Frontend kết nối thời gian thực qua Server-Sent Events (`useInvoiceSyncProgress`) để hiển thị Notification banner tiến trình đồng bộ GDT, cảnh báo mật khẩu/captcha hoặc tỷ lệ thành công.
+- **Drawer Đồng bộ hóa đơn (lai V1/V2)**:
+  - Container V1 `InvoiceImportSyncDrawer` giữ hook, API, SSE, store và 2 dialog V1 (`GdtPortalAuthDrawer`, `InvoiceXmlImportModal`).
+  - Giao diện là `InvoiceSyncDrawer` v2 (`src/v2/modules/finance-invoice/drawers/`), bố cục 2 cột: trái là tiến độ/kết quả hoặc luồng file XML, phải là điều kiện đồng bộ. Kỳ chọn qua `useInvoiceSyncPeriod` (tháng/quý/năm/tùy chỉnh).
+  - UI không giới hạn độ dài khoảng ngày. Ước tính số lượt quét dùng cửa sổ 9 ngày (`GDT_QUERY_WINDOW_DAYS`, mặc định API 9).
 - **Breadcrumbs**:
   - `erp-invoices`: `Kế toán` > `Hóa đơn điện tử`
 - **Route Components**:
@@ -181,7 +185,7 @@ src/modules/erp-invoices-core/
 │   ├── useInvoiceSyncProgress.ts              # SSE Hook lắng nghe tiến trình đồng bộ GDT tự động
 │   ├── useInvoiceExportProgress.ts            # SSE Hook theo dõi tiến độ tác vụ xuất Excel nền
 │   ├── useInvoiceXmlUpload.ts                 # Hook quản lý tiến trình upload & parse XML hàng loạt
-│   ├── usePortalSync.ts                       # Hook kích hoạt đồng bộ GDT thủ công
+│   ├── usePortalSync.ts                       # Hook kích hoạt đồng bộ GDT thủ công (nhận khoảng ngày tùy chọn, không giới hạn 30 ngày)
 │   └── usePortalImport.ts                     # Hook quản lý import dữ liệu Cổng Thuế
 ├── locales/
 │   └── vi.ts                                  # Bản dịch tiếng Việt chuyên biệt cho module Hóa đơn

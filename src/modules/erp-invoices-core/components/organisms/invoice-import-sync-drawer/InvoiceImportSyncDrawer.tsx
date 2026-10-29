@@ -1,19 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { RefreshCw } from "lucide-react";
-import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
-import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
+import { InvoiceSyncDrawer } from "@/v2/modules/finance-invoice/drawers/InvoiceSyncDrawer";
 import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
 import { InvoiceXmlImportModal as ImportPreviewModal } from "@/modules/erp-invoices-core/components/organisms/invoice-xml-import-modal";
 import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/organisms/invoice-detail-wrapper";
 import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/organisms/gdt-portal-auth-drawer";
-import type { Direction } from "@/modules/erp-invoices-core/hooks/useInvoiceXmlUpload";
-import { InvoiceGdtSyncPanel } from "./InvoiceGdtSyncPanel";
-import { InvoiceSyncProgressSection } from "./InvoiceSyncProgressSection";
+import { InvoiceGdtSyncResult } from "./InvoiceGdtSyncResult";
 import { InvoiceXmlSyncPanel } from "./InvoiceXmlSyncPanel";
-import {
-  buildInvoiceSyncActions,
-  type InvoiceSyncMethod,
-} from "./invoiceSyncDrawer.actions";
+import { buildInvoiceSyncActions } from "./invoiceSyncDrawer.actions";
 import { useInvoiceImportSyncDrawer } from "./useInvoiceImportSyncDrawer";
 import type { InvoiceImportSyncDrawerProps } from "./InvoiceImportSyncDrawer.type";
 export type { InvoiceImportSyncDrawerProps };
@@ -58,66 +51,35 @@ export function InvoiceImportSyncDrawer({
 
   return (
     <>
-      <V2StandardDrawer
+      <InvoiceSyncDrawer
         open={open}
         onClose={s.doClose}
-        title="Đồng bộ hóa đơn"
-        icon={<RefreshCw className="h-5 w-5" />}
-        size="md"
-        layout="1-column"
-        fillHeight
-        actions={actions}
         confirmOnClose={s.hasPendingXml}
-        leftPanel={
-          <div className="flex min-h-0 flex-1 flex-col gap-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <V2Combobox
-                options={[
-                  { value: "IN", label: t("inbound", "Hóa đơn mua vào") },
-                  { value: "OUT", label: t("outbound", "Hóa đơn bán ra") },
-                ]}
-                value={s.direction}
-                onValueChange={(v) =>
-                  v && s.handleDirectionChange(v as Direction)
-                }
-                searchable={false}
-              />
-              <V2Combobox
-                options={[
-                  { value: "GDT", label: "Từ hệ thống GDT" },
-                  { value: "XML", label: "Tải file từ máy tính" },
-                ]}
-                value={s.method}
-                onValueChange={(v) =>
-                  v && s.handleMethodChange(v as InvoiceSyncMethod)
-                }
-                searchable={false}
-              />
-            </div>
-
-            {s.method === "GDT" ? (
-              <div className="flex min-h-0 flex-1 flex-col gap-6">
-                <InvoiceGdtSyncPanel
-                  portal={s.portal}
-                  canEditInvoice={s.canEditInvoice}
-                  presetOptions={s.presetOptions}
-                  selectedPreset={s.selectedPreset}
-                  setSelectedPreset={s.setSelectedPreset}
-                  bulkXmlLoading={s.bulkXmlLoading}
-                  onOpenConfig={() => s.setConfigOpen(true)}
-                  onBulkXml={s.handleBulkXml}
-                  onSync={s.handleSync}
-                />
-                <InvoiceSyncProgressSection />
-              </div>
-            ) : (
-              <InvoiceXmlSyncPanel
-                xml={s.xml}
-                onOpenInvoice={(id) => s.setViewInvoiceId(id)}
-              />
-            )}
-          </div>
+        direction={s.direction}
+        onDirectionChange={s.handleDirectionChange}
+        method={s.method}
+        onMethodChange={s.handleMethodChange}
+        period={s.period}
+        canEditInvoice={s.canEditInvoice}
+        noCredential={!s.portal.token && !s.portal.hasPassword}
+        syncing={s.portal.loading}
+        bulkXmlLoading={s.bulkXmlLoading}
+        onOpenLogin={() => s.setConfigOpen(true)}
+        onBulkXml={s.handleBulkXml}
+        onSync={s.handleSync}
+        progress={s.progress}
+        gdtResult={
+          s.portal.result ? (
+            <InvoiceGdtSyncResult result={s.portal.result} />
+          ) : undefined
         }
+        xmlPanel={
+          <InvoiceXmlSyncPanel
+            xml={s.xml}
+            onOpenInvoice={(id) => s.setViewInvoiceId(id)}
+          />
+        }
+        actions={actions}
       />
 
       <GdtPortalAuthDrawer
