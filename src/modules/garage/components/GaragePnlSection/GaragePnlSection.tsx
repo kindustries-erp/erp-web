@@ -9,13 +9,14 @@ import {
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { GaragePnlChartsCard } from "../GaragePnlCharts";
-import { GarageOpexDrawer } from "../GarageOpexDrawer";
+import { GarageOpexDrawer, type CostGroupType } from "../GarageOpexDrawer";
 import { useGaragePnlLogic } from "./useGaragePnlLogic";
 import { PnlFinancialTable } from "./components/PnlFinancialTable";
 import { PnlViewModeSwitch } from "./components/PnlViewModeSwitch";
 
 export function GaragePnlSection() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [drawerCostGroup, setDrawerCostGroup] = useState<CostGroupType>("OPEX");
   const {
     t,
     report,
@@ -139,7 +140,10 @@ export function GaragePnlSection() {
           prev2Month={prev2Month}
           prev2Year={prev2Year}
           isOjOnly={isOjOnly}
-          onOpenDrawer={() => setDrawerOpen(true)}
+          onOpenDrawer={(group) => {
+            setDrawerCostGroup(group || "OPEX");
+            setDrawerOpen(true);
+          }}
         />
       </div>
 
@@ -150,6 +154,7 @@ export function GaragePnlSection() {
         mode="edit"
         setMode={() => {}}
         isCreate={true}
+        initialCostGroup={drawerCostGroup}
         onSuccess={() => refetch()}
       />
     </div>

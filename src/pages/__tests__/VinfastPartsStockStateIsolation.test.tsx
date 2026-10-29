@@ -15,6 +15,37 @@ window.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+vi.mock("@/v2/shared/components", async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    V2ViewModeCombobox: ({
+      filterGroup,
+    }: {
+      filterGroup?: {
+        activeKey: string;
+        onChange: (key: string) => void;
+        items: { key: string; label: React.ReactNode }[];
+      };
+    }) => (
+      <div data-testid="view-mode-combobox" data-value={filterGroup?.activeKey}>
+        {filterGroup?.items.map((item) => (
+          <button
+            key={item.key}
+            role="tab"
+            data-state={
+              filterGroup.activeKey === item.key ? "active" : "inactive"
+            }
+            onClick={() => filterGroup.onChange(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    ),
+  };
+});
+
 vi.mock("@/shared/components/ViewModeCombobox", () => ({
   ViewModeCombobox: ({
     filterGroup,
@@ -55,11 +86,14 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@/pages/hooks/useVinfastPartsStockExportProgress", () => ({
-  useVinfastPartsStockExportProgress: () => ({
-    downloadReadyFile: vi.fn(),
+vi.mock(
+  "@/v2/modules/vinfast-parts/hooks/useVinfastStockExportProgress",
+  () => ({
+    useVinfastStockExportProgress: () => ({
+      downloadReadyFile: vi.fn(),
+    }),
   }),
-}));
+);
 
 vi.mock("@/core/api/axiosInstance", () => ({
   default: {

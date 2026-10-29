@@ -190,6 +190,18 @@ export const debtsEn = {
     },
   },
 
+  unallocated: {
+    loadError: "Unable to load unallocated payments",
+    empty: "No unallocated payments",
+    total: "Total unallocated",
+    date: "Date",
+    reference: "Reference",
+    description: "Description",
+    amount: "Amount",
+    netOff: "Netted off",
+    netOffAction: "Offset",
+    remaining: "Unallocated",
+  },
   drawer: {
     title: "Partner Debt Profile",
     partnerInfoTitle: "Partner Information",
@@ -207,6 +219,7 @@ export const debtsEn = {
     invoicesListTitle: "Detailed Invoices List",
     tabInvoices: "1. Invoices List",
     tabAnalytics: "2. Analytics & Trend",
+    tabUnallocated: "3. Unallocated payments",
     monthlyBreakdownTitle: "Monthly Debt Breakdown Matrix",
     analyticsTitle: "Financial Analytics & Debt Structure",
     agingDistribution: "Aging Breakdown & Structure",

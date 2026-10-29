@@ -34,6 +34,16 @@ describe("V2TableRowHoverActions", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the blur off the hidden bar and turns it on only on hover", () => {
+    const { groups } = makeGroups();
+    render(<V2TableRowHoverActions groups={groups} />);
+    const bar = screen.getByRole("button", { name: "Xem chi tiết" })
+      .parentElement as HTMLElement;
+    const classes = bar.className.split(" ");
+    expect(classes).not.toContain("backdrop-blur-xl");
+    expect(classes).toContain("group-hover:backdrop-blur-xl");
+  });
+
   it("opens the full grouped menu from the more button", () => {
     const { groups, handlers } = makeGroups();
     render(<V2TableRowHoverActions groups={groups} />);

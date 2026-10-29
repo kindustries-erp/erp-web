@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { BankTransactionGeneralInfoSection } from "@/modules/bank-statements/components/BankTransactionGeneralInfoSection";
 import { BankTransactionCashflowSection } from "@/modules/bank-statements/components/BankTransactionCashflowSection";
+import { BankTransactionPartnerField } from "@/modules/bank-statements/components/BankTransactionPartnerField";
 import { InvoiceNetoffSelectionModal } from "@/modules/bank-statements/components/InvoiceNetoffSelectionModal";
 import { useBankTransactionDetailDrawer } from "./BankTransactionDetailDrawer.hook";
 import { useBankTransactionDrawerTabs } from "./BankTransactionDrawerTabs";
@@ -47,6 +48,20 @@ export const BankTransactionDetailDrawer = React.memo(
           onBranchChange={drawer.setEditBranchIds}
           description={drawer.editDescription}
           onDescriptionChange={drawer.setEditDescription}
+          partnerField={
+            <BankTransactionPartnerField
+              editMode={drawer.editMode}
+              direction={
+                Number(drawer.transaction.creditAmount) > 0 ? "OUT" : "IN"
+              }
+              value={drawer.editPartnerValue}
+              label={drawer.editPartnerLabel}
+              onChange={(value, label) => {
+                drawer.setEditPartnerValue(value);
+                drawer.setEditPartnerLabel(label);
+              }}
+            />
+          }
         />
         <BankTransactionCashflowSection
           classification={drawer.cashflowClassification}

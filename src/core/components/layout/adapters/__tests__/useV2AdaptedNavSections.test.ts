@@ -4,7 +4,27 @@ import { useV2AdaptedNavSections } from "../useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "../useV2AdaptedTabs";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource } from "@/modules/system/types/rbac";
-import { Sliders } from "@/v2/shared/components";
+import {
+  Banknote,
+  Landmark,
+  Sliders,
+  type V2SidebarItem,
+} from "@/v2/shared/components";
+
+function findNavChild(
+  items: V2SidebarItem[] | undefined,
+  id: string,
+): V2SidebarItem | undefined {
+  if (!items) return undefined;
+  for (const item of items) {
+    if (item.id === id) return item;
+    if (item.children) {
+      const found = findNavChild(item.children, id);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
 
 vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: vi.fn(),
@@ -54,9 +74,12 @@ describe("useV2AdaptedNavSections - custom-fields in sec-settings", () => {
     const settingsSec = result.current.find((s) => s.id === "sec-settings");
 
     expect(settingsSec).toBeDefined();
-    const customFieldsItem = settingsSec?.items.find(
-      (item) => item.id === "custom-fields",
+    const generalSettingsGroup = settingsSec?.items.find(
+      (item) => item.id === "sub-general-settings",
     );
+    expect(generalSettingsGroup).toBeDefined();
+
+    const customFieldsItem = findNavChild(settingsSec?.items, "custom-fields");
     expect(customFieldsItem).toBeDefined();
     expect(customFieldsItem?.href).toBe("/custom-fields");
     expect(customFieldsItem?.label).toBe("Trường tùy chỉnh");
@@ -72,9 +95,7 @@ describe("useV2AdaptedNavSections - custom-fields in sec-settings", () => {
     const settingsSec = result.current.find((s) => s.id === "sec-settings");
 
     expect(settingsSec).toBeDefined();
-    const customFieldsItem = settingsSec?.items.find(
-      (item) => item.id === "custom-fields",
-    );
+    const customFieldsItem = findNavChild(settingsSec?.items, "custom-fields");
     expect(customFieldsItem).toBeDefined();
     expect(customFieldsItem?.href).toBe("/custom-fields");
   });
@@ -86,6 +107,56 @@ describe("useV2AdaptedNavSections - custom-fields in sec-settings", () => {
     const settingsSec = result.current.find((s) => s.id === "sec-settings");
 
     expect(settingsSec).toBeUndefined();
+  });
+});
+
+describe("useV2AdaptedNavSections - bank & cash fund in sec-settings", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("includes settings-bank when user has BANK_STATEMENTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.BANK_STATEMENTS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const settingsSec = result.current.find((s) => s.id === "sec-settings");
+    const bankItem = findNavChild(settingsSec?.items, "settings-bank");
+
+    expect(bankItem).toBeDefined();
+    expect(bankItem?.href).toBe("/settings-bank");
+    expect(bankItem?.label).toBe("Danh mục Ngân hàng");
+    expect(bankItem?.icon).toBe(Landmark);
+  });
+
+  it("includes settings-cash-fund when user has CASH_STATEMENTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.CASH_STATEMENTS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const settingsSec = result.current.find((s) => s.id === "sec-settings");
+    const cashFundItem = findNavChild(settingsSec?.items, "settings-cash-fund");
+
+    expect(cashFundItem).toBeDefined();
+    expect(cashFundItem?.href).toBe("/settings-cash-fund");
+    expect(cashFundItem?.label).toBe("Danh mục Quỹ");
+    expect(cashFundItem?.icon).toBe(Banknote);
+  });
+
+  it("excludes settings-bank and settings-cash-fund without their permissions", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ADMIN_USERS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const settingsSec = result.current.find((s) => s.id === "sec-settings");
+
+    expect(findNavChild(settingsSec?.items, "settings-bank")).toBeUndefined();
+    expect(
+      findNavChild(settingsSec?.items, "settings-cash-fund"),
+    ).toBeUndefined();
   });
 });
 

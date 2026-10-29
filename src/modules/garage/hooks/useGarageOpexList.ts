@@ -12,7 +12,12 @@ export const getDefaultPageSize = (): number => {
   return 20;
 };
 
-export type CostGroupFilter = "ALL" | "OPEX" | "COGS" | "COMMISSION";
+export type CostGroupFilter =
+  | "ALL"
+  | "OPEX"
+  | "COGS"
+  | "COMMISSION"
+  | "FINANCIAL";
 
 export function useGarageOpexList() {
   const [page, setPage] = useState(1);

@@ -341,3 +341,11 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - Nhóm tab button dùng `--primary`/`--primary-fg` cho active; inactive dùng nền/viền trong suốt và chỉ đổi màu chữ khi hover.
 - Inactive tab của `button-group` để nền và viền trong suốt; chỉ active tab có nền fill.
 - Drawer có thể được mở từ route V1, nơi `v2-theme.css` không được import. Sheet mang `data-v2-standard-drawer`; `src/styles/panels.css` cung cấp Midnight drawer tokens theo marker này để portal content vẫn nhận dark surface.
+
+## 3. Mở V2 drawer chồng lên drawer v1 (DrawerModal)
+
+- `V2StandardDrawer` nhận prop `baseZIndex`. Mặc định z-index tầng đầu là `V2_BASE_DRAWER_Z_INDEX` (50), đủ cho các trang V2.
+- Drawer v1 (`DrawerModal`) có overlay z = 400 + 50 mỗi tầng. Mở V2 drawer trong drawer v1 thì phải truyền `baseZIndex={V2_ABOVE_V1_DRAWER_Z_INDEX}` (600), nếu không drawer V2 sẽ nằm sau drawer v1.
+- Lưu ý: z 600 cao hơn `V2Popover` (450), nên popover/dropdown V2 mở từ bên trong drawer này sẽ bị che. Chưa đặt popover/dropdown trong drawer này cho đến khi đổi mức z.
+- Esc: `DrawerModal` bỏ qua phím Esc khi có phần tử `[data-v2-standard-drawer]` trong DOM, nên Esc đóng drawer V2 trước, drawer v1 đóng ở lần Esc sau.
+- Ví dụ: `src/v2/modules/invoice-debts/drawers/DebtNetOffDrawer.tsx`.

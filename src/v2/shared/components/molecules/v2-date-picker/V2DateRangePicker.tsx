@@ -7,6 +7,7 @@ import {
   V2Text,
 } from "@/v2/shared/components/atoms";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useViewport } from "@/v2/shared/hooks/useViewport";
 import { cn } from "@/v2/shared/utils/cn";
@@ -35,6 +36,14 @@ export const V2DateRangePicker: React.FC<V2DateRangePickerProps> = ({
   const { t } = useV2Translation();
   const { isMobile } = useViewport();
   const [open, setOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  // Click ra ngoài thì đóng lịch; mở lịch này sẽ đóng popover đang mở khác
+  useV2PopoverDismiss({
+    open,
+    onClose: () => setOpen(false),
+    containerRef,
+    panelSelector: "[data-v2-date-panel]",
+  });
   const from = parseIsoDate(value.from);
   const to = parseIsoDate(value.to);
   const hint = placeholder ?? t("v2.form.pickDateRange", "Chọn khoảng ngày");
@@ -61,7 +70,7 @@ export const V2DateRangePicker: React.FC<V2DateRangePickerProps> = ({
   );
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <div ref={containerRef} className={cn("relative w-full", className)}>
       <V2Popover
         trigger={trigger}
         open={open}
@@ -74,7 +83,7 @@ export const V2DateRangePicker: React.FC<V2DateRangePickerProps> = ({
         className="w-auto max-w-none p-2"
         triggerClassName="w-full"
         content={
-          <div className="flex gap-3">
+          <div className="flex gap-3" data-v2-date-panel="">
             {presets && presets.length > 0 && (
               <ul className="flex w-32 shrink-0 flex-col gap-0.5 border-r border-border/40 pr-2">
                 {presets.map((preset) => (

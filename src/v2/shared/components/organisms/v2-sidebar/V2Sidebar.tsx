@@ -3,6 +3,7 @@ import { cn } from "@/v2/shared/utils/cn";
 import { V2SidebarHeader } from "@/v2/shared/components/molecules/v2-sidebar-header";
 import { V2SidebarSection } from "@/v2/shared/components/molecules/v2-sidebar-section";
 import { V2SidebarNavItem } from "@/v2/shared/components/molecules/v2-sidebar-nav-item";
+import { V2SidebarSubGroup } from "@/v2/shared/components/molecules/v2-sidebar-subgroup";
 import { V2SidebarBottom } from "@/v2/shared/components/molecules/v2-sidebar-bottom";
 import { V2SidebarProps, V2SidebarSectionData } from "./V2Sidebar.type";
 import { useV2Sidebar } from "./V2Sidebar.hook";
@@ -38,6 +39,7 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
   return (
     <aside
       data-testid="v2-sidebar"
+      data-collapsed={isCollapsed ? "true" : undefined}
       className={cn(
         "v2-sidebar relative flex flex-col h-full rounded-2xl border border-border dark:border-[color:var(--sidebar-border,rgba(255,255,255,0.06))] shadow-[0_8px_24px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.05)] dark:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)] bg-[color:var(--sidebar-bg,hsl(var(--card)))] dark:bg-[color:var(--sidebar-bg,#16181e)] text-card-foreground transition-all duration-200 ease-in-out select-none flex-shrink-0",
         isCollapsed ? "w-[58px]" : "w-[210px]",
@@ -69,17 +71,31 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
             defaultOpen={openSections[section.id] !== false}
             onToggle={() => toggleSection(section.id)}
           >
-            {section.items.map((item) => (
-              <V2SidebarNavItem
-                key={item.id}
-                label={item.label}
-                icon={item.icon}
-                isActive={activeId === item.id}
-                badgeCount={item.badgeCount}
-                isCollapsed={isCollapsed}
-                onClick={() => onNavigate?.(item)}
-              />
-            ))}
+            {section.items.map((item) => {
+              if (item.children && item.children.length > 0) {
+                return (
+                  <V2SidebarSubGroup
+                    key={item.id}
+                    item={item}
+                    activeId={activeId}
+                    isCollapsed={isCollapsed}
+                    onNavigate={onNavigate}
+                  />
+                );
+              }
+
+              return (
+                <V2SidebarNavItem
+                  key={item.id}
+                  label={item.label}
+                  icon={item.icon}
+                  isActive={activeId === item.id}
+                  badgeCount={item.badgeCount}
+                  isCollapsed={isCollapsed}
+                  onClick={() => onNavigate?.(item)}
+                />
+              );
+            })}
           </V2SidebarSection>
         ))}
       </nav>

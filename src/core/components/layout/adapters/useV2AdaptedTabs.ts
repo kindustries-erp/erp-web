@@ -25,6 +25,8 @@ import {
   Paperclip,
   Mail,
   Sliders,
+  Landmark,
+  Banknote,
   type V2IconType as LucideIcon,
 } from "@/v2/shared/components";
 
@@ -63,6 +65,8 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-permissions-core": Shield,
   "erp-activity-logs": FileText,
   "settings-branch": Building2,
+  "settings-bank": Landmark,
+  "settings-cash-fund": Banknote,
   "sys-tags": Settings,
   "custom-fields": Sliders,
 };
@@ -141,6 +145,10 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.activitylog", "Nhật ký hoạt động");
       case "settings-branch":
         return t("thietlap.tabs.chi-nhanh", "Chi nhánh");
+      case "settings-bank":
+        return t("thietlap.tabs.ngan-hang", "Tài khoản ngân hàng");
+      case "settings-cash-fund":
+        return t("thietlap.tabs.quy", "Quỹ tiền mặt");
       case "sys-tags":
         return t("nav.items.sysTags", "Tags");
       case "custom-fields":

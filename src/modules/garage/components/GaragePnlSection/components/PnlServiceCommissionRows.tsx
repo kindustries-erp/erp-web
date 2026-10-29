@@ -119,12 +119,12 @@ export function PnlServiceCommissionRows({
 
   return (
     <>
-      {/* VII. Thưởng và Hoa hồng Dịch vụ Header */}
+      {/* VIII. Thưởng và Hoa hồng Dịch vụ Header */}
       <tr className="bg-slate-50/50 dark:bg-slate-800/30 font-bold text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors">
         <PnlLevel1HeaderCell
           title={t(
             "pnl.serviceCommissionHeader",
-            "VII. Thưởng và Hoa hồng Dịch vụ",
+            "VIII. Thưởng và Hoa hồng Dịch vụ",
           )}
           icon={Award}
           isCollapsed={isCollapsed}

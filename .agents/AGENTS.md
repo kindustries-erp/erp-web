@@ -33,8 +33,9 @@ Source of truth for this repo (`./erp-web`).
 
 ### 5. Strict Pre-push Hook
 
-- Before running `git push`, you **MUST** run `bun run check:ci` and `bun run test`.
-- Do NOT push if any of these commands fail. Fix the issues first.
+- Commit: pre-commit tự chạy lint-staged (eslint, prettier, `vitest related` trên file staged). Không chạy full test thủ công.
+- Push: pre-push chạy `bun run type:check`. Do NOT push if it fails.
+- Full test / build / check:ci chạy trên GitHub CI. Không push tiếp khi CI của nhánh đang đỏ.
 
 ### 6. i18n Translation Mandate
 
@@ -97,10 +98,7 @@ Source of truth for this repo (`./erp-web`).
 
 2. When asked to **commit code**, you MUST execute the following in order:
    - Ensure current branch is `erp-master`
-   - `bun run build`
-   - `bun run check:ci`
-   - `bun run test`
-   - `git commit`
+   - `git commit` (pre-commit tự chạy lint-staged và `vitest related` trên file staged; không chạy full test thủ công)
 
 3. When asked to **pull code**, you MUST execute the following in order:
    - If there are uncommitted changes, you MUST execute the full **commit code** sequence first.
@@ -109,10 +107,7 @@ Source of truth for this repo (`./erp-web`).
 4. When asked to **push code**, you MUST execute the following in order:
    - If there are uncommitted changes, you MUST execute the full **commit code** sequence first.
    - `git pull --rebase github-industries erp-master` (and resolve conflicts if any)
-   - `bun run build`
-   - `bun run check:ci`
-   - `bun run test`
-   - `git push github-industries erp-master`
+   - `git push github-industries erp-master` (pre-push chạy `bun run type:check`; full test/build/check:ci chạy trên GitHub CI, theo dõi CI sau khi push)
 
 5. When asked to **sync/deploy to downstream branches** (`erp-greenway-production`, `erp-greenway-staging`, `erp-klotus-*`):
    - First ensure `erp-master` is committed, tested, and pushed to `github-industries erp-master`.

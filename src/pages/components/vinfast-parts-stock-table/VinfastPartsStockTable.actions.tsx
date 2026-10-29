@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import type { TFunction } from "i18next";
-import { Eye, RefreshCw, DownloadCloud } from "lucide-react";
-import { ViewModeCombobox } from "@/shared/components/ViewModeCombobox";
+import { Download, Eye } from "lucide-react";
+import { V2ViewModeCombobox } from "@/v2/shared/components";
 import type { TableViewPreset } from "@/shared/hooks/useUserPreferences";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import type {
@@ -32,7 +32,6 @@ export function useVinfastPartsStockActions({
   stockTab,
   setStockTab,
   onSelectSku,
-  onOpenSync,
   onOpenExport,
   presets,
   activePresetKey,
@@ -59,48 +58,61 @@ export function useVinfastPartsStockActions({
     [t, onSelectSku],
   );
 
-  const defaultPresets = useMemo<TableViewPreset[]>(
-    () => [
-      {
-        key: "overview",
-        label: t("vinfastParts:OVERVIEW_VIEW", "Tổng quan"),
-        filters: {},
-        columnVisibility: {},
-      },
-    ],
-    [t],
+  const viewItems = useMemo(
+    () =>
+      presets && presets.length > 0
+        ? presets.map((p) => ({
+            key: p.key,
+            label: p.label,
+            isSystem: p.isDefault,
+          }))
+        : [
+            {
+              key: "overview",
+              label: t("vinfastParts:OVERVIEW_VIEW", "Tổng quan"),
+              isSystem: true,
+            },
+          ],
+    [presets, t],
   );
 
   const customActionsNode = useMemo(
     () => (
       <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
-        <ViewModeCombobox<VinfastStockTab>
-          presets={presets && presets.length > 0 ? presets : defaultPresets}
-          activePresetKey={activePresetKey || "overview"}
-          onSelect={onSelectPreset || (() => {})}
-          onCreateView={onCreateView || (() => {})}
-          onEditView={onEditView || (() => {})}
-          onDeleteView={onDeleteView || (() => {})}
+        <V2ViewModeCombobox
+          items={viewItems}
+          activeKey={activePresetKey || "overview"}
+          onSelect={(key) => {
+            const found = presets?.find((p) => p.key === key);
+            if (found) onSelectPreset?.(found);
+          }}
+          onCreate={onCreateView}
+          onEdit={(key) => {
+            const found = presets?.find((p) => p.key === key);
+            if (found) onEditView?.(found);
+          }}
+          onDelete={(key) => onDeleteView?.(key)}
           filterGroup={{
             title: t("vinfastParts:STOCK_STATUS", "Trạng thái tồn kho"),
-            value: stockTab,
-            onChange: (val) => setStockTab(vehicleType, val),
+            activeKey: stockTab,
+            allKey: "ALL",
+            onChange: (key) => setStockTab(vehicleType, key as VinfastStockTab),
             items: [
-              { value: "ALL", label: t("vinfastParts:ALL", "Tất cả") },
+              { key: "ALL", label: t("vinfastParts:ALL", "Tất cả") },
               {
-                value: "IN_STOCK",
+                key: "IN_STOCK",
                 label: t("vinfastParts:IN_STOCK", "Còn tồn kho"),
-                dotColor: "emerald",
+                dotColor: "#10b981",
               },
               {
-                value: "OUT_OF_STOCK",
+                key: "OUT_OF_STOCK",
                 label: t("vinfastParts:OUT_OF_STOCK", "Hết hàng"),
-                dotColor: "amber",
+                dotColor: "#f59e0b",
               },
               {
-                value: "NEGATIVE",
+                key: "NEGATIVE",
                 label: t("vinfastParts:NEGATIVE_STOCK", "Tồn âm"),
-                dotColor: "rose",
+                dotColor: "#f43f5e",
               },
             ],
           }}
@@ -108,8 +120,8 @@ export function useVinfastPartsStockActions({
       </div>
     ),
     [
+      viewItems,
       presets,
-      defaultPresets,
       activePresetKey,
       onSelectPreset,
       onCreateView,
@@ -122,30 +134,21 @@ export function useVinfastPartsStockActions({
     ],
   );
 
+  // Nút chính là "Đồng bộ" (onOpenSync); menu chỉ còn các thao tác phụ, giống trang hóa đơn
   const createActions = useMemo<ActionDropdownItem[]>(
     () => [
-      {
-        groupLabel: t("vinfastParts:SYSTEM", "HỆ THỐNG"),
-        items: [
-          {
-            label: t("vinfastParts:SYNC_LEDGER", "Đồng bộ sổ cái"),
-            icon: <RefreshCw className="w-4 h-4 text-primary" />,
-            onClick: onOpenSync,
-          },
-        ],
-      },
       {
         groupLabel: t("vinfastParts:SEARCH", "TRA CỨU"),
         items: [
           {
-            label: t("vinfastParts:DOWNLOAD_REPORT", "Tải bảng kê"),
-            icon: <DownloadCloud className="w-4 h-4 text-emerald-600" />,
+            label: t("vinfastParts:EXPORT_EXCEL", "Xuất Excel"),
+            icon: <Download className="w-4 h-4 text-green-600" />,
             onClick: onOpenExport,
           },
         ],
       },
     ],
-    [t, onOpenSync, onOpenExport],
+    [t, onOpenExport],
   );
 
   return {

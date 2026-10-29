@@ -29,6 +29,8 @@ export const vinfastPartsEn = {
   CREATE_NEW: "Create",
   SYSTEM: "SYSTEM",
   SEARCH: "SEARCH",
+  SYNC: "Sync",
+  EXPORT_EXCEL: "Export Excel",
   VIEW_DETAILS: "View Details",
   FIFO_TRACE_LEDGER: "FIFO Trace Ledger",
   CAR: "Car",

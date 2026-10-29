@@ -1,4 +1,5 @@
 {
   "src/**/*.{ts,tsx,js,jsx}": ["eslint --fix", "prettier --write"],
+  "src/**/*.{ts,tsx}": ["vitest related --run --passWithNoTests"],
   "src/**/*.{css,md}": ["prettier --write"]
 }

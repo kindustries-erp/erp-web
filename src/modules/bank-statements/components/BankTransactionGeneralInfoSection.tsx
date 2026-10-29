@@ -27,6 +27,8 @@ export interface BankTransactionGeneralInfoSectionProps {
   className?: string;
   defaultCollapsed?: boolean;
   showTags?: boolean;
+  /** Ô bổ sung ngay dưới Chi nhánh (ví dụ ô Đối tượng) */
+  partnerField?: React.ReactNode;
 }
 
 export const BankTransactionGeneralInfoSection = React.memo(
@@ -40,6 +42,7 @@ export const BankTransactionGeneralInfoSection = React.memo(
     className = "space-y-3 text-sm",
     defaultCollapsed = false,
     showTags = true,
+    partnerField,
   }: BankTransactionGeneralInfoSectionProps) {
     const { t } = useTranslation();
 
@@ -154,6 +157,7 @@ export const BankTransactionGeneralInfoSection = React.memo(
                 <span className="text-sm">{branchLabel}</span>
               )}
             </DrawerField>
+            {partnerField}
 
             {/* Tài khoản nguồn */}
             <div>
@@ -282,6 +286,7 @@ export const BankTransactionGeneralInfoSection = React.memo(
               <span>{branchLabel}</span>
             </div>
           </div>
+          {partnerField}
 
           {/* Tài khoản nguồn */}
           <div>

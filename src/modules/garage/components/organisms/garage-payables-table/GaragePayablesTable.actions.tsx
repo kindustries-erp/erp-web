@@ -1,11 +1,5 @@
-import React, { useMemo } from "react";
-import {
-  FileSpreadsheet,
-  DownloadCloud,
-  Eye,
-  ArrowUpRight,
-  ArrowDownLeft,
-} from "lucide-react";
+import React from "react";
+import { Eye, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -16,9 +10,6 @@ import type {
 
 interface UseGaragePayablesActionsParams {
   t: any;
-  canSyncGarage?: boolean;
-  onSyncCases?: () => void;
-  onOpenExport: () => void;
   onOpenCustomerDetail?: (customer: {
     code: string;
     name: string;
@@ -35,9 +26,6 @@ interface UseGaragePayablesActionsParams {
 
 export function useGaragePayablesActions({
   t,
-  canSyncGarage,
-  onSyncCases,
-  onOpenExport,
   onOpenCustomerDetail,
   onOpenSupplierDetail,
   onCreateCashflow,
@@ -62,36 +50,6 @@ export function useGaragePayablesActions({
       });
     }
   };
-
-  const createActions = useMemo<ActionDropdownItem[]>(
-    () => [
-      {
-        groupLabel: t("debts.actions.exportGroup", "Báo cáo & Xuất file"),
-        items: [
-          {
-            label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
-            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: onOpenExport,
-          },
-        ],
-      },
-      ...(canSyncGarage && onSyncCases
-        ? [
-            {
-              groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
-              items: [
-                {
-                  label: t("cases.actions.syncCases", "Đồng bộ phiếu dịch vụ"),
-                  icon: <DownloadCloud className="w-4 h-4 text-sky-600" />,
-                  onClick: onSyncCases,
-                },
-              ],
-            },
-          ]
-        : []),
-    ],
-    [canSyncGarage, onSyncCases, onOpenExport, t],
-  );
 
   const getRowActions = (row: SupplierDebtItem): ActionDropdownItem[] => [
     {
@@ -142,5 +100,5 @@ export function useGaragePayablesActions({
       : []),
   ];
 
-  return { createActions, getRowActions, handleOpenDetail };
+  return { getRowActions, handleOpenDetail };
 }

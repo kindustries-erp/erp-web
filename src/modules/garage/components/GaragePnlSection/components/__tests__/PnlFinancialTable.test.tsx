@@ -11,7 +11,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 describe("PnlFinancialTable Component", () => {
-  it("renders all 8 sections in default view mode with Roman numerals and OJ sub-rows", () => {
+  it("renders all 9 sections in default view mode with Roman numerals and OJ sub-rows", () => {
     render(
       <PnlFinancialTable
         report={mockPnlReport}
@@ -36,18 +36,19 @@ describe("PnlFinancialTable Component", () => {
     expect(screen.getByText("Tháng 06/2026")).toBeInTheDocument();
     expect(screen.getByText("Tháng 05/2026")).toBeInTheDocument();
 
-    // 8 headers with Roman numerals
+    // 9 headers with Roman numerals
     expect(screen.getByText("I. Doanh Thu")).toBeInTheDocument();
     expect(screen.getByText("II. Chi phí (Giá vốn)")).toBeInTheDocument();
     expect(screen.getByText("III. Lợi nhuận gộp")).toBeInTheDocument();
     expect(screen.getByText("IV. Chi phí bán hàng")).toBeInTheDocument();
     expect(screen.getByText("V. Chi phí vận hành")).toBeInTheDocument();
-    expect(screen.getByText("VI. Lợi nhuận ròng")).toBeInTheDocument();
+    expect(screen.getByText("VI. Chi phí tài chính")).toBeInTheDocument();
+    expect(screen.getByText("VII. Lợi nhuận ròng")).toBeInTheDocument();
     expect(
-      screen.getByText("VII. Thưởng và Hoa hồng Dịch vụ"),
+      screen.getByText("VIII. Thưởng và Hoa hồng Dịch vụ"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)"),
+      screen.getByText("IX. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)"),
     ).toBeInTheDocument();
 
     // Sub-rows
@@ -64,13 +65,16 @@ describe("PnlFinancialTable Component", () => {
       screen.getByText("5.1.1. Trong đó: Phát sinh liên quan OJ"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("6.1. Trong đó: Lợi nhuận ròng mảng OJ"),
+      screen.getByText("6.1.1. Trong đó: Phát sinh liên quan OJ"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("7.1.1. Trong đó: Phát sinh liên quan OJ"),
+      screen.getByText("7.1. Trong đó: Lợi nhuận ròng mảng OJ"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("8.1. Trong đó: Lợi nhuận giữ lại mảng OJ"),
+      screen.getByText("8.1.1. Trong đó: Phát sinh liên quan OJ"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("9.1. Trong đó: Lợi nhuận giữ lại mảng OJ"),
     ).toBeInTheDocument();
   });
 
@@ -94,16 +98,19 @@ describe("PnlFinancialTable Component", () => {
       />,
     );
 
-    // 8 headers still exist with Roman numerals
+    // 9 headers still exist with Roman numerals
     expect(screen.getByText("I. Doanh Thu")).toBeInTheDocument();
     expect(screen.getByText("II. Chi phí (Giá vốn)")).toBeInTheDocument();
     expect(screen.getByText("III. Lợi nhuận gộp")).toBeInTheDocument();
-    expect(screen.getByText("VI. Lợi nhuận ròng")).toBeInTheDocument();
+    expect(screen.getByText("IV. Chi phí bán hàng")).toBeInTheDocument();
+    expect(screen.getByText("V. Chi phí vận hành")).toBeInTheDocument();
+    expect(screen.getByText("VI. Chi phí tài chính")).toBeInTheDocument();
+    expect(screen.getByText("VII. Lợi nhuận ròng")).toBeInTheDocument();
     expect(
-      screen.getByText("VII. Thưởng và Hoa hồng Dịch vụ"),
+      screen.getByText("VIII. Thưởng và Hoa hồng Dịch vụ"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)"),
+      screen.getByText("IX. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)"),
     ).toBeInTheDocument();
 
     // OJ sub-rows MUST NOT be displayed when viewing OJ only
@@ -120,13 +127,16 @@ describe("PnlFinancialTable Component", () => {
       screen.queryByText("5.1.1. Trong đó: Phát sinh liên quan OJ"),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText("6.1. Trong đó: Lợi nhuận ròng mảng OJ"),
+      screen.queryByText("6.1.1. Trong đó: Phát sinh liên quan OJ"),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText("7.1.1. Trong đó: Phát sinh liên quan OJ"),
+      screen.queryByText("7.1. Trong đó: Lợi nhuận ròng mảng OJ"),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByText("8.1. Trong đó: Lợi nhuận giữ lại mảng OJ"),
+      screen.queryByText("8.1.1. Trong đó: Phát sinh liên quan OJ"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("9.1. Trong đó: Lợi nhuận giữ lại mảng OJ"),
     ).not.toBeInTheDocument();
 
     // Verify OJ Revenue and OJ Gross Profit numbers appear

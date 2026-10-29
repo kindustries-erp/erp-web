@@ -1,5 +1,7 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
+import { GLASS_BACKDROP_FILTER_CLASS } from "@/v2/shared/ui";
+import { V2Text } from "@/v2/shared/components/atoms";
 import { useEnvStore } from "@/core/store/useEnvStore";
 import { AppEnvironment } from "@/core/constants/environments";
 import { V2EnvStampProps } from "./V2EnvStamp.type";
@@ -22,12 +24,16 @@ export const V2EnvStamp: React.FC<V2EnvStampProps> = ({
     return null;
   }
 
-  const isLocalProdData = forcedEnv === "prod-dev" || envState.isLocalProdData;
-  const isLocal = forcedEnv === "local" || envState.isLocal;
-  const isKlotus = forcedEnv === "klotus" || envState.isKlotus;
-  const isGreenway = forcedEnv === "greenway" || envState.isGreenway;
-  const isBlueway = forcedEnv === "blueway" || envState.isBlueway;
-  const isDevelopment = forcedEnv === "dev" || envState.isDevelopment;
+  const isLocalProdData = forcedEnv
+    ? forcedEnv === "prod-dev"
+    : envState.isLocalProdData;
+  const isLocal = forcedEnv ? forcedEnv === "local" : envState.isLocal;
+  const isKlotus = forcedEnv ? forcedEnv === "klotus" : envState.isKlotus;
+  const isGreenway = forcedEnv ? forcedEnv === "greenway" : envState.isGreenway;
+  const isBlueway = forcedEnv ? forcedEnv === "blueway" : envState.isBlueway;
+  const isDevelopment = forcedEnv
+    ? forcedEnv === "dev"
+    : envState.isDevelopment;
 
   let text: string;
   if (customLabel) {
@@ -55,39 +61,51 @@ export const V2EnvStamp: React.FC<V2EnvStampProps> = ({
     text = `${name} Demo`;
   }
 
-  let bgClass = "bg-amber-500/90";
-  let borderClass = "border-amber-400/50";
+  let variantClass =
+    "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:bg-amber-950/60 dark:border-amber-400/30 dark:text-amber-300";
 
   if (isLocalProdData) {
-    bgClass = "bg-red-600 shadow-md shadow-red-500/40";
-    borderClass = "border-red-500";
+    variantClass =
+      "bg-rose-500/15 border-rose-500/40 text-rose-700 dark:bg-rose-950/70 dark:border-rose-400/35 dark:text-rose-300";
   } else if (isLocal) {
-    bgClass = "bg-teal-600/90 shadow-md shadow-teal-500/40";
-    borderClass = "border-teal-500/50";
+    variantClass =
+      "bg-teal-500/10 border-teal-500/30 text-teal-700 dark:bg-teal-950/60 dark:border-teal-400/30 dark:text-teal-300";
   } else if (isKlotus) {
-    bgClass = "bg-purple-600/90";
-    borderClass = "border-purple-500/50";
+    variantClass =
+      "bg-purple-500/10 border-purple-500/30 text-purple-700 dark:bg-purple-950/60 dark:border-purple-400/30 dark:text-purple-300";
   } else if (isGreenway) {
-    bgClass = "bg-emerald-600/90";
-    borderClass = "border-emerald-500/50";
+    variantClass =
+      "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:bg-emerald-950/60 dark:border-emerald-400/30 dark:text-emerald-300";
   } else if (isBlueway) {
     // Tuân thủ No Blue Mandate: sử dụng sky token thay cho blue-*
-    bgClass = "bg-sky-600/90";
-    borderClass = "border-sky-500/50";
+    variantClass =
+      "bg-sky-500/10 border-sky-500/30 text-sky-700 dark:bg-sky-950/60 dark:border-sky-400/30 dark:text-sky-300";
   }
+
+  const hasEmoji = text.startsWith("⚠️") || text.startsWith("💻");
 
   return (
     <div
       data-testid="v2-env-stamp"
       className={cn(
-        "fixed top-0 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none px-2.5 py-1 text-white text-[10px] font-bold uppercase tracking-wider backdrop-blur-md rounded-b-md shadow-sm border-b border-x transition-all select-none",
-        bgClass,
-        borderClass,
+        "fixed top-0 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none inline-flex items-center gap-1.5 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-b-md border-b border-x border-t-0 shadow-sm transition-all select-none min-h-[24px]",
+        GLASS_BACKDROP_FILTER_CLASS,
+        variantClass,
         className,
       )}
       {...props}
     >
-      {text}
+      {!hasEmoji && (
+        <span className="w-2 h-2 rounded-full bg-current opacity-80 shrink-0" />
+      )}
+      <V2Text
+        as="span"
+        color="inherit"
+        weight="semibold"
+        className="text-[11px] uppercase tracking-wider leading-none select-none"
+      >
+        {text}
+      </V2Text>
     </div>
   );
 };

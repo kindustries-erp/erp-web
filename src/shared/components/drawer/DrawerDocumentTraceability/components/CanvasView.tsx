@@ -367,32 +367,11 @@ function CanvasFlowInner({
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Sync layout changes when graphData, direction, or selectedNodeId changes
+  // Sync layout changes (initialNodes/initialEdges đã memo theo graphData, direction, selectedNodeId...)
   useEffect(() => {
-    const { nodes: nextNodes, edges: nextEdges } = computeLayout(
-      graphData,
-      direction,
-      allowEdit,
-      onAddLink,
-      onUnlinkNode,
-      allowedDocTypes,
-      onEditManualSettlement,
-      selectedNodeId,
-    );
-    setNodes(nextNodes);
-    setEdges(nextEdges);
-  }, [
-    graphData,
-    direction,
-    allowEdit,
-    onAddLink,
-    onUnlinkNode,
-    allowedDocTypes,
-    onEditManualSettlement,
-    selectedNodeId,
-    setNodes,
-    setEdges,
-  ]);
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   // Initial fit view on mount or layout direction change
   useEffect(() => {

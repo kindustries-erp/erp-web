@@ -5,15 +5,21 @@ import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useT } from "@/core/i18n";
 import type { PageKey } from "@/shared/types";
 import { V2AppLayout } from "@/v2/app/layouts/v2-app-layout";
-import { V2EnvStamp, type V2BreadcrumbItem } from "@/v2/shared/components";
+import {
+  V2EnvStamp,
+  type V2BreadcrumbItem,
+  V2UniversalSearchModal,
+  V2NotificationPopover,
+  V2Text,
+} from "@/v2/shared/components";
+import { cn } from "@/v2/shared/utils/cn";
 import { useV2AdaptedNavSections } from "./adapters/useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "./adapters/useV2AdaptedTabs";
-import { V2UniversalSearchModal } from "@/v2/shared/components";
+import { useEnsureValidCurrentBranch } from "./hooks/useEnsureValidCurrentBranch";
 import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
 import { UserMenuPopover } from "./sidebar/components/UserMenuPopover";
-import { V2NotificationPopover } from "@/v2/shared/components";
 import { useQuery } from "@tanstack/react-query";
 import { notificationsApi } from "@/core/api/notifications";
 
@@ -24,6 +30,8 @@ interface V2ShellLayoutProps {
 export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   const {
     currentPage,
+    sidebarCollapsed,
+    toggleSidebar,
     navigate,
     companyProfileOpen,
     setCompanyProfileOpen,
@@ -33,6 +41,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   const { employee, profile } = useAuthStore();
   const { data: companyProfile } = useCompanyProfile();
   const t = useT();
+  useEnsureValidCurrentBranch();
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [userProfileOpen, setUserProfileOpen] = useState(false);
@@ -220,33 +229,50 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
     }
   }, [currentPage, t]);
 
-  const userMenuNode = (
-    <UserMenuPopover
-      onOpenProfile={() => setUserProfileOpen(true)}
-      onOpenSettings={() => setSettingsOpen(true)}
-    >
-      <div className="flex items-center gap-2 px-1 py-[7px] rounded-lg hover:bg-accent/50 cursor-pointer flex-1 min-w-0">
-        <div className="w-[22px] h-[22px] min-w-[22px] bg-primary rounded-full flex items-center justify-center text-primary-foreground text-[8px] font-semibold flex-shrink-0">
-          {av}
-        </div>
-        <span className="hidden sm:inline-block text-muted-fg font-medium text-xs whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
-          {displayName}
-        </span>
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className="hidden sm:block text-faint flex-shrink-0 opacity-70"
-          aria-hidden="true"
+  const userMenuNode = useCallback(
+    ({ collapsed = false }: { collapsed?: boolean } = {}) => (
+      <UserMenuPopover
+        onOpenProfile={() => setUserProfileOpen(true)}
+        onOpenSettings={() => setSettingsOpen(true)}
+      >
+        <div
+          className={cn(
+            "flex items-center gap-2 px-1 py-[7px] rounded-lg hover:bg-accent/50 cursor-pointer transition-colors",
+            collapsed ? "justify-center w-full" : "flex-1 min-w-0",
+          )}
         >
-          <polyline points="7 10 12 5 17 10" />
-          <polyline points="7 14 12 19 17 14" />
-        </svg>
-      </div>
-    </UserMenuPopover>
+          <div className="w-[22px] h-[22px] min-w-[22px] bg-primary rounded-full flex items-center justify-center text-primary-foreground text-[8px] font-semibold flex-shrink-0">
+            {av}
+          </div>
+          {!collapsed && (
+            <>
+              <V2Text
+                as="span"
+                variant="body-sm"
+                truncate
+                className="text-muted-fg font-medium flex-1 min-w-0"
+              >
+                {displayName}
+              </V2Text>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-faint flex-shrink-0 opacity-70"
+                aria-hidden="true"
+              >
+                <polyline points="7 10 12 5 17 10" />
+                <polyline points="7 14 12 19 17 14" />
+              </svg>
+            </>
+          )}
+        </div>
+      </UserMenuPopover>
+    ),
+    [av, displayName],
   );
 
   const notificationNode = (
@@ -288,6 +314,8 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         branchName={branchName}
         tenantName={tenantName}
         contentClassName="pb-10"
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebar}
         userMenuNode={userMenuNode}
         notificationNode={notificationNode}
         currentTheme={appTheme}

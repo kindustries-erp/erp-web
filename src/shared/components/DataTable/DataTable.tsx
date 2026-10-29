@@ -151,12 +151,32 @@ export function DataTable<T>({
     onColumnSizingChange: handleColumnSizingChange,
   });
 
-  // Portal target subscription for toolbar controls
-  const [portalTarget, setPortalTarget] = useState<Element | null>(null);
+  // Portal target subscription for toolbar controls (support separate column & fullscreen slots)
+  const [columnPortalTarget, setColumnPortalTarget] = useState<Element | null>(
+    null,
+  );
+  const [fullscreenPortalTarget, setFullscreenPortalTarget] =
+    useState<Element | null>(null);
+  const [legacyPortalTarget, setLegacyPortalTarget] = useState<Element | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!tableId || (!enableColumnVisibility && !enableFullscreen)) return;
-    return subscribePortalTarget(tableId, setPortalTarget);
+    const unsubColumn = subscribePortalTarget(
+      `${tableId}-column`,
+      setColumnPortalTarget,
+    );
+    const unsubFullscreen = subscribePortalTarget(
+      `${tableId}-fullscreen`,
+      setFullscreenPortalTarget,
+    );
+    const unsubLegacy = subscribePortalTarget(tableId, setLegacyPortalTarget);
+    return () => {
+      unsubColumn();
+      unsubFullscreen();
+      unsubLegacy();
+    };
   }, [tableId, enableColumnVisibility, enableFullscreen]);
 
   // Context menu state
@@ -608,7 +628,35 @@ export function DataTable<T>({
 
   return (
     <>
-      {portalTarget &&
+      {columnPortalTarget &&
+        enableColumnVisibility &&
+        createPortal(
+          <div className="flex items-center shrink-0">
+            <ColumnToggle
+              table={table}
+              _visibility={internalVisibility}
+              _order={internalColumnOrder}
+              onReset={handleResetTableLayout}
+            />
+          </div>,
+          columnPortalTarget,
+        )}
+
+      {fullscreenPortalTarget &&
+        enableFullscreen &&
+        createPortal(
+          <div className="flex items-center shrink-0">
+            <FullscreenToggle
+              isFullscreen={isFullscreen}
+              onToggle={toggleFullscreen}
+            />
+          </div>,
+          fullscreenPortalTarget,
+        )}
+
+      {!columnPortalTarget &&
+        !fullscreenPortalTarget &&
+        legacyPortalTarget &&
         createPortal(
           <div className="flex items-center gap-1.5 shrink-0">
             {enableColumnVisibility && (
@@ -626,7 +674,7 @@ export function DataTable<T>({
               />
             )}
           </div>,
-          portalTarget,
+          legacyPortalTarget,
         )}
 
       {/* Normal / In-place Table View */}

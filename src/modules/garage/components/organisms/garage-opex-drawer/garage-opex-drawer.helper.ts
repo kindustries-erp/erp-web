@@ -16,6 +16,15 @@ export function getGroupByCatKey(catKey: string): CostGroupType {
   if (catKey.startsWith("HOA_HONG_")) {
     return "COMMISSION";
   }
+  if (
+    catKey === "LAI_VAY" ||
+    catKey === "CHI_PHI_TAI_CHINH" ||
+    catKey === "CHI_PHI_TAI_CHINH_KHAC" ||
+    catKey.includes("TAI_CHINH") ||
+    catKey.includes("LAI_VAY")
+  ) {
+    return "FINANCIAL";
+  }
   return "OPEX";
 }
 

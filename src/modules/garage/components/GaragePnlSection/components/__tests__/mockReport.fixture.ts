@@ -26,6 +26,18 @@ export const mockPnlReport: GaragePnlReportResponse = {
       },
     ],
   },
+  financialExpenses: {
+    total: 5000000,
+    ojTotal: 1000000,
+    items: [
+      {
+        categoryKey: "LAI_VAY",
+        categoryName: "Chi phí lãi vay",
+        amount: 5000000,
+        ojAmount: 1000000,
+      },
+    ],
+  },
   netProfit: 54210586,
   netProfitBeforeCommission: 56210586,
   serviceCommission: {
@@ -62,6 +74,7 @@ export const mockPnlReport: GaragePnlReportResponse = {
     grossMarginRate: 40.0,
     sellingExpensesTotal: 0,
     opexTotal: 10000000,
+    financialExpensesTotal: 1000000,
     netProfit: 10000000,
     netProfitBeforeCommission: 10000000,
     serviceCommissionTotal: 1000000,

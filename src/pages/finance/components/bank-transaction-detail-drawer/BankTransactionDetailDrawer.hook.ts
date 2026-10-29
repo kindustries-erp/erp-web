@@ -12,6 +12,21 @@ import type {
   CashflowPurpose,
 } from "@/modules/bank-statements/constants/cashflowAttributes";
 import type { DrawerAuditLogItem } from "@/shared/components/StandardFormDrawer";
+import {
+  toPartnerOptionValue,
+  toPartnerSelectionPayload,
+} from "@/v2/modules/business-partners/domain/rules/partnerSelection";
+
+/** Giá trị ô chọn đối tượng từ đối tác đã gán cho giao dịch (null nếu chưa gán) */
+const resolvePartnerValue = (transaction: any): string | null =>
+  transaction?.partner?.id
+    ? toPartnerOptionValue({
+        partnerId: transaction.partner.id,
+        name: transaction.partner.name ?? "",
+        taxCode: transaction.partner.taxCode ?? null,
+        source: "MASTER",
+      })
+    : null;
 import type {
   BankTransactionDetailDrawerProps,
   BankTransactionDetailSubTabKey,
@@ -44,6 +59,9 @@ export function useBankTransactionDetailDrawer(
   const [formError, setFormError] = useState<string | null>(null);
   const [editBranchIds, setEditBranchIds] = useState<string[]>([]);
   const [editDescription, setEditDescription] = useState<string>("");
+  // Đối tượng: giá trị đã mã hóa cho ô chọn (xem toPartnerOptionValue) và nhãn hiển thị
+  const [editPartnerValue, setEditPartnerValue] = useState<string | null>(null);
+  const [editPartnerLabel, setEditPartnerLabel] = useState<string | null>(null);
   const [cashflowClassification, setCashflowClassification] =
     useState<CashflowClassification | null>(null);
   const [cashflowPurpose, setCashflowPurpose] =
@@ -132,7 +150,7 @@ export function useBankTransactionDetailDrawer(
           : [];
       postingState.setAllState({
         postingDate: tx?.postingDate || defaultPostingDate,
-        description: tx?.description || baseDescription,
+        description: tx?.postingDescription || baseDescription,
         lines:
           pLines.length > 0
             ? pLines.map((l: any) => ({
@@ -168,6 +186,8 @@ export function useBankTransactionDetailDrawer(
       setFormError(null);
       setEditBranchIds(resolveTransactionBranchIds(transaction));
       setEditDescription(transaction.note || "");
+      setEditPartnerValue(resolvePartnerValue(transaction));
+      setEditPartnerLabel(transaction.partner?.name ?? null);
       setCashflowClassification(transaction.cashflowClassification ?? null);
       setCashflowPurpose(transaction.cashflowPurpose ?? null);
       hydratePostingState(transaction);
@@ -190,8 +210,11 @@ export function useBankTransactionDetailDrawer(
       const oDesc = transaction.note || "";
       const oClassification = transaction.cashflowClassification ?? null;
       const oPurpose = transaction.cashflowPurpose ?? null;
+      const partnerChanged =
+        editPartnerValue !== resolvePartnerValue(transaction);
       if (
         branchChanged ||
+        partnerChanged ||
         editDescription !== oDesc ||
         cashflowClassification !== oClassification ||
         cashflowPurpose !== oPurpose
@@ -199,6 +222,13 @@ export function useBankTransactionDetailDrawer(
         await bankStatementApi.updateTransaction(transactionId, {
           // Chỉ gửi chi nhánh khi người dùng thực sự đổi, tránh xóa nhầm khi chỉ sửa mô tả
           ...(branchChanged ? { branchIds: editBranchIds } : {}),
+          // Tiền thu (credit) ứng với khách hàng, tiền chi (debit) ứng với nhà cung cấp
+          ...(partnerChanged
+            ? toPartnerSelectionPayload(
+                editPartnerValue,
+                Number(transaction.creditAmount) > 0 ? "OUT" : "IN",
+              )
+            : {}),
           note: editDescription,
           cashflowClassification,
           cashflowPurpose: cashflowClassification ? cashflowPurpose : null,
@@ -375,6 +405,10 @@ export function useBankTransactionDetailDrawer(
     cashflowPurpose,
     setCashflowPurpose,
     editBranchIds,
+    editPartnerValue,
+    setEditPartnerValue,
+    editPartnerLabel,
+    setEditPartnerLabel,
     setEditBranchIds,
     editDescription,
     setEditDescription,

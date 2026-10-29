@@ -116,6 +116,48 @@ export const renderInvoiceSubjectCell = (
   return renderCopyableText(subject, t);
 };
 
+const uniqueLinkedInvoiceValues = (
+  row: any,
+  pick: (inv: any) => string | null | undefined,
+) => {
+  const values = (row.invoiceNetOffs || [])
+    .map((link: any) => pick(link.invoice || link.erpInvoice || {}))
+    .filter(Boolean);
+  return Array.from(new Set<string>(values)).join(", ");
+};
+
+export const renderInvoiceNoCell = (
+  row: any,
+  t: (k: string, o?: any) => string,
+) =>
+  renderCopyableText(
+    uniqueLinkedInvoiceValues(row, (inv) => inv.invoiceNo),
+    t,
+  );
+
+export const renderInvoiceSerialCell = (
+  row: any,
+  t: (k: string, o?: any) => string,
+) =>
+  renderCopyableText(
+    uniqueLinkedInvoiceValues(row, (inv) => inv.serialNo),
+    t,
+  );
+
+export const renderInvoiceDateCell = (
+  row: any,
+  t: (k: string, o?: any) => string,
+) =>
+  renderCopyableText(
+    uniqueLinkedInvoiceValues(row, (inv) => {
+      const date = inv.invoiceDate as string | undefined;
+      if (!date) return null;
+      const [y, m, d] = date.slice(0, 10).split("-");
+      return y && m && d ? `${d}/${m}/${y}` : date;
+    }),
+    t,
+  );
+
 export const renderPartnerCell = (
   account: string | undefined,
   name: string | undefined,

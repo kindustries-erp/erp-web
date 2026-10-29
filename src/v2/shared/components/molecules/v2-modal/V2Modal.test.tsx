@@ -108,3 +108,30 @@ describe("V2Modal Molecule", () => {
     expect(handleOpenChange).toHaveBeenCalledWith(false);
   });
 });
+
+describe("V2Modal size 2xl", () => {
+  it("uses the wide 2xl width class", () => {
+    render(
+      <V2Modal open onOpenChange={() => undefined} title="Rộng" size="2xl">
+        <p>nội dung</p>
+      </V2Modal>,
+    );
+    expect(screen.getByRole("dialog").className).toContain("max-w-[1100px]");
+  });
+});
+
+describe("V2Modal size screen", () => {
+  it("fills 96% of the viewport width", () => {
+    render(
+      <V2Modal
+        open
+        onOpenChange={() => undefined}
+        title="Toàn màn hình"
+        size="screen"
+      >
+        <p>nội dung</p>
+      </V2Modal>,
+    );
+    expect(screen.getByRole("dialog").className).toContain("w-[96vw]");
+  });
+});

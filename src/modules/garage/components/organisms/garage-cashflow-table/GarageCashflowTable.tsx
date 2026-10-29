@@ -162,7 +162,7 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
             label: t("garage.cashflow.exportExcel", {
               defaultValue: "Xuất Excel",
             }),
-            icon: <FileSpreadsheet className="w-4 h-4 text-green-600" />,
+            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
             onClick: () => {
               if (onExportExcel) {
                 onExportExcel({

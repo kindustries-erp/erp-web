@@ -7,6 +7,7 @@ import {
   V2Text,
 } from "@/v2/shared/components/atoms";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Calendar, dateTriggerClass } from "./V2Calendar";
@@ -29,9 +30,25 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
   className,
   triggerClassName,
   "aria-label": ariaLabel,
+  open: controlledOpen,
+  onOpenChange,
 }) => {
   const { t } = useV2Translation();
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    else setInternalOpen(next);
+  };
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Click ra ngoài thì đóng lịch; mở lịch này sẽ đóng popover đang mở khác
+  useV2PopoverDismiss({
+    open,
+    onClose: () => setOpen(false),
+    containerRef,
+    panelSelector: "[data-v2-date-panel]",
+  });
   const selected = parseIsoDate(value);
   const hint = placeholder ?? t("v2.form.pickDate", "Chọn ngày");
   const canClear = clearable && selected !== undefined && !disabled;
@@ -52,7 +69,7 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
   );
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <div ref={containerRef} className={cn("relative w-full", className)}>
       <V2Popover
         trigger={trigger}
         open={open}
@@ -65,16 +82,18 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
         className="w-auto p-2"
         triggerClassName="w-full"
         content={
-          <V2Calendar
-            mode="single"
-            selected={selected}
-            defaultMonth={selected}
-            disabled={buildDisabledMatchers(minDate, maxDate)}
-            onSelect={(date) => {
-              onValueChange(date ? toIsoDate(date) : null);
-              setOpen(false);
-            }}
-          />
+          <div data-v2-date-panel="">
+            <V2Calendar
+              mode="single"
+              selected={selected}
+              defaultMonth={selected}
+              disabled={buildDisabledMatchers(minDate, maxDate)}
+              onSelect={(date) => {
+                onValueChange(date ? toIsoDate(date) : null);
+                setOpen(false);
+              }}
+            />
+          </div>
         }
       />
       {canClear && (

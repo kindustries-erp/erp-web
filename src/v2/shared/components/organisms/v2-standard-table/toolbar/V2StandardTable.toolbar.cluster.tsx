@@ -88,6 +88,7 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
         onClear={onClearSelection}
         renderMenu={menuOf(config.bulkActions, "start")}
       />
+      {columnToggle && <V2ColumnToggle {...columnToggle} />}
       {activeFilterCount > 0 && (
         <V2Button
           variant="destructive-outline"
@@ -103,7 +104,6 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
           onClick={config.onFilterToggle}
         />
       )}
-      {columnToggle && <V2ColumnToggle {...columnToggle} />}
       {onToggleFullscreen && (
         <V2ToolbarIconButton
           label={fsLabel}

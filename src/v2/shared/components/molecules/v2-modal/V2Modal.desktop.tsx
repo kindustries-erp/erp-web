@@ -16,7 +16,9 @@ const SIZE_CLASSES: Record<V2ModalSize, string> = {
   md: "max-w-[480px]",
   lg: "max-w-[560px]",
   xl: "max-w-[680px]",
+  "2xl": "max-w-[1100px] w-[94vw]",
   full: "max-w-[92vw] w-[92vw] max-h-[90vh]",
+  screen: "max-w-[96vw] w-[96vw] h-[94vh] max-h-[94vh]",
 };
 
 export const V2ModalDesktop: React.FC<V2ModalProps> = ({

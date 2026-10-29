@@ -126,6 +126,9 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - `V2TabPanel`: `lazy` (mount khi mở lần đầu) + `keepAlive` (giữ mounted, ẩn bằng CSS), mặc định cả hai. Thay `mountedViewsRef` thủ công.
 - Layering: context + hook portal ở L2 (`v2-tab-panel`); template (L4) cung cấp, bảng (L3) tiêu thụ. **Không import template từ organism.**
 - Mobile bỏ `viewModes`, fullscreen, cấu hình cột, panel lọc.
+- **Thứ tự nút toolbar chuẩn (từ trái qua phải)**:
+  `[Chế độ xem / viewModes]` ➔ `[Chip chọn hàng loạt]` ➔ `[Xóa bộ lọc]` ➔ **`[Tùy chỉnh cột (V2ColumnToggle)]`** ➔ **`[Bộ lọc (V2TableFilterButton)]`** ➔ `[Toàn màn hình]` ➔ `[Làm mới (V2ToolbarIconButton)]` ➔ `[Hành động chính (V2SplitButton)]`.
+  Quy chuẩn: **Nút Cột luôn đứng TRƯỚC nút Bộ lọc**.
 - **Nút icon toolbar luôn dùng `V2ToolbarIconButton`** (Lọc, Cột, Toàn màn hình, Làm mới); không tự viết `V2Button` icon mới cho cụm này.
 - **Panel lọc** (`toolbar.filterPanel`): cột bên phải `w-80`, co bảng lại, nằm trong vùng fullscreen. Mỗi cột có `filter` spec + nguồn options là một `V2FilterCard`, thân là `V2ColumnHeaderFilterPanel` (cùng mô hình chờ "Áp dụng" như popup header, một nguồn logic). Chip "Đang lọc" dựng bởi `v2ActiveFilterChips` (một chip/cột, gỡ = `clearColumn`). `extraContent` cho bộ lọc theo trang.
 

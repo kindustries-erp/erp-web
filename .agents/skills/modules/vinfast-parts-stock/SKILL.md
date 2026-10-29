@@ -71,6 +71,7 @@ src/
 
 ### 3.1. Template Trang Kho (`VinfastPartsStockTemplate.tsx`)
 - **Khung giao diện**: Kế thừa `<SpreadsheetPageTemplate>` với `tableId="vinfast-parts-stock-${vehicleType}"`.
+- **Nút hành động đầu trang** (giống trang hóa đơn): nút chính tách đôi "Đồng bộ" (`onCreate` mở `VinfastPartsSyncDrawer`, icon `DownloadCloud`); menu ▾ chỉ có nhóm TRA CỨU → "Xuất Excel" (mở `VinfastPartsStockExportDrawer`). Cấu hình trong `VinfastPartsStockTable.tsx` (`createLabel`, `createIcon`, `onCreate`) và `VinfastPartsStockTable.actions.tsx` (`createActions`).
 - **Bộ lọc & Sắp xếp Header Cột (`TableColumnHeaderFilter`)**:
   - Hỗ trợ tìm kiếm nhanh theo từng cột (`column_search`).
   - Lọc đa giá trị (`column_filters`) với cơ chế tải danh sách giá trị distinct qua `fetchColumnOptions` (`/api/v1/vinfast-parts/stock/column-options`).
@@ -80,15 +81,26 @@ src/
   2. `sku`: Mã phụ tùng — sử dụng `<TableText>` bật copy, tooltip, mở drawer chi tiết khi nhấp chuột.
   3. `name`: Tên phụ tùng — hiển thị kèm tooltip.
   4. `uom`: Đơn vị tính (ĐVT).
-  5. `qtyOpening`: Tồn đầu kỳ.
-  6. `qtyIn`: Số lượng nhập trong kỳ.
-  7. `qtyOut`: Số lượng xuất trong kỳ.
-  8. `qtyBalance`: Số dư tồn cuối kỳ (nổi bật màu sắc nếu tồn > 0).
-  9. `avgCost`: Đơn giá bình quân / FIFO (`money()`).
-  10. `totalAmount`: Giá trị tồn kho (`money()`).
-  11. `actions`: Menu thao tác dòng `<ActionDropdown>`:
-      - **Xem sổ cái FIFO**: Mở Drawer phân rã đơn vị FIFO (`FifoUnitLedgerSection`).
-      - **Xem chi tiết phụ tùng**: Mở `VinfastPartsStockDetailDrawer`.
+  5. `qtyIn`: Số lượng nhập trong kỳ (`text-emerald-700 dark:text-emerald-400`).
+  6. `qtyOut`: Số lượng xuất trong kỳ (`text-rose-700 dark:text-rose-400`).
+  7. `qtyBalance`: Số dư tồn cuối kỳ — sử dụng `text-slate-900 dark:text-zinc-100 tabular-nums font-bold` (nổi bật rõ nét trong Dark Theme, nếu âm chuyển sang `text-rose-600 dark:text-rose-400`).
+  8. Dòng tổng cộng (Summary Row): Đồng bộ màu sắc tương tự, `qtyBalance` dùng `text-slate-900 dark:text-zinc-100 font-bold`.
+
+### 3.1.1. Cấu hình Xuất Excel Báo Cáo Phụ Tùng (Chuẩn Hóa Theo Sao Kê Ngân Hàng)
+- **Sheet 1 ("Tổng Hợp Tồn Kho")**:
+  - Banner hàng đầu: Row 1 Tiêu đề in hoa, Row 2 Diễn giải kỳ (`Kỳ báo cáo: Từ ngày... đến ngày...` / `Toàn bộ thời gian`) + Phân loại xe (`Tất cả` / `Ô tô` / `Xe máy`).
+  - Cột: `STT`, `Mã Phụ Tùng`, `Tên Phụ Tùng`, `ĐVT`, `Loại Xe` (`vehicleType`), `Tồn Đầu Kỳ` (`qtyOpening`), `Tổng Nhập` (`qtyIn`), `Tổng Xuất` (`qtyOut`), `Tồn Cuối Kỳ` (`qtyBalance`).
+  - **Công thức Excel động (Dynamic Formulas)**:
+    - Cột `Tổng Nhập`: Lấy số liệu từ Sổ Cái qua hàm `=SUMIFS('Sổ Cái Chi Tiết FIFO'!$F$7:$F$N, 'Sổ Cái Chi Tiết FIFO'!$A$7:$A$N, B7, 'Sổ Cái Chi Tiết FIFO'!$E$7:$E$N, "Nhập")`.
+    - Cột `Tổng Xuất`: Lấy số liệu từ Sổ Cái qua hàm `=SUMIFS('Sổ Cái Chi Tiết FIFO'!$F$7:$F$N, 'Sổ Cái Chi Tiết FIFO'!$A$7:$A$N, B7, 'Sổ Cái Chi Tiết FIFO'!$E$7:$E$N, "Xuất")`.
+    - Cột `Tồn Cuối Kỳ`: Dùng công thức `= Đầu kỳ + Nhập - Xuất` (`=F7+G7-H7`).
+- **Sheet 2 ("Sổ Cái Chi Tiết FIFO")**:
+  - Gồm 11 cột sổ cái phụ tùng (bổ sung cột `Loại Xe`, cột `Chiều` ghi "Nhập" / "Xuất") và Khối Hóa đơn chi tiết (`erp_invoice_items`):
+    `[HĐ] Chi nhánh`, `[HĐ] Ngày HĐ`, `[HĐ] Số HĐ`, `[HĐ] Ký hiệu HĐ`, `[HĐ] MST HĐ` (tách riêng MST), `[HĐ] Đối tác HĐ` (chỉ ghi tên), `[HĐ] Tên dòng hàng`, `[HĐ] SL HĐ`, `[HĐ] Đơn giá HĐ (VND)`, `[HĐ] Thuế VAT (%)`, `[HĐ] Thành tiền HĐ (VND)`.
+  - Styling: Header xanh Emerald (`FF065F46`), data cell xanh nhạt (`FFF0FDF4`), viền trái nét đôi (`double border`).
+- **Drawer xuất Excel (`VinfastPartsStockExportDrawer`)**:
+  - Phân nhóm 3 group cột rõ ràng: `summary` (Tổng hợp tồn kho), `ledger` (Sổ cái chi tiết FIFO), `invoice` (Dòng hóa đơn mua / bán liên quan).
+  - Mục **Điều kiện xuất dữ liệu**: Tích hợp `V2Combobox` phân loại phụ tùng: "Tất cả" (`ALL`), "Phụ tùng ô tô" (`CAR`), "Phụ tùng xe máy" (`MOTORBIKE`). Khi chọn, tự động map vào payload query xuất Excel ngầm.
 
 ### 3.2. Sổ Cái Phân Rã Đơn Vị FIFO (`fifo-unit-ledger/`)
 - Hiển thị theo nguyên tắc: Mỗi 1 số lượng nhập được tách thành 1 dòng đơn vị (`Unit 1..N`).
@@ -110,10 +122,18 @@ src/
 - Kết nối SSE endpoint `/api/v1/vinfast-parts/sync/progress` để cập nhật thanh tiến trình theo thời gian thực.
 - Section "Tiến trình" bọc `V2SyncProgress` (`src/v2/shared/components/molecules/v2-sync-progress/`) trong `DrawerSection` V1, dùng chung với drawer "Đồng bộ hóa đơn" (`InvoiceSyncProgressSection`). Trạng thái suy bằng `deriveSyncPanelStatus` (`pages/hooks/vinfastSyncStatus.ts`): đang chạy > lỗi (dòng cuối có `level: "error"`) > hoàn tất (100%). Log lưu `{ at, message, level? }`, giờ hiển thị lấy từ `at`.
 
-### 3.4. Drawer Xuất Báo Cáo Excel Chạy Ngầm (`VinfastPartsStockExportDrawer.tsx`)
-- Tích hợp với Zustand store `useVinfastPartsStockExportProgressStore`.
-- Lắng nghe SSE stream `/api/v1/vinfast-parts/stock/export/excel/progress/stream`.
-- Hiển thị lịch sử các lần xuất trước, cho phép tải lại ngay lập tức nếu file còn hiệu lực (chưa quá 24h).
+### 3.4. Drawer Xuất Báo Cáo Excel Chạy Ngầm (V2: `src/v2/modules/vinfast-parts/drawers/VinfastPartsStockExportDrawer.tsx`)
+- Drawer đã chuyển sang V2 (`V2ExportExcelDrawer`, layout 2 cột `lg`). Đường dẫn V1 `src/pages/components/VinfastPartsStockExportDrawer.tsx` chỉ còn re-export để giữ nơi mount.
+- Cấu trúc: `.hook.ts` (điều phối), `.period.hook.ts` (chế độ xuất, kỳ tháng/quý/tùy chỉnh, khoảng ngày), `.history.hook.ts` (query lịch sử + SSE, poll 10s khi job chạy và SSE không khỏe, map `historyItems`), `.helper.ts` (`buildExportPayload`, `buildFilterSummary`, map dòng lịch sử), `.columns.config.ts` (nhóm cột Tổng hợp / Sổ cái FIFO, mặc định chọn đủ), `Conditions.tsx` (mỏng, bọc `V2ExportConditionSection` từ shared).
+- Điều kiện xuất (cột phải) dùng chung `V2ExportConditionSection` (`molecules/v2-export-condition-section`): radio card "Theo kỳ" / "Theo filter hiện tại" → khi theo kỳ: tab pill Theo tháng / Theo quý / Tùy chỉnh + Kỳ hoặc Quý + Từ/Đến ngày; khi theo filter: `V2ExportFilterSummary` (loại xe, từ khóa, số điều kiện lọc cột). Không còn lựa chọn "Tất cả thời gian": xuất toàn bộ thời gian = "Theo filter hiện tại" (không ghi đè ngày).
+- Payload: "Theo kỳ" ghi đè `dateFrom/dateTo`; "Theo filter hiện tại" giữ nguyên `buildBaseQuery()` và không gửi ngày ghi đè. Nút Xuất bị khóa khi chưa chọn cột nào.
+- Cột trái: `V2ColumnSelector` (chọn cột theo nhóm) + `V2ExportHistoryList` (lịch sử + `V2TablePagination`). Nút Xuất bị khóa khi chưa chọn cột nào. Gửi `selectedColumns` trong payload `startBackgroundExport`.
+- Data layer nằm trong module V2 (không import V1): `api/vinfastStockExportApi.ts` (`v2HttpClient`), `api/dtos/vinfastStockExport.dto.ts`, `stores/useVinfastStockExportProgressStore.ts` (zustand), `hooks/useVinfastStockExportProgress.ts` (SSE `${V2_API_BASE_URL}/api/v1/vinfast-parts/stock/export/excel/progress/stream` + tải file blob). Các file V1 tương ứng đã xóa.
+- Toast dùng `useV2ToastStore` (`V2Toaster` đã mount ở `App.tsx`, dùng được cả V1 lẫn V2). Chuỗi hiển thị qua `useV2Translation` với key `v2.vinfastParts.export.*` (module locale `vinfastParts.locale.ts`) và `v2.exportExcel.*` (dùng chung).
+- Icon lấy qua registry `@/v2/shared/components/atoms` (`FileSpreadsheet`, `RefreshCw`, `Play`), không import `lucide-react` trực tiếp.
+- Validate: "Từ ngày" có `maxDate = Đến ngày`, "Đến ngày" có `minDate = Từ ngày`; khi `Từ ngày > Đến ngày` hiện `V2AlertBanner` và khóa nút Xuất; hook chặn thêm bằng toast `destructive`.
+- Nhãn kỳ: tháng `Tháng M/YYYY`, quý `Quý N/YYYY` (không còn kèm khoảng ngày trong nhãn).
+- Hiển thị lịch sử các lần xuất trước, tải lại ngay nếu file còn hiệu lực (chưa quá 24h).
 
 ---
 

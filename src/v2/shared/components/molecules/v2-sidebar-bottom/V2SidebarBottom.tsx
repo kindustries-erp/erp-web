@@ -21,6 +21,11 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
     displayName ?? t("v2.sidebar.userFallback", "Quản trị viên");
   const notificationLabel = t("v2.sidebar.notifications", "Thông báo");
 
+  const resolvedUserMenuNode =
+    typeof userMenuNode === "function"
+      ? userMenuNode({ collapsed })
+      : userMenuNode;
+
   const userButton = (
     <V2Button
       type="button"
@@ -111,7 +116,7 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
             : "flex items-center gap-[6px]",
         )}
       >
-        {userMenuNode ? userMenuNode : userButton}
+        {resolvedUserMenuNode ? resolvedUserMenuNode : userButton}
         {notificationNode ? notificationNode : notificationButton}
       </div>
     </div>

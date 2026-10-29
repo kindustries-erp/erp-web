@@ -29,6 +29,8 @@ export const vinfastPartsVi = {
   CREATE_NEW: "Tạo mới",
   SYSTEM: "HỆ THỐNG",
   SEARCH: "TRA CỨU",
+  SYNC: "Đồng bộ",
+  EXPORT_EXCEL: "Xuất Excel",
   VIEW_DETAILS: "Chi tiết",
   FIFO_TRACE_LEDGER: "Lịch sử xuất nhập kho",
   CAR: "Ô tô",

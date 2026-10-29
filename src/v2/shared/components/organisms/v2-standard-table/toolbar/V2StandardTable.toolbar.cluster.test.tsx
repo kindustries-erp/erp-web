@@ -35,4 +35,32 @@ describe("V2TableToolbarCluster", () => {
       screen.getByRole("button", { name: "Thoát toàn màn hình" }),
     ).toBeInTheDocument();
   });
+
+  it("renders column toggle before filter button in DOM order", () => {
+    const onFilterToggle = vi.fn();
+    render(
+      <V2TableToolbarCluster
+        {...baseProps}
+        config={{ onFilterToggle }}
+        columnToggle={{
+          columns: [{ key: "col1", label: "Col 1", visible: true }],
+          onToggle: vi.fn(),
+          onReorder: vi.fn(),
+          onReset: vi.fn(),
+        }}
+      />,
+    );
+
+    const buttons = screen.getAllByRole("button");
+    const colBtnIdx = buttons.findIndex((b) =>
+      b.getAttribute("aria-label")?.includes("Tùy chỉnh cột"),
+    );
+    const filterBtnIdx = buttons.findIndex((b) =>
+      b.getAttribute("aria-label")?.includes("Bộ lọc"),
+    );
+
+    expect(colBtnIdx).toBeGreaterThanOrEqual(0);
+    expect(filterBtnIdx).toBeGreaterThanOrEqual(0);
+    expect(colBtnIdx).toBeLessThan(filterBtnIdx);
+  });
 });

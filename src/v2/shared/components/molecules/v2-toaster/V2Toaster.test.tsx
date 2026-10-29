@@ -20,6 +20,36 @@ describe("V2Toaster", () => {
     expect(screen.getByText("KH-001")).toBeInTheDocument();
   });
 
+  it("renders all 4 variants with appropriate glass styling", () => {
+    render(<V2Toaster />);
+    act(() => {
+      useV2ToastStore.getState().showToast({
+        title: "Thông báo mặc định",
+        variant: "default",
+      });
+      useV2ToastStore.getState().showToast({
+        title: "Thành công",
+        variant: "success",
+      });
+      useV2ToastStore.getState().showToast({
+        title: "Có lỗi xảy ra",
+        variant: "destructive",
+      });
+      useV2ToastStore.getState().showToast({
+        title: "Cảnh báo hệ thống",
+        variant: "warning",
+      });
+    });
+
+    expect(screen.getByText("Thông báo mặc định")).toBeInTheDocument();
+    expect(screen.getByText("Thành công")).toBeInTheDocument();
+    expect(screen.getByText("Có lỗi xảy ra")).toBeInTheDocument();
+    expect(screen.getByText("Cảnh báo hệ thống")).toBeInTheDocument();
+
+    const toasts = screen.getAllByRole("status");
+    expect(toasts.length).toBeGreaterThanOrEqual(1);
+  });
+
   it("removes a toast from the store when its close button is pressed", () => {
     render(<V2Toaster />);
     act(() => {

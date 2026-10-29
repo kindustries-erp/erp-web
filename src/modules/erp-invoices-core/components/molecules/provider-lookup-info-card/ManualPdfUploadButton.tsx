@@ -1,8 +1,8 @@
 import { useRef, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import { Loader2, Upload } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
+import { Upload } from "lucide-react";
+import { V2Button } from "@/v2/shared/components";
 
 const MAX_MANUAL_PDF_BYTES = 10 * 1024 * 1024;
 
@@ -47,21 +47,17 @@ export function ManualPdfUploadButton({
         aria-label={t("lookupUploadPdf", "Tải lên PDF đã tải")}
         onChange={handleChange}
       />
-      <Button
+      <V2Button
         type="button"
         variant="outline"
         size="sm"
-        disabled={isUploading}
+        isLoading={isUploading}
         onClick={() => inputRef.current?.click()}
         className="h-7 flex-1 text-xs"
+        leftIcon={<Upload className="h-3.5 w-3.5" />}
       >
-        {isUploading ? (
-          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <Upload className="mr-1.5 h-3.5 w-3.5" />
-        )}
         <span>{t("lookupUploadPdf", "Tải lên PDF đã tải")}</span>
-      </Button>
+      </V2Button>
     </>
   );
 }

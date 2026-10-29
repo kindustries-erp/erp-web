@@ -6,6 +6,7 @@ import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
 import { businessPartnersV2Api } from "../api/businessPartnersApi";
 import { useSaveBusinessPartnerMutation } from "../api/mutations/useBusinessPartnerMutations";
 import { businessPartnerKeys } from "../api/queries/businessPartnerKeys";
+import type { BusinessPartner } from "../domain/entities/businessPartner";
 import {
   emptyBusinessPartnerForm,
   type BusinessPartnerFormValue,
@@ -24,6 +25,8 @@ export interface BusinessPartnerDrawerState {
   partnerType: BusinessPartnerType;
   canUpdate: boolean;
   onClose: () => void;
+  /** Gọi khi tạo mới xong (thay cho đóng), để người mở drawer nhận đối tác vừa tạo */
+  onCreated?: (partner: BusinessPartner) => void;
 }
 
 const toForm = (
@@ -92,7 +95,10 @@ export function useBusinessPartnerDrawer(state: BusinessPartnerDrawerState) {
     });
   }, [detail.error, t]);
 
-  const save = useSaveBusinessPartnerMutation(t, state.onClose);
+  const save = useSaveBusinessPartnerMutation(t, (saved) => {
+    if (!state.partnerId && state.onCreated) state.onCreated(saved);
+    else state.onClose();
+  });
 
   const setField = <K extends keyof BusinessPartnerFormValue>(
     key: K,

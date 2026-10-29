@@ -16,6 +16,9 @@ import {
   renderNetOffCell,
   renderRemainingCell,
   renderInvoiceSubjectCell,
+  renderInvoiceNoCell,
+  renderInvoiceSerialCell,
+  renderInvoiceDateCell,
   renderPartnerCell,
 } from "./BankStatementCellRenderers";
 import { resolveBranchIds } from "@/shared/utils/branchIds";
@@ -262,31 +265,6 @@ export function useBankStatementColumns({
         cell: (row: any) => renderCopyableText(row.description, t),
       },
       {
-        key: "cashflowClassification",
-        header: headerFilter(
-          "cashflowClassification",
-          t("bankStatement.columns.classification", {
-            defaultValue: "Phân loại",
-          }),
-          { showBlankOption: true },
-        ),
-        size: 160,
-        cell: (row: any) =>
-          getClassificationLabel(t, row.cashflowClassification),
-      },
-      {
-        key: "cashflowPurpose",
-        header: headerFilter(
-          "cashflowPurpose",
-          t("bankStatement.columns.purpose", {
-            defaultValue: "Mục đích",
-          }),
-          { showBlankOption: true },
-        ),
-        size: 160,
-        cell: (row: any) => getPurposeLabel(t, row.cashflowPurpose),
-      },
-      {
         key: "thu",
         header: headerFilter.amount(
           "thu",
@@ -318,6 +296,55 @@ export function useBankStatementColumns({
         ),
         className: "text-right font-medium",
         size: 140,
+      },
+      {
+        key: "cashflowClassification",
+        header: headerFilter(
+          "cashflowClassification",
+          t("bankStatement.columns.classification", {
+            defaultValue: "Phân loại",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 160,
+        cell: (row: any) =>
+          getClassificationLabel(t, row.cashflowClassification),
+      },
+      {
+        key: "cashflowPurpose",
+        header: headerFilter(
+          "cashflowPurpose",
+          t("bankStatement.columns.purpose", {
+            defaultValue: "Mục đích",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 160,
+        cell: (row: any) => getPurposeLabel(t, row.cashflowPurpose),
+      },
+      {
+        key: "note",
+        header: headerFilter(
+          "note",
+          t("bankStatement.columns.note", {
+            defaultValue: "Ghi chú",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 250,
+        cell: (row: any) => renderCopyableText(row.note, t),
+      },
+      {
+        key: "businessPartner",
+        header: headerFilter(
+          "businessPartner",
+          t("bankStatement.columns.businessPartner", {
+            defaultValue: "Đối tượng",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 200,
+        cell: (row: any) => row.partner?.name || "—",
       },
       {
         key: "netOffAmount",
@@ -360,6 +387,42 @@ export function useBankStatementColumns({
         ),
         size: 200,
         cell: (row: any) => renderInvoiceSubjectCell(row, t),
+      },
+      {
+        key: "invoiceNo",
+        header: headerFilter(
+          "invoiceNo",
+          t("bankStatement.columns.invoiceNo", {
+            defaultValue: "Số hóa đơn",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 150,
+        cell: (row: any) => renderInvoiceNoCell(row, t),
+      },
+      {
+        key: "invoiceSerial",
+        header: (
+          <span className="w-full block text-center">
+            {t("bankStatement.columns.invoiceSerial", {
+              defaultValue: "Ký hiệu HĐ",
+            })}
+          </span>
+        ),
+        size: 120,
+        cell: (row: any) => renderInvoiceSerialCell(row, t),
+      },
+      {
+        key: "invoiceDate",
+        header: (
+          <span className="w-full block text-center">
+            {t("bankStatement.columns.invoiceDate", {
+              defaultValue: "Ngày HĐ",
+            })}
+          </span>
+        ),
+        size: 120,
+        cell: (row: any) => renderInvoiceDateCell(row, t),
       },
       {
         key: "correspondentName",

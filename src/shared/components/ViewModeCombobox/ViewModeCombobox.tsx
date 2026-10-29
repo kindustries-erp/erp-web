@@ -48,10 +48,10 @@ export function ViewModeCombobox<TFilter extends string = string>(
           <button
             type="button"
             className={cn(
-              "h-8 px-2.5 inline-flex items-center gap-1.5 rounded-full text-xs font-medium shrink-0",
-              "bg-slate-100/80 hover:bg-slate-200/70 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80",
-              "border border-slate-200/60 dark:border-zinc-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]",
-              "text-slate-700 dark:text-zinc-200 transition-colors focus:outline-none focus:ring-1 focus:ring-primary/40",
+              "h-8 px-2.5 inline-flex items-center gap-1.5 rounded-lg text-xs font-medium shrink-0",
+              "bg-surface hover:bg-surface-hover dark:hover:bg-white/[0.05]",
+              "border border-border/80 dark:border-white/[0.06] shadow-2xs",
+              "text-foreground transition-colors focus:outline-none focus:ring-1 focus:ring-primary/40",
               disabled && "opacity-50 cursor-not-allowed",
               className,
             )}
