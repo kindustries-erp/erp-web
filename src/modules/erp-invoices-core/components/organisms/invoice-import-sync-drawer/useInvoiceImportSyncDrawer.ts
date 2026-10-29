@@ -10,6 +10,7 @@ import { useInvoiceSyncDrawerProgress } from "./useInvoiceSyncDrawerProgress";
 import { useBulkDownloadXmlMutation } from "@/modules/erp-invoices-core/hooks/useBulkDownloadXmlMutation";
 import { useInvoiceSyncPeriod } from "@/v2/modules/finance-invoice/drawers/InvoiceSyncDrawer.period.hook";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { extractApiError } from "@/shared/utils/apiError";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { InvoiceSyncMethod } from "./invoiceSyncDrawer.actions";
 
@@ -131,11 +132,8 @@ export function useInvoiceImportSyncDrawer({
       const res = await bulkXml.mutateAsync(direction);
       addSyncLog(res.message, "success");
       toast.success(res.message);
-    } catch (e: any) {
-      const message =
-        e.response?.data?.message ||
-        e.message ||
-        t("bulkXmlError", "Lỗi tải lại XML");
+    } catch (e) {
+      const message = extractApiError(e, t("bulkXmlError", "Lỗi tải lại XML"));
       failSync(message);
       toast.error(message);
     }
