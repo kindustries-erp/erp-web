@@ -1331,6 +1331,7 @@ export const garageEn = {
       OPEX: "Operating Expense (OPEX)",
       COGS: "Cost of Goods Sold (COGS)",
       COMMISSION: "Commission",
+      FINANCIAL: "Financial Expenses",
     },
     categories: {
       NHAN_SU: "Personnel / Payroll",
@@ -1345,6 +1346,9 @@ export const garageEn = {
       HOA_HONG_SALE: "Sales Commission",
       HOA_HONG_DV: "Service Commission",
       HOA_HONG_KHAC: "Other Commission (Manual)",
+      LAI_VAY: "Interest Expense",
+      CHI_PHI_TAI_CHINH_KHAC: "Other Financial Expenses",
+      CHI_PHI_TAI_CHINH: "Financial Expenses",
       KHAC: "Other",
     },
     actions: {
@@ -1507,10 +1511,17 @@ export const garageEn = {
     grossProfitHeader: "III. Gross Profit",
     sellingExpensesHeader: "IV. Selling Expenses",
     opexHeader: "V. Operating Expenses (OPEX)",
-    netProfitHeader: "VI. Net Profit",
-    serviceCommissionHeader: "VII. Service Bonus & Commission",
+    financialExpenseHeader: "VI. Financial Expenses",
+    noOjFinancialHint: "6.1. No financial expenses allocated to OJ",
+    noFinancialHint: "6.1. No financial expenses recorded for this month",
+    netProfitHeader: "VII. Net Profit",
+    netProfitOjSub: "7.1. In which: OJ Net Profit",
+    serviceCommissionHeader: "VIII. Service Bonus & Commission",
+    dvCommission: "8.1. Service Commission (10%)",
+    dvCommissionOjSub: "8.1.1. In which: OJ Portion",
     retainedProfitHeader:
-      "VIII. Retained Profit of Garage (After Service Commission)",
+      "IX. Retained Profit of Garage (After Service Commission)",
+    retainedProfitOjSub: "9.1. In which: OJ Retained Profit",
     netProfitBeforeCommissionHeader: "Net Profit (Before Commission)",
     commissionHeader: "Commissions",
     kyGuiProfitRate: "Consignment Profit Share / Total Profit",
@@ -1524,7 +1535,6 @@ export const garageEn = {
     saleCommissionBadge: "10% × Net Profit × {{rate}}% Consignment",
     saleCommissionSubtitle:
       "Calculated on 10% of Net Profit based on Consignment Gross Profit share",
-    dvCommission: "Service Commission (10%)",
     dvCommissionBadge: "10% × (Net Profit - Sales Comm)",
     dvCommissionSubtitle:
       "Calculated on 10% of Net Profit after deducting Sales commission",

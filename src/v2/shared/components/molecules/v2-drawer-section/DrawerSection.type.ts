@@ -11,6 +11,8 @@ export interface DrawerSectionProps {
   onToggleCollapse?: () => void;
   /** Giới hạn chiều cao theo viewport trên desktop; body tự cuộn bên trong */
   fitViewportHeight?: boolean;
+  /** Tự động giãn flex-1 min-h-0 lấp đầy chiều cao còn lại của container drawer */
+  fillHeight?: boolean;
   children: React.ReactNode;
   className?: string;
   bodyClassName?: string;
