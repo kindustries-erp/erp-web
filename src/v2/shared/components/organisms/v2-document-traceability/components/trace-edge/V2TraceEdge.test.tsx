@@ -46,6 +46,12 @@ describe("V2TraceEdge", () => {
     expect(screen.getByText("Liên kết")).toBeInTheDocument();
   });
 
+  it("positions label above the edge line with an offset", () => {
+    renderEdge("Liên kết");
+    const container = screen.getByTestId("v2-trace-edge-label");
+    expect(container.style.transform).toContain("translate(-50%, -100%)");
+  });
+
   it("renders no label when the edge has none", () => {
     renderEdge(undefined);
     expect(screen.queryByText("Liên kết")).toBeNull();

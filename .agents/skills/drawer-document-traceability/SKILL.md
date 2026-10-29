@@ -205,42 +205,88 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
 
 ---
 
-## 10. Quy Chuẩn Tối Ưu Hiệu Năng Kéo Thả Canvas (Drag Performance Standard)
+## 10. Kiến Trúc Layout Engine V2 & No-Drag Standard
 
-Để đảm bảo Canvas đạt chuẩn mượt mà 60–120fps khi kéo thả node (không bị giật lag, đơ cứng hay kẹt chuột):
+Từ phiên bản V2, hệ thống luồng chứng từ chuyển sang sử dụng **Pure Domain Layout Engine** (`src/v2/shared/components/organisms/v2-document-traceability/utils/`):
 
-1. **Uncontrolled Canvas Pattern (`defaultNodes` & `defaultEdges`)**:
-   - **Tuyệt đối không dùng Controlled State (`nodes={canvas.nodes}` + `onNodesChange={canvas.onNodesChange}`)**: Việc gọi `setNodes` trên từng pixel chuột di chuyển sẽ ép React re-render toàn bộ Canvas và Sub-components 60–120 lần/giây, gây nghẽn hoàn toàn luồng JS chính.
-   - **Bắt buộc dùng Uncontrolled Mode**: Truyền `defaultNodes={layout.nodes}` và `defaultEdges={layout.edges}` vào `<ReactFlow>`. React Flow sẽ tự cập nhật CSS `transform` trực tiếp lên DOM node qua Zustand store nội bộ mà không gây bất kỳ React re-render nào khi drag chuột (0 re-render/frame).
-   - **Đồng bộ qua `useReactFlow()`**: Khi đồ thị (`graph.rootId`) hoặc hướng (`direction`) hoặc bộ lọc thay đổi, dùng `setNodes` / `setEdges` trong `useEffect` để đồng bộ lại đồ thị, đồng thời bảo tồn tọa độ mà người dùng đã kéo thả (`posMap`).
-   - Bật `onlyRenderVisibleElements` để React Flow tự động culling các node nằm ngoài viewport.
+1. **Thuật toán Sắp xếp Barycenter Sweep (`traceability.layout.barycenter.ts`)**:
+   - Quét 2 chiều (Forward & Backward) để tính toán trọng tâm kết nối của từng node.
+   - Tự động hoán đổi thứ tự các node trong cùng stage để triệt tiêu 80-90% tình trạng dây nối cắt chéo nhau (edge crossings).
 
-2. **Bảo tồn 100% Hiệu Ứng Thẩm Mỹ `backdrop-blur-[12px]` của Hệ Thống ERP**:
-   - Khi áp dụng Uncontrolled Pattern, CPU/JS thread hoàn toàn rảnh rỗi và GPU chỉ cần đảm nhận CSS `transform` phần cứng. Vì vậy, hệ thống **hoàn toàn giữ nguyên thiết kế kính mờ `backdrop-blur-[12px]`** của `<DrawerSection>` chuẩn ERP mà không làm sụt giảm FPS.
+2. **Thuật toán Gióng Hàng Y & Chống Va Chạm (`traceability.layout.alignment.ts`)**:
+   - **Quan hệ 1-1**: Node con tự động lấy cùng tọa độ Y với node cha ($\Delta y = 0$), tạo thành **đường nối ngang thẳng tắp 180 độ**.
+   - **Quan hệ N-1 / 1-N**: Node liên kết phân bổ đối xứng theo trọng tâm các node cha.
+   - **Chống đè node**: Cơ chế Collision Push đảm bảo khoảng cách giữa các node cùng cột luôn $\ge \text{rowGap}$. Khung Stage tự động co giãn chiều cao theo nội dung thực tế.
 
-3. **Tuyệt đối không dùng `extent: "parent"` trên Document Node**:
-   - Khung giai đoạn (Swimlane) có chiều rộng cố định (`330px`), thẻ chứng từ rộng `290px`.
-   - Nếu bật `extent: "parent"`, node sẽ bị kẹt cứng sau 20px di chuyển và React Flow phải tính toán ma trận va chạm bounding-box liên tục gây lag giật.
-   - Luôn giữ `parentId: stageNodeId(stage)` để định danh phân cấp và nối dây tự động, nhưng **KHÔNG** đặt `extent: "parent"` để người dùng kéo thả tự do.
+3. **Cố Định Vị Trí Node (No-Drag Policy)**:
+   - Các node được cấu hình `draggable: false` và `<ReactFlow nodesDraggable={false} nodesConnectable={false} elementsSelectable={true}>`.
+   - Giữ nguyên khả năng Pan/Zoom canvas và click chọn node để xem/sửa, nhưng khóa thao tác kéo rê để bảo toàn bố cục đồ thị chuẩn.
 
-4. **Đóng băng CSS Transitions khi đang kéo thả (`dragging`)**:
-   - Thẻ node (`V2TraceNode`) phải áp dụng `!transition-none will-change-transform shadow-none` khi `dragging === true` để trình duyệt không phải nội suy style trong lúc chuột đang di chuyển.
+4. **Định Vị Nhãn Trên Lưng Đường Kẻ (`V2TraceEdge.tsx`)**:
+   - Nhãn số tiền / ghi chú được đặt nổi hẳn lên trên đường kẻ (`translate(-50%, -100%) translateY(-6px)`), giúp đường nét thông suốt bên dưới và nhãn hiển thị trang nhã, không bị vạch kẻ đè qua.
 
-5. **Tối ưu hóa nhãn dây nối (`V2TraceEdge`)**:
-   - Nhãn cạnh nối trong `EdgeLabelRenderer` phải dùng thẻ native nhẹ (`<span className="...">`), tuyệt đối không dùng các component typography nặng chứa state, context hay hooks (`V2Text`).
+5. **Cơ Chế Adapter Tái Sử Dụng Cho V1 (`DrawerDocumentTraceability.tsx`)**:
+   - Component V1 đóng vai trò là một **Adapter Facade** mỏng (< 60 LoC), map các props V1 (`allowEdit`, `fetchGraph`, `onAddLink`) sang `V2DocumentTraceability`.
+   - Giúp toàn bộ các module V1 như `garage-cases`, `inventory-core`, `production-core` lập tức thừa hưởng giao diện và engine V2 hiện đại với 100% tương thích ngược.
 
-6. **Static Memoization**:
-   - Cấu hình `fitViewOptions` phải được khai báo dạng hằng số module tĩnh (`const FIT_VIEW_OPTIONS = { padding: 0.15 };`) bên ngoài component để không tạo object reference mới làm re-render React Flow.
+---
+
+## 11. Quy Chuẩn UI Enhancement, Iconography V2 & Theme Harmonization
+
+1. **Bộ Icon Chuyên Biệt Theo Loại Chứng Từ (`traceNode.helper.tsx`)**:
+   - Mỗi loại chứng từ hiển thị kèm icon Lucide đặc trưng trong Badge:
+     - `INVOICE`: `Receipt`
+     - `BANK_TXN`: `CreditCard`
+     - `PURCHASE_ORDER`: `ShoppingCart`
+     - `SALES_ORDER`: `ShoppingBag`
+     - `GOODS_RECEIPT`: `PackageCheck`
+     - `GOODS_ISSUE`: `PackageMinus`
+     - `GARAGE_CASE`: `Wrench`
+     - `PRODUCTION_ORDER` / `PRODUCTION_PLAN`: `Factory`
+     - `JOURNAL_ENTRY`: `BookOpen`
+     - `BATCH` / `RAW_MATERIAL`: `Layers` / `Package`
+
+2. **Thẻ Node Tương Tác Hiện Đại (Micro-Elevation & Theme Harmonization)**:
+   - Hiệu ứng GPU-accelerated hover: `hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 will-change-transform`.
+   - Viền thẻ tinh xảo bao quanh 4 cạnh với độ rực nhẹ matching bản chất tài chính:
+     - Chi tiền (HĐ Mua, UNC, Phiếu chi): `border-warning/30 border-l-[3px] border-l-warning hover:border-warning/60`.
+     - Thu tiền (HĐ Bán, GBC, Phiếu thu): `border-success/30 border-l-[3px] border-l-success hover:border-success/60`.
+     - Chứng từ đang xem: `border-2 border-primary/60 border-l-[3px] border-l-primary shadow-md shadow-primary/10 ring-2 ring-primary/30`.
+     - Trung tính (Kho, Sổ cái): `border border-border/80 border-l-[3px] border-l-muted-fg/40 hover:border-border`.
+   - Tự động tương thích 5 Theme (`Default`, `Classic Light`, `Classic Dark`, `OrcaQ`, `Midnight Dark`): ở Dark Theme, các thẻ có nền slate/charcoal sâu thẳm và viền phát sáng nhẹ giống hệt phong cách kiến trúc của 200Lab.
+   - Tuyệt đối không dùng `backdrop-filter: blur(...)` bên trong các node canvas để duy trì hiệu năng 60-120fps khi pan/zoom.
+
+3. **Stage Swimlanes Chuẩn Khối Nghiệp Vụ (Zone Headers) (`V2TraceStageGroup.tsx`)**:
+   - Đường viền mờ sang trọng `border-border/70`, nền chuyển sắc nhẹ `bg-gradient-to-b from-surface/40 via-surface/10 to-transparent`.
+   - Stage Badge dạng Pill đánh số thứ tự luồng trực quan: `01`, `02`, `03`, `04` kèm Icon phân hệ đặc trưng:
+     - `ORDER_STOCK`: `<Package className="h-3 w-3" />`
+     - `INVOICE`: `<Receipt className="h-3 w-3" />`
+     - `PAYMENT`: `<CreditCard className="h-3 w-3" />`
+     - `GENERAL_LEDGER`: `<BookOpen className="h-3 w-3" />`
+
+4. **Nút Chuyển Hướng Bố Cục Chuẩn Xác (Canvas Controls Only)**:
+   - Nút chuyển hướng bố cục chỉ đặt duy nhất tại cụm Controls góc dưới Canvas (đã loại bỏ khỏi Toolbar trên cùng để tránh trùng lặp và rối mắt).
+   - Khắc phục triệt để lỗi icon bị bôi đen đặc ruột do CSS `@xyflow/react` áp dụng `fill: currentColor` bằng các lớp ghi đè:
+     `[&_svg]:!fill-none [&_svg]:!stroke-current [&_rect]:!fill-none [&_svg]:!max-w-[14px] [&_svg]:!max-h-[14px]`.
+   - Hiển thị icon `Rows3` (khi đang ngang để chuyển sang dọc) và `Columns3` (khi đang dọc để chuyển sang ngang) với đường nét rỗng, sắc sảo.
+
+5. **Lưới Chấm Tối Giản & Thanh Chú Thích Ngang Đáy (`V2TraceCanvasLegend.tsx`)**:
+   - Sử dụng `<Background variant={BackgroundVariant.Dots} gap={22} size={1.2} />` tạo độ sâu không gian theo token `--border`.
+   - Thanh chú thích nổi dạng viên thuốc tròn trịa (`rounded-full border border-border/80 bg-surface/95 px-4 py-1.5 shadow-sm`) nằm ngang đáy Canvas:
+     - 🟢 Dòng tiền vào (Thu)
+     - 🟠 Dòng tiền ra (Chi)
+     - 🟣 Chứng từ đang chọn (Active)
+   - Bật `onlyRenderVisibleElements` trên ReactFlow để tối ưu triệt để việc render chỉ các node nằm trong viewport.
 
 ---
 
 ## Summary Checklist trước khi hoàn thành:
 
-- [ ] Canvas đã sử dụng Uncontrolled Mode (`defaultNodes` / `defaultEdges`) và `onlyRenderVisibleElements` chưa?
-- [ ] Giữ nguyên 100% phong cách thiết kế kính mờ `backdrop-blur-[12px]` của `DrawerSection` chuẩn ERP chưa?
-- [ ] Document nodes đã được gỡ bỏ `extent: "parent"` để cho phép kéo thả tự do mượt mà chưa?
-- [ ] Thẻ node đã có `!transition-none will-change-transform` khi `dragging` chưa?
-- [ ] Nhãn dây nối (`V2TraceEdge`) đã dùng thẻ thuần nhẹ thay cho các component nặng chứa hooks chưa?
+- [ ] Canvas đã khóa kéo rê node (`nodesDraggable={false}`, `draggable: false`) để bảo toàn layout chưa?
+- [ ] Nhãn dây nối (`V2TraceEdge`) đã nằm trên lưng đường kẻ (`translate(-50%, -100%) translateY(-6px)`) chưa?
+- [ ] Layout engine đã áp dụng Barycenter Sweep và Target-Y alignment để các node 1-1 thẳng hàng chưa?
+- [ ] Khung stage đã tự co giãn theo chiều cao thực tế của các node chưa?
+- [ ] Component V1 `DrawerDocumentTraceability` đã đóng vai trò Adapter Facade chuyển tiếp sang V2 chưa?
 - [ ] Đã truyền prop `editMode={mode === "edit"}` để đồng bộ quyền ghép nối/gỡ liên kết với Drawer cha chưa?
 - [ ] Thao tác gỡ liên kết (`onUnlinkNode`) đã được staging trên Client-side và chỉ lưu theo batch khi submit form chưa?
 - [ ] Các loại chứng từ được phép ghép nối (`allowedDocTypes`) đã được khai báo phù hợp với nghiệp vụ của module chưa?

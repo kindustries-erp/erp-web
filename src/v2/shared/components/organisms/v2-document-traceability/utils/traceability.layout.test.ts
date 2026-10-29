@@ -108,6 +108,19 @@ describe("computeTraceabilityLayout", () => {
     const root = layout.nodes.find((n) => n.id === "root");
     expect(root?.parentId).toBe("stage-group-INVOICE");
     expect(root?.type).toBe("traceabilityNode");
+    expect(root?.draggable).toBe(false);
+  });
+
+  it("ensures all nodes have draggable disabled", () => {
+    const layout = computeTraceabilityLayout({
+      graph,
+      direction: "horizontal",
+      allowEdit: false,
+      actions,
+    });
+    layout.nodes.forEach((node) => {
+      expect(node.draggable).toBe(false);
+    });
   });
 
   it("marks edges in the selection as animated and raised", () => {

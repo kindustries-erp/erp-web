@@ -25,8 +25,8 @@ const ALIGN_CLASS: Record<TableColumnAlign, string> = {
 };
 
 const GLASS_STYLE: React.CSSProperties = {
-  backdropFilter: "blur(24px) saturate(200%)",
-  WebkitBackdropFilter: "blur(24px) saturate(200%)",
+  backdropFilter: "blur(var(--glass-blur, 8px)) saturate(180%)",
+  WebkitBackdropFilter: "blur(var(--glass-blur, 8px)) saturate(180%)",
 };
 
 export const V2ColumnHeaderFilter: React.FC<V2ColumnHeaderFilterProps> = (

@@ -4,6 +4,7 @@ import {
   V2Button,
   V2ToolbarIconButton,
   V2TableFilterButton,
+  V2TableFilterChip,
   V2SplitButton,
 } from "@/v2/shared/components";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -64,33 +65,30 @@ export function TableActionGroup({
   return (
     <div className="flex items-center gap-2 w-full flex-wrap justify-start sm:justify-end">
       {extraActions}
-      {children}
 
-      {/* 1. Slot Cột (Column Visibility) - Đặt TRƯỚC Bộ lọc */}
+      {/* 1. Slot Cột (Column Visibility) - Đặt TRƯỚC Thao tác hàng loạt & Bộ lọc */}
       <div
         ref={columnRefCallback}
         className="empty:hidden flex items-center justify-center shrink-0"
       />
 
-      {/* Nút xóa nhanh tất cả bộ lọc khi có filter active */}
-      {activeFilterCount > 0 && onClearAllFilters && (
-        <V2Button
-          variant="destructive-outline"
-          size="xs"
-          onClick={onClearAllFilters}
-          className="shrink-0"
-        >
-          <span>{t("Bộ lọc")}</span>{" "}
-          <span className="font-semibold">({activeFilterCount})</span> ✕
-        </V2Button>
-      )}
+      {/* 2. Thao tác hàng loạt (Bulk Actions) / Custom Actions */}
+      {children}
 
-      {/* 2. Nút Bộ Lọc (Filter) - Đặt SAU Cột, TRƯỚC Toàn màn hình */}
-      {onFilterToggle && (
-        <V2TableFilterButton
-          onClick={onFilterToggle}
-          activeCount={activeFilterCount}
+      {/* 3. Nút Bộ Lọc (Filter) - Có filter active thì hiện Filter Chip; Chưa có thì hiện Filter Button */}
+      {activeFilterCount > 0 && onClearAllFilters ? (
+        <V2TableFilterChip
+          count={activeFilterCount}
+          onClear={onClearAllFilters}
+          onToggleFilter={onFilterToggle}
         />
+      ) : (
+        onFilterToggle && (
+          <V2TableFilterButton
+            onClick={onFilterToggle}
+            activeCount={activeFilterCount}
+          />
+        )
       )}
 
       {/* 3. Slot Toàn màn hình (Fullscreen) - Đặt SAU Bộ lọc, TRƯỚC Tải lại */}

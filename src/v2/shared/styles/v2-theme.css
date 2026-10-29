@@ -38,16 +38,17 @@
   /* ── Glass Chrome & Overlays ── */
   --glass-chrome: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-blur: 15px;
-  --drawer-blur: 28px;
+  --glass-blur: 8px;
+  --drawer-blur: 10px;
+  --drawer-section-blur: 0px;
 
   /* ── Popups, Dropdowns & Modals ── */
-  --popup-bg: rgba(246, 248, 252, 0.65);
+  --popup-bg: rgba(246, 248, 252, 0.9);
   --popup-bg-hover: rgba(0, 0, 0, 0.05);
   --popup-border: rgba(226, 232, 240, 0.8);
   --popup-shadow:
     0 16px 40px -8px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
-  --modal-bg: rgba(246, 248, 252, 0.7);
+  --modal-bg: rgba(246, 248, 252, 0.92);
   --tooltip-bg: #0f172a;
 
   /* ── Table Sticky ── */
@@ -58,7 +59,7 @@
   /* Overlay tắt. Khôi phục: --overlay-bg rgba(15,23,42,0.2), --overlay-blur 1px */
   --overlay-bg: transparent;
   --overlay-blur: 0px;
-  --drawer-bg: rgba(255, 255, 255, 0.35);
+  --drawer-bg: rgba(255, 255, 255, 0.88);
   --drawer-shadow:
     0 0 32px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
   --drawer-border: rgba(255, 255, 255, 0.65);
@@ -66,7 +67,7 @@
   --drawer-header-scrolled-bg: rgba(246, 248, 252, 0.9);
   --drawer-footer-bg: rgba(246, 248, 252, 0.75);
   --drawer-footer-scrolled-bg: rgba(246, 248, 252, 0.9);
-  --drawer-section-bg: rgba(255, 255, 255, 0.65);
+  --drawer-section-bg: rgba(255, 255, 255, 0.85);
 
   /* ── Shell & Sidebar ── */
   --app-shell-bg: #1e1e1e;
@@ -111,21 +112,22 @@
 
   --glass-chrome: rgba(255, 255, 255, 0.48);
   --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-blur: 20px;
-  --drawer-blur: 28px;
-  --drawer-bg: rgba(255, 255, 255, 0.35);
+  --glass-blur: 8px;
+  --drawer-blur: 10px;
+  --drawer-section-blur: 0px;
+  --drawer-bg: rgba(255, 255, 255, 0.88);
   --drawer-shadow:
     0 0 32px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
 
   /* ── Popups & dropdowns ── */
-  --popup-bg: rgba(246, 248, 252, 0.65);
+  --popup-bg: rgba(246, 248, 252, 0.9);
   --popup-bg-hover: rgba(0, 0, 0, 0.05);
   --popup-border: rgba(226, 232, 240, 0.8);
   --popup-shadow:
     0 16px 40px -8px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(246, 248, 252, 0.7);
+  --modal-bg: rgba(246, 248, 252, 0.92);
   --tooltip-bg: #0f172a;
 
   /* ── Table sticky glass ── */
@@ -133,13 +135,12 @@
   --table-footer-bg: rgba(244, 246, 248, 0.7);
 
   /* ── Drawer frosted glass & overlay ── */
-  --drawer-bg: rgba(255, 255, 255, 0.35);
   --drawer-border: rgba(255, 255, 255, 0.65);
   --drawer-header-bg: rgba(246, 248, 252, 0.75);
   --drawer-header-scrolled-bg: rgba(246, 248, 252, 0.9);
   --drawer-footer-bg: rgba(246, 248, 252, 0.75);
   --drawer-footer-scrolled-bg: rgba(246, 248, 252, 0.9);
-  --drawer-section-bg: rgba(255, 255, 255, 0.65);
+  --drawer-section-bg: rgba(255, 255, 255, 0.85);
 
   --app-shell-bg: var(--background);
   --app-shell-border: transparent;
@@ -189,17 +190,19 @@
 
   --glass-chrome: rgba(22, 25, 31, 0.85);
   --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-blur: 18px;
+  --glass-blur: 8px;
+  --drawer-blur: 10px;
+  --drawer-section-blur: 0px;
 
   /* ── Popups & dropdowns ── */
-  --popup-bg: rgba(24, 28, 36, 0.95);
+  --popup-bg: rgba(24, 28, 36, 0.96);
   --popup-bg-hover: rgba(20, 184, 166, 0.08);
   --popup-border: transparent;
   --popup-shadow:
     0 24px 48px -8px rgba(0, 0, 0, 0.8), 0 8px 24px -4px rgba(0, 0, 0, 0.5);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(22, 26, 33, 0.94);
+  --modal-bg: rgba(22, 26, 33, 0.95);
   --tooltip-bg: #252b34;
 
   /* ── Table sticky glass ── */
@@ -207,8 +210,7 @@
   --table-footer-bg: rgba(26, 30, 38, 0.9);
 
   /* ── Drawer frosted glass & overlay (V2 Standard Drawer) ── */
-  --drawer-bg: rgba(26, 30, 38, 0.85);
-  --drawer-blur: 24px;
+  --drawer-bg: rgba(26, 30, 38, 0.92);
   --drawer-shadow:
     0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --drawer-border: rgba(255, 255, 255, 0.08);
@@ -263,17 +265,18 @@
   --glass-chrome: #ffffff;
   --glass-border: #e4e4e7;
   --glass-blur: 0px;
-  --drawer-blur: 24px;
+  --drawer-blur: 8px;
+  --drawer-section-blur: 0px;
 
   /* ── Popups & dropdowns ── */
-  --popup-bg: rgba(24, 24, 27, 0.85);
+  --popup-bg: rgba(24, 24, 27, 0.9);
   --popup-bg-hover: rgba(255, 255, 255, 0.08);
   --popup-border: transparent;
   --popup-shadow:
     0 20px 44px -8px rgba(0, 0, 0, 0.6), 0 6px 18px rgba(0, 0, 0, 0.3);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(24, 24, 27, 0.75);
+  --modal-bg: rgba(24, 24, 27, 0.92);
   --tooltip-bg: #1e1e2e;
 
   /* ── Table sticky glass ── */
@@ -281,7 +284,7 @@
   --table-footer-bg: rgba(244, 244, 245, 0.72);
 
   /* ── Drawer frosted glass & overlay ── */
-  --drawer-bg: rgba(24, 24, 27, 0.9);
+  --drawer-bg: rgba(24, 24, 27, 0.95);
   --drawer-shadow:
     0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --drawer-border: rgba(255, 255, 255, 0.1);
@@ -289,7 +292,7 @@
   --drawer-header-scrolled-bg: rgba(28, 28, 32, 0.92);
   --drawer-footer-bg: rgba(28, 28, 32, 0.8);
   --drawer-footer-scrolled-bg: rgba(28, 28, 32, 0.92);
-  --drawer-section-bg: rgba(39, 39, 42, 0.6);
+  --drawer-section-bg: rgba(39, 39, 42, 0.85);
 
   --sidebar-bg: #18181b;
   --sidebar-border: #27272a;
@@ -343,7 +346,9 @@
 
   --glass-chrome: rgba(18, 21, 30, 0.85);
   --glass-border: rgba(255, 255, 255, 0.07);
-  --glass-blur: 18px;
+  --glass-blur: 8px;
+  --drawer-blur: 10px;
+  --drawer-section-blur: 0px;
 
   --popup-bg: rgba(22, 25, 35, 0.96);
   --popup-bg-hover: rgba(139, 92, 246, 0.1);
@@ -356,8 +361,7 @@
   --table-header-bg: rgba(22, 26, 36, 0.88);
   --table-footer-bg: rgba(22, 26, 36, 0.92);
 
-  --drawer-bg: rgba(22, 25, 34, 0.85);
-  --drawer-blur: 24px;
+  --drawer-bg: rgba(22, 25, 34, 0.92);
   --drawer-shadow:
     0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --drawer-border: rgba(255, 255, 255, 0.08);
@@ -377,4 +381,17 @@
   --sidebar-active-fg: #a78bfa;
   --main-panel-bg: #12151e;
   --main-panel-border: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Accessibility & Performance: Low-Power / Reduced-Motion Fallback ── */
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  .dark,
+  [data-theme="greenway"],
+  .theme-orcaq,
+  .theme-midnight {
+    --glass-blur: 0px !important;
+    --drawer-blur: 0px !important;
+    --drawer-section-blur: 0px !important;
+  }
 }

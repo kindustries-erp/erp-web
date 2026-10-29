@@ -30,6 +30,7 @@ export * from "./v2-table-row-actions";
 export * from "./v2-table-text";
 export * from "./v2-split-button";
 export * from "./v2-table-selection-chip";
+export * from "./v2-table-filter-chip";
 export * from "./v2-view-mode-combobox";
 export * from "./v2-filter-card";
 export * from "./v2-filter-panel";

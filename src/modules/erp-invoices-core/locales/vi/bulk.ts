@@ -2,6 +2,12 @@ export const erpInvoicesViBulk = {
   // Bulk Edit Drawer
   bulkActions: "Thao tác",
   bulkAssignAll: "Gán hàng loạt",
+  bulkAccountingGroup: "Nghiệp vụ & Hạch toán",
+  bulkPostAll: "Hạch toán hàng loạt",
+  bulkSuggestNetOff: "Đề xuất cấn trừ sao kê",
+  bulkUnpostAll: "Hủy hạch toán hàng loạt",
+  bulkDownloadGroup: "Tải & Xuất tệp",
+  bulkExportPdfZip: "Xuất PDF / Tải ZIP",
   bulkEditTitle: "Chỉnh sửa hàng loạt {{count}} hóa đơn",
   bulkEditApplyAll: "Áp dụng tất cả",
   bulkEditApplyAllCommon: "Áp dụng chung cho tất cả",

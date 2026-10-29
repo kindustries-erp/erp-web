@@ -18,4 +18,5 @@ export interface DrawerRowProps {
   className?: string;
   labelClassName?: string;
   valueClassName?: string;
+  multiline?: boolean | 2 | 3;
 }

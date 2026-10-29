@@ -91,16 +91,13 @@ export const V2TraceNode = React.memo(function V2TraceNode({
       onDoubleClick={handleOpen}
       className={cn(
         "group relative z-10 w-[290px] cursor-pointer overflow-hidden rounded-xl bg-surface text-left",
-        meta.cardBorderCls,
-        // Khi đang kéo: tắt hoàn toàn CSS transition, loại bỏ shadow, đưa layer lên GPU để mượt mà 60fps
+        node.isCurrent || selected
+          ? "border-2 border-primary/60 border-l-[3px] border-l-primary shadow-md shadow-primary/10 ring-2 ring-primary/30"
+          : (meta.cardBorderCls ??
+              "border border-border/80 border-l-[3px] border-l-muted-fg/40 hover:border-border"),
         dragging
-          ? "!transition-none border border-border shadow-none"
-          : cn(
-              "transition-[border-color,box-shadow] duration-200",
-              node.isCurrent || selected
-                ? "border-2 border-border shadow-md ring-2 ring-foreground"
-                : "border border-border shadow-2xs hover:border-border hover:shadow-sm dark:hover:border-border",
-            ),
+          ? "!transition-none shadow-none"
+          : "transition-all duration-150 ease-out will-change-transform shadow-2xs hover:-translate-y-0.5 hover:shadow-md",
         node.restricted &&
           "cursor-default border-dashed border-border bg-muted opacity-80",
       )}
@@ -124,7 +121,7 @@ export const V2TraceNode = React.memo(function V2TraceNode({
       />
 
       <div className="space-y-2 p-3">
-        <div className="line-clamp-1 text-[11px] text-muted-fg ">
+        <V2Text as="div" className="line-clamp-1 text-[11px] text-muted-fg">
           {node.restricted ? (
             <V2Text
               as="span"
@@ -136,7 +133,7 @@ export const V2TraceNode = React.memo(function V2TraceNode({
           ) : (
             subtitle
           )}
-        </div>
+        </V2Text>
 
         <div className="flex items-center justify-between border-t border-border pt-1 font-mono text-xs ">
           <V2Text as="span" className="font-sans text-[11px] text-muted-fg">

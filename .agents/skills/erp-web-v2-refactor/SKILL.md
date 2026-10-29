@@ -89,6 +89,7 @@ Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_tabl
 - **Lỗi:** mutation hiện toast; 409 `DOCUMENT_IN_USE` do modal chung xử lý (mutation không toast lại).
 - **Preference:** giữ nguyên `tableId` của V1 (`erp-<x>-table`) để người dùng không mất cấu hình cột.
 - **Popover (dropdown, lịch):** tự đóng khi click ra ngoài và chỉ một popover mở tại một thời điểm. Dùng hook `useV2PopoverDismiss` (`src/v2/shared/hooks/useV2PopoverDismiss.ts`), không tự gắn listener `pointerdown`. Áp dụng cho `V2Combobox`, `V2DatePicker`, `V2DateRangePicker`.
+- **Hiệu ứng Glassmorphism & Tối ưu GPU:** Giới hạn `--drawer-blur: 10px`, `--glass-blur: 8px`. Cấm lồng nested `backdrop-filter` bên trong Drawer (thẻ `DrawerSection` dùng `--drawer-section-blur: 0px` kết hợp nền thẻ `0.85 - 0.9` và viền sắc nét). Thanh hover table actions dùng `backdrop-blur-sm` (4px). Tự động hạ blur về `0px` khi hệ điều hành kích hoạt `prefers-reduced-motion: reduce`.
 
 ---
 
@@ -166,7 +167,10 @@ Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `bank-sta
 
 Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/skills/modules/<module>/SKILL.md` của module.
 
-- `bank-statements` (chỉ drawer xuất Excel sao kê / sổ quỹ, trang sao kê vẫn V1): drawer V2 `V2ExportExcelDrawer` ở `drawers/BankStatementExportDrawer.tsx`, sinh khung bằng plop `v2-module` (`wire = false`), đã bỏ phần CRUD thừa. V1 chỉ giữ wrapper. Chưa có route `/v2` cho module.
+- `bank-statements`: Đã hoàn thiện V2 cho toàn bộ các drawer cốt lõi:
+  - `BankStatementExportDrawer` (`V2ExportExcelDrawer` xuất Excel sao kê ngân hàng & sổ quỹ tiền mặt).
+  - `CashTransactionDetailDrawer` (`V2StandardDrawer` 2-columns cho chi tiết giao dịch tiền mặt, hạch toán, đối tác, cấn trừ hóa đơn).
+  - `BankTransactionDetailDrawer` (`V2StandardDrawer` 2-columns cho chi tiết giao dịch ngân hàng / `cashflow?tab=bank`, xem trước chứng từ UNC/GBC `BankVoucherPreview`, hạch toán `CashPostingSection`, đối tác `CashPartnerTransactions`, truy vết cấn trừ `CashTraceabilitySection` & `CashInvoiceNetOffModal`). V1 giữ Facade Adapter chuyển tiếp 100% props. Chưa có route `/v2` cho toàn trang danh sách.
 - `vinfast-parts` (drawer xuất Excel tồn kho): đã V2 thuần (data layer, toast, icon, locale module, validate ngày). Các drawer khác của module chưa kiểm parity.
 - `finance-invoice` (drawer đồng bộ hóa đơn, chỉ lớp UI): `InvoiceSyncDrawer` v2 (2 cột, `financeInvoiceSync.locale.ts`) được container V1 `InvoiceImportSyncDrawer` render. Logic, API, SSE và 2 dialog V1 vẫn V1, không port trong đợt này.
 
