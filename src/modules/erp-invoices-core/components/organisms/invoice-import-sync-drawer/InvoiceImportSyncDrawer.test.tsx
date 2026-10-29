@@ -61,7 +61,7 @@ function makeState(overrides: Record<string, unknown> = {}) {
       importError: null,
     },
     portal: {
-      token: "t",
+      hasToken: true,
       hasPassword: true,
       loading: false,
       result: null,

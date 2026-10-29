@@ -838,14 +838,16 @@ export const erpInvoicesCoreApi = {
   },
 
   getPortalConfig: async (): Promise<{
-    token: string;
-    cookies: string;
+    token?: string;
+    cookies?: string;
+    hasToken?: boolean;
     username?: string;
     hasPassword?: boolean;
   }> => {
     const { data } = await axiosInstance.get<{
-      token: string;
-      cookies: string;
+      token?: string;
+      cookies?: string;
+      hasToken?: boolean;
       username?: string;
       hasPassword?: boolean;
     }>(`${BASE}/portal/token`);

@@ -36,7 +36,7 @@ export function InvoiceImportSyncDrawer({
       disabled:
         s.bulkXmlLoading ||
         s.portal.loading ||
-        (!s.portal.token && !s.portal.hasPassword),
+        (!s.portal.hasToken && !s.portal.hasPassword),
     },
     labels: {
       bulkXml: t("bulkXml", "Tải lại XML"),
@@ -71,7 +71,7 @@ export function InvoiceImportSyncDrawer({
         onMethodChange={s.handleMethodChange}
         period={s.period}
         canEditInvoice={s.canEditInvoice}
-        noCredential={!s.portal.token && !s.portal.hasPassword}
+        noCredential={!s.portal.hasToken && !s.portal.hasPassword}
         syncing={s.portal.loading}
         onOpenLogin={() => s.setConfigOpen(true)}
         onSync={s.handleSync}

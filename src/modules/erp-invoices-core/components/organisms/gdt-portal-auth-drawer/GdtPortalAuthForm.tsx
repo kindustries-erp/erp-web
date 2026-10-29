@@ -37,7 +37,7 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
 
   // Auth State
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [currentToken, setCurrentToken] = useState("");
+  const [hasCurrentToken, setHasCurrentToken] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
   // Fetch Captcha
@@ -81,8 +81,8 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
       if (config) {
         if (config.username) setUsername(config.username);
         if (config.hasPassword) setHasSavedPassword(true);
-        if (config.token) {
-          setCurrentToken(config.token);
+        if (config.hasToken ?? Boolean(config.token)) {
+          setHasCurrentToken(true);
         }
       }
     } catch {
@@ -131,7 +131,7 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
       if (res.success) {
         toast.success(res.message || "Đăng nhập Cổng Thuế thành công!");
         if (res.token) {
-          setCurrentToken(res.token);
+          setHasCurrentToken(true);
         }
         onSuccess?.();
       }
@@ -153,7 +153,7 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
       {/* Status banner */}
       <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-surface-hover/50 text-xs">
         <div className="flex items-center gap-2">
-          {currentToken ? (
+          {hasCurrentToken ? (
             <>
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span className="text-emerald-700 font-medium">

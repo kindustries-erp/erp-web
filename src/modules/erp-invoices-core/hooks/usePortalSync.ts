@@ -7,7 +7,7 @@ import {
 } from "../api/erpInvoicesCoreApi";
 
 export function usePortalSync() {
-  const [token, setTokenState] = useState<string>("");
+  const [hasToken, setHasToken] = useState(false);
   const [cookies, setCookiesState] = useState<string>("");
   const [hasPassword, setHasPassword] = useState(false);
   const [username, setUsername] = useState<string>("");
@@ -22,7 +22,7 @@ export function usePortalSync() {
     try {
       const res = await erpInvoicesCoreApi.getPortalConfig();
       if (res) {
-        setTokenState(res.token || "");
+        setHasToken(res.hasToken ?? Boolean(res.token));
         setCookiesState(res.cookies || "");
         setHasPassword(Boolean(res.hasPassword));
         setUsername(res.username || "");
@@ -39,7 +39,7 @@ export function usePortalSync() {
 
   const saveConfig = useCallback(
     async (t: string, c?: string, u?: string, p?: string) => {
-      setTokenState(t);
+      setHasToken(Boolean(t));
       if (c !== undefined) setCookiesState(c);
       if (u !== undefined) setUsername(u);
       if (p) setHasPassword(true);
@@ -142,7 +142,7 @@ export function usePortalSync() {
   );
 
   return {
-    token,
+    hasToken,
     cookies,
     username,
     hasPassword,
