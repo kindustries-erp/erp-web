@@ -1,14 +1,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { BookOpen } from "lucide-react";
-import { DrawerSection } from "@/shared/components/DrawerModal";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/Button";
+import { BookOpen, AlertCircle } from "lucide-react";
+import { DrawerSection } from "@/v2/shared/components";
+import { Badge } from "@/v2/shared/ui/badge";
+import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
-import { resolvePurchaseDebitAccountCode } from "@/modules/erp-invoices-core/utils/invoiceTaxCodeAccounting";
-import { createClientId } from "./ErpInvoiceDetailDrawer.state";
 import { resolveBranchIds } from "@/shared/utils/branchIds";
+import { buildDefaultAccountingLines } from "./ErpInvoiceAccountingSection.helper";
 import type {
   ErpInvoice,
   CreateErpInvoicePayload,
@@ -43,27 +42,22 @@ export function ErpInvoiceAccountingSection({
 
   const isPosted = detailInvoice.postingStatus === "POSTED";
   const accountingEnabled = (form as any)?.accountingEnabled;
+  const hasBranch = resolveBranchIds(form).length > 0;
 
   const titleExtra = (
     <div className="flex items-center gap-1.5">
       {isPosted && !pendingUnpost ? (
-        <Badge
-          variant="ghost"
-          className="border border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-mono font-bold"
-        >
+        <Badge variant="success" className="text-[10px] font-mono font-bold">
           {t("statusPosted", "✓ ĐÃ HẠCH TOÁN")}
         </Badge>
       ) : accountingEnabled ? (
-        <Badge
-          variant="ghost"
-          className="border border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 text-[10px] font-mono font-bold"
-        >
+        <Badge variant="warning" className="text-[10px] font-mono font-bold">
           {t("statusAccountingActive", "ĐANG BẬT HẠCH TOÁN")}
         </Badge>
       ) : (
         <Badge
-          variant="ghost"
-          className="border border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400 text-[10px] font-mono"
+          variant="outline"
+          className="text-muted-foreground border-border/60 bg-muted/20 text-[10px] font-mono"
         >
           {t("statusUnposted", "CHƯA HẠCH TOÁN")}
         </Badge>
@@ -74,7 +68,7 @@ export function ErpInvoiceAccountingSection({
   return (
     <DrawerSection
       title={
-        <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+        <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-foreground">
           <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
           <span>
             {t("accountingEntryTitle", "Định khoản nghiệp vụ kế toán")}
@@ -84,19 +78,19 @@ export function ErpInvoiceAccountingSection({
       titleExtra={titleExtra}
       collapsible={true}
       defaultCollapsed={false}
-      className={`border border-slate-200/80 dark:border-slate-800 mb-0 ${className || ""}`}
+      className={`mb-0 ${className || ""}`}
     >
-      <div className="p-3 bg-surface/50 rounded-xl">
+      <div className="w-full space-y-3 pt-1">
         {editMode && postingState ? (
           <div className="py-2 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-foreground">
                 {t("accountingEntrySettings", "Thiết lập định khoản")}
               </span>
-              {resolveBranchIds(form).length > 0 && (
-                <Button
+              {hasBranch && (
+                <V2Button
                   type="button"
-                  variant={accountingEnabled ? "outline" : "primary"}
+                  variant={accountingEnabled ? "outline" : "default"}
                   size="sm"
                   className="h-7 text-xs cursor-pointer"
                   onClick={() => {
@@ -106,16 +100,19 @@ export function ErpInvoiceAccountingSection({
                   {accountingEnabled
                     ? t("disableAccounting", "Hủy hạch toán")
                     : t("enableAccounting", "Bật hạch toán")}
-                </Button>
+                </V2Button>
               )}
             </div>
 
-            {resolveBranchIds(form).length === 0 ? (
-              <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                {t(
-                  "requireBranchForAccounting",
-                  "Vui lòng chọn chi nhánh ở cột bên phải trước khi nhập hạch toán kế toán.",
-                )}
+            {!hasBranch ? (
+              <div className="text-xs text-amber-700 dark:text-amber-400 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span>
+                  {t(
+                    "requireBranchForAccounting",
+                    "Vui lòng chọn chi nhánh ở cột bên phải trước khi nhập hạch toán kế toán.",
+                  )}
+                </span>
               </div>
             ) : null}
 
@@ -143,89 +140,19 @@ export function ErpInvoiceAccountingSection({
                     postingState?.reset?.();
                   }
                 }}
-                getDefaultLines={(accountOptions) => {
-                  const findAccount = (prefix: string) =>
-                    accountOptions.find((a) =>
-                      a.label.split(" - ")[0]?.startsWith(prefix),
-                    )?.value || "";
-                  const preVat =
-                    Number(detailInvoice?.preVatAmount || form?.preVatAmount) ||
-                    0;
-                  const vat =
-                    Number(detailInvoice?.vatAmount || form?.vatAmount) || 0;
-                  const total =
-                    Number(detailInvoice?.totalAmount || form?.totalAmount) ||
-                    0;
-                  const baseDesc =
-                    detailInvoice?.description ||
-                    `${t("postingDefaultDesc", "Hạch toán hóa đơn")} ${detailInvoice?.invoiceNo || form?.invoiceNo}`;
-
-                  const newLines = [];
-                  if (direction === "IN") {
-                    const sellerTaxCode =
-                      detailInvoice?.sellerTaxCode || form?.sellerTaxCode || "";
-                    const debitCode =
-                      resolvePurchaseDebitAccountCode(sellerTaxCode);
-                    const debitAccountId =
-                      debitCode === "642"
-                        ? findAccount("642") || findAccount("632")
-                        : findAccount("632") || findAccount("642");
-
-                    if (preVat > 0)
-                      newLines.push({
-                        id: createClientId(),
-                        accountId:
-                          debitAccountId ||
-                          findAccount("152") ||
-                          findAccount("156"),
-                        debit: preVat,
-                        credit: 0,
-                        description: baseDesc,
-                      });
-                    if (vat > 0)
-                      newLines.push({
-                        id: createClientId(),
-                        accountId: findAccount("133"),
-                        debit: vat,
-                        credit: 0,
-                        description: `Thuế GTGT ${detailInvoice?.invoiceNo || form?.invoiceNo}`,
-                      });
-                    if (total > 0)
-                      newLines.push({
-                        id: createClientId(),
-                        accountId: findAccount("331"),
-                        debit: 0,
-                        credit: total,
-                        description: baseDesc,
-                      });
-                  } else {
-                    if (total > 0)
-                      newLines.push({
-                        id: createClientId(),
-                        accountId: findAccount("131"),
-                        debit: total,
-                        credit: 0,
-                        description: baseDesc,
-                      });
-                    if (preVat > 0)
-                      newLines.push({
-                        id: createClientId(),
-                        accountId: findAccount("511") || findAccount("711"),
-                        debit: 0,
-                        credit: preVat,
-                        description: baseDesc,
-                      });
-                    if (vat > 0)
-                      newLines.push({
-                        id: createClientId(),
-                        accountId: findAccount("3331") || findAccount("333"),
-                        debit: 0,
-                        credit: vat,
-                        description: `Thuế GTGT ${detailInvoice?.invoiceNo || form?.invoiceNo}`,
-                      });
-                  }
-                  return newLines;
-                }}
+                getDefaultLines={(accountOptions) =>
+                  buildDefaultAccountingLines({
+                    detailInvoice,
+                    form,
+                    direction,
+                    accountOptions,
+                    defaultDescriptionPrefix: t(
+                      "postingDefaultDesc",
+                      "Hạch toán hóa đơn",
+                    ),
+                    vatDescriptionPrefix: t("vatDescPrefix", "Thuế GTGT"),
+                  })
+                }
               />
             </div>
           </div>

@@ -55,7 +55,7 @@ describe("useCashVoucherDrawer", () => {
     act(() => {
       result.current.setField("cashBookId", "cb-dt");
       result.current.setField("transDate", "2026-10-01");
-      result.current.setField("debitAmount", 500);
+      result.current.setField("receiptAmount", 500);
     });
     act(() => result.current.submit());
 
@@ -65,8 +65,8 @@ describe("useCashVoucherDrawer", () => {
       sourceType: "CASH",
       cashBookId: "cb-dt",
       transDate: "2026-10-01",
-      debitAmount: 500,
-      creditAmount: 0,
+      creditAmount: 500,
+      debitAmount: 0,
       description: "",
       correspondentName: "",
     });
@@ -82,14 +82,15 @@ describe("useCashVoucherDrawer", () => {
     act(() => {
       result.current.setField("cashBookId", "cb-x");
       result.current.setField("transDate", "2026-10-01");
-      result.current.setField("creditAmount", 200);
+      result.current.setField("paymentAmount", 200);
     });
     act(() => result.current.submit());
 
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
     expect(createManual.mock.calls[0][0]).toMatchObject({
       branchId: "branch-current",
-      creditAmount: 200,
+      debitAmount: 200,
+      creditAmount: 0,
     });
   });
 

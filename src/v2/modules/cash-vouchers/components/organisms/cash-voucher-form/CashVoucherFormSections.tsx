@@ -99,24 +99,22 @@ export function CashVoucherFormSections({
       <DrawerSection title={t("v2.cashVouchers.form.amount", "Số tiền")}>
         <div className="grid gap-3 sm:grid-cols-2">
           <DrawerField
-            label={t("v2.cashVouchers.form.debitAmount", "Thu (phát sinh Nợ)")}
+            label={t("v2.cashVouchers.form.receiptAmount", "Thu")}
             error={errorField === "amount" ? amountErrorMessage : undefined}
           >
             <V2NumberInput
-              value={form.debitAmount}
+              value={form.receiptAmount}
               min={0}
               placeholder="0"
-              onValueChange={(value) => setField("debitAmount", value)}
+              onValueChange={(value) => setField("receiptAmount", value)}
             />
           </DrawerField>
-          <DrawerField
-            label={t("v2.cashVouchers.form.creditAmount", "Chi (phát sinh Có)")}
-          >
+          <DrawerField label={t("v2.cashVouchers.form.paymentAmount", "Chi")}>
             <V2NumberInput
-              value={form.creditAmount}
+              value={form.paymentAmount}
               min={0}
               placeholder="0"
-              onValueChange={(value) => setField("creditAmount", value)}
+              onValueChange={(value) => setField("paymentAmount", value)}
             />
           </DrawerField>
         </div>

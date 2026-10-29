@@ -13,9 +13,9 @@ export function validateCashVoucherForm(
 ): CashVoucherFieldError | null {
   if (!form.cashBookId) return "cashBookId";
   if (!form.transDate) return "transDate";
-  const hasDebit = (form.debitAmount ?? 0) > 0;
-  const hasCredit = (form.creditAmount ?? 0) > 0;
-  if (hasDebit === hasCredit) return "amount";
+  const hasReceipt = (form.receiptAmount ?? 0) > 0;
+  const hasPayment = (form.paymentAmount ?? 0) > 0;
+  if (hasReceipt === hasPayment) return "amount";
   return null;
 }
 

@@ -110,7 +110,9 @@ src/modules/erp-invoices-core/
 │       │   ├── ErpInvoiceDetailDrawerModals.tsx# Sub-organism gom 4 selection modals (Bank NetOff, PO, SO, Case < 80 LoC)
 │       │   ├── ErpInvoiceDetailDrawer.hook.tsx# Hook quản lý form state, mode xem/sửa, deep links & auto-calculate
 │       │   ├── ErpInvoiceDetailDrawer.state.ts# Initial state & validation schema
-│       │   ├── ErpInvoiceAccountingSection.tsx# Section hạch toán kế toán chuẩn DrawerSection (tiêu đề, icon BookOpen, badge trạng thái)
+│       │   ├── ErpInvoiceAccountingSection.tsx# Section hạch toán kế toán chuẩn V2 DrawerSection, Badge, V2Button (< 180 LoC, match theme sáng/tối)
+│       │   ├── ErpInvoiceAccountingSection.helper.ts# Helper độc lập buildDefaultAccountingLines tính toán định khoản Nợ/Có (< 120 LoC)
+│       │   ├── ErpInvoiceAccountingSection.test.tsx# Unit tests co-located kiểm thử toàn diện view/edit mode & helper
 │       │   ├── ErpInvoiceInternalMain.tsx     # Cột Trái: ErpInvoiceAdjustmentSection (trên đầu), Bảng hàng, PDF
 │       │   └── ErpInvoiceInternalSidebar.tsx  # Cột Phải: Tra cứu/PDF, Thông tin chung, debtSlot, Thuộc tính mặc định & tùy chỉnh
 │       ├── erp-invoice-settlement-right-panel/# Cột phải tab Chứng từ & Tài chính (tái sử dụng Sidebar + DebtSection)
@@ -238,7 +240,7 @@ src/modules/erp-invoices-core/
   - **3 Top Tabs chính của drawer** (tinh gọn chuẩn hóa):
     - `invoice_details` (**Chi tiết**): Chứa hàng điều hướng Molecule `ErpInvoiceDetailTabNav` gồm 3 sub-pills:
       1. `[Chi tiết hóa đơn]` (mặc định): nội dung HĐ, chi tiết mặt hàng, bảng kê và 2 buttons căn phải `[Xem trước HĐ thuần]` | `[Tài liệu & PDF]`.
-      2. `[Hạch toán kế toán]`: `ErpInvoiceAccountingSection` bọc chuẩn `DrawerSection` (icon BookOpen, badge ĐÃ HẠCH TOÁN/ĐANG BẬT/CHƯA HẠCH TOÁN, hỗ trợ view summary & edit định khoản Nợ/Có).
+      2. `[Hạch toán kế toán]`: `ErpInvoiceAccountingSection` bọc chuẩn V2 `DrawerSection` (icon BookOpen, V2 Badges ĐÃ HẠCH TOÁN/ĐANG BẬT/CHƯA HẠCH TOÁN, V2Button toggle, hỗ trợ view summary & edit định khoản Nợ/Có qua helper `ErpInvoiceAccountingSection.helper.ts`, match theme sáng/tối và No-Blue).
       3. `[Chứng từ liên kết]`: `ErpInvoiceLinkedDocsSection` (Sơ đồ luồng chứng từ liên kết & Traceability Graph), kèm badge đếm tổng số chứng từ liên kết, tự động chuyển Right Panel sang `ErpInvoiceSettlementRightPanel`.
     - `invoice_partner` (**Chi tiết theo NCC/KH**, `ErpInvoicePartnerSection`: 3 sub-pill `[Chi tiết theo đối tượng]` | `[Bảng kê HHDV]` | `[Biến động & Phân tích]`).
     - `history` (**Lịch sử & Kiểm duyệt**): Nhật ký kiểm toán bọc trong `DrawerSection` collapsible (`DrawerAuditTimeline`).

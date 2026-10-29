@@ -115,7 +115,9 @@ export function PostedAccountingSummary({
 
   if (isLoading) {
     return (
-      <div className="text-xs text-gray-500">Đang tải dữ liệu hạch toán...</div>
+      <div className="text-xs text-muted-foreground">
+        Đang tải dữ liệu hạch toán...
+      </div>
     );
   }
 
@@ -125,33 +127,46 @@ export function PostedAccountingSummary({
   const creditRows = aggregates.filter((acc) => acc.credit > 0);
   const rowCount = Math.max(debitRows.length, creditRows.length, 1);
   const voucherNo = resolveJournalVoucherNo(journalEntry, journalEntryId);
+  const totalDebit = debitRows.reduce((sum, item) => sum + item.debit, 0);
+  const totalCredit = creditRows.reduce((sum, item) => sum + item.credit, 0);
 
   return (
-    <div className="space-y-3">
-      <div>
-        <div className="text-sm font-medium mb-1 text-gray-700">
-          Số phiếu nhật ký chung
+    <div className="space-y-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/40 dark:bg-white/[0.02] border border-border-light dark:border-white/[0.04]">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Số phiếu:
+          </span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded font-mono text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+            {voucherNo}
+          </span>
         </div>
-        <div className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800">
-          {voucherNo}
-        </div>
-        <div className="text-xs text-gray-500 mt-1">
-          Ngày: {postingDate?.slice(0, 10) || "—"}
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span>Ngày:</span>
+          <span className="font-mono font-medium text-foreground">
+            {postingDate?.slice(0, 10) || "—"}
+          </span>
         </div>
       </div>
 
       {aggregates.length === 0 ? (
-        <div className="text-sm text-gray-500 py-4 text-center border border-dashed rounded bg-gray-50">
+        <div className="text-sm text-muted-foreground py-4 text-center border border-dashed border-border-light dark:border-white/[0.06] rounded-lg bg-muted/30">
           Chưa có dữ liệu bút toán.
         </div>
       ) : (
-        <div className="w-full overflow-hidden rounded-md border border-gray-300 bg-white">
-          <div className="grid grid-cols-2 border-b border-gray-300 bg-gray-50">
-            <div className="px-3 py-2 text-center text-xs font-bold tracking-wide text-gray-700 border-r border-gray-300">
-              NỢ
+        <div className="w-full overflow-hidden rounded-lg border border-border-light dark:border-white/[0.06] bg-surface dark:bg-zinc-900/30">
+          <div className="grid grid-cols-2 h-8 items-center border-b border-border-light dark:border-white/[0.05] bg-muted/50 dark:bg-white/[0.03]">
+            <div className="h-full flex items-center justify-between px-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase border-r border-border-light dark:border-white/[0.04]">
+              <span>NỢ</span>
+              <span className="text-[10px] text-muted-foreground/70 font-normal lowercase">
+                tài khoản & số tiền
+              </span>
             </div>
-            <div className="px-3 py-2 text-center text-xs font-bold tracking-wide text-gray-700">
-              CÓ
+            <div className="h-full flex items-center justify-between px-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+              <span>CÓ</span>
+              <span className="text-[10px] text-muted-foreground/70 font-normal lowercase">
+                tài khoản & số tiền
+              </span>
             </div>
           </div>
 
@@ -161,50 +176,74 @@ export function PostedAccountingSummary({
             return (
               <div
                 key={`t-row-${index}`}
-                className="grid grid-cols-2 border-b last:border-b-0 border-gray-200"
+                className="grid grid-cols-2 h-[38px] border-b last:border-b-0 border-border-light/60 dark:border-white/[0.03] hover:bg-muted/40 dark:hover:bg-white/[0.02] transition-colors"
               >
-                <div className="border-r border-gray-200 px-2.5 py-2 text-xs min-h-[42px]">
+                <div className="h-full flex items-center justify-between px-3 text-xs border-r border-border-light dark:border-white/[0.04]">
                   {debit ? (
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className="font-semibold text-gray-700"
-                        title={debit.name}
-                      >
-                        {debit.code}
-                      </span>
-                      <span className="tabular-nums text-gray-700 whitespace-nowrap">
+                    <>
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        <span
+                          className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold bg-muted/60 dark:bg-white/[0.06] text-foreground border border-border-light dark:border-white/[0.04] shrink-0"
+                          title={debit.name}
+                        >
+                          {debit.code}
+                        </span>
+                        <span
+                          className="text-xs text-muted-foreground truncate hidden sm:inline"
+                          title={debit.name}
+                        >
+                          {debit.name}
+                        </span>
+                      </div>
+                      <span className="tabular-nums font-mono font-medium text-xs text-foreground whitespace-nowrap shrink-0">
                         {money(debit.debit)}
                       </span>
-                    </div>
+                    </>
                   ) : null}
                 </div>
-                <div className="px-2.5 py-2 text-xs min-h-[42px]">
+                <div className="h-full flex items-center justify-between px-3 text-xs">
                   {credit ? (
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className="font-semibold text-gray-700"
-                        title={credit.name}
-                      >
-                        {credit.code}
-                      </span>
-                      <span className="tabular-nums text-gray-700 whitespace-nowrap">
+                    <>
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        <span
+                          className="inline-flex items-center px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold bg-muted/60 dark:bg-white/[0.06] text-foreground border border-border-light dark:border-white/[0.04] shrink-0"
+                          title={credit.name}
+                        >
+                          {credit.code}
+                        </span>
+                        <span
+                          className="text-xs text-muted-foreground truncate hidden sm:inline"
+                          title={credit.name}
+                        >
+                          {credit.name}
+                        </span>
+                      </div>
+                      <span className="tabular-nums font-mono font-medium text-xs text-foreground whitespace-nowrap shrink-0">
                         {money(credit.credit)}
                       </span>
-                    </div>
+                    </>
                   ) : null}
                 </div>
               </div>
             );
           })}
 
-          <div className="grid grid-cols-2 border-t border-gray-300 bg-gray-50">
-            <div className="px-2.5 py-2 text-right text-xs font-semibold text-emerald-700 border-r border-gray-300">
-              Tổng Nợ:{" "}
-              {money(debitRows.reduce((sum, item) => sum + item.debit, 0))}
+          <div className="grid grid-cols-2 h-[38px] items-center border-t border-border-light dark:border-white/[0.06] bg-muted/30 dark:bg-zinc-900/40">
+            <div className="h-full flex items-center justify-between px-3 border-r border-border-light dark:border-white/[0.04]">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Tổng Nợ:
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {money(totalDebit)}
+              </span>
             </div>
-            <div className="px-2.5 py-2 text-right text-xs font-semibold text-emerald-700">
-              Tổng Có:{" "}
-              {money(creditRows.reduce((sum, item) => sum + item.credit, 0))}
+            <div className="h-full flex items-center justify-between px-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Tổng Có:
+              </span>
+              <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {money(totalCredit)}
+              </span>
             </div>
           </div>
         </div>
