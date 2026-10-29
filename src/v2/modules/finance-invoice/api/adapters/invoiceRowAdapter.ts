@@ -6,7 +6,7 @@ import type {
   InvoiceDto,
   InvoiceTotalsDto,
 } from "@/v2/modules/finance-invoice/api/dtos/invoice.dto";
-import { resolveBranchIds } from "@/shared/utils/branchIds";
+import { resolveBranchIds } from "@/v2/shared/utils/branchIds";
 
 const toAmount = (value?: number | string | null) => Number(value ?? 0) || 0;
 

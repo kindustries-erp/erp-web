@@ -346,6 +346,8 @@ cd erp/erp-web && bun run storybook
 - **Thanh TabBar (`V2TabBar`)**: Chiều cao chuẩn `h-9` (`36px`), nền `bg-background/80 backdrop-blur-md`, không viền gạch ngang (`border-none`), cuộn ngang ẩn thanh cuộn (`scrollbar-none`).
 - **Thanh Sub-Navigation Pill Tabs (`V2TabBar variant="sub"`)**:
   - Thiết kế đồng bộ hệ bo góc ERP (Midnight Style): Container ngoài dùng `rounded-lg` (8px), sliding animated indicator dùng `rounded-md` (6px), tab item button dùng `rounded-md` (6px) ôm khít khoảng padding `p-[3px]`.
+  - Prop `stretch` (chỉ `variant="sub"`): các tab chia đều toàn bộ chiều ngang (`flex-1`, khung `w-full`). Không truyền thì giữ kích thước theo nội dung như cũ. Dùng cho pill chọn kỳ/nguồn trong drawer điều kiện.
+  - Molecule `V2PeriodPicker` (`molecules/v2-period-picker/`) ghép pill `sub` stretch với combobox kỳ và hai ô ngày (chỉ mở khóa ở "Tùy chỉnh"); đơn vị `week | month | quarter | custom`.
   - Huy hiệu số lượng (`badgeCount`) và dot trạng thái luôn giữ `rounded-full` để đảm bảo độ tròn trịa tự nhiên.
   - Tự động thích ứng màu sắc và độ tương phản cao với Dark Theme (`dark:border-zinc-700/60 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)]`).
 - **Thẻ Tab (`V2TabItem`)**:

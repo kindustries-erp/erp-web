@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   useInvoiceXmlUpload,
@@ -7,10 +7,7 @@ import {
 import { usePortalSync } from "@/modules/erp-invoices-core/hooks/usePortalSync";
 import { useInvoiceSyncProgressStore } from "@/modules/erp-invoices-core/hooks/useInvoiceSyncProgressStore";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import {
-  getPastMonthPresets,
-  getCurrentMonthPreset,
-} from "@/shared/utils/datePresets";
+import { useInvoiceSyncPeriod } from "@/v2/modules/finance-invoice/drawers/InvoiceSyncDrawer.period.hook";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { InvoiceSyncMethod } from "./invoiceSyncDrawer.actions";
@@ -35,20 +32,15 @@ export function useInvoiceImportSyncDrawer({
     ErpAction.UPDATE,
   );
 
-  const presetOptions = useMemo(() => getPastMonthPresets(2), []);
-  const initialPreset = useMemo(() => getCurrentMonthPreset(), []);
-
   const [method, setMethod] = useState<InvoiceSyncMethod>("GDT");
   const [configOpen, setConfigOpen] = useState(false);
   const [direction, setDirection] = useState<Direction>(initialDirection);
   const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState<string>(
-    initialPreset.presetKey,
-  );
   const [showDrawerConfirm, setShowDrawerConfirm] = useState(false);
 
+  const period = useInvoiceSyncPeriod();
   const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
   const portal = usePortalSync();
 
@@ -56,6 +48,10 @@ export function useInvoiceImportSyncDrawer({
   const addSyncLog = useInvoiceSyncProgressStore((s) => s.addLog);
   const failSync = useInvoiceSyncProgressStore((s) => s.fail);
   const setPanelVisible = useInvoiceSyncProgressStore((s) => s.setPanelVisible);
+  const progressStatus = useInvoiceSyncProgressStore((s) => s.status);
+  const progressValue = useInvoiceSyncProgressStore((s) => s.progress);
+  const progressLogs = useInvoiceSyncProgressStore((s) => s.logs);
+  const progressItem = useInvoiceSyncProgressStore((s) => s.currentItem);
 
   useEffect(() => {
     setPanelVisible(open);
@@ -72,10 +68,7 @@ export function useInvoiceImportSyncDrawer({
     if (open) {
       setDirection(initialDirection);
       xml.setDirection(initialDirection);
-      const current = getCurrentMonthPreset();
-      setSelectedPreset(current.presetKey);
-      portal.setDateFrom(current.from);
-      portal.setDateTo(current.to);
+      period.reset();
     }
   }, [open, initialDirection]);
 
@@ -115,7 +108,10 @@ export function useInvoiceImportSyncDrawer({
     startSyncLog(
       t("syncProgressStarting", "Đang khởi tạo tiến trình đồng bộ..."),
     );
-    const res = await portal.sync(type);
+    const res = await portal.sync(type, {
+      dateFrom: period.dateFrom,
+      dateTo: period.dateTo,
+    });
     if (res) {
       addSyncLog(
         res.note ||
@@ -153,9 +149,13 @@ export function useInvoiceImportSyncDrawer({
   return {
     method,
     direction,
-    presetOptions,
-    selectedPreset,
-    setSelectedPreset,
+    period,
+    progress: {
+      status: progressStatus,
+      progress: progressValue,
+      logs: progressLogs,
+      currentItem: progressItem,
+    },
     configOpen,
     setConfigOpen,
     bulkXmlLoading,

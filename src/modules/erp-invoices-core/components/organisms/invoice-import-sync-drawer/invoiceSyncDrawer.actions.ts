@@ -9,18 +9,23 @@ export interface InvoiceSyncActionInput {
   fileCount: number;
   /** Số hóa đơn vừa tạo, `null` khi chưa có kết quả import */
   createdCount: number | null;
+  /** Trạng thái nút tải lại XML, chỉ dùng khi nguồn là GDT */
+  bulkXml: { loading: boolean; disabled: boolean };
   labels: {
     close: string;
     cancel: string;
     preview: string;
     importMore: string;
     viewCreated: string;
+    bulkXml: string;
+    bulkXmlLoading: string;
   };
   handlers: {
     onClose: () => void;
     onCancel: () => void;
     onPreview: () => void;
     onImportMore: () => void;
+    onBulkXml: () => void;
   };
 }
 
@@ -28,10 +33,26 @@ export interface InvoiceSyncActionInput {
 export function buildInvoiceSyncActions(
   input: InvoiceSyncActionInput,
 ): DrawerAction[] {
-  const { method, xmlStep, fileCount, createdCount, labels, handlers } = input;
+  const {
+    method,
+    xmlStep,
+    fileCount,
+    createdCount,
+    bulkXml,
+    labels,
+    handlers,
+  } = input;
 
   if (method === "GDT") {
     return [
+      {
+        label: bulkXml.loading ? labels.bulkXmlLoading : labels.bulkXml,
+        variant: "outline",
+        align: "left",
+        loading: bulkXml.loading,
+        disabled: bulkXml.disabled,
+        onClick: handlers.onBulkXml,
+      },
       { label: labels.close, variant: "outline", onClick: handlers.onClose },
     ];
   }

@@ -168,6 +168,7 @@ Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/
 
 - `bank-statements` (chỉ drawer xuất Excel sao kê / sổ quỹ, trang sao kê vẫn V1): drawer V2 `V2ExportExcelDrawer` ở `drawers/BankStatementExportDrawer.tsx`, sinh khung bằng plop `v2-module` (`wire = false`), đã bỏ phần CRUD thừa. V1 chỉ giữ wrapper. Chưa có route `/v2` cho module.
 - `vinfast-parts` (drawer xuất Excel tồn kho): đã V2 thuần (data layer, toast, icon, locale module, validate ngày). Các drawer khác của module chưa kiểm parity.
+- `finance-invoice` (drawer đồng bộ hóa đơn, chỉ lớp UI): `InvoiceSyncDrawer` v2 (2 cột, `financeInvoiceSync.locale.ts`) được container V1 `InvoiceImportSyncDrawer` render. Logic, API, SSE và 2 dialog V1 vẫn V1, không port trong đợt này.
 
 ## 9. Hạn chế đã biết
 

@@ -17,6 +17,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
   extra,
   className,
   ariaLabel,
+  stretch,
   ...props
 }) => {
   const { t } = useV2Translation();
@@ -61,6 +62,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
         extra={extra}
         className={className}
         ariaLabel={ariaLabel}
+        stretch={stretch}
       />
     );
   }

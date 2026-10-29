@@ -16,4 +16,6 @@ export interface V2ConfirmModalProps {
   onConfirm: () => void | Promise<void>;
   onCancel: () => void;
   className?: string;
+  /** Class bổ sung cho lớp phủ nền, ví dụ z-index khi hộp xác nhận mở trên drawer xếp chồng */
+  overlayClassName?: string;
 }

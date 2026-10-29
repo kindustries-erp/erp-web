@@ -24,6 +24,9 @@ export const DrawerConfirmCloseModal: React.FC<
       confirmLabel={t("v2.drawer.closeWithoutSaving", "Đóng không lưu")}
       cancelLabel={t("v2.drawer.continueEdit", "Tiếp tục chỉnh sửa")}
       variant="danger"
+      // Hộp xác nhận phải nằm trên mọi drawer đang xếp chồng (drawer xếp chồng tối đa ~600)
+      className="z-[700]"
+      overlayClassName="z-[699]"
       onConfirm={onConfirm}
       onCancel={onCancel}
     />
