@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import { toInvoiceOption } from "./invoiceXmlImportModal.helper";
 
 export const MANUAL_MATCH_SEARCH_DEBOUNCE_MS = 300;
@@ -19,56 +22,44 @@ export function InvoiceXmlManualMatchCombobox({
   onChange,
   initialOptions,
 }: InvoiceXmlManualMatchComboboxProps) {
-  const [options, setOptions] = useState(initialOptions);
-  const [loading, setLoading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
-  // Mỗi lần gõ tăng số thứ tự; kết quả của lượt cũ bị bỏ qua
-  const requestIdRef = useRef(0);
+  const { t } = useTranslation("erpInvoices");
+  const [search, setSearch] = useState("");
+  const query = search.trim();
+  const debouncedQuery = useDebounce(query, MANUAL_MATCH_SEARCH_DEBOUNCE_MS);
 
-  useEffect(() => {
-    setOptions(initialOptions);
-  }, [initialOptions]);
-
-  useEffect(
-    () => () => {
-      clearTimeout(timerRef.current);
-      requestIdRef.current++;
-    },
-    [],
-  );
-
-  const handleSearch = (query: string) => {
-    clearTimeout(timerRef.current);
-    const requestId = ++requestIdRef.current;
-
-    if (!query.trim()) {
-      setLoading(false);
-      setOptions(initialOptions);
-      return;
-    }
-
-    setLoading(true);
-    timerRef.current = setTimeout(async () => {
-      try {
-        const res = await erpInvoicesCoreApi.list({
+  const searchQuery = useQuery({
+    queryKey: [
+      "erp-invoices",
+      "manual-match-search",
+      direction,
+      debouncedQuery,
+    ],
+    queryFn: async () =>
+      (
+        await erpInvoicesCoreApi.list({
           direction,
-          search: query,
+          search: debouncedQuery,
           pageSize: 20,
-        });
-        if (requestId === requestIdRef.current) {
-          setOptions(res.items.map(toInvoiceOption));
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (requestId === requestIdRef.current) setLoading(false);
-      }
-    }, MANUAL_MATCH_SEARCH_DEBOUNCE_MS);
-  };
+        })
+      ).items,
+    enabled: debouncedQuery.length > 0,
+  });
+
+  const searchOptions = useMemo(
+    () => (searchQuery.data ?? []).map((inv) => toInvoiceOption(inv, t)),
+    [searchQuery.data, t],
+  );
+  const hasSearchResult = debouncedQuery.length > 0 && !!searchQuery.data;
+  const options = hasSearchResult ? searchOptions : initialOptions;
+  const loading =
+    query.length > 0 && (query !== debouncedQuery || searchQuery.isFetching);
 
   const shownOptions =
     value && !options.some((o) => o.value === value)
-      ? [...options, { value, label: "Đã chọn hóa đơn" }]
+      ? [
+          ...options,
+          { value, label: t("xmlManualMatchSelected", "Đã chọn hóa đơn") },
+        ]
       : options;
 
   return (
@@ -76,11 +67,14 @@ export function InvoiceXmlManualMatchCombobox({
       options={shownOptions}
       value={value || null}
       onValueChange={(v) => onChange(v ?? "")}
-      onSearchChange={handleSearch}
+      onSearchChange={setSearch}
       loading={loading}
-      placeholder="Chọn ghép thủ công..."
-      searchPlaceholder="Tìm số HĐ, ký hiệu..."
-      emptyLabel="Không tìm thấy hóa đơn"
+      placeholder={t("xmlManualMatchPlaceholder", "Chọn ghép thủ công...")}
+      searchPlaceholder={t(
+        "xmlManualMatchSearchPlaceholder",
+        "Tìm số HĐ, ký hiệu...",
+      )}
+      emptyLabel={t("xmlManualMatchEmpty", "Không tìm thấy hóa đơn")}
       clearable
       className="w-full min-w-[150px]"
     />

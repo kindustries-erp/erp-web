@@ -411,4 +411,17 @@ export const erpInvoicesEn = {
   syncProgressBulkStarting: "Re-downloading XML...",
   syncProgressSummary:
     "Imported {{imported}} new invoices, skipped {{skipped}} duplicates, queued {{queued}} XML files.",
+  xmlManualMatchLabel: "Manual match",
+  xmlManualMatchError: "Manual match failed",
+  xmlManualMatchSelected: "Selected invoice",
+  xmlManualMatchPlaceholder: "Choose manual match...",
+  xmlManualMatchSearchPlaceholder: "Search invoice no., series...",
+  xmlManualMatchEmpty: "No invoices found",
+  xmlInvoiceOptionLabel: "[{{serial}}] Invoice: {{invoiceNo}} - {{amount}}",
+  xmlStatusNeedChoice: "Select invoice",
+  xmlStatusExtract: "Extract & import",
+  xmlStatusAttach: "Attach to existing invoice",
+  xmlStatusCreate: "Will create new invoice",
+  importNoteAutoDetail:
+    "Invoice {{invoiceNo}} (series: {{serial}}) - {{amount}}",
 };

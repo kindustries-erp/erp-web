@@ -38,7 +38,13 @@ export function FileNote({
       );
     }
     if (autoMatch) {
-      const text = `${t("importNoteAuto", "Tự động")}: HĐ ${autoMatch.invoiceNo} (KH: ${autoMatch.serialNo || "N/A"}) - ${formatInvoiceAmount(autoMatch.totalAmount)}`;
+      const detail = t("importNoteAutoDetail", {
+        defaultValue: "HĐ {{invoiceNo}} (KH: {{serial}}) - {{amount}}",
+        invoiceNo: autoMatch.invoiceNo,
+        serial: autoMatch.serialNo || "N/A",
+        amount: formatInvoiceAmount(autoMatch.totalAmount),
+      });
+      const text = `${t("importNoteAuto", "Tự động")}: ${detail}`;
       return (
         <span className="text-[11px] font-medium text-emerald-700" title={text}>
           {text}

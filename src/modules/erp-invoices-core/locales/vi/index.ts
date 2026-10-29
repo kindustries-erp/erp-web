@@ -8,6 +8,7 @@ import { erpInvoicesViLookup } from "./lookup";
 import { erpInvoicesViDrawers } from "./drawers";
 import { erpInvoicesViAdvancedSync } from "./advancedSync";
 import { erpInvoicesViPortal } from "./portal";
+import { erpInvoicesViXmlImport } from "./xmlImport";
 
 export const erpInvoicesVi = {
   ...erpInvoicesViPage,
@@ -19,4 +20,5 @@ export const erpInvoicesVi = {
   ...erpInvoicesViDrawers,
   ...erpInvoicesViAdvancedSync,
   ...erpInvoicesViPortal,
+  ...erpInvoicesViXmlImport,
 };

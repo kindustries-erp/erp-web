@@ -6,8 +6,8 @@ import {
   type Direction,
 } from "@/modules/erp-invoices-core/hooks/useInvoiceXmlUpload";
 import { usePortalSync } from "@/modules/erp-invoices-core/hooks/usePortalSync";
-import { useInvoiceSyncProgressStore } from "@/modules/erp-invoices-core/hooks/useInvoiceSyncProgressStore";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { useInvoiceSyncDrawerProgress } from "./useInvoiceSyncDrawerProgress";
+import { useBulkDownloadXmlMutation } from "@/modules/erp-invoices-core/hooks/useBulkDownloadXmlMutation";
 import { useInvoiceSyncPeriod } from "@/v2/modules/finance-invoice/drawers/InvoiceSyncDrawer.period.hook";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -35,7 +35,6 @@ export function useInvoiceImportSyncDrawer({
   const [method, setMethod] = useState<InvoiceSyncMethod>("GDT");
   const [configOpen, setConfigOpen] = useState(false);
   const [direction, setDirection] = useState<Direction>(initialDirection);
-  const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
   const [showDrawerConfirm, setShowDrawerConfirm] = useState(false);
@@ -43,20 +42,10 @@ export function useInvoiceImportSyncDrawer({
   const period = useInvoiceSyncPeriod();
   const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
   const portal = usePortalSync();
+  const bulkXml = useBulkDownloadXmlMutation();
 
-  const startSyncLog = useInvoiceSyncProgressStore((s) => s.start);
-  const addSyncLog = useInvoiceSyncProgressStore((s) => s.addLog);
-  const failSync = useInvoiceSyncProgressStore((s) => s.fail);
-  const setPanelVisible = useInvoiceSyncProgressStore((s) => s.setPanelVisible);
-  const progressStatus = useInvoiceSyncProgressStore((s) => s.status);
-  const progressValue = useInvoiceSyncProgressStore((s) => s.progress);
-  const progressLogs = useInvoiceSyncProgressStore((s) => s.logs);
-  const progressItem = useInvoiceSyncProgressStore((s) => s.currentItem);
-
-  useEffect(() => {
-    setPanelVisible(open);
-    return () => setPanelVisible(false);
-  }, [open, setPanelVisible]);
+  const { startSyncLog, addSyncLog, failSync, progress } =
+    useInvoiceSyncDrawerProgress(open);
 
   useEffect(() => {
     if (portal.needsRelogin && canEditInvoice) {
@@ -136,10 +125,9 @@ export function useInvoiceImportSyncDrawer({
   };
 
   const handleBulkXml = async () => {
+    startSyncLog(t("syncProgressBulkStarting", "Đang tải lại XML..."));
     try {
-      setBulkXmlLoading(true);
-      startSyncLog(t("syncProgressBulkStarting", "Đang tải lại XML..."));
-      const res = await erpInvoicesCoreApi.bulkDownloadXml({ direction });
+      const res = await bulkXml.mutateAsync(direction);
       addSyncLog(res.message, "success");
       toast.success(res.message);
     } catch (e: any) {
@@ -149,8 +137,6 @@ export function useInvoiceImportSyncDrawer({
         t("bulkXmlError", "Lỗi tải lại XML");
       failSync(message);
       toast.error(message);
-    } finally {
-      setBulkXmlLoading(false);
     }
   };
 
@@ -158,15 +144,10 @@ export function useInvoiceImportSyncDrawer({
     method,
     direction,
     period,
-    progress: {
-      status: progressStatus,
-      progress: progressValue,
-      logs: progressLogs,
-      currentItem: progressItem,
-    },
+    progress,
     configOpen,
     setConfigOpen,
-    bulkXmlLoading,
+    bulkXmlLoading: bulkXml.isPending,
     showPreview,
     setShowPreview,
     viewInvoiceId,

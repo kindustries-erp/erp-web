@@ -9,6 +9,7 @@ import { erpInvoicesViLookup } from "./lookup";
 import { erpInvoicesViDrawers } from "./drawers";
 import { erpInvoicesViAdvancedSync } from "./advancedSync";
 import { erpInvoicesViPortal } from "./portal";
+import { erpInvoicesViXmlImport } from "./xmlImport";
 
 const PARTS = [
   erpInvoicesViPage,
@@ -20,6 +21,7 @@ const PARTS = [
   erpInvoicesViDrawers,
   erpInvoicesViAdvancedSync,
   erpInvoicesViPortal,
+  erpInvoicesViXmlImport,
 ];
 
 describe("erpInvoicesVi locale parts", () => {
@@ -40,6 +42,6 @@ describe("erpInvoicesVi locale parts", () => {
       0,
     );
     expect(Object.keys(erpInvoicesVi)).toHaveLength(total);
-    expect(total).toBe(649);
+    expect(total).toBe(661);
   });
 });

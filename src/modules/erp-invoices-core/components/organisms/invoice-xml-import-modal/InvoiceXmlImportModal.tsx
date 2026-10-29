@@ -1,19 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { InvoiceXmlImportFilesTable } from "./InvoiceXmlImportFilesTable";
 import { type MatchedInvoice } from "./InvoiceXmlImportFileNote";
 import { XmlFilePreviewModal } from "@/modules/erp-invoices-core/components/molecules/xml-file-preview-modal";
 import { InvoiceXmlImportSummary } from "./InvoiceXmlImportSummary";
+import { InvoiceXmlImportFooter } from "./InvoiceXmlImportFooter";
 import {
   buildInitialSelection,
   buildSelectionFrom,
+  countFilesByType,
   selectedIdsOf,
   toInvoiceOption,
 } from "./invoiceXmlImportModal.helper";
 import { type InvoiceXmlImportModalProps } from "./InvoiceXmlImportModal.type";
+
+const NO_MATCHES: Record<string, MatchedInvoice | null> = {};
 
 export function InvoiceXmlImportModal({
   open,
@@ -27,16 +31,10 @@ export function InvoiceXmlImportModal({
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(
     () => buildInitialSelection(files),
   );
-  const [matchedInvoices, setMatchedInvoices] = useState<
-    Record<string, MatchedInvoice | null>
-  >({});
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [manualMatches, setManualMatches] = useState<Record<string, string>>(
     {},
   );
-  const [candidateInvoices, setCandidateInvoices] = useState<
-    { value: string; label: string }[]
-  >([]);
 
   // Reset selection when modal opens with new files
   const [prevFiles, setPrevFiles] = useState(files);
@@ -46,51 +44,38 @@ export function InvoiceXmlImportModal({
     setManualMatches({});
   }
 
-  // Fetch matches when files change
-  useEffect(() => {
-    if (!open) return;
-    // Bỏ kết quả của lần gọi cũ khi files/direction đã đổi trước khi phản hồi về
-    let cancelled = false;
-    const pdfNames = files
-      .filter((f) => f.type === "pdf" && !f.pairedPdf)
-      .map((f) => f.file.name);
+  // PDF chưa ghép tự động: server đề xuất hóa đơn khớp và tải danh sách để ghép tay
+  const pdfNames = useMemo(
+    () =>
+      files
+        .filter((f) => f.type === "pdf" && !f.pairedPdf)
+        .map((f) => f.file.name),
+    [files],
+  );
+  const needsMatching = open && pdfNames.length > 0;
 
-    if (pdfNames.length > 0) {
-      erpInvoicesCoreApi
-        .previewPdfMatch(pdfNames, direction)
-        .then((res) => {
-          if (!cancelled) setMatchedInvoices(res);
-        })
-        .catch((err) => console.error("Failed to preview pdf match", err));
+  const matchQuery = useQuery({
+    queryKey: ["erp-invoices", "xml-pdf-match", direction, pdfNames],
+    queryFn: () => erpInvoicesCoreApi.previewPdfMatch(pdfNames, direction),
+    enabled: needsMatching,
+  });
+  const candidateQuery = useQuery({
+    queryKey: ["erp-invoices", "xml-candidates", direction],
+    queryFn: async () =>
+      (await erpInvoicesCoreApi.list({ direction, pageSize: 50 })).items,
+    enabled: needsMatching,
+  });
 
-      erpInvoicesCoreApi
-        .list({ direction, pageSize: 50 })
-        .then((res) => {
-          if (!cancelled) setCandidateInvoices(res.items.map(toInvoiceOption));
-        })
-        .catch((err) =>
-          console.error("Failed to load candidate invoices", err),
-        );
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [open, files, direction]);
+  const matchedInvoices = matchQuery.data ?? NO_MATCHES;
+  const candidateInvoices = useMemo(
+    () => (candidateQuery.data ?? []).map((inv) => toInvoiceOption(inv, t)),
+    [candidateQuery.data, t],
+  );
 
   const selectedCount = Object.values(rowSelection).filter(Boolean).length;
   const selectedFiles = files.filter((f) => rowSelection[f.id]);
 
-  const counts = useMemo(
-    () =>
-      files.reduce(
-        (acc, f) => {
-          acc[f.type] = (acc[f.type] || 0) + 1;
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
-    [files],
-  );
+  const counts = useMemo(() => countFilesByType(files), [files]);
 
   const setManualMatch = (id: string, value: string) => {
     setManualMatches((prev) => ({ ...prev, [id]: value }));
@@ -98,37 +83,6 @@ export function InvoiceXmlImportModal({
       setRowSelection((prev) => ({ ...prev, [id]: true }));
     }
   };
-
-  const footer = (
-    <div className="flex w-full items-center justify-between gap-3">
-      <span className="text-xs text-muted-foreground">
-        {selectedCount === 0 ? (
-          <span className="font-medium text-amber-600">
-            {t("importPickAtLeastOne", "Chọn ít nhất 1 file để import")}
-          </span>
-        ) : (
-          <>
-            {t("importSelectedCount", "Đã chọn")}{" "}
-            <strong className="text-foreground">{selectedCount}</strong> /{" "}
-            {files.length} {t("importFilesUnit", "file")}
-          </>
-        )}
-      </span>
-      <div className="flex items-center gap-2">
-        <V2Button variant="outline" size="sm" onClick={onCancel}>
-          {t("importCancel", "Hủy")}
-        </V2Button>
-        <V2Button
-          size="sm"
-          disabled={selectedCount === 0}
-          onClick={() => onConfirm(selectedFiles, manualMatches)}
-        >
-          {t("importConfirm", "Xác nhận Import")} ({selectedCount}{" "}
-          {t("importFilesUnit", "file")})
-        </V2Button>
-      </div>
-    </div>
-  );
 
   return (
     <>
@@ -143,7 +97,14 @@ export function InvoiceXmlImportModal({
           "importPreviewDesc",
           "Bỏ chọn file không muốn import, sau đó xác nhận",
         )}
-        footer={footer}
+        footer={
+          <InvoiceXmlImportFooter
+            selectedCount={selectedCount}
+            totalCount={files.length}
+            onCancel={onCancel}
+            onConfirm={() => onConfirm(selectedFiles, manualMatches)}
+          />
+        }
       >
         <InvoiceXmlImportSummary
           selectedCount={selectedCount}
