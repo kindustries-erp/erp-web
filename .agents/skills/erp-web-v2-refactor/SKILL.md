@@ -89,6 +89,7 @@ Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_tabl
 - **Lỗi:** mutation hiện toast; 409 `DOCUMENT_IN_USE` do modal chung xử lý (mutation không toast lại).
 - **Preference:** giữ nguyên `tableId` của V1 (`erp-<x>-table`) để người dùng không mất cấu hình cột.
 - **Popover (dropdown, lịch):** tự đóng khi click ra ngoài và chỉ một popover mở tại một thời điểm. Dùng hook `useV2PopoverDismiss` (`src/v2/shared/hooks/useV2PopoverDismiss.ts`), không tự gắn listener `pointerdown`. Áp dụng cho `V2Combobox`, `V2DatePicker`, `V2DateRangePicker`.
+- **Hiệu ứng Glassmorphism & Tối ưu GPU:** Giới hạn `--drawer-blur: 10px`, `--glass-blur: 8px`. Cấm lồng nested `backdrop-filter` bên trong Drawer (thẻ `DrawerSection` dùng `--drawer-section-blur: 0px` kết hợp nền thẻ `0.85 - 0.9` và viền sắc nét). Thanh hover table actions dùng `backdrop-blur-sm` (4px). Tự động hạ blur về `0px` khi hệ điều hành kích hoạt `prefers-reduced-motion: reduce`.
 
 ---
 
