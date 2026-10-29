@@ -1,9 +1,7 @@
-import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-import-sync-drawer";
-import { InvoiceSyncAdvancedModal } from "@/modules/erp-invoices-core/components/organisms/invoice-sync-advanced-modal";
-import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/organisms/gdt-portal-auth-drawer";
 import { type InvoiceDrawersProps } from "./ErpInvoicesTab.drawers.type";
 import { ErpInvoicesTabDetailDrawer } from "./ErpInvoicesTabDetailDrawer";
 import { ErpInvoicesTabPreviewDrawers } from "./ErpInvoicesTabPreviewDrawers";
+import { ErpInvoicesTabSyncDrawers } from "./ErpInvoicesTabSyncDrawers";
 
 export type { InvoiceDrawersProps } from "./ErpInvoicesTab.drawers.type";
 
@@ -45,20 +43,15 @@ export function InvoiceDrawers({
         t={t}
       />
 
-      <InvoiceImportSyncDrawer
-        open={importModalOpen}
-        onClose={() => setImportModalOpen(false)}
-        initialDirection={direction}
-        onImported={(dir: "IN" | "OUT") => {
-          if (dir === direction) {
-            void loadInvoices();
-          }
-        }}
-      />
-
-      <GdtPortalAuthDrawer
-        open={portalAuthOpen}
-        onClose={() => setPortalAuthOpen(false)}
+      <ErpInvoicesTabSyncDrawers
+        direction={direction}
+        loadInvoices={loadInvoices}
+        importModalOpen={importModalOpen}
+        setImportModalOpen={setImportModalOpen}
+        portalAuthOpen={portalAuthOpen}
+        setPortalAuthOpen={setPortalAuthOpen}
+        syncAdvancedModalOpen={syncAdvancedModalOpen}
+        setSyncAdvancedModalOpen={setSyncAdvancedModalOpen}
       />
 
       <ErpInvoicesTabPreviewDrawers
@@ -77,16 +70,6 @@ export function InvoiceDrawers({
         netOffInvoice={netOffInvoice}
         setNetOffInvoice={setNetOffInvoice}
       />
-
-      {/* Modal chỉ được mount khi thực sự mở (trước đây kiểm tra nhầm hàm setter) */}
-      {syncAdvancedModalOpen && setSyncAdvancedModalOpen && (
-        <InvoiceSyncAdvancedModal
-          open={syncAdvancedModalOpen}
-          onClose={() => setSyncAdvancedModalOpen(false)}
-          defaultCompanyTaxCode=""
-          onSuccess={() => void loadInvoices()}
-        />
-      )}
     </>
   );
 }

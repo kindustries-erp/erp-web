@@ -1,9 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { InvoiceSyncDrawer } from "@/v2/modules/finance-invoice/drawers/InvoiceSyncDrawer";
 import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
-import { InvoiceXmlImportModal as ImportPreviewModal } from "@/modules/erp-invoices-core/components/organisms/invoice-xml-import-modal";
-import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/organisms/invoice-detail-wrapper";
-import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/organisms/gdt-portal-auth-drawer";
 import { InvoiceGdtSyncResult } from "./InvoiceGdtSyncResult";
 import { InvoiceXmlSyncPanel } from "./InvoiceXmlSyncPanel";
 import { buildInvoiceSyncActions } from "./invoiceSyncDrawer.actions";
@@ -16,6 +13,10 @@ export function InvoiceImportSyncDrawer({
   onClose,
   onImported,
   initialDirection,
+  onOpenLogin,
+  renderXmlPreview,
+  renderInvoiceDetail,
+  renderXmlResultTables,
 }: InvoiceImportSyncDrawerProps) {
   const { t } = useTranslation("erpInvoices");
   const s = useInvoiceImportSyncDrawer({
@@ -23,6 +24,7 @@ export function InvoiceImportSyncDrawer({
     onClose,
     onImported,
     initialDirection,
+    onOpenLogin,
   });
 
   const actions = buildInvoiceSyncActions({
@@ -72,7 +74,7 @@ export function InvoiceImportSyncDrawer({
         canEditInvoice={s.canEditInvoice}
         noCredential={!s.portal.hasToken && !s.portal.hasPassword}
         syncing={s.portal.loading}
-        onOpenLogin={() => s.setConfigOpen(true)}
+        onOpenLogin={onOpenLogin}
         onSync={s.handleSync}
         progress={s.progress}
         gdtResult={
@@ -84,30 +86,26 @@ export function InvoiceImportSyncDrawer({
           <InvoiceXmlSyncPanel
             xml={s.xml}
             onOpenInvoice={(id) => s.setViewInvoiceId(id)}
+            renderResultTables={renderXmlResultTables}
           />
         }
         actions={actions}
       />
 
-      <GdtPortalAuthDrawer
-        open={s.configOpen}
-        onClose={() => s.setConfigOpen(false)}
-        onSuccess={() => s.portal.refreshConfig()}
-      />
-      <ImportPreviewModal
-        open={s.showPreview}
-        files={s.xml.files}
-        direction={s.xml.direction || "IN"}
-        onConfirm={(selectedFiles, manualMatches) => {
+      {renderXmlPreview({
+        open: s.showPreview,
+        files: s.xml.files,
+        direction: s.xml.direction || "IN",
+        onConfirm: (selectedFiles, manualMatches) => {
           s.setShowPreview(false);
           s.xml.handleImport(selectedFiles, manualMatches);
-        }}
-        onCancel={() => s.setShowPreview(false)}
-      />
-      <InvoiceDetailWrapper
-        invoiceId={s.viewInvoiceId}
-        onClose={() => s.setViewInvoiceId(null)}
-      />
+        },
+        onCancel: () => s.setShowPreview(false),
+      })}
+      {renderInvoiceDetail({
+        invoiceId: s.viewInvoiceId,
+        onClose: () => s.setViewInvoiceId(null),
+      })}
       <V2ConfirmModal
         open={s.showDrawerConfirm}
         title={t("syncDrawerCloseTitle", "Đóng mà không lưu?")}

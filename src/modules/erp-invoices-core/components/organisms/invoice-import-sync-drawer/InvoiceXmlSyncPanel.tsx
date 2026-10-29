@@ -1,20 +1,24 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertCircle } from "lucide-react";
 import type { useInvoiceXmlUpload } from "@/modules/erp-invoices-core/hooks/useInvoiceXmlUpload";
 import { XmlUploadDropzone as UploadDropzone } from "@/modules/erp-invoices-core/components/molecules/xml-upload-dropzone";
 import { XmlUploadFileList as UploadFileList } from "@/modules/erp-invoices-core/components/molecules/xml-upload-file-list";
 import { XmlImportResultSummary as ImportResultSummary } from "@/modules/erp-invoices-core/components/molecules/xml-import-result-summary";
-import { XmlImportResultTables as ImportResultTables } from "@/modules/erp-invoices-core/components/organisms/xml-import-result-tables";
+import type { XmlResultTablesSlotProps } from "./InvoiceImportSyncDrawer.type";
 
 export interface InvoiceXmlSyncPanelProps {
   xml: ReturnType<typeof useInvoiceXmlUpload>;
   onOpenInvoice: (invoiceId: string) => void;
+  /** Bảng kết quả import do cha cung cấp (tránh organism import organism) */
+  renderResultTables: (props: XmlResultTablesSlotProps) => ReactNode;
 }
 
 /** Nhánh "Tải file từ máy tính": chọn file → đang import → kết quả */
 export function InvoiceXmlSyncPanel({
   xml,
   onOpenInvoice,
+  renderResultTables,
 }: InvoiceXmlSyncPanelProps) {
   const { t } = useTranslation("erpInvoices");
 
@@ -64,7 +68,7 @@ export function InvoiceXmlSyncPanel({
   return (
     <div className="flex flex-col gap-5">
       <ImportResultSummary result={result} />
-      <ImportResultTables result={result} onOpenInvoice={onOpenInvoice} />
+      {renderResultTables({ result, onOpenInvoice })}
       {hasNothing && (
         <p className="text-sm text-muted-foreground text-center py-4">
           {t("importNoData", "Không có file nào được xử lý.")}

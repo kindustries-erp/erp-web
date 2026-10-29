@@ -18,6 +18,7 @@ export interface UseInvoiceImportSyncDrawerParams {
   onClose: () => void;
   onImported: (direction: Direction) => void;
   initialDirection: Direction;
+  onOpenLogin: () => void;
 }
 
 export function useInvoiceImportSyncDrawer({
@@ -25,6 +26,7 @@ export function useInvoiceImportSyncDrawer({
   onClose,
   onImported,
   initialDirection,
+  onOpenLogin,
 }: UseInvoiceImportSyncDrawerParams) {
   const { t } = useTranslation("erpInvoices");
   const canEditInvoice = useHasPermission(
@@ -33,7 +35,6 @@ export function useInvoiceImportSyncDrawer({
   );
 
   const [method, setMethod] = useState<InvoiceSyncMethod>("GDT");
-  const [configOpen, setConfigOpen] = useState(false);
   const [direction, setDirection] = useState<Direction>(initialDirection);
   const [showPreview, setShowPreview] = useState(false);
   const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
@@ -49,9 +50,9 @@ export function useInvoiceImportSyncDrawer({
 
   useEffect(() => {
     if (portal.needsRelogin && canEditInvoice) {
-      setConfigOpen(true);
+      onOpenLogin();
     }
-  }, [portal.needsRelogin, canEditInvoice]);
+  }, [portal.needsRelogin, canEditInvoice, onOpenLogin]);
 
   useEffect(() => {
     if (open) {
@@ -145,8 +146,6 @@ export function useInvoiceImportSyncDrawer({
     direction,
     period,
     progress,
-    configOpen,
-    setConfigOpen,
     bulkXmlLoading: bulkXml.isPending,
     showPreview,
     setShowPreview,
