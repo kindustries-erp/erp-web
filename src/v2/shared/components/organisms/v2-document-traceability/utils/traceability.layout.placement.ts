@@ -6,17 +6,17 @@ import type {
 export const CARD_WIDTH = 290;
 
 /** Bố cục ngang: mỗi giai đoạn là một cột, chứng từ xếp dọc */
-const HORIZONTAL = {
+export const HORIZONTAL = {
   columnWidth: 330,
   columnGap: 170,
   headerHeight: 48,
   rowGap: 185,
   minColumnHeight: 180,
-  bottomPadding: 20,
+  bottomPadding: 30,
 };
 
 /** Bố cục dọc: mỗi giai đoạn là một hàng, chứng từ xếp ngang */
-const VERTICAL = {
+export const VERTICAL = {
   minRowWidth: 780,
   rowHeight: 190,
   rowGap: 120,
@@ -38,33 +38,35 @@ export function placeStage(
   stageIndex: number,
   count: number,
   maxDocs: number,
+  customDimensions?: { width: number; height: number },
 ): StagePlacement {
   if (direction === "horizontal") {
-    const height = Math.max(
+    const defaultHeight = Math.max(
       HORIZONTAL.minColumnHeight,
       HORIZONTAL.headerHeight +
         count * HORIZONTAL.rowGap +
         HORIZONTAL.bottomPadding,
     );
     return {
-      width: HORIZONTAL.columnWidth,
-      height,
+      width: customDimensions?.width ?? HORIZONTAL.columnWidth,
+      height: customDimensions?.height ?? defaultHeight,
       x: stageIndex * (HORIZONTAL.columnWidth + HORIZONTAL.columnGap),
       y: 0,
     };
   }
+  const defaultWidth = Math.max(
+    VERTICAL.minRowWidth,
+    maxDocs * (CARD_WIDTH + VERTICAL.cardGap) + VERTICAL.cardGap,
+  );
   return {
-    width: Math.max(
-      VERTICAL.minRowWidth,
-      maxDocs * (CARD_WIDTH + VERTICAL.cardGap) + VERTICAL.cardGap,
-    ),
-    height: VERTICAL.rowHeight,
+    width: customDimensions?.width ?? defaultWidth,
+    height: customDimensions?.height ?? VERTICAL.rowHeight,
     x: 0,
     y: stageIndex * (VERTICAL.rowHeight + VERTICAL.rowGap),
   };
 }
 
-/** Vị trí một chứng từ bên trong khung giai đoạn */
+/** Vị trí một chứng từ bên trong khung giai đoạn (dự phòng) */
 export function placeDocument(
   direction: TraceabilityLayoutDirection,
   docIndex: number,

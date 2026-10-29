@@ -42,9 +42,10 @@ export const V2TraceEdge = React.memo(function V2TraceEdge({
       {parts && (
         <EdgeLabelRenderer>
           <div
+            data-testid="v2-trace-edge-label"
             style={{
               position: "absolute",
-              transform: `translate(-50%, -50%) translate(${geometry.labelX}px,${geometry.labelY}px)`,
+              transform: `translate(-50%, -100%) translate(${geometry.labelX}px,${geometry.labelY - 6}px)`,
               pointerEvents: "all",
               zIndex: animated ? 1100 : 1000,
             }}
