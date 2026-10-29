@@ -167,7 +167,10 @@ Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `bank-sta
 
 Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/skills/modules/<module>/SKILL.md` của module.
 
-- `bank-statements` (chỉ drawer xuất Excel sao kê / sổ quỹ, trang sao kê vẫn V1): drawer V2 `V2ExportExcelDrawer` ở `drawers/BankStatementExportDrawer.tsx`, sinh khung bằng plop `v2-module` (`wire = false`), đã bỏ phần CRUD thừa. V1 chỉ giữ wrapper. Chưa có route `/v2` cho module.
+- `bank-statements`: Đã hoàn thiện V2 cho toàn bộ các drawer cốt lõi:
+  - `BankStatementExportDrawer` (`V2ExportExcelDrawer` xuất Excel sao kê ngân hàng & sổ quỹ tiền mặt).
+  - `CashTransactionDetailDrawer` (`V2StandardDrawer` 2-columns cho chi tiết giao dịch tiền mặt, hạch toán, đối tác, cấn trừ hóa đơn).
+  - `BankTransactionDetailDrawer` (`V2StandardDrawer` 2-columns cho chi tiết giao dịch ngân hàng / `cashflow?tab=bank`, xem trước chứng từ UNC/GBC `BankVoucherPreview`, hạch toán `CashPostingSection`, đối tác `CashPartnerTransactions`, truy vết cấn trừ `CashTraceabilitySection` & `CashInvoiceNetOffModal`). V1 giữ Facade Adapter chuyển tiếp 100% props. Chưa có route `/v2` cho toàn trang danh sách.
 - `vinfast-parts` (drawer xuất Excel tồn kho): đã V2 thuần (data layer, toast, icon, locale module, validate ngày). Các drawer khác của module chưa kiểm parity.
 - `finance-invoice` (drawer đồng bộ hóa đơn, chỉ lớp UI): `InvoiceSyncDrawer` v2 (2 cột, `financeInvoiceSync.locale.ts`) được container V1 `InvoiceImportSyncDrawer` render. Logic, API, SSE và 2 dialog V1 vẫn V1, không port trong đợt này.
 

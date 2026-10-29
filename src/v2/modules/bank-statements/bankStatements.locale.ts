@@ -1,3 +1,4 @@
+import { bankDetailLocale } from "./bankStatements.bankDetail.locale";
 import { cashDetailLocale } from "./bankStatements.cashDetail.locale";
 import { cashNetOffLocale } from "./bankStatements.cashNetOff.locale";
 import { cashPartnerLocale } from "./bankStatements.cashPartner.locale";
@@ -8,6 +9,7 @@ registerV2ModuleLocale("bankStatements", {
   vi: {
     ...cashflowLocale.vi,
     ...cashDetailLocale.vi,
+    ...bankDetailLocale.vi,
     ...cashNetOffLocale.vi,
     ...cashPartnerLocale.vi,
     export: {
@@ -74,6 +76,7 @@ registerV2ModuleLocale("bankStatements", {
   en: {
     ...cashflowLocale.en,
     ...cashDetailLocale.en,
+    ...bankDetailLocale.en,
     ...cashNetOffLocale.en,
     ...cashPartnerLocale.en,
     export: {
