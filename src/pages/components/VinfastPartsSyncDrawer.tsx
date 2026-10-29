@@ -64,7 +64,8 @@ export function VinfastPartsSyncDrawer({
 
           <DrawerSection
             title={t("SYNC_PROGRESS_TITLE")}
-            className="flex min-h-0 flex-1 flex-col"
+            fillHeight
+            className="flex min-h-[220px] flex-1 flex-col"
             bodyClassName="flex min-h-0 flex-1 flex-col"
           >
             <V2SyncProgress
