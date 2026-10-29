@@ -28,9 +28,7 @@ export const InvoiceSyncDrawer: React.FC<InvoiceSyncDrawerProps> = ({
   canEditInvoice,
   noCredential,
   syncing,
-  bulkXmlLoading,
   onOpenLogin,
-  onBulkXml,
   onSync,
   progress,
   gdtResult,
@@ -110,9 +108,7 @@ export const InvoiceSyncDrawer: React.FC<InvoiceSyncDrawerProps> = ({
           canEditInvoice={canEditInvoice}
           noCredential={noCredential}
           syncing={syncing}
-          bulkXmlLoading={bulkXmlLoading}
           onOpenLogin={onOpenLogin}
-          onBulkXml={onBulkXml}
           onSync={onSync}
           estimatedRuns={estimateWindowCount(period.dateFrom, period.dateTo)}
           windowDays={GDT_QUERY_WINDOW_DAYS}

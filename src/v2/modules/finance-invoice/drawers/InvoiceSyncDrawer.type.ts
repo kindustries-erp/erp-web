@@ -35,9 +35,7 @@ export interface InvoiceSyncDrawerProps {
   canEditInvoice: boolean;
   noCredential: boolean;
   syncing: boolean;
-  bulkXmlLoading: boolean;
   onOpenLogin: () => void;
-  onBulkXml: () => void;
   onSync: () => void;
 
   progress: InvoiceSyncProgressView;

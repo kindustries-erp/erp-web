@@ -31,7 +31,16 @@ export function InvoiceImportSyncDrawer({
     xmlStep: s.xml.step,
     fileCount: s.xml.files.length,
     createdCount: s.xml.result?.created ?? null,
+    bulkXml: {
+      loading: s.bulkXmlLoading,
+      disabled:
+        s.bulkXmlLoading ||
+        s.portal.loading ||
+        (!s.portal.token && !s.portal.hasPassword),
+    },
     labels: {
+      bulkXml: t("bulkXml", "Tải lại XML"),
+      bulkXmlLoading: t("bulkXmlLoading", "Đang xử lý..."),
       close: t("actionClose", "Đóng"),
       cancel: t("actionCancel", "Hủy"),
       preview: t("importActionPreview", {
@@ -46,6 +55,7 @@ export function InvoiceImportSyncDrawer({
       onCancel: s.requestClose,
       onPreview: () => s.setShowPreview(true),
       onImportMore: s.xml.handleReset,
+      onBulkXml: s.handleBulkXml,
     },
   });
 
@@ -63,9 +73,7 @@ export function InvoiceImportSyncDrawer({
         canEditInvoice={s.canEditInvoice}
         noCredential={!s.portal.token && !s.portal.hasPassword}
         syncing={s.portal.loading}
-        bulkXmlLoading={s.bulkXmlLoading}
         onOpenLogin={() => s.setConfigOpen(true)}
-        onBulkXml={s.handleBulkXml}
         onSync={s.handleSync}
         progress={s.progress}
         gdtResult={

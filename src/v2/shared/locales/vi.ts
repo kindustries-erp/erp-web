@@ -124,6 +124,17 @@ export const v2Vi = {
       defaultCancel: "Hủy",
       processing: "Đang xử lý...",
     },
+    periodPicker: {
+      ariaLabel: "Chọn đơn vị kỳ",
+      week: "Tuần",
+      month: "Tháng",
+      quarter: "Quý",
+      custom: "Tùy chỉnh",
+      selectPeriod: "Chọn kỳ...",
+      weekLabel: "Tuần {{week}}/{{year}} ({{from}} - {{to}})",
+      dateFrom: "Từ ngày",
+      dateTo: "Đến ngày",
+    },
     exportExcel: {
       condition: {
         title: "Điều kiện xuất dữ liệu",

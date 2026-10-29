@@ -62,6 +62,8 @@ export interface V2TabBarProps extends V2BaseProps<HTMLElement> {
   containerClassName?: string;
   /** Nhãn aria-label hỗ trợ accessibility */
   ariaLabel?: string;
+  /** Chỉ với variant="sub": các tab chia đều toàn bộ chiều ngang (mặc định giữ kích thước theo nội dung) */
+  stretch?: boolean;
 }
 
 export interface TabBarPillViewProps {
@@ -72,4 +74,5 @@ export interface TabBarPillViewProps {
   extra?: React.ReactNode;
   className?: string;
   ariaLabel?: string;
+  stretch?: boolean;
 }

@@ -125,6 +125,17 @@ export const v2En: V2Dictionary = {
       defaultCancel: "Cancel",
       processing: "Processing...",
     },
+    periodPicker: {
+      ariaLabel: "Choose period unit",
+      week: "Week",
+      month: "Month",
+      quarter: "Quarter",
+      custom: "Custom",
+      selectPeriod: "Select period...",
+      weekLabel: "Week {{week}}/{{year}} ({{from}} - {{to}})",
+      dateFrom: "From date",
+      dateTo: "To date",
+    },
     exportExcel: {
       condition: {
         title: "Export conditions",

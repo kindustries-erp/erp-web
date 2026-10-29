@@ -34,8 +34,10 @@ Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đ�
   - Frontend kết nối thời gian thực qua Server-Sent Events (`useInvoiceSyncProgress`) để hiển thị Notification banner tiến trình đồng bộ GDT, cảnh báo mật khẩu/captcha hoặc tỷ lệ thành công.
 - **Drawer Đồng bộ hóa đơn (lai V1/V2)**:
   - Container V1 `InvoiceImportSyncDrawer` giữ hook, API, SSE, store và 2 dialog V1 (`GdtPortalAuthDrawer`, `InvoiceXmlImportModal`).
-  - Giao diện là `InvoiceSyncDrawer` v2 (`src/v2/modules/finance-invoice/drawers/`), bố cục 2 cột: trái là tiến độ/kết quả hoặc luồng file XML, phải là điều kiện đồng bộ. Kỳ chọn qua `useInvoiceSyncPeriod` (tháng/quý/năm/tùy chỉnh).
-  - UI không giới hạn độ dài khoảng ngày. Ước tính số lượt quét dùng cửa sổ 9 ngày (`GDT_QUERY_WINDOW_DAYS`, mặc định API 9).
+  - Giao diện là `InvoiceSyncDrawer` v2 (`src/v2/modules/finance-invoice/drawers/`), bố cục giống drawer Xuất Excel Garage: cột trái là tiến độ/kết quả hoặc luồng file XML; cột phải là **một** section "Điều kiện đồng bộ" gồm: pill Nguồn (Từ hệ thống / Tải file lên), pill Chiều (Mua vào / Bán ra), dòng trạng thái tài khoản Cổng Thuế (`InvoiceSyncCredentialRow`), pill kỳ `V2PeriodPicker` (Tuần / Tháng / Quý / Tùy chỉnh), dòng ước tính và nút "Bắt đầu đồng bộ" full width.
+  - Nút "Tải lại XML" nằm ở footer (`invoiceSyncDrawer.actions.ts`, căn trái), không nằm trong section. Dùng `bulkDownloadXml({direction})`, không nhận kỳ.
+  - Kỳ chọn qua `useInvoiceSyncPeriod` (`unit`: week | month | quarter | custom). Chỉ ở "Tùy chỉnh" mới sửa được hai ô ngày; không giới hạn độ dài khoảng ngày, API tự chia cửa sổ.
+  - Ước tính số lượt quét dùng cửa sổ 9 ngày (`GDT_QUERY_WINDOW_DAYS`, mặc định API 9).
 - **Breadcrumbs**:
   - `erp-invoices`: `Kế toán` > `Hóa đơn điện tử`
 - **Route Components**:

@@ -1,3 +1,5 @@
+export * from "./exportPeriodWeek";
+
 export type V2ExportPeriodType = "month" | "quarter" | "year" | "custom";
 
 export interface V2ExportPeriodOption {
