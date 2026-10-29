@@ -1,3 +1,14 @@
+export enum V2ChevronOrientation {
+  LEFT = "left",
+  RIGHT = "right",
+  UP = "up",
+  DOWN = "down",
+}
+
+export type V2ChevronOrientationInput =
+  | V2ChevronOrientation
+  | `${V2ChevronOrientation}`;
+
 interface V2DatePickerBaseProps {
   placeholder?: string;
   /** Ngày nhỏ nhất được chọn, dạng `yyyy-MM-dd` */

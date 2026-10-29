@@ -71,6 +71,8 @@ src/v2/modules/<module>/
 | Dịch | `useV2Translation` (chỉ đọc dict V2 và module registry) | `src/v2/shared/hooks/useV2Translation.ts` |
 | Quyền | `useV2HasPermission` | `src/v2/shared/hooks/useV2HasPermission.ts` |
 | Ô nhập form chỉ đọc/sửa | `V2ReadValue`, `V2TextField` | `molecules/v2-form-controls/` |
+| Quản lý state form & validation | `useV2Form` | `src/v2/shared/hooks/useV2Form.ts` |
+| Component tổng render form field (100% V2 atoms/molecules, view/edit switch, label lookup) | `V2FormField` | `molecules/v2-form-field/` |
 | Textarea | `V2Textarea` | `atoms/v2-textarea/` |
 | Khung trang / drawer / xác nhận | `V2ModulePage`, `V2StandardDrawer`, `V2ConfirmModal` | `templates/`, `organisms/`, `molecules/` |
 
