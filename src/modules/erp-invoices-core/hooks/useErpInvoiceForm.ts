@@ -44,6 +44,7 @@ function emptyForm(direction: Direction = "IN"): CreateErpInvoicePayload {
 
 let cachedPortalConfig: {
   token?: string;
+  hasToken?: boolean;
   username?: string;
   hasPassword?: boolean;
 } | null = null;
@@ -53,7 +54,7 @@ async function isPortalAuthAvailable(): Promise<boolean> {
   const now = Date.now();
   if (cachedPortalConfig && now - lastPortalConfigFetch < 60000) {
     return Boolean(
-      cachedPortalConfig.token ||
+      (cachedPortalConfig.hasToken ?? cachedPortalConfig.token) ||
       (cachedPortalConfig.username && cachedPortalConfig.hasPassword),
     );
   }
@@ -61,7 +62,10 @@ async function isPortalAuthAvailable(): Promise<boolean> {
     const config = await erpInvoicesCoreApi.getPortalConfig();
     cachedPortalConfig = config;
     lastPortalConfigFetch = now;
-    return Boolean(config?.token || (config?.username && config?.hasPassword));
+    return Boolean(
+      (config?.hasToken ?? config?.token) ||
+      (config?.username && config?.hasPassword),
+    );
   } catch {
     return false;
   }

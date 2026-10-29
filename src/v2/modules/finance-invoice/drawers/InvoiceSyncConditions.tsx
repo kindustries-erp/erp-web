@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Play, V2Button, V2Text } from "@/v2/shared/components/atoms";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { V2PeriodPicker } from "@/v2/shared/components/molecules/v2-period-picker";
+import { V2PeriodPicker } from "@/v2/shared/components/organisms/v2-period-picker";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { InvoiceSyncCredentialRow } from "./InvoiceSyncCredentialRow";
 import { InvoiceSyncSourceFields } from "./InvoiceSyncSourceFields";

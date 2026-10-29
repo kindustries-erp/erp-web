@@ -34,11 +34,6 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
           },
           signal: controller.current?.signal,
           onopen(res) {
-            console.log(
-              "SSE onopen",
-              res.status,
-              res.headers.get("content-type"),
-            );
             if (res.ok && res.status === 200) {
               return Promise.resolve();
             } else {
@@ -91,7 +86,7 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
             }
           },
           onclose() {
-            console.log("SSE onclose");
+            // Kết nối đóng: effect sẽ mở lại khi token hoặc onComplete đổi
           },
           onerror(err) {
             console.error("SSE error", err);
@@ -111,5 +106,6 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
       }
       isConnecting.current = false;
     };
-  }, [onComplete]);
+    // token nằm trong deps: đổi token (đăng nhập lại) thì kết nối SSE mở lại với token mới
+  }, [onComplete, token]);
 }

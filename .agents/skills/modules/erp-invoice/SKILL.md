@@ -33,7 +33,7 @@ Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đ�
   - Hệ thống backend tự động đồng bộ định kỳ tại **5 mốc giờ chuẩn: 09:15, 15:15, 16:15, 17:15, 21:15 (Asia/Ho_Chi_Minh)**.
   - Frontend kết nối thời gian thực qua Server-Sent Events (`useInvoiceSyncProgress`) để hiển thị Notification banner tiến trình đồng bộ GDT, cảnh báo mật khẩu/captcha hoặc tỷ lệ thành công.
 - **Drawer Đồng bộ hóa đơn (lai V1/V2)**:
-  - Container V1 `InvoiceImportSyncDrawer` giữ hook, API, SSE, store và 2 dialog V1 (`GdtPortalAuthDrawer`, `InvoiceXmlImportModal`).
+  - Container V1 `InvoiceImportSyncDrawer` giữ hook, SSE, store; không import organism anh em. Modal XML, chi tiết HĐ và bảng kết quả XML đi qua slot do `ErpInvoicesTabSyncDrawers` cung cấp (xem mục 3.8).
   - Giao diện là `InvoiceSyncDrawer` v2 (`src/v2/modules/finance-invoice/drawers/`), bố cục giống drawer Xuất Excel Garage: cột trái là tiến độ/kết quả hoặc luồng file XML; cột phải là **một** section "Điều kiện đồng bộ" gồm: pill Nguồn (Từ hệ thống / Tải file lên), pill Chiều (Mua vào / Bán ra), dòng trạng thái tài khoản Cổng Thuế (`InvoiceSyncCredentialRow`), pill kỳ `V2PeriodPicker` (Tuần / Tháng / Quý / Tùy chỉnh), dòng ước tính và nút "Bắt đầu đồng bộ" full width.
   - Nút "Tải lại XML" nằm ở footer (`invoiceSyncDrawer.actions.ts`, căn trái), không nằm trong section. Dùng `bulkDownloadXml({direction})`, không nhận kỳ.
   - Kỳ chọn qua `useInvoiceSyncPeriod` (`unit`: week | month | quarter | custom). Chỉ ở "Tùy chỉnh" mới sửa được hai ô ngày; không giới hạn độ dài khoảng ngày, API tự chia cửa sổ.
@@ -101,6 +101,7 @@ src/modules/erp-invoices-core/
 │       │   ├── ErpInvoicesTabHeaderSection.tsx# Header toolbar, PillTabs thuế, search, action buttons
 │       │   ├── ErpInvoicesTabColumns.tsx      # Khai báo dynamic columns theo view preset
 │       │   ├── ErpInvoicesTabDrawers.tsx      # Quản lý mount các Drawer liên quan
+│       │   ├── ErpInvoicesTabSyncDrawers.tsx # Drawer đồng bộ: một GdtPortalAuthDrawer, modal nâng cao, slot XML
 │       │   ├── ErpInvoicesTabBulkModals.tsx   # Quản lý mount các Modals thao tác hàng loạt
 │       │   ├── columns/                       # Thư mục chứa cấu hình chi tiết từng cột
 │       │   └── hooks/                         # Sub-hooks quản lý pagination, filters, selections
@@ -186,9 +187,14 @@ src/modules/erp-invoices-core/
 │   ├── useErpInvoicesQueryConfigs.ts          # Cấu hình React Query keys & caching strategies
 │   ├── useInvoiceSyncProgress.ts              # SSE Hook lắng nghe tiến trình đồng bộ GDT tự động
 │   ├── useInvoiceExportProgress.ts            # SSE Hook theo dõi tiến độ tác vụ xuất Excel nền
-│   ├── useInvoiceXmlUpload.ts                 # Hook quản lý tiến trình upload & parse XML hàng loạt
-│   ├── usePortalSync.ts                       # Hook kích hoạt đồng bộ GDT thủ công (nhận khoảng ngày tùy chọn, không giới hạn 30 ngày)
-│   └── usePortalImport.ts                     # Hook quản lý import dữ liệu Cổng Thuế
+│   ├── useInvoiceXmlUpload.ts                 # Hook state file XML (chọn, gỡ, ghép tự động XML–PDF); import qua mutation
+│   ├── useInvoiceXmlImportMutation.ts         # Mutation import XML tự động và ghép PDF tay theo HĐ đã chọn
+│   ├── invoiceXmlPairing.helper.ts            # Helper thuần: ghép XML–PDF, tách file ghép tay, phân loại preview
+│   ├── useBulkDownloadXmlMutation.ts          # Mutation tải lại XML theo chiều
+│   ├── usePortalConfigQuery.ts                # Query cấu hình Cổng Thuế (nguồn duy nhất, key ["erp-invoices","portal-config"])
+│   ├── usePortalSync.ts                       # Đồng bộ GDT: cấu hình qua query, sync(type, range) qua mutation
+│   ├── portalSyncError.helper.ts              # Ánh xạ mã lỗi GDT sang khóa i18n và cờ cần đăng nhập lại
+│   └── useInvoiceSyncProgressStore.ts         # Zustand store tiến trình đồng bộ (SSE và log)
 ├── locales/
 │   └── vi.ts                                  # Bản dịch tiếng Việt chuyên biệt cho module Hóa đơn
 └── utils/
@@ -300,6 +306,17 @@ src/modules/erp-invoices-core/
 - **`BranchInvoiceChart`**: Hiển thị biến động Hóa đơn (Doanh thu `OUT` - Cột Emerald `#059669`, Chi phí `IN` - Cột Orange `#ea580c`, Lợi nhuận gộp - Đường Line Teal `#2dd4bf` Dark / `#0d9488` Light với `tension: 0.3` mềm mại).
 - **`BranchVatChart`**: Hiển thị biến động Thuế VAT (VAT Đầu vào, VAT Đầu ra, Chênh lệch).
 - **Chuẩn hóa V2**: Sử dụng component `V2ComboChart` kế thừa `V2ChartFrame` hỗ trợ chuyển đổi tức thì giữa chế độ xem Biểu đồ (Chart View) và Bảng chi tiết (Table View), dot viền tương phản `theme.surface`, và tooltip gom đa chuỗi `interaction: { mode: "index" }`.
+
+### 3.8. Đồng bộ hóa đơn: ghép drawer và luồng React Query
+
+- **Ghép dialog (một chiều)**: `InvoiceImportSyncDrawer` không import organism anh em. Modal xem trước XML, chi tiết HĐ và bảng kết quả XML đi qua slot `renderXmlPreview`, `renderInvoiceDetail`, `renderXmlResultTables` do `ErpInvoicesTabSyncDrawers.tsx` cung cấp.
+- **Một GdtPortalAuthDrawer duy nhất**: chỉ `ErpInvoicesTabSyncDrawers.tsx` mount drawer Đăng nhập Cổng Thuế (cùng với modal nâng cao). Khi token cần đăng nhập lại, hook gọi `onOpenLogin()` của tầng tab; không còn `configOpen` trùng ở hook.
+- **Cấu hình Cổng Thuế**: `usePortalConfigQuery` (key `["erp-invoices","portal-config"]`) là nguồn duy nhất cho `hasToken`, `hasPassword`, `username`. Đăng nhập hoặc lưu cấu hình thành công thì invalidate key này.
+- **Đồng bộ GDT**: `usePortalSync.sync(type, {dateFrom, dateTo})` là mutation. Lỗi GDT được ánh xạ sang khóa i18n qua `portalSyncError.helper.ts`.
+- **Import XML**: `useInvoiceXmlUpload` giữ state file. Import qua `useInvoiceXmlImportMutation`; PDF ghép tay được gửi theo hóa đơn đã chọn. Ghép XML–PDF là helper thuần `invoiceXmlPairing.helper.ts`.
+- **Modal XML**: danh sách gợi ý PDF và hóa đơn là `useQuery`; ô tìm hóa đơn ghép tay là `useQuery` + `useDebounce(300ms)`. Footer tách thành `InvoiceXmlImportFooter`.
+- **Tải lại XML**: `useBulkDownloadXmlMutation`. Tiến trình hiển thị qua `useInvoiceSyncDrawerProgress` (store `useInvoiceSyncProgressStore`).
+- **Modal nâng cao**: gửi yêu cầu là mutation; theo dõi tiến trình tải PDF là `useQuery` với `refetchInterval` 2.5 giây, chỉ khi trạng thái `in_progress`.
 
 ---
 

@@ -46,6 +46,18 @@ graph TD
    - Agent **TUYỆT ĐỐI KHÔNG** tự ý bắt đầu migrate bất kỳ module nào nếu chưa có lệnh rõ ràng từ User.
    - Mỗi module migrate độc lập, verify 100% Quality Gate trước khi báo cáo kết quả và dừng lại chờ lệnh tiếp theo.
 
+## 🧱 Kỷ Luật Atomic (tham chiếu `/ui-atomic-refactor`)
+
+Áp dụng cho mọi file UI trong `src/v2/` và cho các file V1 được chạm trong task. Chi tiết và lệnh audit nằm ở `ui-atomic-refactor.md`; mục này là bộ tối thiểu bắt buộc khi làm việc với `src/v2/`:
+
+- **Phân tầng**: mỗi component thuộc đúng một tầng (Atoms, Molecules, Organisms, Templates, Pages).
+- **Import một chiều**: `Templates > Organisms > Molecules > Atoms`. Cấm import ngược tầng và import ngang hàng cùng tầng. Khi hai organism cần chung một phần, đưa phần đó xuống molecule hoặc truyền qua props/slot từ tầng cha.
+- **Ranh giới hook**: Atoms và Molecules chỉ nhận props, không gọi API, React Query hay store. Logic nghiệp vụ nằm trong hook của Organisms.
+- **Cấu trúc thư mục**: folder-per-component kebab-case, có `index.ts`, test co-located (`.test.tsx`).
+- **Ngưỡng kích thước**: `[Name].tsx` < 150 dòng, `.hook.ts` < 180, `.type.ts` < 80, `.helper.ts` < 100. Vượt ngưỡng thì tách theo thứ tự type → hook → helper → sub-component.
+- **Cấm hardcode**: chuỗi hiển thị đi qua `t()`; cấm màu `blue-*`.
+- **Trước khi báo xong**: chạy audit ở Giai đoạn 5 của `ui-atomic-refactor.md`, type-check, và test của thư mục đã chạm.
+
 ---
 
 ## 🧭 Cây Thư Mục Tiêu Chuẩn `src/v2/`
