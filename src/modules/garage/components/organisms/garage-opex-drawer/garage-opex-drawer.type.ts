@@ -1,6 +1,6 @@
 import type { GarageOpexItem } from "@/modules/garage/api/garageOpexApi";
 
-export type CostGroupType = "OPEX" | "COGS" | "COMMISSION";
+export type CostGroupType = "OPEX" | "COGS" | "COMMISSION" | "FINANCIAL";
 
 export interface GarageOpexDrawerProps {
   open: boolean;
@@ -10,6 +10,7 @@ export interface GarageOpexDrawerProps {
   isCreate?: boolean;
   id?: string | null;
   initialData?: GarageOpexItem | null;
+  initialCostGroup?: CostGroupType;
   onSuccess?: () => void;
 }
 

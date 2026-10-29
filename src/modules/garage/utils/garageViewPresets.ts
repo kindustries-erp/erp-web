@@ -57,6 +57,7 @@ export const GARAGE_OPEX_FILTER_ITEMS: ViewModeFilterItem<string>[] = [
   { value: "OPEX", label: "CP Vận hành", dotColor: "slate" },
   { value: "COGS", label: "Giá vốn (COGS)", dotColor: "amber" },
   { value: "COMMISSION", label: "Hoa hồng", dotColor: "blue" },
+  { value: "FINANCIAL", label: "Chi phí tài chính", dotColor: "rose" },
 ];
 
 // ==========================================

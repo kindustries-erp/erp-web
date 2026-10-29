@@ -19,6 +19,11 @@ export const COST_GROUPS: CostGroupOption[] = [
     labelKey: "costGroups.COMMISSION",
     defaultLabel: "Hoa hồng (Commission)",
   },
+  {
+    key: "FINANCIAL",
+    labelKey: "costGroups.FINANCIAL",
+    defaultLabel: "Chi phí tài chính (Financial)",
+  },
 ];
 
 /**
@@ -101,5 +106,28 @@ export const CATEGORY_PRESETS: CategoryPreset[] = [
     labelKey: "categories.HOA_HONG_KHAC",
     defaultName: "Hoa hồng khác / Điều chỉnh hoa hồng",
     badge: "Hoa hồng",
+  },
+
+  // 4. Nhóm Chi phí tài chính (Financial)
+  {
+    key: "LAI_VAY",
+    group: "FINANCIAL",
+    labelKey: "categories.LAI_VAY",
+    defaultName: "Chi phí lãi vay",
+    badge: "Tài chính",
+  },
+  {
+    key: "CHI_PHI_TAI_CHINH_KHAC",
+    group: "FINANCIAL",
+    labelKey: "categories.CHI_PHI_TAI_CHINH_KHAC",
+    defaultName: "Chi phí tài chính khác",
+    badge: "Tài chính",
+  },
+  {
+    key: "CHI_PHI_TAI_CHINH",
+    group: "FINANCIAL",
+    labelKey: "categories.CHI_PHI_TAI_CHINH",
+    defaultName: "Chi phí tài chính",
+    badge: "Tài chính",
   },
 ];
