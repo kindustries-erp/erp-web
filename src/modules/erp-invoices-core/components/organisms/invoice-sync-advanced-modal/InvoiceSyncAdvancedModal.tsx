@@ -11,7 +11,6 @@ import {
 } from "@/shared/components/ui/Dialog";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/input";
-import { Checkbox } from "@/shared/components/ui/checkbox";
 import { useInvoiceSyncAdvancedModal } from "./InvoiceSyncAdvancedModal.hook";
 import type { InvoiceSyncAdvancedModalProps } from "./InvoiceSyncAdvancedModal.type";
 
@@ -122,25 +121,6 @@ export const InvoiceSyncAdvancedModal = React.memo(
                   className="h-8 text-xs"
                 />
               </div>
-            </div>
-
-            <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
-              <Checkbox
-                id="download-original-pdf"
-                checked={formValues.downloadOriginalPdf}
-                onCheckedChange={(checked) =>
-                  handleFieldChange("downloadOriginalPdf", !!checked)
-                }
-              />
-              <label
-                htmlFor="download-original-pdf"
-                className="text-xs font-medium text-slate-700 dark:text-slate-200 cursor-pointer"
-              >
-                {t(
-                  "erpInvoice.autoDownloadOriginalPdf",
-                  "Tự động tải PDF gốc nhà cung cấp (VinFast, MISA, Viettel...)",
-                )}
-              </label>
             </div>
 
             {syncStatus && (

@@ -132,14 +132,11 @@ export const GDT_CAPTCHA_MODEL: Record<string, string> = {
  * @returns Upper-case solved text string (e.g. "8A9AWD")
  */
 export function solveGdtSvgCaptcha(svgContent: string): string {
-  if (!svgContent || typeof svgContent !== "string") {
-    return "";
-  }
+  if (!svgContent || typeof svgContent !== "string") return "";
 
   // Extract all <path ...> tags
   const pathMatches = svgContent.matchAll(/<path([^>]+)\/>/gi);
   const characterPaths: { startX: number; char: string }[] = [];
-
   for (const match of pathMatches) {
     const attrs = match[1];
     const strokeMatch = attrs.match(/stroke="([^"]+)"/i);

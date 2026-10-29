@@ -828,10 +828,16 @@ export const erpInvoicesCoreApi = {
     password?: string;
     cvalue: string;
     ckey: string;
-  }): Promise<{ success: boolean; token: string; message: string }> => {
+  }): Promise<{
+    success: boolean;
+    hasToken?: boolean;
+    token?: string;
+    message: string;
+  }> => {
     const { data } = await axiosInstance.post<{
       success: boolean;
-      token: string;
+      hasToken?: boolean;
+      token?: string;
       message: string;
     }>(`${BASE}/portal/login`, payload);
     return data;

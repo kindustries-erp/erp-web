@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { V2PeriodUnit } from "@/v2/shared/components/molecules/v2-period-picker";
+import type { V2PeriodUnit } from "@/v2/shared/components/organisms/v2-period-picker";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   generateMonthOptions,

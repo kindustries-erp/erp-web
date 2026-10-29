@@ -49,6 +49,8 @@ export function InvoiceXmlImportModal({
   // Fetch matches when files change
   useEffect(() => {
     if (!open) return;
+    // Bỏ kết quả của lần gọi cũ khi files/direction đã đổi trước khi phản hồi về
+    let cancelled = false;
     const pdfNames = files
       .filter((f) => f.type === "pdf" && !f.pairedPdf)
       .map((f) => f.file.name);
@@ -56,13 +58,23 @@ export function InvoiceXmlImportModal({
     if (pdfNames.length > 0) {
       erpInvoicesCoreApi
         .previewPdfMatch(pdfNames, direction)
-        .then((res) => setMatchedInvoices(res))
+        .then((res) => {
+          if (!cancelled) setMatchedInvoices(res);
+        })
         .catch((err) => console.error("Failed to preview pdf match", err));
 
       erpInvoicesCoreApi
         .list({ direction, pageSize: 50 })
-        .then((res) => setCandidateInvoices(res.items.map(toInvoiceOption)));
+        .then((res) => {
+          if (!cancelled) setCandidateInvoices(res.items.map(toInvoiceOption));
+        })
+        .catch((err) =>
+          console.error("Failed to load candidate invoices", err),
+        );
     }
+    return () => {
+      cancelled = true;
+    };
   }, [open, files, direction]);
 
   const selectedCount = Object.values(rowSelection).filter(Boolean).length;

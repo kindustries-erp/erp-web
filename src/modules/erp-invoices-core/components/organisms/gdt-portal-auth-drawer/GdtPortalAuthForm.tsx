@@ -130,7 +130,7 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
 
       if (res.success) {
         toast.success(res.message || "Đăng nhập Cổng Thuế thành công!");
-        if (res.token) {
+        if (res.hasToken ?? Boolean(res.token)) {
           setHasCurrentToken(true);
         }
         onSuccess?.();

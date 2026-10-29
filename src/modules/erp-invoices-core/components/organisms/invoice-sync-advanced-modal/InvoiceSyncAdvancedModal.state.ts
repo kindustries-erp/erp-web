@@ -4,8 +4,6 @@ export interface SyncAdvancedFormValues {
   queryType: "query" | "sco-query" | "all";
   fromDate: string;
   toDate: string;
-  downloadOriginalPdf: boolean;
-  concurrency: number;
 }
 
 export function getDefaultSyncAdvancedFormValues(
@@ -25,7 +23,5 @@ export function getDefaultSyncAdvancedFormValues(
     queryType: "query",
     fromDate,
     toDate,
-    downloadOriginalPdf: true,
-    concurrency: 3,
   };
 }

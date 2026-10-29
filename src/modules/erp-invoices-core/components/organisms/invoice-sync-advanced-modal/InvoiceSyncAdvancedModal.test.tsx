@@ -33,7 +33,7 @@ describe("InvoiceSyncAdvancedModal Organism", () => {
     );
     expect(
       screen.getByText(
-        "Tự động tải PDF gốc nhà cung cấp (VinFast, MISA, Viettel...)",
+        "Đồng bộ từ GDT và tự động tải PDF gốc có chữ ký số từ nhà cung cấp.",
       ),
     ).toBeInTheDocument();
   });
