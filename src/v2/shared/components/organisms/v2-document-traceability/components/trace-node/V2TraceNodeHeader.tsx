@@ -13,6 +13,7 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { cn } from "@/v2/shared/utils/cn";
 import type { TraceabilityVisualMeta } from "../../utils/traceability.visual";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { getDocTypeIcon } from "./traceNode.helper";
 
 export interface V2TraceNodeHeaderProps {
   meta: TraceabilityVisualMeta;
@@ -59,6 +60,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
           )}
           title={t(meta.fullTitleKey)}
         >
+          {getDocTypeIcon(meta.docType)}
           {meta.isInvoiceIn && (
             <ArrowDownLeft className="h-2.5 w-2.5 opacity-80" />
           )}

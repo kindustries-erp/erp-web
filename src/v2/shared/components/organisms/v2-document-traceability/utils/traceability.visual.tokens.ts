@@ -27,6 +27,7 @@ export interface TraceabilityVisualMeta {
   isInvoiceOut?: boolean;
   amountCls?: string;
   amountPrefix?: "+" | "-";
+  docType?: TraceabilityNodeType;
 }
 
 export interface TraceabilityVisualInput {

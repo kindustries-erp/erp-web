@@ -91,15 +91,15 @@ export const V2TraceNode = React.memo(function V2TraceNode({
       onDoubleClick={handleOpen}
       className={cn(
         "group relative z-10 w-[290px] cursor-pointer overflow-hidden rounded-xl bg-surface text-left",
-        meta.cardBorderCls,
+        meta.cardBorderCls ?? "border-l-[3px] border-l-muted-fg/40",
         // Khi đang kéo: tắt hoàn toàn CSS transition, loại bỏ shadow, đưa layer lên GPU để mượt mà 60fps
         dragging
           ? "!transition-none border border-border shadow-none"
           : cn(
-              "transition-[border-color,box-shadow] duration-200",
+              "transition-all duration-150 ease-out will-change-transform",
               node.isCurrent || selected
-                ? "border-2 border-border shadow-md ring-2 ring-foreground"
-                : "border border-border shadow-2xs hover:border-border hover:shadow-sm dark:hover:border-border",
+                ? "border-2 border-primary/60 shadow-md shadow-primary/10 ring-2 ring-primary/30"
+                : "border border-border/80 shadow-2xs hover:-translate-y-0.5 hover:border-border hover:shadow-md",
             ),
         node.restricted &&
           "cursor-default border-dashed border-border bg-muted opacity-80",

@@ -231,6 +231,44 @@ Từ phiên bản V2, hệ thống luồng chứng từ chuyển sang sử dụn
 
 ---
 
+## 11. Quy Chuẩn UI Enhancement & Iconography V2
+
+1. **Bộ Icon Chuyên Biệt Theo Loại Chứng Từ (`traceNode.helper.tsx`)**:
+   - Mỗi loại chứng từ hiển thị kèm icon Lucide đặc trưng trong Badge:
+     - `INVOICE`: `Receipt`
+     - `BANK_TXN`: `CreditCard`
+     - `PURCHASE_ORDER`: `ShoppingCart`
+     - `SALES_ORDER`: `ShoppingBag`
+     - `GOODS_RECEIPT`: `PackageCheck`
+     - `GOODS_ISSUE`: `PackageMinus`
+     - `GARAGE_CASE`: `Wrench`
+     - `PRODUCTION_ORDER` / `PRODUCTION_PLAN`: `Factory`
+     - `JOURNAL_ENTRY`: `BookOpen`
+     - `BATCH` / `RAW_MATERIAL`: `Layers` / `Package`
+
+2. **Thẻ Node Tương Tác Hiện Đại (Micro-Elevation & Active Glow)**:
+   - Hiệu ứng GPU-accelerated hover: `hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 will-change-transform`.
+   - Active highlight khi node được chọn: viền `border-2 border-primary/60 shadow-md shadow-primary/10 ring-2 ring-primary/30`.
+   - Tuyệt đối không dùng `backdrop-filter: blur(...)` bên trong các node canvas để duy trì hiệu năng 60-120fps khi pan/zoom.
+
+3. **Stage Swimlanes Chuẩn Khối Nghiệp Vụ (`V2TraceStageGroup.tsx`)**:
+   - Đường viền mờ sang trọng `border-border/80`, nền chuyển sắc nhẹ `bg-gradient-to-b from-muted/30 via-muted/10 to-transparent`.
+   - Stage Badge dạng Pill đánh số thứ tự luồng trực quan: `01`, `02`, `03`, `04` kèm tiêu đề giai đoạn.
+
+4. **Nút Chuyển Hướng Bố Cục Chuẩn Xác (Toolbar & Canvas Controls)**:
+   - Đổi icon chuyển đổi bố cục từ `RotateCw` gây hiểu lầm thành `Rows3` (khi đang ngang, bấm để chuyển sang dọc) và `Columns3` (khi đang dọc, bấm để chuyển sang ngang).
+   - Tích hợp nút chuyển hướng trực tiếp lên thanh công cụ trên cùng (`V2TraceToolbar`) khi ở chế độ `canvas`.
+
+5. **Lưới Chấm Tối Giản & Chú Thích Dòng Tiền (Dot Grid & Legend)**:
+   - Sử dụng `<Background variant={BackgroundVariant.Dots} gap={16} size={1} />` tạo độ sâu không gian mà không gây rối mắt.
+   - Thêm `<V2TraceCanvasLegend />` góc trái dưới giải thích màu sắc dòng tiền:
+     - 🟢 Dòng tiền vào (Thu)
+     - 🟠 Dòng tiền ra (Chi)
+     - 🟣 Chứng từ đang chọn (Active)
+   - Bật `onlyRenderVisibleElements` trên ReactFlow để tối ưu triệt để việc render chỉ các node nằm trong viewport.
+
+---
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Canvas đã khóa kéo rê node (`nodesDraggable={false}`, `draggable: false`) để bảo toàn layout chưa?

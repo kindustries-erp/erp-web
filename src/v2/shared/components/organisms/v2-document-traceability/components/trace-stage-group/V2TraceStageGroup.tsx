@@ -14,6 +14,7 @@ export const V2TraceStageGroup = React.memo(function V2TraceStageGroup({
   const { t } = useV2Translation();
   const { stage, count, allowEdit, allowedDocTypes, actions } = data;
   const stageName = t(stage.titleKey);
+  const stepStr = String(stage.stageNo).padStart(2, "0");
 
   const addableTypes = useMemo(
     () =>
@@ -29,13 +30,15 @@ export const V2TraceStageGroup = React.memo(function V2TraceStageGroup({
   return (
     <div
       className={cn(
-        "relative h-full w-full rounded-2xl border-2 border-dashed pointer-events-none",
+        "relative h-full w-full rounded-2xl border border-border/80 bg-gradient-to-b from-muted/30 via-muted/10 to-transparent pointer-events-none shadow-2xs",
         stage.accentBorder,
-        stage.bgCls,
       )}
     >
       <div className="pointer-events-auto absolute left-3.5 right-3.5 top-2.5 flex items-center justify-between">
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-surface border border-border/80 font-mono text-[9px] font-bold text-muted-fg shadow-2xs">
+            {stepStr}
+          </span>
           <V2Text
             as="span"
             className={cn(
@@ -47,7 +50,7 @@ export const V2TraceStageGroup = React.memo(function V2TraceStageGroup({
           </V2Text>
           <V2Text
             as="span"
-            className="font-mono text-[11px] font-medium text-muted-fg "
+            className="font-mono text-[11px] font-medium text-muted-fg"
           >
             ({count})
           </V2Text>
@@ -58,7 +61,7 @@ export const V2TraceStageGroup = React.memo(function V2TraceStageGroup({
             type="button"
             variant="ghost"
             size="xs"
-            className="h-6 gap-1 border border-border bg-surface/80 px-2 text-[11px] text-muted-fg shadow-2xs hover:bg-surface hover:text-foreground  "
+            className="h-6 gap-1 border border-border/80 bg-surface/90 px-2 text-[11px] text-muted-fg shadow-2xs hover:bg-surface hover:text-foreground"
             title={t("v2.traceability.stage.addLinkTo", { stage: stageName })}
             onClick={() =>
               actions.onAddLink?.(

@@ -50,8 +50,8 @@ export const V2TraceEdge = React.memo(function V2TraceEdge({
               zIndex: animated ? 1100 : 1000,
             }}
             className={cn(
-              "nodrag nopan select-none rounded-lg border border-border bg-surface/95 px-2 py-0.5 text-foreground shadow-sm hover:border-border",
-              animated && "shadow-md",
+              "nodrag nopan select-none rounded-full border border-border/80 bg-surface/95 px-2.5 py-0.5 text-foreground shadow-2xs transition-all hover:border-border hover:shadow-xs",
+              animated && "border-border/90 shadow-sm ring-1 ring-border/50",
             )}
           >
             {parts.kind === "amount" && (

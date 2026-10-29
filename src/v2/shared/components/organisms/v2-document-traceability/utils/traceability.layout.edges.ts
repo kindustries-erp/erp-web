@@ -9,6 +9,7 @@ import type {
 } from "../types/traceability.flow.type";
 
 const EDGE_STROKE = "var(--muted-fg)";
+const EDGE_SELECTED = "var(--primary)";
 
 export interface EdgeHandles {
   sourceHandle: string;
@@ -47,6 +48,7 @@ export function buildTraceEdge(
   handles: EdgeHandles,
   inSelection: boolean,
 ): TraceFlowEdge {
+  const strokeColor = inSelection ? EDGE_SELECTED : EDGE_STROKE;
   return {
     id: edge.id,
     source: edge.source,
@@ -62,10 +64,10 @@ export function buildTraceEdge(
       type: MarkerType.ArrowClosed,
       width: 14,
       height: 14,
-      color: EDGE_STROKE,
+      color: strokeColor,
     },
     style: {
-      stroke: EDGE_STROKE,
+      stroke: strokeColor,
       strokeWidth: inSelection ? 2.2 : 1.8,
       strokeDasharray: edge.isTransitive && !inSelection ? "4 4" : undefined,
     },
