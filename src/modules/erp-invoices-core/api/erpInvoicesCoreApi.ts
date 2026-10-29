@@ -485,6 +485,15 @@ export interface SyncStatusResponse {
   errorMessage: string | null;
 }
 
+/** Cấu hình Cổng Thuế trả về từ `GET portal/token`; API mới không còn token/cookies thô */
+export interface PortalConfigResponse {
+  token?: string;
+  cookies?: string;
+  hasToken?: boolean;
+  username?: string;
+  hasPassword?: boolean;
+}
+
 export const erpInvoicesCoreApi = {
   downloadOriginalPdf: async (
     invoiceId: string,
@@ -843,20 +852,10 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
-  getPortalConfig: async (): Promise<{
-    token?: string;
-    cookies?: string;
-    hasToken?: boolean;
-    username?: string;
-    hasPassword?: boolean;
-  }> => {
-    const { data } = await axiosInstance.get<{
-      token?: string;
-      cookies?: string;
-      hasToken?: boolean;
-      username?: string;
-      hasPassword?: boolean;
-    }>(`${BASE}/portal/token`);
+  getPortalConfig: async (): Promise<PortalConfigResponse> => {
+    const { data } = await axiosInstance.get<PortalConfigResponse>(
+      `${BASE}/portal/token`,
+    );
     return data;
   },
 
