@@ -318,4 +318,14 @@ export const erpInvoicesEn = {
   uploadPdfSuccess: "PDF uploaded",
   uploadPdfFailed: "Failed to upload PDF",
   invalidPdfFile: "File must be a PDF",
+  // Drawers & confirmation dialogs
+  deleteInvoiceTitle: "Delete invoice",
+  deleteInvoiceMessage:
+    "Are you sure you want to delete invoice {{invoiceNo}}? This action cannot be undone.",
+  deleteInvoiceConfirm: "Delete",
+  cancelInvoiceTitle: "Cancel invoice",
+  cancelInvoiceMessage:
+    "Are you sure you want to cancel invoice {{invoiceNo}}?",
+  cancelInvoiceConfirm: "Confirm cancel",
+  downloadFileError: "File download failed",
 };
