@@ -45,6 +45,7 @@ export const V2ConfirmModalDesktop: React.FC<V2ConfirmModalProps> = ({
   onConfirm,
   onCancel,
   className,
+  overlayClassName,
 }) => {
   const { t } = useV2Translation();
 
@@ -66,6 +67,7 @@ export const V2ConfirmModalDesktop: React.FC<V2ConfirmModalProps> = ({
       <DialogContent
         hideCloseButton
         className={cn("max-w-[380px] p-6 text-left", className)}
+        overlayClassName={overlayClassName}
       >
         <DialogHeader className="space-y-2 mb-2 text-left">
           <div className="flex items-center gap-2.5">

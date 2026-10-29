@@ -35,7 +35,7 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardDrawer) theo ki
      - `mobile-panels/DrawerMobilePanels.tsx`: Bố cục cột và tabs trên Mobile (< 75 LoC) tích hợp sub tabs, main content, stacked right panel và related deck.
      - `mobile/V2StandardDrawer.mobile.tsx`: Fullscreen Bottom Sheet (< 145 LoC, Grab Handle, Slide-up, Vertical Card Cascading Stack).
      - `state-guard/DrawerStateGuard.tsx`: Trình bao bọc trạng thái Loading spinner và Error banner tập trung (< 50 LoC) dùng chung cho cả Desktop và Mobile.
-     - `confirm-modal/DrawerConfirmCloseModal.tsx`: Modal xác nhận đóng Drawer khi form bẩn / dirty state (< 40 LoC).
+     - `confirm-modal/DrawerConfirmCloseModal.tsx`: Modal xác nhận đóng Drawer khi form bẩn / dirty state (< 40 LoC). Luôn render với `className="z-[700]"` và `overlayClassName="z-[699]"` để nằm trên mọi Drawer V2 đang xếp chồng (zIndex tầng ≤ 600 cộng bước 10). Không dùng `z-50` mặc định của `Dialog`, vì drawer ở tầng trên sẽ che hộp xác nhận và bấm "Đóng không lưu" không có tác dụng. Nếu thêm lớp z cao hơn 700 thì phải nâng hằng này.
      - `hooks/V2StandardDrawer.hook.ts`: Hook quản lý state tabs, fullscreen, right panel collapse, scroll detection, confirm close, multi-drawer stack coordination và phím tắt `Esc` 2 tầng (< 178 LoC).
      - `utils/v2DrawerStack.ts`: Module Stack Manager & hook `useV2DrawerStack` độc lập React tree, điều phối `depth`, `zIndex`, `isTopmost`, `isUnderlying`, `desktopShiftPx` (-20px) và `mobileTopOffsetPx` (+16px).
      - `utils/v2TabControl.ts`: Hook đồng bộ tab controlled/uncontrolled (< 25 LoC).

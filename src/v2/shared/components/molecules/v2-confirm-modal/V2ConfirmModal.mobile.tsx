@@ -45,6 +45,7 @@ export const V2ConfirmModalMobile: React.FC<V2ConfirmModalProps> = ({
   onConfirm,
   onCancel,
   className,
+  overlayClassName,
 }) => {
   const { t } = useV2Translation();
 
@@ -65,6 +66,7 @@ export const V2ConfirmModalMobile: React.FC<V2ConfirmModalProps> = ({
     >
       <DialogContent
         hideCloseButton
+        overlayClassName={overlayClassName}
         className={cn(
           "fixed inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0",
           "w-full max-w-none rounded-b-none rounded-t-2xl p-5 overflow-hidden border-b-0",
