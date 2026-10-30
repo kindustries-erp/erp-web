@@ -69,9 +69,9 @@ export interface V2FormFieldProps<V = any> {
   /** Đánh dấu bắt buộc (*) */
   required?: boolean;
   /** Thông báo lỗi hiển thị dưới input */
-  error?: string;
+  error?: React.ReactNode;
   /** Văn bản hướng dẫn hiển thị dưới input */
-  helperText?: string;
+  helperText?: React.ReactNode;
   /** ClassName bổ sung cho container DrawerField */
   className?: string;
   /** ClassName cho label */
@@ -118,6 +118,13 @@ export interface V2FormFieldProps<V = any> {
   actionSlot?: React.ReactNode;
 
   // --- Custom Render ---
-  /** Hàm render tùy biến khi type="custom" */
+  /** Hàm render tùy biến khi type="custom" (legacy fallback cho cả view và edit) */
   render?: (props: V2FormFieldProps<V>) => React.ReactNode;
+  /** Hàm render điều khiển tuỳ biến trong chế độ sửa (Edit Mode) */
+  renderEdit?: (props: V2FormFieldProps<V>) => React.ReactNode;
+  /** Hàm render hiển thị tuỳ biến trong chế độ xem (View Mode) */
+  renderView?: (
+    props: V2FormFieldProps<V>,
+    displayValue: string,
+  ) => React.ReactNode;
 }

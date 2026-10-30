@@ -75,9 +75,16 @@ export function V2FormField<V = any>(props: V2FormFieldProps<V>) {
 
   // --- Chế độ xem (Viewing Mode) ---
   if (viewing) {
-    if (type === V2FormFieldType.CUSTOM && props.render) {
+    if (
+      type === V2FormFieldType.CUSTOM &&
+      props.render &&
+      !props.renderEdit &&
+      !props.renderView
+    ) {
       return <>{props.render(props)}</>;
     }
+    const viewControl = renderViewControl(props, displayValue, shouldCopy);
+
     if (viewMode === V2FormFieldViewMode.BOX) {
       return (
         <DrawerField
@@ -86,7 +93,7 @@ export function V2FormField<V = any>(props: V2FormFieldProps<V>) {
           className={className}
           labelClassName={labelClassName}
         >
-          {renderViewControl(props, displayValue, shouldCopy)}
+          {viewControl}
         </DrawerField>
       );
     }
@@ -108,13 +115,17 @@ export function V2FormField<V = any>(props: V2FormFieldProps<V>) {
               valueClassName,
             )}
           >
-            <V2Text
-              variant="body-sm"
-              weight="medium"
-              className="text-foreground select-text"
-            >
-              {displayValue}
-            </V2Text>
+            {props.renderView ? (
+              viewControl
+            ) : (
+              <V2Text
+                variant="body-sm"
+                weight="medium"
+                className="text-foreground select-text"
+              >
+                {displayValue}
+              </V2Text>
+            )}
             {shouldCopy && displayValue !== emptyDisplay && (
               <V2CopyButton
                 value={typeof value === "string" ? value : displayValue}
@@ -129,7 +140,7 @@ export function V2FormField<V = any>(props: V2FormFieldProps<V>) {
       return (
         <DrawerRow
           label={label}
-          value={displayValue}
+          value={props.renderView ? viewControl : displayValue}
           copyable={shouldCopy}
           copyText={typeof value === "string" ? value : displayValue}
           multiline={type === V2FormFieldType.TEXTAREA ? true : undefined}

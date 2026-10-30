@@ -16,6 +16,10 @@ import { cn } from "@/v2/shared/utils/cn";
 import { V2FormFieldType, type V2FormFieldProps } from "./V2FormField.type";
 
 export function renderEditControl(props: V2FormFieldProps): React.ReactNode {
+  if (props.renderEdit) {
+    return props.renderEdit(props);
+  }
+
   const {
     type = V2FormFieldType.TEXT,
     value,
@@ -29,6 +33,7 @@ export function renderEditControl(props: V2FormFieldProps): React.ReactNode {
     case V2FormFieldType.TEXT:
       return (
         <V2Input
+          size="sm"
           type={props.inputType || "text"}
           value={value ?? ""}
           onChange={(e) => {
@@ -41,13 +46,17 @@ export function renderEditControl(props: V2FormFieldProps): React.ReactNode {
           placeholder={props.placeholder}
           disabled={disabled}
           readOnly={readOnly}
-          className={cn(props.uppercase && "font-mono uppercase")}
+          className={cn(
+            props.uppercase && "font-mono uppercase",
+            props.className,
+          )}
         />
       );
 
     case V2FormFieldType.NUMBER:
       return (
         <V2NumberInput
+          size="sm"
           value={
             typeof value === "number"
               ? value
@@ -65,6 +74,7 @@ export function renderEditControl(props: V2FormFieldProps): React.ReactNode {
           max={props.max}
           decimals={props.decimals ?? 0}
           disabled={disabled}
+          className={props.className}
         />
       );
 
@@ -152,7 +162,14 @@ export function renderViewControl(
   displayValue: string,
   shouldCopy: boolean,
 ): React.ReactNode {
-  if (props.type === V2FormFieldType.CUSTOM && props.render) {
+  if (props.renderView) {
+    return props.renderView(props, displayValue);
+  }
+  if (
+    props.type === V2FormFieldType.CUSTOM &&
+    props.render &&
+    !props.renderEdit
+  ) {
     return props.render(props);
   }
   return <V2ReadValue value={displayValue} copy={shouldCopy} />;

@@ -401,6 +401,86 @@ graph TD
 
 ---
 
+## 10. Kiến Trúc V2: Nâng Cấp Drawer Sang `V2StandardDrawer` & `V2FormField` (Golden Pattern)
+
+Đối với các module đang trong lộ trình migrate V1 sang V2 hoặc refactor chuẩn V2-ready (ví dụ: `garage-cashflow-drawer`):
+
+### 1. Thành phần V2 chuẩn hóa:
+- **Khung Drawer**: Sử dụng `<V2StandardDrawer>` từ `@/v2/shared/components/organisms/v2-standard-drawer` thay cho `StandardFormDrawer`.
+- **Phân tử trường nhập/hiển thị**: Sử dụng `<V2FormField>` từ `@/v2/shared/components/molecules/v2-form-field` thay cho việc tách đôi code giữa `DrawerRow` và `DrawerField`. Cấu hình `viewing={mode === "view"}` để tự động switch giữa chế độ xem và sửa.
+- **Khung Section**: Dùng `<DrawerSection>` từ `@/v2/shared/components/molecules/v2-drawer-section` (bật `collapsible` khi cần thu gọn).
+- **Badge Tiêu Đề**: Dùng `<Badge>` từ `@/v2/shared/ui/badge` (hỗ trợ variant `outline`, `success`, `warning`, `destructive`).
+- **Modal Xác Nhận**: Dùng `<V2ConfirmModal>` từ `@/v2/shared/components/molecules/v2-confirm-modal` (`variant="warning"` hoặc `variant="danger"`).
+
+### 2. Ưu điểm cốt lõi của Pattern V2FormField trong Drawer:
+```tsx
+// Gộp 100% logic View & Edit vào 1 field duy nhất:
+<V2FormField
+  label={t("code", "Mã chứng từ")}
+  type={V2FormFieldType.TEXT}
+  viewing={mode === "view"}
+  value={mode === "view" ? voucher.code : formData.code}
+  onChange={(val) => setFormData(p => ({ ...p, code: val }))}
+  copyable
+  uppercase
+/>
+```
+- Loại bỏ hoàn toàn sự phân mảnh giữa các file `[Name]DrawerViewSection.tsx` và `[Name]DrawerEditSection.tsx`.
+- Tự động định dạng ngày tháng (`type="date"`), tiền tệ (`type="number"`), sao chép mã (`copyable`), tra cứu nhãn enum/select (`options`).
+- Trường phức tạp hoặc combobox phụ thuộc có thể dùng `type="custom"` kèm `render={() => <MyCombobox ... />}`.
+- Đảm bảo nghiêm ngặt quy tắc kích thước file: **mọi file luôn < 180 LoC** theo `/ui-atomic-refactor`.
+
+### 3. Khởi tạo & render Form bằng Mảng cấu hình (Config Array) với `V2FormGrid`:
+Để chuẩn hóa form theo kiến trúc data-driven (Config Array) và loại bỏ việc JSX lặp đi lặp lại nhiều thẻ `<V2FormField>`, sử dụng `<V2FormGrid>`:
+```tsx
+import { V2FormGrid, type V2FormFieldConfig } from "@/v2/shared/components/molecules/v2-form-grid";
+
+// 1. Định nghĩa enum tập trung:
+export enum MyFieldKey {
+  TRANS_DATE = "transDate",
+  PAYMENT_METHOD = "paymentMethod",
+  AMOUNT = "amount",
+}
+
+// 2. Mảng cấu hình field (tách riêng file [module].fields.ts / .fields.tsx < 180 LoC):
+export const myFieldConfigs: V2FormFieldConfig<FormData>[] = [
+  {
+    name: MyFieldKey.TRANS_DATE,
+    label: t("transDate", "Ngày giao dịch"),
+    type: V2FormFieldType.DATE,
+    required: true,
+  },
+  {
+    name: MyFieldKey.PAYMENT_METHOD,
+    label: t("paymentMethod", "Phương thức"),
+    type: V2FormFieldType.SELECT,
+    options: PAYMENT_METHOD_OPTIONS,
+  },
+  {
+    name: MyFieldKey.AMOUNT,
+    label: t("amount", "Số tiền"),
+    required: true,
+    renderView: (_p, _displayVal, values) => `${values.amount?.toLocaleString()} đ`,
+    renderEdit: (_p, onChange, values) => (
+      <AmountInput value={values.amount} onChange={onChange} />
+    ),
+  },
+];
+
+// 3. Render tự động trong Section:
+<V2FormGrid
+  columns={2}
+  viewing={mode === "view"}
+  values={formData}
+  onChange={(name, val) => setFormData(prev => ({ ...prev, [name]: val }))}
+  fields={myFieldConfigs}
+/>
+```
+- Tự động đồng bộ `renderView` (khi `viewing={true}`) và `renderEdit` (khi `viewing={false}`), ngăn chặn triệt để hiện tượng lộ interactive inputs (combobox, select dropdowns) ở chế độ Xem.
+- Dễ dàng unit test: kiểm tra DOM không render inputs ở view mode và render đầy đủ control ở edit mode.
+
+---
+
 ## 9. Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?

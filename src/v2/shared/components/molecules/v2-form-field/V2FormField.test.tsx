@@ -70,4 +70,36 @@ describe("V2FormField - Editing & Layout", () => {
 
     expect(screen.getByTestId("custom-val")).toHaveTextContent("CustomVal");
   });
+
+  it("phân biệt rõ ràng giữa renderView và renderEdit", () => {
+    const { rerender } = render(
+      <V2FormField
+        label="Trường tuỳ biến"
+        value="Val123"
+        viewing={true}
+        renderView={() => <span data-testid="view-only">View Mode Val123</span>}
+        renderEdit={() => (
+          <input data-testid="edit-only" defaultValue="Val123" />
+        )}
+      />,
+    );
+
+    expect(screen.getByTestId("view-only")).toBeInTheDocument();
+    expect(screen.queryByTestId("edit-only")).not.toBeInTheDocument();
+
+    rerender(
+      <V2FormField
+        label="Trường tuỳ biến"
+        value="Val123"
+        viewing={false}
+        renderView={() => <span data-testid="view-only">View Mode Val123</span>}
+        renderEdit={() => (
+          <input data-testid="edit-only" defaultValue="Val123" />
+        )}
+      />,
+    );
+
+    expect(screen.getByTestId("edit-only")).toBeInTheDocument();
+    expect(screen.queryByTestId("view-only")).not.toBeInTheDocument();
+  });
 });

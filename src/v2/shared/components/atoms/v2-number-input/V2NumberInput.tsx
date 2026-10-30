@@ -8,7 +8,17 @@ import {
   sanitizeNumberText,
   toEditableText,
 } from "./V2NumberInput.helper";
-import type { V2NumberInputProps } from "./V2NumberInput.type";
+import type {
+  V2NumberInputProps,
+  V2NumberInputSize,
+} from "./V2NumberInput.type";
+
+const SIZE_STYLES: Record<V2NumberInputSize, string> = {
+  xs: "h-7 text-xs px-2",
+  sm: "h-8 text-sm px-3",
+  md: "h-9 text-sm px-3",
+  lg: "h-10 text-base px-3.5",
+};
 
 /** Ô nhập số: hiển thị có dấu phân cách nghìn khi không gõ, `,` là dấu thập phân khi gõ */
 export const V2NumberInput = React.forwardRef<
@@ -19,6 +29,8 @@ export const V2NumberInput = React.forwardRef<
     {
       value,
       onValueChange,
+      size,
+      sizeVariant,
       decimals = 0,
       min,
       max,
@@ -35,6 +47,7 @@ export const V2NumberInput = React.forwardRef<
     const [draft, setDraft] = React.useState("");
     const options = { decimals, allowNegative };
     const shown = focused ? draft : formatNumberValue(value, decimals, locale);
+    const resolvedSize = sizeVariant ?? size ?? "sm";
 
     return (
       <Input
@@ -43,7 +56,11 @@ export const V2NumberInput = React.forwardRef<
         type="text"
         inputMode={decimals > 0 ? "decimal" : "numeric"}
         value={shown}
-        className={cn("text-right tabular-nums", className)}
+        className={cn(
+          SIZE_STYLES[resolvedSize],
+          "text-right tabular-nums",
+          className,
+        )}
         onFocus={(event) => {
           setDraft(toEditableText(value));
           setFocused(true);
