@@ -1,6 +1,7 @@
 import * as React from "react";
 import { LayoutDashboard } from "lucide-react";
 import { V2Sidebar, V2RightPanel } from "@/v2/shared/components";
+import { V2WorkspaceModeToggle } from "@/v2/shared/components/molecules/v2-workspace-mode-toggle";
 import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
@@ -102,6 +103,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         logoUrl={logoUrl}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
+        topbarActions={<V2WorkspaceModeToggle />}
         contentClassName={contentClassName}
         tabs={tabs ?? fallbackTabs}
         activeTabId={activeTabId ?? "dashboard"}

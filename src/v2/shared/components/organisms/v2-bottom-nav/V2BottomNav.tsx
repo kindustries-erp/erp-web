@@ -15,7 +15,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
       data-testid="v2-bottom-nav"
       aria-label="Mobile Navigation"
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-40 grid grid-flow-col auto-cols-fr h-16 w-full items-center border-t border-border bg-card/95 px-0.5 pb-safe backdrop-blur-md select-none",
+        "fixed bottom-0 left-0 right-0 z-40 grid grid-flow-col auto-cols-fr h-16 w-full items-center border-t border-border bg-card/95 px-0.5 pb-safe backdrop-blur-md select-none animate-slide-in-from-bottom",
         className,
       )}
       {...props}

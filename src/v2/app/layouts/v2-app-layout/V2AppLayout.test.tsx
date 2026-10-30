@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { Wrench } from "lucide-react";
 import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { useV2MobileNavStore } from "@/v2/shared/stores/useV2MobileNavStore";
@@ -263,5 +263,65 @@ describe("V2AppLayout Switcher", () => {
     expect(sidebar).toHaveAttribute("data-collapsed", "true");
     expect(screen.queryByText("User Name")).not.toBeInTheDocument();
     expect(renderUserMenu).toHaveBeenCalledWith({ collapsed: true });
+  });
+
+  it("hỗ trợ tìm kiếm nhanh phân hệ trong mobile catalog modal", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 390,
+    });
+    const mockSections = [
+      {
+        id: "sec-sales",
+        label: "BÁN HÀNG",
+        items: [
+          {
+            id: "sales-orders",
+            label: "Đơn bán hàng",
+            icon: Wrench,
+            href: "/sales",
+          },
+        ],
+      },
+      {
+        id: "sec-purchasing",
+        label: "MUA HÀNG",
+        items: [
+          {
+            id: "purchasing-orders",
+            label: "Đơn mua hàng",
+            icon: Wrench,
+            href: "/purchasing",
+          },
+        ],
+      },
+    ];
+
+    render(
+      <V2AppLayout sections={mockSections}>
+        <div>Content Mobile</div>
+      </V2AppLayout>,
+    );
+
+    const catalogBtn = screen.getByText("Tất cả");
+    fireEvent.click(catalogBtn);
+
+    const bottomSheet = screen.getByTestId("v2-bottom-sheet-content");
+    const withinSheet = within(bottomSheet);
+
+    const searchInput = withinSheet.getByTestId("mobile-catalog-search-input");
+    expect(searchInput).toBeInTheDocument();
+
+    // Gõ tìm "mua" -> Phân hệ Đơn mua hàng xuất hiện trong sheet, Đơn bán hàng bị ẩn
+    fireEvent.change(searchInput, { target: { value: "mua" } });
+    expect(withinSheet.getByText("Đơn mua hàng")).toBeInTheDocument();
+    expect(withinSheet.queryByText("Đơn bán hàng")).not.toBeInTheDocument();
+
+    // Click nút xóa tìm kiếm
+    const clearBtn = withinSheet.getByTestId("mobile-catalog-clear-search");
+    fireEvent.click(clearBtn);
+    expect(withinSheet.getByText("Đơn bán hàng")).toBeInTheDocument();
+    expect(withinSheet.getByText("Đơn mua hàng")).toBeInTheDocument();
   });
 });

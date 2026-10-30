@@ -169,6 +169,7 @@ Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `bank-sta
 
 Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/skills/modules/<module>/SKILL.md` của module.
 
+- `admin-dashboard` & `v2-admin-layout`: Phân tách hoàn chỉnh 2 luồng định tuyến trong V2 (Nghiệp vụ thường `/v2/*` vs Cổng quản trị `/v2/admin/*`). Tích hợp `V2AdminLayout` (Platform Split Desktop/Mobile), `AdminRouteGuard` (chặn nhân viên không có `ADMIN_USERS.READ` hoặc role Admin/Manager), `V2WorkspaceModeToggle` (TopBar Switcher), và trang `V2AdminDashboardPage` kết nối API `/api/v2/admin/dashboard/summary`. Chi tiết tại `.agents/skills/modules/v2-admin-layout/SKILL.md`.
 - `bank-statements`: Đã hoàn thiện V2 cho toàn bộ các drawer cốt lõi:
   - `BankStatementExportDrawer` (`V2ExportExcelDrawer` xuất Excel sao kê ngân hàng & sổ quỹ tiền mặt).
   - `CashTransactionDetailDrawer` (`V2StandardDrawer` 2-columns cho chi tiết giao dịch tiền mặt, hạch toán, đối tác, cấn trừ hóa đơn).
