@@ -522,4 +522,38 @@ describe("GarageCashflowTable", () => {
 
     expect(screen.getByText(/Tổng cộng/i)).toBeInTheDocument();
   });
+
+  it("renders correctly with tabKey=forecast", () => {
+    (useGarageCashflowTable as any).mockReturnValue({
+      data: [],
+      total: 0,
+      totalPages: 0,
+      isLoading: false,
+      page: 1,
+      setPage: vi.fn(),
+      pageSize: 20,
+      setPageSize: vi.fn(),
+      sorts: [],
+      setSort: vi.fn(),
+      columnFilters: {},
+      setColumnFilter: vi.fn(),
+      columnSearch: {},
+      setColumnSearch: vi.fn(),
+      activeFilterCount: 0,
+      clearAllFilters: vi.fn(),
+      refetch: vi.fn(),
+      getColumnOptions: vi.fn(),
+      createMutation: { mutate: vi.fn(), isPending: false },
+      updateMutation: { mutate: vi.fn(), isPending: false },
+      deleteMutation: { mutate: vi.fn(), isPending: false },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowTable tabKey="forecast" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText(/Dự thu chi garage/i)).toBeInTheDocument();
+  });
 });

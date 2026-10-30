@@ -179,4 +179,16 @@ describe("GarageCashflowList Organism RBAC", () => {
     expect(exportDrawerPropsSpy.open).toBe(true);
     expect(exportDrawerPropsSpy.filterSummary.filterCount).toBe(2);
   });
+
+  it("passes tabKey to GarageCashflowTable", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowList tabKey="forecast" />
+      </QueryClientProvider>,
+    );
+
+    expect(tablePropsSpy.tabKey).toBe("forecast");
+  });
 });
