@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2FormField } from "../v2-form-field";
-import type { V2FormGridProps, V2FormFieldConfig } from "./V2FormGrid.type";
+import type { V2FormGridProps } from "./V2FormGrid.type";
 
 export function V2FormGrid<
   T extends Record<string, any> = Record<string, any>,

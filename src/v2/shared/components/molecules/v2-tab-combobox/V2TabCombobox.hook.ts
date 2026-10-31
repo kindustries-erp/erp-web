@@ -1,10 +1,7 @@
 import * as React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { getActiveItem } from "./V2TabCombobox.helper";
-import type {
-  V2TabComboboxItem,
-  V2TabComboboxProps,
-} from "./V2TabCombobox.type";
+import type { V2TabComboboxItem } from "./V2TabCombobox.type";
 
 export interface UseV2TabComboboxParams {
   items: V2TabComboboxItem[];
