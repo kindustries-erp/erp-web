@@ -18,7 +18,7 @@ import type {
   SyncFromInvoicesDto,
 } from "./dtos/businessPartner.dto";
 
-const BASE = "/api/v1/business-partners";
+const BASE = "/api/v2/business-partners";
 const OPTIONS_PAGE_SIZE = 20;
 
 export const toBusinessPartnerListParams = (
