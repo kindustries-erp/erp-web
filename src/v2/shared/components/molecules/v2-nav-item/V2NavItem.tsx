@@ -1,22 +1,33 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
-import { V2NavIcon } from "@/v2/shared/components/atoms/v2-nav-icon";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
-import { Badge } from "@/v2/shared/ui";
-import { V2NavItemProps } from "./V2NavItem.type";
+import {
+  V2Button,
+  V2Text,
+  V2Badge,
+  V2BadgeVariant,
+  V2NavIcon,
+} from "@/v2/shared/components/atoms";
+import {
+  V2NavItemProps,
+  V2NavItemVariant,
+  V2NavIndicator,
+} from "./V2NavItem.type";
 
 export const V2NavItem: React.FC<V2NavItemProps> = ({
   label,
   icon,
   isActive = false,
   badgeCount,
-  variant = "sidebar",
+  variant = V2NavItemVariant.SIDEBAR,
+  indicator = V2NavIndicator.PILL,
   isCollapsed = false,
   onClick,
   className,
   ...props
 }) => {
-  if (variant === "bottom-nav") {
+  const isBottomNav = variant === V2NavItemVariant.BOTTOM_NAV;
+
+  if (isBottomNav) {
     return (
       <V2Button
         type="button"
@@ -24,30 +35,54 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         onClick={onClick}
         aria-label={label}
         className={cn(
-          "group h-auto flex flex-1 flex-col items-center justify-center py-1 px-0.5 text-xs font-medium transition-colors select-none rounded-none hover:bg-transparent min-w-0 w-full",
+          "group relative h-auto flex flex-col items-center justify-center py-1.5 px-1 text-xs font-medium transition-all duration-150 select-none rounded-xl hover:bg-transparent min-w-0 max-w-[62px] w-full mx-auto active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent shadow-none",
           isActive
-            ? "text-primary font-semibold"
+            ? "text-foreground font-semibold"
             : "text-muted-fg hover:text-foreground",
+          indicator === V2NavIndicator.PILL &&
+            isActive &&
+            "bg-foreground/5 dark:bg-white/10 text-foreground",
           className,
         )}
         {...props}
       >
         <div className="relative inline-flex items-center justify-center">
-          <V2NavIcon icon={icon} isActive={isActive} size={20} />
+          <V2NavIcon
+            icon={icon}
+            isActive={isActive}
+            size={18}
+            className={cn(
+              "transition-transform duration-200",
+              isActive && "scale-105 text-foreground",
+            )}
+          />
           {typeof badgeCount === "number" && badgeCount > 0 && (
-            <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+            <V2Badge
+              variant={V2BadgeVariant.DESTRUCTIVE}
+              className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold shadow-xs border-0"
+            >
               {badgeCount > 99 ? "99+" : badgeCount}
-            </span>
+            </V2Badge>
           )}
         </div>
         <V2Text
           as="span"
           variant="caption"
           truncate
-          className="mt-1 max-w-[58px] text-[10px] leading-tight text-inherit font-inherit"
+          className={cn(
+            "mt-0.5 max-w-[54px] text-[9.5px] leading-tight text-inherit font-inherit transition-colors text-center",
+            isActive ? "font-semibold text-foreground" : "font-normal",
+          )}
         >
           {label}
         </V2Text>
+        {indicator === V2NavIndicator.DOT && isActive && (
+          <span
+            data-testid="bottom-nav-dot"
+            aria-hidden="true"
+            className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary shadow-xs transition-transform duration-200"
+          />
+        )}
       </V2Button>
     );
   }
@@ -81,13 +116,15 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         </V2Text>
       )}
       {!isCollapsed && typeof badgeCount === "number" && badgeCount > 0 && (
-        <Badge
-          variant="secondary"
+        <V2Badge
+          variant={V2BadgeVariant.SECONDARY}
           className="ml-auto h-5 px-1.5 text-[10px] font-medium"
         >
           {badgeCount > 99 ? "99+" : badgeCount}
-        </Badge>
+        </V2Badge>
       )}
     </V2Button>
   );
 };
+
+V2NavItem.displayName = "V2NavItem";

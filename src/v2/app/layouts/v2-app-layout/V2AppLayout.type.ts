@@ -7,6 +7,8 @@ import type {
 } from "@/v2/shared/components";
 import type { V2UserMenuRenderProp } from "@/v2/shared/components/molecules/v2-sidebar-bottom";
 import type { V2BaseProps } from "@/v2/shared/types";
+import type { V2BottomNavVariantType } from "@/v2/shared/components/organisms/v2-bottom-nav";
+import type { V2NavIndicatorType } from "@/v2/shared/components/molecules/v2-nav-item";
 
 export interface V2AppLayoutProps extends V2BaseProps {
   children?: ReactNode;
@@ -35,4 +37,6 @@ export interface V2AppLayoutProps extends V2BaseProps {
   onThemeChange?: (theme: any) => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  bottomNavVariant?: V2BottomNavVariantType;
+  bottomNavIndicator?: V2NavIndicatorType;
 }

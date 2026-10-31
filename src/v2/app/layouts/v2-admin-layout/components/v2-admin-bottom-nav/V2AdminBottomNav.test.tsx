@@ -1,7 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { V2AdminRouteId } from "@/v2/shared/types";
+import { V2NavIndicator } from "@/v2/shared/components/molecules/v2-nav-item";
 import { V2AdminBottomNav } from "./V2AdminBottomNav";
+import { V2AdminBottomNavVariant } from "./V2AdminBottomNav.type";
 
 vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
   useV2Translation: () => ({
@@ -62,5 +64,34 @@ describe("V2AdminBottomNav Component", () => {
         href: "/v2/admin/reports/sales",
       }),
     );
+  });
+
+  it("render variant floating va indicator dot", () => {
+    render(
+      <V2AdminBottomNav
+        activeId={V2AdminRouteId.DASHBOARD}
+        variant="floating"
+        indicator="dot"
+      />,
+    );
+
+    const nav = screen.getByTestId("v2-admin-bottom-nav");
+    expect(nav.className).toContain("rounded-2xl");
+    expect(nav.className).toContain("shadow-xl");
+    expect(screen.getByTestId("admin-bottom-nav-dot")).toBeInTheDocument();
+  });
+
+  it("hỗ trợ cấu hình qua enums chuẩn V2AdminBottomNavVariant và V2NavIndicator", () => {
+    render(
+      <V2AdminBottomNav
+        activeId={V2AdminRouteId.DASHBOARD}
+        variant={V2AdminBottomNavVariant.FLOATING}
+        indicator={V2NavIndicator.DOT}
+      />,
+    );
+
+    const nav = screen.getByTestId("v2-admin-bottom-nav");
+    expect(nav.className).toContain("rounded-2xl");
+    expect(screen.getByTestId("admin-bottom-nav-dot")).toBeInTheDocument();
   });
 });

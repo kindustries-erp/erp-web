@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   LayoutGrid,
+  Shapes,
   Check,
   RotateCcw,
   AlertCircle,
@@ -35,6 +36,24 @@ import {
 import { filterV2NavSections, getV2NavigationSections } from "./v2Navigation";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
+const PREFERRED_DEFAULT_NAV_IDS = [
+  // 1. Phân hệ Garage (dành cho tenant chuyên garage)
+  "garage-cases",
+  "garage-debts",
+  // 2. Kế toán & Dòng tiền (luôn ưu tiên cốt lõi)
+  "cashflow",
+  "erp-invoices",
+  "invoices",
+  // 3. Nghiệp vụ vận hành (dành cho tenant sản xuất/thương mại như Greenway)
+  "erp-sales-orders",
+  "sales-orders",
+  "purchasing",
+  "purchasing-orders",
+  "erp-inventory-stock",
+  "inventory-stock",
+  "dashboard",
+];
+
 export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   children,
   activeNavId = "dashboard",
@@ -54,6 +73,8 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   notificationNode,
   currentTheme,
   onThemeChange,
+  bottomNavVariant = "floating",
+  bottomNavIndicator = "pill",
 }) => {
   const { t, locale } = useV2Translation();
   const can = useV2PermissionChecker();
@@ -119,49 +140,65 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
       .filter(Boolean) as typeof effectiveSections;
   }, [effectiveSections, searchQuery]);
 
-  // Bộ 5 mục mặc định thông minh
-  const default5Items = React.useMemo(() => {
-    const primaryItems = effectiveSections
-      .map((sec) => sec.items[0])
-      .filter(Boolean);
-    const combined: V2SidebarNavItem[] = [];
-    for (const item of [...primaryItems, ...allAvailableItems]) {
-      if (!combined.some((ex) => ex.id === item.id)) {
-        combined.push(item);
-      }
-      if (combined.length >= MAX_PINNED_MOBILE_NAV) break;
-    }
-    return combined;
-  }, [effectiveSections, allAvailableItems]);
+  // Bộ 4 mục mặc định thông minh: Hoạt động garage, Công nợ garage, Dòng tiền, Hóa đơn
+  const default4Items = React.useMemo(() => {
+    const list: V2SidebarNavItem[] = [];
 
-  // Danh sách IDs đang được chọn thực tế (nếu store rỗng thì lấy từ default5Items)
+    // 1. Quét tìm 4 mục nghiệp vụ ưu tiên theo yêu cầu
+    for (const prefId of PREFERRED_DEFAULT_NAV_IDS) {
+      if (list.length >= MAX_PINNED_MOBILE_NAV) break;
+      const found = allAvailableItems.find((it) => it.id === prefId);
+      if (found && !list.some((it) => it.id === found.id)) {
+        list.push(found);
+      }
+    }
+
+    // 2. Nếu người dùng chưa có đủ quyền cho các mục trên, bù đắp từ các mục khả dụng khác (loại trừ các dashboard báo cáo phụ)
+    if (list.length < MAX_PINNED_MOBILE_NAV) {
+      for (const item of allAvailableItems) {
+        const isSubDashboard =
+          item.id !== "dashboard" && item.id.includes("dashboard");
+        if (!list.some((it) => it.id === item.id) && !isSubDashboard) {
+          list.push(item);
+        }
+        if (list.length >= MAX_PINNED_MOBILE_NAV) break;
+      }
+    }
+
+    return list;
+  }, [allAvailableItems]);
+
+  // Danh sách IDs đang được chọn thực tế (nếu store rỗng thì lấy từ default4Items)
   const currentSelectedIds = React.useMemo(() => {
     if (pinnedIds && pinnedIds.length > 0) {
-      return pinnedIds;
+      return pinnedIds.slice(0, MAX_PINNED_MOBILE_NAV);
     }
-    return default5Items.map((it) => it.id);
-  }, [pinnedIds, default5Items]);
+    return default4Items.map((it) => it.id);
+  }, [pinnedIds, default4Items]);
 
-  // 5 Quick action items thực tế hiển thị
-  const quick5Items = React.useMemo(() => {
+  // Nút Danh mục Tất cả phân hệ làm Center Hero Bubble
+  const allMenuItem: V2SidebarNavItem = React.useMemo(
+    () => ({
+      id: "catalog",
+      label: t("v2.nav.items.allModules", "Tất cả"),
+      icon: Shapes,
+      href: "#catalog",
+    }),
+    [t],
+  );
+
+  // 4 Quick action items (2 bên trái, 2 bên phải)
+  const quick4Items = React.useMemo(() => {
     return currentSelectedIds
       .map((id) => allAvailableItems.find((it) => it.id === id))
       .filter(Boolean) as V2SidebarNavItem[];
   }, [currentSelectedIds, allAvailableItems]);
 
-  // Thanh điều hướng cố định 6 items: 5 quick actions + 1 Tất cả
+  // Thanh điều hướng: 4 quick actions + 1 Tất cả
   const effectiveNavItems = React.useMemo(() => {
     if (navItems) return navItems;
-
-    const allMenuItem: V2SidebarNavItem = {
-      id: "catalog",
-      label: t("v2.nav.items.allModules", "Tất cả"),
-      icon: LayoutGrid,
-      href: "#catalog",
-    };
-
-    return [...quick5Items, allMenuItem];
-  }, [navItems, quick5Items, t]);
+    return [...quick4Items, allMenuItem];
+  }, [navItems, quick4Items, allMenuItem]);
 
   const handleMobileNavigate = (item: (typeof effectiveNavItems)[number]) => {
     if (item.id === "catalog") {
@@ -171,7 +208,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
     onNavigate?.(item);
   };
 
-  // Xử lý bật/tắt chọn mục trong chế độ Tùy chỉnh: Chặn khi đủ 5 mục và phát thông báo
+  // Xử lý bật/tắt chọn mục trong chế độ Tùy chỉnh: Chặn khi đủ 4 mục và phát thông báo
   const handleToggleItem = (itemId: string) => {
     if (currentSelectedIds.includes(itemId)) {
       // Bỏ chọn mục đã có
@@ -179,11 +216,11 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
       setPinnedIds(nextIds);
       setLimitWarning(null);
     } else {
-      // Cố gắng chọn mục mới khi đã đủ 5 mục -> CHẶN & THÔNG BÁO
+      // Cố gắng chọn mục mới khi đã đủ 4 mục -> CHẶN & THÔNG BÁO
       if (currentSelectedIds.length >= MAX_PINNED_MOBILE_NAV) {
         const warningMsg = t(
           "v2.nav.maxShortcutsDesc",
-          "Đã chọn đủ 5/5 mục lối tắt. Vui lòng bỏ chọn bớt một mục trước khi chọn mục mới.",
+          "Đã chọn đủ 4/4 mục lối tắt. Vui lòng bỏ chọn bớt một mục trước khi chọn mục mới.",
         );
         setLimitWarning(warningMsg);
         useV2ToastStore.getState().showToast({
@@ -194,7 +231,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
         return;
       }
 
-      // Chưa đủ 5 mục -> Cho phép thêm
+      // Chưa đủ 4 mục -> Cho phép thêm
       const nextIds = [...currentSelectedIds, itemId];
       setPinnedIds(nextIds);
       setLimitWarning(null);
@@ -253,9 +290,13 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
         {children}
       </main>
       <V2BottomNav
-        items={effectiveNavItems}
+        items={navItems ?? quick4Items}
+        centerHeroItem={allMenuItem}
         activeId={bottomActiveId}
+        variant={bottomNavVariant}
+        indicator={bottomNavIndicator}
         onNavigate={handleMobileNavigate}
+        onHeroClick={() => setCatalogOpen(true)}
       />
       <V2BottomSheet
         open={catalogOpen}
@@ -491,7 +532,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
                     className="h-8 text-xs gap-1"
                     onClick={() => {
                       if (pinnedIds.length === 0) {
-                        setPinnedIds(default5Items.map((it) => it.id));
+                        setPinnedIds(default4Items.map((it) => it.id));
                       }
                       setIsCustomizing(true);
                     }}
