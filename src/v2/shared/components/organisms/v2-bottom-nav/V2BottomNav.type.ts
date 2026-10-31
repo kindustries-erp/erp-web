@@ -1,9 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { V2BaseProps } from "@/v2/shared/types";
-import {
-  type V2NavIndicator,
-  type V2NavIndicatorType,
-} from "@/v2/shared/components/molecules/v2-nav-item";
+import type { V2NavIndicatorType } from "@/v2/shared/components/molecules/v2-nav-item";
 
 export enum V2BottomNavVariant {
   GROUNDED = "grounded",

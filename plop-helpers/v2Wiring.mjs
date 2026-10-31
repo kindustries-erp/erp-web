@@ -23,7 +23,7 @@ export function insertAtMarker(content, marker, snippet, id) {
 /** Các marker mà generator phụ thuộc; dùng trong test để phát hiện marker bị xóa nhầm */
 export const V2_WIRING_FILES = {
   "src/v2/app/router/v2RouteConfig.ts": ["// plop:v2-routes"],
-  "src/v2/app/layouts/v2-app-layout/v2Navigation.config.ts": ["// plop:v2-nav-items"],
+  "src/v2/app/layouts/v2-app-layout/navigation/v2Navigation.config.ts": ["// plop:v2-nav-items"],
   "src/v2/shared/locales/vi.ts": ["// plop:v2-nav-items"],
   "src/v2/shared/locales/en.ts": ["// plop:v2-nav-items"],
   "src/v2/app/router/v2PageRegistry.tsx": ["// plop:v2-page-imports", "// plop:v2-pages"],

@@ -61,7 +61,7 @@ export function wiringPlan(data) {
       ].join("\n"),
     },
     {
-      file: "src/v2/app/layouts/v2-app-layout/v2Navigation.config.ts",
+      file: "src/v2/app/layouts/v2-app-layout/navigation/v2Navigation.config.ts",
       marker: "// plop:v2-nav-items",
       id: tag("nav"),
       snippet: [
