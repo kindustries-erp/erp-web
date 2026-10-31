@@ -1,10 +1,18 @@
 import * as React from "react";
-import { LayoutGrid, Check, RotateCcw, AlertCircle } from "lucide-react";
+import {
+  LayoutGrid,
+  Check,
+  RotateCcw,
+  AlertCircle,
+  Search,
+  X,
+} from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
+import { Badge } from "@/v2/shared/ui";
 import {
   V2Header,
   V2BottomNav,
-  V2Modal,
+  V2BottomSheet,
   V2Button,
   V2Text,
   V2LanguageSwitcher,
@@ -50,6 +58,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   const { t, locale } = useV2Translation();
   const can = useV2PermissionChecker();
   const [catalogOpen, setCatalogOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [isCustomizing, setIsCustomizing] = React.useState(false);
   const [limitWarning, setLimitWarning] = React.useState<string | null>(null);
 
@@ -82,6 +91,33 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
     });
     return list;
   }, [effectiveSections]);
+
+  // Bộ lọc danh mục theo từ khóa tìm kiếm
+  const filteredSections = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return effectiveSections;
+    }
+    const q = searchQuery.toLowerCase().trim();
+    return effectiveSections
+      .map((sec) => {
+        const matchingItems = sec.items.filter((item) => {
+          const matchLabel = item.label.toLowerCase().includes(q);
+          const matchId = item.id.toLowerCase().includes(q);
+          return matchLabel || matchId;
+        });
+        const matchSecLabel = sec.label
+          ? sec.label.toLowerCase().includes(q)
+          : false;
+        if (matchingItems.length === 0 && !matchSecLabel) {
+          return null;
+        }
+        return {
+          ...sec,
+          items: matchingItems.length > 0 ? matchingItems : sec.items,
+        };
+      })
+      .filter(Boolean) as typeof effectiveSections;
+  }, [effectiveSections, searchQuery]);
 
   // Bộ 5 mục mặc định thông minh
   const default5Items = React.useMemo(() => {
@@ -221,197 +257,293 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
         activeId={bottomActiveId}
         onNavigate={handleMobileNavigate}
       />
-      <V2Modal
+      <V2BottomSheet
         open={catalogOpen}
         onOpenChange={(open) => {
           setCatalogOpen(open);
           if (!open) {
             setIsCustomizing(false);
             setLimitWarning(null);
+            setSearchQuery("");
           }
         }}
-        title={t("v2.nav.items.catalogTitle", "Danh mục phân hệ")}
-        size="full"
+        title={
+          <div className="flex items-center gap-2">
+            <V2Text as="h2" variant="h4" className="text-foreground truncate">
+              {t("v2.nav.items.catalogTitle", "Danh mục phân hệ")}
+            </V2Text>
+            <Badge
+              variant="secondary"
+              className="px-1.5 py-0.5 text-[10px] font-medium shrink-0"
+            >
+              {searchQuery
+                ? `${filteredSections.reduce((acc, s) => acc + s.items.length, 0)}`
+                : t("v2.nav.modulesCountBadge", {
+                    defaultValue: `${allAvailableItems.length} phân hệ`,
+                    count: allAvailableItems.length,
+                  })}
+            </Badge>
+          </div>
+        }
+        subtitle={t(
+          "v2.nav.items.catalogSubtitle",
+          "Toàn bộ chức năng và nghiệp vụ ERP",
+        )}
+        icon={LayoutGrid}
+        maxHeightClass="max-h-[88vh]"
       >
         <div className="space-y-4 pb-6">
-          {/* Quick theme & language settings */}
-          <div
-            data-testid="mobile-appearance-settings"
-            className="p-3 rounded-xl bg-card border border-border space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <V2Icon icon={Palette} size={14} className="text-primary" />
-                <V2Text variant="caption" weight="semibold">
-                  {t("nav.bottom.themeStyle", "Giao diện")}
-                </V2Text>
-              </div>
-              <div className="flex items-center gap-1">
-                <V2Button
-                  size="xs"
-                  variant={
-                    currentTheme === "classic-light" ? "secondary" : "ghost"
-                  }
-                  className={cn(
-                    "h-7 px-2 text-xs border",
-                    currentTheme === "classic-light"
-                      ? "border-primary bg-primary/10 text-primary font-medium"
-                      : "border-border text-muted-fg",
-                  )}
-                  leftIcon={
-                    <V2Icon icon={Sun} size={14} className="text-amber-500" />
-                  }
-                  onClick={() => onThemeChange?.("classic-light")}
-                  title={t("nav.bottom.themeClassicLight", "Giao diện sáng")}
-                >
-                  <V2Text variant="caption">
-                    {t("v2.theme.light", "Sáng")}
-                  </V2Text>
-                </V2Button>
-
-                <V2Button
-                  size="xs"
-                  variant={
-                    currentTheme === "classic-dark" ? "secondary" : "ghost"
-                  }
-                  className={cn(
-                    "h-7 px-2 text-xs border",
-                    currentTheme === "classic-dark"
-                      ? "border-primary bg-primary/10 text-primary font-medium"
-                      : "border-border text-muted-fg",
-                  )}
-                  leftIcon={
-                    <V2Icon icon={Moon} size={14} className="text-blue-400" />
-                  }
-                  onClick={() => onThemeChange?.("classic-dark")}
-                  title={t("nav.bottom.themeClassicDark", "Giao diện tối")}
-                >
-                  <V2Text variant="caption">{t("v2.theme.dark", "Tối")}</V2Text>
-                </V2Button>
-
-                <V2Button
-                  size="xs"
-                  variant={currentTheme === "midnight" ? "secondary" : "ghost"}
-                  className={cn(
-                    "h-7 px-2 text-xs border",
-                    currentTheme === "midnight"
-                      ? "border-primary bg-primary/10 text-primary font-medium"
-                      : "border-border text-muted-fg",
-                  )}
-                  leftIcon={
-                    <V2Icon
-                      icon={Sparkles}
-                      size={14}
-                      className="text-indigo-400"
-                    />
-                  }
-                  onClick={() => onThemeChange?.("midnight")}
-                  title={t("nav.bottom.themeMidnight", "Midnight")}
-                >
-                  <V2Text variant="caption">Midnight</V2Text>
-                </V2Button>
-              </div>
-            </div>
-
-            <div className="border-t border-border/50 pt-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <V2Icon icon={Globe} size={14} className="text-primary" />
-                <V2Text variant="caption" weight="semibold">
-                  {t("nav.bottom.languageLabel", "Ngôn ngữ")}
-                </V2Text>
-              </div>
-              <V2LanguageSwitcher size="default" />
-            </div>
+          {/* Quick Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-fg pointer-events-none" />
+            <input
+              type="text"
+              data-testid="mobile-catalog-search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t(
+                "v2.nav.searchPlaceholder",
+                "Tìm nhanh phân hệ...",
+              )}
+              className="w-full h-8 pl-8 pr-8 rounded-lg bg-muted/50 border border-border/80 text-xs text-foreground placeholder:text-muted-fg focus:outline-none focus:ring-1 focus:ring-primary focus:bg-background transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                data-testid="mobile-catalog-clear-search"
+                onClick={() => setSearchQuery("")}
+                aria-label={t("v2.nav.clearSearch", "Xóa tìm kiếm")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-fg hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
+
+          {/* Quick theme & language settings */}
+          {!searchQuery && (
+            <div
+              data-testid="mobile-appearance-settings"
+              className="p-3 rounded-xl bg-card border border-border space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <V2Icon icon={Palette} size={14} className="text-primary" />
+                  <V2Text variant="caption" weight="semibold">
+                    {t("nav.bottom.themeStyle", "Giao diện")}
+                  </V2Text>
+                </div>
+                <div className="flex items-center gap-1">
+                  <V2Button
+                    size="xs"
+                    variant={
+                      currentTheme === "classic-light" ? "secondary" : "ghost"
+                    }
+                    className={cn(
+                      "h-7 px-2 text-xs border",
+                      currentTheme === "classic-light"
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border text-muted-fg",
+                    )}
+                    leftIcon={
+                      <V2Icon icon={Sun} size={14} className="text-amber-500" />
+                    }
+                    onClick={() => onThemeChange?.("classic-light")}
+                    title={t("nav.bottom.themeClassicLight", "Giao diện sáng")}
+                  >
+                    <V2Text variant="caption">
+                      {t("v2.theme.light", "Sáng")}
+                    </V2Text>
+                  </V2Button>
+
+                  <V2Button
+                    size="xs"
+                    variant={
+                      currentTheme === "classic-dark" ? "secondary" : "ghost"
+                    }
+                    className={cn(
+                      "h-7 px-2 text-xs border",
+                      currentTheme === "classic-dark"
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border text-muted-fg",
+                    )}
+                    leftIcon={
+                      <V2Icon
+                        icon={Moon}
+                        size={14}
+                        className="text-slate-400"
+                      />
+                    }
+                    onClick={() => onThemeChange?.("classic-dark")}
+                    title={t("nav.bottom.themeClassicDark", "Giao diện tối")}
+                  >
+                    <V2Text variant="caption">
+                      {t("v2.theme.dark", "Tối")}
+                    </V2Text>
+                  </V2Button>
+
+                  <V2Button
+                    size="xs"
+                    variant={
+                      currentTheme === "midnight" ? "secondary" : "ghost"
+                    }
+                    className={cn(
+                      "h-7 px-2 text-xs border",
+                      currentTheme === "midnight"
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border text-muted-fg",
+                    )}
+                    leftIcon={
+                      <V2Icon
+                        icon={Sparkles}
+                        size={14}
+                        className="text-indigo-400"
+                      />
+                    }
+                    onClick={() => onThemeChange?.("midnight")}
+                    title={t("nav.bottom.themeMidnight", "Midnight")}
+                  >
+                    <V2Text variant="caption">Midnight</V2Text>
+                  </V2Button>
+                </div>
+              </div>
+
+              <div className="border-t border-border/50 pt-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <V2Icon icon={Globe} size={14} className="text-primary" />
+                  <V2Text variant="caption" weight="semibold">
+                    {t("nav.bottom.languageLabel", "Ngôn ngữ")}
+                  </V2Text>
+                </div>
+                <V2LanguageSwitcher size="default" />
+              </div>
+            </div>
+          )}
 
           {/* Quick actions customization header */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <V2Icon icon={Sliders} size={14} className="text-primary" />
-                <V2Text variant="caption" weight="semibold">
-                  {t("v2.nav.customize", "Tùy chỉnh lối tắt")}{" "}
-                  <V2Text
-                    asChild
-                    variant="caption"
-                    color="muted"
-                    weight="normal"
-                  >
-                    <span>
+          {!searchQuery && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <V2Icon icon={Sliders} size={14} className="text-primary" />
+                  <V2Text variant="caption" weight="semibold">
+                    {t("v2.nav.customize", "Tùy chỉnh lối tắt")}{" "}
+                    <V2Text
+                      as="span"
+                      variant="caption"
+                      color="muted"
+                      weight="normal"
+                    >
                       ({currentSelectedIds.length}/{MAX_PINNED_MOBILE_NAV})
-                    </span>
+                    </V2Text>
                   </V2Text>
+                </div>
+                <V2Text
+                  variant="caption"
+                  color="muted"
+                  className="text-[11px] mt-0.5"
+                >
+                  {isCustomizing
+                    ? t(
+                        "v2.nav.customizeShortcutsHint",
+                        "Chọn tối đa 5 mục thao tác nhanh ngoài Bottom Nav",
+                      )
+                    : t("v2.nav.pinnedShortcutsCount", {
+                        defaultValue: `Đang ghim ${currentSelectedIds.length} mục lối tắt ở Bottom Nav`,
+                        count: currentSelectedIds.length,
+                      })}
                 </V2Text>
               </div>
-              <V2Text
-                variant="caption"
-                color="muted"
-                className="text-[11px] mt-0.5"
-              >
-                {isCustomizing
-                  ? "Chọn tối đa 5 mục thao tác nhanh ngoài Bottom Nav"
-                  : `Đang ghim ${currentSelectedIds.length} mục lối tắt ở Bottom Nav`}
-              </V2Text>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {isCustomizing ? (
-                <>
+              <div className="flex items-center gap-1.5">
+                {isCustomizing ? (
+                  <>
+                    <V2Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2 text-xs text-muted-fg"
+                      onClick={() => {
+                        resetToDefault();
+                        setLimitWarning(null);
+                      }}
+                      title={t("v2.nav.resetDefault", "Khôi phục mặc định")}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </V2Button>
+                    <V2Button
+                      size="sm"
+                      variant="default"
+                      className="h-8 px-3 text-xs gap-1"
+                      onClick={() => {
+                        setIsCustomizing(false);
+                        setLimitWarning(null);
+                      }}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      <V2Text as="span" variant="caption" weight="medium">
+                        {t("v2.common.done", "Xong")}
+                      </V2Text>
+                    </V2Button>
+                  </>
+                ) : (
                   <V2Button
                     size="sm"
-                    variant="ghost"
-                    className="h-8 px-2 text-xs text-muted-fg"
+                    variant="outline"
+                    className="h-8 text-xs gap-1"
                     onClick={() => {
-                      resetToDefault();
-                      setLimitWarning(null);
-                    }}
-                    title="Khôi phục mặc định"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                  </V2Button>
-                  <V2Button
-                    size="sm"
-                    variant="default"
-                    className="h-8 px-3 text-xs gap-1"
-                    onClick={() => {
-                      setIsCustomizing(false);
-                      setLimitWarning(null);
+                      if (pinnedIds.length === 0) {
+                        setPinnedIds(default5Items.map((it) => it.id));
+                      }
+                      setIsCustomizing(true);
                     }}
                   >
-                    <Check className="h-3.5 w-3.5" />
-                    <span>{t("v2.common.done", "Xong")}</span>
+                    <Sliders className="h-3.5 w-3.5" />
+                    <V2Text as="span" variant="caption" weight="medium">
+                      {t("v2.common.edit", "Sửa")}
+                    </V2Text>
                   </V2Button>
-                </>
-              ) : (
-                <V2Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-xs gap-1"
-                  onClick={() => {
-                    if (pinnedIds.length === 0) {
-                      setPinnedIds(default5Items.map((it) => it.id));
-                    }
-                    setIsCustomizing(true);
-                  }}
-                >
-                  <Sliders className="h-3.5 w-3.5" />
-                  <span>Sửa</span>
-                </V2Button>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Warning banner khi người dùng cố chọn vượt quá 5 mục */}
-          {limitWarning && (
+          {limitWarning && !searchQuery && (
             <div
               data-testid="limit-warning-banner"
               className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs font-medium flex items-center gap-2 animate-in fade-in"
             >
               <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{limitWarning}</span>
+              <V2Text
+                as="span"
+                variant="caption"
+                className="text-destructive font-medium"
+              >
+                {limitWarning}
+              </V2Text>
             </div>
           )}
 
-          {effectiveSections.map((section) => (
+          {/* No search results */}
+          {searchQuery && filteredSections.length === 0 && (
+            <div
+              data-testid="mobile-catalog-empty"
+              className="py-8 text-center flex flex-col items-center justify-center space-y-2"
+            >
+              <V2Text variant="body-sm" color="muted">
+                {t("v2.nav.noSearchResults", "Không tìm thấy phân hệ phù hợp")}
+              </V2Text>
+              <V2Button
+                size="xs"
+                variant="ghost"
+                className="text-xs"
+                onClick={() => setSearchQuery("")}
+              >
+                {t("v2.nav.clearSearch", "Xóa tìm kiếm")}
+              </V2Button>
+            </div>
+          )}
+
+          {filteredSections.map((section) => (
             <section key={section.id} className="space-y-2.5">
               <V2Text
                 variant="section-title"
@@ -455,7 +587,15 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <item.icon className="h-4 w-4 shrink-0 text-muted-fg" />
-                        <span className="truncate text-xs">{item.label}</span>
+                        <V2Text
+                          as="span"
+                          variant="caption"
+                          weight="medium"
+                          truncate
+                          className="text-xs text-inherit"
+                        >
+                          {item.label}
+                        </V2Text>
                       </div>
                       {isCustomizing && isSelected && (
                         <Check className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -467,7 +607,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
             </section>
           ))}
         </div>
-      </V2Modal>
+      </V2BottomSheet>
     </div>
   );
 };

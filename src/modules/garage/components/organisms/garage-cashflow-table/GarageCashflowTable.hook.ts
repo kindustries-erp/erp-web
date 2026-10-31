@@ -4,14 +4,16 @@ import { garageCashflowApi } from "../../../api/garageCashflowApi";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { useGarageCashflowMutations } from "./GarageCashflowTable.mutations";
 
-export const getDefaultPageSize = (): number => {
-  if (typeof window !== "undefined" && window.innerHeight >= 900) {
-    return 50;
-  }
-  return 20;
-};
+export const getDefaultPageSize = (): number =>
+  typeof window !== "undefined" && window.innerHeight >= 900 ? 50 : 20;
 
-export function useGarageCashflowTable() {
+export interface UseGarageCashflowTableOptions {
+  tabKey?: "vouchers" | "forecast";
+}
+
+export function useGarageCashflowTable({
+  tabKey = "vouchers",
+}: UseGarageCashflowTableOptions = {}) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [sorts, setSorts] = useState<string[]>([]);
@@ -26,15 +28,16 @@ export function useGarageCashflowTable() {
   const serverFilters = useMemo(() => {
     const combined: Record<string, string[]> = { ...columnFilters };
     Object.entries(dateRanges).forEach(([key, range]) => {
-      if (range?.from || range?.to) {
+      if (range?.from || range?.to)
         combined[key] = [`${range.from || ""}..${range.to || ""}`];
-      }
     });
     return combined;
   }, [columnFilters, dateRanges]);
 
   const queryKey = [
-    "garage-cashflow-list",
+    tabKey === "forecast"
+      ? "garage-cashflow-forecast-list"
+      : "garage-cashflow-list",
     page,
     pageSize,
     sorts,
@@ -46,9 +49,10 @@ export function useGarageCashflowTable() {
     queryKey,
     queryFn: () =>
       garageCashflowApi.getList({
+        tab: tabKey,
         page,
         pageSize,
-        sorts: sorts && sorts.length > 0 ? sorts.join(",") : undefined,
+        sorts: sorts.length > 0 ? sorts.join(",") : undefined,
         column_filters: Object.keys(serverFilters).length
           ? JSON.stringify(serverFilters)
           : undefined,
@@ -76,13 +80,9 @@ export function useGarageCashflowTable() {
       const next = [...prev];
       const ascIdx = next.indexOf(field);
       const descIdx = next.indexOf(`-${field}`);
-      if (ascIdx >= 0) {
-        next[ascIdx] = `-${field}`;
-      } else if (descIdx >= 0) {
-        next.splice(descIdx, 1);
-      } else {
-        next.push(field);
-      }
+      if (ascIdx >= 0) next[ascIdx] = `-${field}`;
+      else if (descIdx >= 0) next.splice(descIdx, 1);
+      else next.push(field);
       return next;
     });
     setPage(1);
@@ -109,17 +109,16 @@ export function useGarageCashflowTable() {
   const getDateRange = (key: string) => dateRanges[key] || { from: "", to: "" };
 
   const activeFilterCount = useMemo(() => {
-    let count = 0;
-    Object.values(columnFilters).forEach((vals) => {
-      if (vals && vals.length > 0) count += 1;
-    });
-    Object.values(columnSearch).forEach((val) => {
-      if (val && val.trim().length > 0) count += 1;
-    });
-    Object.values(dateRanges).forEach((range) => {
-      if (range?.from || range?.to) count += 1;
-    });
-    return count;
+    const filterCnt = Object.values(columnFilters).filter(
+      (v) => v && v.length > 0,
+    ).length;
+    const searchCnt = Object.values(columnSearch).filter(
+      (v) => v && v.trim().length > 0,
+    ).length;
+    const rangeCnt = Object.values(dateRanges).filter(
+      (r) => r?.from || r?.to,
+    ).length;
+    return filterCnt + searchCnt + rangeCnt;
   }, [columnFilters, columnSearch, dateRanges]);
 
   const clearAllFilters = () => {
@@ -132,7 +131,7 @@ export function useGarageCashflowTable() {
   const getColumnOptions = async ({
     columnKey,
     search,
-    pageParam,
+    pageParam = 1,
     pageSize: reqPageSize = 20,
   }: {
     columnKey: string;
@@ -145,16 +144,17 @@ export function useGarageCashflowTable() {
     const res = await garageCashflowApi.getOptions(
       columnKey,
       search || "",
-      pageParam || 1,
+      pageParam,
       reqPageSize,
       Object.keys(filtersWithoutCurrent).length
         ? JSON.stringify(filtersWithoutCurrent)
         : undefined,
+      tabKey,
     );
     return {
       items: res.items.map((i: string) => ({ label: i, value: i })),
       total: res.total,
-      next: (pageParam || 1) < res.totalPages ? (pageParam || 1) + 1 : null,
+      next: pageParam < res.totalPages ? pageParam + 1 : null,
     };
   };
 

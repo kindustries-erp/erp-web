@@ -28,6 +28,7 @@ interface TableActionGroupProps {
   extraActions?: React.ReactNode;
   children?: React.ReactNode;
   portalId?: string;
+  className?: string;
 }
 
 export function TableActionGroup({
@@ -43,6 +44,7 @@ export function TableActionGroup({
   extraActions,
   children,
   portalId = "default",
+  className,
 }: TableActionGroupProps) {
   const t = useT();
 
@@ -63,7 +65,9 @@ export function TableActionGroup({
   );
 
   return (
-    <div className="flex items-center gap-2 w-full flex-wrap justify-start sm:justify-end">
+    <div
+      className={`flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap justify-end ${className || ""}`}
+    >
       {extraActions}
 
       {/* 1. Slot Cột (Column Visibility) - Đặt TRƯỚC Thao tác hàng loạt & Bộ lọc */}

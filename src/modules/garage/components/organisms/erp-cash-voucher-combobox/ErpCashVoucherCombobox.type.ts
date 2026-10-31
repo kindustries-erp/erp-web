@@ -5,4 +5,5 @@ export interface ErpCashVoucherComboboxProps {
   className?: string;
   branchId?: string;
   fallbackLabel?: string;
+  variant?: "default" | "spreadsheet" | "ghost" | "v2";
 }

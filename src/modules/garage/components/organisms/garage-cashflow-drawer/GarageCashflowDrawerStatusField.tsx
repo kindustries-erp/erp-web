@@ -1,6 +1,6 @@
 import React from "react";
-import { DrawerField } from "@/shared/components/DrawerModal";
-import { Combobox } from "@/shared/components/Combobox";
+import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { useT } from "@/core/i18n";
 import type { CreateGarageCashflowVoucherDto } from "../../../api/garageCashflowApi";
 
@@ -27,44 +27,52 @@ export const GarageCashflowDrawerStatusField: React.FC<
 }) => {
   const t = useT();
 
-  return (
-    <DrawerField
-      label={t("garage:cashflowDrawer.paymentStatus", "Trạng thái thanh toán")}
-      required
-    >
-      {voucherType === "PAYMENT" ? (
-        <>
-          <Combobox
-            value={paymentStatus || "PENDING"}
-            disabled={isPaymentLocked}
-            onChange={(val) =>
-              setFormData((prev) => ({ ...prev, paymentStatus: val as any }))
-            }
-            options={paymentStatusOptions}
-            placeholder={t(
-              "garage:cashflowDrawer.selectPlaceholder",
-              "— Chọn —",
-            )}
-          />
-          {isPaymentLocked && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t(
-                "garage:cashflowDrawer.paymentStatusLocked",
-                "Phiếu đã chi, không thể cập nhật lại trạng thái thanh toán.",
-              )}
-            </p>
-          )}
-        </>
-      ) : (
-        <Combobox
-          value={paymentStatus || "PAID"}
-          onChange={(val) =>
-            setFormData((prev) => ({ ...prev, paymentStatus: val as any }))
+  if (voucherType === "PAYMENT") {
+    return (
+      <div className="w-full">
+        <V2Combobox
+          value={paymentStatus || "PENDING"}
+          disabled={isPaymentLocked}
+          onValueChange={(val) =>
+            setFormData((prev) => ({
+              ...prev,
+              paymentStatus: (val || "PENDING") as any,
+            }))
           }
-          options={receiptStatusOptions}
+          options={paymentStatusOptions}
           placeholder={t("garage:cashflowDrawer.selectPlaceholder", "— Chọn —")}
+          searchable={false}
         />
-      )}
-    </DrawerField>
+        {isPaymentLocked && (
+          <V2Text
+            color="muted"
+            variant="body-sm"
+            className="mt-1 leading-tight"
+          >
+            {t(
+              "garage:cashflowDrawer.paymentStatusLocked",
+              "Phiếu đã chi, không thể cập nhật lại trạng thái thanh toán.",
+            )}
+          </V2Text>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full">
+      <V2Combobox
+        value={paymentStatus || "PAID"}
+        onValueChange={(val) =>
+          setFormData((prev) => ({
+            ...prev,
+            paymentStatus: (val || "PAID") as any,
+          }))
+        }
+        options={receiptStatusOptions}
+        placeholder={t("garage:cashflowDrawer.selectPlaceholder", "— Chọn —")}
+        searchable={false}
+      />
+    </div>
   );
 };

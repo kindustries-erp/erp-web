@@ -10,8 +10,8 @@ vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: () => true,
 }));
 
-vi.mock("@/shared/components/Combobox", () => ({
-  Combobox: ({ placeholder, options, disabled, fallbackLabel }: any) => (
+vi.mock("@/v2/shared/components/molecules/v2-combobox", () => ({
+  V2Combobox: ({ placeholder, options, disabled, fallbackLabel }: any) => (
     <div
       data-testid="mock-combobox"
       data-disabled={disabled ? "true" : undefined}

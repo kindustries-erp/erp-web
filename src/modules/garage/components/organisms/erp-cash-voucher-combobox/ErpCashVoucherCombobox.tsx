@@ -1,5 +1,5 @@
-import React from "react";
-import { Combobox } from "@/shared/components/Combobox";
+import React, { useMemo } from "react";
+import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
 import { ErpCashVoucherComboboxProps } from "./ErpCashVoucherCombobox.type";
 import { useErpCashVoucherCombobox } from "./ErpCashVoucherCombobox.hook";
 
@@ -16,16 +16,28 @@ export const ErpCashVoucherCombobox: React.FC<
   const { options, isLoading, isFetchingNextPage, fetchNextPage, setSearch } =
     useErpCashVoucherCombobox(branchId);
 
+  const v2Options = useMemo(
+    () =>
+      options.map((item: any) => ({
+        value: item.value,
+        label: item.label,
+        description: item.subLabel
+          ? `${item.code} - ${item.subLabel}`
+          : item.code,
+      })),
+    [options],
+  );
+
   return (
     <div className={className}>
-      <Combobox
-        value={value || ""}
-        onChange={(val: string) => {
-          if (onChange) onChange(val);
+      <V2Combobox
+        value={value || null}
+        onValueChange={(val) => {
+          if (onChange) onChange(val || "");
         }}
-        options={options}
+        options={v2Options}
         placeholder={isLoading ? "Đang tải..." : placeholder}
-        onSearch={setSearch}
+        onSearchChange={setSearch}
         onScrollBottom={fetchNextPage}
         loading={isLoading || isFetchingNextPage}
         fallbackLabel={fallbackLabel}

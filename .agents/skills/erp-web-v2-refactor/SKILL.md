@@ -71,8 +71,12 @@ src/v2/modules/<module>/
 | Dịch | `useV2Translation` (chỉ đọc dict V2 và module registry) | `src/v2/shared/hooks/useV2Translation.ts` |
 | Quyền | `useV2HasPermission` | `src/v2/shared/hooks/useV2HasPermission.ts` |
 | Ô nhập form chỉ đọc/sửa | `V2ReadValue`, `V2TextField` | `molecules/v2-form-controls/` |
+| Quản lý state form & validation | `useV2Form` | `src/v2/shared/hooks/useV2Form.ts` |
+| Component tổng render form field (100% V2 atoms/molecules, view/edit switch, label lookup) | `V2FormField` | `molecules/v2-form-field/` |
 | Textarea | `V2Textarea` | `atoms/v2-textarea/` |
 | Khung trang / drawer / xác nhận | `V2ModulePage`, `V2StandardDrawer`, `V2ConfirmModal` | `templates/`, `organisms/`, `molecules/` |
+| Bố cục trang chung & Mobile Tabs Dropdown | `V2PageLayout` (Template L4), `V2TabCombobox` (Molecule L2) | `templates/v2-page-layout/`, `molecules/v2-tab-combobox/` |
+
 
 Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_table_preferences`, `migrationVersion` = 1). Lần đầu chép cấu hình từ `erp_preferences` của V1 (chỉ đọc localStorage).
 
@@ -167,6 +171,7 @@ Các module đã có thư mục trong `src/v2/modules/`: `admin-core`, `bank-sta
 
 Knowledge-Sync: mỗi lần migrate xong, cập nhật bảng này và `.agents/skills/modules/<module>/SKILL.md` của module.
 
+- `admin-dashboard` & `v2-admin-layout`: Phân tách hoàn chỉnh 2 luồng định tuyến trong V2 (Nghiệp vụ thường `/v2/*` vs Cổng quản trị `/v2/admin/*`). Tích hợp `V2AdminLayout` (Platform Split Desktop/Mobile), `AdminRouteGuard` (chặn nhân viên không có `ADMIN_USERS.READ` hoặc role Admin/Manager), `V2WorkspaceModeToggle` (TopBar Switcher), và trang `V2AdminDashboardPage` kết nối API `/api/v2/admin/dashboard/summary`. Chi tiết tại `.agents/skills/modules/v2-admin-layout/SKILL.md`.
 - `bank-statements`: Đã hoàn thiện V2 cho toàn bộ các drawer cốt lõi:
   - `BankStatementExportDrawer` (`V2ExportExcelDrawer` xuất Excel sao kê ngân hàng & sổ quỹ tiền mặt).
   - `CashTransactionDetailDrawer` (`V2StandardDrawer` 2-columns cho chi tiết giao dịch tiền mặt, hạch toán, đối tác, cấn trừ hóa đơn).

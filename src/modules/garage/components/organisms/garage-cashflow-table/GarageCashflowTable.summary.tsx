@@ -12,6 +12,7 @@ export interface BuildGarageCashflowSummaryRowParams {
   pageSize: number;
   total: number;
   totalPages: number;
+  tabKey?: "vouchers" | "forecast";
   t: (key: string, def?: string) => string;
 }
 
@@ -22,6 +23,7 @@ export function buildGarageCashflowSummaryRow({
   pageSize,
   total,
   totalPages,
+  tabKey = "vouchers",
   t,
 }: BuildGarageCashflowSummaryRowParams): Record<string, React.ReactNode> {
   const receiptItems = items.filter((r) => r.voucherType === "RECEIPT");
@@ -85,7 +87,11 @@ export function buildGarageCashflowSummaryRow({
           totalCount={total}
           currentPageCount={items.length}
           cumulativeCount={cumulativeCount}
-          itemTitle={t("garage.cashflow.summary.title", "Phiếu thu/chi")}
+          itemTitle={
+            tabKey === "forecast"
+              ? t("garage.cashflow.summary.forecastTitle", "Phiếu dự thu/chi")
+              : t("garage.cashflow.summary.title", "Phiếu thu/chi")
+          }
           itemUnit={t("garage.cashflow.summary.unit", "phiếu")}
         />
       </div>
@@ -94,7 +100,11 @@ export function buildGarageCashflowSummaryRow({
       <div className="w-full flex justify-end">
         <SubtotalSummaryCell
           variantType="amount"
-          metricTitle={t("garage.cashflow.columns.thu", "Tiền vào (Thu)")}
+          metricTitle={
+            tabKey === "forecast"
+              ? t("garage.cashflow.columns.forecastThu", "Tiền vào (Dự thu)")
+              : t("garage.cashflow.columns.thu", "Tiền vào (Thu)")
+          }
           subtotalAmount={pageThu}
           cumulativeAmount={cumThu}
           grandTotalAmount={grandThu}
@@ -110,7 +120,11 @@ export function buildGarageCashflowSummaryRow({
       <div className="w-full flex justify-end">
         <SubtotalSummaryCell
           variantType="amount"
-          metricTitle={t("garage.cashflow.columns.chi", "Tiền ra (Chi)")}
+          metricTitle={
+            tabKey === "forecast"
+              ? t("garage.cashflow.columns.forecastChi", "Tiền ra (Dự chi)")
+              : t("garage.cashflow.columns.chi", "Tiền ra (Chi)")
+          }
           subtotalAmount={pageChi}
           cumulativeAmount={cumChi}
           grandTotalAmount={grandChi}

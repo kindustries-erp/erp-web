@@ -46,6 +46,22 @@ Khi tạo mới hoặc chỉnh sửa một trang Dashboard/Báo cáo tổng quan
 
 ---
 
+## 1.3. 📱 Quy Chuẩn Tối Ưu Mobile Layout (< 640px)
+
+Khi hiển thị trên thiết bị di động, Dashboard và Page Layout **BẮT BUỘC** tuân thủ các quy tắc tiết kiệm không gian màn hình:
+
+1. **Single-Row Top Bar**:
+   - Header đặt Title + Icon nhỏ (28px) bên trái, các nút thao tác (Tải lại, Đồng bộ, Thao tác khác) bên phải trên **cùng 1 hàng duy nhất** (`flex items-center justify-between`).
+   - Tuyệt đối không để cụm action buttons rớt xuống hàng riêng chiếm diện tích dọc.
+2. **Ẩn Mô Tả Dài (`desc`) trên Mobile**:
+   - Dòng mô tả giải thích dài (`desc`) được ẩn hoàn toàn trên mobile (`hidden sm:block`) để nhường diện tích cho KPI cards và biểu đồ; chỉ hiển thị trên desktop (`sm:`).
+3. **Thu Gọn Tabs Thành Combobox / Dropdown (`V2TabCombobox`)**:
+   - Khi trang có nhiều tabs, sử dụng enum `V2MobileTabMode.DROPDOWN` (mặc định trong `PageLayout`).
+   - Dải tabs trên mobile tự động thu gọn thành component `V2TabCombobox` (chỉ cao 28px `[ 📊 Tổng quan ▾ ]`). Nhấp vào mở popover menu chọn tab.
+   - Giúp giảm chiều cao cụm Header + Tabs từ ~200px xuống ~65px (tiết kiệm hơn 65% diện tích dọc trên mobile).
+
+---
+
 ## 2. Breadcrumb & TabBar — BẮT BUỘC
 
 ### 2.1. Breadcrumb đúng cấp (Topbar)

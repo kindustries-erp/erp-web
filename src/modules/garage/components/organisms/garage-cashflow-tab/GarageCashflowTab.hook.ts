@@ -1,28 +1,44 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useT } from "@/core/i18n";
 import type { TabItem } from "@/shared/components/PageLayout";
-import type { GarageCashflowTabKey } from "./GarageCashflowTab.type";
+import {
+  GarageCashflowTabKey,
+  type GarageCashflowTabKeyType,
+} from "./GarageCashflowTab.type";
 
-export function useGarageCashflowTab(propInitialTab?: GarageCashflowTabKey) {
+export function useGarageCashflowTab(
+  propInitialTab?: GarageCashflowTabKey | GarageCashflowTabKeyType,
+) {
   const t = useT();
 
   const getInitialTab = (): GarageCashflowTabKey => {
+    if (propInitialTab) {
+      return propInitialTab as GarageCashflowTabKey;
+    }
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get("tab");
-      if (tabParam === "vouchers" || tabParam === "dashboard") {
+      if (
+        tabParam === GarageCashflowTabKey.VOUCHERS ||
+        tabParam === GarageCashflowTabKey.DASHBOARD ||
+        tabParam === GarageCashflowTabKey.FORECAST
+      ) {
         return tabParam;
       }
     }
-    return propInitialTab || "dashboard";
+    return GarageCashflowTabKey.DASHBOARD;
   };
 
   const [currentTabKey, setCurrentTabKey] =
     useState<GarageCashflowTabKey>(getInitialTab);
 
   const mountedViewsRef = useRef<Record<GarageCashflowTabKey, boolean>>({
-    dashboard: currentTabKey === "dashboard",
-    vouchers: currentTabKey === "vouchers",
+    [GarageCashflowTabKey.DASHBOARD]:
+      currentTabKey === GarageCashflowTabKey.DASHBOARD,
+    [GarageCashflowTabKey.VOUCHERS]:
+      currentTabKey === GarageCashflowTabKey.VOUCHERS,
+    [GarageCashflowTabKey.FORECAST]:
+      currentTabKey === GarageCashflowTabKey.FORECAST,
   });
 
   if (currentTabKey) {
@@ -32,12 +48,16 @@ export function useGarageCashflowTab(propInitialTab?: GarageCashflowTabKey) {
   const pageTabs = useMemo<TabItem[]>(
     () => [
       {
-        value: "dashboard",
+        value: GarageCashflowTabKey.DASHBOARD,
         label: t("garage.cashflow.tabs.dashboard", "Tổng quan"),
       },
       {
-        value: "vouchers",
-        label: t("garage.cashflow.tabs.vouchers", "Danh sách phiếu thu chi"),
+        value: GarageCashflowTabKey.VOUCHERS,
+        label: t("garage.cashflow.tabs.vouchers", "Phiếu thu chi"),
+      },
+      {
+        value: GarageCashflowTabKey.FORECAST,
+        label: t("garage.cashflow.tabs.forecast", "Dự thu chi"),
       },
     ],
     [t],
@@ -45,7 +65,11 @@ export function useGarageCashflowTab(propInitialTab?: GarageCashflowTabKey) {
 
   const handleTabChange = useCallback((newTab: string) => {
     const validTab: GarageCashflowTabKey =
-      newTab === "vouchers" ? "vouchers" : "dashboard";
+      newTab === GarageCashflowTabKey.FORECAST
+        ? GarageCashflowTabKey.FORECAST
+        : newTab === GarageCashflowTabKey.VOUCHERS
+          ? GarageCashflowTabKey.VOUCHERS
+          : GarageCashflowTabKey.DASHBOARD;
     setCurrentTabKey(validTab);
 
     if (typeof window !== "undefined") {

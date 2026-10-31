@@ -109,7 +109,10 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
   EXPECTED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
 };
 
-export const renderPaymentStatusCell = (row: GarageCashflowVoucher) => {
+export const renderPaymentStatusCell = (
+  row: GarageCashflowVoucher,
+  t?: (key: string, def?: string) => string,
+) => {
   const isReceipt = (row.voucherType || "").toUpperCase() === "RECEIPT";
   const isPayment = (row.voucherType || "").toUpperCase() === "PAYMENT";
 
@@ -117,15 +120,16 @@ export const renderPaymentStatusCell = (row: GarageCashflowVoucher) => {
     return <span className="text-muted-foreground">—</span>;
   }
 
+  const tr = t || ((_: string, def?: string) => def || "");
   let label = "";
   let badgeStyle = "bg-slate-500/10 text-slate-600 border-slate-500/20";
 
   if (isReceipt) {
     if (row.paymentStatus === "EXPECTED") {
-      label = "Dự thu";
+      label = tr("garage.cashflow.status.expected", "Dự thu");
       badgeStyle = STATUS_BADGE_STYLES.EXPECTED;
     } else {
-      label = "Đã thu";
+      label = tr("garage.cashflow.status.collected", "Đã thu");
       badgeStyle = STATUS_BADGE_STYLES.PAID;
     }
   } else if (isPayment) {
@@ -133,13 +137,13 @@ export const renderPaymentStatusCell = (row: GarageCashflowVoucher) => {
       return <span className="text-muted-foreground">—</span>;
     }
     if (row.paymentStatus === "PENDING") {
-      label = "Dự chi";
+      label = tr("garage.cashflow.status.pending", "Dự chi");
       badgeStyle = STATUS_BADGE_STYLES.PENDING;
     } else if (row.paymentStatus === "APPROVED") {
-      label = "Đã duyệt";
+      label = tr("garage.cashflow.status.approved", "Đã duyệt");
       badgeStyle = STATUS_BADGE_STYLES.APPROVED;
     } else if (row.paymentStatus === "PAID") {
-      label = "Đã chi";
+      label = tr("garage.cashflow.status.paid", "Đã chi");
       badgeStyle = STATUS_BADGE_STYLES.PAID;
     } else {
       label = row.paymentStatus;

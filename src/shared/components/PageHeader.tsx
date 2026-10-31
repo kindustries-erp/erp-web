@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import { V2PageIcon } from "@/v2/shared/components/atoms/v2-page-icon";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { cn } from "@/v2/shared/utils/cn";
 
 interface PageHeaderProps {
   title: ReactNode;
@@ -17,27 +20,41 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div
-      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${className}`}
+      className={cn(
+        "flex items-center justify-between gap-2 sm:gap-4",
+        className,
+      )}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {icon && (
-          <div className="w-9 h-9 -ml-[6px] md:-ml-[10px] rounded-[10px] bg-[color:var(--primary)]/10 flex items-center justify-center text-[color:var(--primary)] shrink-0">
+          <V2PageIcon className="w-7 h-7 sm:w-9 sm:h-9 -ml-1 sm:-ml-[6px] md:-ml-[10px] [&>svg]:h-3.5 [&>svg]:w-3.5 sm:[&>svg]:h-4 sm:[&>svg]:w-4">
             {icon}
-          </div>
+          </V2PageIcon>
         )}
         <div className="min-w-0">
-          <h1 className="text-base font-semibold text-foreground leading-tight">
+          <V2Text
+            as="h1"
+            variant="h3"
+            truncate
+            className="text-sm sm:text-base font-semibold text-foreground leading-tight"
+          >
             {title}
-          </h1>
+          </V2Text>
           {desc && (
-            <p className="text-xs text-[color:var(--muted-fg)] mt-0.5">
+            <V2Text
+              as="p"
+              variant="body-sm"
+              color="muted"
+              truncate
+              className="hidden sm:block mt-0.5"
+            >
               {desc}
-            </p>
+            </V2Text>
           )}
         </div>
       </div>
       {actions && (
-        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 justify-end">
           {actions}
         </div>
       )}

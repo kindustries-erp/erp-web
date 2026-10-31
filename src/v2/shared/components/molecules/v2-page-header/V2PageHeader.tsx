@@ -15,21 +15,32 @@ export const V2PageHeader: React.FC<V2PageHeaderProps> = ({
   activeKey,
   register = noopRegister,
 }) => (
-  <header className="flex shrink-0 flex-wrap items-start justify-between gap-3">
-    <div className="flex min-w-0 items-center gap-3">
+  <header className="flex shrink-0 items-center justify-between gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
       {icon && <V2PageIcon>{icon}</V2PageIcon>}
       <div className="min-w-0">
-        <V2Text as="h1" variant="h3" truncate>
+        <V2Text
+          as="h1"
+          variant="h3"
+          truncate
+          className="text-sm sm:text-base font-semibold"
+        >
           {title}
         </V2Text>
         {description && (
-          <V2Text as="p" variant="body-sm" color="muted" truncate>
+          <V2Text
+            as="p"
+            variant="body-sm"
+            color="muted"
+            truncate
+            className="hidden sm:block"
+          >
             {description}
           </V2Text>
         )}
       </div>
     </div>
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
       {tabKeys.map((key) => (
         <V2PageToolbarSlot
           key={key}

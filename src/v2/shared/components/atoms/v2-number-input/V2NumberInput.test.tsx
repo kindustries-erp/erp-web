@@ -51,4 +51,15 @@ describe("V2NumberInput", () => {
     );
     expect(box()).toHaveAttribute("inputmode", "decimal");
   });
+
+  it("applies default compact height h-8 text-sm and custom size", () => {
+    const { rerender } = render(
+      <V2NumberInput value={1000} onValueChange={vi.fn()} />,
+    );
+    expect(box().className).toContain("h-8");
+    expect(box().className).toContain("text-sm");
+
+    rerender(<V2NumberInput value={1000} size="lg" onValueChange={vi.fn()} />);
+    expect(box().className).toContain("h-10");
+  });
 });
