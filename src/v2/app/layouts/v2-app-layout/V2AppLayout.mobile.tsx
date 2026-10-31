@@ -1,9 +1,12 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
-import { V2Header, V2BottomNav } from "@/v2/shared/components";
+import {
+  V2Header,
+  V2BottomNav,
+  V2MobileCatalogDrawer,
+} from "@/v2/shared/components";
 import { MAX_PINNED_MOBILE_NAV } from "@/v2/shared/stores/useV2MobileNavStore";
 import { useV2MobileNav } from "./hooks/useV2MobileNav";
-import { V2MobileCatalogDrawer } from "./components/v2-mobile-catalog-drawer";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
 export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({

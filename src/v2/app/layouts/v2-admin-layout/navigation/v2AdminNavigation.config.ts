@@ -10,7 +10,7 @@ import { V2AdminRouteId, V2AdminSectionId } from "@/v2/shared/types";
 import type {
   RawNavDef,
   RawSectionDef,
-} from "../v2-app-layout/v2Navigation.config";
+} from "../../types/layoutNavigation.type";
 
 export const ADMIN_NAV_DEFS: RawNavDef[] = [
   {

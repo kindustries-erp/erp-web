@@ -7,8 +7,10 @@ import {
   V2BadgeVariant,
 } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2MobileAppearanceSettings } from "../v2-mobile-appearance-settings";
-import { V2MobileNavCustomizeBar } from "../v2-mobile-nav-customize-bar";
+import {
+  V2MobileAppearanceSettings,
+  V2MobileNavCustomizeBar,
+} from "@/v2/shared/components/molecules";
 import { V2MobileCatalogSectionList } from "../v2-mobile-catalog-section-list";
 import type { V2MobileCatalogDrawerProps } from "./V2MobileCatalogDrawer.type";
 

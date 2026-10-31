@@ -1,10 +1,9 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
-import { V2Header } from "@/v2/shared/components";
+import { V2Header, V2AdminBottomNav } from "@/v2/shared/components";
 import { V2WorkspaceModeToggle } from "@/v2/shared/components/molecules/v2-workspace-mode-toggle";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2AdminRouteId } from "@/v2/shared/types";
-import { V2AdminBottomNav } from "./components/v2-admin-bottom-nav";
 import type { V2AdminLayoutProps } from "./V2AdminLayout.type";
 
 export const V2AdminLayoutMobile: React.FC<V2AdminLayoutProps> = ({

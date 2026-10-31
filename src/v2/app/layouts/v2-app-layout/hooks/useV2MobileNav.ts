@@ -11,7 +11,7 @@ import {
   useV2MobileNavStore,
   MAX_PINNED_MOBILE_NAV,
 } from "@/v2/shared/stores/useV2MobileNavStore";
-import { filterV2NavSections, getV2NavigationSections } from "../v2Navigation";
+import { filterV2NavSections, getV2NavigationSections } from "../navigation";
 import {
   extractAllAvailableItems,
   filterSectionsByQuery,
