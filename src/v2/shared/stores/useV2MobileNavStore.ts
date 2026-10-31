@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export const V2_MOBILE_NAV_STORAGE_KEY = "v2_mobile_nav_pinned_v4";
+export const V2_MOBILE_NAV_STORAGE_KEY = "v2_mobile_nav_pinned_v5";
 export const MAX_PINNED_MOBILE_NAV = 4;
 
 export interface V2MobileNavState {

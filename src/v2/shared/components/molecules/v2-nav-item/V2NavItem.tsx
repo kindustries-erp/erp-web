@@ -35,7 +35,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         onClick={onClick}
         aria-label={label}
         className={cn(
-          "group relative h-auto flex flex-col items-center justify-center py-1.5 px-1 text-xs font-medium transition-all duration-150 select-none rounded-xl hover:bg-transparent min-w-0 max-w-[62px] w-full mx-auto active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent shadow-none",
+          "group relative h-auto flex flex-col items-center justify-center py-1 px-0.5 text-xs font-medium transition-all duration-150 select-none rounded-lg hover:bg-transparent min-w-0 max-w-[52px] w-full mx-auto active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus:bg-transparent shadow-none",
           isActive
             ? "text-foreground font-semibold"
             : "text-muted-fg hover:text-foreground",
@@ -50,16 +50,16 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           <V2NavIcon
             icon={icon}
             isActive={isActive}
-            size={18}
+            size={16}
             className={cn(
               "transition-transform duration-200",
-              isActive && "scale-105 text-foreground",
+              isActive && "text-foreground",
             )}
           />
           {typeof badgeCount === "number" && badgeCount > 0 && (
             <V2Badge
               variant={V2BadgeVariant.DESTRUCTIVE}
-              className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold shadow-xs border-0"
+              className="absolute -top-1 -right-2 flex h-3.5 min-w-3.5 items-center justify-center rounded-full px-0.5 text-[9px] font-bold shadow-xs border-0"
             >
               {badgeCount > 99 ? "99+" : badgeCount}
             </V2Badge>
@@ -70,7 +70,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           variant="caption"
           truncate
           className={cn(
-            "mt-0.5 max-w-[54px] text-[9.5px] leading-tight text-inherit font-inherit transition-colors text-center",
+            "mt-0.5 max-w-[48px] text-[9px] leading-tight text-inherit font-inherit transition-colors text-center tracking-tight",
             isActive ? "font-semibold text-foreground" : "font-normal",
           )}
         >

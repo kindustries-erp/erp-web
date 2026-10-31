@@ -68,7 +68,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
       className={containerClasses}
       {...props}
     >
-      <div className="flex flex-1 items-center justify-around pr-1">
+      <div className="flex flex-1 items-center justify-around pr-1.5">
         {leftItems.map((item) => (
           <V2NavItem
             key={item.id}
@@ -85,7 +85,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
       </div>
 
       {heroItem && (
-        <div className="shrink-0 px-2 flex items-center justify-center">
+        <div className="shrink-0 px-2.5 flex items-center justify-center">
           <V2BottomNavHeroButton
             key={heroItem.id}
             label={heroItem.label}
@@ -98,7 +98,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
       )}
 
       {rightItems.length > 0 && (
-        <div className="flex flex-1 items-center justify-around pl-1">
+        <div className="flex flex-1 items-center justify-around pl-1.5">
           {rightItems.map((item) => (
             <V2NavItem
               key={item.id}
