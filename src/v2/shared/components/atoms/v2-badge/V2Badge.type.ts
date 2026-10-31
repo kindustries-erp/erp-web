@@ -7,10 +7,19 @@ export enum V2BadgeVariant {
   OUTLINE = "outline",
   SUCCESS = "success",
   WARNING = "warning",
+  PRO = "pro",
+}
+
+export enum V2BadgeSize {
+  DEFAULT = "default",
+  SM = "sm",
+  XS = "xs",
 }
 
 export type V2BadgeVariantType = V2BadgeVariant | `${V2BadgeVariant}`;
+export type V2BadgeSizeType = V2BadgeSize | `${V2BadgeSize}`;
 
-export interface V2BadgeProps extends Omit<BadgeProps, "variant"> {
+export interface V2BadgeProps extends Omit<BadgeProps, "variant" | "size"> {
   variant?: V2BadgeVariantType;
+  size?: V2BadgeSizeType;
 }
