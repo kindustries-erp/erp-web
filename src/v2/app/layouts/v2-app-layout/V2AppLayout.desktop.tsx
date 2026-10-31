@@ -9,7 +9,7 @@ import {
   filterV2NavSections,
   DEFAULT_V2_NAV_ITEMS,
   DEFAULT_V2_SECTIONS,
-} from "./v2Navigation";
+} from "./navigation";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
 export { DEFAULT_V2_NAV_ITEMS, DEFAULT_V2_SECTIONS };

@@ -13,21 +13,12 @@ import {
   Wallet,
   Settings,
 } from "lucide-react";
+import type {
+  RawNavDef,
+  RawSectionDef,
+} from "../../types/layoutNavigation.type";
 
-export interface RawNavDef {
-  id: string;
-  sectionId: string;
-  labelKey: string;
-  fallback: string;
-  icon: any;
-  href: string;
-}
-
-export interface RawSectionDef {
-  id: string;
-  labelKey: string;
-  fallback: string;
-}
+export type { RawNavDef, RawSectionDef };
 
 export const NAV_DEFS: RawNavDef[] = [
   {

@@ -67,3 +67,6 @@ export * from "./v2-admin-stat-card";
 export * from "./v2-impersonation-banner";
 export * from "./v2-bottom-sheet";
 export * from "./v2-tab-combobox";
+export * from "./v2-bottom-nav-hero-button";
+export * from "./v2-mobile-appearance-settings";
+export * from "./v2-mobile-nav-customize-bar";

@@ -1,4 +1,4 @@
-/** Hình dạng bản ghi và payload của `/api/v1/business-partners` (khớp backend, không phụ thuộc V1) */
+/** Hình dạng bản ghi và payload của `/api/v2/business-partners` (khớp backend, không phụ thuộc V1) */
 
 export interface BusinessPartnerDto {
   id: string;

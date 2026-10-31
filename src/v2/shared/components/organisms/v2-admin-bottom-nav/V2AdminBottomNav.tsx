@@ -1,17 +1,21 @@
 import * as React from "react";
 import { LayoutDashboard, BarChart3, Users, Settings } from "lucide-react";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { V2Button, V2Text, V2NavIcon } from "@/v2/shared/components/atoms";
+import { V2NavIndicator } from "@/v2/shared/components/molecules/v2-nav-item";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2AdminRouteId } from "@/v2/shared/types";
 import { cn } from "@/v2/shared/utils/cn";
-import type {
+import {
   V2AdminBottomNavProps,
   V2AdminNavItemDef,
+  V2AdminBottomNavVariant,
 } from "./V2AdminBottomNav.type";
 
 export const V2AdminBottomNav: React.FC<V2AdminBottomNavProps> = ({
   activeId = V2AdminRouteId.DASHBOARD,
   items,
+  variant = V2AdminBottomNavVariant.GROUNDED,
+  indicator = V2NavIndicator.PILL,
   onNavigate,
   className,
 }) => {
@@ -48,18 +52,25 @@ export const V2AdminBottomNav: React.FC<V2AdminBottomNavProps> = ({
   );
 
   const effectiveItems = items ?? defaultNavItems;
+  const isFloating = variant === V2AdminBottomNavVariant.FLOATING;
+  const isPill = indicator === V2NavIndicator.PILL;
+  const isDot = indicator === V2NavIndicator.DOT;
+
+  const containerClasses = cn(
+    "fixed z-30 flex items-center justify-around select-none animate-slide-in-from-bottom transition-all duration-300",
+    isFloating
+      ? "bottom-3 inset-x-3 max-w-lg mx-auto h-16 rounded-2xl border border-border/80 dark:border-white/10 bg-card/85 dark:bg-card/90 px-2 shadow-xl dark:shadow-2xl dark:shadow-black/60 backdrop-blur-xl"
+      : "bottom-0 inset-x-0 h-16 bg-background/90 dark:bg-card/90 backdrop-blur-xl border-t border-border/80 dark:border-white/10 px-2 pb-safe",
+    className,
+  );
 
   return (
     <nav
       data-testid="v2-admin-bottom-nav"
       aria-label={t("v2.admin.nav.ariaLabel", "Mobile Admin Navigation")}
-      className={cn(
-        "fixed bottom-0 left-0 right-0 z-30 h-14 bg-background/95 backdrop-blur border-t border-border flex items-center justify-around px-2 select-none animate-slide-in-from-bottom",
-        className,
-      )}
+      className={containerClasses}
     >
       {effectiveItems.map((item) => {
-        const Icon = item.icon;
         const isActive = activeId === item.id;
 
         return (
@@ -72,13 +83,21 @@ export const V2AdminBottomNav: React.FC<V2AdminBottomNavProps> = ({
             aria-current={isActive ? "page" : undefined}
             data-testid={`admin-nav-item-${item.id}`}
             className={cn(
-              "group h-full flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-none hover:bg-transparent transition-colors",
+              "group relative h-auto flex flex-1 flex-col items-center justify-center py-1.5 px-1 rounded-xl hover:bg-transparent transition-all duration-200 select-none active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 shadow-none",
               isActive
                 ? "text-primary font-semibold"
-                : "text-muted-foreground hover:text-foreground",
+                : "text-muted-fg hover:text-foreground",
+              isPill &&
+                isActive &&
+                "bg-primary/10 text-primary dark:bg-primary/15",
             )}
           >
-            <Icon size={18} className="mb-0.5 shrink-0" />
+            <V2NavIcon
+              icon={item.icon}
+              isActive={isActive}
+              size={18}
+              className="mb-0.5"
+            />
             <V2Text
               as="span"
               variant="caption"
@@ -87,6 +106,13 @@ export const V2AdminBottomNav: React.FC<V2AdminBottomNavProps> = ({
             >
               {item.label}
             </V2Text>
+            {isDot && isActive && (
+              <span
+                data-testid="admin-bottom-nav-dot"
+                aria-hidden="true"
+                className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary shadow-xs transition-transform duration-200"
+              />
+            )}
           </V2Button>
         );
       })}
