@@ -35,7 +35,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         onClick={onClick}
         aria-label={label}
         className={cn(
-          "group relative h-auto flex flex-col items-center justify-center py-1 px-0.5 text-xs font-medium transition-all duration-150 select-none rounded-lg hover:bg-transparent min-w-0 max-w-[52px] w-full mx-auto active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus:bg-transparent shadow-none",
+          "group relative h-auto flex flex-col items-center justify-center py-1.5 px-1 text-xs font-medium transition-all duration-150 select-none rounded-lg hover:bg-transparent min-w-0 max-w-[64px] w-full mx-auto active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus:bg-transparent shadow-none",
           isActive
             ? "text-foreground font-semibold"
             : "text-muted-fg hover:text-foreground",
@@ -50,7 +50,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           <V2NavIcon
             icon={icon}
             isActive={isActive}
-            size={16}
+            size={18}
             className={cn(
               "transition-transform duration-200",
               isActive && "text-foreground",
@@ -70,7 +70,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           variant="caption"
           truncate
           className={cn(
-            "mt-0.5 max-w-[48px] text-[9px] leading-tight text-inherit font-inherit transition-colors text-center tracking-tight",
+            "mt-0.5 max-w-[62px] text-[10px] leading-tight text-inherit font-inherit transition-colors text-center tracking-tight",
             isActive ? "font-semibold text-foreground" : "font-normal",
           )}
         >

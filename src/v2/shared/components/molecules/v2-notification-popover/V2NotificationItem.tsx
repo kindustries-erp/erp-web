@@ -2,8 +2,8 @@ import * as React from "react";
 import { formatDistanceToNow } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
 import { AlertCircle, CheckCircle2, Info, Trash2 } from "lucide-react";
-import { useT } from "@/core/i18n";
-import { useAppStore } from "@/core/config/appStore";
+import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type { CoreNotification } from "@/core/api/notifications";
 
@@ -35,8 +35,7 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
   onDelete,
   onClick,
 }) => {
-  const t = useT();
-  const { locale } = useAppStore();
+  const { t, locale } = useV2Translation();
   const dateLocale = locale === "en" ? enUS : vi;
 
   const handleClick = () => {
@@ -66,36 +65,48 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
       </div>
 
       <div className="flex-1 min-w-0 pr-6">
-        <h4
+        <V2Text
+          as="h4"
+          variant="body-sm"
+          weight={notification.isRead ? "normal" : "semibold"}
           className={cn(
-            "text-sm font-medium mb-1 truncate",
+            "mb-1 truncate block",
             notification.isRead
               ? "text-muted-fg dark:text-slate-400"
-              : "text-foreground dark:text-zinc-100 font-semibold",
+              : "text-foreground dark:text-zinc-100",
           )}
         >
           {notification.title}
-        </h4>
-        <p className="text-xs text-muted-fg dark:text-slate-400 mb-2 line-clamp-2">
+        </V2Text>
+        <V2Text
+          variant="caption"
+          color="muted"
+          className="mb-2 line-clamp-2 block leading-relaxed"
+        >
           {notification.message}
-        </p>
-        <span className="text-[10px] text-faint dark:text-slate-500 font-medium">
+        </V2Text>
+        <V2Text
+          variant="caption"
+          className="text-[10px] text-faint dark:text-slate-500 font-medium block"
+        >
           {formatDistanceToNow(new Date(notification.createdAt), {
             addSuffix: true,
             locale: dateLocale,
           })}
-        </span>
+        </V2Text>
       </div>
 
-      <button
+      <V2Button
         type="button"
+        variant="ghost"
+        size="xs"
         aria-label={t("v2.notifications.deleteItem", "Xóa thông báo")}
         title={t("v2.notifications.deleteItem", "Xóa thông báo")}
         onClick={handleDelete}
-        className="absolute top-2 right-2 p-1.5 rounded-md text-muted-fg opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/[0.08] hover:text-destructive dark:hover:text-rose-400 transition-all border-none bg-transparent cursor-pointer"
+        className="absolute top-2 right-2 p-1.5 h-auto rounded-md text-muted-fg opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/[0.08] hover:text-destructive dark:hover:text-rose-400 transition-all border-none shadow-none"
       >
         <Trash2 className="w-4 h-4" />
-      </button>
+      </V2Button>
 
       {!notification.isRead && (
         <div
@@ -106,4 +117,5 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
     </div>
   );
 };
+
 V2NotificationItem.displayName = "V2NotificationItem";
