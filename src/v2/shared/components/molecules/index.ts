@@ -66,3 +66,4 @@ export * from "./v2-workspace-mode-toggle";
 export * from "./v2-admin-stat-card";
 export * from "./v2-impersonation-banner";
 export * from "./v2-bottom-sheet";
+export * from "./v2-tab-combobox";

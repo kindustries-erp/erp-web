@@ -75,6 +75,8 @@ src/v2/modules/<module>/
 | Component tổng render form field (100% V2 atoms/molecules, view/edit switch, label lookup) | `V2FormField` | `molecules/v2-form-field/` |
 | Textarea | `V2Textarea` | `atoms/v2-textarea/` |
 | Khung trang / drawer / xác nhận | `V2ModulePage`, `V2StandardDrawer`, `V2ConfirmModal` | `templates/`, `organisms/`, `molecules/` |
+| Bố cục trang chung & Mobile Tabs Dropdown | `V2PageLayout` (Template L4), `V2TabCombobox` (Molecule L2) | `templates/v2-page-layout/`, `molecules/v2-tab-combobox/` |
+
 
 Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_table_preferences`, `migrationVersion` = 1). Lần đầu chép cấu hình từ `erp_preferences` của V1 (chỉ đọc localStorage).
 
