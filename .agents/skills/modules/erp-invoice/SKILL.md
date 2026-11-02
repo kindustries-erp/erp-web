@@ -448,9 +448,12 @@ bun run lint:check
 - Chưa có: Garage, giao dịch ngoài sổ. Drawer hóa đơn V1 vẫn dùng modal V1 cho đến khi nối (Task 3.1).
 
 ### 7.2. Dữ liệu và API
-- Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`, đường dẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
-- Endpoint dùng: `GET /` (list), `GET /:id` (chi tiết, bọc `data`), `GET /column-options`, `GET /stats?direction` (KPI tháng), `GET /dashboard/stats` (cashTrend cashIn/cashOut/vatIn/vatOut), `GET /dashboard/partners`.
-- DTO: `api/dtos/invoice.dto.ts`. Số tiền API là chuỗi decimal; `api/adapters/invoiceRowAdapter.ts` (`toInvoiceRow`, `invoiceTotalsToSummary`) chuyển sang shape cột V2 `FakeInvoice`. Tổng toàn bộ kết quả là `grandTotal*`.
+- Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`. List và column-options gọi `/api/v2/invoices` (và `/api/v2/invoices/column-options`); các endpoint còn lại vẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
+- Endpoint dùng: `GET /api/v2/invoices` (list), `GET /api/v2/invoices/column-options`, `GET /api/v1/erp-invoices/:id` (chi tiết, bọc `data`), `GET /api/v1/erp-invoices/stats?direction` (KPI tháng), `GET /api/v1/erp-invoices/dashboard/stats` (cashTrend cashIn/cashOut/vatIn/vatOut), `GET /api/v1/erp-invoices/dashboard/partners`.
+- Tham số list (`api/adapters/invoiceQueryAdapter.ts`): `direction`, `sort=-key,key` (không còn `sort_by`/`sort_order`), `date_from`/`date_to` dạng `YYYY-MM-DD`, `column_filters`, `column_search`. Column-options gửi chiều hóa đơn trong `filters` (không có param `direction`), trang kế đọc từ `next`.
+- DTO: `api/dtos/invoice.dto.ts`. Số tiền API v2 là `number`; list trả `summaries` theo key cột (`api/adapters/invoiceRowAdapter.ts`: `toInvoiceRow`, `toInvoiceSummary`) chuyển sang shape cột V2 `FakeInvoice`. Có `netOffAmount` và `remainingAmount` từ server.
+- Cột V2: `invoiceNo`, `invoiceDate`, `partner`, `preVatAmount`, `vatAmount`, `totalAmount`, `taxInvoiceStatus`, `posting`, `branchId` (overview); thêm `vatRate` (KCT/KTT khi -1/-2), `discountAmount`, `netOffAmount`, `remainingAmount`, `note` (audit); OUT thêm `settlementOrder`, `licensePlate`.
+- **Trạng thái tích hợp**: bảng V2 chưa được gắn vào trang `/invoices` (V1 vẫn chạy). Lọc chi nhánh còn dùng danh sách mẫu `BRANCHES` nên chưa lọc đúng với dữ liệu thật.
 - Dashboard: `domain/rules/invoiceDashboard.logic.ts` (thuần, có test) dựng KPI (VAT = tổng - trước thuế; VAT ròng = VAT đầu ra - VAT đầu vào), chuỗi biểu đồ và cơ cấu đối tác top 5 theo số bán ra.
 - Dữ liệu mẫu (`api/sampleMode.ts`, `isInvoiceSampleMode`) chỉ dùng khi `MODE=test` hoặc thiếu `VITE_API_BASE_URL`. **Lỗi API thật không được thay bằng dữ liệu mẫu.**
 
@@ -458,6 +461,7 @@ bun run lint:check
 - Table IDs: `erp-invoices-table-IN` / `erp-invoices-table-OUT`. Preference qua `v2ColumnPreferencesStorage` / `v2ViewPresetStorage` (store riêng `useV2TablePreferencesStore`). Cấu hình V1 chỉ được **chép một lần** sang V2 (`migrateV1TablePreferences`, bỏ alias `_2`/`__n`); sau đó không đồng bộ ngược. Sort và filter cột không nằm trong preference V2.
 - Header filter động: `createInvoiceFetchOptions` (`api/queries/useInvoiceColumnOptions.ts`) gọi `financeInvoiceV2Api.getColumnOptions`.
 - Cầu nối query V1⇄V2 (`erp-invoices-tab/hooks/useInvoiceV2Bridge.ts`) và cột V2 cho V1 (`useInvoiceV2Columns.tsx`) hiện không còn được V1 dùng; giữ file để tham khảo khi làm tiếp.
+- Thử nghiệm gắn bảng V2 vào tab V1 đã làm rồi gỡ bỏ (chưa commit, không còn trong code). Việc gắn lại cần QC trên trình duyệt trước khi commit.
 
 ### 7.4. Kiểm thử
 - Unit: `invoiceRowAdapter.test.ts`, `financeInvoiceV2Api.test.ts` (khóa đường dẫn API), `invoiceDashboard.logic.test.ts`, `useInvoiceV2Bridge.test.ts`.
