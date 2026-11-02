@@ -41,6 +41,10 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
   const [dateTo, setDateTo] = useState<string>(initialPreset.to);
   const [force, setForce] = useState<boolean>(false);
   const [includeDetails, setIncludeDetails] = useState<boolean>(true);
+  const [allBranches, setAllBranches] = useState<boolean>(false);
+
+  const canSync =
+    (allBranches || !!selectedBranchId) && (!!dateFrom || !!dateTo);
 
   const modalTitle =
     title ||
@@ -102,11 +106,12 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
   }, [open]);
 
   const handleSync = async () => {
-    if (!selectedBranchId) return;
+    if (!allBranches && !selectedBranchId) return;
     try {
       if (mode === "all") {
         await syncAll({
-          branchId: selectedBranchId,
+          branchId: allBranches ? undefined : selectedBranchId,
+          allBranches,
           from: dateFrom || undefined,
           to: dateTo || undefined,
           includeDetails,
@@ -150,6 +155,8 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
     dateTo,
     force,
     includeDetails,
+    allBranches,
+    canSync,
     modalTitle,
     modalDesc,
     presetOptions,
@@ -158,6 +165,7 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
     setDateTo,
     setForce,
     setIncludeDetails,
+    setAllBranches,
     handlePresetChange,
     handleSync,
   };

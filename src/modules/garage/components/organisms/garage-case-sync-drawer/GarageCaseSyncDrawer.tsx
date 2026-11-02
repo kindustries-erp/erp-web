@@ -7,18 +7,20 @@ import { RefreshCw } from "lucide-react";
 import { GarageBranchSelector } from "../../GarageBranchSelector";
 import { GarageCaseSyncDrawerProps } from "./GarageCaseSyncDrawer.type";
 import { useGarageCaseSyncDrawerLogic } from "./GarageCaseSyncDrawer.hook";
+import { GarageCaseSyncOptions } from "./GarageCaseSyncOptions";
 
 export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
   const { open, onClose, mode = "all" } = props;
   const {
     t,
-    selectedBranchId,
     isSyncing,
     selectedPreset,
     dateFrom,
     dateTo,
     force,
     includeDetails,
+    allBranches,
+    canSync,
     modalTitle,
     modalDesc,
     presetOptions,
@@ -27,6 +29,7 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
     setDateTo,
     setForce,
     setIncludeDetails,
+    setAllBranches,
     handlePresetChange,
     handleSync,
   } = useGarageCaseSyncDrawerLogic(props);
@@ -98,38 +101,14 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
               </div>
 
               {mode === "all" && (
-                <div className="flex flex-col gap-2 pt-1 border-t border-border/50">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={includeDetails}
-                      onChange={(e) => setIncludeDetails(e.target.checked)}
-                      className="rounded border-border text-primary focus:ring-primary h-4 w-4"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {t(
-                        "cases.syncDrawer.includeDetails",
-                        "Bao gồm tải chi tiết vật tư phụ tùng & nhân công",
-                      )}
-                    </span>
-                  </label>
-                  {includeDetails && (
-                    <label className="flex items-center gap-2 cursor-pointer select-none ml-6">
-                      <input
-                        type="checkbox"
-                        checked={force}
-                        onChange={(e) => setForce(e.target.checked)}
-                        className="rounded border-border text-primary focus:ring-primary h-4 w-4"
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {t(
-                          "cases.syncDrawer.forceDetails",
-                          "Tải lại cả những phiếu đã có chi tiết (force)",
-                        )}
-                      </span>
-                    </label>
-                  )}
-                </div>
+                <GarageCaseSyncOptions
+                  includeDetails={includeDetails}
+                  force={force}
+                  allBranches={allBranches}
+                  setIncludeDetails={setIncludeDetails}
+                  setForce={setForce}
+                  setAllBranches={setAllBranches}
+                />
               )}
 
               {mode === "case-details" && (
@@ -156,9 +135,7 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
               <div className="flex justify-end items-center mt-2">
                 <Button
                   onClick={handleSync}
-                  disabled={
-                    !selectedBranchId || isSyncing || (!dateFrom && !dateTo)
-                  }
+                  disabled={!canSync || isSyncing}
                   className="gap-2 w-44 justify-center"
                 >
                   <RefreshCw

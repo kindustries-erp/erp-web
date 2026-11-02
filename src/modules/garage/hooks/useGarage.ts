@@ -138,6 +138,7 @@ export const useSyncGarageAll = () => {
       to?: string;
       includeDetails?: boolean;
       forceDetails?: boolean;
+      allBranches?: boolean;
     }) => garageApi.syncAll(payload),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["garage"] });
@@ -145,6 +146,10 @@ export const useSyncGarageAll = () => {
       queryClient.invalidateQueries({ queryKey: ["garage-gross-profit"] });
       queryClient.invalidateQueries({ queryKey: ["garage-branches"] });
       queryClient.invalidateQueries({ queryKey: ["garage-dashboard"] });
+      if (data?.success === false) {
+        toast.error(data?.message || "Đồng bộ toàn diện có lỗi");
+        return;
+      }
       toast.success(data?.message || "Đồng bộ toàn diện hệ thống thành công!");
     },
     onError: (error: any) => {
@@ -161,8 +166,12 @@ export const useSyncGarageBranches = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: garageApi.syncBranches,
-    onSuccess: () => {
-      toast.success("Branches synced successfully");
+    onSuccess: (data) => {
+      if (data?.success === false) {
+        toast.error(data?.message || "Đồng bộ chi nhánh có lỗi");
+      } else {
+        toast.success("Branches synced successfully");
+      }
       qc.invalidateQueries({ queryKey: ["garage-branches"] });
     },
     onError: (err: any) => {
