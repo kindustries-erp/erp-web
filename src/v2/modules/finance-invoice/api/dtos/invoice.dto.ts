@@ -20,38 +20,37 @@ export interface InvoiceDto {
   preVatAmount?: number | string | null;
   vatAmount?: number | string | null;
   totalAmount?: number | string | null;
+  vatRate?: number | string | null;
+  discountAmount?: number | string | null;
   netOffAmount?: number | string | null;
+  remainingAmount?: number | string | null;
+  settlementOrder?: string | null;
+  licensePlate?: string | null;
   postingStatus?: string | null;
   notes?: string | null;
   description?: string | null;
 }
 
-/** Tổng cộng toàn bộ kết quả (`grandTotal*`) */
-export interface InvoiceTotalsDto {
-  grandTotalPreVat: number;
-  grandTotalVat: number;
-  grandTotalDiscount: number;
-  grandTotalAmount: number;
-  grandTotalNetOff: number;
-  grandTotalRemaining: number;
-}
+/** Tổng toàn bộ dòng khớp bộ lọc của `GET /api/v2/invoices`, key theo tên cột */
+export type InvoiceSummariesDto = Record<string, number>;
 
+/** `GET /api/v2/invoices` */
 export interface InvoiceListResponseDto {
   items: InvoiceDto[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
-  totals?: InvoiceTotalsDto;
+  summaries: InvoiceSummariesDto;
 }
 
 export type InvoiceColumnOptionDto = string | { value: string; label: string };
 
+/** `GET /api/v2/invoices/column-options`: `next` là trang kế, hoặc null khi hết */
 export interface InvoiceColumnOptionsResponseDto {
   items: InvoiceColumnOptionDto[];
   total: number;
-  page: number;
-  totalPages: number;
+  next: number | null;
 }
 
 /** `GET /api/v1/erp-invoices/stats`: KPI theo tháng/tuần/ngày của một chiều hóa đơn */

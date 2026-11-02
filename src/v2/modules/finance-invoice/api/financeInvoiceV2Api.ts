@@ -9,16 +9,18 @@ import type {
   InvoiceStatsDto,
 } from "./dtos/invoice.dto";
 
-const BASE_URL = "/api/v1/erp-invoices";
-const DASHBOARD_URL = `${BASE_URL}/dashboard`;
+/** Danh sách và gợi ý cột đã chuyển sang API v2; các endpoint còn lại vẫn ở v1 */
+const V1_BASE_URL = "/api/v1/erp-invoices";
+const V2_LIST_URL = "/api/v2/invoices";
+const DASHBOARD_URL = `${V1_BASE_URL}/dashboard`;
 
 export interface InvoiceColumnOptionsParams {
   column: string;
   search: string;
   page: number;
   pageSize: number;
-  columnFilters?: string;
-  direction?: "IN" | "OUT";
+  /** JSON bộ lọc cột (đã gồm chiều hóa đơn nếu cần), API v2 đọc theo tên `filters` */
+  filters?: string;
 }
 
 /** Client API của module hóa đơn trên V2; không import code V1 */
@@ -26,9 +28,10 @@ export const financeInvoiceV2Api = {
   list: async (
     params: InvoiceListQueryParams,
   ): Promise<InvoiceListResponseDto> => {
-    const { data } = await v2HttpClient.get<InvoiceListResponseDto>(BASE_URL, {
-      params,
-    });
+    const { data } = await v2HttpClient.get<InvoiceListResponseDto>(
+      V2_LIST_URL,
+      { params },
+    );
     return data;
   },
 
@@ -36,15 +39,14 @@ export const financeInvoiceV2Api = {
     params: InvoiceColumnOptionsParams,
   ): Promise<InvoiceColumnOptionsResponseDto> => {
     const { data } = await v2HttpClient.get<InvoiceColumnOptionsResponseDto>(
-      `${BASE_URL}/column-options`,
+      `${V2_LIST_URL}/column-options`,
       {
         params: {
           column: params.column,
           search: params.search,
           page: params.page,
           pageSize: params.pageSize,
-          column_filters: params.columnFilters,
-          direction: params.direction,
+          filters: params.filters,
         },
       },
     );
@@ -54,7 +56,7 @@ export const financeInvoiceV2Api = {
   /** Chi tiết một hóa đơn; API bọc kết quả trong `data` */
   get: async (id: string): Promise<InvoiceDto> => {
     const { data } = await v2HttpClient.get<{ data: InvoiceDto }>(
-      `${BASE_URL}/${id}`,
+      `${V1_BASE_URL}/${id}`,
     );
     return data.data;
   },
@@ -62,7 +64,7 @@ export const financeInvoiceV2Api = {
   /** KPI tháng hiện tại của một chiều (IN = mua vào, OUT = bán ra) */
   getStats: async (direction: "IN" | "OUT"): Promise<InvoiceStatsDto> => {
     const { data } = await v2HttpClient.get<InvoiceStatsDto>(
-      `${BASE_URL}/stats`,
+      `${V1_BASE_URL}/stats`,
       { params: { direction } },
     );
     return data;

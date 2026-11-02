@@ -15,5 +15,5 @@ export const buildInvoiceColumns = (
 ): V2Column<FakeInvoice>[] => {
   const baseColumns = getBaseInvoiceColumns(onOpen, direction);
   if (view === "overview") return baseColumns;
-  return [...baseColumns, ...getAuditInvoiceColumns()];
+  return [...baseColumns, ...getAuditInvoiceColumns(direction)];
 };
