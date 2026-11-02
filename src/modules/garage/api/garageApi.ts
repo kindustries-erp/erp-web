@@ -403,6 +403,7 @@ export const garageApi = {
     to?: string;
     includeDetails?: boolean;
     forceDetails?: boolean;
+    allBranches?: boolean;
   }) => {
     const res = await axiosInstance.post(`${BASE}/sync/all`, payload, {
       headers: payload.branchId
