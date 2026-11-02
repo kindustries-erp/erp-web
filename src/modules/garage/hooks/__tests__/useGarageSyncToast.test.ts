@@ -3,13 +3,12 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { toast } from "react-hot-toast";
-import { useSyncGarageBranches, useSyncGarageAll } from "../useGarage";
+import { useSyncGarageBranches } from "../useGarage";
 import { garageApi } from "../../api/garageApi";
 
 vi.mock("../../api/garageApi", () => ({
   garageApi: {
     syncBranches: vi.fn(),
-    syncAll: vi.fn(),
   },
 }));
 
@@ -70,23 +69,5 @@ describe("garage sync toasts reflect per-account failures", () => {
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledTimes(1));
     expect(toast.error).not.toHaveBeenCalled();
-  });
-
-  it("shows error for a partial all-branches sync", async () => {
-    vi.mocked(garageApi.syncAll).mockResolvedValue({
-      success: false,
-      message: "Đồng bộ có lỗi: OJ/b-oj: Kgara API Error: 500",
-    } as any);
-
-    const { result } = renderHook(() => useSyncGarageAll(), {
-      wrapper: createWrapper(),
-    });
-    await act(async () => {
-      result.current.mutate({ allBranches: true });
-    });
-
-    await waitFor(() => expect(toast.error).toHaveBeenCalledTimes(1));
-    expect(garageApi.syncAll).toHaveBeenCalledWith({ allBranches: true });
-    expect(toast.success).not.toHaveBeenCalled();
   });
 });

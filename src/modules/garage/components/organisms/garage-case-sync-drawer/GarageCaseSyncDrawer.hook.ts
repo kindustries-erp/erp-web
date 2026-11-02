@@ -5,33 +5,20 @@ import {
   getPastMonthPresets,
   getCurrentMonthPreset,
 } from "@/shared/utils/datePresets";
-import { useGarageStore } from "../../../store/garageStore";
 import {
-  useSyncGarageAll,
-  useSyncGarageCases,
-  useSyncGarageGrossProfit,
-  useSyncGarageCaseDetails,
-} from "../../../hooks/useGarage";
+  useGarageBulkSyncStatus,
+  useStartGarageBulkSync,
+} from "../../../hooks/useGarageBulkSync";
 import { GarageCaseSyncDrawerProps } from "./GarageCaseSyncDrawer.type";
 
 export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
-  const { open, onClose, onSuccess, mode = "all", title, description } = props;
+  const { open, onSuccess, mode = "all", title, description } = props;
   const { t } = useTranslation("garage");
-  const { selectedBranchId } = useGarageStore();
 
-  const { mutateAsync: syncAll, isPending: isSyncingAll } = useSyncGarageAll();
-  const { mutateAsync: syncCases, isPending: isSyncingCases } =
-    useSyncGarageCases();
-  const { mutateAsync: syncGrossProfit, isPending: isSyncingGrossProfit } =
-    useSyncGarageGrossProfit();
-  const { mutateAsync: syncCaseDetails, isPending: isSyncingCaseDetails } =
-    useSyncGarageCaseDetails();
-
-  const isSyncing =
-    isSyncingAll ||
-    isSyncingCases ||
-    isSyncingGrossProfit ||
-    isSyncingCaseDetails;
+  const { mutateAsync: startBulkSync, isPending: isStarting } =
+    useStartGarageBulkSync();
+  const { data: bulkStatus } = useGarageBulkSyncStatus(open, onSuccess);
+  const isRunning = bulkStatus?.status === "running";
 
   const initialPreset = useMemo(() => getCurrentMonthPreset(), []);
   const [selectedPreset, setSelectedPreset] = useState<string>(
@@ -41,10 +28,9 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
   const [dateTo, setDateTo] = useState<string>(initialPreset.to);
   const [force, setForce] = useState<boolean>(false);
   const [includeDetails, setIncludeDetails] = useState<boolean>(true);
-  const [allBranches, setAllBranches] = useState<boolean>(false);
 
-  const canSync =
-    (allBranches || !!selectedBranchId) && (!!dateFrom || !!dateTo);
+  const isSyncing = isStarting || isRunning;
+  const canSync = !isSyncing && (!!dateFrom || !!dateTo);
 
   const modalTitle =
     title ||
@@ -105,57 +91,31 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
     }
   }, [open]);
 
+  /** Bấm một lần: backend chạy nền trên mọi chi nhánh; drawer giữ mở để theo dõi tiến độ. */
   const handleSync = async () => {
-    if (!allBranches && !selectedBranchId) return;
+    if (!canSync) return;
     try {
-      if (mode === "all") {
-        await syncAll({
-          branchId: allBranches ? undefined : selectedBranchId,
-          allBranches,
-          from: dateFrom || undefined,
-          to: dateTo || undefined,
-          includeDetails,
-          forceDetails: force,
-        });
-      } else if (mode === "gross-profit") {
-        await syncGrossProfit({
-          branchId: selectedBranchId,
-          from: dateFrom || undefined,
-          to: dateTo || undefined,
-        });
-      } else if (mode === "case-details") {
-        await syncCaseDetails({
-          branchId: selectedBranchId,
-          from: dateFrom || undefined,
-          to: dateTo || undefined,
-          force,
-        });
-      } else {
-        await syncCases({
-          branchId: selectedBranchId,
-          from: dateFrom || undefined,
-          to: dateTo || undefined,
-        });
-      }
-      if (onSuccess) {
-        onSuccess();
-      }
-      onClose();
+      await startBulkSync({
+        scope: mode,
+        from: dateFrom || undefined,
+        to: dateTo || undefined,
+        includeDetails: mode === "all" ? includeDetails : undefined,
+        forceDetails: force,
+      });
     } catch {
-      // Error handled in the mutation
+      // Lỗi đã được báo trong mutation
     }
   };
 
   return {
     t,
-    selectedBranchId,
+    bulkStatus,
     isSyncing,
     selectedPreset,
     dateFrom,
     dateTo,
     force,
     includeDetails,
-    allBranches,
     canSync,
     modalTitle,
     modalDesc,
@@ -165,7 +125,6 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
     setDateTo,
     setForce,
     setIncludeDetails,
-    setAllBranches,
     handlePresetChange,
     handleSync,
   };
