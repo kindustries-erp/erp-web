@@ -3,38 +3,27 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 import { GarageCaseSyncDrawer } from "./GarageCaseSyncDrawer";
 
+const startBulkSync = vi.fn();
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, def?: string) => def || _key,
   }),
 }));
 
-vi.mock("../../GarageBranchSelector", () => ({
-  GarageBranchSelector: () => <div data-testid="branch-selector" />,
-}));
-
-vi.mock("../../../store/garageStore", () => ({
-  useGarageStore: () => ({
-    selectedBranchId: "branch-1",
+vi.mock("../../../hooks/useGarageBulkSync", () => ({
+  useStartGarageBulkSync: () => ({
+    mutateAsync: startBulkSync,
+    isPending: false,
+  }),
+  useGarageBulkSyncStatus: () => ({
+    data: undefined,
   }),
 }));
 
 vi.mock("../../../hooks/useGarage", () => ({
-  useSyncGarageAll: () => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
-  }),
-  useSyncGarageCases: () => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
-  }),
-  useSyncGarageGrossProfit: () => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
-  }),
-  useSyncGarageCaseDetails: () => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
+  useGarageBranches: () => ({
+    data: [],
   }),
 }));
 
@@ -48,18 +37,15 @@ describe("GarageCaseSyncDrawer Organism", () => {
     expect(screen.getByText("Bắt đầu đồng bộ")).toBeDefined();
   });
 
-  it("toggles the all-branches option in all mode", () => {
+  it("no longer asks for a branch", () => {
     render(<GarageCaseSyncDrawer open={true} onClose={vi.fn()} mode="all" />);
-    const checkbox = screen.getByRole("checkbox", {
-      name: /Đồng bộ tất cả chi nhánh/,
-    }) as HTMLInputElement;
-
-    expect(checkbox.checked).toBe(false);
-    fireEvent.click(checkbox);
-    expect(checkbox.checked).toBe(true);
+    expect(screen.queryByText("Branch:")).toBeNull();
+    expect(
+      screen.queryByRole("checkbox", { name: /Đồng bộ tất cả chi nhánh/ }),
+    ).toBeNull();
   });
 
-  it("hides the all-branches option outside all mode", () => {
+  it("hides the detail options outside all mode", () => {
     render(
       <GarageCaseSyncDrawer
         open={true}
@@ -68,7 +54,18 @@ describe("GarageCaseSyncDrawer Organism", () => {
       />,
     );
     expect(
-      screen.queryByRole("checkbox", { name: /Đồng bộ tất cả chi nhánh/ }),
+      screen.queryByText("Bao gồm tải chi tiết vật tư phụ tùng & nhân công"),
     ).toBeNull();
+  });
+
+  it("starts one background job for the current mode when clicked", () => {
+    startBulkSync.mockClear();
+    render(<GarageCaseSyncDrawer open={true} onClose={vi.fn()} mode="cases" />);
+
+    fireEvent.click(screen.getByText("Bắt đầu đồng bộ"));
+
+    expect(startBulkSync).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "cases", includeDetails: undefined }),
+    );
   });
 });

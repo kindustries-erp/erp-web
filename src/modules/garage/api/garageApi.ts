@@ -397,19 +397,21 @@ export const garageApi = {
     return res.data;
   },
 
-  syncAll: async (payload: {
-    branchId?: string;
+  startAllBranchesSync: async (payload: {
+    scope: "all" | "cases" | "gross-profit" | "case-details";
     from?: string;
     to?: string;
     includeDetails?: boolean;
     forceDetails?: boolean;
-    allBranches?: boolean;
   }) => {
-    const res = await axiosInstance.post(`${BASE}/sync/all`, payload, {
-      headers: payload.branchId
-        ? { "x-greenway-branch-id": payload.branchId }
-        : undefined,
+    const res = await axiosInstance.post(`${BASE}/sync/all-branches`, payload, {
+      timeout: 15000,
     });
+    return res.data;
+  },
+
+  getAllBranchesSyncStatus: async () => {
+    const res = await axiosInstance.get(`${BASE}/sync/all-branches/status`);
     return res.data;
   },
 

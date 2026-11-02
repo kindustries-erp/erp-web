@@ -4,22 +4,22 @@ import { Button } from "@/shared/components/ui/Button";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
 import { RefreshCw } from "lucide-react";
-import { GarageBranchSelector } from "../../GarageBranchSelector";
 import { GarageCaseSyncDrawerProps } from "./GarageCaseSyncDrawer.type";
 import { useGarageCaseSyncDrawerLogic } from "./GarageCaseSyncDrawer.hook";
 import { GarageCaseSyncOptions } from "./GarageCaseSyncOptions";
+import { GarageBulkSyncProgress } from "./GarageBulkSyncProgress";
 
 export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
   const { open, onClose, mode = "all" } = props;
   const {
     t,
+    bulkStatus,
     isSyncing,
     selectedPreset,
     dateFrom,
     dateTo,
     force,
     includeDetails,
-    allBranches,
     canSync,
     modalTitle,
     modalDesc,
@@ -29,7 +29,6 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
     setDateTo,
     setForce,
     setIncludeDetails,
-    setAllBranches,
     handlePresetChange,
     handleSync,
   } = useGarageCaseSyncDrawerLogic(props);
@@ -50,10 +49,6 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
       ]}
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-3 px-[18px] py-3 border-b border-border shrink-0 -mx-[18px] -mt-[18px] mb-4 bg-muted/30">
-          <GarageBranchSelector />
-        </div>
-
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-6">
             <div className="text-sm text-muted-foreground">{modalDesc}</div>
@@ -104,10 +99,8 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
                 <GarageCaseSyncOptions
                   includeDetails={includeDetails}
                   force={force}
-                  allBranches={allBranches}
                   setIncludeDetails={setIncludeDetails}
                   setForce={setForce}
-                  setAllBranches={setAllBranches}
                 />
               )}
 
@@ -132,10 +125,12 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
                 </div>
               )}
 
+              <GarageBulkSyncProgress status={bulkStatus} />
+
               <div className="flex justify-end items-center mt-2">
                 <Button
                   onClick={handleSync}
-                  disabled={!canSync || isSyncing}
+                  disabled={!canSync}
                   className="gap-2 w-44 justify-center"
                 >
                   <RefreshCw
