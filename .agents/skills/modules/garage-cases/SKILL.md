@@ -10,7 +10,7 @@ description: Module tri thức Quản lý Vụ việc Dịch vụ Garage & Sửa
 Phân hệ Quản lý Phiếu Dịch Vụ Garage (`src/modules/garage/`) cung cấp giao diện quản lý toàn diện cho các hoạt động sửa chữa, bảo dưỡng tại xưởng dịch vụ:
 - **Bảng Danh sách Phiếu Dịch Vụ (`/garage/cases`)**: Xem, tìm kiếm, lọc đa chiều, ẩn/hiện cột thông minh và xuất dữ liệu phiếu dịch vụ.
 - **Xem Chi tiết & Sổ Báo Giá (`GarageCaseStandaloneDrawer`)**: Xem chi tiết thông tin khách hàng, phương tiện, cố vấn, tiến độ và bản xem trước tờ phiếu Báo giá & Lợi nhuận dự kiến.
-- **Đồng bộ Dữ liệu Garage (`GarageCaseSyncDrawer`)**: Kích hoạt đồng bộ phiếu dịch vụ và lợi nhuận gộp từ hệ thống KGara về ERP theo dải ngày. Ở mode `all` có checkbox `Đồng bộ tất cả chi nhánh (MAIN & OJ)` (`allBranches`, tách thành `GarageCaseSyncOptions.tsx`): bật thì không cần chọn chi nhánh và backend sync tuần tự mọi chi nhánh. Lỗi theo tài khoản/chi nhánh hiển thị bằng toast đỏ (`useSyncGarageAll`, `useSyncGarageBranches` trong `hooks/useGarage.ts`), không báo thành công khi `success=false`.
+- **Đồng bộ Dữ liệu Garage (`GarageCaseSyncDrawer`)**: Kích hoạt đồng bộ phiếu dịch vụ và lợi nhuận gộp từ hệ thống KGara về ERP theo dải ngày. Ở mode `all` có checkbox `Đồng bộ tất cả chi nhánh (MAIN & OJ)` (`allBranches`, tách thành `GarageCaseSyncOptions.tsx`): bật thì không cần chọn chi nhánh và backend sync tuần tự mọi chi nhánh. Lỗi theo tài khoản/chi nhánh hiển thị bằng toast đỏ (`useSyncGarageAll`, `useSyncGarageBranches` trong `hooks/useGarage.ts`), không báo thành công khi `success=false`. Dropdown chi nhánh (`GarageBranchSelector`, hàm `formatGarageBranchLabel`) gắn thêm `· <accountKey>` cho chi nhánh không thuộc MAIN (ví dụ `· OJ`) để phân biệt chi nhánh tài khoản 2.
 
 ---
 
