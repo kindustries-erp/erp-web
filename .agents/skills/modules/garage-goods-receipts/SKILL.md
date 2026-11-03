@@ -53,6 +53,7 @@ src/v2/modules/garage-goods-receipts/
 - **Không dùng Blue**: Màu sắc semantic hoàn toàn từ Token System (`bg-amber-50`, `bg-emerald-50`, `text-primary`, `text-muted-fg`).
 - **Giới hạn dòng (< 180 LoC)**: Mọi file thành phần đều < 180 dòng. Bảng dòng phụ tùng được chia nhỏ thành `GarageGoodsReceiptLinesTable` và `GarageGoodsReceiptLineRow`.
 - **Đa ngôn ngữ 100%**: Tất cả tiêu đề cột, form field, thông báo toast, actions được dịch qua `garageGoodsReceipts.locale.ts` (`vi` / `en`).
-- **Tích hợp Menu Sidebar**: Đã thêm NavItem "Nhập kho Garage" vào `GarageNavSection.tsx` trong menu GARAGE.
-- **URL Route**: `/garage-goods-receipts` qua wrapper `src/pages/GarageGoodsReceiptsPage.tsx`.
+- **Tích hợp Menu Sidebar**: Đã thêm NavItem "Nhập kho Garage" vào `sec-garage` trong `useV2AdaptedNavSections.ts` và `GarageNavSection.tsx` (nhóm GARAGE) với quyền `canReadGarageGoodsReceipts` (có fallback `canReadGarageCases`).
+- **Tích hợp Multi-tab Shell & Breadcrumb**: `useV2AdaptedTabs.ts` ánh xạ icon `Package` và label chuẩn `v2.nav.items.garageGoodsReceipts`; `V2ShellLayout.tsx` hiển thị breadcrumb `Garage > Nhập kho Garage`.
+- **URL Route & Navigation**: Truy cập trực tiếp qua URL `/garage-goods-receipts` (hỗ trợ cả alias `/v2/garage-goods-receipts`), render trực tiếp `GarageGoodsReceiptsPage`.
 

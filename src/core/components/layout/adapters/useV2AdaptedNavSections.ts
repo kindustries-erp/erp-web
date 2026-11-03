@@ -108,8 +108,12 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpAction.READ,
   );
   const canReadGarageOpex = canReadGarageCases;
+  const canReadGarageGoodsReceipts =
+    useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
+    canReadGarageCases;
   const showGarage =
     canReadGarageCases ||
+    canReadGarageGoodsReceipts ||
     canReadGarageCashflow ||
     canReadGarageDebts ||
     canReadGarageOpex;
@@ -369,6 +373,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           label: t("nav.items.garageCases", "Hoạt động garage"),
           icon: Car,
           href: "/garage-cases",
+        });
+      }
+      if (canReadGarageGoodsReceipts) {
+        items.push({
+          id: "garage-goods-receipts",
+          label: t("nav.items.garageGoodsReceipts", "Nhập kho Garage"),
+          icon: Package,
+          href: "/garage-goods-receipts",
         });
       }
       if (canReadGarageCashflow) {

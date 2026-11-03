@@ -171,6 +171,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.garage", "Garage") },
           { label: t("nav.items.garageCases", "Hoạt động garage") },
         ];
+      case "garage-goods-receipts":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          { label: t("nav.items.garageGoodsReceipts", "Nhập kho Garage") },
+        ];
       case "garage-cashflow":
         return [
           { label: t("nav.sections.garage", "Garage") },

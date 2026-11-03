@@ -97,6 +97,12 @@ export const V2_ROUTES: V2RouteDef[] = [
   },
   {
     id: "garage-goods-receipts",
+    path: "/garage-goods-receipts",
+    title: "Nhập kho Garage",
+    permission: { collection: "garage_goods_receipts", action: "read" },
+  },
+  {
+    id: "garage-goods-receipts",
     path: "/v2/garage-goods-receipts",
     title: "Nhập kho Garage",
     permission: { collection: "garage_goods_receipts", action: "read" },
