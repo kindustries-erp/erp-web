@@ -36,7 +36,7 @@ const PopoverContent = React.forwardRef<
         side={side}
         sideOffset={sideOffset}
         className={cn(
-          "z-50 w-72 rounded-xl p-4 text-foreground outline-none",
+          "z-[9999] w-72 rounded-xl p-4 text-foreground outline-none",
           "border border-[color:var(--popup-border,rgba(226,232,240,0.8))] dark:border-transparent",
           "bg-[var(--popup-bg,rgba(246,248,252,0.72))]",
           "backdrop-blur-[var(--glass-blur,16px)]",
