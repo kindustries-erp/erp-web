@@ -35,6 +35,8 @@ export const v2En: V2Dictionary = {
         pinnedShortcutsCount: "Pinned {{count}} shortcuts on Bottom Nav",
         resetDefault: "Reset to default",
         inventoryGroup: "Inventory",
+        garageGoodsReceipts: "Garage Goods Receipts",
+        // v2-module:garage-goods-receipts:locale-en
         // plop:v2-nav-items
       },
       searchPlaceholder: "Search modules...",
@@ -53,6 +55,9 @@ export const v2En: V2Dictionary = {
       error: "An error occurred",
       actions: "Actions",
       overview: "Overview",
+      total: "Total",
+      remove: "Remove",
+      delete: "Delete",
     },
     sidebar: {
       appName: "ERP",

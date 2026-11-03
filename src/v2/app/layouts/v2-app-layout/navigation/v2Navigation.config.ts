@@ -125,6 +125,15 @@ export const NAV_DEFS: RawNavDef[] = [
     icon: Settings,
     href: "/v2/settings",
   },
+  {
+    id: "garage-goods-receipts",
+    sectionId: "inventory",
+    labelKey: "v2.nav.items.garageGoodsReceipts",
+    fallback: "Nhập kho Garage",
+    icon: FileText,
+    href: "/v2/garage-goods-receipts",
+  },
+  // v2-module:garage-goods-receipts:nav
   // plop:v2-nav-items
 ];
 

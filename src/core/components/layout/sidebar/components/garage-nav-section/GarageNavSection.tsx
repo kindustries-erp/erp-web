@@ -1,6 +1,6 @@
 import React from "react";
 import { useT } from "@/core/i18n";
-import { Wallet, Car, Users, ReceiptText } from "lucide-react";
+import { Wallet, Car, Users, ReceiptText, Package } from "lucide-react";
 import { NavSection, NavItem } from "../SidebarPrimitives";
 import type { GarageNavSectionProps } from "./GarageNavSection.type";
 import { useGarageNavSection } from "./GarageNavSection.hook";
@@ -14,14 +14,17 @@ export function GarageNavSection({
   const {
     canReadGarageCashflow,
     canReadGarageCases,
+    canReadGarageGoodsReceipts,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
+    isGoodsReceiptsActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
+    handleNavGoodsReceipts,
     handleNavDebts,
     handleNavOpex,
   } = useGarageNavSection({
@@ -32,6 +35,7 @@ export function GarageNavSection({
   if (
     !canReadGarageCashflow &&
     !canReadGarageCases &&
+    !canReadGarageGoodsReceipts &&
     !canReadGarageDebts &&
     !canReadGarageOpex
   ) {
@@ -51,6 +55,16 @@ export function GarageNavSection({
           active={isCasesActive}
           onClick={handleNavCases}
           contextPage="garage-cases"
+        />
+      )}
+      {canReadGarageGoodsReceipts && (
+        <NavItem
+          collapsed={collapsed}
+          icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
+          label={t("nav.items.garageGoodsReceipts", "Nhập kho Garage")}
+          active={isGoodsReceiptsActive}
+          onClick={handleNavGoodsReceipts}
+          contextPage="garage-goods-receipts"
         />
       )}
       {canReadGarageCashflow && (

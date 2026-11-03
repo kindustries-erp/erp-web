@@ -35,6 +35,8 @@ export const v2Vi = {
         pinnedShortcutsCount: "Đang ghim {{count}} mục lối tắt ở Bottom Nav",
         resetDefault: "Khôi phục mặc định",
         inventoryGroup: "Kho",
+        garageGoodsReceipts: "Nhập kho Garage",
+        // v2-module:garage-goods-receipts:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",
@@ -53,6 +55,9 @@ export const v2Vi = {
       error: "Đã xảy ra lỗi",
       actions: "Thao tác",
       overview: "Tổng quan",
+      total: "Tổng cộng",
+      remove: "Xóa",
+      delete: "Xóa",
     },
     sidebar: {
       appName: "ERP",

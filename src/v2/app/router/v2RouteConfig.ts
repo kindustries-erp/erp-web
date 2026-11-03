@@ -95,6 +95,13 @@ export const V2_ROUTES: V2RouteDef[] = [
     isAdmin: true,
     permission: { collection: "admin_users", action: "read" },
   },
+  {
+    id: "garage-goods-receipts",
+    path: "/v2/garage-goods-receipts",
+    title: "Nhập kho Garage",
+    permission: { collection: "garage_goods_receipts", action: "read" },
+  },
+  // v2-module:garage-goods-receipts:routes
   // plop:v2-routes
 ];
 
