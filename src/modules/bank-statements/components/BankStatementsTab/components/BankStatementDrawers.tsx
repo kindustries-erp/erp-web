@@ -2,9 +2,11 @@ import React from "react";
 import { ImportStatementDrawer } from "@/pages/finance/components/ImportStatementDrawer";
 import { OriginalStatementFilesDrawer } from "@/pages/finance/components/OriginalStatementFilesDrawer";
 import { CreateCashTransactionDrawer } from "@/pages/finance/components/CreateCashTransactionDrawer";
-import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { BankStatementExportDrawer } from "@/pages/finance/components/BankStatementExportDrawer";
-import { CashTransactionDetailDrawer } from "@/v2/modules/bank-statements";
+import {
+  CashTransactionDetailDrawer,
+  BankTransactionDetailDrawer,
+} from "@/v2/modules/bank-statements";
 import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
 
 export interface BankStatementDrawersProps {
@@ -116,6 +118,7 @@ export function BankStatementDrawers({
           transactionId={detailTransactionId}
           defaultTabKey={detailDefaultTab || "txn_details"}
           initialMode={detailMode}
+          onSelectTransaction={setDetailTransactionId}
           onSaved={() => {
             onRefresh();
           }}

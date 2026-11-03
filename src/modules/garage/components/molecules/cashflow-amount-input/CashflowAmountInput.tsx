@@ -1,7 +1,9 @@
 import React, { useId } from "react";
-import { Input } from "@/shared/components/ui/input";
+import { V2NumberInput } from "@/v2/shared/components/atoms/v2-number-input";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { readVietnameseCurrency } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
+import { cn } from "@/v2/shared/utils/cn";
 import type { CashflowAmountInputProps } from "./CashflowAmountInput.type";
 
 export const CashflowAmountInput: React.FC<CashflowAmountInputProps> = ({
@@ -9,37 +11,33 @@ export const CashflowAmountInput: React.FC<CashflowAmountInputProps> = ({
   onChange,
   disabled = false,
   placeholder = "0",
-  className = "w-full h-8 text-sm",
+  className,
+  hideWords = false,
 }) => {
   const t = useT();
   const inputId = useId();
-
   const numValue = Number(value) || 0;
-  const displayValue = numValue > 0 ? numValue.toLocaleString("vi-VN") : "";
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawDigits = e.target.value.replace(/[^0-9]/g, "");
-    const parsed = rawDigits ? Number(rawDigits) : 0;
-    onChange(parsed);
-  };
 
   return (
     <div className="flex flex-col gap-1 w-full">
-      <Input
+      <V2NumberInput
         id={inputId}
-        type="text"
-        inputMode="numeric"
-        value={displayValue}
-        onChange={handleChange}
+        value={numValue > 0 ? numValue : null}
+        onValueChange={(val) => onChange(val || 0)}
         disabled={disabled}
         placeholder={placeholder}
-        className={`${className} text-right font-mono`}
+        decimals={0}
+        className={cn("h-8 text-sm font-mono text-right rounded-md", className)}
       />
-      {numValue > 0 && (
-        <p className="text-xs text-muted-foreground italic leading-tight pt-0.5">
+      {!hideWords && numValue > 0 && (
+        <V2Text
+          color="muted"
+          variant="body-sm"
+          className="italic leading-tight pt-0.5"
+        >
           {t("garage:cashflowDrawer.amountInWords", "Bằng chữ:")}{" "}
           <span>{readVietnameseCurrency(numValue)}</span>
-        </p>
+        </V2Text>
       )}
     </div>
   );

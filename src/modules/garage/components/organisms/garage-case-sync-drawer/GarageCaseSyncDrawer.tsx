@@ -4,21 +4,23 @@ import { Button } from "@/shared/components/ui/Button";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
 import { RefreshCw } from "lucide-react";
-import { GarageBranchSelector } from "../../GarageBranchSelector";
 import { GarageCaseSyncDrawerProps } from "./GarageCaseSyncDrawer.type";
 import { useGarageCaseSyncDrawerLogic } from "./GarageCaseSyncDrawer.hook";
+import { GarageCaseSyncOptions } from "./GarageCaseSyncOptions";
+import { GarageBulkSyncProgress } from "./GarageBulkSyncProgress";
 
 export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
   const { open, onClose, mode = "all" } = props;
   const {
     t,
-    selectedBranchId,
+    bulkStatus,
     isSyncing,
     selectedPreset,
     dateFrom,
     dateTo,
     force,
     includeDetails,
+    canSync,
     modalTitle,
     modalDesc,
     presetOptions,
@@ -47,10 +49,6 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
       ]}
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-3 px-[18px] py-3 border-b border-border shrink-0 -mx-[18px] -mt-[18px] mb-4 bg-muted/30">
-          <GarageBranchSelector />
-        </div>
-
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-6">
             <div className="text-sm text-muted-foreground">{modalDesc}</div>
@@ -98,38 +96,12 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
               </div>
 
               {mode === "all" && (
-                <div className="flex flex-col gap-2 pt-1 border-t border-border/50">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={includeDetails}
-                      onChange={(e) => setIncludeDetails(e.target.checked)}
-                      className="rounded border-border text-primary focus:ring-primary h-4 w-4"
-                    />
-                    <span className="text-xs text-foreground font-medium">
-                      {t(
-                        "cases.syncDrawer.includeDetails",
-                        "Bao gồm tải chi tiết vật tư phụ tùng & nhân công",
-                      )}
-                    </span>
-                  </label>
-                  {includeDetails && (
-                    <label className="flex items-center gap-2 cursor-pointer select-none ml-6">
-                      <input
-                        type="checkbox"
-                        checked={force}
-                        onChange={(e) => setForce(e.target.checked)}
-                        className="rounded border-border text-primary focus:ring-primary h-4 w-4"
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {t(
-                          "cases.syncDrawer.forceDetails",
-                          "Tải lại cả những phiếu đã có chi tiết (force)",
-                        )}
-                      </span>
-                    </label>
-                  )}
-                </div>
+                <GarageCaseSyncOptions
+                  includeDetails={includeDetails}
+                  force={force}
+                  setIncludeDetails={setIncludeDetails}
+                  setForce={setForce}
+                />
               )}
 
               {mode === "case-details" && (
@@ -153,12 +125,12 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
                 </div>
               )}
 
+              <GarageBulkSyncProgress status={bulkStatus} />
+
               <div className="flex justify-end items-center mt-2">
                 <Button
                   onClick={handleSync}
-                  disabled={
-                    !selectedBranchId || isSyncing || (!dateFrom && !dateTo)
-                  }
+                  disabled={!canSync}
                   className="gap-2 w-44 justify-center"
                 >
                   <RefreshCw

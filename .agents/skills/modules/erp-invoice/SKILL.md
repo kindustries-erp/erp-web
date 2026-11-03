@@ -32,6 +32,12 @@ Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đ�
 - **Tiến trình Đồng bộ Tự động (5-Slot Heartbeat Cron & Live SSE)**:
   - Hệ thống backend tự động đồng bộ định kỳ tại **5 mốc giờ chuẩn: 09:15, 15:15, 16:15, 17:15, 21:15 (Asia/Ho_Chi_Minh)**.
   - Frontend kết nối thời gian thực qua Server-Sent Events (`useInvoiceSyncProgress`) để hiển thị Notification banner tiến trình đồng bộ GDT, cảnh báo mật khẩu/captcha hoặc tỷ lệ thành công.
+- **Drawer Đồng bộ hóa đơn (lai V1/V2)**:
+  - Container V1 `InvoiceImportSyncDrawer` giữ hook, SSE, store; không import organism anh em. Modal XML, chi tiết HĐ và bảng kết quả XML đi qua slot do `ErpInvoicesTabSyncDrawers` cung cấp (xem mục 3.8).
+  - Giao diện là `InvoiceSyncDrawer` v2 (`src/v2/modules/finance-invoice/drawers/`), bố cục giống drawer Xuất Excel Garage: cột trái là tiến độ/kết quả hoặc luồng file XML; cột phải là **một** section "Điều kiện đồng bộ" gồm: pill Nguồn (Từ hệ thống / Tải file lên), pill Chiều (Mua vào / Bán ra), dòng trạng thái tài khoản Cổng Thuế (`InvoiceSyncCredentialRow`), pill kỳ `V2PeriodPicker` (Tuần / Tháng / Quý / Tùy chỉnh), dòng ước tính và nút "Bắt đầu đồng bộ" full width.
+  - Nút "Tải lại XML" nằm ở footer (`invoiceSyncDrawer.actions.ts`, căn trái), không nằm trong section. Dùng `bulkDownloadXml({direction})`, không nhận kỳ.
+  - Kỳ chọn qua `useInvoiceSyncPeriod` (`unit`: week | month | quarter | custom). Chỉ ở "Tùy chỉnh" mới sửa được hai ô ngày; không giới hạn độ dài khoảng ngày, API tự chia cửa sổ.
+  - Ước tính số lượt quét dùng cửa sổ 9 ngày (`GDT_QUERY_WINDOW_DAYS`, mặc định API 9).
 - **Breadcrumbs**:
   - `erp-invoices`: `Kế toán` > `Hóa đơn điện tử`
 - **Route Components**:
@@ -95,6 +101,7 @@ src/modules/erp-invoices-core/
 │       │   ├── ErpInvoicesTabHeaderSection.tsx# Header toolbar, PillTabs thuế, search, action buttons
 │       │   ├── ErpInvoicesTabColumns.tsx      # Khai báo dynamic columns theo view preset
 │       │   ├── ErpInvoicesTabDrawers.tsx      # Quản lý mount các Drawer liên quan
+│       │   ├── ErpInvoicesTabSyncDrawers.tsx # Drawer đồng bộ: một GdtPortalAuthDrawer, modal nâng cao, slot XML
 │       │   ├── ErpInvoicesTabBulkModals.tsx   # Quản lý mount các Modals thao tác hàng loạt
 │       │   ├── columns/                       # Thư mục chứa cấu hình chi tiết từng cột
 │       │   └── hooks/                         # Sub-hooks quản lý pagination, filters, selections
@@ -110,7 +117,9 @@ src/modules/erp-invoices-core/
 │       │   ├── ErpInvoiceDetailDrawerModals.tsx# Sub-organism gom 4 selection modals (Bank NetOff, PO, SO, Case < 80 LoC)
 │       │   ├── ErpInvoiceDetailDrawer.hook.tsx# Hook quản lý form state, mode xem/sửa, deep links & auto-calculate
 │       │   ├── ErpInvoiceDetailDrawer.state.ts# Initial state & validation schema
-│       │   ├── ErpInvoiceAccountingSection.tsx# Section hạch toán kế toán chuẩn DrawerSection (tiêu đề, icon BookOpen, badge trạng thái)
+│       │   ├── ErpInvoiceAccountingSection.tsx# Section hạch toán kế toán chuẩn V2 DrawerSection, Badge, V2Button (< 180 LoC, match theme sáng/tối)
+│       │   ├── ErpInvoiceAccountingSection.helper.ts# Helper độc lập buildDefaultAccountingLines tính toán định khoản Nợ/Có (< 120 LoC)
+│       │   ├── ErpInvoiceAccountingSection.test.tsx# Unit tests co-located kiểm thử toàn diện view/edit mode & helper
 │       │   ├── ErpInvoiceInternalMain.tsx     # Cột Trái: ErpInvoiceAdjustmentSection (trên đầu), Bảng hàng, PDF
 │       │   └── ErpInvoiceInternalSidebar.tsx  # Cột Phải: Tra cứu/PDF, Thông tin chung, debtSlot, Thuộc tính mặc định & tùy chỉnh
 │       ├── erp-invoice-settlement-right-panel/# Cột phải tab Chứng từ & Tài chính (tái sử dụng Sidebar + DebtSection)
@@ -178,9 +187,14 @@ src/modules/erp-invoices-core/
 │   ├── useErpInvoicesQueryConfigs.ts          # Cấu hình React Query keys & caching strategies
 │   ├── useInvoiceSyncProgress.ts              # SSE Hook lắng nghe tiến trình đồng bộ GDT tự động
 │   ├── useInvoiceExportProgress.ts            # SSE Hook theo dõi tiến độ tác vụ xuất Excel nền
-│   ├── useInvoiceXmlUpload.ts                 # Hook quản lý tiến trình upload & parse XML hàng loạt
-│   ├── usePortalSync.ts                       # Hook kích hoạt đồng bộ GDT thủ công
-│   └── usePortalImport.ts                     # Hook quản lý import dữ liệu Cổng Thuế
+│   ├── useInvoiceXmlUpload.ts                 # Hook state file XML (chọn, gỡ, ghép tự động XML–PDF); import qua mutation
+│   ├── useInvoiceXmlImportMutation.ts         # Mutation import XML tự động và ghép PDF tay theo HĐ đã chọn
+│   ├── invoiceXmlPairing.helper.ts            # Helper thuần: ghép XML–PDF, tách file ghép tay, phân loại preview
+│   ├── useBulkDownloadXmlMutation.ts          # Mutation tải lại XML theo chiều
+│   ├── usePortalConfigQuery.ts                # Query cấu hình Cổng Thuế (nguồn duy nhất, key ["erp-invoices","portal-config"])
+│   ├── usePortalSync.ts                       # Đồng bộ GDT: cấu hình qua query, sync(type, range) qua mutation
+│   ├── portalSyncError.helper.ts              # Ánh xạ mã lỗi GDT sang khóa i18n và cờ cần đăng nhập lại
+│   └── useInvoiceSyncProgressStore.ts         # Zustand store tiến trình đồng bộ (SSE và log)
 ├── locales/
 │   └── vi.ts                                  # Bản dịch tiếng Việt chuyên biệt cho module Hóa đơn
 └── utils/
@@ -238,7 +252,7 @@ src/modules/erp-invoices-core/
   - **3 Top Tabs chính của drawer** (tinh gọn chuẩn hóa):
     - `invoice_details` (**Chi tiết**): Chứa hàng điều hướng Molecule `ErpInvoiceDetailTabNav` gồm 3 sub-pills:
       1. `[Chi tiết hóa đơn]` (mặc định): nội dung HĐ, chi tiết mặt hàng, bảng kê và 2 buttons căn phải `[Xem trước HĐ thuần]` | `[Tài liệu & PDF]`.
-      2. `[Hạch toán kế toán]`: `ErpInvoiceAccountingSection` bọc chuẩn `DrawerSection` (icon BookOpen, badge ĐÃ HẠCH TOÁN/ĐANG BẬT/CHƯA HẠCH TOÁN, hỗ trợ view summary & edit định khoản Nợ/Có).
+      2. `[Hạch toán kế toán]`: `ErpInvoiceAccountingSection` bọc chuẩn V2 `DrawerSection` (icon BookOpen, V2 Badges ĐÃ HẠCH TOÁN/ĐANG BẬT/CHƯA HẠCH TOÁN, V2Button toggle, hỗ trợ view summary & edit định khoản Nợ/Có qua helper `ErpInvoiceAccountingSection.helper.ts`, match theme sáng/tối và No-Blue).
       3. `[Chứng từ liên kết]`: `ErpInvoiceLinkedDocsSection` (Sơ đồ luồng chứng từ liên kết & Traceability Graph), kèm badge đếm tổng số chứng từ liên kết, tự động chuyển Right Panel sang `ErpInvoiceSettlementRightPanel`.
     - `invoice_partner` (**Chi tiết theo NCC/KH**, `ErpInvoicePartnerSection`: 3 sub-pill `[Chi tiết theo đối tượng]` | `[Bảng kê HHDV]` | `[Biến động & Phân tích]`).
     - `history` (**Lịch sử & Kiểm duyệt**): Nhật ký kiểm toán bọc trong `DrawerSection` collapsible (`DrawerAuditTimeline`).
@@ -292,6 +306,17 @@ src/modules/erp-invoices-core/
 - **`BranchInvoiceChart`**: Hiển thị biến động Hóa đơn (Doanh thu `OUT` - Cột Emerald `#059669`, Chi phí `IN` - Cột Orange `#ea580c`, Lợi nhuận gộp - Đường Line Teal `#2dd4bf` Dark / `#0d9488` Light với `tension: 0.3` mềm mại).
 - **`BranchVatChart`**: Hiển thị biến động Thuế VAT (VAT Đầu vào, VAT Đầu ra, Chênh lệch).
 - **Chuẩn hóa V2**: Sử dụng component `V2ComboChart` kế thừa `V2ChartFrame` hỗ trợ chuyển đổi tức thì giữa chế độ xem Biểu đồ (Chart View) và Bảng chi tiết (Table View), dot viền tương phản `theme.surface`, và tooltip gom đa chuỗi `interaction: { mode: "index" }`.
+
+### 3.8. Đồng bộ hóa đơn: ghép drawer và luồng React Query
+
+- **Ghép dialog (một chiều)**: `InvoiceImportSyncDrawer` không import organism anh em. Modal xem trước XML, chi tiết HĐ và bảng kết quả XML đi qua slot `renderXmlPreview`, `renderInvoiceDetail`, `renderXmlResultTables` do `ErpInvoicesTabSyncDrawers.tsx` cung cấp.
+- **Một GdtPortalAuthDrawer duy nhất**: chỉ `ErpInvoicesTabSyncDrawers.tsx` mount drawer Đăng nhập Cổng Thuế (cùng với modal nâng cao). Khi token cần đăng nhập lại, hook gọi `onOpenLogin()` của tầng tab; không còn `configOpen` trùng ở hook.
+- **Cấu hình Cổng Thuế**: `usePortalConfigQuery` (key `["erp-invoices","portal-config"]`) là nguồn duy nhất cho `hasToken`, `hasPassword`, `username`. Đăng nhập hoặc lưu cấu hình thành công thì invalidate key này.
+- **Đồng bộ GDT**: `usePortalSync.sync(type, {dateFrom, dateTo})` là mutation. Lỗi GDT được ánh xạ sang khóa i18n qua `portalSyncError.helper.ts`.
+- **Import XML**: `useInvoiceXmlUpload` giữ state file. Import qua `useInvoiceXmlImportMutation`; PDF ghép tay được gửi theo hóa đơn đã chọn. Ghép XML–PDF là helper thuần `invoiceXmlPairing.helper.ts`.
+- **Modal XML**: danh sách gợi ý PDF và hóa đơn là `useQuery`; ô tìm hóa đơn ghép tay là `useQuery` + `useDebounce(300ms)`. Footer tách thành `InvoiceXmlImportFooter`.
+- **Tải lại XML**: `useBulkDownloadXmlMutation`. Tiến trình hiển thị qua `useInvoiceSyncDrawerProgress` (store `useInvoiceSyncProgressStore`).
+- **Modal nâng cao**: gửi yêu cầu là mutation; theo dõi tiến trình tải PDF là `useQuery` với `refetchInterval` 2.5 giây, chỉ khi trạng thái `in_progress`.
 
 ---
 
@@ -423,9 +448,12 @@ bun run lint:check
 - Chưa có: Garage, giao dịch ngoài sổ. Drawer hóa đơn V1 vẫn dùng modal V1 cho đến khi nối (Task 3.1).
 
 ### 7.2. Dữ liệu và API
-- Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`, đường dẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
-- Endpoint dùng: `GET /` (list), `GET /:id` (chi tiết, bọc `data`), `GET /column-options`, `GET /stats?direction` (KPI tháng), `GET /dashboard/stats` (cashTrend cashIn/cashOut/vatIn/vatOut), `GET /dashboard/partners`.
-- DTO: `api/dtos/invoice.dto.ts`. Số tiền API là chuỗi decimal; `api/adapters/invoiceRowAdapter.ts` (`toInvoiceRow`, `invoiceTotalsToSummary`) chuyển sang shape cột V2 `FakeInvoice`. Tổng toàn bộ kết quả là `grandTotal*`.
+- Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`. List và column-options gọi `/api/v2/invoices` (và `/api/v2/invoices/column-options`); các endpoint còn lại vẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
+- Endpoint dùng: `GET /api/v2/invoices` (list), `GET /api/v2/invoices/column-options`, `GET /api/v1/erp-invoices/:id` (chi tiết, bọc `data`), `GET /api/v1/erp-invoices/stats?direction` (KPI tháng), `GET /api/v1/erp-invoices/dashboard/stats` (cashTrend cashIn/cashOut/vatIn/vatOut), `GET /api/v1/erp-invoices/dashboard/partners`.
+- Tham số list (`api/adapters/invoiceQueryAdapter.ts`): `direction`, `sort=-key,key` (không còn `sort_by`/`sort_order`), `date_from`/`date_to` dạng `YYYY-MM-DD`, `column_filters`, `column_search`. Column-options gửi chiều hóa đơn trong `filters` (không có param `direction`), trang kế đọc từ `next`.
+- DTO: `api/dtos/invoice.dto.ts`. Số tiền API v2 là `number`; list trả `summaries` theo key cột (`api/adapters/invoiceRowAdapter.ts`: `toInvoiceRow`, `toInvoiceSummary`) chuyển sang shape cột V2 `FakeInvoice`. Có `netOffAmount` và `remainingAmount` từ server.
+- Cột V2: `invoiceNo`, `invoiceDate`, `partner`, `preVatAmount`, `vatAmount`, `totalAmount`, `taxInvoiceStatus`, `posting`, `branchId` (overview); thêm `vatRate` (KCT/KTT khi -1/-2), `discountAmount`, `netOffAmount`, `remainingAmount`, `note` (audit); OUT thêm `settlementOrder`, `licensePlate`.
+- **Trạng thái tích hợp**: bảng V2 chưa được gắn vào trang `/invoices` (V1 vẫn chạy). Lọc chi nhánh còn dùng danh sách mẫu `BRANCHES` nên chưa lọc đúng với dữ liệu thật.
 - Dashboard: `domain/rules/invoiceDashboard.logic.ts` (thuần, có test) dựng KPI (VAT = tổng - trước thuế; VAT ròng = VAT đầu ra - VAT đầu vào), chuỗi biểu đồ và cơ cấu đối tác top 5 theo số bán ra.
 - Dữ liệu mẫu (`api/sampleMode.ts`, `isInvoiceSampleMode`) chỉ dùng khi `MODE=test` hoặc thiếu `VITE_API_BASE_URL`. **Lỗi API thật không được thay bằng dữ liệu mẫu.**
 
@@ -433,6 +461,7 @@ bun run lint:check
 - Table IDs: `erp-invoices-table-IN` / `erp-invoices-table-OUT`. Preference qua `v2ColumnPreferencesStorage` / `v2ViewPresetStorage` (store riêng `useV2TablePreferencesStore`). Cấu hình V1 chỉ được **chép một lần** sang V2 (`migrateV1TablePreferences`, bỏ alias `_2`/`__n`); sau đó không đồng bộ ngược. Sort và filter cột không nằm trong preference V2.
 - Header filter động: `createInvoiceFetchOptions` (`api/queries/useInvoiceColumnOptions.ts`) gọi `financeInvoiceV2Api.getColumnOptions`.
 - Cầu nối query V1⇄V2 (`erp-invoices-tab/hooks/useInvoiceV2Bridge.ts`) và cột V2 cho V1 (`useInvoiceV2Columns.tsx`) hiện không còn được V1 dùng; giữ file để tham khảo khi làm tiếp.
+- Thử nghiệm gắn bảng V2 vào tab V1 đã làm rồi gỡ bỏ (chưa commit, không còn trong code). Việc gắn lại cần QC trên trình duyệt trước khi commit.
 
 ### 7.4. Kiểm thử
 - Unit: `invoiceRowAdapter.test.ts`, `financeInvoiceV2Api.test.ts` (khóa đường dẫn API), `invoiceDashboard.logic.test.ts`, `useInvoiceV2Bridge.test.ts`.

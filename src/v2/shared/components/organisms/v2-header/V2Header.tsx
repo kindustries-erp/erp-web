@@ -5,6 +5,7 @@ import { V2Text } from "@/v2/shared/components/atoms";
 import { Badge } from "@/v2/shared/ui";
 import { V2UserBadge } from "@/v2/shared/components/molecules/v2-user-badge";
 import { V2LanguageSwitcher } from "@/v2/shared/components/molecules/v2-language-switcher";
+import { V2ImpersonationBanner } from "@/v2/shared/components/molecules/v2-impersonation-banner";
 import { V2HeaderProps } from "./V2Header.type";
 
 export const V2Header: React.FC<V2HeaderProps> = ({
@@ -82,13 +83,20 @@ export const V2Header: React.FC<V2HeaderProps> = ({
             className="gap-1 text-[11px] font-medium text-primary shrink-0"
           >
             <Sparkles size={12} />
-            <span>ERP V2 Beta</span>
+            <V2Text
+              as="span"
+              variant="caption"
+              className="text-inherit font-inherit"
+            >
+              ERP V2 Beta
+            </V2Text>
           </Badge>
         )}
       </div>
 
       {/* Right Actions: Notification, Language Switcher, User Menu / Badge */}
-      <div className="flex items-center gap-1.5 shrink-0 max-w-[65%] justify-end">
+      <div className="flex items-center gap-1.5 shrink-0 max-w-[70%] justify-end">
+        <V2ImpersonationBanner compact />
         {notificationNode}
         {showLanguageSwitcher && <V2LanguageSwitcher />}
 

@@ -13,6 +13,7 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
   className,
   labelClassName,
   valueClassName,
+  multiline,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -29,6 +30,8 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
       setTimeout(() => setCopied(false), 1500);
     }
   };
+
+  const truncateLines = multiline ? (multiline === true ? 2 : multiline) : 1;
 
   return (
     <div
@@ -50,14 +53,19 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
 
       <div
         className={cn(
-          "flex items-center gap-1.5 text-foreground font-medium text-right break-words select-text min-w-0 justify-end flex-1",
+          "flex gap-1.5 text-foreground font-medium text-right break-words select-text min-w-0 justify-end flex-1",
+          multiline ? "items-start" : "items-center",
           valueClassName,
         )}
       >
         <V2Text
           variant="body-sm"
           weight="medium"
-          className="truncate text-foreground"
+          truncate={truncateLines}
+          className={cn(
+            multiline ? "whitespace-normal text-right break-words" : "truncate",
+            "text-foreground",
+          )}
         >
           {value}
         </V2Text>

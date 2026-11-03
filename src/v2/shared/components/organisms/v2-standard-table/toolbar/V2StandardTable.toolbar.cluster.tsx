@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Maximize2, Minimize2, RefreshCw } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2ToolbarIconButton } from "@/v2/shared/components/atoms/v2-toolbar-icon-button";
 import { V2TableFilterButton } from "@/v2/shared/components/atoms/v2-table-filter-button";
 import { V2ColumnToggle } from "@/v2/shared/components/molecules/v2-column-toggle";
@@ -10,6 +9,7 @@ import type { V2DropdownGroup } from "@/v2/shared/components/molecules/v2-dropdo
 import { V2SearchInput } from "@/v2/shared/components/molecules/v2-search-input";
 import { V2SplitButton } from "@/v2/shared/components/molecules/v2-split-button";
 import { V2TableSelectionChip } from "@/v2/shared/components/molecules/v2-table-selection-chip";
+import { V2TableFilterChip } from "@/v2/shared/components/molecules/v2-table-filter-chip";
 import { V2ViewModeCombobox } from "@/v2/shared/components/molecules/v2-view-mode-combobox";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2ViewPresetsApi } from "../hooks/V2StandardTable.views.hook";
@@ -83,26 +83,25 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
               filterGroup={filterGroup}
             />
           )}
+      {columnToggle && <V2ColumnToggle {...columnToggle} />}
       <V2TableSelectionChip
         count={selectedCount}
         onClear={onClearSelection}
         renderMenu={menuOf(config.bulkActions, "start")}
       />
-      {columnToggle && <V2ColumnToggle {...columnToggle} />}
-      {activeFilterCount > 0 && (
-        <V2Button
-          variant="destructive-outline"
-          size="xs"
-          onClick={onClearAllFilters}
-        >
-          {t("v2.table.clearAllFilters", { count: activeFilterCount })}
-        </V2Button>
-      )}
-      {config.onFilterToggle && (
-        <V2TableFilterButton
-          activeCount={activeFilterCount}
-          onClick={config.onFilterToggle}
+      {activeFilterCount > 0 && onClearAllFilters ? (
+        <V2TableFilterChip
+          count={activeFilterCount}
+          onClear={onClearAllFilters}
+          onToggleFilter={config.onFilterToggle}
         />
+      ) : (
+        config.onFilterToggle && (
+          <V2TableFilterButton
+            activeCount={activeFilterCount}
+            onClick={config.onFilterToggle}
+          />
+        )
       )}
       {onToggleFullscreen && (
         <V2ToolbarIconButton

@@ -5,4 +5,5 @@ export interface CashflowAmountInputProps {
   required?: boolean;
   placeholder?: string;
   className?: string;
+  hideWords?: boolean;
 }

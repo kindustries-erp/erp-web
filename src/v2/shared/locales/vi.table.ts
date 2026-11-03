@@ -19,6 +19,7 @@ export const v2ViTable = {
   clearFilter: "Xóa bộ lọc",
   advancedFilter: "Bộ lọc nâng cao",
   filterColumn: "Lọc cột {{label}}",
+  filterCount: "Bộ lọc ({{count}})",
   clearAllFilters: "Xóa bộ lọc ({{count}})",
   blank: "(Trống)",
   selectAllMatching: "(Chọn tất cả kết quả tìm kiếm)",

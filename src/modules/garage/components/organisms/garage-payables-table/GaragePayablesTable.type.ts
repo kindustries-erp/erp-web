@@ -30,8 +30,6 @@ export interface GaragePayablesTableProps {
     name: string;
   }) => void;
   onOpenExportDrawer: (context: GarageDebtsExportContext) => void;
-  canSyncGarage?: boolean;
-  onSyncCases?: () => void;
   onCreateCashflow?: (params: CreateSupplierCashflowParams) => void;
 }
 

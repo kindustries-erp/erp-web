@@ -129,40 +129,16 @@ export function useGarageGrossProfitJournal(
   });
 }
 
-export const useSyncGarageAll = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: {
-      branchId?: string;
-      from?: string;
-      to?: string;
-      includeDetails?: boolean;
-      forceDetails?: boolean;
-    }) => garageApi.syncAll(payload),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["garage"] });
-      queryClient.invalidateQueries({ queryKey: ["garage-cases"] });
-      queryClient.invalidateQueries({ queryKey: ["garage-gross-profit"] });
-      queryClient.invalidateQueries({ queryKey: ["garage-branches"] });
-      queryClient.invalidateQueries({ queryKey: ["garage-dashboard"] });
-      toast.success(data?.message || "Đồng bộ toàn diện hệ thống thành công!");
-    },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Đồng bộ toàn diện thất bại",
-      );
-    },
-  });
-};
-
 export const useSyncGarageBranches = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: garageApi.syncBranches,
-    onSuccess: () => {
-      toast.success("Branches synced successfully");
+    onSuccess: (data) => {
+      if (data?.success === false) {
+        toast.error(data?.message || "Đồng bộ chi nhánh có lỗi");
+      } else {
+        toast.success("Branches synced successfully");
+      }
       qc.invalidateQueries({ queryKey: ["garage-branches"] });
     },
     onError: (err: any) => {

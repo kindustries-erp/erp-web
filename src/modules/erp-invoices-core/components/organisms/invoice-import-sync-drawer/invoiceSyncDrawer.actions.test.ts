@@ -7,7 +7,11 @@ const labels = {
   preview: "Xem trước",
   importMore: "Import thêm",
   viewCreated: "Xem hóa đơn vừa tạo",
+  bulkXml: "Tải lại XML",
+  bulkXmlLoading: "Đang xử lý...",
 };
+
+const idleBulkXml = { loading: false, disabled: false };
 
 function handlers() {
   return {
@@ -15,20 +19,53 @@ function handlers() {
     onCancel: vi.fn(),
     onPreview: vi.fn(),
     onImportMore: vi.fn(),
+    onBulkXml: vi.fn(),
   };
 }
 
 describe("buildInvoiceSyncActions", () => {
-  it("offers only close for the GDT method", () => {
+  it("GDT: tải lại XML căn trái ở footer, trước nút Đóng", () => {
     const actions = buildInvoiceSyncActions({
       method: "GDT",
       xmlStep: "select",
       fileCount: 0,
       createdCount: null,
+      bulkXml: idleBulkXml,
       labels,
       handlers: handlers(),
     });
-    expect(actions.map((a) => a.label)).toEqual(["Đóng"]);
+    expect(actions.map((a) => a.label)).toEqual(["Tải lại XML", "Đóng"]);
+    expect(actions[0].align).toBe("left");
+  });
+
+  it("GDT: nút tải lại XML hiện trạng thái đang xử lý và bị khóa", () => {
+    const actions = buildInvoiceSyncActions({
+      method: "GDT",
+      xmlStep: "select",
+      fileCount: 0,
+      createdCount: null,
+      bulkXml: { loading: true, disabled: true },
+      labels,
+      handlers: handlers(),
+    });
+    expect(actions[0].label).toBe("Đang xử lý...");
+    expect(actions[0].loading).toBe(true);
+    expect(actions[0].disabled).toBe(true);
+  });
+
+  it("GDT: bấm tải lại XML gọi đúng handler", () => {
+    const h = handlers();
+    const actions = buildInvoiceSyncActions({
+      method: "GDT",
+      xmlStep: "select",
+      fileCount: 0,
+      createdCount: null,
+      bulkXml: idleBulkXml,
+      labels,
+      handlers: h,
+    });
+    actions[0].onClick?.();
+    expect(h.onBulkXml).toHaveBeenCalledTimes(1);
   });
 
   it("disables preview until a file is selected", () => {
@@ -37,6 +74,7 @@ describe("buildInvoiceSyncActions", () => {
       xmlStep: "select",
       fileCount: 0,
       createdCount: null,
+      bulkXml: idleBulkXml,
       labels,
       handlers: handlers(),
     });
@@ -48,6 +86,7 @@ describe("buildInvoiceSyncActions", () => {
       method: "XML" as const,
       xmlStep: "result" as const,
       fileCount: 2,
+      bulkXml: idleBulkXml,
       labels,
       handlers: handlers(),
     };
@@ -67,6 +106,7 @@ describe("buildInvoiceSyncActions", () => {
       xmlStep: "importing",
       fileCount: 2,
       createdCount: null,
+      bulkXml: idleBulkXml,
       labels,
       handlers: handlers(),
     });

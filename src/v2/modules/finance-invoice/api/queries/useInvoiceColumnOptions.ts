@@ -6,6 +6,19 @@ import type {
 import type { InvoiceDirection } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import { financeInvoiceV2Api } from "../financeInvoiceV2Api";
 
+/** Bộ lọc cột dạng JSON của bảng; chuỗi sai định dạng thì coi như không lọc */
+const parseColumnFilters = (raw?: string): Record<string, string[]> => {
+  if (!raw) return {};
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, string[]>)
+      : {};
+  } catch {
+    return {};
+  }
+};
+
 /**
  * Tạo fetchOptions cho V2StandardTable để tải động các giá trị bộ lọc của từng cột từ backend.
  */
@@ -20,8 +33,11 @@ export const createInvoiceFetchOptions = (
       search: params.search,
       page: params.pageParam,
       pageSize: 20,
-      columnFilters: params.filtersStr,
-      direction,
+      // Chiều hóa đơn đi qua bộ lọc cột, API v2 không có tham số direction riêng
+      filters: JSON.stringify({
+        ...parseColumnFilters(params.filtersStr),
+        direction: [direction],
+      }),
     });
     const items = res.items.map((item) =>
       typeof item === "string" ? { value: item, label: item } : item,
@@ -29,7 +45,7 @@ export const createInvoiceFetchOptions = (
     return {
       items,
       total: res.total,
-      next: res.page < res.totalPages ? res.page + 1 : null,
+      next: res.next,
     };
   };
 };

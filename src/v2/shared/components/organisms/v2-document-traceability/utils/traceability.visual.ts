@@ -17,12 +17,17 @@ export { isManualSettlementNode } from "./traceability.visual.bank";
 export function getTraceabilityVisualMeta(
   node: TraceabilityVisualInput,
 ): TraceabilityVisualMeta {
-  if (node.docType === "INVOICE") return getInvoiceVisualMeta(node);
-  if (node.docType === "BANK_TXN") return getBankVisualMeta(node);
+  if (node.docType === "INVOICE") {
+    return { ...getInvoiceVisualMeta(node), docType: "INVOICE" };
+  }
+  if (node.docType === "BANK_TXN") {
+    return { ...getBankVisualMeta(node), docType: "BANK_TXN" };
+  }
   const meta = DOC_TYPE_META[node.docType];
   return {
     label: meta?.label ?? node.docType,
     fullTitleKey: meta?.fullTitleKey ?? node.docType,
     badgeCls: meta?.badgeCls ?? NEUTRAL_BADGE,
+    docType: node.docType,
   };
 }

@@ -33,8 +33,6 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
   onTabChange,
   onOpenCustomerDetail,
   onOpenExportDrawer,
-  canSyncGarage,
-  onSyncCases,
   onCreateCashflow,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
@@ -125,11 +123,8 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
     onOpenExportDrawer(buildGarageDebtsExportContext("customers", listHook));
   }, [listHook, onOpenExportDrawer]);
 
-  const { createActions, getRowActions } = useGarageDebtsActions({
+  const { getRowActions } = useGarageDebtsActions({
     t,
-    canSyncGarage,
-    onSyncCases,
-    onOpenExport: handleOpenExport,
     onOpenCustomerDetail,
     onCreateCashflow,
   });
@@ -150,10 +145,9 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
       customActionsNode={viewTabsNode}
       createLabel={t("debts.exportExcel", "Xuất Excel")}
       createIcon={
-        <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-600" />
+        <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
       }
       onCreate={handleOpenExport}
-      createActions={createActions}
       items={listHook.data}
       columns={columns}
       getRowKey={(row) =>

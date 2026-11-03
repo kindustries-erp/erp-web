@@ -8,6 +8,7 @@ interface TabBarPillItemProps {
   isActive: boolean;
   variant: "header" | "sub" | "button-group";
   onSelect: (key: string) => void;
+  stretch?: boolean;
 }
 
 const DOT_COLORS: Record<string, string> = {
@@ -22,6 +23,7 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
   isActive,
   variant,
   onSelect,
+  stretch = false,
 }) => {
   const tabKey = (tab.key ?? tab.id) || "";
   const isHeader = variant === "header";
@@ -124,7 +126,8 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
       id={`${variant}-tab-${tabKey}`}
       onClick={() => !tab.disabled && onSelect(tabKey)}
       className={cn(
-        "whitespace-nowrap transition-all duration-150 cursor-pointer select-none shrink-0 flex items-center",
+        "whitespace-nowrap transition-all duration-150 cursor-pointer select-none flex items-center",
+        isSub && stretch ? "min-w-0 flex-1 justify-center" : "shrink-0",
         isSub ? "gap-1" : "gap-1.5",
         getContainerCls(),
         tab.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent",

@@ -80,8 +80,9 @@ export function useCashVoucherDrawer({
       sourceType: "CASH",
       cashBookId: form.cashBookId,
       transDate: form.transDate,
-      debitAmount: form.debitAmount ?? 0,
-      creditAmount: form.creditAmount ?? 0,
+      // Thu = credit_amount, Chi = debit_amount (theo backend bank-transactions-core)
+      creditAmount: form.receiptAmount ?? 0,
+      debitAmount: form.paymentAmount ?? 0,
       description: form.description,
       correspondentName: form.correspondentName,
     };

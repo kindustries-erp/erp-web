@@ -20,11 +20,19 @@ function makeState(overrides: Record<string, unknown> = {}) {
   return {
     method: "GDT",
     direction: "IN",
-    presetOptions: [],
-    selectedPreset: "",
-    setSelectedPreset: vi.fn(),
-    configOpen: false,
-    setConfigOpen: vi.fn(),
+    period: {
+      unit: "month",
+      handleUnitChange: vi.fn(),
+      period: "2026-10",
+      handlePeriodChange: vi.fn(),
+      periodOptions: [],
+      dateFrom: "2026-10-01",
+      setDateFrom: vi.fn(),
+      dateTo: "2026-10-31",
+      setDateTo: vi.fn(),
+      reset: vi.fn(),
+    },
+    progress: { status: "idle", progress: 0, logs: [], currentItem: undefined },
     bulkXmlLoading: false,
     showPreview: false,
     setShowPreview: vi.fn(),
@@ -51,7 +59,7 @@ function makeState(overrides: Record<string, unknown> = {}) {
       importError: null,
     },
     portal: {
-      token: "t",
+      hasToken: true,
       hasPassword: true,
       loading: false,
       result: null,
@@ -74,28 +82,17 @@ function makeState(overrides: Record<string, unknown> = {}) {
 
 let state = makeState();
 
+// Slot và callback do cha cung cấp; drawer không tự import modal con
+const slots = {
+  onOpenLogin: vi.fn(),
+  renderXmlPreview: () => null,
+  renderInvoiceDetail: () => null,
+  renderXmlResultTables: () => null,
+};
+
 vi.mock("./useInvoiceImportSyncDrawer", () => ({
   useInvoiceImportSyncDrawer: () => state,
 }));
-
-vi.mock(
-  "@/modules/erp-invoices-core/components/organisms/invoice-xml-import-modal",
-  () => ({
-    InvoiceXmlImportModal: () => null,
-  }),
-);
-vi.mock(
-  "@/modules/erp-invoices-core/components/organisms/invoice-detail-wrapper",
-  () => ({
-    InvoiceDetailWrapper: () => null,
-  }),
-);
-vi.mock(
-  "@/modules/erp-invoices-core/components/organisms/gdt-portal-auth-drawer",
-  () => ({
-    GdtPortalAuthDrawer: () => null,
-  }),
-);
 
 describe("InvoiceImportSyncDrawer", () => {
   beforeEach(() => {
@@ -110,6 +107,7 @@ describe("InvoiceImportSyncDrawer", () => {
         onClose={vi.fn()}
         onImported={vi.fn()}
         initialDirection="IN"
+        {...slots}
       />,
     );
 
@@ -125,6 +123,7 @@ describe("InvoiceImportSyncDrawer", () => {
         onClose={vi.fn()}
         onImported={vi.fn()}
         initialDirection="IN"
+        {...slots}
       />,
     );
 
@@ -140,6 +139,7 @@ describe("InvoiceImportSyncDrawer", () => {
         onClose={vi.fn()}
         onImported={vi.fn()}
         initialDirection="IN"
+        {...slots}
       />,
     );
 

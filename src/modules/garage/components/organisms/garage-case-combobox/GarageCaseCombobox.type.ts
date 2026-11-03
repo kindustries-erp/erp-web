@@ -13,4 +13,5 @@ export interface GarageCaseComboboxProps {
   supplierId?: string;
   partnerName?: string;
   disabled?: boolean;
+  variant?: "default" | "spreadsheet" | "ghost" | "v2";
 }

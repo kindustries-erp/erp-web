@@ -6,6 +6,7 @@ export type PnlSectionKey =
   | "grossProfit"
   | "selling"
   | "opex"
+  | "financial"
   | "netProfit"
   | "serviceComm"
   | "retainedProfit";
@@ -16,6 +17,7 @@ export const ALL_PNL_SECTIONS: PnlSectionKey[] = [
   "grossProfit",
   "selling",
   "opex",
+  "financial",
   "netProfit",
   "serviceComm",
   "retainedProfit",

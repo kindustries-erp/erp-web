@@ -9,9 +9,10 @@ import type {
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
 import { useGarageCashflowList } from "../../../hooks/useGarageCashflowList";
-import type {
-  DrawerModeType,
-  InitialCashflowData,
+import {
+  V2DrawerMode,
+  type DrawerModeType,
+  type InitialCashflowData,
 } from "./GarageCashflowDrawer.type";
 import { useGarageCashflowDuplicateGuard } from "./useGarageCashflowDuplicateGuard";
 import {
@@ -31,7 +32,7 @@ interface UseGarageCashflowDrawerParams {
   open: boolean;
   onClose: () => void;
   voucher: GarageCashflowVoucher | null;
-  initialMode?: "view" | "edit" | "create";
+  initialMode?: V2DrawerMode | "view" | "edit" | "create";
   initialData?: InitialCashflowData;
   onSuccess?: () => void;
 }
@@ -40,7 +41,7 @@ export function useGarageCashflowDrawer({
   open,
   onClose,
   voucher,
-  initialMode = "view",
+  initialMode = V2DrawerMode.VIEW,
   initialData,
   onSuccess,
 }: UseGarageCashflowDrawerParams) {
@@ -56,10 +57,11 @@ export function useGarageCashflowDrawer({
     ErpAction.UPDATE,
   );
 
-  const [mode, setMode] = useState<DrawerModeType>(() => {
-    if (initialMode === "create") return "edit";
-    return initialMode as DrawerModeType;
-  });
+  const [mode, setMode] = useState<DrawerModeType>(() =>
+    initialMode === V2DrawerMode.CREATE
+      ? V2DrawerMode.EDIT
+      : (initialMode as DrawerModeType),
+  );
 
   const [formData, setFormData] = useState<
     Partial<CreateGarageCashflowVoucherDto>
@@ -68,14 +70,16 @@ export function useGarageCashflowDrawer({
   useEffect(() => {
     if (open) {
       setMode(
-        initialMode === "create" ? "edit" : (initialMode as DrawerModeType),
+        initialMode === V2DrawerMode.CREATE
+          ? V2DrawerMode.EDIT
+          : (initialMode as DrawerModeType),
       );
       setFormData(buildInitialFormData(voucher, initialData));
     }
   }, [open, voucher, initialMode, initialData]);
 
   const duplicateGuard = useGarageCashflowDuplicateGuard();
-  const canSave = initialMode === "create" ? canCreate : canUpdate;
+  const canSave = initialMode === V2DrawerMode.CREATE ? canCreate : canUpdate;
 
   const handleSave = useCallback(() => {
     if (!canSave) return;

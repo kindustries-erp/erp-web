@@ -3,8 +3,10 @@ export interface CashVoucherFormValue {
   cashBookId: string;
   transDate: string;
   correspondentName: string;
-  debitAmount: number | null;
-  creditAmount: number | null;
+  /** Thu tiền (phiếu thu) */
+  receiptAmount: number | null;
+  /** Chi tiền (phiếu chi) */
+  paymentAmount: number | null;
   description: string;
 }
 
@@ -12,8 +14,8 @@ export const emptyCashVoucherForm = (): CashVoucherFormValue => ({
   cashBookId: "",
   transDate: "",
   correspondentName: "",
-  debitAmount: null,
-  creditAmount: null,
+  receiptAmount: null,
+  paymentAmount: null,
   description: "",
 });
 

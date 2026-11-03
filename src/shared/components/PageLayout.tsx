@@ -1,7 +1,9 @@
-import { PageHeader } from "@/shared/components/PageHeader";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { PillTabs, type PillTabItem } from "@/shared/components/PillTabs";
-import { cn } from "@/shared/utils";
+import * as React from "react";
+import {
+  V2PageLayout,
+  type V2PageLayoutProps,
+} from "@/v2/shared/components/templates/v2-page-layout";
+import { V2MobileTabMode } from "@/v2/shared/types";
 
 export interface TabItem {
   value: string;
@@ -12,122 +14,27 @@ export interface TabItem {
   disabled?: boolean;
 }
 
-export interface PageLayoutProps {
+export interface PageLayoutProps extends Omit<
+  V2PageLayoutProps,
+  "tabs" | "title"
+> {
   /** Page title shown in the header */
   title: string;
-  /** Optional description below the title */
-  desc?: string;
-  /** Icon displayed in the header badge */
-  icon?: React.ReactNode;
-  /** Action buttons rendered on the right side of the header */
-  actions?: React.ReactNode;
-  /** Content rendered between header and tabs (e.g. filter bar) */
-  middleContent?: React.ReactNode;
   /** Tab definitions — if provided, renders a sticky tab bar */
   tabs?: TabItem[];
-  /** Currently active tab value */
-  activeTab?: string;
-  /** Callback when tab changes */
-  onTabChange?: (value: string) => void;
-  /** Tab styling variant — "underline" (default) or "pill" */
-  tabVariant?: "underline" | "pill";
-  /** Hide the tab bar (useful for single-tab views) */
-  hideTabs?: boolean;
-  /** Sticky offset for the tab bar (default: "-26px") */
+  /** Sticky offset for the tab bar (legacy compatibility) */
   stickyOffset?: string;
-  /** Hide the entire header (for embedded/nested usage) */
-  hideHeader?: boolean;
-  /** Additional className on the root wrapper */
-  className?: string;
-  children: React.ReactNode;
 }
 
 /**
  * Standard page layout wrapper for all ERP pages.
- * Provides consistent spacing (space-y-4), optional PageHeader, and optional tabs.
- *
- * Usage:
- * ```tsx
- * <PageLayout title="Tiền mặt" desc="..." icon={<Wallet />} actions={...}>
- *   <VoucherFilterBar ... />
- *   <VoucherTable ... />
- * </PageLayout>
- * ```
+ * Acts as a backward-compatible adapter delegating to V2PageLayout template.
  */
 export function PageLayout({
-  title,
-  desc,
-  icon,
-  actions,
-  middleContent,
-  tabs,
-  activeTab,
-  onTabChange,
-  tabVariant = "underline",
-  hideTabs,
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  stickyOffset = "-26px",
-  hideHeader,
-  className,
-  children,
+  stickyOffset,
+  mobileTabMode = V2MobileTabMode.DROPDOWN,
+  ...props
 }: PageLayoutProps) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col h-full overflow-hidden space-y-3 sm:space-y-4 px-2 sm:px-5 pt-2 sm:pt-[18px]",
-        hideHeader && "px-2 sm:px-4 pt-2 sm:pt-3 space-y-2 sm:space-y-3",
-        className,
-      )}
-    >
-      {!hideHeader && (icon || title) ? (
-        <PageHeader
-          title={title}
-          desc={desc}
-          icon={icon}
-          actions={actions}
-          className="mb-0"
-        />
-      ) : hideHeader && actions ? (
-        <div className="flex items-center justify-end">{actions}</div>
-      ) : null}
-
-      {middleContent && <div>{middleContent}</div>}
-
-      {tabs &&
-        !hideTabs &&
-        (tabVariant === "pill" ? (
-          <div className="w-full z-10 mb-3 flex items-center justify-start">
-            <PillTabs
-              value={activeTab || (tabs[0]?.value ?? "")}
-              onValueChange={onTabChange || (() => {})}
-              items={tabs as PillTabItem<string>[]}
-              size="md"
-              hideBorder
-              className="w-auto"
-            />
-          </div>
-        ) : (
-          <Tabs
-            value={activeTab}
-            onValueChange={onTabChange}
-            className="w-full z-10 bg-transparent"
-          >
-            <TabsList className="bg-transparent border-b border-[color:var(--border)]/40 dark:border-white/[0.06] w-full justify-start rounded-none h-auto p-0 gap-6 mb-2 shadow-none overflow-x-auto scrollbar-none [&>[data-tabs-indicator]]:hidden">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="border-b-2 border-transparent rounded-none px-1 py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary whitespace-nowrap flex-shrink-0 transition-colors"
-                >
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        ))}
-
-      <div className="flex-1 min-h-0 flex flex-col w-full pb-4">{children}</div>
-    </div>
-  );
+  return <V2PageLayout mobileTabMode={mobileTabMode} {...props} />;
 }

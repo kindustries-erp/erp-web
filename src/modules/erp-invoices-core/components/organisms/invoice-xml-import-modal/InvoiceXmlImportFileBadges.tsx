@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Archive,
   FileCode,
@@ -44,12 +45,13 @@ export function FileStatusBadge({
   entry: FileEntry;
   hasMatch: boolean;
 }) {
+  const { t } = useTranslation("erpInvoices");
   const isOrphanPdf = entry.type === "pdf" && !entry.pairedPdf && !hasMatch;
   if (isOrphanPdf) {
     return (
       <Badge variant="warning" className="gap-1 rounded-full">
         <Clock className="h-3 w-3" />
-        Cần chọn HĐ
+        {t("xmlStatusNeedChoice", "Cần chọn HĐ")}
       </Badge>
     );
   }
@@ -58,7 +60,7 @@ export function FileStatusBadge({
     return (
       <Badge variant="warning" className="gap-1 rounded-full">
         <PackageOpen className="h-3 w-3" />
-        Extract &amp; import
+        {t("xmlStatusExtract", "Extract & import")}
       </Badge>
     );
   }
@@ -66,14 +68,14 @@ export function FileStatusBadge({
     return (
       <Badge variant="secondary" className="gap-1 rounded-full">
         <Clock className="h-3 w-3" />
-        Ghép vào HĐ hiện có
+        {t("xmlStatusAttach", "Ghép vào HĐ hiện có")}
       </Badge>
     );
   }
   return (
     <Badge variant="success" className="gap-1 rounded-full">
       <CheckCircle2 className="h-3 w-3" />
-      Sẽ tạo HĐ mới
+      {t("xmlStatusCreate", "Sẽ tạo HĐ mới")}
     </Badge>
   );
 }

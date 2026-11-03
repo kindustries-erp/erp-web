@@ -14,6 +14,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
   extra,
   className,
   ariaLabel,
+  stretch,
 }) => {
   const { t } = useV2Translation();
   const subContainerRef = React.useRef<HTMLDivElement>(null);
@@ -47,6 +48,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
           variant={v}
           isActive={activeKey === tabKey}
           onSelect={onSelect}
+          stretch={stretch}
         />
       );
     });
@@ -120,7 +122,10 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
       <div className="relative w-full overflow-x-auto touch-pan-x scrollbar-none [-webkit-overflow-scrolling:touch] py-0.5">
         <div
           ref={subContainerRef}
-          className="relative inline-flex items-center gap-1 p-[3px] rounded-lg bg-slate-100/90 dark:bg-[#161a22]/90 border border-slate-200/70 dark:border-white/[0.06] shadow-xs h-8"
+          className={cn(
+            "relative inline-flex items-center gap-1 p-[3px] rounded-lg bg-slate-100/90 dark:bg-[#161a22]/90 border border-slate-200/70 dark:border-white/[0.06] shadow-xs h-8",
+            stretch && "flex w-full",
+          )}
         >
           <div
             ref={subIndicatorRef}

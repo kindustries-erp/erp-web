@@ -273,7 +273,7 @@ export default function (plop) {
     ],
   });
 
-  // 5. GENERATOR: Module V2 chuẩn (Dual-Run /v2/) — xem .agents/skills/erp-web-v2-refactor
+  // 5. GENERATOR: Module V2 chuẩn (Dual-Run /v2/) — xem .agents/skills/erp-web-structure/references/v2-migration.md
   plop.setGenerator("v2-module", {
     description:
       "Tạo module V2 chuẩn (API, domain, atomic components, drawer, page, locale, test) và nối route/menu/i18n",

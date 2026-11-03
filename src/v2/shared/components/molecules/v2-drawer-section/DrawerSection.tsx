@@ -15,6 +15,7 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
   defaultCollapsed = false,
   onToggleCollapse,
   fitViewportHeight = false,
+  fillHeight = false,
   children,
   className,
   bodyClassName,
@@ -27,6 +28,9 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
   const isCollapsed =
     controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
+
+  const isFlexGrow =
+    fillHeight || fitViewportHeight || Boolean(className?.includes("flex-1"));
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,11 +50,12 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
     <div
       className={cn(
         "mb-3 rounded-xl border border-border/50 dark:border-white/[0.06] p-2.5 sm:p-3 transition-all duration-200",
-        "bg-[var(--drawer-section-bg,rgba(255,255,255,0.65))] backdrop-blur-[12px]",
+        "bg-[var(--drawer-section-bg,rgba(255,255,255,0.85))] backdrop-blur-[var(--drawer-section-blur,0px)]",
         "shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.03)_inset]",
         fitViewportHeight &&
           !isCollapsed &&
           "flex flex-col max-h-none lg:max-h-[calc(100vh-210px)]",
+        fillHeight && !isCollapsed && "flex flex-col min-h-0 flex-1",
         isCollapsed && "!h-auto !flex-none !min-h-0 !flex-initial",
         className,
       )}
@@ -126,7 +131,7 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
           isCollapsed
             ? "grid-rows-[0fr] opacity-0 pointer-events-none"
             : "grid-rows-[1fr] opacity-100",
-          fitViewportHeight && !isCollapsed && "flex-1 flex flex-col min-h-0",
+          isFlexGrow && !isCollapsed && "flex-1 flex flex-col min-h-0",
         )}
       >
         <div
@@ -134,6 +139,10 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
           className={cn(
             "overflow-hidden min-h-0",
             fitViewportHeight && !isCollapsed && "flex-1 overflow-y-auto",
+            isFlexGrow &&
+              !fitViewportHeight &&
+              !isCollapsed &&
+              "flex-1 flex flex-col min-h-0",
             bodyClassName,
           )}
         >

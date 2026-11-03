@@ -8,6 +8,7 @@ import { PnlCogsRows } from "./PnlCogsRows";
 import { PnlGrossProfitRow } from "./PnlGrossProfitRow";
 import { PnlSellingExpenseRows } from "./PnlSellingExpenseRows";
 import { PnlOpexRows } from "./PnlOpexRows";
+import { PnlFinancialExpenseRows } from "./PnlFinancialExpenseRows";
 import { PnlNetProfitRow } from "./PnlNetProfitRow";
 import { PnlServiceCommissionRows } from "./PnlServiceCommissionRows";
 import { PnlRetainedProfitRow } from "./PnlRetainedProfitRow";
@@ -126,9 +127,15 @@ export function PnlFinancialTable({
           />
           <PnlOpexRows
             {...commonProps}
-            onOpenDrawer={onOpenDrawer}
+            onOpenDrawer={() => onOpenDrawer("OPEX")}
             isCollapsed={isCollapsed("opex")}
             onToggle={() => toggleSection("opex")}
+          />
+          <PnlFinancialExpenseRows
+            {...commonProps}
+            onOpenDrawer={onOpenDrawer}
+            isCollapsed={isCollapsed("financial")}
+            onToggle={() => toggleSection("financial")}
           />
           <PnlNetProfitRow
             {...commonProps}

@@ -108,4 +108,53 @@ describe("V2Sidebar Organism", () => {
     expect(screen.getByLabelText("Notifications")).toBeInTheDocument();
     expect(screen.getByText("Administrator")).toBeInTheDocument();
   });
+
+  it("renders sub-groups inside section and navigates child items", () => {
+    const handleNavigate = vi.fn();
+    const sectionsWithSubGroup: V2SidebarSectionData[] = [
+      {
+        id: "settings",
+        label: "HỆ THỐNG",
+        items: [
+          {
+            id: "sub-access",
+            label: "Quản lý truy cập",
+            icon: Users,
+            href: "/users",
+            children: [
+              {
+                id: "erp-users",
+                label: "Quản lý người dùng",
+                icon: Users,
+                href: "/erp-users",
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    render(
+      <V2Sidebar
+        sections={sectionsWithSubGroup}
+        activeId="erp-users"
+        onNavigate={handleNavigate}
+      />,
+    );
+
+    expect(screen.getByText("HỆ THỐNG")).toBeInTheDocument();
+    expect(screen.getByText("Quản lý truy cập")).toBeInTheDocument();
+
+    const trigger = screen.getByTestId(
+      "v2-sidebar-subgroup-trigger-sub-access",
+    );
+    fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
+
+    expect(screen.getByText("Quản lý người dùng")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Quản lý người dùng"));
+    expect(handleNavigate).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "erp-users" }),
+    );
+  });
 });

@@ -20,7 +20,13 @@ function getNetProfit(r?: GaragePnlReportResponse): number | undefined {
   if (!r) return undefined;
   const selling =
     r.sellingExpenses?.total ?? r.commission?.auto?.saleCommission ?? 0;
-  return r.netProfit ?? r.grossProfit - selling - (r.opex?.total || 0);
+  return (
+    r.netProfit ??
+    r.grossProfit -
+      selling -
+      (r.opex?.total || 0) -
+      (r.financialExpenses?.total || 0)
+  );
 }
 
 function getOjNetProfit(r?: GaragePnlReportResponse): number | undefined {
@@ -29,7 +35,8 @@ function getOjNetProfit(r?: GaragePnlReportResponse): number | undefined {
     r.oj.netProfit ??
     (r.oj.grossProfit || 0) -
       (r.oj.sellingExpensesTotal || 0) -
-      (r.oj.opexTotal || 0)
+      (r.oj.opexTotal || 0) -
+      (r.oj.financialExpensesTotal || 0)
   );
 }
 
@@ -63,10 +70,10 @@ export function PnlNetProfitRow({
 
   return (
     <>
-      {/* VI. Lợi nhuận ròng Header */}
+      {/* VII. Lợi nhuận ròng Header */}
       <tr className="bg-slate-100/70 dark:bg-slate-800/60 text-foreground font-bold border-y border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
         <PnlLevel1HeaderCell
-          title={t("pnl.netProfitHeader", "VI. Lợi nhuận ròng")}
+          title={t("pnl.netProfitHeader", "VII. Lợi nhuận ròng")}
           icon={Coins}
           isCollapsed={isCollapsed}
           onToggle={onToggle}
@@ -102,12 +109,12 @@ export function PnlNetProfitRow({
         />
       </tr>
 
-      {/* 6.1. Trong đó: Lợi nhuận ròng mảng OJ (Ẩn khi đang xem riêng OJ hoặc collapsed) */}
+      {/* 7.1. Trong đó: Lợi nhuận ròng mảng OJ (Ẩn khi đang xem riêng OJ hoặc collapsed) */}
       {!isOjOnly && !isCollapsed && (
         <tr className="text-slate-700 dark:text-slate-300 bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
           <td className="py-2 px-8 font-medium">
             <span>
-              {t("pnl.netProfitOjSub", "6.1. Trong đó: Lợi nhuận ròng mảng OJ")}
+              {t("pnl.netProfitOjSub", "7.1. Trong đó: Lợi nhuận ròng mảng OJ")}
             </span>
           </td>
           <PnlAmountCell

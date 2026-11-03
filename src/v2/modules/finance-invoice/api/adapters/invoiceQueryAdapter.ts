@@ -4,13 +4,14 @@ import type {
   TaxTab,
 } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 
+/** Tham số `GET /api/v2/invoices` (xem `QueryInvoiceDto` và `TableQueryDto` phía API) */
 export interface InvoiceListQueryParams {
   direction?: "IN" | "OUT";
   page: number;
   pageSize: number;
   search?: string;
-  sort_by?: string;
-  sort_order?: "asc" | "desc";
+  /** `a,-b`: dấu `-` là giảm dần */
+  sort?: string;
   column_search?: string;
   column_filters?: string;
   date_from?: string;
@@ -23,6 +24,18 @@ const TAX_TAB_STATUS_MAP: Record<TaxTab, string[] | null> = {
   replacement: ["2", "4"],
   adjustment: ["3", "5"],
 };
+
+/** Chuỗi sắp xếp của API v2 từ danh sách sort của bảng */
+export function toSortParam(sorts: V2TableQuery["sorts"]): string | undefined {
+  if (sorts.length === 0) return undefined;
+  return sorts
+    .map((sort) =>
+      sort.direction === TableSortState.DESC
+        ? `-${sort.columnKey}`
+        : sort.columnKey,
+    )
+    .join(",");
+}
 
 export function v2InvoiceQueryToParams(
   direction: InvoiceDirection,
@@ -41,42 +54,22 @@ export function v2InvoiceQueryToParams(
     columnFilters.taxInvoiceStatus = statusTabValues;
   }
 
-  // Sort mapping
-  let sort_by: string | undefined;
-  let sort_order: "asc" | "desc" | undefined;
-  if (query.sorts.length > 0) {
-    const primarySort = query.sorts[0];
-    sort_by = primarySort.columnKey;
-    sort_order = primarySort.direction === TableSortState.DESC ? "desc" : "asc";
-  }
-
-  // Date range mapping
-  let date_from: string | undefined;
-  let date_to: string | undefined;
+  // Khoảng ngày của cột hóa đơn: API v2 nhận YYYY-MM-DD
   const dateRange = query.dateRanges.invoiceDate;
-  if (dateRange) {
-    if (dateRange.from) {
-      date_from = `${dateRange.from}T00:00:00`;
-    }
-    if (dateRange.to) {
-      date_to = `${dateRange.to}T23:59:59`;
-    }
-  }
 
   return {
     direction,
     page: query.page,
     pageSize: query.pageSize,
     search: query.search?.trim() || undefined,
-    sort_by,
-    sort_order,
+    sort: toSortParam(query.sorts),
     column_search: Object.keys(query.columnSearch).length
       ? JSON.stringify(query.columnSearch)
       : undefined,
     column_filters: Object.keys(columnFilters).length
       ? JSON.stringify(columnFilters)
       : undefined,
-    date_from,
-    date_to,
+    date_from: dateRange?.from || undefined,
+    date_to: dateRange?.to || undefined,
   };
 }

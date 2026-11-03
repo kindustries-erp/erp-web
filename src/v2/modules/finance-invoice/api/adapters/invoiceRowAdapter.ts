@@ -4,9 +4,9 @@ import type {
 } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import type {
   InvoiceDto,
-  InvoiceTotalsDto,
+  InvoiceSummariesDto,
 } from "@/v2/modules/finance-invoice/api/dtos/invoice.dto";
-import { resolveBranchIds } from "@/shared/utils/branchIds";
+import { resolveBranchIds } from "@/v2/shared/utils/branchIds";
 
 const toAmount = (value?: number | string | null) => Number(value ?? 0) || 0;
 
@@ -46,19 +46,27 @@ export function toInvoiceRow(
     preVatAmount,
     vatAmount,
     totalAmount,
+    vatRate: inv.vatRate == null ? null : Number(inv.vatRate),
+    discountAmount: toAmount(inv.discountAmount),
     netOffAmount,
+    remainingAmount: toAmount(inv.remainingAmount),
+    settlementOrder: inv.settlementOrder ?? null,
+    licensePlate: inv.licensePlate ?? null,
   };
 }
 
-/** Tổng server → map theo key cột tiền của bảng V2 */
-export function invoiceTotalsToSummary(totals?: InvoiceTotalsDto) {
-  return {
-    preVatAmount: totals?.grandTotalPreVat ?? 0,
-    vatAmount: totals?.grandTotalVat ?? 0,
-    totalAmount: totals?.grandTotalAmount ?? 0,
-    discountAmount: totals?.grandTotalDiscount ?? 0,
-    netOffAmount: totals?.grandTotalNetOff ?? 0,
-    remainingAmount: totals?.grandTotalRemaining ?? 0,
-    total: totals?.grandTotalAmount ?? 0,
-  };
+const SUMMARY_KEYS = [
+  "preVatAmount",
+  "vatAmount",
+  "totalAmount",
+  "discountAmount",
+  "netOffAmount",
+  "remainingAmount",
+] as const;
+
+/** Tổng server (`summaries` của API v2) → đủ các key cột tiền của bảng V2, thiếu thì 0 */
+export function toInvoiceSummary(summaries?: InvoiceSummariesDto) {
+  return Object.fromEntries(
+    SUMMARY_KEYS.map((key) => [key, summaries?.[key] ?? 0]),
+  ) as Record<(typeof SUMMARY_KEYS)[number], number>;
 }

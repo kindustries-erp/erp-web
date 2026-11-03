@@ -44,7 +44,7 @@ export function GarageCashflowExportDrawer({
       onClose={onClose}
       title="Xuất Excel thu chi garage"
       subtitle="Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng"
-      icon={<FileSpreadsheet className="w-4 h-4" />}
+      icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
       layout="2-columns"
       size="lg"
       leftPanel={

@@ -20,9 +20,9 @@ export const V2UniversalSearchModalMobile: React.FC<
         side="bottom"
         hideCloseButton
         style={{
-          background: "var(--popup-bg, rgba(246, 248, 252, 0.72))",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          background: "var(--popup-bg, rgba(246, 248, 252, 0.9))",
+          backdropFilter: "blur(var(--glass-blur, 8px)) saturate(180%)",
+          WebkitBackdropFilter: "blur(var(--glass-blur, 8px)) saturate(180%)",
         }}
         className={cn(
           "h-[88dvh] max-h-[88dvh] p-0 rounded-t-2xl flex flex-col",

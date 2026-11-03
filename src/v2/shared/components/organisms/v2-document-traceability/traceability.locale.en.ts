@@ -63,6 +63,11 @@ export const traceabilityLocaleEn: V2ModuleLocale["en"] = {
   canvas: {
     toVertical: "Switch to vertical layout",
     toHorizontal: "Switch to horizontal layout",
+    legend: {
+      receipt: "Cash Inflow",
+      payment: "Cash Outflow",
+      current: "Current Document",
+    },
   },
   pipeline: { empty: "No documents" },
   state: { error: "Could not load the linked document graph" },

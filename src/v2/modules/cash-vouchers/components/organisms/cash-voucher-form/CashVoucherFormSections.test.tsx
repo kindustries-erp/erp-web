@@ -24,8 +24,8 @@ describe("CashVoucherFormSections", () => {
     renderForm();
     expect(screen.getByText("Sổ quỹ")).toBeTruthy();
     expect(screen.getByText("Ngày giao dịch")).toBeTruthy();
-    expect(screen.getByText("Thu (phát sinh Nợ)")).toBeTruthy();
-    expect(screen.getByText("Chi (phát sinh Có)")).toBeTruthy();
+    expect(screen.getByText("Thu")).toBeTruthy();
+    expect(screen.getByText("Chi")).toBeTruthy();
   });
 
   it("hiện thông báo lỗi số tiền khi được đánh dấu", () => {

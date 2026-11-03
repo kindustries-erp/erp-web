@@ -32,6 +32,23 @@ description: Tri thức frontend cho drawer xuất Excel sao kê ngân hàng / s
 - Hook phân kỳ (`period.hook.ts`) đang trùng với mẫu của `vinfast-parts`. Có thể gom về một hook dùng chung trong `src/v2/shared/` khi có module thứ ba.
 - `bankStatementApi` (V1) vẫn còn các hàm export cũ không còn được gọi.
 
+## Drawer chi tiết giao dịch ngân hàng (V2, đã nối)
+- Nối tại `modules/bank-statements/components/BankStatementsTab/components/BankStatementDrawers.tsx`: `type === "bank"` dùng `BankTransactionDetailDrawer` (export từ `@/v2/modules/bank-statements`).
+- Facade Adapter: `src/pages/finance/components/bank-transaction-detail-drawer/BankTransactionDetailDrawer.tsx` chuyển tiếp 100% props sang bản V2.
+- Bố cục 2 tầng Tab & Sub-tab chuẩn `erp-invoice`:
+  - Top Tab 1: **Chi tiết** (`FileText`) gồm 3 sub-tab `V2TabBar variant="sub"`:
+    1. *Chi tiết giao dịch*: Xem trước chứng từ UNC/GBC (`BankVoucherPreview`).
+    2. *Hạch toán kế toán*: Soạn bút toán Nợ/Có (`CashPostingSection`), badge `1` khi đã hạch toán.
+    3. *Chứng từ liên kết*: Truy vết chứng từ & cấn trừ (`CashTraceabilitySection`), badge `netOffCount`.
+  - Top Tab 2: **Chi tiết theo đối tác** (`Users`, tự động hiện khi có đối tác) gồm 2 sub-tab `V2TabBar`:
+    1. *Chi tiết theo đối tượng*: Bảng kê giao dịch cùng đối tác (`CashPartnerTransactions`).
+    2. *Biến động & Phân tích*: Biểu đồ xu hướng và phân tích đối tác (`CashPartnerAnalytics`).
+  - Top Tab 3: **Lịch sử & Kiểm duyệt** (`History`): Nhật ký thao tác (`DrawerAuditTimeline`).
+- Cột phải 2 khối `DrawerSection` độc lập:
+  - Khối 1: *THÔNG TIN GIAO DỊCH* (Read-only): Ngày giao dịch, Số tham chiếu (copyable), Số tiền (+/-, xanh/đỏ), Tài khoản nguồn, Đối tác giao dịch (hiển thị 2–3 hàng, hover mở `AppTooltip` diễn giải giao dịch gốc). Lược bỏ dòng Loại giao dịch và Diễn giải ngân hàng riêng.
+  - Khối 2: *THIẾT LẬP & PHÂN LOẠI* (Editable): Chi nhánh (`V2MultiCombobox`), Đối tượng ERP (`BusinessPartnerPicker`), Ghi chú ERP (`V2Textarea`), Phân loại & Mục đích dòng tiền (`CashClassificationFields` chuẩn `DrawerField` V2).
+- Khóa i18n: `v2.bankStatements.bankDetail.*` (`bankStatements.bankDetail.locale.ts`) song ngữ VI/EN.
+
 ## Drawer chi tiết giao dịch tiền mặt (V2, đã nối)
 - Nối tại `modules/bank-statements/components/BankStatementsTab/components/BankStatementDrawers.tsx`: `type === "cash"` dùng `CashTransactionDetailDrawer` (export từ `@/v2/modules/bank-statements`), tab bank vẫn dùng drawer V1 `BankTransactionDetailDrawer`. Không có file cầu nối riêng.
 - Chọn dòng ở bảng kê đối tượng gọi `onSelectTransaction` → mở giao dịch khác ngay trong drawer.

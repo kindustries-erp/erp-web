@@ -3,6 +3,7 @@ import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import {
   formatMoney,
   type FakeInvoice,
+  type InvoiceDirection,
 } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import { VAT_RATE_OPTIONS } from "./invoiceColumns.constants";
 
@@ -10,15 +11,51 @@ const money = (value?: number | null) => (
   <span className="tabular-nums">{formatMoney(value ?? 0)}</span>
 );
 
-export const getAuditInvoiceColumns = (): V2Column<FakeInvoice>[] => [
+/** Thuế suất theo giá trị API: -1 là KCT, -2 là KTT, còn lại là phần trăm */
+const formatVatRate = (value?: number | null) => {
+  if (value === -1) return "KCT";
+  if (value === -2) return "KTT";
+  return value == null ? "-" : `${value}%`;
+};
+
+export const getAuditInvoiceColumns = (
+  direction: InvoiceDirection = "IN",
+): V2Column<FakeInvoice>[] => [
   {
     key: "vatRate",
     ...headerFilter.select("Thuế suất", VAT_RATE_OPTIONS),
     size: 110,
     align: TableColumnAlign.RIGHT,
     mobileSlot: "hidden",
-    cell: (row) => (row.vatAmount ? "10%" : "0%"),
+    cell: (row) => formatVatRate(row.vatRate),
   },
+  {
+    key: "discountAmount",
+    ...headerFilter.amount("Chiết khấu"),
+    size: 140,
+    align: TableColumnAlign.RIGHT,
+    mobileSlot: "hidden",
+    cell: (row) => money(row.discountAmount),
+    summary: { variant: "amount", metricTitle: "Chiết khấu" },
+  },
+  ...(direction === "OUT"
+    ? [
+        {
+          key: "settlementOrder",
+          ...headerFilter("Lệnh thanh toán"),
+          size: 160,
+          mobileSlot: "hidden" as const,
+          cell: (row: FakeInvoice) => row.settlementOrder || "-",
+        },
+        {
+          key: "licensePlate",
+          ...headerFilter("Biển số"),
+          size: 130,
+          mobileSlot: "hidden" as const,
+          cell: (row: FakeInvoice) => row.licensePlate || "-",
+        },
+      ]
+    : []),
   {
     key: "netOffAmount",
     ...headerFilter.amount("Đã cấn trừ"),

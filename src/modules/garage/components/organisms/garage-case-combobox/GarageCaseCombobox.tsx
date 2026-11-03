@@ -1,5 +1,5 @@
-import React from "react";
-import { Combobox } from "@/shared/components/Combobox";
+import React, { useMemo } from "react";
+import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
 import { GarageCaseComboboxProps } from "./GarageCaseCombobox.type";
 import { useGarageCaseCombobox } from "./GarageCaseCombobox.hook";
 
@@ -10,7 +10,6 @@ export const GarageCaseCombobox: React.FC<GarageCaseComboboxProps> = ({
   className,
   branchId,
   fallbackLabel,
-  fallbackTooltipContent,
   customerCode,
   licensePlate,
   supplierId,
@@ -26,24 +25,35 @@ export const GarageCaseCombobox: React.FC<GarageCaseComboboxProps> = ({
       partnerName,
     });
 
+  const v2Options = useMemo(
+    () =>
+      options.map((o: any) => ({
+        ...o,
+        value: o.value,
+        label: o.label,
+        description: o.subLabel,
+        disabled: o.disabled,
+      })),
+    [options],
+  );
+
   return (
     <div className={className}>
-      <Combobox
-        value={value || ""}
-        onChange={(val: string) => {
+      <V2Combobox
+        value={value || null}
+        onValueChange={(val) => {
           if (onChange) {
             const selectedOption = options.find((o: any) => o.value === val);
-            onChange(val, selectedOption);
+            onChange(val || "", selectedOption);
           }
         }}
-        options={options}
+        options={v2Options}
         disabled={disabled}
         placeholder={isLoading ? "Đang tải..." : placeholder}
-        onSearch={setSearch}
+        onSearchChange={setSearch}
         onScrollBottom={fetchNextPage}
         loading={isLoading || isFetchingNextPage}
         fallbackLabel={fallbackLabel}
-        fallbackTooltipContent={fallbackTooltipContent}
       />
     </div>
   );

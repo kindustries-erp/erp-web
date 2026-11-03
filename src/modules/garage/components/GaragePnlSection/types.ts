@@ -32,5 +32,7 @@ export interface PnlFinancialTableProps {
   prev2Month?: number;
   prev2Year?: number;
   isOjOnly?: boolean;
-  onOpenDrawer: () => void;
+  onOpenDrawer: (
+    costGroup?: "OPEX" | "COGS" | "COMMISSION" | "FINANCIAL",
+  ) => void;
 }

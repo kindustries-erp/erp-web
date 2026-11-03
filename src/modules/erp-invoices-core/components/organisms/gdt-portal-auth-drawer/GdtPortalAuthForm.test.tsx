@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GdtPortalAuthForm } from "./GdtPortalAuthForm";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
@@ -20,14 +21,32 @@ vi.mock("react-hot-toast", () => ({
   },
 }));
 
+// Trả về chuỗi mặc định tiếng Việt để giữ nguyên các assertion theo nhãn
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, fallback?: unknown) =>
+      typeof fallback === "string"
+        ? fallback
+        : ((fallback as { defaultValue?: string })?.defaultValue ?? key),
+  }),
+}));
+
+const renderWithClient = (ui: React.ReactElement) => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
+  );
+};
+
 describe("GdtPortalAuthForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (erpInvoicesCoreApi.getPortalConfig as any).mockResolvedValue({
       username: "0318334886-003",
       hasPassword: true,
-      token: "existing-token",
-      cookies: "existing-cookie",
+      hasToken: true,
     });
     (erpInvoicesCoreApi.getPortalCaptcha as any).mockResolvedValue({
       content: "base64image",
@@ -36,7 +55,7 @@ describe("GdtPortalAuthForm", () => {
   });
 
   it("renders form fields and loads initial config and captcha", async () => {
-    render(<GdtPortalAuthForm />);
+    renderWithClient(<GdtPortalAuthForm />);
 
     expect(
       screen.getByText("Đăng nhập Cổng Hóa đơn điện tử"),
@@ -50,17 +69,20 @@ describe("GdtPortalAuthForm", () => {
       ) as HTMLInputElement;
       expect(usernameInput.value).toBe("0318334886-003");
     });
+    expect(
+      screen.getByText("Đã có Token kết nối Cổng Thuế"),
+    ).toBeInTheDocument();
   });
 
   it("submits login with username, password, captcha and key", async () => {
     (erpInvoicesCoreApi.loginPortal as any).mockResolvedValue({
       success: true,
-      token: "new-token-999",
+      hasToken: true,
       message: "Đăng nhập Cổng Thuế thành công!",
     });
     const onSuccess = vi.fn();
 
-    render(<GdtPortalAuthForm onSuccess={onSuccess} />);
+    renderWithClient(<GdtPortalAuthForm onSuccess={onSuccess} />);
 
     await waitFor(() => {
       expect(erpInvoicesCoreApi.getPortalCaptcha).toHaveBeenCalled();
@@ -79,10 +101,7 @@ describe("GdtPortalAuthForm", () => {
     fireEvent.change(captchaInput, { target: { value: "vmrbxr" } });
     expect(captchaInput.value).toBe("VMRBXR");
 
-    const submitBtn = screen.getByRole("button", {
-      name: /Đăng nhập & Lưu/i,
-    });
-    fireEvent.click(submitBtn);
+    fireEvent.click(screen.getByRole("button", { name: /Đăng nhập & Lưu/i }));
 
     await waitFor(() => {
       expect(erpInvoicesCoreApi.loginPortal).toHaveBeenCalledWith({
@@ -102,7 +121,7 @@ describe("GdtPortalAuthForm", () => {
       text: "AUTO88",
     });
 
-    render(<GdtPortalAuthForm />);
+    renderWithClient(<GdtPortalAuthForm />);
 
     await waitFor(() => {
       const captchaInput = screen.getByPlaceholderText(

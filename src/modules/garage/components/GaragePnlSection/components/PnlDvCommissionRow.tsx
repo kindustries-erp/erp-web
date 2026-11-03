@@ -58,13 +58,13 @@ export function PnlDvCommissionRow({
 
   return (
     <>
-      {/* 7.1. Hoa hồng cho DV (10%) */}
+      {/* 8.1. Hoa hồng cho DV (10%) */}
       <tr className="text-slate-700 dark:text-slate-300 hover:bg-muted/10 transition-colors">
         <td className="py-2 px-8">
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-semibold text-slate-800 dark:text-slate-200">
-                {t("pnl.dvCommission", "7.1. Hoa hồng cho DV (10%)")}
+                {t("pnl.dvCommission", "8.1. Hoa hồng cho DV (10%)")}
               </span>
               <Badge
                 variant="outline"
@@ -124,14 +124,14 @@ export function PnlDvCommissionRow({
         />
       </tr>
 
-      {/* 7.1.1. Trong đó: Phát sinh liên quan OJ */}
+      {/* 8.1.1. Trong đó: Phát sinh liên quan OJ */}
       {!isOjOnly && (
         <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
           <td className="py-1.5 pl-14 pr-4">
             <span className="text-[11px] italic">
               {t(
                 "pnl.dvCommissionOjSub",
-                "7.1.1. Trong đó: Phát sinh liên quan OJ",
+                "8.1.1. Trong đó: Phát sinh liên quan OJ",
               )}
             </span>
           </td>

@@ -10,7 +10,7 @@ const filled = {
   ...emptyCashVoucherForm(),
   cashBookId: "cb1",
   transDate: "2026-10-27",
-  debitAmount: 500,
+  receiptAmount: 500,
 };
 
 describe("validateCashVoucherForm", () => {
@@ -28,13 +28,13 @@ describe("validateCashVoucherForm", () => {
   });
 
   it("báo lỗi số tiền khi để trống cả Thu và Chi", () => {
-    expect(validateCashVoucherForm({ ...filled, debitAmount: null })).toBe(
+    expect(validateCashVoucherForm({ ...filled, receiptAmount: null })).toBe(
       "amount",
     );
   });
 
   it("báo lỗi số tiền khi nhập cả Thu và Chi", () => {
-    expect(validateCashVoucherForm({ ...filled, creditAmount: 100 })).toBe(
+    expect(validateCashVoucherForm({ ...filled, paymentAmount: 100 })).toBe(
       "amount",
     );
   });

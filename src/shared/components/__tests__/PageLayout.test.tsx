@@ -1,6 +1,17 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { PageLayout } from "../PageLayout";
+import { useViewport } from "@/v2/shared/hooks/useViewport";
+
+vi.mock("@/v2/shared/hooks/useViewport", () => ({
+  useViewport: vi.fn(() => ({
+    width: 1280,
+    height: 800,
+    isMobile: false,
+    isTablet: false,
+    isDesktop: true,
+  })),
+}));
 
 vi.mock("@/core/config/appStore", () => ({
   useAppStore: () => ({ locale: "vi" }),
@@ -170,7 +181,34 @@ describe("PageLayout", () => {
       </PageLayout>,
     );
 
-    expect(container.firstChild).toHaveClass("space-y-3");
+    expect(container.firstChild).toHaveClass("space-y-2");
     expect(container.firstChild).toHaveClass("sm:space-y-4");
+  });
+
+  it("renders V2TabCombobox for mobile when tabs are provided", () => {
+    vi.mocked(useViewport).mockReturnValueOnce({
+      width: 375,
+      height: 667,
+      isMobile: true,
+      isTablet: false,
+      isDesktop: false,
+    });
+    const tabs = [
+      { value: "overview", label: "Tổng quan" },
+      { value: "cases", label: "Hoạt động garage" },
+    ];
+
+    render(
+      <PageLayout
+        title="Test"
+        icon={<span>📋</span>}
+        tabs={tabs}
+        activeTab="overview"
+      >
+        <div>content</div>
+      </PageLayout>,
+    );
+
+    expect(screen.getByTestId("v2-tab-combobox")).toBeInTheDocument();
   });
 });

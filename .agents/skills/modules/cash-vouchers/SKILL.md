@@ -19,6 +19,12 @@ description: Tri thức frontend cho drawer tạo mới phiếu thu/chi tiền m
 - `drawers/CashVoucherDrawer.tsx` + `.hook.ts`: `V2StandardDrawer` 1 cột, size `md`, `confirmOnClose` khi form bẩn.
 - `components/organisms/cash-voucher-form/CashVoucherFormSections.tsx`: `V2Combobox` sổ quỹ, `V2DatePicker`, `V2Input`, `V2NumberInput` (Thu/Chi), `V2Textarea`.
 
+## Ánh xạ Thu/Chi sang API (quan trọng)
+- Trường form: `receiptAmount` (ô **Thu**), `paymentAmount` (ô **Chi**).
+- Payload gửi `POST .../transactions/manual`: `creditAmount = receiptAmount`, `debitAmount = paymentAmount`.
+- Lý do: backend coi thu = `credit_amount`, chi = `debit_amount` cho mọi nguồn (xem skill `bank-statement` của erp-api). Gán ngược sẽ lưu phiếu Thu thành chi và không cấn trừ được với hóa đơn bán ra.
+- Không dùng tên `debitAmount`/`creditAmount` cho trường form để tránh nhầm lẫn.
+
 ## Quy tắc
 - Chỉ import V2 (`@/v2/*`). Chi nhánh đang chọn của V1 đi qua prop `fallbackBranchId`, không import store V1 trong V2.
 - Khóa i18n `v2.cashVouchers.form.*` (vi/en trong `cashVouchers.locale.ts`).
@@ -26,7 +32,7 @@ description: Tri thức frontend cho drawer tạo mới phiếu thu/chi tiền m
 
 ## Hành vi đã đổi so với V1
 - Lỗi lưu: toast thay cho `alert()`.
-- Thêm rule: phải nhập đúng một trong Thu/Chi (V1 cho nhập cả hai hoặc cả hai bằng 0). Cần xác nhận lại với nghiệp vụ.
+- Thêm rule: phải nhập đúng một trong Thu/Chi (V1 cho nhập cả hai hoặc cả hai bằng 0).
 
 ## Còn lại
-- Chưa commit. Chưa kiểm tra thủ công trên dev.
+- Đã sửa đảo chiều Thu/Chi (xem mục ánh xạ). Chưa kiểm tra thủ công trên dev.
