@@ -103,5 +103,5 @@ bunx tsc --noEmit
 
 ## 8. Liên quan
 
-- Workflow: `/erp-web-v2-refactor` (Rolling Migration: chỉ chạy khi có lệnh từ user).
+- Workflow: `/ui-structure` (Rolling Migration: chỉ chạy khi có lệnh từ user).
 - Module V1 đối chiếu: `src/modules/business-partners-core/` (vẫn được dùng bởi PurchaseOrder V1, không xóa).

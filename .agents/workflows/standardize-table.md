@@ -4,7 +4,7 @@ description: Quy trình chuẩn 5 giai đoạn thiết kế, phân rã kiến tr
 
 # 📊 Standardize Table & Atomic Workflow (`/standardize-table`)
 
-Workflow này hướng dẫn quy trình chuẩn 5 giai đoạn khi **tạo mới**, **fix bug** hoặc **refactor** bất kỳ bảng dữ liệu nào trong ERP. Workflow này **kế thừa 100% triết lý UI Atomic từ [`/ui-atomic-refactor`](./ui-atomic-refactor.md)** và bổ sung toàn bộ chuẩn mực khắt khe của **DataTable**, tích hợp **Bộ 8 Lệnh Grep Audit Tự Động** để loại bỏ hoàn toàn các lỗi sai hoặc thiếu sót thường gặp.
+Workflow này hướng dẫn quy trình chuẩn 5 giai đoạn khi **tạo mới**, **fix bug** hoặc **refactor** bất kỳ bảng dữ liệu nào trong ERP. Workflow này **kế thừa 100% triết lý UI Atomic từ [`/ui-structure`](./ui-structure.md)** và bổ sung toàn bộ chuẩn mực khắt khe của **DataTable**, tích hợp **Bộ 8 Lệnh Grep Audit Tự Động** để loại bỏ hoàn toàn các lỗi sai hoặc thiếu sót thường gặp.
 
 ---
 
@@ -80,7 +80,7 @@ src/modules/[module]/components/organisms/[name]-table/
 
 #### 2. Xây Dựng List Hook (`[Name]Table.hook.ts`):
 - Sử dụng TanStack Query với enum **`ErpQueryKey`** (ví dụ: `ErpQueryKey.INVOICES_LIST`).
-- Thời gian cache chuẩn **90s (`DEFAULT_STALE_TIME = 90_000`)**.
+- Thời gian cache chuẩn là hằng số `DEFAULT_STALE_TIME` từ `@/shared/lib/queryKeys` (đọc giá trị trong file, không ghi cứng).
 - Quản lý state lọc 2 cấp độ: `columnFilters`, `columnSearch`, `dateRanges`.
 - Tính `activeFilterCount` và hàm `clearAllFilters`.
 - **BẮT BUỘC TÍNH SỐ LŨY KẾ CHO MULTI-PAGE**: Tính `cumulativeAmount`, `cumulativeQty`, `cumulativeCount` từ trang 1 đến trang hiện tại.
