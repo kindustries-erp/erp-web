@@ -5,7 +5,7 @@ description: Module tri thức Bảng dữ liệu chuẩn V2 (V2StandardTable) t
 
 # Module Tri Thức: Bảng Chuẩn V2 (`V2StandardTable`) - `erp-web`
 
-Bản V2 của bảng chuẩn trong skill `standardize_table`, **khớp `variant="spreadsheet"` của V1** và viết lại theo kiến trúc V2: mọi file < 180 LoC, không `blue-*`, 100% i18n VI/EN (`v2.table.*`), platform split desktop/mobile, test co-located, stories. **Không import `@/shared/*` của V1**; chỉ dùng `@/core/config/appStore` (qua `useV2Translation`).
+Bản V2 của bảng chuẩn trong skill `standardize-table`, **khớp `variant="spreadsheet"` của V1** và viết lại theo kiến trúc V2: mọi file < 180 LoC, không `blue-*`, 100% i18n VI/EN (`v2.table.*`), platform split desktop/mobile, test co-located, stories. **Không import `@/shared/*` của V1**; chỉ dùng `@/core/config/appStore` (qua `useV2Translation`).
 
 ## 1. Cây file (đúng 5 tầng, import một chiều)
 
@@ -54,7 +54,7 @@ src/v2/shared/
     └── templates/v2-module-page/               Khung trang `V2ModulePage`: `V2PageHeader` (icon, tiêu đề, mô tả, slot toolbar theo tab, actions) + tab (`kind`: `list` dựng `V2StandardTable`, `dashboard` render nội dung) + vùng nội dung full-height (`V2Stack`)
 ```
 
-Quy tắc tầng đã áp dụng (theo `ui-atomic-refactor`):
+Quy tắc tầng đã áp dụng (theo `ui-structure`):
 - Molecule **không import molecule khác**: popup dùng primitive `shared/ui` (`Popover`) và `V2Button` (atom) thay vì `V2Popover`/`V2Dropdown`.
 - Molecule **0% API**: `V2ColumnHeaderFilter` nhận `optionsState` qua props; hook React Query nằm ở organism (`hooks/V2StandardTable.options.hook.ts`) và chỉ truy vấn cột đang mở popup.
 - Không dùng `<button>` thuần trong code bảng: dùng `V2Button`.

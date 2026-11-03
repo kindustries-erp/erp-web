@@ -6,7 +6,7 @@ vi.mock("@/core/i18n", () => ({
   useT: () => (key: string, def?: string) => def || key,
 }));
 
-describe("DateRangeColumnSlot Molecule (/ui-atomic-refactor)", () => {
+describe("DateRangeColumnSlot Molecule (/ui-structure)", () => {
   it("renders with both Quick Select and Reporting Period rows and action buttons", () => {
     const onChange = vi.fn();
     const onClose = vi.fn();

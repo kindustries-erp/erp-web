@@ -288,5 +288,5 @@ Resource RBAC: `garage`
   - Tự động query các phiếu dịch vụ của đối tượng (`getCasesByCustomer`, `getCasesBySupplier`, hoặc query theo `licensePlate`).
   - Đưa danh sách lên đầu combobox dưới nhóm ưu tiên: **"⭐ Phiếu dịch vụ của [Khách hàng/BKS]"** kèm tooltip chi tiết (Số chứng từ, BKS, Doanh thu, Chi phí, Dư nợ).
   - Khi chọn case: Tự động bind `caseId`, cập nhật `licensePlate`, `partnerName`, và nếu `amount` chưa có thì gợi ý điền số tiền của vụ việc.
-- Tuân thủ `/ui-atomic-refactor`: File helper `GarageCaseCombobox.helper.tsx` độc lập, hook $< 160\text{ LoC}$, 0 class `blue-*`, 100% i18n, co-located test.
+- Tuân thủ `/ui-structure`: File helper `GarageCaseCombobox.helper.tsx` độc lập, hook $< 160\text{ LoC}$, 0 class `blue-*`, 100% i18n, co-located test.
 
