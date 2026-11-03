@@ -49,6 +49,7 @@ export enum ErpResource {
   GARAGE = "garage",
   GARAGE_DEBTS = "garage_debts",
   GARAGE_CASHFLOW = "garage_cashflow",
+  GARAGE_GOODS_RECEIPTS = "garage_goods_receipts",
   ACCOUNTING_CONFIGS = "accounting_configs",
   INVOICES = "invoices",
   INVOICE_DEBTS = "invoice_debts",
@@ -304,6 +305,7 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
       ErpResource.GARAGE,
       ErpResource.GARAGE_DEBTS,
       ErpResource.GARAGE_CASHFLOW,
+      ErpResource.GARAGE_GOODS_RECEIPTS,
     ],
   },
   {

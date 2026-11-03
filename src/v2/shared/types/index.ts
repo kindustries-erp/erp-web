@@ -3,3 +3,4 @@ export * from "./v2-table";
 export * from "./v2-admin";
 export * from "./v2-drawer-mode";
 export * from "./v2-tab-mode";
+export * from "./v2-status";
