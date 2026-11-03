@@ -94,4 +94,20 @@ describe("GarageDebtsTable", () => {
     expect(screen.getByText("Công ty Vận Tải XYZ")).toBeInTheDocument();
     expect(screen.getByText("KH00123")).toBeInTheDocument();
   });
+
+  it("accepts onCreateCashflow callback prop", () => {
+    const queryClient = new QueryClient();
+    const handleCreateCashflow = vi.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebtsTable
+          onOpenCustomerDetail={vi.fn()}
+          onOpenExportDrawer={vi.fn()}
+          onCreateCashflow={handleCreateCashflow}
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("51A-999.88")).toBeInTheDocument();
+  });
 });

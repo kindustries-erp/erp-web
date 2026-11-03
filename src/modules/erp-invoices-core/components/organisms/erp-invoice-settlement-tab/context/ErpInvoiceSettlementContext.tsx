@@ -33,6 +33,8 @@ const ErpInvoiceSettlementContext =
 export interface ErpInvoiceSettlementProviderProps extends ErpInvoiceSettlementTabProps {
   children: React.ReactNode;
   enabled?: boolean;
+  /** false: bỏ tải danh sách sao kê & gợi ý cấn trừ (drawer chỉ cần số liệu công nợ) */
+  loadSelectionData?: boolean;
 }
 
 export function ErpInvoiceSettlementProvider({
@@ -45,6 +47,7 @@ export function ErpInvoiceSettlementProvider({
   onRefresh,
   onStartEdit,
   enabled = true,
+  loadSelectionData = true,
 }: ErpInvoiceSettlementProviderProps) {
   const { t } = useTranslation(["erpInvoices", "common"]);
 
@@ -148,7 +151,7 @@ export function ErpInvoiceSettlementProvider({
             : undefined,
       });
     },
-    enabled: enabled && activeSubTab === "bank_statement",
+    enabled: enabled && loadSelectionData && activeSubTab === "bank_statement",
   });
 
   const vouchers = data?.items || data?.data || [];
@@ -170,7 +173,7 @@ export function ErpInvoiceSettlementProvider({
       }
       return Promise.resolve({ suggestions: [] });
     },
-    enabled: enabled && !!targetInvoiceId,
+    enabled: enabled && loadSelectionData && !!targetInvoiceId,
   });
 
   const suggestions = useMemo(() => {

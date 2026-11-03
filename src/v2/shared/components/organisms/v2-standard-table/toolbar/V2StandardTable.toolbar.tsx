@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2TableFilterChip } from "@/v2/shared/components/molecules/v2-table-filter-chip";
 import { V2ColumnToggle } from "@/v2/shared/components/molecules/v2-column-toggle";
 import type { V2ColumnToggleProps } from "@/v2/shared/components/molecules/v2-column-toggle";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -90,13 +90,10 @@ export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
         </V2Text>
       )}
       {activeFilterCount > 0 && (
-        <V2Button
-          variant="destructive-outline"
-          size="xs"
-          onClick={onClearAllFilters}
-        >
-          {t("v2.table.clearAllFilters", { count: activeFilterCount })}
-        </V2Button>
+        <V2TableFilterChip
+          count={activeFilterCount}
+          onClear={onClearAllFilters}
+        />
       )}
     </>
   );

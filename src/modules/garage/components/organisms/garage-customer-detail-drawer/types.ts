@@ -7,6 +7,7 @@ export interface GarageCustomerDetailDrawerProps {
   branchId?: string;
   debtType?: "receivables" | "payables";
   onDebtTypeChange?: (debtType: "receivables" | "payables") => void;
+  onCreateCashflow?: (params: any) => void;
 }
 
 export interface CustomerDebtTotals {

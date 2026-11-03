@@ -136,4 +136,31 @@ describe("V2 DrawerSection Molecule", () => {
       screen.getByText("Nội dung thẻ kính mờ không tiêu đề"),
     ).toBeInTheDocument();
   });
+
+  it("propagates flex-1 and min-h-0 to wrapper and body when fillHeight is true", () => {
+    render(
+      <DrawerSection title="Tiến trình" fillHeight>
+        <p>Nội dung lấp đầy chiều cao</p>
+      </DrawerSection>,
+    );
+
+    const wrapper = wrapperOf();
+    expect(wrapper).toHaveClass("flex-1", "min-h-0", "flex", "flex-col");
+    const body = screen.getByTestId("drawer-section-body");
+    expect(body).toHaveClass("flex-1", "min-h-0", "flex", "flex-col");
+  });
+
+  it("propagates flex-1 and min-h-0 to wrapper when className includes flex-1", () => {
+    render(
+      <DrawerSection
+        title="Tự co giãn"
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <p>Nội dung</p>
+      </DrawerSection>,
+    );
+
+    const wrapper = wrapperOf();
+    expect(wrapper).toHaveClass("flex-1", "min-h-0");
+  });
 });

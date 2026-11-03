@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Panel } from "@/shared/components/Panel";
-import { BarChart } from "@/shared/components/charts/BarChart";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
+import { V2ComboChart, type V2ComboSeries } from "@/v2/shared/components";
+import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { KpiSparkline } from "@/shared/components/KpiSparkline";
 import { format, subMonths, subWeeks, startOfWeek, endOfWeek } from "date-fns";
@@ -20,31 +20,6 @@ export interface VinfastPartsSummaryCardsProps {
 
 const COLOR_REVENUE = "#059669";
 const COLOR_EXPENSE = "#ea580c";
-const LINE_PROFIT = "#1e293b";
-
-function LegendItem({
-  color,
-  label,
-  isLine,
-}: {
-  color: string;
-  label: string;
-  isLine?: boolean;
-}) {
-  return (
-    <div className="flex items-center text-xs">
-      {isLine ? (
-        <div className="w-4 h-[2px] mr-2" style={{ backgroundColor: color }} />
-      ) : (
-        <div
-          className="w-3 h-3 rounded-[3px] mr-2"
-          style={{ backgroundColor: color }}
-        />
-      )}
-      <span className="text-[color:var(--muted-fg)] font-medium">{label}</span>
-    </div>
-  );
-}
 
 export function VinfastPartTrendChart({
   title,
@@ -60,6 +35,7 @@ export function VinfastPartTrendChart({
   chartHeight?: number;
 }) {
   const { t } = useTranslation("dashboard");
+  const theme = useV2ChartTheme();
   const { data, isLoading } = useQuery({
     queryKey: [
       "workshop-vf-parts-trend",
@@ -79,59 +55,59 @@ export function VinfastPartTrendChart({
   });
 
   const trend = data?.trend || [];
-  const trendLabels = trend.map((t) => t.month);
-  const trendBuy = trend.map((t: any) => t.cogs || 0);
-  const trendSell = trend.map((t: any) => t.revenue || 0);
-  const trendProfit = trend.map((t: any) => t.grossProfit || 0);
+  const trendLabels = useMemo(() => trend.map((t) => t.month), [trend]);
+  const trendBuy = useMemo(() => trend.map((t: any) => t.cogs || 0), [trend]);
+  const trendSell = useMemo(
+    () => trend.map((t: any) => t.revenue || 0),
+    [trend],
+  );
+  const trendProfit = useMemo(
+    () => trend.map((t: any) => t.grossProfit || 0),
+    [trend],
+  );
+
+  const lineProfit = theme.mode === "dark" ? "#2dd4bf" : "#0d9488"; // Teal 400 / 600
+
+  const series = useMemo<V2ComboSeries[]>(
+    () => [
+      {
+        key: "buy",
+        type: "bar",
+        data: trendBuy,
+        color: COLOR_EXPENSE,
+        label: t("vinfastParts.buy"),
+      },
+      {
+        key: "sell",
+        type: "bar",
+        data: trendSell,
+        color: COLOR_REVENUE,
+        label: t("vinfastParts.sell"),
+      },
+      {
+        key: "profit",
+        type: "line",
+        data: trendProfit,
+        color: lineProfit,
+        borderColor: lineProfit,
+        borderWidth: 2.5,
+        tension: 0.3,
+        label: t("vinfastParts.profit"),
+      },
+    ],
+    [trendBuy, trendSell, trendProfit, lineProfit, t],
+  );
 
   return (
     <Panel title={title}>
-      <div className="relative" style={{ height: chartHeight }}>
-        {!isLoading && trendLabels.length > 0 ? (
-          <BarChart
-            labels={trendLabels}
-            yCallback={(v) => money(Number(v))}
-            datasets={[
-              {
-                type: "line",
-                data: trendProfit,
-                color: "transparent",
-                borderColor: LINE_PROFIT,
-                borderWidth: 2,
-                fill: false,
-                label: t("vinfastParts.profit"),
-              },
-              {
-                type: "bar",
-                data: trendBuy,
-                color: COLOR_EXPENSE,
-                label: t("vinfastParts.buy"),
-              },
-              {
-                type: "bar",
-                data: trendSell,
-                color: COLOR_REVENUE,
-                label: t("vinfastParts.sell"),
-              },
-            ]}
-          />
-        ) : isLoading ? (
-          <ChartSkeleton type="bar" />
-        ) : (
-          <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-            {t("common.noData")}
-          </div>
-        )}
-      </div>
-      <div className="flex gap-4 mt-[10px] justify-center">
-        <LegendItem color={COLOR_EXPENSE} label={t("vinfastParts.buy")} />
-        <LegendItem color={COLOR_REVENUE} label={t("vinfastParts.sell")} />
-        <LegendItem
-          color={LINE_PROFIT}
-          label={t("vinfastParts.profit")}
-          isLine
-        />
-      </div>
+      <V2ComboChart
+        labels={trendLabels}
+        series={series}
+        height={chartHeight}
+        loading={isLoading}
+        formatValue={(v) => money(Number(v))}
+        ariaLabel={title}
+      />
     </Panel>
   );
 }

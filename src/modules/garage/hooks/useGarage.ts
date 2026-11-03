@@ -133,8 +133,12 @@ export const useSyncGarageBranches = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: garageApi.syncBranches,
-    onSuccess: () => {
-      toast.success("Branches synced successfully");
+    onSuccess: (data) => {
+      if (data?.success === false) {
+        toast.error(data?.message || "Đồng bộ chi nhánh có lỗi");
+      } else {
+        toast.success("Branches synced successfully");
+      }
       qc.invalidateQueries({ queryKey: ["garage-branches"] });
     },
     onError: (err: any) => {

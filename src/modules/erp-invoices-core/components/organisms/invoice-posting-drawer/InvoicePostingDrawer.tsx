@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { accountingApi } from "@/modules/accounting/api/accountingApi";
 import { money } from "@/shared/utils/format";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { resolveBranchIds } from "@/shared/utils/branchIds";
 import { DatePicker } from "@/shared/components/DatePicker";
 import type {
   PostInvoiceLine,
@@ -42,11 +43,15 @@ export function InvoicePostingDrawer({
   });
 
   // Fetch Chart of Accounts
+  // Hóa đơn nhiều chi nhánh dùng chi nhánh đầu để lấy hệ thống tài khoản
+  const primaryBranchId = resolveBranchIds(invoice)[0] ?? null;
   const { data: chartOfAccounts } = useQuery({
-    queryKey: ["chart-of-accounts", invoice?.branchId],
+    queryKey: ["chart-of-accounts", primaryBranchId],
     queryFn: () =>
-      accountingApi.getChartOfAccounts({ branchId: invoice?.branchId }),
-    enabled: !!invoice?.branchId,
+      accountingApi.getChartOfAccounts({
+        branchId: primaryBranchId ?? undefined,
+      }),
+    enabled: !!invoice,
   });
 
   // Fetch Journal Entry if posted
@@ -291,7 +296,7 @@ export function InvoicePostingDrawer({
       primary: true,
       onClick: () => postMutation.mutate(),
       loading: postMutation.isPending,
-      disabled: !isValid || !postingDate || !invoice?.branchId,
+      disabled: !isValid || !postingDate,
     });
   }
 
@@ -341,11 +346,11 @@ export function InvoicePostingDrawer({
               </div>
             </div>
 
-            {!invoice?.branchId && !isPosted && (
+            {resolveBranchIds(invoice).length === 0 && !isPosted && (
               <div className="bg-amber-50 text-amber-800 border border-amber-200 px-3 py-2 rounded-lg text-sm mb-4">
-                <span className="font-semibold">⚠️ Cảnh báo:</span> Hóa đơn chưa
-                có chi nhánh. Vui lòng gán chi nhánh ở thông tin nội bộ trước
-                khi hạch toán.
+                <span className="font-semibold">Lưu ý:</span> Hóa đơn chưa có
+                chi nhánh. Bút toán vẫn được ghi sổ, và sẽ được cập nhật khi anh
+                gán chi nhánh sau.
               </div>
             )}
 

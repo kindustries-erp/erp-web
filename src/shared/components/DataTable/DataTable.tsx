@@ -151,12 +151,32 @@ export function DataTable<T>({
     onColumnSizingChange: handleColumnSizingChange,
   });
 
-  // Portal target subscription for toolbar controls
-  const [portalTarget, setPortalTarget] = useState<Element | null>(null);
+  // Portal target subscription for toolbar controls (support separate column & fullscreen slots)
+  const [columnPortalTarget, setColumnPortalTarget] = useState<Element | null>(
+    null,
+  );
+  const [fullscreenPortalTarget, setFullscreenPortalTarget] =
+    useState<Element | null>(null);
+  const [legacyPortalTarget, setLegacyPortalTarget] = useState<Element | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!tableId || (!enableColumnVisibility && !enableFullscreen)) return;
-    return subscribePortalTarget(tableId, setPortalTarget);
+    const unsubColumn = subscribePortalTarget(
+      `${tableId}-column`,
+      setColumnPortalTarget,
+    );
+    const unsubFullscreen = subscribePortalTarget(
+      `${tableId}-fullscreen`,
+      setFullscreenPortalTarget,
+    );
+    const unsubLegacy = subscribePortalTarget(tableId, setLegacyPortalTarget);
+    return () => {
+      unsubColumn();
+      unsubFullscreen();
+      unsubLegacy();
+    };
   }, [tableId, enableColumnVisibility, enableFullscreen]);
 
   // Context menu state
@@ -195,8 +215,9 @@ export function DataTable<T>({
               ref={!isFsView ? scrollContainerRef : undefined}
               onScroll={!isFsView ? handleTableScroll : undefined}
               className={cn(
-                "bg-surface transition-shadow duration-150 isolate flex-1 min-h-0 flex flex-col relative w-full border border-border/60 rounded-xl overflow-x-auto overflow-y-auto",
-                elevated && "rounded-lg border border-border shadow-xs",
+                "bg-surface transition-shadow duration-150 isolate flex-1 min-h-0 flex flex-col relative w-full border border-border/60 dark:border-white/[0.06] rounded-xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.35),0_0_0_1px_rgba(255,255,255,0.04)] overflow-x-auto overflow-y-auto",
+                elevated &&
+                  "rounded-lg border border-border/80 dark:border-white/[0.08] shadow-panel",
                 isScrolledTop &&
                   "shadow-[inset_0_4px_6px_-2px_rgba(0,0,0,0.05)]",
                 isScrolledBottom &&
@@ -223,7 +244,7 @@ export function DataTable<T>({
               >
                 <TableHeader
                   className={cn(
-                    "sticky top-0 z-20 table-header-glass bg-muted/80 backdrop-blur-sm border-b border-border shadow-[0_1px_0_0_var(--border-light)]",
+                    "sticky top-0 z-20 table-header-glass bg-muted/80 backdrop-blur-sm border-b border-border/60 dark:border-white/[0.06] shadow-[0_1px_0_0_var(--border-light)]",
                   )}
                 >
                   {table.getHeaderGroups().map((headerGroup) => (
@@ -241,7 +262,7 @@ export function DataTable<T>({
                           return (
                             <TableHead
                               key={header.id}
-                              className="w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-r border-border"
+                              className="w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-r border-border/40 dark:border-white/[0.04]"
                               style={{
                                 width: 116,
                                 minWidth: 116,
@@ -260,13 +281,13 @@ export function DataTable<T>({
                             key={header.id}
                             className={cn(
                               meta?.headerClassName,
-                              "sticky top-0 bg-transparent z-20 border-r border-border",
+                              "sticky top-0 bg-transparent z-20 border-r border-border/40 dark:border-white/[0.04]",
                               isFirstCol &&
                                 !enableRowSelection &&
                                 variant !== "spreadsheet" &&
                                 "left-0 z-35 table-header-glass bg-muted/80 backdrop-blur-sm shadow-[1px_0_0_0_var(--border-light)]",
                               variant === "spreadsheet" &&
-                                "border-r border-border py-1 h-auto text-[11px]",
+                                "border-r border-border/40 dark:border-white/[0.04] py-1 h-auto text-[11px]",
                               variant === "spreadsheet" &&
                                 ![
                                   "__actions",
@@ -447,7 +468,7 @@ export function DataTable<T>({
                                 className={cn(
                                   meta?.className,
                                   variant === "spreadsheet" &&
-                                    "border-r border-border py-1 px-2",
+                                    "border-r border-border/40 dark:border-white/[0.04] py-1 px-2",
                                 )}
                                 style={{
                                   maxWidth: enableColumnResizing
@@ -550,7 +571,7 @@ export function DataTable<T>({
                 </TableBody>
 
                 {summaryRow && items.length > 0 && !loading && (
-                  <TableFooter className="sticky bottom-0 z-20 bg-muted/80 backdrop-blur-sm border-t border-border font-semibold shadow-[0_-1px_0_0_var(--border-light)]">
+                  <TableFooter className="sticky bottom-0 z-20 bg-muted/80 backdrop-blur-sm border-t border-border/60 dark:border-white/[0.06] font-semibold shadow-[0_-1px_0_0_var(--border-light)]">
                     <TableRow className="hover:bg-transparent">
                       {table.getVisibleLeafColumns().map((column) => {
                         const meta = column.columnDef.meta as DataTableRowMeta;
@@ -561,7 +582,7 @@ export function DataTable<T>({
                             className={cn(
                               meta?.className,
                               variant === "spreadsheet" &&
-                                "border-r border-border py-1.5 px-2 text-xs",
+                                "border-r border-border/40 dark:border-white/[0.04] py-1.5 px-2 text-xs",
                             )}
                             style={{
                               maxWidth: enableColumnResizing
@@ -607,7 +628,35 @@ export function DataTable<T>({
 
   return (
     <>
-      {portalTarget &&
+      {columnPortalTarget &&
+        enableColumnVisibility &&
+        createPortal(
+          <div className="flex items-center shrink-0">
+            <ColumnToggle
+              table={table}
+              _visibility={internalVisibility}
+              _order={internalColumnOrder}
+              onReset={handleResetTableLayout}
+            />
+          </div>,
+          columnPortalTarget,
+        )}
+
+      {fullscreenPortalTarget &&
+        enableFullscreen &&
+        createPortal(
+          <div className="flex items-center shrink-0">
+            <FullscreenToggle
+              isFullscreen={isFullscreen}
+              onToggle={toggleFullscreen}
+            />
+          </div>,
+          fullscreenPortalTarget,
+        )}
+
+      {!columnPortalTarget &&
+        !fullscreenPortalTarget &&
+        legacyPortalTarget &&
         createPortal(
           <div className="flex items-center gap-1.5 shrink-0">
             {enableColumnVisibility && (
@@ -625,7 +674,7 @@ export function DataTable<T>({
               />
             )}
           </div>,
-          portalTarget,
+          legacyPortalTarget,
         )}
 
       {/* Normal / In-place Table View */}

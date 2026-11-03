@@ -9,11 +9,11 @@ import type {
   V2ViewPresetState,
   V2ViewPresetStorage,
 } from "../toolbar/V2StandardTable.toolbar.type";
+import { v2ViewPresetStorage } from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import {
   buildViewItems,
   createEmptyViewPresetState,
   isViewNameTaken,
-  localStorageViewPresets,
   resolveActiveViewKey,
 } from "../utils/v2ViewPresets";
 import type { V2ColumnPreferencesApi } from "./V2StandardTable.preferences.hook";
@@ -40,7 +40,7 @@ export function useV2ViewPresets({
   viewModes,
   filterGroup,
   prefs,
-  storage = localStorageViewPresets,
+  storage = v2ViewPresetStorage,
 }: UseV2ViewPresetsOptions) {
   const [state, setState] = React.useState<V2ViewPresetState>(
     () => storage.load(tableId) ?? createEmptyViewPresetState(),

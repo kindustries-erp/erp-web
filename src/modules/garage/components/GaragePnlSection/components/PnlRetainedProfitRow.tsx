@@ -62,12 +62,12 @@ export function PnlRetainedProfitRow({
 
   return (
     <>
-      {/* VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV) Header */}
+      {/* IX. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV) Header */}
       <tr className="bg-emerald-50/70 dark:bg-emerald-950/30 text-foreground font-bold border-t-2 border-emerald-500/40 dark:border-emerald-600/40 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors">
         <PnlLevel1HeaderCell
           title={t(
             "pnl.retainedProfitHeader",
-            "VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)",
+            "IX. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)",
           )}
           icon={ShieldCheck}
           iconClassName="text-emerald-700 dark:text-emerald-300"
@@ -106,14 +106,14 @@ export function PnlRetainedProfitRow({
         />
       </tr>
 
-      {/* 8.1. Trong đó: Lợi nhuận giữ lại mảng OJ (Ẩn khi đang xem riêng OJ hoặc collapsed) */}
+      {/* 9.1. Trong đó: Lợi nhuận giữ lại mảng OJ (Ẩn khi đang xem riêng OJ hoặc collapsed) */}
       {!isOjOnly && !isCollapsed && (
         <tr className="text-slate-700 dark:text-slate-300 bg-emerald-50/20 dark:bg-emerald-950/10 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-colors border-b border-border/20">
           <td className="py-2 px-8 font-medium">
             <span>
               {t(
                 "pnl.retainedProfitOjSub",
-                "8.1. Trong đó: Lợi nhuận giữ lại mảng OJ",
+                "9.1. Trong đó: Lợi nhuận giữ lại mảng OJ",
               )}
             </span>
           </td>

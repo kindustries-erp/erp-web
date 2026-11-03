@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import {
@@ -17,9 +18,10 @@ export const TaxInvoiceStatusBadge = React.memo(function TaxInvoiceStatusBadge({
   relatedInvoiceNo,
   relatedSerialNo,
 }: TaxInvoiceStatusBadgeProps) {
+  const { t } = useTranslation("erpInvoices");
   if (status == null) return <>—</>;
 
-  const lbl = formatTaxInvoiceStatus(status);
+  const lbl = formatTaxInvoiceStatus(status, t);
   let badgeClass = "w-[80px] border-slate-200 bg-slate-50 text-slate-700";
 
   switch (status) {

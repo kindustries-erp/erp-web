@@ -64,7 +64,7 @@ describe("V2ViewModeCombobox", () => {
     expect(onEdit).toHaveBeenCalledWith("mine");
     fireEvent.click(screen.getByRole("button", { name: "Xóa chế độ xem" }));
     expect(onDelete).toHaveBeenCalledWith("mine");
-    fireEvent.click(screen.getByRole("button", { name: "Tạo chế độ xem" }));
+    fireEvent.click(screen.getByRole("button", { name: "Tạo chế độ xem mới" }));
     expect(onCreate).toHaveBeenCalled();
   });
 

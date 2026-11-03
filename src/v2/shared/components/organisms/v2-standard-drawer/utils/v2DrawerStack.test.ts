@@ -9,6 +9,7 @@ import {
   V2_DESKTOP_STACK_OFFSET_PX,
   V2_MOBILE_STACK_OFFSET_PX,
   V2_BASE_DRAWER_Z_INDEX,
+  V2_ABOVE_V1_DRAWER_Z_INDEX,
   V2_Z_INDEX_STEP,
 } from "./v2DrawerStack";
 
@@ -114,5 +115,20 @@ describe("v2DrawerStack Module", () => {
     expect(disabledResult.current.depth).toBe(2);
     expect(disabledResult.current.desktopShiftPx).toBe(0);
     expect(disabledResult.current.mobileTopOffsetPx).toBe(0);
+  });
+
+  it("uses baseZIndex as the first layer when given, and keeps the default otherwise", () => {
+    const { result: withBase, unmount } = renderHook(() =>
+      useV2DrawerStack("above-v1", true, {
+        baseZIndex: V2_ABOVE_V1_DRAWER_Z_INDEX,
+      }),
+    );
+    expect(withBase.current.zIndex).toBe(V2_ABOVE_V1_DRAWER_Z_INDEX);
+    unmount();
+
+    const { result: withoutBase } = renderHook(() =>
+      useV2DrawerStack("default-base", true),
+    );
+    expect(withoutBase.current.zIndex).toBe(V2_BASE_DRAWER_Z_INDEX);
   });
 });

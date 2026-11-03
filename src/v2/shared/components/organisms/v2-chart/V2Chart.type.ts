@@ -31,3 +31,20 @@ export interface V2DonutChartProps extends V2ChartBaseProps {
   /** Giá trị của từng mảng, cùng thứ tự với `labels` (tối đa 5, phần dư gộp vào "Khác") */
   values: number[];
 }
+
+export interface V2ComboSeries extends V2ChartSeries {
+  /** Kiểu vẽ: cột (bar) hoặc đường (line) */
+  type: "bar" | "line";
+  /** Màu sắc tùy chỉnh (nếu bỏ trống sẽ dùng palette chuẩn V2) */
+  color?: string;
+  borderColor?: string;
+  borderWidth?: number;
+  tension?: number;
+  secondaryAxis?: boolean;
+}
+
+export interface V2ComboChartProps extends V2ChartBaseProps {
+  series: V2ComboSeries[];
+  stacked?: boolean;
+  secondaryFormatValue?: (value: number) => string;
+}

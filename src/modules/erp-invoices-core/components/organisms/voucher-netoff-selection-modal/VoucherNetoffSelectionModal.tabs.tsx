@@ -1,6 +1,12 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Landmark, Receipt, DollarSign, ListChecks } from "lucide-react";
+import {
+  Landmark,
+  Receipt,
+  DollarSign,
+  ListChecks,
+  CheckCircle2,
+} from "lucide-react";
 import { type DrawerTopTabItem } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
@@ -10,11 +16,33 @@ import { money } from "@/shared/utils/format";
 import { SelectedBankTransactionsTable } from "@/modules/erp-invoices-core/components/organisms/selected-bank-transactions-table";
 import { AllBankTransactionsTable } from "@/modules/erp-invoices-core/components/organisms/all-bank-transactions-table";
 import { ComingSoonTabContent } from "@/modules/erp-invoices-core/components/molecules/coming-soon-tab-content";
+import { SuggestionPillStrip } from "./suggestion-pill-strip";
 import { OffSystemManualSection } from "@/modules/erp-invoices-core/components/organisms/off-system-manual-section";
 
 interface UseVoucherNetoffTabsProps {
   logic: any;
   invoiceDirection?: "IN" | "OUT";
+}
+
+/** Banner hóa đơn đã cấn trừ đủ 100%, hiển thị đầu danh sách sao kê */
+function FullySettledBanner() {
+  const { t } = useTranslation("erpInvoices");
+  return (
+    <div className="m-3 text-xs italic text-center py-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg border border-dashed border-emerald-300/80 dark:border-emerald-800 px-3 space-y-1">
+      <div className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1">
+        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+        <span>
+          {t("invoiceFullySettledTitle", "Hóa đơn đã được cấn trừ đủ 100%")}
+        </span>
+      </div>
+      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+        {t(
+          "invoiceFullySettledDesc",
+          "Hóa đơn này không còn số dư cần cấn trừ thêm. Bạn có thể xem các giao dịch đã cấn trừ ở danh sách bên dưới.",
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function useVoucherNetoffTabs({
@@ -122,6 +150,20 @@ export function useVoucherNetoffTabs({
               className="p-3 mb-0 border border-slate-200/80 dark:border-slate-800"
               bodyClassName="p-0"
             >
+              <div className="border-b border-border/60">
+                <SuggestionPillStrip
+                  suggestions={logic.filteredSuggestions || []}
+                  selectedIds={logic.selectedIds}
+                  onToggle={(txn) => logic.handleToggleSuggestion(txn)}
+                  onSelectAll={logic.handleSelectAllFilteredSuggestions}
+                  isLoading={logic.isLoadingSuggestions}
+                  currentRemaining={logic.currentRemaining}
+                  onViewDetail={(id) => logic.setDetailTxnId(id)}
+                />
+              </div>
+              {logic.isInvoiceContext &&
+                logic.currentRemaining === 0 &&
+                logic.selectedIds.length === 0 && <FullySettledBanner />}
               <AllBankTransactionsTable
                 vouchers={logic.vouchers}
                 isLoading={logic.isLoading}
@@ -264,6 +306,20 @@ export function useVoucherNetoffTabs({
               className="p-3 mb-0 border border-slate-200/80 dark:border-slate-800"
               bodyClassName="p-0"
             >
+              <div className="border-b border-border/60">
+                <SuggestionPillStrip
+                  suggestions={logic.filteredSuggestions || []}
+                  selectedIds={logic.selectedIds}
+                  onToggle={(txn) => logic.handleToggleSuggestion(txn)}
+                  onSelectAll={logic.handleSelectAllFilteredSuggestions}
+                  isLoading={logic.isLoadingSuggestions}
+                  currentRemaining={logic.currentRemaining}
+                  onViewDetail={(id) => logic.setDetailTxnId(id)}
+                />
+              </div>
+              {logic.isInvoiceContext &&
+                logic.currentRemaining === 0 &&
+                logic.selectedIds.length === 0 && <FullySettledBanner />}
               <AllBankTransactionsTable
                 vouchers={logic.vouchers}
                 isLoading={logic.isLoading}

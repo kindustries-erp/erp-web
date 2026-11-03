@@ -19,9 +19,9 @@ export function useInvoicePartnerDebtDetailDrawer({
   const isCustomer = partnerType === "CUSTOMER";
 
   // Sub-tab navigation state (Left Panel)
-  const [activeSubTab, setActiveSubTab] = useState<"invoices" | "analytics">(
-    "invoices",
-  );
+  const [activeSubTab, setActiveSubTab] = useState<
+    "invoices" | "analytics" | "unallocated"
+  >("invoices");
 
   // Fetch Invoices of Partner (used for KPI summary & fallback)
   const {

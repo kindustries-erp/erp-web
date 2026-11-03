@@ -72,6 +72,18 @@ vi.mock("../../components/organisms/garage-payables-table", () => ({
   ),
 }));
 
+vi.mock(
+  "../../components/organisms/garage-cashflow-drawer/GarageCashflowDrawer",
+  () => ({
+    GarageCashflowDrawer: ({ open }: any) => (
+      <div
+        data-testid="mock-cashflow-drawer"
+        data-open={open ? "true" : "false"}
+      />
+    ),
+  }),
+);
+
 describe("GarageDebts Page RBAC & Tabs", () => {
   let queryClient: QueryClient;
 
@@ -128,5 +140,17 @@ describe("GarageDebts Page RBAC & Tabs", () => {
     expect(
       screen.queryByTestId("garage-cashflow-list"),
     ).not.toBeInTheDocument();
+  });
+
+  it("mounts GarageCashflowDrawer on page", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebts />
+      </QueryClientProvider>,
+    );
+
+    const drawer = screen.getByTestId("mock-cashflow-drawer");
+    expect(drawer).toBeInTheDocument();
+    expect(drawer).toHaveAttribute("data-open", "false");
   });
 });

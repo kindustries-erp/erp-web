@@ -1,13 +1,6 @@
 import * as React from "react";
-import {
-  Layers,
-  Smartphone,
-  ShieldCheck,
-  Zap,
-  ArrowRight,
-  ExternalLink,
-} from "lucide-react";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { Layers, Smartphone, ShieldCheck, Zap, ArrowRight } from "lucide-react";
+import { V2Button, V2Text } from "@/v2/shared/components";
 import { Badge } from "@/v2/shared/ui";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 
@@ -98,17 +91,6 @@ export const V2WelcomePage: React.FC = () => {
               rightIcon={<ArrowRight size={14} />}
             >
               <span>{t("v2.welcome.exploreBtn", "Khám phá giao diện V2")}</span>
-            </V2Button>
-
-            <V2Button
-              variant="outline"
-              onClick={() => {
-                window.location.href = "/";
-              }}
-              className="gap-2 text-xs text-muted-fg hover:text-foreground"
-              rightIcon={<ExternalLink size={14} />}
-            >
-              <span>{t("v2.welcome.backV1Btn", "Quay lại ERP V1")}</span>
             </V2Button>
           </div>
         </div>

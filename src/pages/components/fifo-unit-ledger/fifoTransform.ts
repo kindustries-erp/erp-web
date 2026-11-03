@@ -23,24 +23,25 @@ export interface LedgerDisplayRow {
   outProfit?: number;
   outMargin?: number;
 
-  // BALANCE
+  // Cờ hiển thị
+  /** Dòng trả hàng (OUT điều chỉnh âm): đưa đơn vị về kho. */
+  isReturn: boolean;
+  /** Số thiếu hàng phát sinh tại dòng này (0 nếu không thiếu). */
+  shortageDelta: number;
+
+  // BALANCE (lũy kế từ API, có thể âm khi bán vượt tồn)
   balanceQty: number;
   balanceValue: number;
 }
 
+/**
+ * Chuyển dòng sổ cái (đã có số liệu FIFO từ API) thành dòng hiển thị.
+ * Không tự tính lại hàng đợi: nguồn sự thật là engine phía API, giữ nguyên thứ tự API.
+ */
 export function buildFlatLedgerRows(rows: LedgerRow[]): LedgerDisplayRow[] {
-  const displayRows: LedgerDisplayRow[] = [];
+  let previousShortage = 0;
 
-  const inQueue: { qty: number; unitCost: number }[] = [];
-
-  // Sort rows chronologically (oldest first) to simulate FIFO correctly
-  const sortedRows = [...rows].sort(
-    (a, b) =>
-      new Date(a.transactionDate).getTime() -
-      new Date(b.transactionDate).getTime(),
-  );
-
-  for (const row of sortedRows) {
+  return rows.map((row) => {
     const rawQty = parseFloat(row.qty || "0");
     const isAdjNegative = row.isAdjustment && row.adjSign === -1;
     const qty = isAdjNegative ? -rawQty : rawQty;
@@ -52,72 +53,11 @@ export function buildFlatLedgerRows(rows: LedgerRow[]): LedgerDisplayRow[] {
     const partnerName = isOut ? row.buyerName : row.sellerName;
     const partnerTaxCode = isOut ? row.buyerTaxCode : row.sellerTaxCode;
 
-    if (!isOut) {
-      if (qty > 0) {
-        inQueue.push({ qty, unitCost: parseFloat(row.unitCost || "0") });
-      } else if (qty < 0) {
-        let qToReverse = Math.abs(qty);
-        while (qToReverse > 0 && inQueue.length > 0) {
-          const batch = inQueue[0];
-          if (batch.qty <= qToReverse) {
-            qToReverse -= batch.qty;
-            inQueue.shift();
-          } else {
-            batch.qty -= qToReverse;
-            qToReverse = 0;
-          }
-        }
-      }
-    } else {
-      if (qty > 0) {
-        let qNeeded = qty;
-        while (qNeeded > 0 && inQueue.length > 0) {
-          const batch = inQueue[0];
-          if (batch.qty <= qNeeded) {
-            qNeeded -= batch.qty;
-            inQueue.shift();
-          } else {
-            batch.qty -= qNeeded;
-            qNeeded = 0;
-          }
-        }
-      }
-    }
+    const cumulativeShortage = row.shortageQty ?? 0;
+    const shortageDelta = Math.max(0, cumulativeShortage - previousShortage);
+    previousShortage = cumulativeShortage;
 
-    let balanceQty = 0;
-    let balanceValue = 0;
-    for (const q of inQueue) {
-      balanceQty += q.qty;
-      balanceValue += q.qty * q.unitCost;
-    }
-
-    // Rounding floats to avoid precision issues
-    balanceQty = Math.round(balanceQty * 1000) / 1000;
-
-    let inQty, inUnitCost, inTotal;
-    let outQty,
-      outUnitCost,
-      outSellPrice,
-      outCogs,
-      outRevenue,
-      outProfit,
-      outMargin;
-
-    if (!isOut) {
-      inQty = qty;
-      inUnitCost = parseFloat(row.unitCost || "0");
-      inTotal = amount;
-    } else {
-      outQty = qty;
-      outUnitCost = row.calculatedUnitCost || 0;
-      outCogs = row.calculatedCogs || 0;
-      outRevenue = amount;
-      outSellPrice = qty !== 0 ? amount / qty : 0;
-      outProfit = amount - outCogs;
-      outMargin = amount > 0 ? (outProfit / amount) * 100 : 0;
-    }
-
-    displayRows.push({
+    const display: LedgerDisplayRow = {
       id: row.id,
       transactionDate: row.transactionDate,
       invoiceNo: row.invoiceNo,
@@ -125,23 +65,27 @@ export function buildFlatLedgerRows(rows: LedgerRow[]): LedgerDisplayRow[] {
       partnerName,
       partnerTaxCode,
       direction: row.direction as "IN" | "OUT",
+      isReturn: isOut && isAdjNegative,
+      shortageDelta,
+      balanceQty: row.balanceQty ?? 0,
+      balanceValue: row.balanceValue ?? 0,
+    };
 
-      inQty,
-      inUnitCost,
-      inTotal,
+    if (!isOut) {
+      display.inQty = qty;
+      display.inUnitCost = parseFloat(row.unitCost || "0");
+      display.inTotal = amount;
+    } else {
+      const outCogs = row.calculatedCogs ?? 0;
+      display.outQty = qty;
+      display.outUnitCost = row.calculatedUnitCost ?? 0;
+      display.outCogs = outCogs;
+      display.outRevenue = amount;
+      display.outSellPrice = qty !== 0 ? amount / qty : 0;
+      display.outProfit = amount - outCogs;
+      display.outMargin = amount > 0 ? (display.outProfit / amount) * 100 : 0;
+    }
 
-      outQty,
-      outUnitCost,
-      outSellPrice,
-      outCogs,
-      outRevenue,
-      outProfit,
-      outMargin,
-
-      balanceQty,
-      balanceValue,
-    });
-  }
-
-  return displayRows;
+    return display;
+  });
 }

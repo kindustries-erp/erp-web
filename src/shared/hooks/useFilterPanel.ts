@@ -46,7 +46,7 @@ export interface FilterPanelConfig {
     label: string;
     placeholder: string;
     options: FilterOption[];
-    type?: "select" | "multi-select" | "combobox";
+    type?: "select" | "multi-select" | "multi-combobox" | "combobox";
     initialValue?: string;
     onSearch?: (v: string) => void;
     onLoadMore?: () => void;

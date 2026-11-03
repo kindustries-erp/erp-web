@@ -4,19 +4,19 @@ Source of truth for this repo (`./erp-web`).
 
 ## Read order
 
-1. `.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+1. `.agents/skills/erp-web-truth/SKILL.md`
 
 ## Web Specific Agent Mandates
 
 ### 1. UI Reusability Enforcer (Anti-Reinvention)
 
 - **CRITICAL:** Do NOT build basic components like Modal, Drawer, Table/Spreadsheet, or Filter Panel from scratch.
-- Always use `grep_search` in `src/components/` (e.g., `ConfirmModal`, `StandardDrawer`, `Spreadsheet`, `FilterPanel`) first.
+- Always use `grep_search` in `src/shared/components/` (e.g., `ConfirmModal`, `StandardFormDrawer`, `DataTable`, `FilterPanel`) first. V2 components live in `src/v2/shared/components/`.
 - If found, read its interface/props and reuse it.
 
 ### 2. Atomic Design & Clean Code
 
-- **Max File Size:** Any React file exceeding ~200 lines MUST be split.
+- **Max File Size:** Any React file exceeding 180 lines MUST be split (v1 legacy files over 180 lines are exempt unless touched by the task; see `ui-structure`).
 - Extract complex state/API logic into `hooks/` (e.g., `use[Feature]Logic.ts`).
 - Extract helper functions into `utils/`.
 - Extract sub-components into their own files. Do NOT group multiple large React components in a single file.
@@ -33,8 +33,9 @@ Source of truth for this repo (`./erp-web`).
 
 ### 5. Strict Pre-push Hook
 
-- Before running `git push`, you **MUST** run `bun run check:ci` and `bun run test`.
-- Do NOT push if any of these commands fail. Fix the issues first.
+- Commit: pre-commit tự chạy lint-staged (eslint, prettier, `vitest related` trên file staged). Không chạy full test thủ công.
+- Push: pre-push chạy `bun run type:check`. Do NOT push if it fails.
+- Full test / build / check:ci chạy trên GitHub CI. Không push tiếp khi CI của nhánh đang đỏ.
 
 ### 6. i18n Translation Mandate
 
@@ -79,7 +80,7 @@ Source of truth for this repo (`./erp-web`).
 - MUST use bun/bunx exclusively (do NOT use npm)
 - evidence-first
 - before commit/push, `cd` into the repo root (`./erp-web`)
-- **Strict Git Workflow**: You MUST follow the exact commit/push sequence defined below (pull -> build -> check:ci -> test -> commit -> push).
+- **Strict Git Workflow**: You MUST follow the exact commit/push sequence defined below (test -> commit -> pull --rebase -> check:ci -> push, theo `erp-git-workflow`).
 - push this repo with `github-industries`
 - when debugging and testing API locally, always start dev on port 10010
 - by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
@@ -97,10 +98,7 @@ Source of truth for this repo (`./erp-web`).
 
 2. When asked to **commit code**, you MUST execute the following in order:
    - Ensure current branch is `erp-master`
-   - `bun run build`
-   - `bun run check:ci`
-   - `bun run test`
-   - `git commit`
+   - `git commit` (pre-commit tự chạy lint-staged và `vitest related` trên file staged; không chạy full test thủ công)
 
 3. When asked to **pull code**, you MUST execute the following in order:
    - If there are uncommitted changes, you MUST execute the full **commit code** sequence first.
@@ -109,10 +107,7 @@ Source of truth for this repo (`./erp-web`).
 4. When asked to **push code**, you MUST execute the following in order:
    - If there are uncommitted changes, you MUST execute the full **commit code** sequence first.
    - `git pull --rebase github-industries erp-master` (and resolve conflicts if any)
-   - `bun run build`
-   - `bun run check:ci`
-   - `bun run test`
-   - `git push github-industries erp-master`
+   - `git push github-industries erp-master` (pre-push chạy `bun run type:check`; full test/build/check:ci chạy trên GitHub CI, theo dõi CI sau khi push)
 
 5. When asked to **sync/deploy to downstream branches** (`erp-greenway-production`, `erp-greenway-staging`, `erp-klotus-*`):
    - First ensure `erp-master` is committed, tested, and pushed to `github-industries erp-master`.
@@ -123,7 +118,7 @@ Source of truth for this repo (`./erp-web`).
 
 ### Required behavior
 
-- load `@.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+- load `@.agents/skills/erp-web-truth/SKILL.md`
 - use repo-local context as default guidance
 - MUST use bun/bunx exclusively (do NOT use npm)
 - when debugging and testing API locally, always start dev on port 10010
@@ -138,7 +133,7 @@ Source of truth for this repo (`./erp-web`).
 - always check branch 1st when push. All modifications must be developed and pushed on `erp-master` 1st, then merged/synced downstream to other branches.
 - reuse existing components/hooks/utils/helpers/services/functions/page patterns first
 - extend/adapt before duplicating
-- manage all task execution, planning, and verification in Antigravity Brain (`implementation_plan.md` -> `walkthrough.md`)
+- plan trình trong hội thoại và chờ `OK`; theo dõi task trên Plane (project KINDU) bằng skill `plane-work-items`. Antigravity Brain chỉ là bản phụ.
 - keep task checklist updated in realtime
 - if task status in docs drifts from code reality, verify by code + build/test + git state before correcting the artifact
 

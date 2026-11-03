@@ -397,6 +397,24 @@ export const garageApi = {
     return res.data;
   },
 
+  startAllBranchesSync: async (payload: {
+    scope: "all" | "cases" | "gross-profit" | "case-details";
+    from?: string;
+    to?: string;
+    includeDetails?: boolean;
+    forceDetails?: boolean;
+  }) => {
+    const res = await axiosInstance.post(`${BASE}/sync/all-branches`, payload, {
+      timeout: 15000,
+    });
+    return res.data;
+  },
+
+  getAllBranchesSyncStatus: async () => {
+    const res = await axiosInstance.get(`${BASE}/sync/all-branches/status`);
+    return res.data;
+  },
+
   syncBranches: async () => {
     const res = await axiosInstance.post(`${BASE}/sync/branches`);
     return res.data;
@@ -779,10 +797,15 @@ export const garageApi = {
     };
   },
 
-  getCasesByCustomer: async (branchId: string, customerCode: string) => {
+  getCasesByCustomer: async (
+    branchId: string,
+    customerCode: string,
+    licensePlate?: string,
+  ) => {
     const res = await axiosInstance.get(
       `${BASE}/cases/by-customer/${encodeURIComponent(customerCode)}`,
       {
+        params: licensePlate ? { licensePlate } : undefined,
         headers: { "x-greenway-branch-id": branchId || "" },
       },
     );

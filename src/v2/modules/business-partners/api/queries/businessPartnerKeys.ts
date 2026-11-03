@@ -6,4 +6,7 @@ export const businessPartnerKeys = {
   list: (partnerType: BusinessPartnerType, query: V2TableQuery) =>
     [...businessPartnerKeys.all, "list", partnerType, query] as const,
   detail: (id: string) => [...businessPartnerKeys.all, "detail", id] as const,
+  syncPreview: ["v2-business-partners", "sync-preview"] as const,
+  selectOptions: (direction: "IN" | "OUT", search: string) =>
+    [...businessPartnerKeys.all, "select-options", direction, search] as const,
 };

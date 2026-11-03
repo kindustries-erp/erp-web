@@ -14,6 +14,7 @@ export interface ExportPeriodPickerLabels {
   selectPlaceholder: string;
   dateFrom: string;
   dateTo: string;
+  unitLabel?: string;
 }
 
 export interface ExportPeriodPickerProps {
@@ -21,12 +22,19 @@ export interface ExportPeriodPickerProps {
   labels: ExportPeriodPickerLabels;
 }
 
-/** Chọn kỳ báo cáo: tab Tuần | Tháng | Quý | Tùy chỉnh + danh sách kỳ hoặc 2 ô ngày. */
+/** Chọn kỳ báo cáo: 4 tab (Tuần | Tháng | Quý | Tùy chỉnh) + dropdown kỳ + 2 ô ngày. */
 export function ExportPeriodPicker({
   period,
   labels,
 }: ExportPeriodPickerProps) {
   const labelClass = "text-xs font-medium text-muted-foreground block mb-1";
+
+  const tabs: Array<{ value: ExportPeriodUnit; label: string }> = [
+    { value: "week", label: labels.week },
+    { value: "month", label: labels.month },
+    { value: "quarter", label: labels.quarter },
+    { value: "custom", label: labels.custom },
+  ];
 
   return (
     <div className="space-y-3" data-testid="export-period-picker">
@@ -38,12 +46,7 @@ export function ExportPeriodPicker({
         triggerClassName="justify-center flex-1"
         value={period.unit}
         onValueChange={period.setUnit}
-        items={[
-          { value: "week", label: labels.week },
-          { value: "month", label: labels.month },
-          { value: "quarter", label: labels.quarter },
-          { value: "custom", label: labels.custom },
-        ]}
+        items={tabs}
       />
 
       {period.unit !== "custom" && (

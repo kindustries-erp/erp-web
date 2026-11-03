@@ -1,8 +1,14 @@
 import * as React from "react";
-import { Check, ChevronDown } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import {
+  Check,
+  ChevronDown,
+  V2Button,
+  V2Icon,
+  V2Input,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { Input, Popover, PopoverContent, PopoverTrigger } from "@/v2/shared/ui";
+import { Popover, PopoverContent, PopoverTrigger } from "@/v2/shared/ui";
 import type {
   V2FilterOperator,
   V2OperatorFilter,
@@ -59,18 +65,21 @@ export const V2OperatorFilterField: React.FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-fg">
+      <V2Text
+        variant="caption"
+        className="text-[10px] font-semibold uppercase tracking-wide"
+      >
         {t("v2.table.advancedFilter", "Bộ lọc nâng cao")}
-      </span>
+      </V2Text>
       <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
         <PopoverTrigger asChild>
           <V2Button
             variant="outline"
             size="sm"
             className="w-full justify-between font-normal"
-            rightIcon={<ChevronDown className="h-3.5 w-3.5" />}
+            rightIcon={<V2Icon icon={ChevronDown} size={14} />}
           >
-            {label(operator)}
+            <V2Text variant="body-sm">{label(operator)}</V2Text>
           </V2Button>
         </PopoverTrigger>
         <PopoverContent
@@ -91,17 +100,17 @@ export const V2OperatorFilterField: React.FC<Props> = ({
                 setPickerOpen(false);
               }}
             >
-              {label(op)}
-              {op === operator && <Check className="h-3 w-3" />}
+              <V2Text variant="body-sm">{label(op)}</V2Text>
+              {op === operator && <V2Icon icon={Check} size={12} />}
             </V2Button>
           ))}
         </PopoverContent>
       </Popover>
       {operatorNeedsValue(operator) && (
         <div className="flex items-center gap-1.5">
-          <Input
+          <V2Input
+            sizeVariant="sm"
             type={inputType}
-            className="h-8 text-xs"
             aria-label={t("v2.table.valueLabel", "Giá trị")}
             value={first}
             onChange={(e) => {
@@ -110,9 +119,9 @@ export const V2OperatorFilterField: React.FC<Props> = ({
             }}
           />
           {operatorNeedsRange(operator) && (
-            <Input
+            <V2Input
+              sizeVariant="sm"
               type={inputType}
-              className="h-8 text-xs"
               aria-label={t("v2.table.to", "Đến")}
               value={second}
               onChange={(e) => {

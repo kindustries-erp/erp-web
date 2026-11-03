@@ -2,11 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
-import { V2_PREFERENCES_PATH } from "@/v2/shared/preferences/v2TablePreferences.sync";
 
 export type V2Locale = "vi" | "en";
 
 export const V2_LOCALE_STORAGE_KEY = "v2_locale";
+/** User preference chung trên server; ngôn ngữ nằm ở đây, cấu hình bảng thì không */
+export const V2_USER_PREFERENCES_PATH = "/api/v1/app/preferences";
 /** Key localStorage của store V1, chỉ đọc để seed ngôn ngữ lần đầu */
 export const V1_APP_STORAGE_KEY = "erp-app";
 
@@ -42,7 +43,7 @@ export const useV2LocaleStore = create<V2LocaleState>()(
         set({ locale });
         if (useAuthStore.getState().accessToken) {
           void v2HttpClient
-            .patch(V2_PREFERENCES_PATH, { language: locale })
+            .patch(V2_USER_PREFERENCES_PATH, { language: locale })
             .catch(() => undefined);
         }
       },

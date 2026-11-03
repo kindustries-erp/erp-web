@@ -37,6 +37,7 @@ import { GarageCaseGeneralInfoSection } from "./drawer/sections/GarageCaseGenera
 import { GarageCaseDefaultAttributesSection } from "./drawer/sections/GarageCaseDefaultAttributesSection";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
 import { GarageCaseBusinessPerformanceSection } from "./drawer/sections/GarageCaseBusinessPerformanceSection";
+import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
 
 export interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;
@@ -393,17 +394,17 @@ export function GarageCaseStandaloneDrawer(
         defaultTabKey="quote_details"
         leftPanel={
           isLoadingCase || isSyncingDetail ? (
-            <div className="space-y-4 animate-pulse px-2 w-full">
-              <div className="h-48 bg-slate-100 rounded-lg w-full"></div>
-              <div className="h-64 bg-slate-100 rounded-lg w-full"></div>
+            <div className="space-y-4 px-2 w-full">
+              <V2Skeleton className="h-48 w-full rounded-lg" />
+              <V2Skeleton className="h-64 w-full rounded-lg" />
             </div>
           ) : undefined
         }
         rightPanel={
           isLoadingCase || isSyncingDetail ? (
-            <div className="space-y-4 animate-pulse px-2 w-full">
-              <div className="h-20 bg-slate-100 rounded-lg w-full"></div>
-              <div className="h-40 bg-slate-100 rounded-lg w-full"></div>
+            <div className="space-y-4 px-2 w-full">
+              <V2Skeleton className="h-20 w-full rounded-lg" />
+              <V2Skeleton className="h-40 w-full rounded-lg" />
             </div>
           ) : selectedCase ? (
             <div className="space-y-3 pb-3">

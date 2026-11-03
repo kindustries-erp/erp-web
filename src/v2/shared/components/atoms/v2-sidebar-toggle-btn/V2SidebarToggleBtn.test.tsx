@@ -17,4 +17,11 @@ describe("V2SidebarToggleBtn Atom", () => {
     const iconSpan = screen.getByTestId("v2-sidebar-toggle-btn").firstChild;
     expect(iconSpan).toHaveClass("rotate-180");
   });
+
+  it("render biến thể floating tròn nổi khi floating=true", () => {
+    render(<V2SidebarToggleBtn isCollapsed={true} floating={true} />);
+    const btn = screen.getByTestId("v2-sidebar-toggle-btn");
+    expect(btn).toHaveClass("rounded-full");
+    expect(btn).toHaveClass("absolute");
+  });
 });

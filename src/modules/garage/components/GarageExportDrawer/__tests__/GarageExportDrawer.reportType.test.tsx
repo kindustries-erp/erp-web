@@ -63,6 +63,23 @@ vi.mock("@/shared/components/StandardTable", () => ({
   ),
 }));
 
+vi.mock("@/shared/components/PillTabs", () => ({
+  PillTabs: ({ value, onValueChange, items }: any) => (
+    <div>
+      {items.map((item: any) => (
+        <button
+          key={item.value}
+          type="button"
+          aria-pressed={item.value === value}
+          onClick={() => onValueChange(item.value)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
 vi.mock("@/shared/components/MultiCombobox", () => ({
   MultiCombobox: ({ value, onChange, placeholder, options }: any) => (
     <select
@@ -139,15 +156,27 @@ function renderDrawer(
   );
 }
 
+const chooseKind = async (label: string) => {
+  await act(async () => {
+    fireEvent.click(screen.getByText(label));
+  });
+};
+
 const chooseReportTypes = async (values: string[]) => {
   await act(async () => {
-    const el = screen.getByLabelText("Loại báo cáo") as HTMLSelectElement;
+    const el = screen.getByLabelText("Nội dung báo cáo") as HTMLSelectElement;
     Array.from(el.options).forEach((o) => {
       o.selected = values.includes(o.value);
     });
     fireEvent.change(el);
   });
 };
+
+const selectedPeriods = () =>
+  Array.from(
+    (screen.getByLabelText("Nội dung báo cáo") as HTMLSelectElement)
+      .selectedOptions,
+  ).map((o) => o.value);
 
 const PERIOD_KEYS = [
   "period-overview",
@@ -174,7 +203,7 @@ const exportAndGetCall = async () => {
   return (axiosInstance.post as any).mock.calls[0];
 };
 
-describe("GarageExportDrawer - Combobox loại báo cáo (nhiều lựa chọn)", () => {
+describe("GarageExportDrawer - loại báo cáo: tab đơn + nội dung kỳ nhiều lựa chọn", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -186,24 +215,32 @@ describe("GarageExportDrawer - Combobox loại báo cáo (nhiều lựa chọn)"
   });
   afterEach(() => vi.useRealTimers());
 
-  it("có đủ 7 lựa chọn (bảng kê + 6 mục kỳ) và chọn sẵn 6 mục kỳ theo tab Tổng quan", () => {
+  it("tab Tổng quan mở ở 'Báo cáo theo kỳ' với đủ 6 mục, không hiện cột xuất bảng kê", () => {
     renderDrawer({ defaultReportType: "period-all" });
-    const select = screen.getByLabelText("Loại báo cáo") as HTMLSelectElement;
-    expect(Array.from(select.options).map((o) => o.value)).toEqual([
-      "cases-list",
-      ...PERIOD_KEYS,
-    ]);
-    expect(Array.from(select.selectedOptions).map((o) => o.value)).toEqual(
-      PERIOD_KEYS,
-    );
+    expect(
+      screen.getByText("Báo cáo theo kỳ").getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(selectedPeriods()).toEqual(PERIOD_KEYS);
+    expect(screen.queryByText("CỘT XUẤT DỮ LIỆU")).toBeNull();
   });
 
-  it("chọn sẵn đúng 'Bảng kê phiếu dịch vụ' theo tab Hoạt động", () => {
+  it("tab 'Báo cáo theo kỳ' đứng đầu, trước 'Bảng kê phiếu dịch vụ'", () => {
+    renderDrawer({ defaultReportType: "period-all" });
+    const tabs = Array.from(
+      screen
+        .getByText("Báo cáo theo kỳ")
+        .parentElement!.querySelectorAll("button"),
+    ).map((b) => b.textContent);
+    expect(tabs).toEqual(["Báo cáo theo kỳ", "Bảng kê phiếu dịch vụ"]);
+  });
+
+  it("tab Hoạt động mở ở 'Bảng kê phiếu dịch vụ': hiện cột xuất, không hiện ô nội dung kỳ", () => {
     renderDrawer({ defaultReportType: "cases-list" });
-    const select = screen.getByLabelText("Loại báo cáo") as HTMLSelectElement;
-    expect(Array.from(select.selectedOptions).map((o) => o.value)).toEqual([
-      "cases-list",
-    ]);
+    expect(
+      screen.getByText("Bảng kê phiếu dịch vụ").getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(screen.getByText("CỘT XUẤT DỮ LIỆU")).toBeDefined();
+    expect(screen.queryByLabelText("Nội dung báo cáo")).toBeNull();
   });
 
   it("nhiều mục kỳ gửi reportSections tới endpoint báo cáo kỳ", async () => {
@@ -211,40 +248,36 @@ describe("GarageExportDrawer - Combobox loại báo cáo (nhiều lựa chọn)"
     await chooseReportTypes(["period-pnl", "period-payables"]);
     const body = await exportAndGetCall().then((c: any[]) => c[1]);
     expect(body.reportSections).toEqual(["pnl", "payables"]);
-    expect(body.reportType).toBeUndefined();
   });
 
-  it("chọn bảng kê phiếu dịch vụ thì bỏ các mục kỳ và gọi endpoint cases", async () => {
+  it("không cho để trống nội dung kỳ: bỏ hết thì giữ lựa chọn cũ", async () => {
+    renderDrawer({ defaultReportType: "period-overdue" });
+    await chooseReportTypes([]);
+    expect(selectedPeriods()).toEqual(["period-overdue"]);
+  });
+
+  it("chuyển sang bảng kê rồi quay lại: nội dung kỳ đã chọn vẫn còn", async () => {
     renderDrawer({ defaultReportType: "period-all" });
-    await chooseReportTypes(["cases-list"]);
-    expect(
-      Array.from(
-        (screen.getByLabelText("Loại báo cáo") as HTMLSelectElement)
-          .selectedOptions,
-      ).map((o) => o.value),
-    ).toEqual(["cases-list"]);
+    await chooseReportTypes(["period-overdue"]);
+    await chooseKind("Bảng kê phiếu dịch vụ");
+    await chooseKind("Báo cáo theo kỳ");
+    expect(selectedPeriods()).toEqual(["period-overdue"]);
+  });
+
+  it("ở tab bảng kê, xuất gọi endpoint cases", async () => {
+    renderDrawer({ defaultReportType: "period-all" });
+    await chooseKind("Bảng kê phiếu dịch vụ");
     const call = await exportAndGetCall();
     expect(call[0]).toContain("/cases/export/excel/background");
   });
 
-  it("không cho để trống lựa chọn: bỏ hết thì giữ lựa chọn cũ", async () => {
-    renderDrawer({ defaultReportType: "period-overdue" });
-    await chooseReportTypes([]);
-    expect(
-      Array.from(
-        (screen.getByLabelText("Loại báo cáo") as HTMLSelectElement)
-          .selectedOptions,
-      ).map((o) => o.value),
-    ).toEqual(["period-overdue"]);
-  });
-
-  it("mặc định tab Tổng quan gửi đủ 6 mục kỳ", async () => {
+  it("tab kỳ mặc định gửi đủ 6 mục kỳ", async () => {
     renderDrawer({ defaultReportType: "period-all" });
     const body = await exportAndGetCall().then((c: any[]) => c[1]);
     expect(body.reportSections).toEqual(PERIOD_SECTION_KEYS);
   });
 
-  it("mỗi lần mở lại chọn đúng loại mặc định của tab", async () => {
+  it("mỗi lần mở lại chọn đúng loại và nội dung mặc định của tab", async () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -262,9 +295,6 @@ describe("GarageExportDrawer - Combobox loại báo cáo (nhiều lựa chọn)"
     await chooseReportTypes(["period-overdue"]);
     rerender(drawer(false));
     rerender(drawer(true));
-    const select = screen.getByLabelText("Loại báo cáo") as HTMLSelectElement;
-    expect(Array.from(select.selectedOptions).map((o) => o.value)).toEqual(
-      PERIOD_KEYS,
-    );
+    expect(selectedPeriods()).toEqual(PERIOD_KEYS);
   });
 });

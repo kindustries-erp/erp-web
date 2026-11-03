@@ -5,6 +5,11 @@ import React from "react";
 import { Progress } from "@/shared/components/ui/progress";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { API_BASE_URL } from "@/core/api/axiosInstance";
+import { useInvoiceSyncProgressStore } from "./useInvoiceSyncProgressStore";
+import {
+  isInvoiceSyncKeepAlive,
+  type InvoiceSyncEvent,
+} from "@/modules/erp-invoices-core/utils/invoiceSyncEvent";
 
 export function useInvoiceSyncProgress(onComplete?: () => void) {
   const token = useAuthStore((s) => s.accessToken);
@@ -29,11 +34,6 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
           },
           signal: controller.current?.signal,
           onopen(res) {
-            console.log(
-              "SSE onopen",
-              res.status,
-              res.headers.get("content-type"),
-            );
             if (res.ok && res.status === 200) {
               return Promise.resolve();
             } else {
@@ -45,28 +45,38 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
           onmessage(ev) {
             if (!ev.data) return; // Ignore empty messages
             try {
-              const data = JSON.parse(ev.data);
-              const { current, total, message, completed, processId } = data;
+              const data = JSON.parse(ev.data) as InvoiceSyncEvent;
+              if (isInvoiceSyncKeepAlive(data)) return;
 
-              if (processId === "ping") return; // Ignore keep-alive
+              const store = useInvoiceSyncProgressStore.getState();
+              store.applyEvent(data);
 
-              if (!completed) {
-                const percent = total > 0 ? (current / total) * 100 : 0;
-                toast.loading(
-                  React.createElement(
-                    "div",
-                    { className: "flex flex-col gap-2 min-w-[200px]" },
+              // Drawer đang mở đã hiển thị tiến trình; chỉ toast khi drawer đóng
+              if (!data.completed) {
+                if (!store.panelVisible) {
+                  const percent =
+                    data.total > 0 ? (data.current / data.total) * 100 : 0;
+                  toast.loading(
                     React.createElement(
                       "div",
-                      { className: "text-sm font-medium" },
-                      message,
+                      { className: "flex flex-col gap-2 min-w-[200px]" },
+                      React.createElement(
+                        "div",
+                        { className: "text-sm font-medium" },
+                        data.message,
+                      ),
+                      React.createElement(Progress, { value: percent }),
                     ),
-                    React.createElement(Progress, { value: percent }),
-                  ),
-                  { id: "sync-progress", duration: Infinity },
-                );
+                    { id: "sync-progress", duration: Infinity },
+                  );
+                }
               } else {
-                toast.success(message, { id: "sync-progress", duration: 4000 });
+                if (!store.panelVisible) {
+                  toast.success(data.message, {
+                    id: "sync-progress",
+                    duration: 4000,
+                  });
+                }
                 if (onComplete) {
                   onComplete();
                 }
@@ -76,7 +86,7 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
             }
           },
           onclose() {
-            console.log("SSE onclose");
+            // Kết nối đóng: effect sẽ mở lại khi token hoặc onComplete đổi
           },
           onerror(err) {
             console.error("SSE error", err);
@@ -96,5 +106,6 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
       }
       isConnecting.current = false;
     };
-  }, [onComplete]);
+    // token nằm trong deps: đổi token (đăng nhập lại) thì kết nối SSE mở lại với token mới
+  }, [onComplete, token]);
 }

@@ -1,54 +1,39 @@
-import React, { useRef } from "react";
-import { Upload } from "lucide-react";
-import { useTranslation, Trans } from "react-i18next";
+import { useTranslation } from "react-i18next";
+import { V2FileUpload } from "@/v2/shared/components/molecules/v2-file-upload";
 import type { XmlUploadDropzoneProps } from "./XmlUploadDropzone.type";
 
-export function XmlUploadDropzone({
-  dragging,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onFilesSelected,
-}: XmlUploadDropzoneProps) {
+/** Đồng bộ với API: `FilesInterceptor('files', 200, { fileSize: 5MB })` */
+export const XML_UPLOAD_ACCEPT = [
+  ".xml",
+  ".pdf",
+  ".zip",
+  "application/xml",
+  "text/xml",
+  "application/pdf",
+  "application/zip",
+  "application/x-zip-compressed",
+];
+export const XML_UPLOAD_MAX_FILES = 200;
+export const XML_UPLOAD_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
+export function XmlUploadDropzone({ onFilesSelected }: XmlUploadDropzoneProps) {
   const { t } = useTranslation("erpInvoices");
-  const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      onClick={() => inputRef.current?.click()}
-      className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-        dragging
-          ? "border-primary bg-primary/5"
-          : "border-border hover:border-primary/50 hover:bg-muted/30"
-      }`}
-    >
-      <Upload className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
-      <p className="text-sm font-medium text-foreground">
-        <Trans
-          i18nKey="importDropzoneText"
-          ns="erpInvoices"
-          defaults="Kéo thả file <1>.xml, .pdf, .zip</1> vào đây"
-          components={{ 1: <span className="text-primary" /> }}
-        />
-      </p>
-      <p className="text-xs text-muted-foreground mt-1">
-        {t(
-          "importDropzoneSubtext",
-          "hoặc click để chọn từ máy tính (tối đa 200 file, 5MB/file)",
-        )}
-      </p>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".xml,application/xml,text/xml,.pdf,application/pdf,.zip,application/zip,application/x-zip-compressed"
-        multiple
-        className="hidden"
-        onChange={(e) => e.target.files && onFilesSelected(e.target.files)}
-      />
-    </div>
+    <V2FileUpload
+      multiple
+      accept={XML_UPLOAD_ACCEPT}
+      maxFiles={XML_UPLOAD_MAX_FILES}
+      maxSizeBytes={XML_UPLOAD_MAX_SIZE_BYTES}
+      title={t("importDropzoneTitle", "Kéo thả file .xml, .pdf, .zip vào đây")}
+      hint={t(
+        "importDropzoneSubtext",
+        "hoặc click để chọn từ máy tính (tối đa 200 file, 5MB/file)",
+      )}
+      onFilesSelected={(accepted) => {
+        if (accepted.length > 0) onFilesSelected(accepted);
+      }}
+    />
   );
 }
 

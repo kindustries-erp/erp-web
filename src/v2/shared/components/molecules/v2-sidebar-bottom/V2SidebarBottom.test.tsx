@@ -43,4 +43,27 @@ describe("V2SidebarBottom Molecule", () => {
     expect(screen.queryByText("Admin User")).not.toBeInTheDocument();
     expect(screen.queryByTestId("notification-dot")).not.toBeInTheDocument();
   });
+
+  it("gọi userMenuNode dạng render prop với đúng trạng thái collapsed", () => {
+    const renderUserMenu = vi.fn(({ collapsed }: { collapsed: boolean }) => (
+      <div data-testid="custom-user-menu">
+        <span>Avatar</span>
+        {!collapsed && <span>Full Email</span>}
+      </div>
+    ));
+
+    const { rerender } = render(
+      <V2SidebarBottom collapsed={false} userMenuNode={renderUserMenu} />,
+    );
+
+    expect(screen.getByText("Full Email")).toBeInTheDocument();
+    expect(renderUserMenu).toHaveBeenCalledWith({ collapsed: false });
+
+    rerender(
+      <V2SidebarBottom collapsed={true} userMenuNode={renderUserMenu} />,
+    );
+
+    expect(screen.queryByText("Full Email")).not.toBeInTheDocument();
+    expect(renderUserMenu).toHaveBeenCalledWith({ collapsed: true });
+  });
 });

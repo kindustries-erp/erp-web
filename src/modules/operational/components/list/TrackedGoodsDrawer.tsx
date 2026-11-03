@@ -22,6 +22,7 @@ import {
 } from "@/modules/manufacturing/api/manufacturingApi";
 import { AsBuiltBomTable } from "@/modules/inventory-core/components";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface AttributeEntry {
@@ -336,9 +337,9 @@ export function TrackedGoodsDrawer({
       {detailItem?.status === "ASSEMBLED" && (
         <DrawerSection title={t("Xe lắp ráp")}>
           {loadingVehicle ? (
-            <div className="py-2">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4 mb-2" />
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
+            <div className="py-2 space-y-2">
+              <V2Skeleton className="h-4 w-3/4" />
+              <V2Skeleton className="h-4 w-1/2" />
             </div>
           ) : assignedVehicle ? (
             <>

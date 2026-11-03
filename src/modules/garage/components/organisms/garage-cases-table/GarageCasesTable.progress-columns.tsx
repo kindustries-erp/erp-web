@@ -44,6 +44,16 @@ export function buildProgressColumns(
   });
 
   return [
+    makeExtractorCol(
+      "phaiThuKhachHang",
+      t("cases.columns.receivableCustomer", "Phải thu KH"),
+      extractPhaiThuKhachHang,
+    ),
+    makeExtractorCol(
+      "phaiThuBaoHiem",
+      t("cases.columns.receivableInsurance", "Phải thu BH"),
+      extractPhaiThuBaoHiem,
+    ),
     {
       key: "collectionProgress",
       label: t("cases.columns.collectionProgress", "Tổng phải thu"),
@@ -64,16 +74,6 @@ export function buildProgressColumns(
         />
       ),
     },
-    makeExtractorCol(
-      "phaiThuKhachHang",
-      t("cases.columns.receivableCustomer", "Phải thu KH"),
-      extractPhaiThuKhachHang,
-    ),
-    makeExtractorCol(
-      "phaiThuBaoHiem",
-      t("cases.columns.receivableInsurance", "Phải thu BH"),
-      extractPhaiThuBaoHiem,
-    ),
     {
       key: "tienConPhaiThanhToan",
       label: t("cases.columns.balanceAmount", "Còn phải thu"),

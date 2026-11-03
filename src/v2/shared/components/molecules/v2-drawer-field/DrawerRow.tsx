@@ -13,6 +13,7 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
   className,
   labelClassName,
   valueClassName,
+  multiline,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -30,10 +31,12 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
     }
   };
 
+  const truncateLines = multiline ? (multiline === true ? 2 : multiline) : 1;
+
   return (
     <div
       className={cn(
-        "flex items-start justify-between py-1.5 border-b border-border/40 last:border-b-0 text-xs gap-3",
+        "flex items-start justify-between py-1.5 border-b border-border/40 dark:border-white/[0.04] last:border-b-0 text-xs gap-3",
         className,
       )}
     >
@@ -50,14 +53,19 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
 
       <div
         className={cn(
-          "flex items-center gap-1.5 text-foreground font-medium text-right break-words select-text min-w-0 justify-end flex-1",
+          "flex gap-1.5 text-foreground font-medium text-right break-words select-text min-w-0 justify-end flex-1",
+          multiline ? "items-start" : "items-center",
           valueClassName,
         )}
       >
         <V2Text
           variant="body-sm"
           weight="medium"
-          className="truncate text-foreground"
+          truncate={truncateLines}
+          className={cn(
+            multiline ? "whitespace-normal text-right break-words" : "truncate",
+            "text-foreground",
+          )}
         >
           {value}
         </V2Text>
@@ -71,7 +79,7 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
             className="p-0.5 text-muted-fg hover:text-foreground shrink-0 cursor-pointer"
           >
             {copied ? (
-              <Check className="w-3 h-3 text-emerald-600" />
+              <Check className="w-3 h-3 text-teal-400" />
             ) : (
               <Copy className="w-3 h-3" />
             )}

@@ -1,6 +1,6 @@
 export const changelogEn = {
   title: "Release Changelog & Version",
-  subtitle: "Version details and release timeline of Liouni ERP system",
+  subtitle: "Version details and release timeline of ERP system",
   badgeCurrent: "Current Build",
   badgeLatest: "Latest",
   runtimeInfo: "Runtime & Environment Info",

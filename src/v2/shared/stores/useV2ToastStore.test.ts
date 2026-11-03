@@ -10,11 +10,14 @@ describe("useV2ToastStore", () => {
     const { showToast } = useV2ToastStore.getState();
     showToast({ title: "Đã lưu" });
     showToast({ title: "Lỗi", variant: "destructive", description: "x" });
+    showToast({ title: "Cảnh báo", variant: "warning" });
 
-    const [first, second] = useV2ToastStore.getState().toasts;
+    const [first, second, third] = useV2ToastStore.getState().toasts;
     expect(first).toMatchObject({ title: "Đã lưu", variant: "default" });
     expect(second).toMatchObject({ variant: "destructive", description: "x" });
+    expect(third).toMatchObject({ title: "Cảnh báo", variant: "warning" });
     expect(first.id).not.toBe(second.id);
+    expect(second.id).not.toBe(third.id);
   });
 
   it("dismisses only the requested toast", () => {

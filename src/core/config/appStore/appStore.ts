@@ -4,7 +4,11 @@ import { PageKey, TabInstance } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
 import { updateUserPreferencesApi } from "@/core/api/appConfigApi";
 import { AppState, AppTheme } from "./types";
-import { applyDocumentTheme } from "./themeHelper";
+import {
+  applyDocumentTheme,
+  isSystemDarkMode,
+  registerThemeChangeCallback,
+} from "./themeHelper";
 import { STATIC_TABS, SECTION_ROOTS, DUPLICATABLE_PAGES } from "./constants";
 import {
   getPathWithPreservedSearch,
@@ -26,7 +30,7 @@ export const useAppStore = create<AppState>()(
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
-      appTheme: "classic",
+      appTheme: isSystemDarkMode() ? "classic-dark" : "classic-light",
       locale: "vi",
       isLoggedIn: false,
       companyProfileOpen: false,
@@ -489,7 +493,13 @@ export const useAppStore = create<AppState>()(
         }),
 
       toggleAppTheme: () => {
-        const order: AppTheme[] = ["classic", "shell", "orcaq", "midnight"];
+        const order: AppTheme[] = [
+          "classic-light",
+          "classic-dark",
+          "shell",
+          "orcaq",
+          "midnight",
+        ];
         const idx = order.indexOf(get().appTheme);
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });
@@ -546,11 +556,26 @@ export const useAppStore = create<AppState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
+          if (state.appTheme === "classic" || !state.appTheme) {
+            state.appTheme = isSystemDarkMode()
+              ? "classic-dark"
+              : "classic-light";
+          }
           applyDocumentTheme(state.appTheme);
         } else {
-          applyDocumentTheme("classic");
+          applyDocumentTheme(
+            isSystemDarkMode() ? "classic-dark" : "classic-light",
+          );
         }
       },
     },
   ),
 );
+
+// Đồng bộ tự động 2 chiều khi OS/Browser thay đổi mode Light/Dark
+registerThemeChangeCallback((theme) => {
+  useAppStore.setState({ appTheme: theme });
+  if (useAppStore.getState().isLoggedIn) {
+    updateUserPreferencesApi({ theme }).catch(() => {});
+  }
+});

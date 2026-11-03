@@ -49,10 +49,20 @@ export const ErpInvoiceItemsSection = React.memo(
         hideHeader={isDrawer}
         title={
           direction === "IN"
-            ? t("inbound", "Hóa đơn mua vào")
-            : t("outbound", "Hóa đơn bán ra")
+            ? t("inboundLines", "Bảng kê HHDV mua vào")
+            : t("outboundLines", "Bảng kê HHDV bán ra")
         }
-        desc={t("invoiceDesc", "Quản lý danh sách hóa đơn điện tử")}
+        desc={
+          direction === "IN"
+            ? t(
+                "inboundLinesDesc",
+                "Theo dõi và đối soát từng dòng diễn giải, mặt hàng, số lượng và thuế suất của hóa đơn đầu vào",
+              )
+            : t(
+                "outboundLinesDesc",
+                "Theo dõi và đối soát từng dòng diễn giải, mặt hàng, số lượng và thuế suất của hóa đơn đầu ra",
+              )
+        }
         icon={<Receipt className="h-5 w-5 text-primary" />}
         tabs={tabs}
         activeTab={activeTab}

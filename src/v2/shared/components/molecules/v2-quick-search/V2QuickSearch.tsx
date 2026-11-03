@@ -27,7 +27,7 @@ export const V2QuickSearch: React.FC<V2QuickSearchProps> = ({
       onClick={onClick}
       aria-label={ariaLabel}
       className={cn(
-        "v2-quick-search flex items-center gap-1.5 h-6 px-2 rounded-md border border-border bg-surface text-[11px] text-muted-fg hover:text-foreground hover:bg-surface-hover hover:border-foreground/20 cursor-pointer select-none transition-all shadow-2xs font-normal",
+        "v2-quick-search flex items-center gap-1.5 h-6 px-2 rounded-md border border-border dark:border-white/[0.08] bg-surface dark:bg-white/[0.05] text-[11px] text-muted-fg dark:text-zinc-300 hover:text-foreground dark:hover:text-white hover:bg-surface-hover dark:hover:bg-white/[0.1] hover:border-foreground/20 cursor-pointer select-none transition-all shadow-2xs font-normal",
         className,
       )}
       {...props}
@@ -41,7 +41,7 @@ export const V2QuickSearch: React.FC<V2QuickSearchProps> = ({
       >
         {effectivePlaceholder}
       </V2Text>
-      <kbd className="hidden md:inline-flex items-center justify-center h-4 min-w-[20px] px-1 rounded-[4px] bg-muted text-[9px] font-semibold text-muted-fg border border-border/80">
+      <kbd className="hidden md:inline-flex items-center justify-center h-4 min-w-[20px] px-1 rounded-[4px] bg-muted dark:bg-white/[0.08] text-[9px] font-semibold text-muted-fg dark:text-zinc-300 border border-border/80 dark:border-white/[0.08]">
         {effectiveShortcut}
       </kbd>
     </V2Button>

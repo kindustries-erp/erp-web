@@ -4,6 +4,7 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2ColumnHeaderFilter } from "@/v2/shared/components/molecules/v2-column-header-filter";
 import { TableHead, TableHeader, TableRow } from "@/v2/shared/ui";
 import { cn } from "@/v2/shared/utils/cn";
+import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
 import type { V2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import type { V2TableState } from "../hooks/V2StandardTable.state.hook";
 import type { V2Column } from "../V2StandardTable.type";
@@ -11,8 +12,7 @@ import type { V2Column } from "../V2StandardTable.type";
 export const V2_ROW_ACTIONS_COLUMN_WIDTH = 116;
 
 /** Nền kính dùng chung cho header và hàng tổng (mờ nền phía sau khi cuộn) */
-export const V2_GLASS_SURFACE_CLASS =
-  "bg-[var(--table-header-bg,rgba(244,246,248,0.65))] backdrop-blur-[16px] backdrop-saturate-200";
+export const V2_GLASS_SURFACE_CLASS = GLASS_BAR_CLASS;
 
 interface HeaderCellProps<T> {
   header: Header<T, unknown>;

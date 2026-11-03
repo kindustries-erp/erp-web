@@ -5,6 +5,7 @@ import {
 } from "@/v2/shared/utils/v2ApiError";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import type {
+  BusinessPartner,
   BusinessPartnerFormValue,
   BusinessPartnerType,
 } from "../../domain/entities/businessPartner";
@@ -22,7 +23,7 @@ export interface SaveBusinessPartnerInput {
 /** Tạo mới hoặc cập nhật; thành công làm mới danh sách và đóng drawer qua `onSaved` */
 export function useSaveBusinessPartnerMutation(
   t: Translate,
-  onSaved: () => void,
+  onSaved: (saved: BusinessPartner) => void,
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -30,7 +31,7 @@ export function useSaveBusinessPartnerMutation(
       id
         ? businessPartnersV2Api.update(id, partnerType, form)
         : businessPartnersV2Api.create(partnerType, form),
-    onSuccess: async (_data, { id }) => {
+    onSuccess: async (saved, { id }) => {
       await queryClient.invalidateQueries({
         queryKey: businessPartnerKeys.all,
       });
@@ -41,7 +42,7 @@ export function useSaveBusinessPartnerMutation(
           ? t("v2.partners.form.updateSuccess", "Đã cập nhật thành công")
           : t("v2.partners.form.createSuccess", "Đã tạo mới thành công"),
       });
-      onSaved();
+      onSaved(saved);
     },
     onError: (error, { id }) => {
       // Chứng từ đang tham chiếu đã được modal DOCUMENT_IN_USE giải thích

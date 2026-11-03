@@ -1,0 +1,11 @@
+import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { {{Name}} } from "./{{Name}}";
+
+describe("{{Name}}", () => {
+  it("renders its children", () => {
+    render(<{{Name}}>Nội dung</{{Name}}>);
+
+    expect(screen.getByText("Nội dung")).toBeInTheDocument();
+  });
+});

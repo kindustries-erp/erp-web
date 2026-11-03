@@ -84,4 +84,43 @@ describe("V2TableSummary", () => {
       .querySelectorAll("tfoot td")
       .forEach((cell) => expect(cell).toHaveClass("backdrop-blur-[16px]"));
   });
+
+  it("renders label cell when column has summary.variant === 'label'", () => {
+    const mapWithLabel = new Map<string, V2Column<Row>>([
+      [
+        "qty",
+        {
+          key: "qty",
+          label: "SL",
+          cell: (row) => row.qty,
+          summary: { variant: "label", label: "Tổng cộng:" },
+        },
+      ],
+      [
+        "amount",
+        {
+          key: "amount",
+          label: "Thành tiền",
+          cell: (row) => row.amount,
+          summary: { variant: "amount" },
+        },
+      ],
+    ]);
+
+    const { container } = render(
+      <TableHarness<Row> data={[]} columns={columns}>
+        {(table) => (
+          <V2TableSummary
+            table={table}
+            columnsByKey={mapWithLabel}
+            values={values}
+            page={1}
+            totalPages={3}
+          />
+        )}
+      </TableHarness>,
+    );
+    const firstCell = container.querySelector("tfoot td");
+    expect(firstCell).toHaveTextContent("Tổng cộng:");
+  });
 });

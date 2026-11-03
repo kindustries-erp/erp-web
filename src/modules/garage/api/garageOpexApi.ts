@@ -157,6 +157,11 @@ export interface GaragePnlReportResponse {
     ojTotal?: number;
     items: GaragePnlItem[];
   };
+  financialExpenses?: {
+    total: number;
+    ojTotal?: number;
+    items: GaragePnlItem[];
+  };
   netProfit?: number;
   netProfitBeforeCommission: number;
   serviceCommission?: {
@@ -198,6 +203,7 @@ export interface GaragePnlReportResponse {
     grossMarginRate: number;
     sellingExpensesTotal?: number;
     opexTotal: number;
+    financialExpensesTotal?: number;
     netProfit?: number;
     netProfitBeforeCommission: number;
     serviceCommissionTotal?: number;

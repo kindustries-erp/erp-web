@@ -95,7 +95,7 @@ describe("useErpInvoiceForm without branchId", () => {
     expect(result.current.formError).toBeNull();
   });
 
-  it("should block and show error only when accountingEnabled is true with posting lines but branchId is missing", async () => {
+  it("saves and posts even when no branch is assigned (ghi sổ không cần chi nhánh)", async () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
     const mockInvoice = {
       id: "inv-2",
@@ -140,9 +140,9 @@ describe("useErpInvoiceForm without branchId", () => {
       await result.current.handleSave();
     });
 
-    expect(result.current.formError).toBe(
+    expect(result.current.formError).not.toBe(
       "Vui lòng chọn chi nhánh trước khi lưu và hạch toán kế toán.",
     );
-    expect(erpInvoicesCoreApi.update).not.toHaveBeenCalled();
+    expect(erpInvoicesCoreApi.update).toHaveBeenCalled();
   });
 });

@@ -1,9 +1,11 @@
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
 import type { DayPickerProps } from "react-day-picker";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { enUS, vi } from "date-fns/locale";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2ChevronOrientation } from "./V2DatePicker.type";
 
 export const dateTriggerClass =
   "flex h-8 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
@@ -20,8 +22,15 @@ export const V2Calendar = (props: DayPickerProps) => {
     month: "flex flex-col gap-2",
     month_caption: "flex h-8 items-center justify-center font-medium",
     nav: "absolute inset-x-0 top-0 flex h-8 items-center justify-between",
-    button_previous: cn(dayButton, "z-10 flex items-center justify-center"),
-    button_next: cn(dayButton, "z-10 flex items-center justify-center"),
+    button_previous: cn(
+      dayButton,
+      "z-10 flex items-center justify-center text-foreground hover:bg-muted cursor-pointer",
+    ),
+    button_next: cn(
+      dayButton,
+      "z-10 flex items-center justify-center text-foreground hover:bg-muted cursor-pointer",
+    ),
+    chevron: "inline-block fill-foreground text-foreground",
     month_grid: "border-collapse",
     weekdays: "flex",
     weekday: "w-8 text-center text-xs font-normal text-muted-foreground",
@@ -43,6 +52,16 @@ export const V2Calendar = (props: DayPickerProps) => {
       showOutsideDays
       locale={locale === "en" ? enUS : vi}
       classNames={classNames}
+      components={{
+        Chevron: ({ orientation }: { orientation?: string }) => {
+          if (orientation === V2ChevronOrientation.RIGHT) {
+            return (
+              <ChevronRight className="h-4 w-4 text-foreground shrink-0" />
+            );
+          }
+          return <ChevronLeft className="h-4 w-4 text-foreground shrink-0" />;
+        },
+      }}
       labels={{
         labelPrevious: () => t("v2.form.prevMonth", "Tháng trước"),
         labelNext: () => t("v2.form.nextMonth", "Tháng sau"),

@@ -2,6 +2,24 @@ import axiosInstance from "@/core/api/axiosInstance";
 
 export type InvoicePartnerType = "CUSTOMER" | "SUPPLIER";
 
+/** Một khoản sao kê còn phần chưa cấn trừ hóa đơn (số tiền dạng chuỗi từ backend) */
+export interface UnallocatedPaymentItem {
+  id: string;
+  transDate: string;
+  referenceNumber: string | null;
+  description: string | null;
+  note: string | null;
+  cashflowPurpose: string | null;
+  amount: string;
+  netOffAmount: string;
+  unallocatedAmount: string;
+}
+
+export interface UnallocatedPaymentResult {
+  items: UnallocatedPaymentItem[];
+  total: number;
+}
+
 export interface InvoiceDebtItem {
   taxCode: string;
   partnerName: string;
@@ -10,6 +28,10 @@ export interface InvoiceDebtItem {
   totalAmount: number;
   paidAmount: number;
   balanceAmount: number;
+  /** Tiền sao kê gắn đối tượng nhưng chưa cấn trừ hóa đơn nào */
+  unallocatedAmount?: number;
+  /** Còn phải thu/trả sau khi trừ phần chưa phân bổ; có thể âm khi trả trước */
+  netBalanceAmount?: number;
   maxAgingDays: number;
   weightedAgingDays?: number;
   latestInvoiceDate: string | null;
@@ -30,6 +52,8 @@ export interface InvoiceDebtSummary {
   grandTotalAmount: number;
   grandTotalPaid: number;
   grandTotalBalance: number;
+  /** Tổng tiền chưa phân bổ của toàn bộ kết quả đang lọc */
+  grandTotalUnallocated?: number;
   grandTotalAging0To30?: number;
   grandTotalAging31To60?: number;
   grandTotalAging61To90?: number;
@@ -191,6 +215,18 @@ export const invoiceDebtsApi = {
       {
         params,
       },
+    );
+    return data;
+  },
+
+  /** Khoản sao kê gắn đối tác nhưng chưa cấn trừ hóa đơn nào */
+  getUnallocatedPayments: async (
+    taxCode: string,
+    partnerType?: InvoicePartnerType,
+  ): Promise<UnallocatedPaymentResult> => {
+    const { data } = await axiosInstance.get<UnallocatedPaymentResult>(
+      `${BASE}/${encodeURIComponent(taxCode)}/unallocated-payments`,
+      { params: { partner_type: partnerType } },
     );
     return data;
   },

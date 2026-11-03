@@ -3,6 +3,11 @@ import { useSyncExternalStore, useEffect, useId } from "react";
 export const V2_DESKTOP_STACK_OFFSET_PX = 20;
 export const V2_MOBILE_STACK_OFFSET_PX = 16;
 export const V2_BASE_DRAWER_Z_INDEX = 50;
+/**
+ * Mức z-index để drawer V2 mở chồng lên drawer v1 (DrawerModal: 400 + 50 mỗi tầng).
+ * Lưu ý: cao hơn V2Popover (450) nên popover/dropdown V2 mở từ bên trong drawer này sẽ bị che.
+ */
+export const V2_ABOVE_V1_DRAWER_Z_INDEX = 600;
 export const V2_Z_INDEX_STEP = 10;
 
 export interface V2DrawerStackState {
@@ -19,6 +24,8 @@ export interface UseV2DrawerStackOptions {
   stackOffsetPx?: number;
   mobileOffsetPx?: number;
   disableStackOffset?: boolean;
+  /** z-index của tầng đầu tiên; mặc định `V2_BASE_DRAWER_Z_INDEX` */
+  baseZIndex?: number;
 }
 
 type StackListener = () => void;
@@ -102,7 +109,8 @@ export function useV2DrawerStack(
 
   const desktopShiftPx = disableOffset ? 0 : depth * desktopStep;
   const mobileTopOffsetPx = disableOffset ? 0 : depth * mobileStep;
-  const zIndex = V2_BASE_DRAWER_Z_INDEX + depth * V2_Z_INDEX_STEP;
+  const baseZIndex = options?.baseZIndex ?? V2_BASE_DRAWER_Z_INDEX;
+  const zIndex = baseZIndex + depth * V2_Z_INDEX_STEP;
 
   return {
     drawerId,

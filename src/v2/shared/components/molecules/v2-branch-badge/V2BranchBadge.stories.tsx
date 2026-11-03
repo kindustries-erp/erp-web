@@ -21,13 +21,13 @@ type Story = StoryObj<typeof V2BranchBadge>;
 export const Default: Story = {
   args: {
     branchName: "Chi nhánh Nam Sài Gòn",
-    companyName: "Công ty Cổ phần Công nghiệp Liouni",
+    companyName: "Công ty Cổ phần Công nghiệp Mẫu",
   },
 };
 
 export const ShortName: Story = {
   args: {
     branchName: "Kho Tổng Đào Trí",
-    companyName: "Liouni Logistics",
+    companyName: "Mẫu Logistics",
   },
 };

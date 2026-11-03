@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { PanelContent } from "@/shared/types";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -59,6 +60,17 @@ export const useUIStore = create<UIState>((set, get) => ({
       toastDescription: payload.description ?? "",
       toastVariant: payload.variant ?? "default",
       toastVisible: true,
+    });
+    // Bridge to V2 Toast Engine
+    useV2ToastStore.getState().showToast({
+      title: payload.title ?? payload.description ?? "",
+      description: payload.title ? payload.description : undefined,
+      variant:
+        payload.variant === "destructive"
+          ? "destructive"
+          : payload.variant === "success"
+            ? "success"
+            : "default",
     });
     toastTimer = setTimeout(() => set({ toastVisible: false }), 3800);
   },

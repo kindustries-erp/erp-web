@@ -8,6 +8,10 @@ import {
   DialogFooter,
 } from "@/v2/shared/ui/dialog";
 import { cn } from "@/v2/shared/utils/cn";
+import {
+  FLOATING_OVERLAY_CLASS,
+  FLOATING_SURFACE_CLASS,
+} from "@/v2/shared/ui/floating-surface";
 import type { V2ModalProps } from "./V2Modal.type";
 
 export const V2ModalMobile: React.FC<V2ModalProps> = ({
@@ -32,10 +36,13 @@ export const V2ModalMobile: React.FC<V2ModalProps> = ({
       <DialogContent
         hideCloseButton={hideCloseButton}
         hideOverlay={hideOverlay}
+        overlayClassName={FLOATING_OVERLAY_CLASS}
         closeAriaLabel={closeAriaLabel}
         className={cn(
           "fixed inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0",
           "w-full max-w-none rounded-b-none rounded-t-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-b-0",
+          FLOATING_SURFACE_CLASS,
+          "border-t border-[color:var(--drawer-border,var(--border))] dark:border-t-white/[0.08]",
           "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           className,
         )}

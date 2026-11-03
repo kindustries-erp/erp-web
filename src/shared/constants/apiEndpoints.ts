@@ -1,5 +1,5 @@
 /**
- * Chuẩn hóa tập trung Enum URL API Endpoints cho toàn bộ hệ thống Liouni ERP (erp-web).
+ * Chuẩn hóa tập trung Enum URL API Endpoints cho toàn bộ hệ thống ERP (erp-web).
  * Bắt buộc sử dụng ErpApiEndpoint thay vì viết chuỗi string tự do ("/api/v1/...").
  */
 export enum ErpApiEndpoint {

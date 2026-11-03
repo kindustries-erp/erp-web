@@ -9,6 +9,7 @@ import {
   inputCls,
   selectCls,
 } from "@/shared/components/DrawerModal";
+import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
   createSinvoiceApi,
@@ -54,7 +55,8 @@ function buildDraftPayload(
     buyer_tax_code?: string;
     buyer_address?: string;
   },
-  partner?: BusinessPartner | null,
+  partner: BusinessPartner | null | undefined,
+  sellerAddress: string,
 ) {
   return {
     buyerName: (
@@ -67,7 +69,7 @@ function buildDraftPayload(
     buyerTaxCode:
       (form.buyer_tax_code || partner?.tax_code || "").trim() || undefined,
     buyerAddress: (form.buyer_address || partner?.address || "").trim(),
-    sellerAddress: "123 Đường Liouni, HCM",
+    sellerAddress: sellerAddress.trim(),
     description: form.description || form.reference_no || "Hóa đơn nháp từ ERP",
     currencyCode: form.currency || "VND",
     templateCode: form.template_code,
@@ -106,6 +108,7 @@ export function SinvoiceDraftModal({
   title = "Tạo hóa đơn điện tử nháp Viettel v2.49",
   subtitle = "Chỉ lưu nháp nội bộ theo surface Viettel v2.49, không ký và không phát hành",
 }: SinvoiceDraftModalProps) {
+  const { data: companyProfile } = useCompanyProfile();
   const [form, setForm] = useState<CreateArSalesInvoiceWithViettelDto>(() => ({
     ...emptySalesInvoiceForm(),
     ...initialForm,
@@ -196,7 +199,11 @@ export function SinvoiceDraftModal({
   };
 
   const handleSave = async () => {
-    const draftPayload = buildDraftPayload(form, selectedPartner);
+    const draftPayload = buildDraftPayload(
+      form,
+      selectedPartner,
+      companyProfile?.address ?? "",
+    );
     if (draftPayload.buyerTaxCode && !draftPayload.buyerAddress) {
       setError(
         "Khách hàng có MST nhưng thiếu địa chỉ. Vui lòng cập nhật địa chỉ khách hàng trước khi lưu nháp.",

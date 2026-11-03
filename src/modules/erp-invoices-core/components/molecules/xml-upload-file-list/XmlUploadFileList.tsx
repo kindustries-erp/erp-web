@@ -1,15 +1,17 @@
 import { useState } from "react";
-import {
-  FileText,
-  FileCode,
-  Archive,
-  X,
-  CheckCircle2,
-  AlertCircle,
-  Eye,
-} from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
+import {
+  AlertCircle,
+  Archive,
+  CheckCircle2,
+  Eye,
+  FileCode,
+  FileText,
+  X,
+} from "lucide-react";
+import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { Badge } from "@/v2/shared/ui/badge";
+import { XmlFilePreviewModal } from "@/modules/erp-invoices-core/components/molecules/xml-file-preview-modal";
 import type { XmlUploadFileListProps } from "./XmlUploadFileList.type";
 
 export function XmlUploadFileList({ files, onRemove }: XmlUploadFileListProps) {
@@ -18,87 +20,80 @@ export function XmlUploadFileList({ files, onRemove }: XmlUploadFileListProps) {
 
   if (files.length === 0) return null;
 
+  const isPaired = (name: string) =>
+    files.some((f) => f.type === "xml" && f.pairedPdf === name);
+
   return (
-    <div className="border border-border rounded-lg overflow-hidden">
-      <div className="px-4 py-2 bg-muted/30 text-xs font-medium text-muted-foreground border-b border-border">
+    <div className="overflow-hidden rounded-lg border border-border">
+      <div className="border-b border-border bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground">
         {t("importSelected", {
           count: files.length,
           defaultValue: "{{count}} file đã chọn",
         })}
       </div>
-      <ul className="divide-y divide-border max-h-48 overflow-y-auto">
+      <ul className="max-h-48 divide-y divide-border overflow-y-auto">
         {files.map((entry) => (
           <li
             key={entry.id}
-            className="flex items-center justify-between px-4 py-2 text-sm hover:bg-muted/20"
+            className="flex items-center justify-between gap-2 px-4 py-2 text-sm hover:bg-muted/20"
           >
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
               {entry.type === "xml" && (
-                <FileCode className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400 shrink-0" />
+                <FileCode className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               )}
               {entry.type === "pdf" && (
-                <FileText className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                <FileText className="h-3.5 w-3.5 shrink-0 text-red-500" />
               )}
               {entry.type === "zip" && (
-                <Archive className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <Archive className="h-3.5 w-3.5 shrink-0 text-amber-500" />
               )}
-
               <span className="truncate">{entry.file.name}</span>
-              <span className="text-xs text-muted-foreground shrink-0">
+              <span className="shrink-0 text-xs text-muted-foreground">
                 {(entry.file.size / 1024).toFixed(0)} KB
               </span>
-
               {entry.type === "xml" && entry.pairedPdf && (
-                <span className="flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-1.5 py-0.5 rounded-full ml-2 shrink-0">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Đã ghép PDF
-                </span>
+                <Badge variant="success" className="ml-2 shrink-0 gap-1">
+                  <CheckCircle2 className="h-3 w-3" />
+                  {t("importNotePaired", "Đã ghép PDF")}
+                </Badge>
               )}
-              {entry.type === "pdf" &&
-                !files.find(
-                  (f) => f.type === "xml" && f.pairedPdf === entry.file.name,
-                ) && (
-                  <span className="flex items-center gap-1 text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded-full ml-2 shrink-0">
-                    <AlertCircle className="w-3 h-3" />
-                    Orphan
-                  </span>
-                )}
+              {entry.type === "pdf" && !isPaired(entry.file.name) && (
+                <Badge variant="warning" className="ml-2 shrink-0 gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Orphan
+                </Badge>
+              )}
             </div>
-            <div className="ml-2 flex items-center gap-1 shrink-0">
+            <div className="flex shrink-0 items-center gap-1">
               {entry.type === "pdf" && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPreviewFile(entry.file);
-                  }}
-                  className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-                  title="Xem PDF"
+                <V2Button
+                  variant="ghost"
+                  size="icon-xs"
+                  title={t("importPreviewPdf", "Xem PDF")}
+                  aria-label={t("importPreviewPdf", "Xem PDF")}
+                  onClick={() => setPreviewFile(entry.file)}
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                </button>
+                  <Eye className="h-3.5 w-3.5" />
+                </V2Button>
               )}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove(entry.id);
-                }}
-                className="p-1.5 hover:text-destructive transition-colors rounded hover:bg-destructive/10"
-                title="Xóa"
+              <V2Button
+                variant="ghost"
+                size="icon-xs"
+                title={t("importRemove", "Xóa")}
+                aria-label={t("importRemove", "Xóa")}
+                className="hover:text-destructive"
+                onClick={() => onRemove(entry.id)}
               >
-                <X className="w-3.5 h-3.5" />
-              </button>
+                <X className="h-3.5 w-3.5" />
+              </V2Button>
             </div>
           </li>
         ))}
       </ul>
 
-      <FilePreviewDrawer
-        open={!!previewFile}
-        onClose={() => setPreviewFile(null)}
+      <XmlFilePreviewModal
         file={previewFile}
-        fileName={previewFile?.name}
+        onClose={() => setPreviewFile(null)}
       />
     </div>
   );

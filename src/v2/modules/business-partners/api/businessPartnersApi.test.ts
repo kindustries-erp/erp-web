@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInitialQuery } from "@/v2/shared/components/organisms/v2-standard-table";
+import { createInitialQuery } from "@/v2/shared/components";
 import { TableSortState, TextFilterOperator } from "@/v2/shared/types/v2-table";
 import { toBusinessPartnerListParams } from "./businessPartnersApi";
 

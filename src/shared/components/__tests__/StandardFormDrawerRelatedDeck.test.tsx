@@ -260,7 +260,7 @@ describe("Pre-built Related Deck Sub-Components", () => {
         actionType: "CREATE",
         actionLabel: "Khởi tạo phiếu",
         actorName: "Nguyễn Văn A",
-        actorEmail: "vana@liouni.vn",
+        actorEmail: "vana@example.vn",
         timestamp: new Date().toISOString(),
         message: "Khởi tạo đơn hàng mới từ báo giá",
         diffs: [

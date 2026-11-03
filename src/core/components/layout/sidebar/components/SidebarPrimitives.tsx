@@ -31,7 +31,7 @@ export function SubItem({
     <div
       className={cn(
         "py-[6px] pl-3 pr-4 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden",
-        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-surface-hover hover:text-foreground",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--sidebar-hover-bg,var(--surface-hover))] hover:text-[color:var(--sidebar-hover-fg,var(--foreground))]",
         active &&
           "!text-[color:var(--sidebar-active-fg)] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
       )}
@@ -94,15 +94,17 @@ export function NavItem({
     <Tooltip content={label} disabled={!collapsed}>
       <div
         className={cn(
-          "flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md cursor-pointer whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
-          "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
+          "group flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md cursor-pointer whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
+          "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--sidebar-hover-bg,var(--popup-bg-hover))] hover:text-[color:var(--sidebar-hover-fg,var(--foreground))]",
           active &&
-            "!text-foreground font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
+            "!text-[color:var(--sidebar-active-fg,var(--foreground))] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
         )}
         onClick={onClick}
         onContextMenu={contextPage ? onContextMenu : undefined}
       >
-        <span className="nav-icon flex-shrink-0">{icon}</span>
+        <span className="nav-icon flex-shrink-0 transition-colors group-hover:text-[color:var(--sidebar-hover-fg,var(--foreground))]">
+          {icon}
+        </span>
         <span className="nav-label hide-on-collapse text-[12px] overflow-hidden whitespace-nowrap flex-1 transition-all duration-150">
           {label}
         </span>
@@ -147,15 +149,17 @@ export function NavGroup({
   const triggerContent = (
     <div
       className={cn(
-        "flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
+        "group flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
         "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100",
         !isMobile &&
-          "hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground cursor-pointer outline-none select-none",
+          "hover:bg-[color:var(--sidebar-hover-bg,var(--popup-bg-hover))] hover:text-[color:var(--sidebar-hover-fg,var(--foreground))] cursor-pointer outline-none select-none",
         active &&
-          "!text-foreground font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
+          "!text-[color:var(--sidebar-active-fg,var(--foreground))] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
       )}
     >
-      <span className="nav-icon flex-shrink-0">{icon}</span>
+      <span className="nav-icon flex-shrink-0 transition-colors group-hover:text-[color:var(--sidebar-hover-fg,var(--foreground))]">
+        {icon}
+      </span>
       <span className="nav-label hide-on-collapse text-sm overflow-hidden whitespace-nowrap flex-1 transition-all duration-150">
         {label}
       </span>
@@ -261,9 +265,9 @@ export function NavGroupItem({
     <div
       className={cn(
         "py-[6px] mx-2 px-2 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden rounded-md transition-colors",
-        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--sidebar-hover-bg,var(--popup-bg-hover))] hover:text-[color:var(--sidebar-hover-fg,var(--foreground))]",
         active &&
-          "!text-foreground font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
+          "!text-[color:var(--sidebar-active-fg,var(--foreground))] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
       )}
       onClick={onClick}
       onContextMenu={contextPage ? onContextMenu : undefined}

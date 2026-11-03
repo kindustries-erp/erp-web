@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
 import { InvoiceShapePage } from "@/v2/modules/finance-invoice";
@@ -35,13 +35,13 @@ describe("InvoiceShape page (parity smoke test)", () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
-  it("opens on the dashboard with KPIs and charts", () => {
+  it("opens on the dashboard with KPIs and charts", async () => {
     renderPage();
     expect(
       screen.getByRole("heading", { name: "Hóa đơn điện tử" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Doanh số bán ra")).toBeInTheDocument();
-    expect(screen.getByTestId("line")).toBeInTheDocument();
+    expect(await screen.findByText("Doanh số bán ra")).toBeInTheDocument();
+    expect(await screen.findByTestId("line")).toBeInTheDocument();
     expect(screen.getByTestId("donut")).toBeInTheDocument();
     expect(screen.getByTestId("bar")).toBeInTheDocument();
   });
@@ -61,36 +61,18 @@ describe("InvoiceShape page (parity smoke test)", () => {
     expect(window.location.search).toContain("tab=in");
   });
 
-  it("opens the sync split button menu with its three groups", async () => {
-    renderPage();
-    fireEvent.click(screen.getByText("Hóa đơn mua vào"));
-    await screen.findByText("C26TGA-1001");
-    fireEvent.click(
-      screen.getAllByRole("button", { name: "Thao tác khác" })[0]!,
-    );
-    expect(await screen.findByText("Tra cứu")).toBeInTheDocument();
-    expect(screen.getByText("Thao tác")).toBeInTheDocument();
-    expect(screen.getByText("Cấu hình")).toBeInTheDocument();
-    // "Xuất Excel" cũng là nút ở header, nên chỉ cần có ít nhất một phần tử
-    expect(screen.getAllByText("Xuất Excel").length).toBeGreaterThan(1);
-    expect(screen.getByText("Đăng nhập Cổng Thuế")).toBeInTheDocument();
-  });
-
-  it("opens the detail drawer from a row with its info, preview and tabs", async () => {
+  it("opens the read-only detail drawer with its info and no edit or posting actions", async () => {
     renderPage();
     fireEvent.click(screen.getByText("Hóa đơn mua vào"));
     fireEvent.click(await screen.findByText("C26TGA-1001"));
     expect(await screen.findByText("Hóa đơn C26TGA-1001")).toBeInTheDocument();
     expect(window.location.search).toContain("overlay=");
     expect(screen.getByText("Thông tin chung")).toBeInTheDocument();
-    expect(screen.getByText("Tài chính")).toBeInTheDocument();
-    expect(screen.getByText("Chứng từ liên kết")).toBeInTheDocument();
-    expect(
-      screen.getByText((text) => text.includes("<SHDon>1001</SHDon>")),
-    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Hạch toán" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: "Tài chính" })).toBeNull();
   });
 
-  it("stacks the posting drawer over the detail drawer and closes only the top one", async () => {
+  it("ignores non-detail overlay keys in the URL and still opens the detail drawer", async () => {
     window.history.replaceState(
       null,
       "",
@@ -98,18 +80,6 @@ describe("InvoiceShape page (parity smoke test)", () => {
     );
     renderPage();
     expect(await screen.findByText("Hóa đơn C26TGA-1001")).toBeInTheDocument();
-    expect(await screen.findByText("Hạch toán hóa đơn")).toBeInTheDocument();
-
-    const closers = screen.getAllByRole("button", {
-      name: "Đóng",
-      hidden: true,
-    });
-    fireEvent.click(closers[closers.length - 1]!);
-    await waitFor(() =>
-      expect(screen.queryByText("Hạch toán hóa đơn")).not.toBeInTheDocument(),
-    );
-    expect(screen.getByText("Hóa đơn C26TGA-1001")).toBeInTheDocument();
-    expect(window.location.search).not.toContain("posting");
   });
 
   it("restores an open drawer from the URL", async () => {

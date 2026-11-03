@@ -11,14 +11,7 @@ import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSumma
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import {
-  ReceiptText,
-  Eye,
-  FileText,
-  Download,
-  FileSpreadsheet,
-} from "lucide-react";
-import toast from "react-hot-toast";
+import { ReceiptText, Eye, FileText, FileSpreadsheet } from "lucide-react";
 import type { TabItem } from "@/shared/components/PageLayout";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { useInvoiceDebtsList } from "../hooks/useInvoiceDebtsList";
@@ -142,71 +135,6 @@ export function InvoiceDebtsPage() {
   const openDetail = useCallback((taxCode: string, partnerName?: string) => {
     setSelectedPartner({ taxCode, partnerName });
   }, []);
-
-  const handleQuickExport = useCallback(async () => {
-    try {
-      toast.loading(
-        t("debts:exportDrawer.toast.downloading", "Đang xuất file Excel..."),
-        { id: "quick-export-debt" },
-      );
-      const blob = await invoiceDebtsApi.exportExcel({
-        partner_type: listHook.partnerType,
-        search: listHook.search || undefined,
-        date_from: listHook.dateFrom || undefined,
-        date_to: listHook.dateTo || undefined,
-        column_search:
-          Object.keys(listHook.columnSearch).length > 0
-            ? JSON.stringify(listHook.columnSearch)
-            : undefined,
-        column_filters:
-          Object.keys(listHook.columnFilters).length > 0
-            ? JSON.stringify(listHook.columnFilters)
-            : undefined,
-      });
-      const blobUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = blobUrl;
-      a.download = `Bao_cao_cong_no_${activeTab === "suppliers" ? "nha_cung_cap" : "khach_hang"}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (document.body.contains(a)) {
-          document.body.removeChild(a);
-        }
-        window.URL.revokeObjectURL(blobUrl);
-      }, 2000);
-      toast.success(
-        t("debts:exportDrawer.toast.downloading", "Đã tải xuống file Excel."),
-        { id: "quick-export-debt" },
-      );
-    } catch (e: any) {
-      toast.error(
-        e?.message ||
-          t(
-            "debts:exportDrawer.error.downloadFailed",
-            "Không thể xuất file Excel.",
-          ),
-        { id: "quick-export-debt" },
-      );
-    }
-  }, [activeTab, listHook, t]);
-
-  const createActions = useMemo<ActionDropdownItem[]>(
-    () => [
-      {
-        groupLabel: t("common:search", "Tra cứu"),
-        items: [
-          {
-            label: t("debts:exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
-            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: () => setExportDrawerOpen(true),
-          },
-        ],
-      },
-    ],
-    [t],
-  );
 
   // 4. Server-Side Column Header Filter Builder
   const headerFilter = useMemo(
@@ -482,6 +410,33 @@ export function InvoiceDebtsPage() {
             >
               {money(bal)}
             </span>
+          );
+        },
+      },
+
+      // 6b. Chưa phân bổ: tiền sao kê đã gắn đối tượng nhưng chưa cấn trừ hóa đơn nào
+      {
+        key: "unallocatedAmount",
+        className: "text-right font-mono text-xs",
+        header: t("debts:columns.unallocated", "Chưa phân bổ"),
+        size: 150,
+        enableResizing: true,
+        cell: (row) => money(Number(row.unallocatedAmount) || 0),
+      },
+      // 6c. Còn lại sau trừ phân bổ (có thể âm khi trả trước)
+      {
+        key: "netBalanceAmount",
+        className: "text-right font-mono text-xs",
+        header: t("debts:columns.netBalance", "Còn lại sau phân bổ"),
+        size: 170,
+        enableResizing: true,
+        cell: (row) => {
+          const net =
+            row.netBalanceAmount ??
+            (Number(row.balanceAmount) || 0) -
+              (Number(row.unallocatedAmount) || 0);
+          return (
+            <span className="tabular-nums font-semibold">{money(net)}</span>
           );
         },
       },
@@ -854,6 +809,7 @@ export function InvoiceDebtsPage() {
     let subtotalInvoices = 0;
     let subtotalAmount = 0;
     let subtotalBal = 0;
+    let subtotalUnalloc = 0;
     let subtotalA0_30 = 0;
     let subtotalA31_60 = 0;
     let subtotalA61_90 = 0;
@@ -863,6 +819,7 @@ export function InvoiceDebtsPage() {
       subtotalInvoices += Number(r.invoiceCount) || 0;
       subtotalAmount += Number(r.totalAmount) || 0;
       subtotalBal += Number(r.balanceAmount) || 0;
+      subtotalUnalloc += Number(r.unallocatedAmount) || 0;
       subtotalA0_30 += Number(r.aging0To30) || 0;
       subtotalA31_60 += Number(r.aging31To60) || 0;
       subtotalA61_90 += Number(r.aging61To90) || 0;
@@ -995,6 +952,21 @@ export function InvoiceDebtsPage() {
               ? "font-bold text-emerald-600 dark:text-emerald-400"
               : "font-bold text-destructive"
           }
+        />
+      ),
+      unallocatedAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:columns.unallocated", "Chưa phân bổ")}
+          itemTitle={t("debts:partner", "Đối tác")}
+          itemUnit={t("debts:unitPartner", "đối tác")}
+          subtotalAmount={subtotalUnalloc}
+          grandTotalAmount={listHook.summary.grandTotalUnallocated ?? 0}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          valueClassName="font-bold text-amber-700 dark:text-amber-400"
         />
       ),
       aging0To30: (
@@ -1190,13 +1162,11 @@ export function InvoiceDebtsPage() {
             listHook.setPage(1);
           }}
           onRefresh={() => listHook.refetch()}
-          createLabel={t(
-            "debts:exportCurrentView",
-            "Xuất nhanh dữ liệu hiện tại",
-          )}
-          createIcon={<Download className="w-4 h-4 mr-1 text-primary-fg/80" />}
-          onCreate={handleQuickExport}
-          createActions={createActions}
+          createLabel={t("debts:exportExcel", "Xuất Excel")}
+          createIcon={
+            <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
+          }
+          onCreate={() => setExportDrawerOpen(true)}
           activeFilterCount={listHook.activeFilterCount}
           onClearAllFilters={listHook.clearAllFilters}
           rowActions={getRowActions}

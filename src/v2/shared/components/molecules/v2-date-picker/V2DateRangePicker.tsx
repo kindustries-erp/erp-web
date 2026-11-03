@@ -1,6 +1,13 @@
 import * as React from "react";
-import { CalendarDays, X } from "lucide-react";
+import {
+  CalendarDays,
+  X,
+  V2Button,
+  V2Icon,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useViewport } from "@/v2/shared/hooks/useViewport";
 import { cn } from "@/v2/shared/utils/cn";
@@ -23,11 +30,20 @@ export const V2DateRangePicker: React.FC<V2DateRangePickerProps> = ({
   disabled = false,
   presets,
   className,
+  triggerClassName,
   "aria-label": ariaLabel,
 }) => {
   const { t } = useV2Translation();
   const { isMobile } = useViewport();
   const [open, setOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  // Click ra ngoài thì đóng lịch; mở lịch này sẽ đóng popover đang mở khác
+  useV2PopoverDismiss({
+    open,
+    onClose: () => setOpen(false),
+    containerRef,
+    panelSelector: "[data-v2-date-panel]",
+  });
   const from = parseIsoDate(value.from);
   const to = parseIsoDate(value.to);
   const hint = placeholder ?? t("v2.form.pickDateRange", "Chọn khoảng ngày");
@@ -39,21 +55,22 @@ export const V2DateRangePicker: React.FC<V2DateRangePickerProps> = ({
     : hint;
 
   const trigger = (
-    <button
+    <V2Button
       type="button"
+      variant="outline"
       aria-label={ariaLabel ?? hint}
       disabled={disabled}
-      className={cn(dateTriggerClass, canClear && "pr-8")}
+      className={cn(dateTriggerClass, canClear && "pr-8", triggerClassName)}
     >
-      <CalendarDays aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
-      <span className={cn("truncate", !hasValue && "text-muted-foreground")}>
+      <V2Icon icon={CalendarDays} size={16} className="shrink-0 opacity-60" />
+      <V2Text variant="body-sm" truncate color={hasValue ? "default" : "muted"}>
         {text}
-      </span>
-    </button>
+      </V2Text>
+    </V2Button>
   );
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <div ref={containerRef} className={cn("relative w-full", className)}>
       <V2Popover
         trigger={trigger}
         open={open}
@@ -66,21 +83,22 @@ export const V2DateRangePicker: React.FC<V2DateRangePickerProps> = ({
         className="w-auto max-w-none p-2"
         triggerClassName="w-full"
         content={
-          <div className="flex gap-3">
+          <div className="flex gap-3" data-v2-date-panel="">
             {presets && presets.length > 0 && (
-              <ul className="flex w-32 shrink-0 flex-col gap-0.5 border-r border-border pr-2">
+              <ul className="flex w-32 shrink-0 flex-col gap-0.5 border-r border-border/40 pr-2">
                 {presets.map((preset) => (
                   <li key={preset.key}>
-                    <button
-                      type="button"
-                      className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+                    <V2Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-xs font-normal"
                       onClick={() => {
                         onValueChange(preset.range());
                         setOpen(false);
                       }}
                     >
-                      {preset.label}
-                    </button>
+                      <V2Text variant="body-sm">{preset.label}</V2Text>
+                    </V2Button>
                   </li>
                 ))}
               </ul>
@@ -103,14 +121,15 @@ export const V2DateRangePicker: React.FC<V2DateRangePickerProps> = ({
         }
       />
       {canClear && (
-        <button
-          type="button"
+        <V2Button
+          variant="ghost"
+          size="icon-xs"
           aria-label={t("v2.form.clearDate", "Xóa ngày")}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+          className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded p-0 text-muted-fg hover:text-foreground"
           onClick={() => onValueChange({})}
         >
-          <X className="h-3.5 w-3.5" />
-        </button>
+          <V2Icon icon={X} size={14} />
+        </V2Button>
       )}
     </div>
   );

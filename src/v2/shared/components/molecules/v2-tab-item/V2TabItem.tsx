@@ -1,8 +1,7 @@
 import * as React from "react";
-import { X } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { V2Button, V2Text, V2Icon, X } from "@/v2/shared/components/atoms";
 import { V2TabItemProps } from "./V2TabItem.type";
 
 export const V2TabItem: React.FC<V2TabItemProps> = ({
@@ -31,23 +30,28 @@ export const V2TabItem: React.FC<V2TabItemProps> = ({
       className={cn(
         "v2-tab-item group relative flex h-full items-center gap-[6px] px-[14px] text-[11px] font-medium cursor-pointer transition-all duration-150 ease-out whitespace-nowrap select-none border-b-2 border-transparent",
         isActive
-          ? "text-foreground font-semibold border-b-primary"
-          : "text-muted-fg hover:text-foreground hover:border-b-black/10 dark:hover:border-b-white/10",
+          ? "text-foreground dark:text-white font-semibold border-b-primary dark:border-b-white"
+          : "text-muted-fg dark:text-zinc-400 hover:text-foreground dark:hover:text-zinc-100 hover:border-b-black/10 dark:hover:border-b-white/20",
         className,
       )}
       {...props}
     >
       {Icon && (
-        <Icon
-          size={14}
+        <span
           className={cn(
-            "flex-shrink-0 transition-opacity",
+            "flex-shrink-0 inline-flex items-center justify-center transition-opacity",
             isActive
-              ? "opacity-100 text-foreground"
-              : "opacity-60 group-hover:opacity-100",
+              ? "opacity-100 text-foreground dark:text-white"
+              : "opacity-60 dark:opacity-75 group-hover:opacity-100 dark:group-hover:text-white",
           )}
           aria-hidden="true"
-        />
+        >
+          {React.isValidElement(Icon) ? (
+            Icon
+          ) : (
+            <V2Icon icon={Icon as any} size={14} />
+          )}
+        </span>
       )}
       <V2Text
         as="span"
@@ -57,23 +61,21 @@ export const V2TabItem: React.FC<V2TabItemProps> = ({
       >
         {label}
       </V2Text>
-
       {isClosable && (
         <V2Button
-          type="button"
           variant="ghost"
-          size="icon-xs"
+          size="sm"
+          className="h-4 w-4 p-0 ml-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition-opacity flex items-center justify-center"
           aria-label={closeTabAria}
-          title={closeTabAria}
           onClick={(e) => {
             e.stopPropagation();
             onClose?.();
           }}
-          className="ml-1 flex h-4 w-4 min-w-[16px] items-center justify-center rounded-full text-faint hover:bg-surface-hover hover:text-foreground border-none bg-transparent p-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <X size={10} strokeWidth={2.5} />
+          <V2Icon icon={X} size={12} aria-hidden="true" />
         </V2Button>
       )}
     </div>
   );
 };
+V2TabItem.displayName = "V2TabItem";

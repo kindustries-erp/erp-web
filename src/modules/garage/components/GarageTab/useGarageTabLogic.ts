@@ -137,7 +137,10 @@ export function useGarageTabLogic({
         label: t("tabs.overview", t("tabs.dashboard", "Tổng quan")),
       },
       { value: "cases", label: t("tabs.cases", "Hoạt động garage") },
-      { value: "services", label: t("tabs.services", "Chi tiết phiếu DV") },
+      {
+        value: "services",
+        label: t("tabs.services", "Bảng kê phụ tùng & công"),
+      },
     ],
     [t],
   );

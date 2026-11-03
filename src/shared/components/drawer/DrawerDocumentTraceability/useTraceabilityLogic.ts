@@ -96,7 +96,13 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
     }
   }, [rootId, controlledGraphData]);
 
+  // Refetch silent khi đổi editMode (vd. thoát edit mode); bỏ qua lần mount vì effect trên đã tải.
+  const isFirstEditModeRun = useRef(true);
   useEffect(() => {
+    if (isFirstEditModeRun.current) {
+      isFirstEditModeRun.current = false;
+      return;
+    }
     if (!editMode && controlledGraphData === undefined) {
       loadData(true);
     }

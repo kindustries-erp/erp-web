@@ -1,10 +1,13 @@
 import * as React from "react";
-import { Check, ChevronDown, X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
+import { V2Input } from "@/v2/shared/components/atoms/v2-input";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { Input } from "@/v2/shared/ui";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2Combobox } from "./V2Combobox.hook";
+import { V2ComboboxList } from "./V2ComboboxList";
 import type { V2ComboboxProps } from "./V2Combobox.type";
 
 export const V2Combobox: React.FC<V2ComboboxProps> = ({
@@ -14,16 +17,40 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
   placeholder,
   searchable = true,
   searchPlaceholder,
+  onSearchChange,
+  loading = false,
   clearable = false,
   emptyLabel,
   disabled = false,
   className,
   "aria-label": ariaLabel,
+  onScrollBottom,
+  fallbackLabel,
 }) => {
   const { t } = useV2Translation();
   const c = useV2Combobox({ options, value, searchable, onValueChange });
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useV2PopoverDismiss({
+    open: c.open,
+    onClose: () => c.setOpen(false),
+    containerRef,
+    panelSelector: "[data-v2-combobox-panel]",
+  });
+
   const hint = placeholder ?? t("v2.form.selectPlaceholder", "Chọn...");
   const canClear = clearable && value !== null && !disabled;
+  const displayLabel =
+    c.selected?.label ?? (value && fallbackLabel ? fallbackLabel : hint);
+  const isPlaceholder = !c.selected && !(value && fallbackLabel);
+
+  const handleListScroll = (e: React.UIEvent<HTMLUListElement>) => {
+    if (!onScrollBottom || loading) return;
+    const target = e.currentTarget;
+    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 15) {
+      onScrollBottom();
+    }
+  };
 
   const trigger = (
     <button
@@ -39,17 +66,26 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
         canClear && "pr-8",
       )}
     >
-      <span className={cn("truncate", !c.selected && "text-muted-foreground")}>
-        {c.selected?.label ?? hint}
-      </span>
+      <V2Text
+        asChild
+        color={isPlaceholder ? "muted" : "default"}
+        className="truncate"
+      >
+        <span>{displayLabel}</span>
+      </V2Text>
       <ChevronDown aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
     </button>
   );
 
   const content = (
-    <div className="flex flex-col gap-1" onKeyDown={c.onKeyDown}>
+    <div
+      className="flex flex-col gap-1"
+      data-v2-combobox-panel=""
+      onKeyDown={c.onKeyDown}
+    >
       {searchable && (
-        <Input
+        <V2Input
+          size="sm"
           autoFocus
           value={c.query}
           placeholder={
@@ -58,53 +94,28 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
           aria-label={
             searchPlaceholder ?? t("v2.form.searchPlaceholder", "Tìm kiếm...")
           }
-          className="h-8 text-sm"
-          onChange={(event) => c.setQuery(event.target.value)}
+          onChange={(event) => {
+            c.setQuery(event.target.value);
+            onSearchChange?.(event.target.value);
+          }}
         />
       )}
-      <ul role="listbox" className="max-h-60 overflow-y-auto">
-        {c.filtered.length === 0 && (
-          <li className="px-2 py-3 text-center text-sm text-muted-foreground">
-            {emptyLabel ?? t("v2.form.noResults", "Không có kết quả")}
-          </li>
-        )}
-        {c.filtered.map((option, index) => (
-          <li
-            key={option.value}
-            role="option"
-            aria-selected={option.value === value}
-            aria-disabled={option.disabled}
-            onMouseEnter={() => c.setActiveIndex(index)}
-            onClick={() => c.select(option)}
-            className={cn(
-              "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm",
-              index === c.activeIndex && "bg-accent",
-              option.disabled && "cursor-not-allowed opacity-50",
-            )}
-          >
-            <Check
-              aria-hidden
-              className={cn(
-                "h-4 w-4 shrink-0",
-                option.value === value ? "opacity-100" : "opacity-0",
-              )}
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate">{option.label}</span>
-              {option.description && (
-                <span className="block truncate text-xs text-muted-foreground">
-                  {option.description}
-                </span>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <V2ComboboxList
+        options={c.filtered}
+        value={value}
+        activeIndex={c.activeIndex}
+        loading={loading}
+        emptyLabel={emptyLabel ?? t("v2.form.noResults", "Không có kết quả")}
+        loadingText={t("v2.form.searching", "Đang tìm...")}
+        onSelect={c.select}
+        onHoverIndex={c.setActiveIndex}
+        onScroll={handleListScroll}
+      />
     </div>
   );
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <div ref={containerRef} className={cn("relative w-full", className)}>
       <V2Popover
         trigger={trigger}
         content={content}

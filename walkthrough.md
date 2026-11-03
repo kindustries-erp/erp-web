@@ -1,3 +1,38 @@
+# Enhance Glassmorphism cho V2 Drawer
+
+## Thay đổi
+
+- V2 Sheet dùng `--drawer-blur: 20px`, saturate `190%` và contrast `102%`, đồng bộ filter với V1 mà không ảnh hưởng popup/modal.
+- Bề mặt drawer light dùng alpha `0.35`, dark dùng alpha `0.75`; overlay light/dark dùng alpha `0.2` và blur nhẹ `1px`. Drawer có `--drawer-shadow` nhẹ riêng theo theme.
+- Fallback cho drawer V2 trên route V1 áp dụng alpha light riêng, không đổi V1 slide-panel. OrcaQ dùng cùng blur `20px`.
+- Cập nhật module skill `v2-drawer` ghi nhận token contract.
+
+## Verification
+
+- `bunx vitest run src/v2/shared/ui/sheet/sheet.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/desktop/V2StandardDrawer.desktop-content.test.tsx src/v2/shared/components/organisms/v2-standard-drawer/mobile/V2StandardDrawer.mobile.test.tsx` — 3 files, 12 tests PASS.
+- `bunx tsc --noEmit` — PASS; `bun run build` — PASS (có warning chunk/dynamic import); `bun run check:ci` — PASS.
+- `bun run test` — Final Gate: 573 files passed, 2 skipped; 2,542 tests passed, 12 skipped.
+- `bash ../../.agents/scripts/sync-agents.sh --check` — Agent system validation PASS.
+- `bun run verify:final` — PASS trên commit `4a34a7e5` sau rebase.
+- UI smoke light/dark desktop/mobile chưa chạy trong browser; cần phiên đăng nhập.
+
+## Follow-up: Light glass chưa rõ trong screenshot
+
+- Nguyên nhân: light surface alpha `0.82` chỉ cho backdrop xuyên qua 18%; drawer gần full màn hình và nền phía sau sáng đồng màu làm blur khó nhận biết. Sheet trước đó cũng chỉ có blur, thiếu saturate/contrast như V1.
+- Điều chỉnh: light V2 drawer alpha `0.68`, filter `blur(24px) saturate(190%) contrast(102%)`; fallback light giới hạn vào V2 Sheet trên route V1.
+- Follow-up backdrop: dark overlay giảm từ 60% xuống 8%, bỏ blur trên overlay; blur 24px giữ ở sheet surface. Scoped sheet/drawer tests (3 files, 12 tests), `bun run check:ci`, `bun run build`, và `git diff --check` pass. Build hiện có cảnh báo chunk size và dynamic/static imports.
+- Verification follow-up 1: 3 scoped files / 12 tests PASS; `bun run check:ci` PASS; `bun run build` PASS. Full suite phía trên đã chạy trước follow-up style-only.
+- Follow-up 2: giảm surface alpha light từ 0.68 xuống 0.38, dark từ 0.88 xuống 0.58. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- Follow-up 3: theo yêu cầu mới, surface alpha light 0.2/dark 0.7, blur 15px và overlay 15%; OrcaQ dùng cùng blur 15px. Scoped tests (3 files/12 tests), `bun run check:ci` và `bun run build` PASS. Build hiện có cảnh báo chunk size và dynamic/static imports.
+- Follow-up 4: tăng drawer blur lên 20px, thêm overlay backdrop blur 4px ở light/dark. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- Follow-up 5: giảm overlay blur xuống 2px và tăng overlay alpha lên 0.2 ở light/dark. Scoped tests (3 files/12 tests) và `bun run check:ci` PASS.
+- Follow-up 6: overlay blur 1px, shadow nhẹ theo theme, light alpha 0.35 và dark alpha 0.65. Scoped tests (3 files/12 tests), `bun run check:ci` và `bun run build` PASS. Build có warning chunk size và dynamic/static imports.
+- Follow-up 7: light alpha 0.3, dark alpha 0.7 ở theme tokens và V1 fallback.
+- Follow-up 8: light alpha 0.35, dark alpha 0.75.
+- Delivery QC: `bun run build`, `bun run check:ci`, `bun run test` (571 files/2,528 tests passed; 2 files/12 tests skipped), `git diff --check` PASS. Final Gate sẽ chạy sau commit và rebase.
+
+---
+
 # Business Partners trên ERP Web V2
 
 ## Kết quả
@@ -105,3 +140,50 @@ bun run test
 2. Ở tab Phân loại nghiệp vụ, xác nhận hai bảng nằm trong section riêng và right panel chỉ có cơ cấu Thu KH/Thu BH.
 3. Chuyển sang tab Phân loại theo đối tượng, xác nhận hai card nằm trong cùng right panel, xếp dọc và không lặp ở cột trái.
 4. Mở drawer từ chế độ Phải trả và xác nhận tab Phân loại theo đối tượng không xuất hiện.
+
+---
+
+# Invoice Detail Drawer sang V2StandardDrawer
+
+## Thay đổi
+
+- `ErpInvoiceDetailDrawer` dùng `V2StandardDrawer`; luồng từ danh sách và standalone/cấn trừ tiếp tục đi qua cùng component.
+- Thêm `V2TabItemData.rightPanel`; panel của tab active được dùng trước panel fallback của drawer. Desktop/Mobile dùng chung cách resolve này.
+- Tách phần dựng title, sub-tab, panel và map tab thành presentation hook để giữ file drawer dưới 180 LoC.
+- Cập nhật module skills `erp-invoice` và `v2-drawer`.
+
+## Verification
+
+- `bunx vitest run src/v2/shared/components/organisms/v2-standard-drawer src/modules/erp-invoices-core` — 69 files passed, 272 tests passed, 9 skipped.
+- `bunx tsc --noEmit` — PASS.
+- `git diff --check` — PASS.
+- Audit file V2 đã sửa/thêm: không có `blue-*`; tất cả file nguồn/test/story đã sửa hoặc thêm đều dưới 180 LoC.
+- `bash ./.agents/scripts/sync-agents.sh --sync` từ workspace root — Agent system validation PASS.
+
+## UI smoke
+
+1. Đăng nhập, mở `/erp-invoices?tab=in` hoặc `?tab=out`, mở chi tiết một hóa đơn.
+2. Chuyển `Chi tiết`, `Chi tiết theo NCC/KH`, `Lịch sử`; xác nhận panel phải theo đúng tab và panel Công nợ xuất hiện ở sub-tab `Chứng từ liên kết`.
+3. Kiểm tra view/edit, lưu/hủy, confirm khi đóng lúc edit, modal liên kết và đóng drawer con.
+4. Lặp lại trên viewport desktop và mobile; mở hóa đơn standalone trong luồng cấn trừ.
+
+UI smoke chưa chạy vì browser hiện không có phiên đăng nhập (route chuyển đến màn Đăng nhập). Test component/integration và typecheck ở trên đã pass.
+
+## Invoice button active state & V2 drawer dark theme
+
+- Button-group “Xem trước HĐ thuần” / “Tài liệu & PDF” chuẩn hóa active key rõ ràng theo mode (`template`/`pdf`) và dùng cùng state cho preview content; test giữ đúng selected state khi khởi tạo `template`, chuyển sang `pdf` và quay lại.
+- Active/inactive button colors dùng token `primary`, `primary-fg`, `surface` và `border`. Dark drawer surface tăng độ đặc/độ tách nền; Sheet viền dùng `--drawer-border`, floating shadow theo `--panel-shadow`, header/footer có shadow tối khi cuộn.
+- Scoped tests: 6 files, 26 tests PASS cho invoice/navigation và 11 files, 45 tests PASS cho V2StandardDrawer.
+- `bunx tsc --noEmit` PASS; `git diff --check` PASS.
+- UI smoke trên theme sáng/tối Desktop/Mobile chưa chạy do browser session chưa đăng nhập.
+
+### Follow-up từ ảnh UI
+
+- Nguyên nhân dark token chưa hiện ở invoice route: route đang dùng V1 theme stylesheet; `v2-theme.css` chỉ được import trong app `/v2`. Sheet content đã được gắn `data-v2-standard-drawer`, và selector Midnight đặt token tối trên chính Sheet để Radix portal cùng toàn bộ nội dung con kế thừa.
+- Nút inactive trong button-group hiện có nền/viền trong suốt; chỉ active tab dùng nền fill. Test bổ sung khóa hai trạng thái và marker của Sheet.
+- Recheck: 14 test files, 57 tests PASS.
+
+## Git
+
+- Branch: `erp-master`.
+- Code commit `4a34a7e5` đã push lên `github-industries/erp-master`; checkpoint docs được cập nhật sau push.

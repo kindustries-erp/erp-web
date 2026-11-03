@@ -81,6 +81,7 @@ export function GarageCustomerDetailDrawer(
             }}
             onOpenSettlementModal={logic.setSettlementCase}
             onOpenInvoiceLinkingModal={logic.setInvoiceLinkingCase}
+            onCreateCashflow={props.onCreateCashflow}
           />
         )}
 

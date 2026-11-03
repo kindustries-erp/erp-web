@@ -34,7 +34,7 @@ describe("useBulkEditAssignments", () => {
     });
 
     expect(result.current.notesAssignments).toEqual({ a: "n-a", b: "n-b" });
-    expect(result.current.branchAssignments).toEqual({ a: "b1", b: "b2" });
+    expect(result.current.branchAssignments).toEqual({ a: ["b1"], b: ["b2"] });
     expect(result.current.initNotes).toEqual({ a: "n-a", b: "n-b" });
   });
 

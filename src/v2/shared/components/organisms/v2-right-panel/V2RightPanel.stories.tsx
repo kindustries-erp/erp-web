@@ -19,7 +19,7 @@ export const Default: Story = {
   args: {
     breadcrumbs: [{ label: "Kế toán" }, { label: "Hóa đơn VAT" }],
     branchName: "Chi nhánh Nam Sài Gòn",
-    companyName: "Liouni ERP",
+    companyName: "ERP",
     tabs: [
       {
         id: "invoices",

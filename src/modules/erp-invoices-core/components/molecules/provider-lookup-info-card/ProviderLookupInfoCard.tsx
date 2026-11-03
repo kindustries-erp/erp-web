@@ -1,17 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Building2,
-  Copy,
-  Check,
-  ExternalLink,
-  Download,
-  Loader2,
-} from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
-import { cn } from "@/shared/utils";
+import { Building2, ExternalLink, Download } from "lucide-react";
+import { DrawerSection, V2Button } from "@/v2/shared/components";
 import { OriginalPdfStatusBadge } from "../../atoms/original-pdf-status-badge";
 import { useProviderLookupInfoCard } from "./ProviderLookupInfoCard.hook";
+import { LookupHintRow } from "./LookupHintRow";
+import { ManualPdfUploadButton } from "./ManualPdfUploadButton";
 import type { ProviderLookupInfoCardProps } from "./ProviderLookupInfoCard.type";
 
 export const ProviderLookupInfoCard = React.memo(
@@ -21,107 +15,118 @@ export const ProviderLookupInfoCard = React.memo(
     providerName,
     lookupCode,
     lookupUrl,
+    hints = [],
+    hasXml = true,
     pdfFileKey,
     pdfSource,
     pdfError,
     onDownloadPdf,
     isDownloading,
+    onUploadPdf,
+    isUploading,
     className,
   }: ProviderLookupInfoCardProps) {
-    const { t } = useTranslation();
-    const { copied, handleCopyCode, handleOpenPortal, handleTriggerDownload } =
-      useProviderLookupInfoCard({
-        lookupCode,
-        lookupUrl,
-        invoiceId,
-        onDownloadPdf,
-      });
+    const { t } = useTranslation("erpInvoices");
+    const { copiedValue, handleCopy, handleOpenPortal, handleTriggerDownload } =
+      useProviderLookupInfoCard({ lookupUrl, invoiceId, onDownloadPdf });
+
+    const codeRows = [
+      ...(lookupCode
+        ? [{ label: t("lookupCode", "Mã tra cứu"), value: lookupCode }]
+        : []),
+      ...hints.map((h) => ({ label: h.label, value: h.value })),
+    ];
 
     return (
-      <div
-        className={cn(
-          "flex flex-col gap-2.5 rounded-lg border border-slate-200 bg-slate-50/70 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/60",
-          className,
-        )}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-100">
-            <Building2 className="h-4 w-4 shrink-0 text-slate-500" />
-            <span className="truncate">
+      <DrawerSection
+        title={
+          <span className="inline-flex items-center gap-1.5 truncate">
+            <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span>
               {providerName ||
                 providerCode ||
-                t("erpInvoice.provider", "Nhà cung cấp")}
+                t("lookupProvider", "Nhà cung cấp")}
             </span>
-          </div>
+          </span>
+        }
+        titleExtra={
           <OriginalPdfStatusBadge
             pdfFileKey={pdfFileKey}
             pdfSource={pdfSource}
             providerCode={providerCode}
             pdfError={pdfError}
           />
-        </div>
-
-        {lookupCode && (
-          <div className="flex items-center justify-between gap-2 rounded-md bg-white px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 dark:bg-slate-950">
-            <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-200 select-all truncate">
-              {lookupCode}
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleCopyCode}
-              aria-label={t("erpInvoice.copyCode", "Sao chép mã tra cứu")}
-              className="h-6 px-1.5 text-xs text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
-              title={t("erpInvoice.copyCode", "Sao chép mã tra cứu")}
-            >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-emerald-600" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
+        }
+        collapsible={true}
+        defaultCollapsed={false}
+        className={className}
+      >
+        <div className="flex flex-col gap-2.5 pt-1 text-sm">
+          {!hasXml && (
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              {t(
+                "lookupNoXml",
+                "Chưa có file XML trên hệ thống, chỉ tra cứu thủ công được",
               )}
-              <span className="ml-1 text-[11px]">
-                {copied
-                  ? t("erpInvoice.copied", "Đã chép")
-                  : t("erpInvoice.copy", "Chép")}
-              </span>
-            </Button>
+            </p>
+          )}
+
+          {codeRows.map((row) => (
+            <LookupHintRow
+              key={`${row.label}-${row.value}`}
+              label={row.label}
+              value={row.value}
+              copied={copiedValue === row.value}
+              onCopy={handleCopy}
+            />
+          ))}
+
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            {lookupUrl && (
+              <V2Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleOpenPortal}
+                className="h-7 flex-1 text-xs"
+                leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
+              >
+                <span>{t("lookupOpenPortal", "Mở cổng tra cứu")}</span>
+              </V2Button>
+            )}
+
+            {onDownloadPdf && (
+              <V2Button
+                type="button"
+                variant="primary"
+                size="sm"
+                isLoading={isDownloading}
+                onClick={handleTriggerDownload}
+                className="h-7 flex-1 bg-emerald-600 text-xs text-white hover:bg-emerald-700"
+                leftIcon={<Download className="h-3.5 w-3.5" />}
+              >
+                <span>{t("lookupDownloadPdf", "Tải PDF gốc")}</span>
+              </V2Button>
+            )}
+
+            {onUploadPdf && (
+              <ManualPdfUploadButton
+                invoiceId={invoiceId}
+                onUpload={onUploadPdf}
+                isUploading={isUploading}
+              />
+            )}
           </div>
-        )}
-
-        <div className="flex items-center gap-2 pt-0.5">
-          {lookupUrl && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleOpenPortal}
-              className="flex-1 h-7 text-xs border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-              <span>{t("erpInvoice.openPortal", "Mở Cổng Tra Cứu")}</span>
-            </Button>
-          )}
-
-          {onDownloadPdf && (
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              disabled={isDownloading}
-              onClick={handleTriggerDownload}
-              className="flex-1 h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              {isDownloading ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Download className="mr-1.5 h-3.5 w-3.5" />
+          {onUploadPdf && (
+            <p className="text-[11px] text-slate-500">
+              {t(
+                "lookupUploadHint",
+                "Tải PDF từ cổng nhà cung cấp, rồi tải lên đây để hệ thống ghi nhận",
               )}
-              <span>{t("erpInvoice.downloadOriginalPdf", "Tải PDF Gốc")}</span>
-            </Button>
+            </p>
           )}
         </div>
-      </div>
+      </DrawerSection>
     );
   },
 );

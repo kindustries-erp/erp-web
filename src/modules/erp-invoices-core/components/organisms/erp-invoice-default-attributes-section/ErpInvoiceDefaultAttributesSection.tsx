@@ -292,14 +292,14 @@ export function ErpInvoiceDefaultAttributesSection({
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="h-6 text-[11px] px-2 gap-1 text-primary hover:text-primary-foreground hover:bg-primary border-primary/40"
+                  className="h-6 text-[11px] px-2.5 gap-1.5 text-primary hover:text-primary-foreground hover:bg-primary border-primary/40 dark:border-teal-500/40 dark:bg-teal-500/10 dark:text-teal-300 dark:hover:bg-teal-500/25 dark:hover:text-teal-200 shadow-xs transition-colors"
                   onClick={handleAiAutoClassify}
                   disabled={isAiLoading}
                 >
                   {isAiLoading ? (
-                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    <RefreshCw className="w-3 h-3 animate-spin text-teal-400" />
                   ) : (
-                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    <Sparkles className="w-3 h-3 text-teal-400" />
                   )}
                   <span>
                     {isAiLoading ? "Đang phân loại..." : "AI Phân loại"}

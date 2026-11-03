@@ -67,6 +67,8 @@ export interface GarageCasesExportPayload {
   q?: string;
   sorts?: string[];
   filtersStr?: string;
+  /** Key cột Sheet 1 cần xuất (khớp whitelist của API). */
+  selectedColumns?: string[];
 }
 
 /** Body xuất nền báo cáo Garage theo kỳ (khớp `GarageDashboardExportDto`). */

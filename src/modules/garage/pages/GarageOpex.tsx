@@ -58,6 +58,20 @@ const getCostGroupInfo = (
       groupKey: "COGS",
     };
   }
+  if (
+    categoryKey === "LAI_VAY" ||
+    categoryKey === "CHI_PHI_TAI_CHINH" ||
+    categoryKey === "CHI_PHI_TAI_CHINH_KHAC" ||
+    categoryKey.includes("TAI_CHINH") ||
+    categoryKey.includes("LAI_VAY")
+  ) {
+    return {
+      label: t("opex.costGroups.FINANCIAL", "Chi phí tài chính"),
+      badgeClass:
+        "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-700/60 font-normal",
+      groupKey: "FINANCIAL",
+    };
+  }
   if (categoryKey.startsWith("HOA_HONG_")) {
     return {
       label: t("opex.costGroups.COMMISSION", "Hoa hồng"),
@@ -327,6 +341,10 @@ export function GarageOpex() {
               {
                 label: t("opex.costGroups.COMMISSION", "Hoa hồng"),
                 value: "COMMISSION",
+              },
+              {
+                label: t("opex.costGroups.FINANCIAL", "Chi phí tài chính"),
+                value: "FINANCIAL",
               },
             ],
           },

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type V2ToastVariant = "default" | "success" | "destructive";
+export type V2ToastVariant = "default" | "success" | "destructive" | "warning";
 
 export interface V2Toast {
   id: string;

@@ -173,6 +173,7 @@ export function useBankStatementsTabLogic({
     setDetailDefaultTab,
     setSelectedPartner,
     setPartnerDrawerOpen,
+    branches,
   });
 
   const summaryRow = useBankStatementSummary({
@@ -291,7 +292,7 @@ export function useBankStatementsTabLogic({
     if (appliedFilters.bankAccountId || appliedFilters.cashBookId)
       filterCount++;
     if (activeTransactionType !== "ALL") filterCount++;
-    if (appliedFilters.branchId) filterCount++;
+    if (appliedFilters.branchIds?.length) filterCount++;
     if (appliedFilters.tagIds && appliedFilters.tagIds.length > 0)
       filterCount++;
     filterCount += columnFiltersSummary.length;
@@ -307,10 +308,20 @@ export function useBankStatementsTabLogic({
         : accountObj.name
       : undefined;
 
-    const branchObj = branches?.find(
-      (b: any) => b.id === appliedFilters.branchId,
-    );
-    const branchName = branchObj ? branchObj.name : undefined;
+    const selectedBranchNames = (appliedFilters.branchIds ?? [])
+      .map(
+        (id) =>
+          branches?.find((b: any) => b.id === id)?.name ??
+          (id === "__BLANK__"
+            ? t("bankStatement.filters.noBranch", {
+                defaultValue: "Không có chi nhánh",
+              })
+            : undefined),
+      )
+      .filter(Boolean);
+    const branchName = selectedBranchNames.length
+      ? selectedBranchNames.join(", ")
+      : undefined;
 
     return {
       dateFrom: appliedFilters.startDate,

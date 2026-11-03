@@ -17,6 +17,7 @@ export interface GarageCasesTableProps {
   branches?: any[];
   onSyncCases?: () => void;
   onExportExcel?: (query: GarageCasesTableQuery) => void;
+  onOpenWorkflow?: () => void;
   onSyncGrossProfit?: () => void;
   activeStatusTab: string;
   onStatusTabChange: (tab: string) => void;

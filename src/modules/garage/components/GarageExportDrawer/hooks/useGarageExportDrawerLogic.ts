@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GarageCasesTableQuery } from "@/modules/garage/export/garageExportScopes";
 import {
-  applyReportSelection,
-  defaultReportSelection,
-  isCasesReport,
+  applyPeriodSelection,
+  defaultKindAndPeriods,
+  reportTypesOf,
   toPeriodSectionKeys,
   type GarageExportDefaultReport,
-  type GarageExportReportType,
+  type GarageExportKind,
+  type PeriodReportType,
 } from "@/modules/garage/export/garageExportReportTypes";
 import { useGarageCaseExportLogic } from "@/modules/garage/components/GarageCaseExportDrawer/hooks/useGarageCaseExportLogic";
 import {
@@ -27,8 +28,9 @@ export interface UseGarageExportDrawerLogicOptions {
 }
 
 /**
- * Gộp logic xuất của bảng kê phiếu dịch vụ và báo cáo kỳ sau một Combobox loại báo cáo.
- * Chỉ nhánh đang chọn được bật (`open`) nên lịch sử và SSE không chạy song song.
+ * Gộp logic xuất của bảng kê phiếu dịch vụ và báo cáo kỳ.
+ * Loại báo cáo là lựa chọn đơn (`kind`); nội dung kỳ (`periodTypes`) là lựa chọn nhiều và
+ * được giữ khi đổi loại. Chỉ nhánh đang chọn được bật (`open`) nên lịch sử và SSE không chạy song song.
  */
 export function useGarageExportDrawerLogic({
   open,
@@ -38,18 +40,25 @@ export function useGarageExportDrawerLogic({
   initialRange,
 }: UseGarageExportDrawerLogicOptions) {
   const { t } = useTranslation("garage");
-  const [reportTypes, setReportTypesState] = useState<GarageExportReportType[]>(
-    () => defaultReportSelection(defaultReportType),
+  const [initial] = useState(() => defaultKindAndPeriods(defaultReportType));
+  const [kind, setKind] = useState<GarageExportKind>(initial.kind);
+  const [periodTypes, setPeriodTypesState] = useState<PeriodReportType[]>(
+    initial.periodTypes,
   );
 
   useEffect(() => {
-    if (open) setReportTypesState(defaultReportSelection(defaultReportType));
+    if (!open) return;
+    const next = defaultKindAndPeriods(defaultReportType);
+    setKind(next.kind);
+    setPeriodTypesState(next.periodTypes);
   }, [open, defaultReportType]);
 
-  const setReportTypes = (next: GarageExportReportType[]) =>
-    setReportTypesState((prev) => applyReportSelection(prev, next));
+  const setPeriodSelection = (next: PeriodReportType[]) =>
+    setPeriodTypesState((prev) => applyPeriodSelection(prev, next));
 
-  const isCases = reportTypes.some(isCasesReport);
+  const isCases = kind === "cases";
+  const reportTypes = reportTypesOf(kind, periodTypes);
+
   const cases = useGarageCaseExportLogic({
     open: open && isCases,
     initialBranchId,
@@ -66,8 +75,11 @@ export function useGarageExportDrawerLogic({
 
   return {
     t,
+    kind,
+    setKind,
+    periodTypes,
+    setPeriodSelection,
     reportTypes,
-    setReportTypes,
     isCases,
     cases,
     active,

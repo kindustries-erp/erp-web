@@ -37,4 +37,6 @@ export interface ErpInvoiceDetailDrawerProps {
   defaultRelatedCollapsed?: boolean;
   bottomPanel?: React.ReactNode;
   partnerViewMode?: "details" | "invoices" | "lines";
+  pendingTagIds?: string[];
+  onPendingTagsChange?: (ids: string[]) => void;
 }

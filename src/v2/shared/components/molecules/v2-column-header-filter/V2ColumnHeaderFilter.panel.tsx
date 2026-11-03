@@ -1,8 +1,15 @@
 import * as React from "react";
-import { ArrowDownAZ, ArrowUpAZ, Check, Search, X } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import {
+  ArrowDownAZ,
+  ArrowUpAZ,
+  Check,
+  Search,
+  V2Button,
+  V2Icon,
+  V2Input,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { Input } from "@/v2/shared/ui";
 import { ColumnValueType, TableSortState } from "@/v2/shared/types/v2-table";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2DateRangeSlot } from "./V2ColumnHeaderFilter.date-slot";
@@ -11,9 +18,6 @@ import { V2OperatorFilterField } from "./V2ColumnHeaderFilter.operator";
 import { getOperatorGroup } from "./V2ColumnHeaderFilter.operators";
 import { V2FilterOptionsList } from "./V2ColumnHeaderFilter.options";
 import type { V2ColumnHeaderFilterPanelProps } from "./V2ColumnHeaderFilter.type";
-
-const SORT_BUTTON = "h-8 justify-start rounded-sm font-normal";
-const ACTIVE_SORT = "bg-primary/10 font-medium text-primary";
 
 export const V2ColumnHeaderFilterPanel: React.FC<
   V2ColumnHeaderFilterPanelProps
@@ -24,38 +28,65 @@ export const V2ColumnHeaderFilterPanel: React.FC<
   const isDate = props.valueType === ColumnValueType.DATE;
   const group = getOperatorGroup(props.valueType);
 
-  const sortButton = (
-    direction: TableSortState.ASC | TableSortState.DESC,
-    label: string,
-    icon: React.ReactNode,
-  ) => (
-    <V2Button
-      variant="ghost"
-      size="sm"
-      className={cn(SORT_BUTTON, sort === direction && ACTIVE_SORT)}
-      leftIcon={icon}
-      onClick={() => {
-        onSortChange(sort === direction ? TableSortState.NONE : direction);
-        onClose();
-      }}
-    >
-      <span className="flex-1 text-left">{label}</span>
-      {sort === direction && <Check className="ml-auto h-3.5 w-3.5" />}
-    </V2Button>
-  );
-
   const sortSection = (
-    <div className="flex flex-col gap-1 border-b border-border p-2">
-      {sortButton(
-        TableSortState.ASC,
-        t("v2.table.sortAsc", "Sắp xếp tăng dần"),
-        <ArrowDownAZ className="h-3.5 w-3.5" />,
-      )}
-      {sortButton(
-        TableSortState.DESC,
-        t("v2.table.sortDesc", "Sắp xếp giảm dần"),
-        <ArrowUpAZ className="h-3.5 w-3.5" />,
-      )}
+    <div className="border-b border-border-light p-2">
+      <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1">
+        <V2Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-7 justify-center gap-1.5 rounded-md text-xs font-normal transition-all",
+            sort === TableSortState.ASC
+              ? "bg-surface font-medium text-foreground shadow-xs"
+              : "text-muted-fg hover:bg-surface/40 hover:text-foreground",
+          )}
+          aria-label={t("v2.table.sortAsc", "Sắp xếp tăng dần")}
+          onClick={() => {
+            onSortChange(
+              sort === TableSortState.ASC
+                ? TableSortState.NONE
+                : TableSortState.ASC,
+            );
+            onClose();
+          }}
+        >
+          <V2Icon icon={ArrowDownAZ} size={14} className="shrink-0" />
+          <V2Text variant="body-sm">
+            {t("v2.table.sortAscShort", "Tăng dần")}
+          </V2Text>
+          {sort === TableSortState.ASC && (
+            <V2Icon icon={Check} size={12} className="ml-0.5 text-primary" />
+          )}
+        </V2Button>
+
+        <V2Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-7 justify-center gap-1.5 rounded-md text-xs font-normal transition-all",
+            sort === TableSortState.DESC
+              ? "bg-surface font-medium text-foreground shadow-xs"
+              : "text-muted-fg hover:bg-surface/40 hover:text-foreground",
+          )}
+          aria-label={t("v2.table.sortDesc", "Sắp xếp giảm dần")}
+          onClick={() => {
+            onSortChange(
+              sort === TableSortState.DESC
+                ? TableSortState.NONE
+                : TableSortState.DESC,
+            );
+            onClose();
+          }}
+        >
+          <V2Icon icon={ArrowUpAZ} size={14} className="shrink-0" />
+          <V2Text variant="body-sm">
+            {t("v2.table.sortDescShort", "Giảm dần")}
+          </V2Text>
+          {sort === TableSortState.DESC && (
+            <V2Icon icon={Check} size={12} className="ml-0.5 text-primary" />
+          )}
+        </V2Button>
+      </div>
     </div>
   );
 
@@ -84,29 +115,18 @@ export const V2ColumnHeaderFilterPanel: React.FC<
       }}
     >
       {sortSection}
-      <div className="border-b border-border p-2">
-        <div className="relative flex items-center">
-          <Search className="pointer-events-none absolute left-2.5 h-4 w-4 text-muted-fg" />
-          <Input
-            className="h-8 pl-8 pr-8 text-xs"
-            placeholder={t("v2.table.search", "Tìm kiếm...")}
-            title={t("v2.table.searchHint")}
-            aria-label={t("v2.table.search", "Tìm kiếm...")}
-            value={draft.draftSearch}
-            onChange={(event) => draft.setDraftSearch(event.target.value)}
-          />
-          {draft.draftSearch !== "" && (
-            <V2Button
-              variant="ghost"
-              size="icon-xs"
-              className="absolute right-1 h-6 w-6 text-muted-fg"
-              aria-label={t("v2.table.clearSearch", "Xóa tìm kiếm")}
-              onClick={() => draft.setDraftSearch("")}
-            >
-              <X className="h-3.5 w-3.5" />
-            </V2Button>
-          )}
-        </div>
+      <div className="border-b border-border-light p-2">
+        <V2Input
+          sizeVariant="sm"
+          leftIcon={<V2Icon icon={Search} size={16} />}
+          placeholder={t("v2.table.search", "Tìm kiếm...")}
+          title={t("v2.table.searchHint")}
+          aria-label={t("v2.table.search", "Tìm kiếm...")}
+          value={draft.draftSearch}
+          onChange={(event) => draft.setDraftSearch(event.target.value)}
+          clearable
+          onClear={() => draft.setDraftSearch("")}
+        />
       </div>
       <div className="p-2">
         <V2FilterOptionsList
@@ -118,7 +138,7 @@ export const V2ColumnHeaderFilterPanel: React.FC<
         />
       </div>
       {group && group !== "date" && (
-        <div className="border-t border-border p-2">
+        <div className="border-t border-border-light p-2">
           <V2OperatorFilterField
             group={group}
             value={draft.pendingOperator}
@@ -126,22 +146,30 @@ export const V2ColumnHeaderFilterPanel: React.FC<
           />
         </div>
       )}
-      <div className="flex items-center justify-between rounded-b-xl border-t border-border bg-muted/30 p-2">
+      <div className="flex items-center justify-between rounded-b-xl border-t border-border-light bg-muted/20 p-2">
         <V2Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-xs text-muted-fg hover:bg-transparent hover:text-foreground"
+          className="h-7 px-2 text-xs font-medium text-muted-fg hover:bg-muted/50 hover:text-foreground"
           onClick={draft.clear}
         >
-          {t("v2.table.clearFilter", "Xóa bộ lọc")}
+          <V2Text variant="body-sm" color="inherit">
+            {t("v2.table.clearFilter", "Xóa bộ lọc")}
+          </V2Text>
         </V2Button>
         <V2Button
           variant="primary"
           size="sm"
-          className="h-7 px-3 text-xs"
+          className="h-7 px-3 text-xs font-medium"
           onClick={draft.apply}
         >
-          {t("v2.table.apply", "Áp dụng")}
+          <V2Text
+            variant="body-sm"
+            color="inherit"
+            className="text-primary-fg font-medium"
+          >
+            {t("v2.table.apply", "Áp dụng")}
+          </V2Text>
         </V2Button>
       </div>
     </div>

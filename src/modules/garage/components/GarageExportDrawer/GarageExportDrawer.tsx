@@ -3,16 +3,14 @@ import { FileSpreadsheet } from "lucide-react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { GarageExportHistoryPanel } from "@/modules/garage/export/GarageExportSections";
 import { GarageExportConditionSection } from "@/modules/garage/export/GarageExportConditionSection";
-import { MultiCombobox } from "@/shared/components/MultiCombobox";
+import { GarageCasesExportColumnSelector } from "@/modules/garage/export/GarageCasesExportColumnSelector";
 import type { GarageCasesTableQuery } from "@/modules/garage/export/garageExportScopes";
-import {
-  type GarageExportDefaultReport,
-  type GarageExportReportType,
-} from "@/modules/garage/export/garageExportReportTypes";
+import type { GarageExportDefaultReport } from "@/modules/garage/export/garageExportReportTypes";
 import { GarageCaseExportConditionFields } from "@/modules/garage/components/GarageCaseExportDrawer/components/GarageCaseExportConditionFields";
 import type { GarageDashboardExportRange } from "@/modules/garage/components/GarageDashboardExportDrawer";
 import { useGarageExportDrawerLogic } from "./hooks/useGarageExportDrawerLogic";
 import { useGarageReportTypeOptions } from "./hooks/useGarageReportTypeOptions";
+import { GarageExportReportTypeField } from "./GarageExportReportTypeField";
 
 export interface GarageExportDrawerProps {
   open: boolean;
@@ -42,7 +40,7 @@ export function GarageExportDrawer({
     initialRange,
   });
   const { exporter, t, cases, active } = logic;
-  const typeSelect = useGarageReportTypeOptions();
+  const { kindLabel } = useGarageReportTypeOptions();
 
   return (
     <StandardFormDrawer
@@ -55,42 +53,48 @@ export function GarageExportDrawer({
       layout="2-columns"
       size="lg"
       leftPanel={
-        <GarageExportHistoryPanel
-          tableId={
-            logic.isCases
-              ? "garage-cases-export-history"
-              : "garage-dashboard-export-history"
-          }
-          labels={logic.historyLabels}
-          history={exporter.historyQuery.data}
-          loading={
-            exporter.historyQuery.isLoading || exporter.historyQuery.isFetching
-          }
-          page={exporter.page}
-          pageSize={exporter.pageSize}
-          onPage={exporter.setPage}
-          onPageSize={exporter.setPageSize}
-          downloadingJobId={exporter.downloadingJobId}
-          progress={exporter.progress}
-          onDownload={exporter.handleDownload}
-        />
+        <div className="space-y-4">
+          {logic.isCases && (
+            <GarageCasesExportColumnSelector
+              selectedColumns={cases.selectedColumns}
+              onChange={cases.setSelectedColumns}
+            />
+          )}
+          <GarageExportHistoryPanel
+            tableId={
+              logic.isCases
+                ? "garage-cases-export-history"
+                : "garage-dashboard-export-history"
+            }
+            labels={logic.historyLabels}
+            history={exporter.historyQuery.data}
+            loading={
+              exporter.historyQuery.isLoading ||
+              exporter.historyQuery.isFetching
+            }
+            page={exporter.page}
+            pageSize={exporter.pageSize}
+            onPage={exporter.setPage}
+            onPageSize={exporter.setPageSize}
+            downloadingJobId={exporter.downloadingJobId}
+            progress={exporter.progress}
+            onDownload={exporter.handleDownload}
+          />
+        </div>
       }
       rightPanel={
         <div className="space-y-4 text-xs">
           <GarageExportConditionSection
-            targetLabel={typeSelect.label}
+            targetLabel={kindLabel}
             targetField={
-              <MultiCombobox
-                options={typeSelect.options}
-                value={logic.reportTypes}
-                onChange={(value) =>
-                  logic.setReportTypes(value as GarageExportReportType[])
-                }
-                placeholder={typeSelect.label}
+              <GarageExportReportTypeField
+                kind={logic.kind}
+                onKindChange={logic.setKind}
+                periodTypes={logic.periodTypes}
+                onPeriodChange={logic.setPeriodSelection}
               />
             }
-            startDisabled={logic.reportTypes.length === 0}
-            targetHint={typeSelect.hint}
+            startDisabled={logic.isCases && cases.selectedColumns.length === 0}
             exportMode={active.exportMode}
             onExportModeChange={active.setExportMode}
             modeLabels={active.modeLabels}
@@ -103,6 +107,7 @@ export function GarageExportDrawer({
               q: tableQuery?.q,
               sortCount: tableQuery?.sorts?.length,
               filterCount: cases.filterCount,
+              filtersStr: tableQuery?.filtersStr,
             }}
             starting={exporter.starting}
             onStartExport={active.handleStartExport}

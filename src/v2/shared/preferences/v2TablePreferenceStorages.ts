@@ -1,8 +1,8 @@
 import type {
   V2ColumnPreferences,
   V2ColumnPreferencesStorage,
-} from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.type";
-import type { V2ViewPresetStorage } from "@/v2/shared/components/organisms/v2-standard-table/toolbar/V2StandardTable.toolbar.type";
+  V2ViewPresetStorage,
+} from "@/v2/shared/components";
 import { useV2TablePreferencesStore } from "./useV2TablePreferencesStore";
 import type { V2TablePreferenceEntry } from "./v2TablePreferences.type";
 

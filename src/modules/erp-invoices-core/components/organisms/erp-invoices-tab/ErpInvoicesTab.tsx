@@ -173,7 +173,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         </div>
       )}
 
-      {/* ── View 2: Lines IN (Chi tiết mua vào) ────────────────────────── */}
+      {/* ── View 2: Lines IN (Bảng kê HHDV mua vào) ────────────────────────── */}
       {mountedViewsRef.current["in-lines"] && (
         <div
           className={
@@ -243,7 +243,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         </div>
       )}
 
-      {/* ── View 4: Lines OUT (Chi tiết bán ra) ────────────────────────── */}
+      {/* ── View 4: Lines OUT (Bảng kê HHDV bán ra) ────────────────────────── */}
       {mountedViewsRef.current["out-lines"] && (
         <div
           className={

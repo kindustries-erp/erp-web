@@ -11,7 +11,7 @@ const buttonVariants = cva(
         primary:
           "bg-primary text-primary-fg border border-primary hover:opacity-90 active:opacity-80",
         secondary:
-          "bg-surface text-foreground border border-border hover:bg-surface-hover",
+          "bg-surface text-foreground border border-border/80 dark:border-white/[0.06] hover:bg-surface-hover dark:hover:bg-white/[0.05] shadow-2xs transition-colors",
         outline:
           "bg-transparent text-primary border border-primary/60 hover:bg-primary/5",
         ghost:

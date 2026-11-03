@@ -40,7 +40,7 @@ export const DefaultMedium = () => {
             </label>
             <input
               className="w-full mt-1 px-3 py-1.5 rounded-md border border-border bg-surface text-foreground text-sm outline-none"
-              defaultValue="Công ty TNHH Liouni Technology"
+              defaultValue="Công ty TNHH Mẫu"
             />
           </div>
           <div>

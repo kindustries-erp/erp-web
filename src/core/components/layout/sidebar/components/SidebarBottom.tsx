@@ -1,6 +1,6 @@
 import { cn } from "@/shared/utils";
 import { UserMenuPopover } from "./UserMenuPopover";
-import { NotificationPopover } from "./NotificationPopover";
+import { V2NotificationPopover } from "@/v2/shared/components";
 import { useQuery } from "@tanstack/react-query";
 import { notificationsApi } from "@/core/api/notifications";
 
@@ -69,7 +69,7 @@ export function SidebarBottom({
           </div>
         </UserMenuPopover>
 
-        <NotificationPopover notifications={notifications}>
+        <V2NotificationPopover notifications={notifications}>
           <button className="relative flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-[color:var(--faint)] hover:text-foreground hover:bg-surface-hover border-none bg-transparent cursor-pointer flex-shrink-0">
             <svg
               width="14"
@@ -86,7 +86,7 @@ export function SidebarBottom({
               <span className="absolute top-[2px] right-[2px] w-[6px] h-[6px] bg-red-500 rounded-full"></span>
             )}
           </button>
-        </NotificationPopover>
+        </V2NotificationPopover>
       </div>
     </div>
   );

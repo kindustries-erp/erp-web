@@ -127,7 +127,8 @@ export function TableColumnHeaderFilter({
     }
   }, [debouncedLocalSearch]);
 
-  const shouldFetchOptions = !!columnKey;
+  const shouldFetchOptions =
+    Boolean(columnKey) && !hideFilter && !hideFilterList;
 
   const filtersToPass = useMemo(() => {
     if (!allFilters || !columnKey) return {};
@@ -167,18 +168,21 @@ export function TableColumnHeaderFilter({
           filtersStr,
         });
       }
-      const res = await operationalApi.getInventoryStockColumnOptions(
-        columnKey,
-        debouncedLocalSearch,
-        pageParam as number,
-        20,
-        filtersStr,
-      );
-      return {
-        items: res.items.map((i) => ({ label: i, value: i })),
-        total: res.total,
-        next: res.page < res.totalPages ? res.page + 1 : null,
-      };
+      if (queryKeyPrefix === "inventory-stock-column-options") {
+        const res = await operationalApi.getInventoryStockColumnOptions(
+          columnKey,
+          debouncedLocalSearch,
+          pageParam as number,
+          20,
+          filtersStr,
+        );
+        return {
+          items: res.items.map((i) => ({ label: i, value: i })),
+          total: res.total,
+          next: res.page < res.totalPages ? res.page + 1 : null,
+        };
+      }
+      return { items: [], total: 0, next: null };
     },
     getNextPageParam: (lastPage: any) => lastPage.next,
     enabled: open && !!shouldFetchOptions,

@@ -18,6 +18,7 @@ export function useGarageOpexDrawer({
   isCreate = false,
   id,
   initialData,
+  initialCostGroup,
   onSuccess,
 }: GarageOpexDrawerProps) {
   const { t } = useTranslation("garage");
@@ -64,11 +65,17 @@ export function useGarageOpexDrawer({
       applyFormData(extractOpexFormData(initialData, currentYear));
       if (isCreate) setPeriodMonth(initialData.periodMonth || currentMonth);
     } else if (isCreate) {
+      const defaultKey =
+        initialCostGroup === "FINANCIAL" ? "LAI_VAY" : "NHAN_SU";
+      const defaultLabel =
+        initialCostGroup === "FINANCIAL"
+          ? t("opex.categories.LAI_VAY", "Chi phí lãi vay")
+          : t("opex.categories.NHAN_SU", "Nhân sự");
       applyFormData(
         extractOpexFormData(
           {
-            categoryKey: "NHAN_SU",
-            categoryName: t("opex.categories.NHAN_SU", "Nhân sự"),
+            categoryKey: defaultKey,
+            categoryName: defaultLabel,
           },
           currentYear,
         ),
@@ -81,6 +88,7 @@ export function useGarageOpexDrawer({
     open,
     isCreate,
     initialData,
+    initialCostGroup,
     id,
     currentYear,
     currentMonth,

@@ -3,37 +3,32 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 
 interface UseProviderLookupInfoCardParams {
-  lookupCode?: string | null;
   lookupUrl?: string | null;
   invoiceId: string;
   onDownloadPdf?: (invoiceId: string) => Promise<void> | void;
 }
 
 export function useProviderLookupInfoCard({
-  lookupCode,
   lookupUrl,
   invoiceId,
   onDownloadPdf,
 }: UseProviderLookupInfoCardParams) {
-  const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  const { t } = useTranslation("erpInvoices");
+  const [copiedValue, setCopiedValue] = useState<string | null>(null);
 
-  const handleCopyCode = useCallback(async () => {
-    if (!lookupCode) return;
-    try {
-      await navigator.clipboard.writeText(lookupCode);
-      setCopied(true);
-      toast.success(
-        t(
-          "erpInvoice.copiedLookupCode",
-          "Đã sao chép mã tra cứu vào bộ nhớ tạm",
-        ),
-      );
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error(t("erpInvoice.copyFailed", "Không thể sao chép mã tra cứu"));
-    }
-  }, [lookupCode, t]);
+  const handleCopy = useCallback(
+    async (value: string) => {
+      try {
+        await navigator.clipboard.writeText(value);
+        setCopiedValue(value);
+        toast.success(t("lookupCopied", "Đã sao chép vào bộ nhớ tạm"));
+        setTimeout(() => setCopiedValue(null), 2000);
+      } catch {
+        toast.error(t("lookupCopyFailed", "Không thể sao chép"));
+      }
+    },
+    [t],
+  );
 
   const handleOpenPortal = useCallback(() => {
     if (!lookupUrl) return;
@@ -48,13 +43,13 @@ export function useProviderLookupInfoCard({
     try {
       await onDownloadPdf(invoiceId);
     } catch {
-      // Error handled by parent or toast in callback
+      // Lỗi đã được xử lý ở hook gọi (toast)
     }
   }, [invoiceId, onDownloadPdf]);
 
   return {
-    copied,
-    handleCopyCode,
+    copiedValue,
+    handleCopy,
     handleOpenPortal,
     handleTriggerDownload,
   };

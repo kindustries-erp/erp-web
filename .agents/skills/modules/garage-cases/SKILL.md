@@ -10,7 +10,7 @@ description: Module tri thức Quản lý Vụ việc Dịch vụ Garage & Sửa
 Phân hệ Quản lý Phiếu Dịch Vụ Garage (`src/modules/garage/`) cung cấp giao diện quản lý toàn diện cho các hoạt động sửa chữa, bảo dưỡng tại xưởng dịch vụ:
 - **Bảng Danh sách Phiếu Dịch Vụ (`/garage/cases`)**: Xem, tìm kiếm, lọc đa chiều, ẩn/hiện cột thông minh và xuất dữ liệu phiếu dịch vụ.
 - **Xem Chi tiết & Sổ Báo Giá (`GarageCaseStandaloneDrawer`)**: Xem chi tiết thông tin khách hàng, phương tiện, cố vấn, tiến độ và bản xem trước tờ phiếu Báo giá & Lợi nhuận dự kiến.
-- **Đồng bộ Dữ liệu Garage (`GarageCaseSyncDrawer`)**: Kích hoạt đồng bộ phiếu dịch vụ và lợi nhuận gộp từ hệ thống KGara về ERP theo dải ngày.
+- **Đồng bộ Dữ liệu Garage (`GarageCaseSyncDrawer`)**: Kích hoạt đồng bộ phiếu dịch vụ, lợi nhuận gộp và chi tiết từ KGara về ERP theo dải ngày. Không còn dropdown chi nhánh: bấm "Bắt đầu đồng bộ" khởi động job nền trên **mọi chi nhánh** (`POST /greenway/sync/all-branches`, `scope` = mode của drawer). Drawer giữ mở và hiển thị `GarageBulkSyncProgress` (x/y chi nhánh, chi nhánh đang chạy, danh sách lỗi). Trạng thái poll mỗi 2 giây khi `running` (`useGarageBulkSyncStatus`, `useStartGarageBulkSync` trong `hooks/useGarageBulkSync.ts`); khi xong thì làm mới `garage*` và báo toast một lần. Tùy chọn `GarageCaseSyncOptions.tsx` chỉ còn tải chi tiết và force ở mode `all`. Dropdown chi nhánh (`GarageBranchSelector`, hàm `formatGarageBranchLabel`) gắn thêm `· <accountKey>` cho chi nhánh không thuộc MAIN (ví dụ `· OJ`) để phân biệt chi nhánh tài khoản 2.
 
 ---
 
@@ -107,7 +107,7 @@ src/modules/garage/
   9. `statusName`: Trạng thái dịch vụ (căn giữa, `KgaraCaseStatusBadge`).
   10. `collectionProgress` & `costProgress`: Tiến độ thu/chi dòng tiền.
 - **Table Headers**: 100% căn giữa (`text-center` / `align="center"`).
-- **Bộ lọc Cột Ngày (`DateRangeColumnSlot`)**: Đã được nâng cấp chuẩn kiến trúc Molecule L2 (`/ui-atomic-refactor`, folder-per-component `< 140 LoC`), tích hợp đầy đủ:
+- **Bộ lọc Cột Ngày (`DateRangeColumnSlot`)**: Đã được nâng cấp chuẩn kiến trúc Molecule L2 (`/ui-structure`, folder-per-component `< 140 LoC`), tích hợp đầy đủ:
   - **Hàng 1 (`Chọn nhanh`)**: DropdownMenu các presets động (*Hôm nay*, *Hôm qua*, *Tháng này*, *Tháng trước*, *Quý này*, *Quý trước*, *Năm nay*, *Tất cả*).
   - **Hàng 2 (`Kỳ`)**: Combobox chọn nhanh 24 tháng gần nhất (`PERIOD_OPTS`) có ô tìm kiếm chuẩn như Drawer Xuất Excel.
   - **Hàng 3 & 4 (`Từ ngày` / `Đến ngày`)**: Hai ô `DatePicker` độc lập, đồng bộ 2 chiều trơn tru với cả 2 hàng trên.
@@ -117,11 +117,13 @@ src/modules/garage/
 - **Cột Trạng thái & Cột Bảo hiểm**: Căn giữa (`text-center`). Cột Bảo hiểm chỉ hiển thị icon khiên `ShieldCheck` neutral cho xe có bảo hiểm, `—` cho xe không bảo hiểm.
 - **Các cột Mã, Tên, Biển số xe**: Căn trái (`text-left`).
 
-### 3.3. Ẩn Mặc Định Cột (Default Column Visibility)
-- `branchName`: `false`.
-- `createdAt`: `false`.
-- `updatedAt`: `false`.
-- `dataAsOf`: `false`.
+### 3.3. Cấu hình Chế Độ Xem & Ẩn/Hiện Cột (View Presets & Column Visibility)
+- **Tổng quan (`overview`)**: Hiển thị mặc định 13 cột nghiệp vụ cốt lõi:
+  - `caseDate` (Ngày tiếp nhận), `ngayHoanThanhCongViec` (Ngày kết thúc), `caseCode` (Số chứng từ), `customer` (Khách hàng), `statusName` (Trạng thái), `classification` (Phân loại ERP), `hasInvoice` (VAT), `doanhThu` (DT), `chiPhi` (CP), `loiNhuan` (Lợi nhuận), `margin` (Biên LN), `collectionProgress` (Tổng phải thu), `costProgress` (Tổng phải trả).
+  - Ẩn mặc định các cột chi tiết công nợ lẻ: `exclusionRules`, `phaiThuKhachHang`, `phaiThuBaoHiem`, `tienConPhaiThanhToan`, `tienConPhaiChi`, `branchName`, `createdAt`, `updatedAt`, `dataAsOf`.
+- **Đối soát (`audit`)**: Bật `collectionProgress: true` (Tổng phải thu), đặt ngay bên trái cột `tienConPhaiThanhToan` (Còn phải thu).
+- **Tất cả cột (`all_columns`)**: Hiển thị toàn bộ 22 cột dữ liệu phiếu dịch vụ.
+- **Bảo vệ Cột Ngày (`DateRangeColumnSlot` & `TableColumnHeaderFilter`)**: `TableColumnHeaderFilter` có cơ chế `shouldFetchOptions = Boolean(columnKey) && !hideFilter && !hideFilterList`. Khi cột ngày truyền `hideFilter: true`, `useInfiniteQuery` hoàn toàn bị vô hiệu hóa, ngăn chặn triệt để việc tự ý gọi API Kho `/api/v1/inventory/stock/column-options` gây lỗi 403 Forbidden đối với normal user.
 
 ---
 
@@ -211,6 +213,8 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
 - Drawer cases và công nợ **dùng chung bố cục** qua `modules/garage/export/GarageExportSections.tsx` (`GarageExportModeAndPeriod`, `GarageExportStartButton`, `GarageExportHistoryPanel`): `layout="2-columns"`, trái = lịch sử, phải = chế độ + kỳ + nút Xuất. Cases thêm nhóm "Loại ngày / Phân loại / Trạng thái" (`GarageCaseExportExtraFields`, chỉ ở chế độ theo kỳ); công nợ thêm PillTabs đối tượng KH/NCC, mặc định Tùy chỉnh từ `2026-07-01` đến hôm nay.
 - Invoice **chưa** chuyển sang lớp này (vẫn dùng `useInvoiceExportProgress` + `useInvoiceExportProgressStore`); có thể gộp sau.
 
+**Cột xuất Excel (Cases)**: danh sách cột và nhóm nằm ở `modules/garage/export/garageCasesExportColumns.ts` (khớp `COMPLETED_CASES_ALL_COLUMNS` phía API). Thuế GTGT (`vatAmount`) là cột mặc định, đứng ngay trái Doanh thu (nhóm `profit`); các cột tùy chọn còn lại là `exclusionRules`, `createdAt`, `updatedAt`, `dataAsOf`. Lựa chọn lưu localStorage key `garage_cases_export_columns_v2`; `loadSavedGarageCasesExportColumns` đọc v2, nếu chưa có thì chuyển một lần từ v1 bằng cách chèn `vatAmount` trước `doanhThu`. Đã lưu v2 thì không chèn lại, nên người dùng bỏ tick VAT vẫn được giữ.
+
 **Cases**: drawer xuất là `GarageExportDrawer` (dùng chung với tab Tổng quan, Combobox Loại báo cáo, mặc định `cases-list`; nhánh cases vẫn dùng `useGarageCaseExportLogic` và đặt các trường riêng (loại ngày / phân loại / trạng thái / chi nhánh) vào slot của `GarageExportConditionSection` qua `GarageCaseExportConditionFields`) và nhận `tableQuery` (từ `useGarageCasesTable().exportQuery`: `date_from/date_to` = `caseDate`, `filtersStr`, `sorts`) qua `GarageCasesTable.onExportExcel(query)` → `GarageCases` mở drawer qua `useGarageHeaderActions().openExport` (`GarageHeaderActionDrawers` render cả drawer đồng bộ + drawer xuất). Dropdown của nút chính "Đồng bộ" do `buildGarageHeaderActions` dựng (`buildGarageCaseCreateActions` chỉ còn là wrapper), dùng chung với tab Tổng quan. Chế độ `by-current-filter` chỉ hiện khi có `tableQuery`; chi nhánh gửi qua header `x-greenway-branch-id` (không đưa vào body). Lịch sử localStorage cũ đã bỏ, thay bằng lịch sử server.
 
 **Công nợ**: `GarageDebtsExportDrawer` (đối tượng KH/NCC, kỳ mặc định từ `GARAGE_DEBT_BASELINE_DATE = 2026-07-01`) nhận `context` = `buildGarageDebtsExportContext(kind, listHook)` do `GarageDebtsTable`/`GaragePayablesTable` truyền qua `onOpenExportDrawer(context)`. Đổi đối tượng khác bảng đang mở thì tự về `by-period`. CSV client-side (`*.export.ts`) đã gỡ.
@@ -219,3 +223,11 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
 ## Đổi nhãn điều hướng (cập nhật 2026-10-17)
 - Nhãn UI của màn hình `garage-cases` đổi từ "Phiếu dịch vụ" thành **"Hoạt động garage"** (EN: "Garage Activities") ở sidebar (`nav.items.garageCases`), breadcrumb, tab `tabs.cases`, tiêu đề `cases.title`, nhãn tổng hợp `cases.summary.items`, command palette. Route `garage-cases` và key i18n giữ nguyên. Chuỗi nghiệp vụ như "Phiếu dịch vụ gần đây", "Phiếu dịch vụ Garage (RO)" giữ nguyên.
 - Thứ tự mục sidebar GARAGE không đổi: Thu chi garage → Hoạt động garage → Công nợ garage → Chi phí vận hành Garage.
+
+## Sơ đồ quy trình Garage Hub & Chuẩn hóa UI Atomic (cập nhật 2026-10-20)
+- **Action Menu Xem sơ đồ quy trình**: Dropdown nút chính "Đồng bộ" tại tab Hoạt động garage (`garage-cases?tab=cases`) kết nối callback `onOpenWorkflow` xuyên suốt từ `GarageCases` (Page L5 qua `useGarageHeaderActions().openWorkflow`) xuống `GarageCasesTable` (Organism L3) và `buildGarageCaseCreateActions` (`GarageCasesTable.actions.tsx`), kích hoạt mở `GarageWorkflowDrawer` hiển thị sơ đồ quy trình toàn diện.
+- **Chuẩn hóa UI Atomic (< 180 LoC)**:
+  - `GarageCasesTable.tsx` được tinh gọn từ 211 LoC xuống 170 LoC (< 180 LoC).
+  - Tách sub-component phân tầng `GarageCaseViewTabs` (`GarageCasesTable.view-tabs.tsx`, 33 LoC) quản lý cụm view presets combobox & status tabs.
+  - Tách hàm tính toán nhãn tổng hợp `resolveTotalLabelCol` vào `GarageCasesTable.summary.tsx`.
+  - Tuân thủ No Blue Mandate: loại bỏ hoàn toàn các class `blue-*` khỏi bảng và summary row.

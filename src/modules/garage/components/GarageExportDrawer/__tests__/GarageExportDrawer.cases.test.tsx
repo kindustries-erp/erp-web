@@ -11,6 +11,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { GarageExportDrawer } from "../GarageExportDrawer";
 import axiosInstance from "@/core/api/axiosInstance";
+import {
+  DEFAULT_GARAGE_CASES_EXPORT_COLUMNS,
+  GARAGE_CASES_EXPORT_COLUMNS_STORAGE_KEY,
+} from "@/modules/garage/export/garageCasesExportColumns";
 
 const standardTableSpy = vi.fn();
 
@@ -172,6 +176,7 @@ const selectTab = async (name: string) => {
 describe("GarageExportDrawer - bảng kê phiếu dịch vụ", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     (axiosInstance.get as any).mockResolvedValue({ data: historyResponse });
     (axiosInstance.post as any).mockResolvedValue({
       data: { jobId: "job-2", message: "Đang chạy nền", reused: false },
@@ -225,6 +230,34 @@ describe("GarageExportDrawer - bảng kê phiếu dịch vụ", () => {
     expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-01" });
   });
 
+  it("chế độ theo filter hiện tại dùng chi nhánh hiện tại của bảng, không dùng chi nhánh cũ", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const drawer = (branch: string) => (
+      <QueryClientProvider client={client}>
+        <GarageExportDrawer
+          open={true}
+          onClose={vi.fn()}
+          defaultReportType="cases-list"
+          initialBranchId={branch}
+          tableQuery={tableQuery}
+        />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(drawer("CN-01"));
+    rerender(drawer("CN-02"));
+
+    fireEvent.click(screen.getByLabelText(/Theo filter hiện tại/));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Xuất Excel"));
+    });
+
+    await waitFor(() => expect(axiosInstance.post).toHaveBeenCalledTimes(1));
+    const [, , config] = (axiosInstance.post as any).mock.calls[0];
+    expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-02" });
+  });
+
   it("chế độ theo filter hiện tại: gửi filtersStr, sorts và khoảng ngày của bảng", async () => {
     renderDrawer({ tableQuery });
 
@@ -244,7 +277,29 @@ describe("GarageExportDrawer - bảng kê phiếu dịch vụ", () => {
       q: undefined,
       sorts: ["-doanhThu"],
       filtersStr: tableQuery.filtersStr,
+      selectedColumns: DEFAULT_GARAGE_CASES_EXPORT_COLUMNS,
     });
+  });
+
+  it("bỏ chọn một cột: payload không còn cột đó và lựa chọn được lưu localStorage", async () => {
+    renderDrawer({ tableQuery });
+
+    fireEvent.click(screen.getByLabelText(/Theo filter hiện tại/));
+    fireEvent.click(screen.getByLabelText("Số phiếu"));
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Xuất Excel"));
+    });
+
+    await waitFor(() => expect(axiosInstance.post).toHaveBeenCalledTimes(1));
+    const [, body] = (axiosInstance.post as any).mock.calls[0];
+    expect(body.selectedColumns).not.toContain("soChungTu");
+    expect(body.selectedColumns).toContain("doanhThu");
+    expect(
+      JSON.parse(
+        localStorage.getItem(GARAGE_CASES_EXPORT_COLUMNS_STORAGE_KEY) ?? "[]",
+      ),
+    ).not.toContain("soChungTu");
   });
 
   describe("chọn kỳ Tuần / Tháng / Quý", () => {

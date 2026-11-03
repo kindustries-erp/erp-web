@@ -28,6 +28,7 @@ export interface ActionDropdownProps {
   align?: "start" | "center" | "end";
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  modal?: boolean;
 }
 
 export function ActionDropdown({
@@ -36,6 +37,7 @@ export function ActionDropdown({
   align = "start",
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  modal = false,
 }: ActionDropdownProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -118,10 +120,25 @@ export function ActionDropdown({
   if (visibleEntries.length === 0) return null;
 
   return (
-    <DropdownMenu.Root modal={false} open={open} onOpenChange={setOpen}>
+    <DropdownMenu.Root modal={modal} open={open} onOpenChange={setOpen}>
       <DropdownMenu.Trigger asChild>
         {customTrigger ? (
-          customTrigger
+          React.isValidElement(customTrigger) ? (
+            React.cloneElement(customTrigger as React.ReactElement<any>, {
+              onClick: (e: React.MouseEvent) => {
+                e.stopPropagation();
+                (customTrigger as React.ReactElement<any>).props?.onClick?.(e);
+              },
+              onPointerDown: (e: React.PointerEvent) => {
+                e.stopPropagation();
+                (
+                  customTrigger as React.ReactElement<any>
+                ).props?.onPointerDown?.(e);
+              },
+            })
+          ) : (
+            customTrigger
+          )
         ) : (
           <button
             type="button"
@@ -140,6 +157,7 @@ export function ActionDropdown({
         <DropdownMenu.Content
           sideOffset={6}
           align={align}
+          onCloseAutoFocus={(e) => e.preventDefault()}
           className="z-[9999] min-w-[140px] rounded-lg p-1 popup-content"
         >
           {visibleEntries.map((entry, index) => {

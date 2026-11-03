@@ -50,8 +50,11 @@ export function GarageCaseViewConfigDrawer({
 
   const getDefaultPresetLabel = (p?: TableViewPreset | null) => {
     if (!p) return "";
-    if (p.key === "overview" || p.key === "all_columns") {
+    if (p.key === "overview") {
       return t("cases.viewModeOverview", "Tổng quan");
+    }
+    if (p.key === "all_columns") {
+      return t("cases.viewModeAllColumns", "Tất cả cột");
     }
     if (p.key === "audit" || p.key === "financial_progress") {
       return t("cases.viewModeAudit", "Đối soát");

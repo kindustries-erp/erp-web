@@ -1,0 +1,13 @@
+import * as React from "react";
+import { cn } from "@/v2/shared/utils/cn";
+import type { {{Name}}Props } from "./{{Name}}.type";
+
+/** {{description}} */
+export const {{Name}} = React.forwardRef<HTMLDivElement, {{Name}}Props>(
+  ({ className, children, ...props }, ref) => (
+    <div ref={ref} className={cn(className)} {...props}>
+      {children}
+    </div>
+  ),
+);
+{{Name}}.displayName = "{{Name}}";

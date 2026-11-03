@@ -1,4 +1,4 @@
-import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import { V2StandardDrawer } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { BusinessPartnerStatusBadge } from "../components/molecules/business-partner-status-badge";
 import { BusinessPartnerFormSections } from "../components/organisms/business-partner-form";

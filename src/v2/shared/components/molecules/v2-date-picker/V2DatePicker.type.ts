@@ -1,3 +1,14 @@
+export enum V2ChevronOrientation {
+  LEFT = "left",
+  RIGHT = "right",
+  UP = "up",
+  DOWN = "down",
+}
+
+export type V2ChevronOrientationInput =
+  | V2ChevronOrientation
+  | `${V2ChevronOrientation}`;
+
 interface V2DatePickerBaseProps {
   placeholder?: string;
   /** Ngày nhỏ nhất được chọn, dạng `yyyy-MM-dd` */
@@ -7,6 +18,7 @@ interface V2DatePickerBaseProps {
   clearable?: boolean;
   disabled?: boolean;
   className?: string;
+  triggerClassName?: string;
   "aria-label"?: string;
 }
 
@@ -14,6 +26,9 @@ export interface V2DatePickerProps extends V2DatePickerBaseProps {
   /** `yyyy-MM-dd`, `null` là chưa chọn */
   value: string | null;
   onValueChange: (value: string | null) => void;
+  /** Mở/đóng lịch từ bên ngoài, để nhiều picker trên cùng form chỉ mở một cái */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export interface V2DateRangeValue {

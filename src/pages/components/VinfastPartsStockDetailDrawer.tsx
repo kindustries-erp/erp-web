@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { FifoUnitLedgerSection } from "./fifo-unit-ledger/FifoUnitLedgerSection";
 import { useTranslation } from "react-i18next";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import {
+  StandardFormDrawer,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
+import { ReceiptText, TrendingUp } from "lucide-react";
 import { VinfastPartTrendChart } from "../VinfastPartsDashboardPage";
 
 interface VinfastPartsStockDetailDrawerProps {
@@ -20,6 +24,40 @@ export function VinfastPartsStockDetailDrawer({
   catalogData,
 }: VinfastPartsStockDetailDrawerProps) {
   const { t } = useTranslation(["vinfastParts", "reports", "common"]);
+
+  const drawerTabs: DrawerTopTabItem[] = useMemo(
+    () => [
+      {
+        key: "ledger",
+        label: t("vinfastParts:DETAIL_TAB", "Chi tiết"),
+        icon: <ReceiptText className="w-3.5 h-3.5" />,
+        content: (
+          <div className="space-y-4 pb-4">
+            <FifoUnitLedgerSection sku={sku} />
+          </div>
+        ),
+      },
+      {
+        key: "trend",
+        label: t("vinfastParts:TREND_ANALYSIS_TAB", "Biến động & Phân tích"),
+        icon: <TrendingUp className="w-3.5 h-3.5" />,
+        content: (
+          <div className="space-y-4 pb-4">
+            <VinfastPartTrendChart
+              title={t("vinfastParts:TREND", "Biểu đồ biến động")}
+              vehicleType="all"
+              filterState={{}}
+              groupBy="day"
+              itemCode={sku}
+              chartHeight={360}
+              variant="drawer"
+            />
+          </div>
+        ),
+      },
+    ],
+    [t, sku],
+  );
 
   return (
     <StandardFormDrawer
@@ -41,21 +79,10 @@ export function VinfastPartsStockDetailDrawer({
       size="full"
       panelClassName="w-full lg:w-[calc(100vw-208px)]"
       collapsibleRightPanel={true}
+      enableFullscreen={true}
       actions={[{ label: t("common:close", "Đóng"), onClick: onClose }]}
-      leftPanel={
-        <div className="flex flex-col gap-4">
-          <VinfastPartTrendChart
-            title={t("vinfastParts:TREND", "Biểu đồ biến động")}
-            vehicleType="all"
-            filterState={{}}
-            groupBy="day"
-            itemCode={sku}
-            chartHeight={200}
-            variant="drawer"
-          />
-          <FifoUnitLedgerSection sku={sku} />
-        </div>
-      }
+      tabs={drawerTabs}
+      defaultTabKey="ledger"
       rightPanel={
         <div className="flex flex-col gap-4">
           <DrawerSection
@@ -74,24 +101,24 @@ export function VinfastPartsStockDetailDrawer({
               value={catalogData?.name}
             />
             <div className="mt-6 grid grid-cols-3 gap-2 text-center">
-              <div className="flex flex-col items-center justify-center p-2 bg-orange-50/50 rounded-md">
-                <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1">
+              <div className="flex flex-col items-center justify-center p-2 bg-orange-50/50 dark:bg-orange-950/30 border border-orange-200/50 dark:border-orange-900/40 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
                   {t("vinfastParts:TOTAL_IN", "Tổng Nhập")}
                 </span>
-                <span className="font-semibold text-orange-700 text-base">
+                <span className="font-semibold text-orange-700 dark:text-orange-400 text-base">
                   {Number(catalogData?.qtyIn || 0).toLocaleString()}
                 </span>
               </div>
-              <div className="flex flex-col items-center justify-center p-2 bg-emerald-50/50 rounded-md">
-                <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1">
+              <div className="flex flex-col items-center justify-center p-2 bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/40 rounded-md">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
                   {t("vinfastParts:TOTAL_OUT", "Tổng Xuất")}
                 </span>
-                <span className="font-semibold text-emerald-700 text-base">
+                <span className="font-semibold text-emerald-700 dark:text-emerald-400 text-base">
                   {Number(catalogData?.qtyOut || 0).toLocaleString()}
                 </span>
               </div>
-              <div className="flex flex-col items-center justify-center p-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-md border border-slate-200/80 dark:border-slate-700">
-                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+              <div className="flex flex-col items-center justify-center p-2 bg-slate-100/70 dark:bg-zinc-900/60 rounded-md border border-slate-200/80 dark:border-zinc-800">
+                <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider mb-1">
                   {t("vinfastParts:BALANCE", "Tồn cuối")}
                 </span>
                 <span className="font-bold text-foreground text-lg tabular-nums">

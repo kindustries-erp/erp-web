@@ -319,11 +319,20 @@ export function useGeneralColumns({
         headerClassName: "text-center",
         className: "text-center",
         cell: (inv: any) => {
-          if (!inv.branchId) return "—";
-          const branch = branches.find((b) => b.value === inv.branchId);
-          if (!branch) return inv.branchId;
-          const parts = branch.label.split(" — ");
-          return parts.length > 1 ? parts[1] : branch.label;
+          const ids: string[] = inv.branchIds?.length
+            ? inv.branchIds
+            : inv.branchId
+              ? [inv.branchId]
+              : [];
+          if (ids.length === 0) return "—";
+          return ids
+            .map((id) => {
+              const branch = branches.find((b) => b.value === id);
+              if (!branch) return id;
+              const parts = branch.label.split(" — ");
+              return parts.length > 1 ? parts[1] : branch.label;
+            })
+            .join(", ");
         },
       },
       invoiceCategory: {

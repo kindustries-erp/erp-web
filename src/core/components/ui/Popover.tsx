@@ -38,9 +38,9 @@ export function Popover({
             WebkitBackdropFilter: "blur(24px) saturate(200%)",
           }}
           className={cn(
-            "z-[9999] rounded-xl border border-[color:var(--popup-border)] shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset] data-[state=open]:animate-[popover-in_150ms_ease-out] data-[state=closed]:animate-[popover-out_100ms_ease-in]",
+            "z-[9999] rounded-xl border border-[color:var(--popup-border)] shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset] dark:shadow-[0_20px_48px_-8px_rgba(0,0,0,0.7),0_4px_16px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.06)_inset] data-[state=open]:animate-[popover-in_150ms_ease-out] data-[state=closed]:animate-[popover-out_100ms_ease-in]",
             glass &&
-              "[--muted-fg:#374151] [--faint:#4b5563] [--foreground:#030712] [--popup-bg-hover:rgba(0,0,0,0.05)] text-[#1f2937] font-[450]",
+              "[--muted-fg:#374151] [--faint:#4b5563] [--foreground:#030712] [--popup-bg-hover:rgba(0,0,0,0.05)] text-[#1f2937] font-[450] dark:[--muted-fg:#94a3b8] dark:[--faint:#64748b] dark:[--foreground:#f8fafc] dark:[--popup-bg-hover:rgba(255,255,255,0.06)] dark:text-zinc-200",
             className,
           )}
         >

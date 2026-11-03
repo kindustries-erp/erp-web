@@ -25,6 +25,15 @@ describe("V2StandardTableMobile", () => {
     expect(within(first).getByText("Ngày")).toBeInTheDocument();
   });
 
+  it("scrolls the card list inside its own container, keeping pagination fixed", () => {
+    render({ items: makeRows(3), total: 3 });
+    const list = screen.getAllByRole("listitem")[0].parentElement;
+    expect(list?.parentElement).toHaveClass("overflow-y-auto", "flex-1");
+    expect(
+      screen.getByLabelText("Trang sau").closest(".shrink-0"),
+    ).not.toBeNull();
+  });
+
   it("does not offer header filters or column settings", () => {
     render();
     expect(screen.queryByLabelText("Tùy chỉnh cột")).not.toBeInTheDocument();

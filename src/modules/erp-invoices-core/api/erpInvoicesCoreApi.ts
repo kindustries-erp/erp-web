@@ -33,6 +33,7 @@ export interface ErpInvoiceItemRow {
   licensePlate?: string | null;
   settlementOrder?: string | null;
   branchId?: string | null;
+  branchIds?: string[];
   taxInvoiceStatus?: number | null;
   branchName?: string | null;
   itemCode?: string | null;
@@ -96,6 +97,7 @@ export interface ErpInvoiceItemListResponse {
 export interface ErpInvoice {
   id: string;
   branchId?: string | null;
+  branchIds?: string[];
   invoiceNo: string;
   serialNo?: string | null;
   invoiceDate: string;
@@ -182,6 +184,7 @@ export interface ErpInvoice {
 
 export interface CreateErpInvoicePayload {
   branchId?: string;
+  branchIds?: string[];
   invoiceNo: string;
   serialNo?: string;
   invoiceDate: string;
@@ -433,6 +436,11 @@ export interface OriginalPdfDownloadResponse {
   pdfError: string | null;
 }
 
+export interface OriginalPdfLookupHint {
+  label: string;
+  value: string;
+}
+
 export interface OriginalPdfLookupInfoResponse {
   invoiceId: string;
   invoiceNo: string;
@@ -444,6 +452,14 @@ export interface OriginalPdfLookupInfoResponse {
   pdfSource: string | null;
   pdfFileKey: string | null;
   pdfError: string | null;
+  hasXml: boolean;
+  hints: OriginalPdfLookupHint[];
+}
+
+export interface ManualPdfUploadResponse {
+  invoiceId: string;
+  pdfFileKey: string;
+  pdfSource: string;
 }
 
 export interface SyncAdvancedPayload {
@@ -469,6 +485,15 @@ export interface SyncStatusResponse {
   errorMessage: string | null;
 }
 
+/** Cấu hình Cổng Thuế trả về từ `GET portal/token`; API mới không còn token/cookies thô */
+export interface PortalConfigResponse {
+  token?: string;
+  cookies?: string;
+  hasToken?: boolean;
+  username?: string;
+  hasPassword?: boolean;
+}
+
 export const erpInvoicesCoreApi = {
   downloadOriginalPdf: async (
     invoiceId: string,
@@ -484,6 +509,20 @@ export const erpInvoicesCoreApi = {
   ): Promise<OriginalPdfLookupInfoResponse> => {
     const { data } = await axiosInstance.get<OriginalPdfLookupInfoResponse>(
       `${BASE}/original-pdf/${invoiceId}/lookup-info`,
+    );
+    return data;
+  },
+
+  uploadManualPdf: async (
+    invoiceId: string,
+    file: File,
+  ): Promise<ManualPdfUploadResponse> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await axiosInstance.post<ManualPdfUploadResponse>(
+      `${BASE}/original-pdf/${invoiceId}/manual-upload`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
     );
     return data;
   },
@@ -665,11 +704,12 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
-  bulkSetBranch: async (ids: string[], branchId: string | null) => {
+  /** branchIds rỗng = không gán chi nhánh nào */
+  bulkSetBranch: async (ids: string[], branchIds: string[]) => {
     const { data } = await axiosInstance.patch<{
       updated: number;
       ids: string[];
-    }>(`${BASE}/bulk-set-branch`, { ids, branchId });
+    }>(`${BASE}/bulk-set-branch`, { ids, branchIds });
     return data;
   },
 
@@ -797,27 +837,25 @@ export const erpInvoicesCoreApi = {
     password?: string;
     cvalue: string;
     ckey: string;
-  }): Promise<{ success: boolean; token: string; message: string }> => {
+  }): Promise<{
+    success: boolean;
+    hasToken?: boolean;
+    token?: string;
+    message: string;
+  }> => {
     const { data } = await axiosInstance.post<{
       success: boolean;
-      token: string;
+      hasToken?: boolean;
+      token?: string;
       message: string;
     }>(`${BASE}/portal/login`, payload);
     return data;
   },
 
-  getPortalConfig: async (): Promise<{
-    token: string;
-    cookies: string;
-    username?: string;
-    hasPassword?: boolean;
-  }> => {
-    const { data } = await axiosInstance.get<{
-      token: string;
-      cookies: string;
-      username?: string;
-      hasPassword?: boolean;
-    }>(`${BASE}/portal/token`);
+  getPortalConfig: async (): Promise<PortalConfigResponse> => {
+    const { data } = await axiosInstance.get<PortalConfigResponse>(
+      `${BASE}/portal/token`,
+    );
     return data;
   },
 
@@ -1297,6 +1335,13 @@ export interface BulkImportResult {
   pdfOrphans?: { filename: string; reason: string }[];
 }
 
+export interface SmartNetOffReason {
+  key: string;
+  label: string;
+  /** true: tín hiệu cộng điểm; false: yếu tố trừ điểm */
+  matched: boolean;
+}
+
 export interface SmartNetOffSuggestionItem {
   txn: {
     id: string;
@@ -1331,4 +1376,5 @@ export interface SmartNetOffSuggestionItem {
       | "NOTICE";
   };
   matchedKeywords: string[];
+  reasons?: SmartNetOffReason[];
 }

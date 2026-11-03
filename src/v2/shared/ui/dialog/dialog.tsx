@@ -2,6 +2,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
+import { FLOATING_OVERLAY_CLASS } from "@/v2/shared/ui/floating-surface";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -15,7 +16,8 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm",
+      "fixed inset-0 z-50",
+      FLOATING_OVERLAY_CLASS,
       "data-[state=open]:animate-in data-[state=closed]:animate-out",
       "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className,
@@ -58,7 +60,7 @@ const DialogContent = React.forwardRef<
           "fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%]",
           "rounded-2xl border border-[color:var(--popup-border,rgba(226,232,240,0.8))] bg-[var(--modal-bg,rgba(246,248,252,0.75))]",
           "backdrop-blur-[var(--glass-blur,16px)] text-foreground",
-          "p-6 shadow-[var(--popup-shadow,0_24px_48px_-12px_rgba(15,23,42,0.22))] duration-150",
+          "p-6 shadow-[var(--drawer-shadow,var(--popup-shadow,0_24px_48px_-12px_rgba(15,23,42,0.22)))] duration-150",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",

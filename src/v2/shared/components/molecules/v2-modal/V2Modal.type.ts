@@ -1,6 +1,6 @@
 import * as React from "react";
 
-export type V2ModalSize = "sm" | "md" | "lg" | "xl" | "full";
+export type V2ModalSize = "sm" | "md" | "lg" | "xl" | "2xl" | "screen" | "full";
 
 export interface V2ModalProps {
   open: boolean;

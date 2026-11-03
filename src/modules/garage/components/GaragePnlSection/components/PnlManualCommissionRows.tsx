@@ -34,7 +34,7 @@ export function PnlManualCommissionRows({
               <td className="py-2 px-8 font-medium flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span>
-                    7.{idx + 2}. {item.categoryName}
+                    8.{idx + 2}. {item.categoryName}
                   </span>
                   <Badge
                     variant="outline"
@@ -92,7 +92,7 @@ export function PnlManualCommissionRows({
                 <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
                   <td className="py-1.5 pl-14 pr-4">
                     <span className="text-[11px] italic">
-                      7.{idx + 2}.1. Trong đó: Phát sinh liên quan OJ
+                      8.{idx + 2}.1. Trong đó: Phát sinh liên quan OJ
                     </span>
                   </td>
                   <PnlAmountCell

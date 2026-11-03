@@ -135,6 +135,15 @@ export const debtsVi = {
   exportDetailed: "Xuất Excel theo kỳ / Nâng cao",
   exportCurrentView: "Xuất nhanh dữ liệu hiện tại",
 
+  actions: {
+    exportGroup: "Báo cáo & Xuất file",
+    cashflowGroup: "PHIẾU THU / CHI",
+    createReceipt: "Tạo phiếu thu",
+    createPayment: "Tạo phiếu chi",
+    createReceiptForCase: "Tạo phiếu thu vụ việc...",
+    createPaymentForCase: "Tạo phiếu chi vụ việc...",
+  },
+
   exportDrawer: {
     title: "Xuất Excel báo cáo công nợ",
     subtitle: "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
@@ -181,6 +190,18 @@ export const debtsVi = {
     },
   },
 
+  unallocated: {
+    loadError: "Không thể tải khoản chưa phân bổ",
+    empty: "Không có khoản chưa phân bổ",
+    total: "Tổng chưa phân bổ",
+    date: "Ngày GD",
+    reference: "Số tham chiếu",
+    description: "Diễn giải",
+    amount: "Số tiền",
+    netOff: "Đã cấn trừ",
+    netOffAction: "Cấn trừ",
+    remaining: "Chưa phân bổ",
+  },
   drawer: {
     title: "Hồ sơ công nợ đối tác",
     partnerInfoTitle: "Thông tin đối tác",
@@ -198,6 +219,7 @@ export const debtsVi = {
     invoicesListTitle: "Danh sách hóa đơn chi tiết",
     tabInvoices: "1. Danh sách hóa đơn",
     tabAnalytics: "2. Biến động & Phân tích",
+    tabUnallocated: "3. Khoản chưa phân bổ",
     monthlyBreakdownTitle: "Ma trận công nợ theo kỳ phát sinh / tháng",
     analyticsTitle: "Phân tích tài chính & Cơ cấu công nợ",
     agingDistribution: "Cơ cấu phân bổ tuổi nợ",

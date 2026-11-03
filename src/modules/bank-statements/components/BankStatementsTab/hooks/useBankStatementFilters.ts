@@ -40,11 +40,20 @@ export function useBankStatementFilters({
     const custom: any[] = [
       {
         key: "branchId",
+        type: "multi-combobox",
         label: t("bankStatement.filters.branch", { defaultValue: "Chi nhánh" }),
         placeholder: t("bankStatement.filters.allBranches", {
           defaultValue: "Tất cả chi nhánh",
         }),
-        options: branches.map((b) => ({ value: b.id, label: b.name })),
+        options: [
+          {
+            value: "__BLANK__",
+            label: t("bankStatement.filters.noBranch", {
+              defaultValue: "Không có chi nhánh",
+            }),
+          },
+          ...branches.map((b) => ({ value: b.id, label: b.name })),
+        ],
       },
     ];
 
@@ -103,7 +112,9 @@ export function useBankStatementFilters({
     return {
       startDate: filter.state.dateFrom || undefined,
       endDate: filter.state.dateTo || undefined,
-      branchId: custom.branchId || undefined,
+      branchIds: custom.branchId
+        ? (custom.branchId as string).split(",")
+        : undefined,
       bankAccountId:
         type === "bank" ? custom.bankAccountId || undefined : undefined,
       cashBookId: type === "cash" ? custom.cashBookId || undefined : undefined,

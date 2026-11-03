@@ -1,8 +1,7 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { Users, FileSpreadsheet, DownloadCloud } from "lucide-react";
+import { Users, FileSpreadsheet } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
-import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { GarageDebtsKpiGrid } from "../garage-debts-kpi-grid";
 import { GarageDebtsHorizonGrid } from "../garage-debts-horizon-grid";
 import { GarageDebtsAnalyticsCharts } from "../garage-debts-analytics-charts";
@@ -13,15 +12,7 @@ import { useGarageDebtsDashboardTab } from "./GarageDebtsDashboardTab.hook";
 
 export const GarageDebtsDashboardTab: React.FC<
   GarageDebtsDashboardTabProps
-> = ({
-  tabs,
-  activeTab,
-  onTabChange,
-  onExportClick,
-  onOpenCustomerDetail,
-  canSyncGarage,
-  onSyncCases,
-}) => {
+> = ({ tabs, activeTab, onTabChange, onExportClick, onOpenCustomerDetail }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const {
     summary,
@@ -36,36 +27,6 @@ export const GarageDebtsDashboardTab: React.FC<
     setSelectedHorizon,
     selectedBranchId,
   } = useGarageDebtsDashboardTab();
-
-  const createActions = useMemo<ActionDropdownItem[]>(
-    () => [
-      {
-        groupLabel: t("debts.actions.exportGroup", "Báo cáo & Xuất file"),
-        items: [
-          {
-            label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
-            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: onExportClick || (() => {}),
-          },
-        ],
-      },
-      ...(canSyncGarage && onSyncCases
-        ? [
-            {
-              groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
-              items: [
-                {
-                  label: t("cases.actions.syncCases", "Đồng bộ phiếu dịch vụ"),
-                  icon: <DownloadCloud className="w-4 h-4 text-sky-600" />,
-                  onClick: onSyncCases,
-                },
-              ],
-            },
-          ]
-        : []),
-    ],
-    [canSyncGarage, onSyncCases, onExportClick, t],
-  );
 
   return (
     <DashboardTemplate
@@ -83,9 +44,8 @@ export const GarageDebtsDashboardTab: React.FC<
       onCreate={onExportClick}
       createLabel={t("debts.exportExcel", "Xuất Excel")}
       createIcon={
-        <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-600" />
+        <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
       }
-      createActions={createActions}
     >
       {/* 1. 3 Executive KPI Cards */}
       <GarageDebtsKpiGrid summary={summary} isLoading={isLoading} />

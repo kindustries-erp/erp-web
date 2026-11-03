@@ -5,7 +5,7 @@ import { ErpAction, ErpResource } from "@/modules/system/types/rbac";
 import type { GarageCasesTableQuery } from "../../export/garageExportScopes";
 import { buildGarageHeaderActions } from "./buildGarageHeaderActions";
 
-export type GarageSyncMode = "cases" | "gross-profit";
+export type GarageSyncMode = "all" | "cases" | "gross-profit" | "case-details";
 
 /**
  * Trạng thái nút chính "Đồng bộ" + dropdown xuất file dùng chung cho 2 tab Garage:
@@ -24,14 +24,14 @@ export function useGarageHeaderActions() {
   const canSyncGarage = canCreateGarage || canUpdateGarage;
 
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
-  const [syncMode, setSyncMode] = useState<GarageSyncMode>("cases");
+  const [syncMode, setSyncMode] = useState<GarageSyncMode>("all");
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
   const [exportTableQuery, setExportTableQuery] = useState<
     GarageCasesTableQuery | undefined
   >(undefined);
   const [workflowDrawerOpen, setWorkflowDrawerOpen] = useState(false);
 
-  const openSync = useCallback((mode: GarageSyncMode) => {
+  const openSync = useCallback((mode: GarageSyncMode = "all") => {
     setSyncMode(mode);
     setSyncDrawerOpen(true);
   }, []);

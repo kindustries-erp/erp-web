@@ -1,6 +1,12 @@
-export type GarageCashflowTabKey = "dashboard" | "vouchers";
+export enum GarageCashflowTabKey {
+  DASHBOARD = "dashboard",
+  VOUCHERS = "vouchers",
+  FORECAST = "forecast",
+}
+
+export type GarageCashflowTabKeyType = "dashboard" | "vouchers" | "forecast";
 
 export interface GarageCashflowTabProps {
-  initialTab?: GarageCashflowTabKey;
+  initialTab?: GarageCashflowTabKey | GarageCashflowTabKeyType;
   onOpenCaseDetail?: (caseCode: string) => void;
 }

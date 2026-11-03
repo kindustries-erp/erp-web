@@ -14,9 +14,20 @@ describe("V2SidebarHeader Molecule", () => {
     expect(handleToggle).toHaveBeenCalledTimes(1);
   });
 
-  it("ẩn tên ứng dụng khi isCollapsed=true", () => {
-    render(<V2SidebarHeader appName="ERP CORE" isCollapsed={true} />);
+  it("thay thế logo bằng nút toggle expand khi isCollapsed=true", () => {
+    const handleToggle = vi.fn();
+    render(
+      <V2SidebarHeader
+        appName="ERP CORE"
+        isCollapsed={true}
+        onToggle={handleToggle}
+      />,
+    );
     expect(screen.queryByText("ERP CORE")).not.toBeInTheDocument();
-    expect(screen.getByTestId("v2-sidebar-logo")).toBeInTheDocument();
+    expect(screen.queryByTestId("v2-sidebar-logo")).not.toBeInTheDocument();
+    const toggleBtn = screen.getByTestId("v2-sidebar-toggle-btn");
+    expect(toggleBtn).toBeInTheDocument();
+    fireEvent.click(toggleBtn);
+    expect(handleToggle).toHaveBeenCalledTimes(1);
   });
 });

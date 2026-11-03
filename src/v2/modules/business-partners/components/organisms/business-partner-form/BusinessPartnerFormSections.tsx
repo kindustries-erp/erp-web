@@ -1,13 +1,14 @@
 import { RotateCw } from "lucide-react";
-import { V2Button, V2Textarea } from "@/v2/shared/components/atoms";
-import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
-import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
 import type { BusinessPartnerFormValue } from "../../../domain/entities/businessPartner";
 import {
+  V2Button,
+  V2Textarea,
+  DrawerField,
+  DrawerSection,
+  V2Combobox,
   V2ReadValue as ReadValue,
   V2TextField as TextInput,
-} from "@/v2/shared/components/molecules/v2-form-controls";
+} from "@/v2/shared/components";
 
 interface FormProps {
   form: BusinessPartnerFormValue;

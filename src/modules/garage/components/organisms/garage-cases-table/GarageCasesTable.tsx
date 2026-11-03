@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileText, DownloadCloud } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { GarageCaseViewModeCombobox } from "../../molecules/garage-case-view-mode-combobox";
 import { buildGarageCasesColumns } from "./GarageCasesTable.columns";
 import { useGarageCasesTable } from "./GarageCasesTable.hook";
 import {
@@ -14,10 +13,8 @@ import {
   buildGarageCaseCreateActions,
   buildGarageCaseRowActions,
 } from "./GarageCasesTable.actions";
-import {
-  DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY,
-  GARAGE_CASE_STATUS_TABS,
-} from "../../../utils/garageCaseViewPresets";
+import { DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY } from "../../../utils/garageCaseViewPresets";
+import { GarageCaseViewTabs } from "./GarageCasesTable.view-tabs";
 import type { GarageCasesTableProps } from "./GarageCasesTable.type";
 
 export function GarageCasesTable(props: GarageCasesTableProps) {
@@ -90,22 +87,6 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
     ],
   );
 
-  const totalLabelCol = useMemo(() => {
-    const isHidden = props.columnViewPresetsHook?.isColumnHidden;
-    const colVis = props.columnViewPresetsHook?.activePreset?.columnVisibility;
-    const isCustVisible =
-      typeof isHidden === "function"
-        ? !isHidden("customer")
-        : colVis?.customer !== false;
-    if (isCustVisible) return "customer";
-    const isCodeVisible =
-      typeof isHidden === "function"
-        ? !isHidden("caseCode")
-        : colVis?.caseCode !== false;
-    if (isCodeVisible) return "caseCode";
-    return "customer";
-  }, [props.columnViewPresetsHook]);
-
   const summaryRow = useMemo(
     () =>
       buildCasesSummaryRow({
@@ -115,7 +96,7 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
         page,
         pageSize,
         totalCases: total,
-        totalLabelCol,
+        columnViewPresetsHook: props.columnViewPresetsHook,
         t: translate,
       }),
     [
@@ -125,7 +106,7 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
       page,
       pageSize,
       total,
-      totalLabelCol,
+      props.columnViewPresetsHook,
       translate,
     ],
   );
@@ -142,28 +123,6 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
   const rowActions = useMemo(
     () => buildGarageCaseRowActions(props, translate),
     [props, translate],
-  );
-
-  const viewTabsNode = (
-    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
-      <GarageCaseViewModeCombobox
-        presets={props.columnViewPresetsHook.presets}
-        activePresetKey={props.activeColumnPresetKey}
-        onSelect={props.onColumnPresetChange}
-        onCreateView={props.onCreateViewPreset}
-        onEditView={props.onEditViewPreset}
-        onDeleteView={props.onDeleteViewPreset}
-        filterGroup={{
-          title: t("cases.statusGroup", { defaultValue: "Trạng thái phiếu" }),
-          value: props.activeStatusTab,
-          onChange: props.onStatusTabChange,
-          items: GARAGE_CASE_STATUS_TABS.map((tab) => ({
-            value: tab.value,
-            label: t(tab.labelKey, { defaultValue: tab.defaultLabel }),
-          })),
-        }}
-      />
-    </div>
   );
 
   return (
@@ -195,7 +154,7 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
       onCreate={props.canSyncGarage ? props.onSyncCases : undefined}
       createActions={createActions}
       rowActions={rowActions}
-      customActionsNode={viewTabsNode}
+      customActionsNode={<GarageCaseViewTabs props={props} t={t} />}
       containerClassName="max-h-[calc(100vh-220px)]"
       page={page}
       pageSize={pageSize}

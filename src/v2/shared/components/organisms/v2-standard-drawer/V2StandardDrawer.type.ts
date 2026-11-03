@@ -113,6 +113,8 @@ export interface V2StandardDrawerProps {
   id?: string;
   stackOffsetPx?: number;
   disableStackOffset?: boolean;
+  /** z-index tầng đầu, dùng khi drawer V2 mở chồng lên drawer v1 */
+  baseZIndex?: number;
 
   // Class overrides & Options
   className?: string;
@@ -120,4 +122,6 @@ export interface V2StandardDrawerProps {
   bodyClassName?: string;
   closeAriaLabel?: string;
   floating?: boolean;
+  /** Nội dung chiếm hết chiều cao còn lại của drawer (desktop), để section bên trong giãn theo (ví dụ nhật ký tiến trình) */
+  fillHeight?: boolean;
 }

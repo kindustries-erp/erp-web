@@ -1,11 +1,11 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshCw, FileSpreadsheet, ChevronDown } from "lucide-react";
+import { RefreshCw, FileSpreadsheet } from "lucide-react";
 import toast from "react-hot-toast";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import type { V2DropdownGroup } from "@/v2/shared/components";
 import type { ErpInvoiceDetailDrawerProps } from "./ErpInvoiceDetailDrawer.type";
+import type { PartnerSubTabMode } from "../erp-invoice-partner-tab/ErpInvoicePartnerTabNav";
 
 export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
   const {
@@ -19,6 +19,10 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     fieldSet,
     direction,
     editMode,
+    open,
+    activeTabKey,
+    onTabChange,
+    partnerViewMode,
   } = props;
 
   const { t } = useTranslation("erpInvoices");
@@ -26,14 +30,60 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
   const [showPoModal, setShowPoModal] = useState(false);
   const [showSoModal, setShowSoModal] = useState(false);
   const [showGarageCaseModal, setShowGarageCaseModal] = useState(false);
-  const [subTabKey, setSubTabKey] = useState<
-    "details" | "invoices" | "lines" | "analytics" | "attachments"
-  >("details");
 
-  const handleFetchGraph = useCallback(
-    (id: string) => erpInvoicesCoreApi.getTraceabilityGraph(id),
-    [],
+  const isUrlLinesTab = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const s = window.location.search;
+    return (
+      s.includes("tab=in-lines") ||
+      s.includes("tab=out-lines") ||
+      s.includes("view=lines")
+    );
+  }, []);
+
+  const opensPartnerTab =
+    (partnerViewMode !== undefined && partnerViewMode !== "details") ||
+    isUrlLinesTab;
+  const partnerDefaultSubTab: PartnerSubTabMode =
+    partnerViewMode === "lines" || isUrlLinesTab ? "lines" : "invoices";
+
+  // Deep link "Đối soát dòng tiền" (activeTabKey="financials") hoặc "linked_docs" → mở main tab Chi tiết
+  useEffect(() => {
+    if (activeTabKey !== "financials" && activeTabKey !== "linked_docs") return;
+    if (activeTabKey === "financials") {
+      setShowNetOffModal(true);
+    }
+    onTabChange?.("invoice_details");
+  }, [activeTabKey, onTabChange]);
+
+  // Deep link "Hạch toán kế toán" (activeTabKey="accounting") → mở main tab Chi tiết (có sub-tab hạch toán)
+  useEffect(() => {
+    if (activeTabKey !== "accounting") return;
+    onTabChange?.("invoice_details");
+  }, [activeTabKey, onTabChange]);
+
+  // Deep link danh sách HHDV/đối tượng → main tab "Chi tiết theo NCC/KH" khi mở drawer
+  useEffect(() => {
+    if (!open || !opensPartnerTab) return;
+    onTabChange?.("invoice_partner");
+  }, [open, opensPartnerTab]);
+
+  const [traceabilityCount, setTraceabilityCount] = useState<number | null>(
+    null,
   );
+
+  useEffect(() => {
+    setTraceabilityCount(null);
+  }, [detailInvoice?.id]);
+
+  const handleFetchGraph = useCallback(async (id: string) => {
+    const res = await erpInvoicesCoreApi.getTraceabilityGraph(id);
+    if (res && Array.isArray(res.nodes)) {
+      const next = Math.max(0, res.nodes.length - 1);
+      setTraceabilityCount((prev) => (prev === next ? prev : next));
+    }
+    return res;
+  }, []);
 
   const handleSelectBankNetOff = (
     selected: { id: string; amount: number }[],
@@ -49,6 +99,7 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     fieldSet?.("pendingDocumentChanges", [...current, ...newChanges]);
     toast.success(
       t(
+        "toastLinkedBankSuccess",
         "Đã thêm giao dịch ngân hàng vào danh sách cấn trừ (chờ Lưu thay đổi).",
       ),
     );
@@ -63,7 +114,9 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     ]);
     fieldSet?.("purchaseOrderId", po.id);
     toast.success(
-      t("Đã chọn đơn mua hàng {{poNo}} để liên kết (chờ Lưu thay đổi).", {
+      t("toastLinkedPoSuccess", {
+        defaultValue:
+          "Đã chọn đơn mua hàng {{poNo}} để liên kết (chờ Lưu thay đổi).",
         poNo: po.poNo,
       }),
     );
@@ -78,7 +131,9 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     ]);
     fieldSet?.("salesOrderId", so.id);
     toast.success(
-      t("Đã chọn đơn bán hàng {{soNo}} để liên kết (chờ Lưu thay đổi).", {
+      t("toastLinkedSoSuccess", {
+        defaultValue:
+          "Đã chọn đơn bán hàng {{soNo}} để liên kết (chờ Lưu thay đổi).",
         soNo: so.soNo,
       }),
     );
@@ -95,7 +150,9 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     ]);
     fieldSet?.("settlementOrder", code);
     toast.success(
-      t("Đã chọn vụ việc garage {{code}} để liên kết (chờ Lưu thay đổi).", {
+      t("toastLinkedCaseSuccess", {
+        defaultValue:
+          "Đã chọn vụ việc garage {{code}} để liên kết (chờ Lưu thay đổi).",
         code,
       }),
     );
@@ -162,21 +219,21 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     }
   }, [detailInvoice, direction, t]);
 
-  const footerLeft = useMemo(() => {
+  const actionGroups = useMemo<V2DropdownGroup[] | undefined>(() => {
     if (editMode) return undefined;
     if (!onSyncDetail && !detailInvoice) return undefined;
 
-    const dropdownItems: ActionDropdownItem[] = [];
+    const groups: V2DropdownGroup[] = [];
 
     if (onSyncDetail) {
-      dropdownItems.push({
-        groupLabel: "ĐỒNG BỘ",
+      groups.push({
+        groupLabel: t("groupSync", "ĐỒNG BỘ"),
         items: [
           {
-            label: "Đồng bộ từ GĐT",
+            label: t("syncGdt", "Đồng bộ từ GĐT"),
             icon: (
               <RefreshCw
-                className={`w-4 h-4 ${loadingDetail ? "animate-spin" : ""}`}
+                className={`w-4 h-4 text-teal-400 ${loadingDetail ? "animate-spin" : ""}`}
               />
             ),
             onClick: onSyncDetail,
@@ -187,14 +244,14 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     }
 
     if (detailInvoice?.id) {
-      dropdownItems.push({
-        groupLabel: "XUẤT DỮ LIỆU",
+      groups.push({
+        groupLabel: t("groupExport", "XUẤT DỮ LIỆU"),
         items: [
           {
-            label: "Xuất Excel hóa đơn",
+            label: t("exportInvoiceExcel", "Xuất Excel hóa đơn"),
             icon: (
               <FileSpreadsheet
-                className={`w-4 h-4 text-emerald-600 ${exportingExcel ? "animate-spin" : ""}`}
+                className={`w-4 h-4 text-emerald-500 ${exportingExcel ? "animate-spin" : ""}`}
               />
             ),
             onClick: handleExportSingleExcel,
@@ -204,25 +261,8 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
       });
     }
 
-    if (dropdownItems.length === 0) return undefined;
-
-    return (
-      <ActionDropdown
-        align="start"
-        items={dropdownItems}
-        customTrigger={
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors cursor-pointer"
-          >
-            <span className="font-semibold text-[color:var(--fg)]">
-              Thao tác
-            </span>
-            <ChevronDown className="w-3.5 h-3.5 text-[color:var(--faint)]" />
-          </button>
-        }
-      />
-    );
+    if (groups.length === 0) return undefined;
+    return groups;
   }, [
     editMode,
     onSyncDetail,
@@ -230,6 +270,7 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     detailInvoice,
     exportingExcel,
     handleExportSingleExcel,
+    t,
   ]);
 
   return {
@@ -242,14 +283,15 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     setShowSoModal,
     showGarageCaseModal,
     setShowGarageCaseModal,
-    subTabKey,
-    setSubTabKey,
+    partnerDefaultSubTab,
     handleFetchGraph,
+    traceabilityCount,
     handleSelectBankNetOff,
     handleSelectPo,
     handleSelectSo,
     handleSelectGarageCase,
     editActions,
-    footerLeft,
+    actionGroups,
+    footerLeft: undefined,
   };
 }

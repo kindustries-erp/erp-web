@@ -1,16 +1,12 @@
 import * as React from "react";
-import { V2Header } from "@/v2/shared/components/organisms/v2-header";
-import { V2BottomNav } from "@/v2/shared/components/organisms/v2-bottom-nav";
-import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
-import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
-import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { cn } from "@/v2/shared/utils/cn";
 import {
-  filterV2NavItems,
-  filterV2NavSections,
-  getV2NavItems,
-  getV2NavigationSections,
-} from "./v2Navigation";
+  V2Header,
+  V2BottomNav,
+  V2MobileCatalogDrawer,
+} from "@/v2/shared/components";
+import { MAX_PINNED_MOBILE_NAV } from "@/v2/shared/stores/useV2MobileNavStore";
+import { useV2MobileNav } from "./hooks/useV2MobileNav";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
 export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
@@ -20,34 +16,50 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   userName,
   userRole,
   tenantName,
+  branchName,
+  logoUrl,
+  sections,
   navItems,
   onNavigate,
+  onBranchClick,
+  onClickLogo,
+  contentClassName,
+  userMenuNode,
+  notificationNode,
+  currentTheme,
+  onThemeChange,
+  bottomNavVariant = "floating",
+  bottomNavIndicator = "pill",
 }) => {
-  const { t, locale } = useV2Translation();
-  const can = useV2PermissionChecker();
-  const [catalogOpen, setCatalogOpen] = React.useState(false);
-
-  const dynamicNavItems = React.useMemo(
-    () => filterV2NavItems(getV2NavItems(t), can),
-    [t, locale, can],
-  );
-  const catalogSections = React.useMemo(
-    () => filterV2NavSections(getV2NavigationSections(t), can),
-    [t, locale, can],
-  );
-  const effectiveNavItems = navItems ?? dynamicNavItems;
-  const handleMobileNavigate = (item: (typeof effectiveNavItems)[number]) => {
-    if (item.id === "catalog") {
-      setCatalogOpen(true);
-      return;
-    }
-    onNavigate?.(item);
-  };
-  const bottomActiveId = effectiveNavItems.some(
-    (item) => item.id === activeNavId,
-  )
-    ? activeNavId
-    : "catalog";
+  const {
+    t,
+    locale,
+    catalogOpen,
+    setCatalogOpen,
+    closeCatalog,
+    searchQuery,
+    setSearchQuery,
+    isCustomizing,
+    setIsCustomizing,
+    limitWarning,
+    pinnedIds,
+    setPinnedIds,
+    resetToDefault,
+    allAvailableItems,
+    filteredSections,
+    default4Items,
+    currentSelectedIds,
+    quick4Items,
+    allMenuItem,
+    bottomActiveId,
+    handleMobileNavigate,
+    handleToggleItem,
+  } = useV2MobileNav({
+    activeNavId,
+    sections,
+    navItems,
+    onNavigate,
+  });
 
   const fallbackBreadcrumbs = React.useMemo(
     () => [{ label: t("v2.nav.items.dashboard", "Tổng quan") }],
@@ -56,6 +68,11 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
 
   const effectiveUserName =
     userName ?? t("v2.sidebar.userFallback", "Quản trị viên");
+
+  const filteredSectionsCount = React.useMemo(
+    () => filteredSections.reduce((acc, s) => acc + s.items.length, 0),
+    [filteredSections],
+  );
 
   return (
     <div
@@ -67,47 +84,68 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
         userName={effectiveUserName}
         userRole={userRole}
         tenantName={tenantName}
+        branchName={branchName}
+        logoUrl={logoUrl}
+        onBranchClick={onBranchClick ?? onClickLogo}
+        userMenuNode={userMenuNode}
+        notificationNode={notificationNode}
       />
-      <main className="flex-1 overflow-y-auto p-4 pb-20 focus:outline-none">
+      <main
+        tabIndex={-1}
+        className={cn(
+          "flex-1 overflow-y-auto px-2 py-2.5 pb-20 focus:outline-none sm:px-4 sm:py-4",
+          contentClassName,
+        )}
+      >
         {children}
       </main>
       <V2BottomNav
-        items={effectiveNavItems}
+        items={navItems ?? quick4Items}
+        centerHeroItem={allMenuItem}
         activeId={bottomActiveId}
+        variant={bottomNavVariant}
+        indicator={bottomNavIndicator}
         onNavigate={handleMobileNavigate}
+        onHeroClick={() => setCatalogOpen(true)}
       />
-      <V2Modal
+      <V2MobileCatalogDrawer
         open={catalogOpen}
-        onOpenChange={setCatalogOpen}
-        title={t("v2.nav.items.catalog", "Danh mục")}
-        size="full"
-      >
-        <div className="space-y-4">
-          {catalogSections.map((section) => (
-            <section key={section.id} className="space-y-2">
-              <V2Text variant="section-title" color="muted">
-                {section.label}
-              </V2Text>
-              <div className="grid grid-cols-2 gap-2">
-                {section.items.map((item) => (
-                  <V2Button
-                    key={item.id}
-                    variant="outline"
-                    className="h-auto justify-start gap-2 py-3"
-                    onClick={() => {
-                      setCatalogOpen(false);
-                      onNavigate?.(item);
-                    }}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="truncate">{item.label}</span>
-                  </V2Button>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      </V2Modal>
+        onOpenChange={(open) => {
+          setCatalogOpen(open);
+          if (!open) closeCatalog();
+        }}
+        totalModulesCount={allAvailableItems.length}
+        filteredSectionsCount={filteredSectionsCount}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        currentTheme={currentTheme}
+        onThemeChange={onThemeChange}
+        isCustomizing={isCustomizing}
+        limitWarning={limitWarning}
+        currentCount={currentSelectedIds.length}
+        maxCount={MAX_PINNED_MOBILE_NAV}
+        onStartCustomize={() => {
+          if (pinnedIds.length === 0) {
+            setPinnedIds(default4Items.map((it) => it.id));
+          }
+          setIsCustomizing(true);
+        }}
+        onFinishCustomize={() => setIsCustomizing(false)}
+        onResetDefault={() => resetToDefault()}
+        sections={filteredSections}
+        selectedIds={currentSelectedIds}
+        activeNavId={activeNavId}
+        onItemClick={(item) => {
+          if (isCustomizing) {
+            handleToggleItem(item.id);
+          } else {
+            setCatalogOpen(false);
+            onNavigate?.(item);
+          }
+        }}
+      />
     </div>
   );
 };
+
+V2AppLayoutMobile.displayName = "V2AppLayoutMobile";

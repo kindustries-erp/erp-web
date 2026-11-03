@@ -118,8 +118,8 @@ function TabItem({
         "tab-item flex items-center gap-[5px] px-[14px] py-[7px] text-[11px] cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 border-b-2 border-transparent select-none",
         "transition-all duration-150 ease-out",
         active
-          ? "text-foreground font-semibold border-b-[color:var(--primary)]"
-          : "text-[color:var(--muted-fg)] hover:text-foreground hover:border-b-black/10",
+          ? "text-foreground font-semibold border-b-[color:var(--primary)] dark:border-b-teal-400 dark:text-teal-300 dark:bg-teal-500/[0.08] dark:shadow-[0_1px_8px_rgba(20,184,166,0.3)]"
+          : "text-[color:var(--muted-fg)] hover:text-foreground hover:border-b-black/10 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/[0.03]",
         dragging && "opacity-40 scale-95",
         dragOver && "bg-[color:var(--surface-hover)] scale-105",
       )}
@@ -143,7 +143,14 @@ function TabItem({
         onDrop(tab.instanceId);
       }}
     >
-      <Icon className="w-3.5 h-3.5 opacity-70" />
+      <Icon
+        className={cn(
+          "w-3.5 h-3.5 transition-colors",
+          active
+            ? "opacity-100 text-[color:var(--primary)] dark:text-teal-400"
+            : "opacity-70 text-inherit",
+        )}
+      />
       <span>{label}</span>
       {tab.instanceIndex === 2 && (
         <span className="text-[9px] font-semibold px-1 py-0.5 rounded bg-muted text-muted-foreground ml-0.5">
@@ -152,7 +159,7 @@ function TabItem({
       )}
       {closable && (
         <span
-          className="inline-flex items-center justify-center w-4 h-4 text-[color:var(--faint)] text-sm leading-none cursor-pointer rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)] ml-1"
+          className="inline-flex items-center justify-center w-4 h-4 text-[color:var(--faint)] text-sm leading-none cursor-pointer rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)] dark:text-slate-500 dark:hover:text-slate-300 dark:hover:bg-white/[0.06] ml-1"
           onClick={(e) => {
             e.stopPropagation();
             closeTab(tab.instanceId);
@@ -242,25 +249,28 @@ export function TabBar() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(0, 0, 0, 0.3);
         }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb,
         .theme-orcaq .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.12);
         }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover,
         .theme-orcaq .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.3);
+          background: rgba(255, 255, 255, 0.25);
         }
         .custom-scrollbar {
           scrollbar-width: thin;
           scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
           overflow-x: overlay;
         }
+        .dark .custom-scrollbar,
         .theme-orcaq .custom-scrollbar {
-          scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+          scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
         }
       `}</style>
       <div className="tab-bar-wrapper relative z-50 shrink-0">
         <div
           ref={containerRef}
-          className="tab-bar-inner flex items-center px-6 gap-0 bg-[color:var(--background)] border-t border-[color:var(--glass-border)] relative overflow-x-auto overflow-y-hidden custom-scrollbar w-full h-9"
+          className="tab-bar-inner flex items-center px-6 gap-0 bg-[color:var(--background)] border-t border-[color:var(--glass-border)] dark:bg-[#15181e] dark:border-white/[0.06] relative overflow-x-auto overflow-y-hidden custom-scrollbar w-full h-9"
           onDragOver={handleContainerDragOver}
           onDrop={handleContainerDrop}
           onDragLeave={handleContainerDragLeave}

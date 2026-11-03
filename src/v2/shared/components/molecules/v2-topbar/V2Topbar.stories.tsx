@@ -21,7 +21,7 @@ export const Default: Story = {
       { label: "Tuổi nợ khách hàng" },
     ],
     branchName: "Nam Sài Gòn",
-    companyName: "Liouni ERP",
+    companyName: "ERP",
   },
 };
 

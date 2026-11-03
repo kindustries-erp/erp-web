@@ -88,11 +88,11 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
         return (
           <React.Fragment key={groupIdx}>
             {groupIdx > 0 && (
-              <div className="my-1 -mx-1 h-[1px] bg-border/60" />
+              <div className="my-1 -mx-1 h-[1px] bg-border/60 dark:bg-white/[0.06]" />
             )}
             <div className="flex flex-col">
               {group.groupLabel && (
-                <div className="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-muted-fg uppercase select-none">
+                <div className="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-muted-fg dark:text-teal-400/80 uppercase select-none">
                   {group.groupLabel}
                 </div>
               )}
@@ -104,7 +104,7 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
                   onClick={() => handleItemClick(item)}
                   className={cn(
                     "flex items-center gap-2 w-full px-2.5 py-1.5 text-xs text-left rounded-md transition-colors select-none",
-                    "text-foreground hover:bg-surface-hover active:bg-surface-active cursor-pointer",
+                    "text-foreground hover:bg-surface-hover dark:hover:bg-teal-500/10 dark:hover:text-teal-300 active:bg-surface-active cursor-pointer",
                     "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
                     item.variant === "danger" &&
                       "text-destructive hover:bg-destructive/10 active:bg-destructive/15",
@@ -142,7 +142,7 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
       modal={modal}
       triggerClassName={triggerClassName}
       className={cn(
-        "p-1 min-w-[170px] max-w-[280px] shadow-lg border-border/80",
+        "p-1 min-w-[170px] max-w-[280px] shadow-lg border-border/80 dark:border-white/[0.08] dark:bg-[#1b1f27] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)]",
         className,
       )}
       content={dropdownMenuContent}

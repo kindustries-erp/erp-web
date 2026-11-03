@@ -6,6 +6,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { Badge } from "@/shared/components/ui/badge";
 import { TagConnectionsDrawer } from "./TagConnectionsDrawer";
 import { useT } from "@/core/i18n";
+import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
 
 interface EntityTagSelectorProps {
   entityType: string;
@@ -108,9 +109,7 @@ export function EntityTagSelector({
   };
 
   if (isLoadingTags || (!pendingMode && isLoadingEntityTags)) {
-    return (
-      <div className="h-6 w-20 bg-slate-100 animate-pulse rounded-md"></div>
-    );
+    return <V2Skeleton className="h-6 w-20 rounded-md" />;
   }
 
   const exactMatch = allTags.find(

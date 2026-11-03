@@ -231,6 +231,7 @@ export const garageCashflowApi = {
     page: number,
     pageSize: number,
     columnFilters?: string,
+    tab?: string,
   ) => {
     const res = await axiosInstance.get(
       "/api/v1/greenway/cashflow-vouchers/column-options",
@@ -241,6 +242,7 @@ export const garageCashflowApi = {
           page,
           pageSize,
           column_filters: columnFilters,
+          tab,
         },
       },
     );

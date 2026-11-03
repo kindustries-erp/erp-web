@@ -24,7 +24,7 @@ export const V2Breadcrumb: React.FC<V2BreadcrumbProps> = ({
     <nav
       aria-label="Breadcrumb"
       className={cn(
-        "v2-breadcrumb flex items-center gap-[5px] text-xs text-muted-fg min-w-0 overflow-hidden select-none",
+        "v2-breadcrumb flex items-center gap-[5px] text-xs text-muted-fg dark:text-zinc-400 min-w-0 overflow-hidden select-none",
         className,
       )}
       {...props}
@@ -43,7 +43,7 @@ export const V2Breadcrumb: React.FC<V2BreadcrumbProps> = ({
               <V2Text
                 variant="body-sm"
                 weight="medium"
-                className="text-foreground truncate"
+                className="text-foreground dark:text-zinc-100 font-medium truncate"
                 aria-current="page"
               >
                 {item.label}
@@ -54,7 +54,7 @@ export const V2Breadcrumb: React.FC<V2BreadcrumbProps> = ({
                 variant="ghost"
                 size="xs"
                 onClick={item.onClick}
-                className="h-auto p-0 text-xs font-normal text-muted-fg hover:text-foreground hover:bg-transparent truncate"
+                className="h-auto p-0 text-xs font-normal text-muted-fg dark:text-zinc-400 hover:text-foreground dark:hover:text-zinc-100 hover:bg-transparent truncate"
               >
                 {item.label}
               </V2Button>

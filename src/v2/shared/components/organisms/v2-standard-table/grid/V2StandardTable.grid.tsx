@@ -28,6 +28,8 @@ interface V2TableGridProps<T> extends Omit<
     values: Record<string, V2ColumnSummaryValues>;
     page: number;
     totalPages: number;
+    totalRows?: number;
+    pageSize?: number;
   };
 }
 
@@ -72,6 +74,8 @@ export function V2TableGrid<T>({
           values={summary.values}
           page={summary.page}
           totalPages={summary.totalPages}
+          totalRows={summary.totalRows}
+          pageSize={summary.pageSize}
         />
       )}
     </table>

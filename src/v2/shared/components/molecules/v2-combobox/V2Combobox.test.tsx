@@ -149,4 +149,47 @@ describe("V2Combobox", () => {
     );
     expect(screen.getByRole("combobox")).toBeDisabled();
   });
+
+  it("shows fallbackLabel when value is not in options", () => {
+    render(
+      <V2Combobox
+        options={options}
+        value="unknown-val"
+        fallbackLabel="Phiếu dự phòng #999"
+        onValueChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("combobox")).toHaveTextContent(
+      "Phiếu dự phòng #999",
+    );
+  });
+
+  it("triggers onScrollBottom when scrolled near bottom", () => {
+    const handleScrollBottom = vi.fn();
+    render(
+      <V2Combobox
+        options={options}
+        value={null}
+        onValueChange={vi.fn()}
+        onScrollBottom={handleScrollBottom}
+      />,
+    );
+    open();
+    const listbox = screen.getByRole("listbox");
+    Object.defineProperty(listbox, "scrollHeight", {
+      value: 300,
+      configurable: true,
+    });
+    Object.defineProperty(listbox, "clientHeight", {
+      value: 200,
+      configurable: true,
+    });
+    Object.defineProperty(listbox, "scrollTop", {
+      value: 90,
+      configurable: true,
+    });
+
+    fireEvent.scroll(listbox);
+    expect(handleScrollBottom).toHaveBeenCalled();
+  });
 });

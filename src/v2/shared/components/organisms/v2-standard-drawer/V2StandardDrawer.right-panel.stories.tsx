@@ -101,7 +101,7 @@ export const RightPanelCollapseAnimationDemo = () => {
               </DrawerField>
               <DrawerField label="Địa chỉ xuất hóa đơn">
                 <input
-                  defaultValue="Tầng 12, Tòa nhà Liouni Tower, Quận 7, TP.HCM"
+                  defaultValue="Tầng 12, Tòa nhà Mẫu Tower, Quận 7, TP.HCM"
                   className="w-full px-3 py-1.5 text-xs rounded-lg border border-border bg-surface text-foreground"
                 />
               </DrawerField>

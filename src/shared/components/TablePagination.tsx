@@ -35,12 +35,12 @@ export function TablePagination({
 
   const btn = (active = false, disabled = false) =>
     cn(
-      "w-7 h-7 border rounded-[6px] text-xs flex items-center justify-center font-medium cursor-pointer select-none",
+      "w-7 h-7 border rounded-[6px] text-xs flex items-center justify-center font-medium cursor-pointer select-none transition-all",
       active
-        ? "bg-primary text-primary-fg border-primary"
-        : "bg-surface border-border text-foreground hover:bg-surface-hover",
+        ? "bg-primary text-primary-fg border-primary shadow-xs font-semibold"
+        : "bg-surface border-border/60 dark:border-white/[0.06] text-foreground hover:bg-surface-hover dark:hover:bg-white/[0.05] shadow-2xs",
       disabled &&
-        "text-[color:var(--faint)] cursor-default pointer-events-none opacity-40",
+        "text-[color:var(--faint)] cursor-default pointer-events-none opacity-40 shadow-none",
     );
 
   return (
@@ -140,7 +140,7 @@ function PageSizeSelect({
       <Popover.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1 px-2 py-[3px] border border-border rounded-[6px] text-xs text-foreground bg-surface hover:bg-surface-hover cursor-pointer outline-none"
+          className="inline-flex items-center gap-1 px-2 py-[3px] border border-border/60 dark:border-white/[0.06] rounded-[6px] text-xs text-foreground bg-surface hover:bg-surface-hover dark:hover:bg-white/[0.05] cursor-pointer outline-none transition-colors shadow-2xs"
         >
           {value}
           <svg

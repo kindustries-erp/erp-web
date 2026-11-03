@@ -113,7 +113,9 @@ describe("V2StandardTable filter panel", () => {
     );
     expect(within(p).getByText("(1)")).toBeInTheDocument();
     expect(within(p).getByText("Đang lọc (1)")).toBeInTheDocument();
-    expect(screen.getByTestId("toolbar-icon-badge")).toHaveTextContent("1");
+    expect(
+      screen.getByRole("button", { name: "Xóa bộ lọc (1)" }),
+    ).toBeInTheDocument();
 
     fireEvent.click(within(p).getByRole("button", { name: "Gỡ bộ lọc: Mã" }));
     await waitFor(() =>

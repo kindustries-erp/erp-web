@@ -9,7 +9,11 @@ import type {
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
 import { useGarageCashflowList } from "../../../hooks/useGarageCashflowList";
-import type { DrawerModeType } from "./GarageCashflowDrawer.type";
+import {
+  V2DrawerMode,
+  type DrawerModeType,
+  type InitialCashflowData,
+} from "./GarageCashflowDrawer.type";
 import { useGarageCashflowDuplicateGuard } from "./useGarageCashflowDuplicateGuard";
 import {
   buildInitialFormData,
@@ -28,14 +32,18 @@ interface UseGarageCashflowDrawerParams {
   open: boolean;
   onClose: () => void;
   voucher: GarageCashflowVoucher | null;
-  initialMode?: "view" | "edit" | "create";
+  initialMode?: V2DrawerMode | "view" | "edit" | "create";
+  initialData?: InitialCashflowData;
+  onSuccess?: () => void;
 }
 
 export function useGarageCashflowDrawer({
   open,
   onClose,
   voucher,
-  initialMode = "view",
+  initialMode = V2DrawerMode.VIEW,
+  initialData,
+  onSuccess,
 }: UseGarageCashflowDrawerParams) {
   const t = useT();
   const { createMutation, updateMutation } = useGarageCashflowList();
@@ -49,26 +57,29 @@ export function useGarageCashflowDrawer({
     ErpAction.UPDATE,
   );
 
-  const [mode, setMode] = useState<DrawerModeType>(() => {
-    if (initialMode === "create") return "edit";
-    return initialMode as DrawerModeType;
-  });
+  const [mode, setMode] = useState<DrawerModeType>(() =>
+    initialMode === V2DrawerMode.CREATE
+      ? V2DrawerMode.EDIT
+      : (initialMode as DrawerModeType),
+  );
 
   const [formData, setFormData] = useState<
     Partial<CreateGarageCashflowVoucherDto>
-  >(() => buildInitialFormData(voucher));
+  >(() => buildInitialFormData(voucher, initialData));
 
   useEffect(() => {
     if (open) {
       setMode(
-        initialMode === "create" ? "edit" : (initialMode as DrawerModeType),
+        initialMode === V2DrawerMode.CREATE
+          ? V2DrawerMode.EDIT
+          : (initialMode as DrawerModeType),
       );
-      setFormData(buildInitialFormData(voucher));
+      setFormData(buildInitialFormData(voucher, initialData));
     }
-  }, [open, voucher, initialMode]);
+  }, [open, voucher, initialMode, initialData]);
 
   const duplicateGuard = useGarageCashflowDuplicateGuard();
-  const canSave = initialMode === "create" ? canCreate : canUpdate;
+  const canSave = initialMode === V2DrawerMode.CREATE ? canCreate : canUpdate;
 
   const handleSave = useCallback(() => {
     if (!canSave) return;
@@ -76,7 +87,12 @@ export function useGarageCashflowDrawer({
     if (initialMode === "create") {
       const createDto = buildCreatePayload(formData);
       const submit = () =>
-        createMutation.mutate(createDto, { onSuccess: () => onClose() });
+        createMutation.mutate(createDto, {
+          onSuccess: () => {
+            onSuccess?.();
+            onClose();
+          },
+        });
       if (createDto.amount > 0) {
         duplicateGuard.guard(
           {
@@ -95,7 +111,12 @@ export function useGarageCashflowDrawer({
       const submit = () =>
         updateMutation.mutate(
           { id: voucher.id, data: updateDto },
-          { onSuccess: () => onClose() },
+          {
+            onSuccess: () => {
+              onSuccess?.();
+              onClose();
+            },
+          },
         );
       if (
         updateDto.amount &&
@@ -124,6 +145,7 @@ export function useGarageCashflowDrawer({
     createMutation,
     updateMutation,
     duplicateGuard,
+    onSuccess,
     onClose,
   ]);
 

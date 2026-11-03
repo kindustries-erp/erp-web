@@ -1,4 +1,4 @@
-/** Hình dạng bản ghi và payload của `/api/v1/business-partners` (khớp backend, không phụ thuộc V1) */
+/** Hình dạng bản ghi và payload của `/api/v2/business-partners` (khớp backend, không phụ thuộc V1) */
 
 export interface BusinessPartnerDto {
   id: string;
@@ -61,4 +61,37 @@ export interface BusinessPartnerPayloadDto {
 export interface BusinessPartnerEnvelopeDto {
   message: string;
   data: BusinessPartnerDto;
+}
+
+/** Một dòng trong danh sách chọn đối tượng cho sao kê */
+export interface PartnerSelectOptionDto {
+  partnerId: string | null;
+  code: string | null;
+  name: string;
+  taxCode: string | null;
+  partnerType: string | null;
+  source: "MASTER" | "INVOICE";
+}
+
+export interface PartnerSelectOptionsDto {
+  items: PartnerSelectOptionDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/** Kết quả đồng bộ đối tác từ hóa đơn (dryRun hoặc thực tế) */
+export interface SyncFromInvoicesItemDto {
+  taxCode: string;
+  name: string;
+  address: string | null;
+  partnerType: "CUSTOMER" | "VENDOR";
+}
+
+export interface SyncFromInvoicesDto {
+  message: string;
+  dryRun: boolean;
+  count: number;
+  items: SyncFromInvoicesItemDto[];
 }

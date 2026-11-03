@@ -13,13 +13,6 @@ export interface VoucherNetoffRightPanelProps {
   remainingAfterNetOff: number;
   isOverRemaining: boolean;
   suggestedDebtDiff: number;
-  filteredSuggestions: any[];
-  isLoadingSuggestions: boolean;
-  handleSelectAllFilteredSuggestions: () => void;
-  selectedIds: string[];
-  netOffAmounts: Record<string, number>;
-  handleAmountChange: (txn: any, val: number) => void;
-  handleToggleSuggestion: (txn: any) => void;
   setDetailTxnId: (id: string | null) => void;
   existingCaseSettlements?: any[];
   existingInvoiceNetOffs?: any[];

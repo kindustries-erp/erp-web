@@ -18,6 +18,8 @@ import type { GarageExportFilterSummary } from "./GarageExportSections";
 export interface GarageExportConditionSectionProps {
   /** Nhãn trường chọn đối tượng/loại báo cáo (trường đầu tiên của section). */
   targetLabel: string;
+  /** Nút hoặc icon phụ nằm cạnh nhãn (vd: icon Popover thông tin trợ giúp). */
+  targetLabelExtra?: React.ReactNode;
   /** Ô chọn đơn (mặc định dùng `targetValue`/`targetOptions`/`onTargetChange`). */
   targetValue?: string;
   targetOptions?: Array<{ value: string; label: string }>;
@@ -52,6 +54,7 @@ export interface GarageExportConditionSectionProps {
  */
 export function GarageExportConditionSection({
   targetLabel,
+  targetLabelExtra,
   targetValue,
   targetOptions,
   onTargetChange,
@@ -81,9 +84,12 @@ export function GarageExportConditionSection({
     >
       <div className="space-y-3.5">
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">
-            {targetLabel}
-          </label>
+          <div className="flex items-center gap-1.5">
+            <label className="text-xs font-medium text-foreground">
+              {targetLabel}
+            </label>
+            {targetLabelExtra}
+          </div>
           {targetField ?? (
             <Combobox
               options={targetOptions ?? []}
@@ -122,6 +128,7 @@ export function GarageExportConditionSection({
             search={filterSummary.q}
             sortCount={filterSummary.sortCount}
             filterCount={filterSummary.filterCount}
+            filtersStr={filterSummary.filtersStr}
           />
         )}
 

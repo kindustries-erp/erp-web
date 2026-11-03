@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Panel, PanelMore } from "@/shared/components/Panel";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
-import { BarChart } from "@/shared/components/charts/BarChart";
 import { shortMoney } from "@/shared/utils/format";
 import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoiceDashboardApi";
+import { V2ComboChart, type V2ComboSeries } from "@/v2/shared/components";
+import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 
 interface BranchVatChartProps {
   branchId: string | null;
@@ -19,6 +19,7 @@ export function BranchVatChart({
   filterState,
   canView,
 }: BranchVatChartProps) {
+  const theme = useV2ChartTheme();
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: [
       "invoice-dashboard-stats",
@@ -37,83 +38,65 @@ export function BranchVatChart({
 
   const colorRevenue = "#059669"; // Emerald 600 (Đầu ra)
   const colorExpense = "#ea580c"; // Orange 600 (Đầu vào)
-  const lineDiff = "#1e293b"; // Slate 800
+  const lineDiff = theme.mode === "dark" ? "#2dd4bf" : "#0d9488"; // Teal 400 / 600
 
-  const cashTrendLabels = statsData?.cashTrend?.map((t: any) => t.label) || [];
-  const vatIn = statsData?.cashTrend?.map((t: any) => -t.vatIn) || []; // VAT đầu vào
-  const vatOut = statsData?.cashTrend?.map((t: any) => t.vatOut) || []; // VAT đầu ra
-  const vatDiff =
-    statsData?.cashTrend?.map((t: any) => t.vatOut - t.vatIn) || []; // Đầu ra - Đầu vào
+  const cashTrendLabels = useMemo(
+    () => statsData?.cashTrend?.map((t: any) => t.label) || [],
+    [statsData],
+  );
+  const vatIn = useMemo(
+    () => statsData?.cashTrend?.map((t: any) => -t.vatIn) || [],
+    [statsData],
+  );
+  const vatOut = useMemo(
+    () => statsData?.cashTrend?.map((t: any) => t.vatOut) || [],
+    [statsData],
+  );
+  const vatDiff = useMemo(
+    () => statsData?.cashTrend?.map((t: any) => t.vatOut - t.vatIn) || [],
+    [statsData],
+  );
+
+  const series = useMemo<V2ComboSeries[]>(
+    () => [
+      {
+        key: "vat-in",
+        type: "bar",
+        data: vatIn,
+        color: colorExpense,
+        label: "VAT Đầu vào",
+      },
+      {
+        key: "vat-out",
+        type: "bar",
+        data: vatOut,
+        color: colorRevenue,
+        label: "VAT Đầu ra",
+      },
+      {
+        key: "vat-diff",
+        type: "line",
+        data: vatDiff,
+        color: lineDiff,
+        borderColor: lineDiff,
+        borderWidth: 2.5,
+        tension: 0.3,
+        label: "Chênh lệch (Đầu ra - Đầu vào)",
+      },
+    ],
+    [vatIn, vatOut, vatDiff, colorExpense, colorRevenue, lineDiff],
+  );
 
   return (
     <Panel title={branchName} extra={<PanelMore />}>
-      <div className="relative h-[280px]">
-        {!isLoadingStats && cashTrendLabels.length > 0 ? (
-          <BarChart
-            labels={cashTrendLabels}
-            yCallback={(v) => shortMoney(Number(v))}
-            datasets={[
-              {
-                type: "line",
-                data: vatDiff,
-                color: "transparent",
-
-                borderColor: lineDiff,
-                borderWidth: 2,
-                fill: false,
-                label: "Chênh lệch (Đầu ra - Đầu vào)",
-              },
-              {
-                type: "bar",
-                data: vatIn,
-                color: colorExpense,
-                label: "VAT Đầu vào",
-              },
-              {
-                type: "bar",
-                data: vatOut,
-                color: colorRevenue,
-                label: "VAT Đầu ra",
-              },
-            ]}
-          />
-        ) : isLoadingStats ? (
-          <ChartSkeleton type="bar" />
-        ) : (
-          <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-            Chưa có dữ liệu
-          </div>
-        )}
-      </div>
-      <div className="flex gap-4 mt-[10px] justify-center">
-        <LegendItem color={colorExpense} label="VAT Đầu vào" />
-        <LegendItem color={colorRevenue} label="VAT Đầu ra" />
-        <LegendItem color={lineDiff} label="Chênh lệch" isLine={true} />
-      </div>
+      <V2ComboChart
+        labels={cashTrendLabels}
+        series={series}
+        height={280}
+        loading={isLoadingStats}
+        formatValue={(v) => shortMoney(Number(v))}
+        ariaLabel={`Biểu đồ thuế VAT chi nhánh ${branchName}`}
+      />
     </Panel>
-  );
-}
-
-function LegendItem({
-  color,
-  label,
-  isLine,
-}: {
-  color: string;
-  label: string;
-  isLine?: boolean;
-}) {
-  return (
-    <div className="flex items-center text-xs">
-      {isLine ? (
-        <div className="w-4 h-1 mr-2" style={{ backgroundColor: color }} />
-      ) : (
-        <div
-          className="w-3 h-3 rounded-[3px] mr-2"
-          style={{ backgroundColor: color }}
-        />
-      )}
-      <span className="text-[color:var(--muted-fg)] font-medium">{label}</span>
-    </div>
   );
 }

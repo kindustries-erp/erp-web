@@ -17,17 +17,22 @@ interface UseBulkEditAssignmentsArgs {
  * HĐ mới chưa seed, nên chỉnh sửa của người dùng không bị ghi đè khi danh sách
  * HĐ đổi identity (mảng mới mỗi render) hoặc khi HĐ thiếu được tải về sau.
  */
+/** Chi nhánh được gán cho từng hóa đơn (mảng rỗng = không gán) */
+export type BranchAssignments = Record<string, string[]>;
+
 export function useBulkEditAssignments({
   open,
   selectedIds,
   availableInvoices,
 }: UseBulkEditAssignmentsArgs) {
-  const [branchAssignments, setBranchAssignments] = useState<Assignments>({});
+  const [branchAssignments, setBranchAssignments] = useState<BranchAssignments>(
+    {},
+  );
   const [categoryAssignments, setCategoryAssignments] = useState<Assignments>(
     {},
   );
   const [notesAssignments, setNotesAssignments] = useState<Assignments>({});
-  const [initBranch, setInitBranch] = useState<Assignments>({});
+  const [initBranch, setInitBranch] = useState<BranchAssignments>({});
   const [initCategory, setInitCategory] = useState<Assignments>({});
   const [initNotes, setInitNotes] = useState<Assignments>({});
 
@@ -50,12 +55,16 @@ export function useBulkEditAssignments({
     );
     if (fresh.length === 0) return;
 
-    const nextBranch: Assignments = {};
+    const nextBranch: BranchAssignments = {};
     const nextCategory: Assignments = {};
     const nextNotes: Assignments = {};
     fresh.forEach((inv) => {
       seededRef.current.add(inv.id);
-      nextBranch[inv.id] = inv.branchId ?? "";
+      nextBranch[inv.id] = inv.branchIds?.length
+        ? inv.branchIds
+        : inv.branchId
+          ? [inv.branchId]
+          : [];
       nextCategory[inv.id] = inv.categoryId ?? inv.category?.id ?? "";
       nextNotes[inv.id] = inv.notes ?? "";
     });
@@ -68,7 +77,7 @@ export function useBulkEditAssignments({
     setInitNotes((prev) => ({ ...prev, ...nextNotes }));
   }, [open, selectedKey, availableKey]);
 
-  const handleBranchChange = useCallback((id: string, value: string) => {
+  const handleBranchChange = useCallback((id: string, value: string[]) => {
     setBranchAssignments((prev) => ({ ...prev, [id]: value }));
   }, []);
 

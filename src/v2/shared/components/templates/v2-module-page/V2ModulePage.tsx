@@ -1,4 +1,5 @@
 import * as React from "react";
+import { cn } from "@/v2/shared/utils/cn";
 import { V2Stack } from "@/v2/shared/components/atoms/v2-stack";
 import { V2PageHeader } from "@/v2/shared/components/molecules/v2-page-header";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
@@ -42,7 +43,12 @@ export function V2ModulePage<T>({
 
   return (
     <V2PageTabsContext.Provider value={page.context}>
-      <V2Stack as="section" fill gap="md" className={className}>
+      <V2Stack
+        as="section"
+        fill
+        gap="md"
+        className={cn("px-2 sm:px-5 pt-1.5 sm:pt-[18px] pb-2", className)}
+      >
         <V2PageHeader
           title={title}
           description={description}

@@ -105,7 +105,7 @@ export function useVinfastPartsStockSummary(
           cumulativeQty={cumulativeQtyIn}
           page={page}
           totalPages={totalPages}
-          valueClassName="font-semibold text-emerald-700 text-right"
+          valueClassName="font-semibold text-emerald-700 dark:text-emerald-400 text-right"
         />
       ),
       qtyOut: (
@@ -117,7 +117,7 @@ export function useVinfastPartsStockSummary(
           cumulativeQty={cumulativeQtyOut}
           page={page}
           totalPages={totalPages}
-          valueClassName="font-semibold text-rose-700 text-right"
+          valueClassName="font-semibold text-rose-700 dark:text-rose-400 text-right"
         />
       ),
       qtyBalance: (
@@ -129,7 +129,7 @@ export function useVinfastPartsStockSummary(
           cumulativeQty={cumulativeQtyBalance}
           page={page}
           totalPages={totalPages}
-          valueClassName="font-bold text-slate-800 dark:text-slate-100 text-right"
+          valueClassName="font-bold text-slate-900 dark:text-zinc-100 text-right"
         />
       ),
     };

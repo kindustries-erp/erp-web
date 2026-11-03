@@ -20,9 +20,12 @@ export function readV1TablePreferences(): Record<string, V1TablePreference> {
     const raw = localStorage.getItem(V1_PREFERENCES_STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as {
-      state?: { tables?: Record<string, V1TablePreference> };
+      state?: { tables?: unknown };
     };
-    return parsed.state?.tables ?? {};
+    const tables = parsed.state?.tables;
+    const isObject =
+      typeof tables === "object" && tables !== null && !Array.isArray(tables);
+    return isObject ? (tables as Record<string, V1TablePreference>) : {};
   } catch {
     return {};
   }
@@ -31,10 +34,12 @@ export function readV1TablePreferences(): Record<string, V1TablePreference> {
 export function mapV1TablePreference(
   legacy: V1TablePreference,
 ): V2TablePreferenceEntry {
-  const order = legacy.columnOrder ?? [];
-  const activeKey = legacy.activeView
-    ? (V1_SYSTEM_VIEW_KEYS[legacy.activeView] ?? legacy.activeView)
-    : undefined;
+  const order = Array.isArray(legacy.columnOrder) ? legacy.columnOrder : [];
+  const legacyViews = Array.isArray(legacy.views) ? legacy.views : [];
+  const activeKey =
+    typeof legacy.activeView === "string"
+      ? (V1_SYSTEM_VIEW_KEYS[legacy.activeView] ?? legacy.activeView)
+      : undefined;
 
   return {
     columns: {
@@ -43,8 +48,13 @@ export function mapV1TablePreference(
       sizing: legacy.columnSizing ?? {},
     },
     views: {
-      customViews: (legacy.views ?? [])
-        .filter((view) => view.isCustom)
+      customViews: legacyViews
+        .filter(
+          (view) =>
+            view?.isCustom &&
+            typeof view.key === "string" &&
+            typeof view.label === "string",
+        )
         .map((view) => ({
           key: view.key,
           label: view.label,

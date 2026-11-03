@@ -58,6 +58,21 @@ describe("V2 Sheet Primitive", () => {
       screen.getByText("Mô tả chi tiết nội dung sheet"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("sheet-body")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveClass(
+      "bg-[var(--drawer-bg,rgba(255,255,255,0.85))]",
+      "backdrop-blur-[var(--drawer-blur,20px)]",
+      "shadow-[var(--drawer-shadow,var(--panel-shadow,0_12px_30px_rgba(15,23,42,0.16)))]",
+      "backdrop-saturate-[190%]",
+      "backdrop-contrast-[102%]",
+      "text-foreground",
+    );
+    expect(screen.getByRole("dialog")).toHaveAttribute(
+      "data-v2-standard-drawer",
+    );
+    expect(document.querySelector("[data-v2-sheet-overlay]")).toHaveClass(
+      "bg-[var(--overlay-bg,transparent)]",
+      "backdrop-blur-[var(--overlay-blur,0px)]",
+    );
   });
 
   it("renders accessible close button with aria-label by default", () => {

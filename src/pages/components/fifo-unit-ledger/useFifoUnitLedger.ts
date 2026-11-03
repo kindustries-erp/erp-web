@@ -20,6 +20,11 @@ export interface LedgerRow {
   licensePlate: string;
   calculatedCogs?: number;
   calculatedUnitCost?: number;
+  /** Tồn lũy kế sau dòng này (có thể âm khi bán vượt tồn). */
+  balanceQty?: number;
+  balanceValue?: number;
+  /** Tổng thiếu hàng lũy kế sau dòng này. */
+  shortageQty?: number;
 }
 
 export function useFifoUnitLedger(sku: string, open: boolean) {

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Landmark, Receipt, Sparkles, CheckCircle2 } from "lucide-react";
-import { PillTabs } from "@/shared/components/PillTabs";
+import { V2TabBar, V2Text } from "@/v2/shared/components";
 import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
@@ -57,28 +57,31 @@ export function ErpInvoiceSettlementTab(props?: ErpInvoiceSettlementTabProps) {
       <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
         {/* Bên trái: Sub-Tabs 1. Sao kê / 2. Sổ quỹ */}
         <div className="flex items-center gap-2">
-          <PillTabs
-            size="sm"
-            value={ctx.activeSubTab}
-            onValueChange={(val) =>
+          <V2TabBar
+            variant="sub"
+            activeTabKey={ctx.activeSubTab}
+            onTabChange={(val: string) =>
               ctx.setActiveSubTab(val as SettlementSubTabKey)
             }
-            items={[
+            tabs={[
               {
-                value: "bank_statement",
+                key: "bank_statement",
                 label: t("tabBankStatement", "1. Sao kê"),
                 icon: Landmark,
                 badgeCount:
                   ctx.selectedIds.length > 0
                     ? ctx.selectedIds.length
                     : undefined,
+                alwaysShowIcon: true,
               },
               {
-                value: "cash_book",
+                key: "cash_book",
                 label: t("tabCashBook", "2. Sổ quỹ"),
                 icon: Receipt,
+                alwaysShowIcon: true,
               },
             ]}
+            className="w-auto pb-0"
           />
         </div>
 
@@ -102,18 +105,22 @@ export function ErpInvoiceSettlementTab(props?: ErpInvoiceSettlementTabProps) {
                     )}
                   >
                     <Icon className="w-3.5 h-3.5" />
-                    <span>{preset.label}</span>
+                    <V2Text as="span" variant="body-sm" color="inherit">
+                      {preset.label}
+                    </V2Text>
                     {preset.count > 0 && (
-                      <span
+                      <V2Text
+                        as="span"
+                        variant="numeric"
                         className={cn(
-                          "px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold",
+                          "px-1.5 py-0.2 rounded-full text-[10px] font-bold",
                           isActive
                             ? "bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900"
                             : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
                         )}
                       >
                         {preset.count}
-                      </span>
+                      </V2Text>
                     )}
                   </button>
                 );

@@ -5,6 +5,10 @@ import { createColumnHeaderFilter } from "@/shared/components/DataTable/createCo
 import { money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import {
+  getClassificationLabel,
+  getPurposeLabel,
+} from "@/modules/bank-statements/constants/cashflowAttributes";
+import {
   renderCopyableText,
   renderReferenceCell,
   renderThuCell,
@@ -12,10 +16,15 @@ import {
   renderNetOffCell,
   renderRemainingCell,
   renderInvoiceSubjectCell,
+  renderInvoiceNoCell,
+  renderInvoiceSerialCell,
+  renderInvoiceDateCell,
   renderPartnerCell,
 } from "./BankStatementCellRenderers";
+import { resolveBranchIds } from "@/shared/utils/branchIds";
 
 export interface UseBankStatementColumnsProps {
+  branches?: Array<{ id: string; name: string }>;
   type: "bank" | "cash";
   page: number;
   pageSize: number;
@@ -46,6 +55,18 @@ export interface UseBankStatementColumnsProps {
   setPartnerDrawerOpen: (open: boolean) => void;
 }
 
+/** Tên mọi chi nhánh của dòng sao kê, nối bằng dấu phẩy (không chỉ chi nhánh đầu). */
+function branchNamesOf(
+  row: any,
+  branches?: Array<{ id: string; name: string }>,
+): string {
+  const names = resolveBranchIds(row)
+    .map((id) => branches?.find((b) => b.id === id)?.name)
+    .filter((name): name is string => !!name);
+  if (names.length > 0) return names.join(", ");
+  return row.branch?.name || "";
+}
+
 export function useBankStatementColumns({
   type,
   tableState,
@@ -55,6 +76,7 @@ export function useBankStatementColumns({
   setDetailDefaultTab,
   setSelectedPartner,
   setPartnerDrawerOpen,
+  branches,
 }: UseBankStatementColumnsProps) {
   const { t } = useTranslation();
 
@@ -276,6 +298,55 @@ export function useBankStatementColumns({
         size: 140,
       },
       {
+        key: "cashflowClassification",
+        header: headerFilter(
+          "cashflowClassification",
+          t("bankStatement.columns.classification", {
+            defaultValue: "Phân loại",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 160,
+        cell: (row: any) =>
+          getClassificationLabel(t, row.cashflowClassification),
+      },
+      {
+        key: "cashflowPurpose",
+        header: headerFilter(
+          "cashflowPurpose",
+          t("bankStatement.columns.purpose", {
+            defaultValue: "Mục đích",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 160,
+        cell: (row: any) => getPurposeLabel(t, row.cashflowPurpose),
+      },
+      {
+        key: "note",
+        header: headerFilter(
+          "note",
+          t("bankStatement.columns.note", {
+            defaultValue: "Ghi chú",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 250,
+        cell: (row: any) => renderCopyableText(row.note, t),
+      },
+      {
+        key: "businessPartner",
+        header: headerFilter(
+          "businessPartner",
+          t("bankStatement.columns.businessPartner", {
+            defaultValue: "Đối tượng",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 200,
+        cell: (row: any) => row.partner?.name || "—",
+      },
+      {
         key: "netOffAmount",
         header: headerFilter.client(
           "netOffAmount",
@@ -316,6 +387,42 @@ export function useBankStatementColumns({
         ),
         size: 200,
         cell: (row: any) => renderInvoiceSubjectCell(row, t),
+      },
+      {
+        key: "invoiceNo",
+        header: headerFilter(
+          "invoiceNo",
+          t("bankStatement.columns.invoiceNo", {
+            defaultValue: "Số hóa đơn",
+          }),
+          { showBlankOption: true },
+        ),
+        size: 150,
+        cell: (row: any) => renderInvoiceNoCell(row, t),
+      },
+      {
+        key: "invoiceSerial",
+        header: (
+          <span className="w-full block text-center">
+            {t("bankStatement.columns.invoiceSerial", {
+              defaultValue: "Ký hiệu HĐ",
+            })}
+          </span>
+        ),
+        size: 120,
+        cell: (row: any) => renderInvoiceSerialCell(row, t),
+      },
+      {
+        key: "invoiceDate",
+        header: (
+          <span className="w-full block text-center">
+            {t("bankStatement.columns.invoiceDate", {
+              defaultValue: "Ngày HĐ",
+            })}
+          </span>
+        ),
+        size: 120,
+        cell: (row: any) => renderInvoiceDateCell(row, t),
       },
       {
         key: "correspondentName",
@@ -373,7 +480,7 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 140,
-        cell: (row: any) => renderCopyableText(row.branch?.name || "", t),
+        cell: (row: any) => renderCopyableText(branchNamesOf(row, branches), t),
       },
     ],
     [

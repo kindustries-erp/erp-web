@@ -92,9 +92,14 @@
   border: 1px solid var(--popup-border);
   box-shadow:
     0 16px 40px -8px rgba(15, 23, 42, 0.18),
-    0 4px 12px rgba(15, 23, 42, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    0 4px 12px rgba(15, 23, 42, 0.08);
   color: var(--foreground);
+}
+.dark .popup-content {
+  box-shadow:
+    0 20px 48px -8px rgba(0, 0, 0, 0.65),
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset !important;
 }
 .theme-classic .popup-content {
   background: var(--popup-bg);
@@ -256,6 +261,33 @@
   background-color: var(--table-footer-bg, rgba(244, 246, 248, 0.7)) !important;
   backdrop-filter: blur(16px) saturate(200%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(200%) !important;
+}
+
+/* Drawer V2 mở: bảng phía sau bị che nên tắt kính của nó. Mỗi lớp kính là một lớp compositing,
+   canvas trong drawer kéo sẽ phải dựng lại chúng mỗi khung hình. Bảng trong drawer/dialog giữ kính. */
+body:has([data-v2-standard-drawer][data-state="open"])
+  table
+  :is(
+    thead,
+    tfoot,
+    th,
+    td,
+    .table-header-glass,
+    .table-footer-glass,
+    [class*="backdrop-blur"],
+    [style*="backdrop-filter"]
+  ):not([data-v2-standard-drawer] *, [role="dialog"] *) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Đang kéo node trên canvas chứng từ: tắt dash animation của cạnh được chọn để không repaint SVG mỗi khung hình */
+.react-flow.is-dragging .react-flow__edge.animated path {
+  animation: none;
+}
+
+.react-flow.is-dragging .react-flow__edgelabel-renderer > div {
+  box-shadow: none;
 }
 
 /* ── Fullscreen Modal Animations ── */

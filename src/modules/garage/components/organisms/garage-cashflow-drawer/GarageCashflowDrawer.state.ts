@@ -3,9 +3,11 @@ import type {
   CreateGarageCashflowVoucherDto,
   UpdateGarageCashflowVoucherDto,
 } from "../../../api/garageCashflowApi";
+import type { InitialCashflowData } from "./GarageCashflowDrawer.type";
 
 export function buildInitialFormData(
   voucher: GarageCashflowVoucher | null,
+  initialData?: InitialCashflowData,
 ): Partial<CreateGarageCashflowVoucherDto> {
   if (voucher) {
     return {
@@ -35,11 +37,24 @@ export function buildInitialFormData(
     };
   }
 
+  const defaultVoucherType = initialData?.voucherType || "RECEIPT";
+
   return {
-    voucherType: "RECEIPT",
-    transDate: new Date().toISOString().slice(0, 10),
-    amount: 0,
-    paymentStatus: "PAID",
+    voucherType: defaultVoucherType,
+    voucherCode: "",
+    transDate: initialData?.transDate || new Date().toISOString().slice(0, 10),
+    amount: initialData?.amount || 0,
+    partnerName: initialData?.partnerName || "",
+    partnerPhone: initialData?.partnerPhone || "",
+    licensePlate: initialData?.licensePlate || "",
+    note: initialData?.note || "",
+    paymentMethod: initialData?.paymentMethod || "",
+    paymentContent: initialData?.paymentContent || "",
+    referenceNumber: "",
+    caseId: initialData?.caseId || "",
+    erpBankTransactionId: "",
+    erpCashVoucherId: "",
+    paymentStatus: defaultVoucherType === "PAYMENT" ? "PENDING" : "PAID",
   };
 }
 

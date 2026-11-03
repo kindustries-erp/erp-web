@@ -15,6 +15,7 @@ const hookState = {
   activeRightTabKey: "",
   handleRightTabChange: () => {},
   activeRightTabItem: undefined,
+  activeRightPanel: undefined,
 } as unknown as DrawerHook;
 
 describe("DrawerMobilePanels", () => {
@@ -37,7 +38,7 @@ describe("DrawerMobilePanels", () => {
     render(
       <DrawerMobilePanels
         props={{ rightPanel: <p>Panel phụ</p> } as V2StandardDrawerProps}
-        h={hookState}
+        h={{ ...hookState, activeRightPanel: <p>Panel phụ</p> } as DrawerHook}
         mainContent={<p>Nội dung chính</p>}
         hasRelated={false}
       />,
@@ -55,6 +56,7 @@ describe("DrawerMobilePanels", () => {
           {
             ...hookState,
             activeTabItem: { hideRightPanel: true },
+            activeRightPanel: <p>Panel phụ</p>,
           } as unknown as DrawerHook
         }
         mainContent={<p>Nội dung chính</p>}
@@ -64,5 +66,25 @@ describe("DrawerMobilePanels", () => {
     expect(
       screen.queryByTestId("drawer-mobile-stacked-panel"),
     ).not.toBeInTheDocument();
+  });
+
+  it("stacks the active tab panel instead of the drawer fallback", () => {
+    render(
+      <DrawerMobilePanels
+        props={{ rightPanel: <p>Panel mặc định</p> } as V2StandardDrawerProps}
+        h={
+          {
+            ...hookState,
+            activeTabItem: { rightPanel: <p>Panel theo tab</p> },
+            activeRightPanel: <p>Panel theo tab</p>,
+          } as DrawerHook
+        }
+        mainContent={<p>Nội dung chính</p>}
+        hasRelated={false}
+      />,
+    );
+
+    expect(screen.getByText("Panel theo tab")).toBeInTheDocument();
+    expect(screen.queryByText("Panel mặc định")).not.toBeInTheDocument();
   });
 });
