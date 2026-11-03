@@ -1,8 +1,3 @@
----
-name: standardize-table-page
-description: Scaffold or refactor a standard DataTable page following the ERP project's UI standards. Use this skill whenever you need to create a new data table page or refactor an existing one for a new module.
----
-
 # 📋 Table Page Standards
 
 > ⚡ **FAST-TRACK (PlopJS Generator)**: Để tiết kiệm token và tạo ngay bộ khung chuẩn (API + Hook + Page + Detail Drawer + Locales), chạy:
@@ -22,18 +17,12 @@ Khi tạo mới hoặc chỉnh sửa một trang hiển thị bảng dữ liệu
 
 ---
 
-## 1.1. 🎨 Quy Tắc Bảng Màu & Tuyệt Đối Cấm Màu Xanh Dương (No Blue Mandate)
+## 1.1. 🎨 Quy Tắc Bảng Màu (No Blue Mandate)
 
 > [!CAUTION]
-> **TUYỆT ĐỐI KHÔNG SỬ DỤNG MÀU XANH DƯƠNG (`blue-*`, `bg-blue-*`, `text-blue-*`, `border-blue-*`)** trong toàn bộ màn hình Trang Bảng (Header, Tabs, Toolbar, PillTabs, Filter Panel, Badges, Table Rows, Stat Cards, Action Buttons).
-> 
-> **Thay thế bằng hệ màu chuẩn:**
-> 1. **Neutral Palette (Mặc định)**: Dùng `foreground`, `muted`, `muted-foreground`, `border`, `slate-*`, `zinc-*`, `neutral-*` cho thông tin chung, text, metadata, badge trạng thái `IN_PROGRESS` / Đang xử lý.
-> 2. **Brand Primary**: Dùng `primary`, `bg-primary`, `text-primary` cho nút hành động chính, thanh tiến độ, icon tiêu đề trang.
-> 3. **Semantic Colors**:
->    - **Thành công / Hoàn thành (100% / COMPLETED / DONE)**: Dùng `emerald-*` (`bg-emerald-50 text-emerald-700 border-emerald-200`, `text-emerald-600 font-semibold`).
->    - **Cảnh báo / Tiến trình / Nhắc nhở**: Dùng `amber-*` hoặc `neutral / muted` (`bg-amber-50 text-amber-800 border-amber-200` hoặc `bg-muted text-foreground border-border`).
->    - **Lỗi / Hủy / Nguy hiểm**: Dùng `destructive` / `red-*` (`bg-destructive/10 text-destructive border-destructive/20`).
+> **Không dùng `blue-*`** (`bg-blue-*`, `text-blue-*`, `border-blue-*`) trong toàn bộ trang bảng: Header, Tabs, Toolbar, PillTabs, Filter Panel, Badges, Table Rows, Stat Cards, Action Buttons.
+>
+> Bảng màu thay thế (neutral, brand primary, semantic): xem [`table-rules.md`](table-rules.md) mục 0.1 và token ngữ nghĩa ở `erp-web-truth/references/ui-shell-and-theme.md` mục 4. Riêng trang bảng: `primary` dùng cho nút hành động chính, thanh tiến độ và icon tiêu đề trang.
 
 ---
 
@@ -73,7 +62,9 @@ Format: `Array<[i18nKey, pageKey?]>` — nếu có `pageKey` thì breadcrumb đ�
 
 - **Mặc định toàn hệ thống**: Filter, Sorting và Pagination **BẮT BUỘC** thực hiện ở **Server-side** thông qua custom hook `use[Module]List` kết nối **TanStack React Query (`useQuery`)**.
 - **Enum Query Key Tập Trung**: **BẮT BUỘC** dùng Enum `ErpQueryKey` từ `@/shared/lib/queryKeys` (ví dụ: `ErpQueryKey.INVOICES_LIST`, `ErpQueryKey.VINFAST_PARTS_STOCK`, `ErpQueryKey.INVENTORY_STOCK_LIST`), **TUYỆT ĐỐI KHÔNG** hardcode string query key tự do.
-- **Thời Gian Cache Tiêu Chuẩn (`DEFAULT_STALE_TIME`)**: Sử dụng hằng số chuẩn `DEFAULT_STALE_TIME = 90_000` (1 phút 30 giây) từ `@/shared/lib/queryKeys` (hoặc để mặc định từ `queryClient.ts`).
+- **Thời Gian Cache Tiêu Chuẩn (`DEFAULT_STALE_TIME`)**: Dùng hằng số `DEFAULT_STALE_TIME` từ `@/shared/lib/queryKeys` (hiện là 5 phút; đọc giá trị trong file, đừng ghi cứng số giây). QueryClient V1 (`@/shared/lib/queryClient`) đặt `staleTime` và `gcTime` bằng hằng số này, `refetchOnMount: false`, nên sau mỗi mutation phải `invalidateQueries` đúng key thì danh sách mới cập nhật.
+- **V2 (`src/v2/`)**: dùng key factory theo module tại `src/v2/modules/<module>/api/queries/<module>Keys.ts`, export `as const` (mẫu: `invoiceDebtsKeys` có `all`, `list(query)`, `detail(id)` nối từ `all`). Key là mảng phân cấp, phần tử đầu là tên miền. Khi invalidate, dùng prefix chung của miền thay vì liệt kê từng key. Không ghép nhiều ý vào một chuỗi (ví dụ `"branches:list"`) vì mất khớp prefix. QueryClient V2 (`src/v2/app/providers/AppProviders.tsx`) dùng `staleTime` 2 phút, `retry: 1`, `refetchOnWindowFocus: false` và không tắt `refetchOnMount`, khác V1.
+- **Không sao chép dữ liệu query vào state**: không `useEffect(() => setX(data), [data])`, không đẩy `data` vào `useState`/Zustand. Dẫn xuất giá trị ngay lúc render hoặc bằng `select` của `useQuery`.
 - **Khởi tạo `defaultPageSize` thích ứng theo Chiều cao màn hình (Screen Height)**:
   - Khi `window.innerHeight < 900px` (Laptop / màn hình phổ thông): Default `pageSize = 20`.
   - Khi `window.innerHeight >= 900px` (Desktop / Monitor lớn): Default `pageSize = 50`.
@@ -120,7 +111,7 @@ export function use[Module]List(activeTab?: string) {
       // return [module]Api.getList({ page, pageSize, tab: activeTab, sorts, date_from: dateFrom || undefined, date_to: dateTo || undefined, column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined, column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined });
       return Promise.resolve({ data: [], total: 0, totalPages: 0 });
     },
-    staleTime: DEFAULT_STALE_TIME, // 👉 1 phút 30 giây (90,000ms)
+    staleTime: DEFAULT_STALE_TIME, // 👉 hằng số dùng chung, không ghi cứng thời gian
   });
 
   const setSort = (key: string, state: "asc" | "desc" | "none") => {
@@ -198,14 +189,14 @@ export function use[Module]List(activeTab?: string) {
 
 Khi tạo bảng và drawer trong trang, **BẮT BUỘC** tuân thủ các quy chuẩn từ 2 skill cơ sở:
 
-1. 👉 **Bảng dữ liệu ([`standardize-table`](../standardize-table/SKILL.md))**:
+1. 👉 **Bảng dữ liệu ([`standardize-table`](table-rules.md))**:
    - **`tableId="[module]-table"`**: Duy nhất để đồng bộ cấu hình cột vào App Setting Core (`core_user_preferences`) và LocalStorage cache.
    - **Reset Layout**: Nằm cố định trong menu dropdown `ColumnToggle` (`Settings2` → `RotateCcw`), không đặt ở header cột.
-   - **Cột STT (Index)**: Rộng đúng `40px`, **bắt đầu từ 1 (1-based)**, căn giữa tuyệt đối cả header và cell (`cell: (_, idx) => <span className="w-full block text-center">{(page - 1) * pageSize + idx + 1}</span>`).
+   - **Cột STT (Index)**: Rộng đúng `40px`, **bắt đầu từ 1 (1-based)**, căn giữa tuyệt đối cả header và cell. `DataTable` đã tự cộng dồn offset theo trang, nên chỉ render `{idx}` và không cộng thêm (`cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`).
    - **Cột Mã Code**: Dùng `<TableText enableCopy tooltip onDetailClick={() => openDetail(row.id, "view")}>`.
    - **Row Actions**: BẮT BUỘC dùng prop `rowActions` trên `<SpreadsheetPageTemplate>`. Không tạo cột action tĩnh. Mảng `rowActions` phải chứa 2 action đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️) để map vào Floated Action Bar và Right-Click Context Menu.
    - **TableColumnHeaderFilter**: Dùng `fetchOptions` gọi `getColumnOptions` API; Cột Date dùng `<DateRangeColumnSlot>`; Tự động hỗ trợ tìm kiếm chính xác (`"..."`) và nhiều từ khóa qua dấu chấm phẩy (`;`); Cột có dữ liệu optional/null bật `{ showBlankOption: true }` để chèn option `(blank)` / `(Trống)`.
-2. 👉 **Detail Drawer ([`standardize-drawer`](../standardize-drawer/SKILL.md))**:
+2. 👉 **Detail Drawer ([`standardize-drawer`](../../standardize-drawer/SKILL.md))**:
    - Mở component `[Module]DetailDrawer` với prop `mode={drawerMode}` (`"view" | "edit"`) và `setMode={setDrawerMode}`. Không điều hướng URL.
 
 ## 6. Chế độ xem Cột linh hoạt (`ViewModeCombobox`) & Switch Nhanh (`PillTabs`) — BẮT BUỘC KHI CÓ ĐA GÓC NHÌN / PHÂN LOẠI CHIỀU DỮ LIỆU
@@ -342,7 +333,7 @@ Khi một trang bảng quyết định kích hoạt `Header Page Tabs`, **BẮT 
 
 6. **Zero-latency Tab Switching qua React Query & `ErpQueryKey`**:
    - **BẮT BUỘC** đưa `currentTab` / `direction` / `subview` vào `queryKey` (ví dụ `queryKey: [ErpQueryKey.INVOICES_LIST, currentTab, page, ...]`).
-   - Nhờ đó, TanStack Query tự động lưu cache riêng cho từng tab trong `DEFAULT_STALE_TIME` (90s). Khi người dùng chuyển đổi qua lại giữa các tab (`in` $\leftrightarrow$ `out` $\leftrightarrow$ `lines`), dữ liệu được hiển thị **ngay lập tức 0ms** từ cache mà không phải fetch lại API và không hiển thị loading spinner gián đoạn thao tác.
+   - Nhờ đó, TanStack Query tự động lưu cache riêng cho từng tab trong `DEFAULT_STALE_TIME` (hằng số, không ghi cứng). Khi người dùng chuyển đổi qua lại giữa các tab (`in` $\leftrightarrow$ `out` $\leftrightarrow$ `lines`), dữ liệu được hiển thị **ngay lập tức 0ms** từ cache mà không phải fetch lại API và không hiển thị loading spinner gián đoạn thao tác.
 
 ## 8. Mẫu code cơ bản (Table Page Boilerplate)
 
@@ -619,7 +610,7 @@ export function ExampleTablePage() {
 
 ### Server-side Hook, React Query & Responsive PageSize
 - [ ] Mặc định **100% BẢNG ĐÃ ƯU TIÊN SERVER-SIDE SORTING & FILTERING** (thông qua hook `use[Module]List` + API `getColumnOptions`) chưa?
-- [ ] **React Query & ErpQueryKey Enum**: Hook đã dùng `useQuery` kết hợp `ErpQueryKey` enum từ `@/shared/lib/queryKeys`, hưởng `staleTime: DEFAULT_STALE_TIME` (90s) và đưa `activeTab` / `direction` vào `queryKey` để hỗ trợ Zero-latency Tab Switching chưa?
+- [ ] **React Query & ErpQueryKey Enum**: Hook đã dùng `useQuery` kết hợp `ErpQueryKey` enum từ `@/shared/lib/queryKeys`, hưởng `staleTime: DEFAULT_STALE_TIME` (hằng số, không ghi cứng) và đưa `activeTab` / `direction` vào `queryKey` để hỗ trợ Zero-latency Tab Switching chưa?
 - [ ] Hook đã dùng `getDefaultPageSize` để gán default pageSize theo chiều cao màn hình (`< 900px` -> `20`, `>= 900px` -> `50`) và hỗ trợ `pageSizeOptions = [20, 50, 100, 200]` chưa?
 
 ### Page Template & App Settings

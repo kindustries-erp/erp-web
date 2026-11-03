@@ -316,5 +316,9 @@ Khi tạo mới một Component:
 - [ ] **Co-located Tests**: Test nằm trực tiếp cùng cấp trong component folder đơn lẻ hoặc trong `__tests__/` của multi-component feature/organism?
 - [ ] **Đa ngôn ngữ 100%**: Sử dụng `useTranslation` có fallback tiếng Việt và đồng bộ VI/EN?
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong giao diện?
+- [ ] **A11y cho primitive/control (`prefer`)**: control tương tác thấy được focus bàn phím (`focus-visible:ring-*`, không thêm `outline-none` mà thiếu thay thế); nút chỉ có icon có `aria-label` qua `t()`; overlay (Dialog/Sheet/Drawer) có Title (`sr-only` nếu ẩn); field lỗi có `aria-invalid` và `aria-describedby` trỏ tới text lỗi; animation có `motion-reduce:*` khi chuyển động lớn?
 - [ ] **Web Responsive**: Hỗ trợ đầy đủ mobile, tablet, laptop và màn hình lớn?
 - [ ] **Type Check & Tests**: `bun run type:check` 0 lỗi, unit tests pass 100% và `bun run build-storybook` thành công?
+
+> [!NOTE]
+> CSS toàn cục (`src/styles/base.css` và khối `@layer utilities` trong `src/index.css`) đang đặt `outline: none !important` và `--tw-ring-shadow: 0 0 #0000 !important` cho `:focus`/`:focus-visible`/`:focus-within`/`:active`. Theo cascade CSS, các class `focus-visible:ring-*` có thể không hiển thị. Khi làm việc về focus/a11y, kiểm tra thực tế bằng phím Tab trong trình duyệt thay vì tin vào class, và không giả định ring đang hoạt động.

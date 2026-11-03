@@ -80,7 +80,7 @@ src/modules/[module]/components/organisms/[name]-table/
 
 #### 2. Xây Dựng List Hook (`[Name]Table.hook.ts`):
 - Sử dụng TanStack Query với enum **`ErpQueryKey`** (ví dụ: `ErpQueryKey.INVOICES_LIST`).
-- Thời gian cache chuẩn **90s (`DEFAULT_STALE_TIME = 90_000`)**.
+- Thời gian cache chuẩn là hằng số `DEFAULT_STALE_TIME` từ `@/shared/lib/queryKeys` (đọc giá trị trong file, không ghi cứng).
 - Quản lý state lọc 2 cấp độ: `columnFilters`, `columnSearch`, `dateRanges`.
 - Tính `activeFilterCount` và hàm `clearAllFilters`.
 - **BẮT BUỘC TÍNH SỐ LŨY KẾ CHO MULTI-PAGE**: Tính `cumulativeAmount`, `cumulativeQty`, `cumulativeCount` từ trang 1 đến trang hiện tại.

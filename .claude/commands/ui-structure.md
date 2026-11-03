@@ -1,5 +1,5 @@
 ---
-description: "Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (< 180 LoC, co-located testing, No Blue, i18n VI/EN). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate)"
+description: "Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (< 180 LoC, co-located testing, No Blue, i18n VI/EN). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate). Phần C là cửa vào cho Table và Drawer (chọn skill và workflow chi tiết)"
 ---
 
 <!-- GENERATED FILE - DO NOT EDIT. Sửa nguồn .agents/workflows/ui-structure.md, rồi chạy /sync-agents. -->

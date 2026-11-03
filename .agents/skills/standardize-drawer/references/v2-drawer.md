@@ -1,8 +1,3 @@
----
-name: v2-drawer
-description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardDrawer) theo kiến trúc ERP Web v2 (Dual-Run /v2/, Atomic Design 5 tầng, Platform Split Desktop/Mobile, < 180 LoC, No Blue Mandate, 100% i18n, Co-located Vitest testing & Storybook) trong erp-web (src/v2/shared/components/organisms/v2-standard-drawer và src/v2/shared/ui/sheet).
----
-
 # 📋 Module Tri Thức: Chuẩn Hóa Drawer V2 (`V2StandardDrawer`) - Frontend (`erp-web`)
 
 ## 1. Tổng Quan Kiến Trúc & Trách Nhiệm Hệ Thống

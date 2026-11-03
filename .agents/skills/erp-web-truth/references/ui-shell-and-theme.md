@@ -35,6 +35,21 @@ Token nằm ở `src/styles/` (ví dụ `panels.css`, `shell.css`, `themes/class
 
 Màu accent Teal: `--primary`, `--primary-accent`, `--sidebar-active-bg`. Không dùng `blue-*`.
 
+### Token ngữ nghĩa trong Tailwind (`tailwind.config.js`)
+
+Các token dưới đây đã khai báo sẵn và đổi theo theme (Default, Classic, Orcaq, Midnight) vì trỏ tới biến CSS. Với code V2, `prefer` dùng token thay vì màu raw khi diễn đạt trạng thái hoặc viền/chữ mặc định:
+
+| Ý nghĩa | Ưu tiên (theo theme) | Màu raw vẫn được chấp nhận (No Blue Mandate, `atomic-ui.md` mục 7) |
+| :--- | :--- | :--- |
+| Viền mặc định / nhạt | `border-border`, `border-border-light` | `border-zinc-*`, `border-slate-*` |
+| Chữ phụ | `text-muted-foreground` (hoặc `text-muted-fg`) | `text-slate-*`, `text-zinc-*` |
+| Thành công | `text-success`, `bg-success-bg` | `emerald-*` |
+| Cảnh báo / chờ xử lý | `text-warning`, `bg-warning-bg` | `amber-*` |
+| Lỗi / hủy / xóa | `text-destructive`, `bg-destructive` | `red-*` |
+
+- Màu raw không đổi theo theme, nên dễ lệch khi chuyển Classic hoặc Midnight. Hex cứng trong `.tsx` thì tránh hẳn.
+- `blue-*`, `sky-*`, `indigo-*` bị cấm. Kiểm nhanh trong V2: `grep -rnE "(bg|text|border|ring|fill|stroke)-(blue|sky|indigo)-[0-9]{2,3}" src/v2 --include='*.tsx'` (kết quả phải rỗng).
+
 Drawer V2 (`V2DrawerSheet`, `src/v2/shared/components/molecules/v2-drawer-sheet/`): vỏ dạng floating card, overlay tối có blur nhẹ, viền mảnh cho header và footer.
 
 Khi đổi token, kiểm tra cả light và dark.

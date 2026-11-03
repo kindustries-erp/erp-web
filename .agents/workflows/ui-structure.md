@@ -1,12 +1,12 @@
 ---
-description: Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (< 180 LoC, co-located testing, No Blue, i18n VI/EN). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate)
+description: Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (< 180 LoC, co-located testing, No Blue, i18n VI/EN). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate). Phần C là cửa vào cho Table và Drawer (chọn skill và workflow chi tiết)
 ---
 
 # 🏗️ ERP Web Structure Workflow (`/ui-structure`)
 
-Workflow gộp hai quy trình cấu trúc frontend. **Phần A** dùng khi tạo mới hoặc tách component UI theo Atomic 5 tầng. **Phần B** dùng khi migrate module V1 sang V2 (`src/v2/`). Playbook, quy ước và checklist nằm ở skill `erp-web-structure`.
+Workflow gộp ba phần cấu trúc frontend. **Phần A** dùng khi tạo mới hoặc tách component UI theo Atomic 5 tầng. **Phần B** dùng khi migrate module V1 sang V2 (`src/v2/`). **Phần C** dùng khi làm bảng hoặc drawer. Playbook, quy ước và checklist nằm ở skill `erp-web-structure`.
 
-Chọn phần: tạo mới hoặc tách component trong V1/shared thì làm Phần A. Migrate module sang `/v2/` thì làm Phần B, và chỉ khi user ra lệnh. Cả hai phần đều phải qua audit của Phần A.
+Chọn phần: tạo mới hoặc tách component trong V1/shared thì làm Phần A. Migrate module sang `/v2/` thì làm Phần B, và chỉ khi user ra lệnh. Làm bảng hoặc drawer thì làm Phần C. Cả ba phần đều phải qua audit của Phần A.
 
 ---
 
@@ -442,3 +442,21 @@ cd erp/erp-web && bun run build-storybook
 # Khởi chạy Storybook dev server (:6006)
 cd erp/erp-web && bun run storybook
 ```
+
+---
+
+## 🅲 Phần C: Table & Drawer
+
+Mỗi loại có một skill duy nhất (đã gồm V1, V2 và phần phụ) và một workflow chi tiết. Bảng chọn đầy đủ nằm ở mục 3 của skill `erp-web-structure`.
+
+| Việc | Skill (đọc trước) | Workflow chạy | Reference |
+| :--- | :--- | :--- | :--- |
+| Trang bảng, cột, filter, subtotal, bảng nhúng (V1) | `standardize-table` | [`/standardize-table`](./standardize-table.md) (5 giai đoạn, kèm bộ grep audit) | `references/table-page.md`, `references/table-rules.md` |
+| Bảng hoặc trang dưới `src/v2/` | `standardize-table` | [`/standardize-table`](./standardize-table.md) | `references/v2-table.md` |
+| Drawer chi tiết hoặc form (V1) | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) (4 bước) | `references/drawer-rules.md` |
+| Drawer dưới `src/v2/` | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) | `references/v2-drawer.md` |
+| Tab chứng từ liên kết, cấn trừ, truy vết | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) | `references/drawer-rules.md` mục 11 |
+
+Đường dẫn reference đầy đủ: `.agents/skills/<skill>/references/<file>`.
+
+Quy tắc: làm theo workflow của loại tương ứng, sau đó chạy audit của Phần A (No Blue, i18n, giới hạn 180 dòng, import ngược). Với V2, chạy thêm audit ở Phần B mục "Zero-Miss Quality Gate".

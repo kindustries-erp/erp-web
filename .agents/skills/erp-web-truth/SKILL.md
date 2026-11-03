@@ -82,7 +82,7 @@ Tài liệu chi tiết của từng module nằm tại `.agents/skills/modules/<
 - **Đối tác & nhà cung cấp**: `business-partners`, `erp-suppliers`
 - **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`
 - **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`
-- **Layout và thành phần chuẩn V2**: `v2-layout`, `v2-drawer`, `v2-table`, `v2-foundation`, `v2-auth`, `v2-admin-layout`
+- **Layout và thành phần chuẩn V2**: `v2-layout`, `v2-foundation`, `v2-auth`, `v2-admin-layout`; bảng và drawer V2 nằm trong skill `standardize-table` (`standardize-table/references/v2-table.md`) và `standardize-drawer` (`standardize-drawer/references/v2-drawer.md`)
 - **Shell và điều hướng**: xem `references/ui-shell-and-theme.md`
 
 Khi cần quét mới hoặc cập nhật tài liệu module: skill `scan-module-knowledge`.

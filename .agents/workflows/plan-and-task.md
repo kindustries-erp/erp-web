@@ -216,7 +216,7 @@ Khi bắt đầu lại phiên làm việc (User gõ `tiếp tục`, `continue`, 
 #### 4. Nghiệm thu, Cập nhật Tri thức & Báo cáo (Walkthrough & Knowledge Sync)
 - **Nghiệm thu cuối cùng (Final Gate)**: Sau khi commit và `git pull --rebase`, push (pre-push chạy `type:check`) rồi xác nhận CI GitHub xanh trên commit cuối.
 - **Knowledge & Skill Sync (Bắt buộc kiểm tra & cập nhật liền sau khi xong task)**:
-  - Nếu có thay đổi cấu trúc component, props, hooks, stores, hoặc semantic tokens: cập nhật ngay file Module Skill tương ứng (như `v2-layout`, `app-store`, `drawer-document-traceability`, ...) hoặc tạo skill mới.
+  - Nếu có thay đổi cấu trúc component, props, hooks, stores, hoặc semantic tokens: cập nhật ngay file Module Skill tương ứng (như `v2-layout`, `app-store`, `standardize-drawer`, ...) hoặc tạo skill mới.
   - Liên kết skill mới vào `erp-web-truth`.
   - Tuyệt đối không để tri thức chỉ nằm trong commit hoặc đầu óc mà không ghi vào skill.
 - **Tạo Báo cáo Nghiệm thu**: Tạo file `walkthrough.md` đính kèm bằng chứng test pass, screenshot giao diện (nếu có) và hướng dẫn thao tác kiểm thử UI.

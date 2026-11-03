@@ -1,11 +1,6 @@
----
-name: v2-table
-description: Module tri thức Bảng dữ liệu chuẩn V2 (V2StandardTable) trong erp-web (src/v2/shared/components/organisms/v2-standard-table cùng atom v2-page-button, v2-table-date-cell, molecule v2-table-pagination, v2-column-toggle, v2-column-header-filter, v2-table-row-actions, v2-table-text và template v2-module-page). Chứa cây thư mục, props, hai chế độ server/client, header filter, lưu cấu hình cột, quy tắc UI bắt buộc và checklist khi dùng cho trang mới.
----
-
 # Module Tri Thức: Bảng Chuẩn V2 (`V2StandardTable`) - `erp-web`
 
-Bản V2 của bảng chuẩn trong skill `standardize-table`, **khớp `variant="spreadsheet"` của V1** và viết lại theo kiến trúc V2: mọi file < 180 LoC, không `blue-*`, 100% i18n VI/EN (`v2.table.*`), platform split desktop/mobile, test co-located, stories. **Không import `@/shared/*` của V1**; chỉ dùng `@/core/config/appStore` (qua `useV2Translation`).
+Bản V2 của bảng chuẩn trong [`table-rules.md`](table-rules.md), **khớp `variant="spreadsheet"` của V1** và viết lại theo kiến trúc V2: mọi file < 180 LoC, không `blue-*`, 100% i18n VI/EN (`v2.table.*`), platform split desktop/mobile, test co-located, stories. **Không import `@/shared/*` của V1**; chỉ dùng `@/core/config/appStore` (qua `useV2Translation`).
 
 ## 1. Cây file (đúng 5 tầng, import một chiều)
 
