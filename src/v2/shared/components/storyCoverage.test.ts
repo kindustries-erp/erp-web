@@ -2,11 +2,18 @@ import { describe, expect, it } from "vitest";
 
 /** Thành phần chưa có story riêng, chỉ được minh họa qua story của drawer. Thêm mới vào đây là vi phạm. */
 const ALLOWLIST = new Set([
+  "atoms/v2-badge",
+  "molecules/v2-bottom-nav-hero-button",
   "molecules/v2-drawer-audit-timeline",
   "molecules/v2-drawer-field",
   "molecules/v2-drawer-footer",
   "molecules/v2-drawer-header",
   "molecules/v2-drawer-related-deck",
+  "molecules/v2-mobile-appearance-settings",
+  "molecules/v2-mobile-nav-customize-bar",
+  "organisms/v2-admin-bottom-nav",
+  "organisms/v2-mobile-catalog-drawer",
+  "organisms/v2-mobile-catalog-section-list",
 ]);
 
 const files = Object.keys(

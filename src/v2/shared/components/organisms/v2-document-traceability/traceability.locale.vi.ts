@@ -60,6 +60,11 @@ export const traceabilityLocaleVi: V2ModuleLocale["vi"] = {
   canvas: {
     toVertical: "Đổi sang bố cục Dọc",
     toHorizontal: "Đổi sang bố cục Ngang",
+    legend: {
+      receipt: "Dòng tiền thu",
+      payment: "Dòng tiền chi",
+      current: "Chứng từ đang xem",
+    },
   },
   pipeline: { empty: "Không có chứng từ" },
   state: { error: "Không thể tải đồ thị chứng từ liên kết" },

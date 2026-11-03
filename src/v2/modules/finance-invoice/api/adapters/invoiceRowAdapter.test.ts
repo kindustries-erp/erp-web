@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { invoiceTotalsToSummary, toInvoiceRow } from "./invoiceRowAdapter";
+import { toInvoiceRow, toInvoiceSummary } from "./invoiceRowAdapter";
 
 describe("toInvoiceRow", () => {
   it("uses the seller for IN invoices and the buyer for OUT invoices", () => {
@@ -43,27 +43,27 @@ describe("toInvoiceRow", () => {
   });
 });
 
-describe("invoiceTotalsToSummary", () => {
-  it("maps server grand totals to the amount column keys", () => {
-    const summary = invoiceTotalsToSummary({
-      grandTotalPreVat: 10,
-      grandTotalVat: 1,
-      grandTotalDiscount: 0,
-      grandTotalAmount: 11,
-      grandTotalNetOff: 5,
-      grandTotalRemaining: 6,
-    });
-    expect(summary).toMatchObject({
+describe("toInvoiceSummary", () => {
+  it("keeps the v2 summary keys for the amount columns", () => {
+    const summary = toInvoiceSummary({
       preVatAmount: 10,
       vatAmount: 1,
       totalAmount: 11,
+      discountAmount: 0,
       netOffAmount: 5,
       remainingAmount: 6,
-      total: 11,
+    });
+    expect(summary).toEqual({
+      preVatAmount: 10,
+      vatAmount: 1,
+      totalAmount: 11,
+      discountAmount: 0,
+      netOffAmount: 5,
+      remainingAmount: 6,
     });
   });
 
-  it("returns zeros when totals are missing", () => {
-    expect(invoiceTotalsToSummary(undefined).totalAmount).toBe(0);
+  it("returns zeros when summaries are missing", () => {
+    expect(toInvoiceSummary(undefined).totalAmount).toBe(0);
   });
 });

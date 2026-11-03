@@ -35,8 +35,12 @@ export interface FakeInvoice {
   vatAmount?: number;
   totalAmount?: number;
   discountAmount?: number;
+  /** Thuế suất: 0, 5, 8, 10, hoặc -1 (KCT), -2 (KTT) */
+  vatRate?: number | null;
   netOffAmount?: number;
   remainingAmount?: number;
+  settlementOrder?: string | null;
+  licensePlate?: string | null;
   postingStatus?: string | null;
   description?: string | null;
   notes?: string;

@@ -32,11 +32,20 @@ export const getGarageCashflowColumns = (
   openDetail: (row: GarageCashflowVoucher, mode: "view" | "edit") => void,
   onOpenCaseDetail?: (caseCode: string) => void,
   tableHook?: any,
+  tabKey: "vouchers" | "forecast" = "vouchers",
+  t?: (key: string, def?: string) => string,
 ): DataTableColumn<GarageCashflowVoucher>[] => {
+  const tr = t || ((_: string, def?: string) => def || "");
+  const isForecast = tabKey === "forecast";
+
   return [
     {
       key: "stt",
-      header: <span className="w-full block text-center">#</span>,
+      header: (
+        <span className="w-full block text-center">
+          {tr("garage.cashflow.columns.stt", "#")}
+        </span>
+      ),
       size: 40,
       className: "text-center w-[40px] min-w-[40px]",
       headerClassName: "text-center w-[40px] min-w-[40px]",
@@ -47,7 +56,13 @@ export const getGarageCashflowColumns = (
       key: "transDate",
       sortKey: "transDate",
       size: 110,
-      header: createCashflowDateHeader("transDate", "Ngày", tableHook),
+      header: createCashflowDateHeader(
+        "transDate",
+        isForecast
+          ? tr("garage.cashflow.columns.expectedDate", "Ngày dự kiến")
+          : tr("garage.cashflow.columns.transDate", "Ngày"),
+        tableHook,
+      ),
       className: "text-right",
       cell: (row) => (
         <TableDateCell
@@ -61,7 +76,11 @@ export const getGarageCashflowColumns = (
       key: "createdAt",
       sortKey: "createdAt",
       size: 110,
-      header: createCashflowDateHeader("createdAt", "Ngày tạo", tableHook),
+      header: createCashflowDateHeader(
+        "createdAt",
+        tr("garage.cashflow.columns.createdAt", "Ngày tạo"),
+        tableHook,
+      ),
       className: "text-right",
       cell: (row) => (
         <TableDateCell date={row.createdAt} className="justify-end w-full" />
@@ -71,9 +90,11 @@ export const getGarageCashflowColumns = (
       key: "voucherCode",
       sortKey: "voucherCode",
       size: 160,
-      header: filterBuilder("voucherCode", "Mã phiếu", {
-        valueType: ColumnValueType.TEXT,
-      }),
+      header: filterBuilder(
+        "voucherCode",
+        tr("garage.cashflow.columns.voucherCode", "Mã phiếu"),
+        { valueType: ColumnValueType.TEXT },
+      ),
       cell: (row) => (
         <TableText
           text={row.voucherCode || ""}
@@ -86,10 +107,13 @@ export const getGarageCashflowColumns = (
       key: "thu",
       sortKey: "amount",
       size: 140,
-      header: filterBuilder.amount("thu", "Tiền vào (Thu)", {
-        valueType: ColumnValueType.NUMBER,
-        align: "right",
-      }),
+      header: filterBuilder.amount(
+        "thu",
+        isForecast
+          ? tr("garage.cashflow.columns.forecastThu", "Tiền vào (Dự thu)")
+          : tr("garage.cashflow.columns.thu", "Tiền vào (Thu)"),
+        { valueType: ColumnValueType.NUMBER, align: "right" },
+      ),
       className: "text-right",
       headerClassName: "text-right",
       cell: renderThuCell,
@@ -98,10 +122,13 @@ export const getGarageCashflowColumns = (
       key: "chi",
       sortKey: "amount",
       size: 140,
-      header: filterBuilder.amount("chi", "Tiền ra (Chi)", {
-        valueType: ColumnValueType.NUMBER,
-        align: "right",
-      }),
+      header: filterBuilder.amount(
+        "chi",
+        isForecast
+          ? tr("garage.cashflow.columns.forecastChi", "Tiền ra (Dự chi)")
+          : tr("garage.cashflow.columns.chi", "Tiền ra (Chi)"),
+        { valueType: ColumnValueType.NUMBER, align: "right" },
+      ),
       className: "text-right",
       headerClassName: "text-right",
       cell: renderChiCell,
@@ -110,31 +137,43 @@ export const getGarageCashflowColumns = (
       key: "paymentStatus",
       sortKey: "paymentStatus",
       size: 130,
-      header: filterBuilder("paymentStatus", "Trạng thái", {
-        valueType: ColumnValueType.SELECT,
-        filterOptions: PAYMENT_STATUS_OPTIONS,
-      }),
-      cell: renderPaymentStatusCell,
+      header: filterBuilder(
+        "paymentStatus",
+        tr("garage.cashflow.columns.paymentStatus", "Trạng thái"),
+        {
+          valueType: ColumnValueType.SELECT,
+          filterOptions: PAYMENT_STATUS_OPTIONS,
+        },
+      ),
+      cell: (row) => renderPaymentStatusCell(row, tr),
     },
     {
       key: "paymentMethod",
       sortKey: "paymentMethod",
       size: 160,
-      header: filterBuilder("paymentMethod", "Phương thức TT", {
-        valueType: ColumnValueType.SELECT,
-        filterOptions: PAYMENT_METHOD_OPTIONS,
-      }),
+      header: filterBuilder(
+        "paymentMethod",
+        tr("garage.cashflow.columns.paymentMethod", "Phương thức TT"),
+        {
+          valueType: ColumnValueType.SELECT,
+          filterOptions: PAYMENT_METHOD_OPTIONS,
+        },
+      ),
       cell: renderPaymentMethodCell,
     },
     {
       key: "paymentContent",
       sortKey: "paymentContent",
       size: 160,
-      header: filterBuilder("paymentContent", "Nội dung TT", {
-        valueType: ColumnValueType.SELECT,
-        filterOptions: PAYMENT_CONTENT_OPTIONS,
-        showBlankOption: true,
-      }),
+      header: filterBuilder(
+        "paymentContent",
+        tr("garage.cashflow.columns.paymentContent", "Nội dung TT"),
+        {
+          valueType: ColumnValueType.SELECT,
+          filterOptions: PAYMENT_CONTENT_OPTIONS,
+          showBlankOption: true,
+        },
+      ),
       cell: renderPaymentContentCell,
     },
     {
@@ -142,10 +181,11 @@ export const getGarageCashflowColumns = (
       sortKey: "caseCode",
       size: 180,
       className: "text-left",
-      header: filterBuilder("caseCode", "Mã PDV", {
-        valueType: ColumnValueType.TEXT,
-        showBlankOption: true,
-      }),
+      header: filterBuilder(
+        "caseCode",
+        tr("garage.cashflow.columns.caseCode", "Mã PDV"),
+        { valueType: ColumnValueType.TEXT, showBlankOption: true },
+      ),
       cell: (row) => renderCaseCodeCell(row, onOpenCaseDetail),
     },
     {
@@ -153,29 +193,32 @@ export const getGarageCashflowColumns = (
       sortKey: "licensePlate",
       size: 130,
       className: "text-left",
-      header: filterBuilder("licensePlate", "Biển số xe", {
-        valueType: ColumnValueType.TEXT,
-        showBlankOption: true,
-      }),
+      header: filterBuilder(
+        "licensePlate",
+        tr("garage.cashflow.columns.licensePlate", "Biển số xe"),
+        { valueType: ColumnValueType.TEXT, showBlankOption: true },
+      ),
       cell: renderLicensePlateCell,
     },
     {
       key: "partnerName",
       sortKey: "partnerName",
       size: 200,
-      header: filterBuilder("partnerName", "Đối tác", {
-        valueType: ColumnValueType.TEXT,
-        showBlankOption: true,
-      }),
+      header: filterBuilder(
+        "partnerName",
+        tr("garage.cashflow.columns.partnerName", "Đối tác / Khách hàng"),
+        { valueType: ColumnValueType.TEXT, showBlankOption: true },
+      ),
       cell: renderPartnerNameCell,
     },
     {
       key: "note",
       size: 250,
-      header: filterBuilder("note", "Diễn giải", {
-        valueType: ColumnValueType.TEXT,
-        showBlankOption: true,
-      }),
+      header: filterBuilder(
+        "note",
+        tr("garage.cashflow.columns.note", "Ghi chú"),
+        { valueType: ColumnValueType.TEXT, showBlankOption: true },
+      ),
       cell: renderNoteCell,
     },
   ];

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { InvoiceXmlManualMatchCombobox } from "./InvoiceXmlManualMatchCombobox";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
@@ -7,17 +8,32 @@ vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: { list: vi.fn() },
 }));
 
+// Trả về chuỗi mặc định tiếng Việt để giữ nguyên các assertion theo nhãn
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string, fallback?: unknown) =>
+      typeof fallback === "string"
+        ? fallback
+        : ((fallback as { defaultValue?: string })?.defaultValue ?? key),
+  }),
+}));
+
 const initial = [{ value: "a", label: "HĐ cũ" }];
 
 function renderCombobox(value = "") {
   const onChange = vi.fn();
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   render(
-    <InvoiceXmlManualMatchCombobox
-      direction="IN"
-      value={value}
-      onChange={onChange}
-      initialOptions={initial}
-    />,
+    <QueryClientProvider client={client}>
+      <InvoiceXmlManualMatchCombobox
+        direction="IN"
+        value={value}
+        onChange={onChange}
+        initialOptions={initial}
+      />
+    </QueryClientProvider>,
   );
   return { onChange };
 }
@@ -70,7 +86,11 @@ describe("InvoiceXmlManualMatchCombobox", () => {
     expect(screen.getByText("Đang tìm...")).toBeInTheDocument();
 
     await act(async () => {
-      vi.advanceTimersByTime(300);
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    // Query bắt đầu sau khi debounce cập nhật; cho thêm lượt flush để kết quả về
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10);
     });
     expect(screen.queryByText("Đang tìm...")).toBeNull();
   });

@@ -18,12 +18,17 @@ export function useGarageNavSection({
     ErpResource.GARAGE_DEBTS,
     ErpAction.READ,
   );
+  const canReadGarageGoodsReceipts =
+    useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
+    canReadGarageCases;
   const canReadGarageOpex = canReadGarageCases;
 
   const isCashflowActive = currentPage === "garage-cashflow";
 
   const isCasesActive =
     currentPage === "garage-cases" || currentPage === "garage-dashboard";
+
+  const isGoodsReceiptsActive = currentPage === "garage-goods-receipts";
 
   const isDebtsActive =
     currentPage === "garage-debts" ||
@@ -34,20 +39,24 @@ export function useGarageNavSection({
 
   const handleNavCashflow = () => navTo("garage-cashflow");
   const handleNavCases = () => navTo("garage-cases");
+  const handleNavGoodsReceipts = () => navTo("garage-goods-receipts");
   const handleNavDebts = () => navTo("garage-debts");
   const handleNavOpex = () => navTo("garage-opex");
 
   return {
     canReadGarageCashflow,
     canReadGarageCases,
+    canReadGarageGoodsReceipts,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
+    isGoodsReceiptsActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
+    handleNavGoodsReceipts,
     handleNavDebts,
     handleNavOpex,
   };

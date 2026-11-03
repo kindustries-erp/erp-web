@@ -51,6 +51,24 @@ graph LR
 
 ---
 
+## 🧩 Tầng Cơ Chế Plan Theo Agent (`/plan` Bridge)
+
+Workflow này là chuẩn chung. Mỗi agent dùng cơ chế plan gốc của mình để chạy Giai đoạn 1–4, nhưng artifact đầu ra luôn giống nhau: `implementation_plan.md` và Task 3 cấp.
+
+| Agent | Cơ chế plan | Cách dùng |
+| :--- | :--- | :--- |
+| Claude Code | Plan mode gốc: `/plan` (tool `EnterPlanMode`) | Vào plan mode để khảo sát read-only và trình plan trong hội thoại. Sau khi user `OK` mới `ExitPlanMode`, lưu bản chốt vào `.agents/plans/<task-slug>/implementation_plan.md`, rồi chuyển sang Giai đoạn 5. |
+| Antigravity | `implementation_plan.md` + `walkthrough.md` (Brain) | Dùng trực tiếp mẫu trong workflow này. Hai file này là artifact chính. |
+| Codex, Copilot, Trae, agent khác | Không có plan mode tùy chỉnh | Trình plan trong chat, lưu bản chốt vào `.agents/plans/<task-slug>/implementation_plan.md` trong repo, chờ `OK`. |
+
+Quy tắc áp dụng cho mọi agent:
+- Cổng `OK` của user là bắt buộc. Plan mode chỉ thay thế bước khảo sát read-only, không thay thế cổng duyệt.
+- Giai đoạn plan không chạy test runner, không sửa code.
+- Sau `OK`: tạo task trên Plane (project KINDU) theo skill `plane-work-items`. Task ERP luôn có Story/Task.
+- Task mới phải đi qua chuỗi `/plan-and-task`. Đừng bỏ qua giai đoạn 4 chỉ vì agent có plan mode riêng.
+
+---
+
 ## 🧭 Quy Trình 5 Giai Đoạn Chuẩn (5-Phase SOP)
 
 ### 🔹 GIAI ĐOẠN 1: Discovery & UI/UX Research (Khảo sát API & UI Hiện Trạng - READ-ONLY)
@@ -124,6 +142,7 @@ Phân chia toàn bộ công việc theo hệ thống đánh số 3 cấp **`X.Y.
 ```markdown
 - [ ] **Task X.Y.Z: [Tên Task súc tích, rõ hành động]**
   - **Phân hệ**: `Frontend Web` | **Ưu tiên**: `[P0 / P1 / P2]`
+  - **Runner**: `[Main Agent]` *(Mặc định là Main Agent cho mọi CLI đơn luồng như Codex/Claude. Chỉ ghi `Sub-agent (self)` khi Agent có hỗ trợ Sub-agent và task độc lập hoàn toàn)*
   - **Files**: `[NEW]` / `[MODIFY]` / `[DELETE]` [path/to/file](erp/erp-web/path/to/file)
   - **DoD**: TypeScript strict pass, render đúng layout, validate form chuẩn.
   - **Verification**: `[Lệnh kiểm thử scoped cụ thể: bunx tsc --noEmit hoặc bunx vitest run <spec>]`
@@ -133,9 +152,29 @@ Phân chia toàn bộ công việc theo hệ thống đánh số 3 cấp **`X.Y.
 
 ### 🔹 GIAI ĐOẠN 4: Review, Alignment & Approval Gate (Duyệt Kế Hoạch)
 
+**Bước 0: Kiểm tra chéo (Consistency Check, read-only)**: làm trước khi hỏi `OK`.
+1. Mỗi tiêu chí chấp nhận (`AC-n`) ánh xạ tới ít nhất một task; mỗi task truy về ít nhất một AC. Không có task mồ côi, không có AC bị bỏ sót. Điền bảng truy vết AC → Task → Verification trong mục Spec.
+2. Verification của task thật sự kiểm được AC đó, không chỉ là type-check chung.
+3. Mọi mục `[CẦN LÀM RÕ]` đã được trả lời, hoặc nằm trong Open Questions chờ user quyết. Không để mơ hồ ngầm.
+4. Plan không mâu thuẫn với skill chuẩn liên quan (No Blue, giới hạn 180 dòng, i18n, thứ tự giao hàng theo `AGENTS.md`).
+5. Ghi một dòng kết quả trong plan: `Consistency Check: đạt` hoặc liệt kê chỗ lệch kèm cách xử lý.
+
 1. Trình bày UI flow, layout, các trường form và các điểm cần User quyết định.
 2. Đặt `RequestFeedback: true` trên `implementation_plan.md`.
 3. **DỪNG LẠI (STOP) HOÀN TOÀN**: Khoanh tay chờ User phê duyệt (`OK` / `Confirm`). **TUYỆT ĐỐI KHÔNG tự ý thực thi task đầu tiên, KHÔNG chạy test runner, KHÔNG sửa file trước khi có xác nhận rõ ràng từ User.**
+
+---
+
+### 🔸 Sau `OK`: Xác nhận tích hợp Plane (`plane-work-items`)
+
+Ngay sau khi User trả lời `OK` / `Confirm`, Agent **PHẢI HỎI** trước khi làm gì trên Plane:
+
+> Bạn có muốn tôi tạo và theo dõi task này trên Plane (project KINDU, workspace k-industries) không? **Có / Không**
+
+- **Có**: load skill `plane-work-items`, tạo Module, Cycle, Story và Task theo mục 3 của skill, rồi ghi identifier (ví dụ `KINDU-12`) vào `implementation_plan.md`. Khi task đổi trạng thái thì cập nhật trên Plane.
+- **Không**: chỉ theo dõi trong `implementation_plan.md`, và ghi dòng `Plane: không theo dõi` vào plan.
+- Với task ERP, lựa chọn khuyến nghị là **Có**, theo quy tắc ERP trong `AGENTS.md`. Câu hỏi vẫn phải được hỏi.
+- Chưa có `OK` thì không tạo gì trên Plane. Không ghi plan hay task vào Trilium.
 
 ---
 
@@ -147,6 +186,19 @@ Phân chia toàn bộ công việc theo hệ thống đánh số 3 cấp **`X.Y.
   - Chỉ được đổi `[/]` thành `[x]` khi và chỉ khi lệnh trong mục `Verification` trả về kết quả **PASS 100%**.
   - Nếu test fail hoặc type error: giữ nguyên `[/]`, tiếp tục sửa code cho đến khi test pass.
 - **Live Sync**: Ngay khi hoàn tất một task, ghi nhận trạng thái vào `implementation_plan.md` ngay lập tức, không để dồn đến cuối mới tick.
+
+#### 1.1 Cơ chế Thực thi Thống nhất (Single-Agent vs Sub-agent Delegation)
+Để đảm bảo **bất kỳ AI Agent nào (Codex CLI, Claude Code, Gemini CLI, Antigravity) cũng đều thực thi và có hành động giống hệt nhau**, toàn bộ hệ thống tuân theo các nguyên tắc chuẩn hóa:
+- **Chuẩn Mặc Định Cho Mọi Agent (Single-Agent Baseline)**:
+  - Mọi Agent (dù đơn luồng hay đa nhiệm) đều có thể tự mình thực thi tuần tự từ trên xuống dưới (`[/]` ➔ sửa file ➔ chạy verification ➔ PASS ➔ tick `[x]`).
+  - Khi chạy trên các công cụ không có Sub-agent (Codex CLI, Claude Code), Agent chính tự làm 100% các task mà không yêu cầu thêm công cụ nào khác.
+- **Cơ Chế Ủy Quyền Sub-agent (Khi môi trường hỗ trợ, ví dụ Antigravity)**:
+  - **Điều kiện ủy quyền**: Chỉ kích hoạt khi Agent có công cụ `invoke_subagent` VÀ task thỏa mãn tính độc lập (ví dụ component/page riêng biệt, hoặc khi User chỉ định / dùng `/teamwork`).
+  - **Quy tắc Giao việc**: Agent chính gọi Sub-agent (`self`) bằng cách trích xuất chính xác: `Task X.Y.Z`, `Files được phép sửa`, `DoD`, và `Lệnh Verification`.
+  - **Quy tắc Thực thi của Sub-agent**: Sub-agent khi nhận task **BẮT BUỘC tuân thủ đúng DoD và Verification của task đó**, tuyệt đối không sửa lan man ngoài scope.
+  - **Nguyên tắc Gatekeeper (Trách nhiệm Người Giữ Cổng)**: Sub-agent **TUYỆT ĐỐI KHÔNG** tự ý tick `[x]` vào `implementation_plan.md`. Sub-agent chỉ thực thi, chạy verification, và báo cáo kết quả kèm bằng chứng test pass về cho Agent chính.
+  - **Nghiệm thu & Cập nhật**: Agent chính nhận kết quả, xác minh lại lệnh Scoped Verification thực sự PASS 100%, sau đó Agent chính mới chuyển task sang `[x]` trên `implementation_plan.md`.
+  - **Tính Nhất Quán**: Dù do Main Agent tự làm hay Sub-agent thực hiện, mã nguồn, commit log, test passing và tài liệu nghiệm thu (`walkthrough.md`) là **100% ĐỒNG NHẤT**.
 
 #### 2. Giao thức Tạm dừng (Pause Protocol)
 Khi người dùng yêu cầu tạm dừng, đổi context hoặc phiên làm việc bị ngắt quãng:
@@ -171,8 +223,8 @@ Khi bắt đầu lại phiên làm việc (User gõ `tiếp tục`, `continue`, 
 #### 4. Nghiệm thu, Cập nhật Tri thức & Báo cáo (Walkthrough & Knowledge Sync)
 - **Nghiệm thu cuối cùng (Final Gate)**: Sau khi commit và `git pull --rebase`, push (pre-push chạy `type:check`) rồi xác nhận CI GitHub xanh trên commit cuối.
 - **Knowledge & Skill Sync (Bắt buộc kiểm tra & cập nhật liền sau khi xong task)**:
-  - Nếu có thay đổi cấu trúc component, props, hooks, stores, hoặc semantic tokens: cập nhật ngay file Module Skill tương ứng (như `v2-layout`, `app-store`, `drawer-document-traceability`, ...) hoặc tạo skill mới.
-  - Liên kết skill mới vào `erp-web-current-truth`.
+  - Nếu có thay đổi cấu trúc component, props, hooks, stores, hoặc semantic tokens: cập nhật ngay file Module Skill tương ứng (như `v2-layout`, `app-store`, `standardize-drawer`, ...) hoặc tạo skill mới.
+  - Liên kết skill mới vào `erp-web-truth`.
   - Tuyệt đối không để tri thức chỉ nằm trong commit hoặc đầu óc mà không ghi vào skill.
 - **Tạo Báo cáo Nghiệm thu**: Tạo file `walkthrough.md` đính kèm bằng chứng test pass, screenshot giao diện (nếu có) và hướng dẫn thao tác kiểm thử UI.
 
@@ -185,12 +237,24 @@ Khi bắt đầu lại phiên làm việc (User gõ `tiếp tục`, `continue`, 
 
 Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tương tác chính.
 
+## 📝 Spec (Mục tiêu & Tiêu chí chấp nhận)
+- **Mục tiêu**: một hai câu nói rõ việc này giải quyết vấn đề gì cho ai.
+- **Phạm vi và ngoài phạm vi**: liệt kê rõ để tránh task lan ra ngoài yêu cầu.
+- **Tiêu chí chấp nhận** (mã `AC-1`, `AC-2`, ...; mỗi tiêu chí phải kiểm chứng được bằng test, lệnh hoặc quan sát cụ thể):
+  - [ ] `AC-1`: ...
+- **Bảng truy vết** (điền ở Giai đoạn 4 khi Consistency Check):
+
+| AC | Task | Verification |
+| :--- | :--- | :--- |
+| `AC-1` | `1.1.1` | ... |
+
 ## ⚠️ User Review Required
 > [!IMPORTANT]
 > - **Điểm quyết định UI**: Kích thước Drawer (`45vw` vs `65vw`), các tab điều hướng trên đầu.
 > - **Behavior**: Hành vi sau khi Lưu (Đóng Drawer hay giữ nguyên form).
 
 ## ❓ Open Questions
+> Mỗi điểm mơ hồ ghi thành một mục gắn nhãn `[CẦN LÀM RÕ]`. Không tự giả định thay user; nếu user bỏ qua thì ghi giả định đã chọn vào đây.
 - [ ] **Câu hỏi 1**: Bảng dữ liệu có cần cột tính tổng phụ (Subtotal footer) ở dưới không?
 
 ---
@@ -293,5 +357,5 @@ Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tươ
 
 ## 🧠 Tri Thức & Skill Đồng Bộ (Knowledge Sync)
 - **Module Skill**: Đã cập nhật `[path/to/SKILL.md]` (hoặc: *Không có thay đổi contract/component*).
-- **Current Truth**: Đã liên kết vào `erp-web-current-truth`.
+- **Current Truth**: Đã liên kết vào `erp-web-truth`.
 ```

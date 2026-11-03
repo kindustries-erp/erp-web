@@ -41,6 +41,20 @@ const Demo = ({ variant }: { variant: V2TabBarVariant }) => {
 export const App = () => <Demo variant="app" />;
 export const Header = () => <Demo variant="header" />;
 export const Sub = () => <Demo variant="sub" />;
+export const SubStretch = () => {
+  const [active, setActive] = useState("detail");
+  return (
+    <div className="w-[420px]">
+      <V2TabBar
+        variant="sub"
+        stretch
+        tabs={TABS.filter((tab) => !tab.disabled)}
+        activeTabKey={active}
+        onTabChange={setActive}
+      />
+    </div>
+  );
+};
 export const ButtonGroup = () => <Demo variant="button-group" />;
 export const Page = () => <Demo variant="page" />;
 export const PageManyTabs = () => {

@@ -1,7 +1,10 @@
 import React from "react";
 import { GarageCashflowDashboard } from "../garage-cashflow-dashboard";
 import { GarageCashflowList } from "../garage-cashflow-list";
-import type { GarageCashflowTabProps } from "./GarageCashflowTab.type";
+import {
+  GarageCashflowTabKey,
+  type GarageCashflowTabProps,
+} from "./GarageCashflowTab.type";
 import { useGarageCashflowTab } from "./GarageCashflowTab.hook";
 
 export const GarageCashflowTab: React.FC<GarageCashflowTabProps> = ({
@@ -13,10 +16,10 @@ export const GarageCashflowTab: React.FC<GarageCashflowTabProps> = ({
 
   return (
     <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
-      {mountedViews.dashboard && (
+      {mountedViews[GarageCashflowTabKey.DASHBOARD] && (
         <div
           className={
-            currentTabKey === "dashboard"
+            currentTabKey === GarageCashflowTabKey.DASHBOARD
               ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
               : "hidden"
           }
@@ -30,10 +33,10 @@ export const GarageCashflowTab: React.FC<GarageCashflowTabProps> = ({
         </div>
       )}
 
-      {mountedViews.vouchers && (
+      {mountedViews[GarageCashflowTabKey.VOUCHERS] && (
         <div
           className={
-            currentTabKey === "vouchers"
+            currentTabKey === GarageCashflowTabKey.VOUCHERS
               ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
               : "hidden"
           }
@@ -43,6 +46,25 @@ export const GarageCashflowTab: React.FC<GarageCashflowTabProps> = ({
             activeTab={currentTabKey}
             onTabChange={handleTabChange}
             onOpenCaseDetail={onOpenCaseDetail}
+            tabKey="vouchers"
+          />
+        </div>
+      )}
+
+      {mountedViews[GarageCashflowTabKey.FORECAST] && (
+        <div
+          className={
+            currentTabKey === GarageCashflowTabKey.FORECAST
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <GarageCashflowList
+            tabs={pageTabs}
+            activeTab={currentTabKey}
+            onTabChange={handleTabChange}
+            onOpenCaseDetail={onOpenCaseDetail}
+            tabKey="forecast"
           />
         </div>
       )}

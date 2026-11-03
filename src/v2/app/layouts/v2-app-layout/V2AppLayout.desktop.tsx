@@ -1,6 +1,7 @@
 import * as React from "react";
 import { LayoutDashboard } from "lucide-react";
 import { V2Sidebar, V2RightPanel } from "@/v2/shared/components";
+import { V2WorkspaceModeToggle } from "@/v2/shared/components/molecules/v2-workspace-mode-toggle";
 import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
@@ -8,7 +9,7 @@ import {
   filterV2NavSections,
   DEFAULT_V2_NAV_ITEMS,
   DEFAULT_V2_SECTIONS,
-} from "./v2Navigation";
+} from "./navigation";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
 export { DEFAULT_V2_NAV_ITEMS, DEFAULT_V2_SECTIONS };
@@ -71,7 +72,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   return (
     <div
       data-testid="v2-app-layout-desktop"
-      className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-[#f4f4f4] dark:bg-[color:var(--app-shell-bg,#131418)] text-foreground select-none"
+      className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-[#f4f4f4] dark:bg-[color:var(--app-shell-bg,#131418)] text-foreground"
     >
       {/* Card 1: Sidebar floating card */}
       <V2Sidebar
@@ -102,6 +103,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         logoUrl={logoUrl}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
+        topbarActions={<V2WorkspaceModeToggle />}
         contentClassName={contentClassName}
         tabs={tabs ?? fallbackTabs}
         activeTabId={activeTabId ?? "dashboard"}

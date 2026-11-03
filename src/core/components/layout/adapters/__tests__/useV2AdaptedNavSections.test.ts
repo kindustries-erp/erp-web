@@ -4,6 +4,7 @@ import { useV2AdaptedNavSections } from "../useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "../useV2AdaptedTabs";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource } from "@/modules/system/types/rbac";
+import { Package } from "lucide-react";
 import {
   Banknote,
   Landmark,
@@ -50,6 +51,11 @@ vi.mock("@/core/config/appStore", async (importOriginal) => {
         {
           instanceId: "tab-custom-fields-1",
           pageKey: "custom-fields",
+          instanceIndex: 1,
+        },
+        {
+          instanceId: "tab-garage-goods-receipts-1",
+          pageKey: "garage-goods-receipts",
           instanceIndex: 1,
         },
       ],
@@ -170,5 +176,62 @@ describe("useV2AdaptedTabs - custom-fields tab", () => {
     expect(customFieldsTab).toBeDefined();
     expect(customFieldsTab?.label).toBe("Trường tùy chỉnh");
     expect(customFieldsTab?.icon).toBe(Sliders);
+  });
+
+  it("resolves label and icon for garage-goods-receipts tab", () => {
+    const { result } = renderHook(() => useV2AdaptedTabs());
+    const goodsReceiptTab = result.current.tabs.find(
+      (t) => t.id === "tab-garage-goods-receipts-1",
+    );
+
+    expect(goodsReceiptTab).toBeDefined();
+    expect(goodsReceiptTab?.label).toBe("Nhập kho Garage");
+    expect(goodsReceiptTab?.icon).toBe(Package);
+  });
+});
+
+describe("useV2AdaptedNavSections - garage-goods-receipts in sec-garage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("includes garage-goods-receipts when user has explicit GARAGE_GOODS_RECEIPTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.GARAGE_GOODS_RECEIPTS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const garageSec = result.current.find((s) => s.id === "sec-garage");
+    const item = findNavChild(garageSec?.items, "garage-goods-receipts");
+
+    expect(item).toBeDefined();
+    expect(item?.href).toBe("/garage-goods-receipts");
+    expect(item?.label).toBe("Nhập kho Garage");
+    expect(item?.icon).toBe(Package);
+  });
+
+  it("includes garage-goods-receipts via fallback when user has GARAGE permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.GARAGE;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const garageSec = result.current.find((s) => s.id === "sec-garage");
+    const item = findNavChild(garageSec?.items, "garage-goods-receipts");
+
+    expect(item).toBeDefined();
+    expect(item?.href).toBe("/garage-goods-receipts");
+  });
+
+  it("excludes garage-goods-receipts when user lacks garage permissions", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ADMIN_USERS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const garageSec = result.current.find((s) => s.id === "sec-garage");
+    const item = findNavChild(garageSec?.items, "garage-goods-receipts");
+
+    expect(item).toBeUndefined();
   });
 });

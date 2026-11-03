@@ -1,35 +1,31 @@
 import React, { useMemo, useCallback } from "react";
-import { Plus, ReceiptText, FileSpreadsheet } from "lucide-react";
+import { Plus, ReceiptText } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { createColumnHeaderFilter } from "@/shared/components/DataTable/createColumnHeaderFilter";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import type { GarageCashflowTableProps } from "./GarageCashflowTable.type";
 import { useGarageCashflowTable } from "./GarageCashflowTable.hook";
 import { useT } from "@/core/i18n";
+import { getGarageCashflowColumns } from "./GarageCashflowTable.columns";
 import {
-  getGarageCashflowColumns,
   getGarageCashflowRowActions,
-} from "./GarageCashflowTable.columns";
+  buildGarageCashflowCreateActions,
+} from "./GarageCashflowTable.actions";
 import { buildGarageCashflowSummaryRow } from "./GarageCashflowTable.summary";
-import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
-import {
-  useUserPreferencesStore,
-  type TableViewPreset,
-} from "@/shared/hooks/useUserPreferences";
-import {
-  GARAGE_CASHFLOW_COLUMN_VIEW_PRESETS,
-  DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY,
-  GARAGE_CASHFLOW_FILTER_ITEMS,
-} from "../../../utils/garageViewPresets";
+import { DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY } from "../../../utils/garageViewPresets";
 import { GarageViewModeCombobox } from "../../molecules/garage-view-mode-combobox";
+import {
+  useGarageCashflowPresets,
+  useGarageCashflowFilterItems,
+} from "./GarageCashflowTable.presets";
 
-const columnPresetsTableId = "garage-cashflow-column-views";
-const actualTableId = "garage-cashflow-list";
+export { getGarageCashflowColumns } from "./GarageCashflowTable.columns";
 
 export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
   tabs,
   activeTab,
   onTabChange,
+  tabKey = "vouchers",
   onCreate,
   onView,
   onEdit,
@@ -39,51 +35,25 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
   onExportExcel,
 }) => {
   const t = useT();
-  const tableHook = useGarageCashflowTable();
+  const tableHook = useGarageCashflowTable({ tabKey });
 
-  const columnViewPresetsHook = usePageViewPresets({
-    tableId: columnPresetsTableId,
-    defaultPresets: GARAGE_CASHFLOW_COLUMN_VIEW_PRESETS,
-  });
+  const {
+    actualTableId,
+    columnViewPresetsHook,
+    activeColumnPresetKey,
+    handleColumnPresetChange,
+  } = useGarageCashflowPresets(tabKey);
 
-  const [activeColumnPresetKey, setActiveColumnPresetKey] =
-    React.useState<string>(() => {
-      const stored = useUserPreferencesStore
-        .getState()
-        .getTablePreference(actualTableId);
-      return stored?.activeView || "overview";
-    });
-
-  const handleColumnPresetChange = (preset: TableViewPreset) => {
-    setActiveColumnPresetKey(preset.key);
-    const currentPref = useUserPreferencesStore
-      .getState()
-      .getTablePreference(actualTableId) || {
-      columnOrder: [],
-      columnVisibility: {},
-    };
-    useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
-      ...currentPref,
-      columnOrder: [],
-      columnVisibility:
-        preset.columnVisibility || DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY,
-      activeView: preset.key,
-    });
-  };
+  const filterItems = useGarageCashflowFilterItems(tabKey, t);
 
   const currentVoucherType = useMemo(() => {
     const filterVal = tableHook.columnFilters["voucherType"];
-    if (filterVal && filterVal.length > 0) return filterVal[0];
-    return "ALL";
+    return filterVal && filterVal.length > 0 ? filterVal[0] : "ALL";
   }, [tableHook.columnFilters]);
 
   const handleVoucherTypeChange = useCallback(
     (val: string) => {
-      if (val === "ALL") {
-        tableHook.setColumnFilter("voucherType", []);
-      } else {
-        tableHook.setColumnFilter("voucherType", [val]);
-      }
+      tableHook.setColumnFilter("voucherType", val === "ALL" ? [] : [val]);
     },
     [tableHook],
   );
@@ -98,16 +68,10 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
         onEditView={() => {}}
         onDeleteView={(key) => columnViewPresetsHook.deleteView(key)}
         filterGroup={{
-          title: t("garage.cashflow.filterGroup", {
-            defaultValue: "Loại phiếu",
-          }),
+          title: t("garage.cashflow.filterGroup", "Loại phiếu"),
           value: currentVoucherType,
           onChange: handleVoucherTypeChange,
-          items: GARAGE_CASHFLOW_FILTER_ITEMS.map((item) => ({
-            value: item.value,
-            label: item.label,
-            dotColor: item.dotColor,
-          })),
+          items: filterItems,
         }}
       />
     </div>
@@ -118,9 +82,9 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
       createColumnHeaderFilter({
         listHook: tableHook as any,
         fetchOptions: tableHook.getColumnOptions,
-        queryKeyPrefix: "garage-cashflow-options",
+        queryKeyPrefix: `garage-cashflow-options-${tabKey}`,
       }),
-    [tableHook],
+    [tableHook, tabKey],
   );
 
   const openDetail = useCallback(
@@ -138,8 +102,10 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
         openDetail,
         onOpenCaseDetail,
         tableHook,
+        tabKey,
+        t,
       ),
-    [filterBuilder, openDetail, onOpenCaseDetail, tableHook],
+    [filterBuilder, openDetail, onOpenCaseDetail, tableHook, tabKey, t],
   );
 
   const rowActions = useMemo(
@@ -149,39 +115,13 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
         canDelete ? onDelete : undefined,
         Boolean(onEdit),
         canDelete,
+        t,
       ),
-    [openDetail, onDelete, onEdit, canDelete],
+    [openDetail, onDelete, onEdit, canDelete, t],
   );
 
   const createActions = useMemo(
-    () => [
-      {
-        groupLabel: t("groupThaoTac", { defaultValue: "Thao tác" }),
-        items: [
-          {
-            label: t("garage.cashflow.exportExcel", {
-              defaultValue: "Xuất Excel",
-            }),
-            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: () => {
-              if (onExportExcel) {
-                onExportExcel({
-                  column_filters: Object.keys(tableHook.serverFilters).length
-                    ? JSON.stringify(tableHook.serverFilters)
-                    : undefined,
-                  column_search: Object.keys(tableHook.columnSearch).length
-                    ? JSON.stringify(tableHook.columnSearch)
-                    : undefined,
-                  sorts: tableHook.sorts,
-                  activeFilterCount: tableHook.activeFilterCount,
-                  serverFilters: tableHook.serverFilters,
-                });
-              }
-            },
-          },
-        ],
-      },
-    ],
+    () => buildGarageCashflowCreateActions(onExportExcel, tableHook, t),
     [onExportExcel, tableHook, t],
   );
 
@@ -194,6 +134,7 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
         pageSize: tableHook.pageSize,
         total: tableHook.total,
         totalPages: tableHook.totalPages,
+        tabKey,
         t,
       }),
     [
@@ -203,22 +144,36 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
       tableHook.pageSize,
       tableHook.total,
       tableHook.totalPages,
+      tabKey,
       t,
     ],
   );
 
+  const pageTitle =
+    tabKey === "forecast"
+      ? t("garage.cashflow.forecastTitle", "Dự thu chi garage")
+      : t("nav.items.garageCashflow", "Thu chi garage");
+
+  const pageDesc =
+    tabKey === "forecast"
+      ? t(
+          "garage.cashflow.forecastDesc",
+          "Quản lý các khoản dự thu và dự chi tại xưởng",
+        )
+      : t(
+          "garage.cashflow.desc",
+          "Quản lý Thu/Chi nội bộ tại xưởng và đối soát với dòng tiền ERP",
+        );
+
   return (
     <SpreadsheetPageTemplate
-      title={t("nav.items.garageCashflow", "Thu chi garage")}
-      desc={t(
-        "garage.cashflow.desc",
-        "Quản lý Thu/Chi nội bộ tại xưởng và đối soát với dòng tiền ERP",
-      )}
+      title={pageTitle}
+      desc={pageDesc}
       icon={<ReceiptText className="w-5 h-5 text-slate-700" />}
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={onTabChange}
-      tableId="garage-cashflow-list"
+      tableId={actualTableId}
       columns={columns}
       defaultColumnVisibility={DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY}
       customActionsNode={viewTabsNode}
@@ -240,7 +195,11 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
       onSort={tableHook.toggleSort}
       rowActions={rowActions}
       onCreate={onCreate}
-      createLabel="Tạo phiếu mới"
+      createLabel={
+        tabKey === "forecast"
+          ? t("garage.cashflow.createForecast", "Tạo dự thu/chi mới")
+          : t("garage.cashflow.createVoucher", "Tạo phiếu mới")
+      }
       createIcon={<Plus className="w-4 h-4 mr-1 text-primary-foreground" />}
       createActions={createActions}
     />

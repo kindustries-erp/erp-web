@@ -50,7 +50,7 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
     <div
       className={cn(
         "mb-3 rounded-xl border border-border/50 dark:border-white/[0.06] p-2.5 sm:p-3 transition-all duration-200",
-        "bg-[var(--drawer-section-bg,rgba(255,255,255,0.65))] backdrop-blur-[12px]",
+        "bg-[var(--drawer-section-bg,rgba(255,255,255,0.85))] backdrop-blur-[var(--drawer-section-blur,0px)]",
         "shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.03)_inset]",
         fitViewportHeight &&
           !isCollapsed &&

@@ -5,7 +5,7 @@ import { financeInvoiceV2Api } from "./financeInvoiceV2Api";
 describe("financeInvoiceV2Api", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("lists invoices from the erp-invoices route, not a core-prefixed one", async () => {
+  it("lists invoices from the v2 route", async () => {
     const get = vi
       .spyOn(v2HttpClient, "get")
       .mockResolvedValue({ data: { items: [], total: 0 } });
@@ -15,31 +15,29 @@ describe("financeInvoiceV2Api", () => {
       pageSize: 20,
     });
     expect(get).toHaveBeenCalledWith(
-      "/api/v1/erp-invoices",
+      "/api/v2/invoices",
       expect.objectContaining({ params: expect.any(Object) }),
     );
   });
 
-  it("requests column options from erp-invoices/column-options with snake_case filters", async () => {
+  it("requests column options from the v2 route with a filters param", async () => {
     const get = vi.spyOn(v2HttpClient, "get").mockResolvedValue({
-      data: { items: [], total: 0, page: 1, totalPages: 1 },
+      data: { items: [], total: 0, next: null },
     });
     await financeInvoiceV2Api.getColumnOptions({
       column: "partner",
       search: "abc",
       page: 2,
       pageSize: 20,
-      columnFilters: "{}",
-      direction: "OUT",
+      filters: '{"direction":["OUT"]}',
     });
-    expect(get).toHaveBeenCalledWith("/api/v1/erp-invoices/column-options", {
+    expect(get).toHaveBeenCalledWith("/api/v2/invoices/column-options", {
       params: {
         column: "partner",
         search: "abc",
         page: 2,
         pageSize: 20,
-        column_filters: "{}",
-        direction: "OUT",
+        filters: '{"direction":["OUT"]}',
       },
     });
   });

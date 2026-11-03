@@ -40,8 +40,8 @@ describe("V2TableRowHoverActions", () => {
     const bar = screen.getByRole("button", { name: "Xem chi tiết" })
       .parentElement as HTMLElement;
     const classes = bar.className.split(" ");
-    expect(classes).not.toContain("backdrop-blur-xl");
-    expect(classes).toContain("group-hover:backdrop-blur-xl");
+    expect(classes).not.toContain("backdrop-blur-sm");
+    expect(classes).toContain("group-hover:backdrop-blur-sm");
   });
 
   it("opens the full grouped menu from the more button", () => {

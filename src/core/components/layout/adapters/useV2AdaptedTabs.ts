@@ -47,6 +47,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-finished-goods": PackageCheck,
   "garage-dashboard": LayoutDashboard,
   "garage-cases": Car,
+  "garage-goods-receipts": Package,
   "garage-opex": ReceiptText,
   "garage-cashflow": Wallet,
   "garage-customers": Users,
@@ -111,6 +112,8 @@ export function useV2AdaptedTabs(): {
       case "garage-dashboard":
       case "garage-cases":
         return t("nav.items.garageCases", "Hoạt động garage");
+      case "garage-goods-receipts":
+        return t("nav.items.garageGoodsReceipts", "Nhập kho Garage");
       case "garage-cashflow":
         return t("nav.items.garageCashflow", "Thu chi garage");
       case "garage-debts":

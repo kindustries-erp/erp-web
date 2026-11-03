@@ -5,6 +5,18 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 
+/** Nhãn chi nhánh; chi nhánh không thuộc tài khoản MAIN được gắn thêm mã tài khoản (ví dụ `· OJ`). */
+export function formatGarageBranchLabel(branch: {
+  name?: string | null;
+  code?: string | null;
+  accountKey?: string | null;
+}): string {
+  const base = `${branch.name} (${branch.code})`;
+  return branch.accountKey && branch.accountKey !== "MAIN"
+    ? `${base} · ${branch.accountKey}`
+    : base;
+}
+
 export function GarageBranchSelector() {
   const { data: branches, isLoading } = useGarageBranches();
   const { mutate: syncBranches, isPending: isSyncing } =
@@ -20,7 +32,7 @@ export function GarageBranchSelector() {
   const branchOptions =
     branches?.map((b: any) => ({
       value: b.externalId,
-      label: `${b.name} (${b.code})`,
+      label: formatGarageBranchLabel(b),
     })) || [];
 
   return (

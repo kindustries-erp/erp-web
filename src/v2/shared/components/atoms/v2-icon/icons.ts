@@ -56,6 +56,7 @@ export {
   Maximize,
   Minimize,
   RefreshCw,
+  KeyRound,
   Play,
   FileSpreadsheet,
   Globe,

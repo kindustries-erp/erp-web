@@ -332,8 +332,8 @@ Storybook được cấu hình hoàn toàn độc lập và **chỉ kết nối 
 1. **Primitives UI (`src/v2/shared/ui/`)**: `Button`, `Text`, `Badge`.
 2. **Atoms (`src/v2/shared/components/atoms/`)**: `V2Button`, `V2Text`, `V2NavIcon`, `V2SidebarIcon`, `V2SidebarLogo`, `V2SidebarToggleBtn`.
 3. **Molecules (`src/v2/shared/components/molecules/`)**: `V2BranchBadge`, `V2UserBadge`, `V2LanguageSwitcher`, `V2QuickSearch`, `V2Breadcrumb`, `V2TabItem`, `V2Topbar`, `V2NavItem`, `V2SidebarHeader`, `V2SidebarNavItem`, `V2SidebarSection`, `V2SidebarBottom`.
-4. **Organisms (`src/v2/shared/components/organisms/`)**: `V2Sidebar`, `V2TabBar`, `V2Header`, `V2RightPanel`, `V2BottomNav`, `V2StandardDrawer` (xem `v2-drawer`), `V2StandardTable` (xem `v2-table`).
-5. **Atoms bảng**: `V2PageButton`, `V2TableDateCell`. **Molecules bảng**: `V2TablePagination`, `V2ColumnToggle`, `V2ColumnHeaderFilter`, `V2TableRowHoverActions`, `V2TableContextMenu`, `V2TableText` (chi tiết ở skill `v2-table`).
+4. **Organisms (`src/v2/shared/components/organisms/`)**: `V2Sidebar`, `V2TabBar`, `V2Header`, `V2RightPanel`, `V2BottomNav`, `V2StandardDrawer` (xem `standardize-drawer/references/v2-drawer.md`), `V2StandardTable` (xem `standardize-table/references/v2-table.md`).
+5. **Atoms bảng**: `V2PageButton`, `V2TableDateCell`. **Molecules bảng**: `V2TablePagination`, `V2ColumnToggle`, `V2ColumnHeaderFilter`, `V2TableRowHoverActions`, `V2TableContextMenu`, `V2TableText` (chi tiết ở `standardize-table/references/v2-table.md`).
 6. **Templates (`src/v2/shared/components/templates/v2-module-page/`)**: `V2ModulePage` (header + tab list/dashboard, bảng full-height cho tab list).
 
 ### 7.3. Các Lệnh Thực Thi Storybook
@@ -346,6 +346,8 @@ cd erp/erp-web && bun run storybook
 - **Thanh TabBar (`V2TabBar`)**: Chiều cao chuẩn `h-9` (`36px`), nền `bg-background/80 backdrop-blur-md`, không viền gạch ngang (`border-none`), cuộn ngang ẩn thanh cuộn (`scrollbar-none`).
 - **Thanh Sub-Navigation Pill Tabs (`V2TabBar variant="sub"`)**:
   - Thiết kế đồng bộ hệ bo góc ERP (Midnight Style): Container ngoài dùng `rounded-lg` (8px), sliding animated indicator dùng `rounded-md` (6px), tab item button dùng `rounded-md` (6px) ôm khít khoảng padding `p-[3px]`.
+  - Prop `stretch` (chỉ `variant="sub"`): các tab chia đều toàn bộ chiều ngang (`flex-1`, khung `w-full`). Không truyền thì giữ kích thước theo nội dung như cũ. Dùng cho pill chọn kỳ/nguồn trong drawer điều kiện.
+  - Molecule `V2PeriodPicker` (`molecules/v2-period-picker/`) ghép pill `sub` stretch với combobox kỳ và hai ô ngày (chỉ mở khóa ở "Tùy chỉnh"); đơn vị `week | month | quarter | custom`.
   - Huy hiệu số lượng (`badgeCount`) và dot trạng thái luôn giữ `rounded-full` để đảm bảo độ tròn trịa tự nhiên.
   - Tự động thích ứng màu sắc và độ tương phản cao với Dark Theme (`dark:border-zinc-700/60 dark:shadow-[0_1px_4px_rgba(0,0,0,0.4)]`).
 - **Thẻ Tab (`V2TabItem`)**:
@@ -359,7 +361,7 @@ cd erp/erp-web && bun run storybook
 ### 4.5. Tab trang nhiều bảng: `V2TabBar variant="page"`, `V2TabPanel`, slot toolbar
 - `V2TabBar` có thêm `variant="page"`: tab gạch chân (`border-b-2 border-primary` khi active), dùng cho tab cấp trang.
 - Thành phần layout/header dùng chung: atom `V2Stack` (flex-col, `gap`/`fill`/`grow`), atom `V2PageIcon`, molecule `V2PageHeader` (tiêu đề, mô tả, icon, actions, slot toolbar), molecule `V2PageToolbarSlot` (thay cho `V2ToolbarSlot` cũ).
-- `V2TabPanel` (`molecules/v2-tab-panel`) bọc nội dung từng tab: lazy + keepAlive, `role="tabpanel"`. Context và `useV2ToolbarPortal` nằm ở L2 để organism (L3) tiêu thụ mà không import ngược lên template (L4). Chi tiết dùng cho bảng: xem `v2-table`.
+- `V2TabPanel` (`molecules/v2-tab-panel`) bọc nội dung từng tab: lazy + keepAlive, `role="tabpanel"`. Context và `useV2ToolbarPortal` nằm ở L2 để organism (L3) tiêu thụ mà không import ngược lên template (L4). Chi tiết dùng cho bảng: xem `standardize-table/references/v2-table.md`.
 - Chốt chặn Storybook: `src/v2/shared/components/storyCoverage.test.ts` quét `atoms|molecules|organisms|templates`, thành phần mới phải có `*.stories.tsx` (ngoại lệ phải thêm vào allowlist kèm lý do).
 
 ### 4.6. Khung trang module `V2ModulePage` (L4) và KPI `V2StatCard` (L2)

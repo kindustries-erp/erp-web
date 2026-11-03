@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import "@xyflow/react/dist/style.css";
 import {
   Background,
+  BackgroundVariant,
   ControlButton,
   Controls,
   ReactFlow,
   ReactFlowProvider,
 } from "@xyflow/react";
-import { RotateCw } from "lucide-react";
+import { Columns3, Rows3 } from "lucide-react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type {
   TraceabilityGraphData,
@@ -18,6 +19,7 @@ import type { TraceabilityCanvasActions } from "../../types/traceability.flow.ty
 import { V2TraceNode } from "../trace-node";
 import { V2TraceStageGroup } from "../trace-stage-group";
 import { V2TraceEdge } from "../trace-edge";
+import { V2TraceCanvasLegend } from "./V2TraceCanvasLegend";
 import { useTraceabilityCanvas } from "./V2TraceabilityCanvas.hook";
 
 const NODE_TYPES = {
@@ -72,8 +74,6 @@ function CanvasInner({
   onEditManualSettlement,
 }: V2TraceabilityCanvasProps) {
   const { t } = useV2Translation();
-  // Chỉ đổi hai lần mỗi lần kéo (bắt đầu/kết thúc), không đổi theo từng khung hình
-  const [isDragging, setIsDragging] = useState(false);
   const canvas = useTraceabilityCanvas({
     graph,
     direction,
@@ -94,50 +94,59 @@ function CanvasInner({
       : t("v2.traceability.canvas.toHorizontal");
 
   return (
-    <ReactFlow
-      nodes={canvas.nodes}
-      edges={canvas.edges}
-      onNodesChange={canvas.onNodesChange}
-      onEdgesChange={canvas.onEdgesChange}
-      className={isDragging ? "is-dragging" : undefined}
-      onNodeDragStart={() => setIsDragging(true)}
-      onNodeDragStop={() => setIsDragging(false)}
-      onNodeClick={canvas.onNodeClick}
-      onPaneClick={canvas.onPaneClick}
-      onReconnect={canvas.onReconnect}
-      style={CONTROLS_THEME}
-      nodeTypes={NODE_TYPES}
-      edgeTypes={EDGE_TYPES}
-      edgesReconnectable
-      reconnectRadius={30}
-      edgesFocusable
-      elevateEdgesOnSelect
-      fitView
-      fitViewOptions={FIT_VIEW_OPTIONS}
-      minZoom={0.6}
-      maxZoom={1.2}
-      nodesDraggable
-      nodeDragThreshold={1}
-      nodesConnectable
-      elementsSelectable
-      proOptions={{ hideAttribution: true }}
-    >
-      <Background color="var(--border)" gap={20} size={1} />
-      <Controls
-        showInteractive={false}
-        className="!m-3.5 !overflow-hidden !rounded-lg !border-border !bg-surface !shadow-sm"
+    <div className="relative h-full w-full">
+      <ReactFlow
+        nodes={canvas.nodes}
+        edges={canvas.edges}
+        onNodesChange={canvas.onNodesChange}
+        onEdgesChange={canvas.onEdgesChange}
+        onNodeClick={canvas.onNodeClick}
+        onPaneClick={canvas.onPaneClick}
+        onReconnect={canvas.onReconnect}
+        style={CONTROLS_THEME}
+        nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
+        edgesReconnectable
+        reconnectRadius={30}
+        edgesFocusable
+        elevateEdgesOnSelect
+        fitView
+        fitViewOptions={FIT_VIEW_OPTIONS}
+        minZoom={0.6}
+        maxZoom={1.2}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable
+        onlyRenderVisibleElements
+        proOptions={{ hideAttribution: true }}
       >
-        {onToggleDirection && (
-          <ControlButton
-            onClick={onToggleDirection}
-            title={toggleLabel}
-            aria-label={toggleLabel}
-            className="!flex !items-center !justify-center hover:!bg-surface-hover"
-          >
-            <RotateCw className="h-3 w-3 text-muted-fg " />
-          </ControlButton>
-        )}
-      </Controls>
-    </ReactFlow>
+        <Background
+          variant={BackgroundVariant.Dots}
+          color="var(--border)"
+          gap={22}
+          size={1.2}
+        />
+        <Controls
+          showInteractive={false}
+          className="!m-3.5 !overflow-hidden !rounded-lg !border-border !bg-surface !shadow-sm"
+        >
+          {onToggleDirection && (
+            <ControlButton
+              onClick={onToggleDirection}
+              title={toggleLabel}
+              aria-label={toggleLabel}
+              className="!flex !items-center !justify-center hover:!bg-surface-hover [&_rect]:!fill-none [&_svg]:!max-h-[14px] [&_svg]:!max-w-[14px] [&_svg]:!fill-none [&_svg]:!stroke-current"
+            >
+              {direction === "horizontal" ? (
+                <Rows3 className="h-3.5 w-3.5 text-muted-fg" />
+              ) : (
+                <Columns3 className="h-3.5 w-3.5 text-muted-fg" />
+              )}
+            </ControlButton>
+          )}
+        </Controls>
+      </ReactFlow>
+      <V2TraceCanvasLegend />
+    </div>
   );
 }

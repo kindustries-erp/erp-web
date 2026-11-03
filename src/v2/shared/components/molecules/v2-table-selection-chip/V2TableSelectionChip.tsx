@@ -1,6 +1,7 @@
 import * as React from "react";
 import { CheckSquare, ChevronDown, X } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { AppTooltip } from "@/v2/shared/components/atoms/v2-tooltip";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type { V2TableSelectionChipProps } from "./V2TableSelectionChip.type";
@@ -22,7 +23,6 @@ export const V2TableSelectionChip: React.FC<V2TableSelectionChipProps> = ({
       variant="ghost"
       size="sm"
       aria-label={actionsLabel}
-      title={actionsLabel}
       className="h-full gap-1 rounded-none px-2.5 text-primary"
     >
       <CheckSquare className="h-3.5 w-3.5 shrink-0" />
@@ -34,22 +34,28 @@ export const V2TableSelectionChip: React.FC<V2TableSelectionChipProps> = ({
   return (
     <div
       className={cn(
-        "inline-flex h-8 shrink-0 items-stretch overflow-hidden rounded-lg border border-border bg-surface shadow-xs",
+        "inline-flex h-8 shrink-0 items-stretch overflow-hidden rounded-lg border border-border bg-surface shadow-xs transition-colors hover:border-primary/40",
         className,
       )}
     >
-      {renderMenu ? renderMenu(trigger) : trigger}
-      <V2Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        aria-label={deselectLabel}
-        title={deselectLabel}
-        onClick={onClear}
-        className="h-full rounded-none px-2 text-muted-fg hover:bg-destructive/10 hover:text-destructive"
-      >
-        <X className="h-3.5 w-3.5" />
-      </V2Button>
+      <AppTooltip content={actionsLabel}>
+        <div className="h-full inline-flex items-stretch">
+          {renderMenu ? renderMenu(trigger) : trigger}
+        </div>
+      </AppTooltip>
+      <span className="w-px self-stretch bg-border/60" aria-hidden />
+      <AppTooltip content={deselectLabel}>
+        <V2Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={deselectLabel}
+          onClick={onClear}
+          className="h-full cursor-pointer rounded-none px-2 text-muted-fg transition-colors hover:bg-destructive/10 hover:text-destructive"
+        >
+          <X className="h-3.5 w-3.5" />
+        </V2Button>
+      </AppTooltip>
     </div>
   );
 };

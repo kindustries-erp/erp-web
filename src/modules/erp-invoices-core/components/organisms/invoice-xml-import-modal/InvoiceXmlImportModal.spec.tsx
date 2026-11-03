@@ -18,9 +18,17 @@ vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
   },
 }));
 
+// Trả về chuỗi mặc định (có nội suy {{biến}}) để giữ nguyên các assertion theo nhãn
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback: string) => fallback,
+    t: (key: string, fallback?: unknown) => {
+      if (typeof fallback === "string") return fallback;
+      const opts = fallback as Record<string, unknown> | undefined;
+      const template = (opts?.defaultValue as string | undefined) ?? key;
+      return template.replace(/\{\{(\w+)\}\}/g, (_, name: string) =>
+        String(opts?.[name] ?? ""),
+      );
+    },
   }),
 }));
 

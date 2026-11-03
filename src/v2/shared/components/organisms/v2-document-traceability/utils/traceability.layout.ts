@@ -15,11 +15,12 @@ import type {
 import { getStageForDocType } from "./traceability.helper";
 import { collectConnectedSelection } from "./traceability.layout.selection";
 import { buildTraceEdge, pickEdgeHandles } from "./traceability.layout.edges";
+import { placeStage, stageNodeId } from "./traceability.layout.placement";
 import {
-  placeDocument,
-  placeStage,
-  stageNodeId,
-} from "./traceability.layout.placement";
+  barycenterSortStages,
+  type StageNodeGroup,
+} from "./traceability.layout.barycenter";
+import { computeAlignedStagePositions } from "./traceability.layout.alignment";
 
 export interface TraceabilityLayoutInput {
   graph: TraceabilityGraphData;
@@ -36,8 +37,8 @@ export interface TraceabilityLayout {
 }
 
 /**
- * Tính vị trí node và cạnh cho React Flow. Chỉ giai đoạn có ít nhất một chứng từ mới được vẽ.
- * Hàm thuần: cùng đầu vào cho cùng đầu ra.
+ * Tính vị trí node và cạnh cho React Flow.
+ * Tích hợp thuật toán Barycenter Sweep và Alignment để triệt tiêu giao cắt và gióng hàng các chứng từ liên kết.
  */
 export function computeTraceabilityLayout({
   graph,
@@ -57,10 +58,29 @@ export function computeTraceabilityLayout({
     ...activeStages.map((s) => docsByStage.get(s.key)?.length ?? 0),
   );
 
+  // 1. Chuẩn bị danh sách StageNodeGroup cho Barycenter Sweep
+  const stageGroups: StageNodeGroup[] = activeStages.map((stage) => ({
+    stageKey: stage.key,
+    nodes: docsByStage.get(stage.key) ?? [],
+  }));
+
+  // 2. Chạy Barycenter Sweep để giảm thiểu việc cắt chéo dây nối
+  const sortedStages = barycenterSortStages(stageGroups, graph.edges);
+
+  // 3. Tính toán vị trí x, y gióng hàng cho các node và kích thước stage
+  const { nodePositions, stageDimensions } = computeAlignedStagePositions(
+    sortedStages,
+    graph.edges,
+    direction,
+  );
+
   const nodes: TraceFlowNode[] = [];
   activeStages.forEach((stage, stageIndex) => {
-    const docs = docsByStage.get(stage.key) ?? [];
-    const frame = placeStage(direction, stageIndex, docs.length, maxDocs);
+    const sortedGroup = sortedStages.find((s) => s.stageKey === stage.key);
+    const docs = sortedGroup?.nodes ?? [];
+    const dims = stageDimensions.get(stage.key);
+    const frame = placeStage(direction, stageIndex, docs.length, maxDocs, dims);
+
     nodes.push({
       id: stageNodeId(stage),
       type: "stageGroupNode",
@@ -72,15 +92,17 @@ export function computeTraceabilityLayout({
       data: { stage, count: docs.length, allowEdit, allowedDocTypes, actions },
     });
 
-    docs.forEach((doc, docIndex) => {
+    docs.forEach((doc) => {
       const isSelected = selectedNodeId === doc.id;
+      const pos = nodePositions.get(doc.id) ?? { x: 0, y: 0 };
       nodes.push({
         id: doc.id,
         type: "traceabilityNode",
         parentId: stageNodeId(stage),
         extent: "parent",
-        position: placeDocument(direction, docIndex, frame.width),
+        position: pos,
         selected: isSelected,
+        draggable: false, // Node cố định, người dùng không thể kéo rê
         zIndex: isSelected ? 30 : 10,
         data: { node: doc, allowEdit, actions },
       });

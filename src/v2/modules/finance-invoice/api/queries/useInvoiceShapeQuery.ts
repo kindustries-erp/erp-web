@@ -14,10 +14,7 @@ import {
 import { v2InvoiceQueryToParams } from "../adapters/invoiceQueryAdapter";
 import { financeInvoiceV2Api } from "../financeInvoiceV2Api";
 import { isInvoiceSampleMode } from "../sampleMode";
-import {
-  invoiceTotalsToSummary,
-  toInvoiceRow,
-} from "../adapters/invoiceRowAdapter";
+import { toInvoiceRow, toInvoiceSummary } from "../adapters/invoiceRowAdapter";
 
 const useSampleMode = isInvoiceSampleMode;
 
@@ -43,7 +40,7 @@ export function useInvoiceList(
       return {
         items: res.items.map((inv) => toInvoiceRow(inv, direction)),
         total: res.total,
-        summaries: res.totals && invoiceTotalsToSummary(res.totals),
+        summaries: toInvoiceSummary(res.summaries),
       };
     },
     placeholderData: keepPreviousData,
