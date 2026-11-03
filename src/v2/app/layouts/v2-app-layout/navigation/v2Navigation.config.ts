@@ -130,8 +130,8 @@ export const NAV_DEFS: RawNavDef[] = [
     sectionId: "inventory",
     labelKey: "v2.nav.items.garageGoodsReceipts",
     fallback: "Nhập kho Garage",
-    icon: FileText,
-    href: "/v2/garage-goods-receipts",
+    icon: Package,
+    href: "/garage-goods-receipts",
   },
   // v2-module:garage-goods-receipts:nav
   // plop:v2-nav-items
