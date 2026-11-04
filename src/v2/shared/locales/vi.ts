@@ -9,6 +9,7 @@ export const v2Vi = {
         purchasing: "MUA HÀNG",
         inventory: "KHO",
         manufacturing: "SẢN XUẤT / XƯỞNG",
+        garage: "GARAGE",
         accounting: "KẾ TOÁN",
         settings: "HỆ THỐNG",
       },

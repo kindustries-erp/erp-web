@@ -128,7 +128,7 @@ export const NAV_DEFS: RawNavDef[] = [
   },
   {
     id: "garage-goods-receipts",
-    sectionId: "inventory",
+    sectionId: "garage",
     labelKey: "v2.nav.items.garageGoodsReceipts",
     fallback: "Nhập kho Garage",
     icon: Package,
@@ -136,7 +136,7 @@ export const NAV_DEFS: RawNavDef[] = [
   },
   {
     id: "garage-purchase-orders",
-    sectionId: "inventory",
+    sectionId: "garage",
     labelKey: "v2.nav.items.garagePurchaseOrders",
     fallback: "Đơn mua hàng Garage",
     icon: ShoppingCart,
@@ -163,6 +163,11 @@ export const SECTION_DEFS: RawSectionDef[] = [
     id: "manufacturing",
     labelKey: "v2.nav.sections.manufacturing",
     fallback: "SẢN XUẤT",
+  },
+  {
+    id: "garage",
+    labelKey: "v2.nav.sections.garage",
+    fallback: "GARAGE",
   },
   {
     id: "accounting",

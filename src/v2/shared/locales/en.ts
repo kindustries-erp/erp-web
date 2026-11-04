@@ -10,6 +10,7 @@ export const v2En: V2Dictionary = {
         purchasing: "PURCHASING",
         inventory: "WAREHOUSE",
         manufacturing: "MANUFACTURING / WORKSHOP",
+        garage: "GARAGE",
         accounting: "ACCOUNTING",
         settings: "SYSTEM",
       },
