@@ -407,7 +407,17 @@ src/v2/
    - Tuân thủ chiều import đơn hướng: `Templates (L4) > Organisms (L3) > Molecules (L2) > Atoms (L1)`.
 
 #### 🔹 GIAI ĐOẠN 3: Triển Khai Module Scaffolding & Pure Domain Rules
-0. **Sinh khung bằng plop (ưu tiên)**: `bun plop v2-module <module> <Entity> <Plural> "<titleVi>" "<titleEn>" <apiBase> <permissionCollection> <routeInput> <navSection> <tableInput> "<fieldSpec>" <hasNextCode> <wire>`. Sau đó chạy `bunx prettier --write src/v2/modules/<module>`. Chi tiết tham số và checklist chỉnh tay: skill `plop-generate`, Generator 5.
+0. **Sinh khung bằng plop (ưu tiên)**: chọn generator theo bảng dưới (đồng bộ với `api-structure` Phần B). Sau đó chạy `bunx prettier --write src/v2/modules/<module>` hoặc `src/v2/core/<họ>`. Chi tiết tham số: skill `plop-generate`.
+
+   | Tình huống | Generator | Kết quả |
+   | :--- | :--- | :--- |
+   | Họ nghiệp vụ mới, chưa có lõi | `v2-core` (nhập họ, entity) | `src/v2/core/<họ>/`: config type, API type, keys, domain, locale, barrel, `core.manifest.json` với `exports: null` |
+   | Lõi họ đã viết xong hook UI | Khai báo `exports` trong `core.manifest.json` | Cho phép ghép module mỏng |
+   | Module thuộc họ đã có lõi | `v2-thin-module` (chọn lõi, nhập tiêu đề vi/en, route, nhóm menu, bật wire) | `src/v2/modules/<module>/`: config, API, locale, page + hook, index, test tích hợp; khi wire tự nối route, menu, i18n vi/en và page registry |
+   | Entity đơn lẻ, không thuộc họ | `v2-module` | Module standalone đầy đủ |
+   | Module V1 cũ | `table-page`, `drawer`, `modal`, `table-section` | `[LEGACY-V1]`, chỉ giữ để tham khảo |
+
+   Quy tắc: họ mới luôn tạo lõi (`v2-core`) trước, viết hook UI của lõi rồi khai báo `exports`, sau đó mới ghép module mỏng. `v2-thin-module` từ chối lõi chưa khai báo `exports` và báo lỗi rõ ràng.
 1. **Khởi tạo thư mục module `kebab-case/`** (nếu không dùng plop):
    - `domain/entities/`, `domain/rules/`.
 2. **Đưa Business Logic về Domain Rules**:
