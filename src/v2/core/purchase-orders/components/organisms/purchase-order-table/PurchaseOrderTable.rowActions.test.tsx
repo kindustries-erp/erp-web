@@ -11,6 +11,14 @@ const labelsOf = (
   groups: ReturnType<ReturnType<typeof buildPurchaseOrderRowActions>>,
 ) => groups.flatMap((group) => group.items.map((item) => item.label));
 
+const handlers = () => ({
+  open: vi.fn(),
+  onApprove: vi.fn(),
+  onConfirm: vi.fn(),
+  onCancel: vi.fn(),
+  onDelete: vi.fn(),
+});
+
 const build = (
   status: PurchaseOrderStatus,
   perms: { canUpdate: boolean; canDelete: boolean },
@@ -18,36 +26,56 @@ const build = (
   buildPurchaseOrderRowActions({
     t,
     ...perms,
-    open: vi.fn(),
-    onDelete: vi.fn(),
+    ...handlers(),
   })(rowOf(status));
 
 describe("buildPurchaseOrderRowActions", () => {
-  it("nháp có đủ xem, sửa, xóa khi có quyền", () => {
+  it("nháp có xem, sửa, lưu, xác nhận, xóa khi có quyền (chưa có hủy)", () => {
     const actions = build(PurchaseOrderStatus.DRAFT, {
       canUpdate: true,
       canDelete: true,
     });
-    expect(labelsOf(actions)).toEqual(["Xem chi tiết", "Chỉnh sửa", "Xóa"]);
+    expect(labelsOf(actions)).toEqual([
+      "Xem chi tiết",
+      "Chỉnh sửa",
+      "Lưu",
+      "Xác nhận đơn",
+      "Xóa",
+    ]);
   });
 
-  it("đã duyệt: có sửa nhưng không có xóa", () => {
+  it("chia hai nhóm TRA CỨU và THAO TÁC, mục đầu của THAO TÁC là Chỉnh sửa", () => {
+    const actions = build(PurchaseOrderStatus.DRAFT, {
+      canUpdate: true,
+      canDelete: true,
+    });
+    expect(actions.map((group) => group.groupLabel)).toEqual([
+      "Tra cứu",
+      "Thao tác",
+    ]);
+    expect(actions[1].items[0].label).toBe("Chỉnh sửa");
+  });
+
+  it("đã duyệt: không còn Lưu, không có xóa; còn sửa, xác nhận, hủy", () => {
     const actions = build(PurchaseOrderStatus.APPROVED, {
       canUpdate: true,
       canDelete: true,
     });
-    expect(labelsOf(actions)).toEqual(["Xem chi tiết", "Chỉnh sửa"]);
+    expect(labelsOf(actions)).toEqual([
+      "Xem chi tiết",
+      "Chỉnh sửa",
+      "Xác nhận đơn",
+      "Hủy đơn",
+    ]);
   });
 
-  it("đã nhận đủ hoặc đã hủy: chỉ còn xem", () => {
-    expect(
-      labelsOf(
-        build(PurchaseOrderStatus.RECEIVED, {
-          canUpdate: true,
-          canDelete: true,
-        }),
-      ),
-    ).toEqual(["Xem chi tiết"]);
+  it("đã nhận đủ hoặc đã hủy: chỉ còn nhóm TRA CỨU", () => {
+    const received = build(PurchaseOrderStatus.RECEIVED, {
+      canUpdate: true,
+      canDelete: true,
+    });
+    expect(received.map((group) => group.groupLabel)).toEqual(["Tra cứu"]);
+    expect(labelsOf(received)).toEqual(["Xem chi tiết"]);
     expect(
       labelsOf(
         build(PurchaseOrderStatus.CANCELLED, {
@@ -58,28 +86,52 @@ describe("buildPurchaseOrderRowActions", () => {
     ).toEqual(["Xem chi tiết"]);
   });
 
-  it("không có quyền thì không có sửa và xóa dù đang nháp", () => {
-    const actions = build(PurchaseOrderStatus.DRAFT, {
+  it("không có quyền cập nhật thì không có mục ghi, chỉ còn xem; xóa cần quyền xóa", () => {
+    const noUpdate = build(PurchaseOrderStatus.DRAFT, {
       canUpdate: false,
       canDelete: false,
     });
-    expect(labelsOf(actions)).toEqual(["Xem chi tiết"]);
+    expect(labelsOf(noUpdate)).toEqual(["Xem chi tiết"]);
+
+    const deleteOnly = build(PurchaseOrderStatus.DRAFT, {
+      canUpdate: false,
+      canDelete: true,
+    });
+    expect(labelsOf(deleteOnly)).toEqual(["Xem chi tiết", "Xóa"]);
   });
 
-  it("gọi đúng callback khi bấm sửa và xóa", () => {
-    const open = vi.fn();
-    const onDelete = vi.fn();
+  it("gọi đúng callback theo từng mục", () => {
+    const h = handlers();
     const actions = buildPurchaseOrderRowActions({
       t,
       canUpdate: true,
       canDelete: true,
-      open,
-      onDelete,
+      ...h,
     })(rowOf(PurchaseOrderStatus.DRAFT));
+    const operate = actions[1].items;
 
-    actions[0].items[1].onClick();
-    expect(open).toHaveBeenCalledWith("p1", "edit");
-    actions[0].items[2].onClick();
-    expect(onDelete).toHaveBeenCalledWith(rowOf(PurchaseOrderStatus.DRAFT));
+    operate[0].onClick();
+    expect(h.open).toHaveBeenCalledWith("p1", "edit");
+    operate[1].onClick();
+    expect(h.onApprove).toHaveBeenCalledWith(rowOf(PurchaseOrderStatus.DRAFT));
+    operate[2].onClick();
+    expect(h.onConfirm).toHaveBeenCalledWith(rowOf(PurchaseOrderStatus.DRAFT));
+    operate[3].onClick();
+    expect(h.onDelete).toHaveBeenCalledWith(rowOf(PurchaseOrderStatus.DRAFT));
+  });
+
+  it("đã duyệt: mục Hủy đơn gọi onCancel với đúng dòng", () => {
+    const h = handlers();
+    const actions = buildPurchaseOrderRowActions({
+      t,
+      canUpdate: true,
+      canDelete: true,
+      ...h,
+    })(rowOf(PurchaseOrderStatus.APPROVED));
+    const cancelItem = actions[1].items.find((i) => i.label === "Hủy đơn");
+    cancelItem?.onClick();
+    expect(h.onCancel).toHaveBeenCalledWith(
+      rowOf(PurchaseOrderStatus.APPROVED),
+    );
   });
 });

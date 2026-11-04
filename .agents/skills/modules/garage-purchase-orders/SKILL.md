@@ -70,12 +70,21 @@ Khớp `PURCHASE_ORDER_TRANSITIONS` của API. UI chỉ ẩn/hiện; API vẫn l
 | Hành động | Hiện khi | Ghi chú |
 | :--- | :--- | :--- |
 | Sửa | `DRAFT`, `APPROVED`, `CONFIRMED`, `PARTIAL_RECEIVED` | khóa khi `RECEIVED`, `CANCELLED` |
-| Duyệt | `DRAFT` | → `APPROVED` |
+| Lưu nháp (drawer) | đơn mới hoặc `DRAFT` | `saveDraft`: tạo/sửa, giữ `DRAFT` |
+| Lưu (drawer, `DRAFT`) | `DRAFT` và có quyền `update` | `saveAndApprove`: tạo/sửa rồi `approve` |
+| Lưu (drawer, đã duyệt trở đi) | `APPROVED`, `CONFIRMED`, `PARTIAL_RECEIVED` | `saveDraft`: chỉ sửa nội dung |
+| Duyệt đơn (drawer xem) | `DRAFT` | → `APPROVED` |
 | Xác nhận | `DRAFT`, `APPROVED` | → `CONFIRMED` |
-| Hủy đơn | `APPROVED`, `CONFIRMED`, `PARTIAL_RECEIVED` | `V2ConfirmModal` trước khi gọi API |
+| Hủy đơn | `APPROVED`, `CONFIRMED`, `PARTIAL_RECEIVED` | `PurchaseOrderCancelModal` (dùng chung drawer và trang) trước khi gọi API |
 | Xóa | `DRAFT` | `V2ConfirmModal`, xóa mềm (`isDeleted`) |
 
-Hàm nằm trong `domain/purchaseOrderRules.ts` (`canEditPurchaseOrder`, `canApprovePurchaseOrder`, `canConfirmPurchaseOrder`, `canCancelPurchaseOrder`, `canDeletePurchaseOrder`), có test phủ từng trạng thái.
+Menu dòng (`PurchaseOrderTable.rowActions.tsx`) chia hai nhóm như bảng Hóa đơn: **Tra cứu** (Xem chi tiết) và **Thao tác** (Chỉnh sửa, Lưu, Xác nhận đơn, Hủy đơn, Xóa). Nhóm rỗng bị bỏ. Mục đầu của Thao tác là Chỉnh sửa vì `getQuickActions` lấy mục đầu hai nhóm làm nút nhanh khi hover. Menu "Lưu" trên đơn nháp là `approve` (đơn đã lưu rồi).
+
+Drawer: footer dựng bởi `drawers/PurchaseOrderDrawer.actions.ts`. Đơn nháp có `[Hủy, Lưu nháp, Lưu]`; khi thiếu quyền `update` chỉ còn `[Hủy, Lưu nháp]` (Lưu nháp là primary). Đơn đã duyệt trở đi có `[Hủy, Lưu]`.
+
+`saveAndApprove` (`api/mutations/usePurchaseOrderMutations.ts`) là hai lời gọi API (tạo/sửa rồi `approve`), không có endpoint gộp. Nếu lưu được nhưng duyệt lỗi, lỗi được ném dưới dạng `PurchaseOrderPartialApproveError`: báo "Đã lưu nháp nhưng chưa duyệt được", làm mới danh sách và đóng drawer để không tạo trùng khi bấm lại.
+
+Hàm quyền nằm trong `domain/purchaseOrderRules.ts` (`canEditPurchaseOrder`, `canApprovePurchaseOrder`, `canConfirmPurchaseOrder`, `canCancelPurchaseOrder`, `canDeletePurchaseOrder`), có test phủ từng trạng thái.
 
 ## 4. Hợp đồng dữ liệu (đã đối chiếu với erp-api)
 
@@ -91,7 +100,8 @@ Hàm nằm trong `domain/purchaseOrderRules.ts` (`canEditPurchaseOrder`, `canApp
 - **Không dùng plop `v2-module`**: generator không sinh lõi họ, không chọn được nhóm Garage và không sửa shell lai. Dựng tay theo đúng mẫu `garage-goods-receipts`.
 - **Không gửi `branchId` và `supplierId`**: UI nhập tay tên NCC và chi nhánh (`branchName`, `supplierName`). Hệ quả: bộ lọc chi nhánh chỉ theo cột tên, không lọc theo `branch_id`.
 - **Menu chỉ dùng quyền của chính nó** (`garage_purchase_orders:read`), không fallback sang quyền garage khác.
-- **Mục menu V2 dùng `sectionId: "inventory"`**: V2 chưa có nhóm Garage riêng; nhóm Garage đầy đủ chỉ có trong shell lai (`sec-garage`).
+- **Mục menu V2 nằm trong section `garage`** (nhãn GARAGE vi/en) cùng với Nhập kho Garage. Trước đây đặt ở `inventory` do copy từ Nhập kho; đã sửa vì mục Garage phải thuộc nhóm Garage. Shell lai (`sec-garage`) vẫn là nơi có đủ nhóm Garage.
+- **Lưu = lưu rồi duyệt** (chốt với người dùng): nút "Lưu" trên đơn nháp đưa đơn sang ĐÃ DUYỆT; "Lưu nháp" giữ NHÁP. Nút "Duyệt đơn" trong drawer xem được giữ nguyên.
 - **Dòng hàng nhập tay** (mã, tên, mô tả, SL đặt, đơn giá). `itemId` không bắt buộc, chưa nối danh mục vật tư.
 
 ## 6. Kiểm thử
@@ -103,7 +113,8 @@ Hàm nằm trong `domain/purchaseOrderRules.ts` (`canEditPurchaseOrder`, `canApp
 ## 7. Giới hạn đã biết
 
 - Khi đang sửa, `detail` có thể refetch (focus cửa sổ) và đổ lại form từ server. Cùng hành vi với `goods-receipts`, cần xem lại khi có yêu cầu.
-- Smoke UI thật (dev server, đăng nhập, thao tác từng hành động) chưa chạy: cần sự cho phép của người dùng để dùng tài khoản staging.
+- Smoke UI đã chạy một phần trên staging (`erp_greenway_staging`): danh sách, tạo, sửa, duyệt, xác nhận, hủy, xóa qua API và khung chi tiết qua màn hình. Chưa bấm hết nút trên UI (nút Lưu nháp/Lưu, menu mới).
+- Chưa có test tích hợp cho menu nhóm và hủy đơn từ menu trên trang; chỉ có unit test của `rowActions`, controller và mutation.
 
 ## 8. Tái dùng cho PO thường (sau này)
 

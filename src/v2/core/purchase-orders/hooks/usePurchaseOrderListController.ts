@@ -43,6 +43,8 @@ export function usePurchaseOrderListController(
   );
   const [deleteTarget, setDeleteTarget] =
     React.useState<PurchaseOrderRecord | null>(null);
+  const [cancelTarget, setCancelTarget] =
+    React.useState<PurchaseOrderRecord | null>(null);
   const [view, setView] = React.useState(
     () =>
       useV2TablePreferencesStore.getState().tables[tableId]?.views?.activeKey ??
@@ -81,6 +83,14 @@ export function usePurchaseOrderListController(
     [t, open],
   );
 
+  const { remove, approve, confirm, cancel } = usePurchaseOrderMutations({
+    api: config.api,
+    keys: config.keys,
+    t,
+    onRemoved: () => setDeleteTarget(null),
+    onActed: () => setCancelTarget(null),
+  });
+
   const rowActions = React.useMemo(
     () =>
       buildPurchaseOrderRowActions({
@@ -88,17 +98,17 @@ export function usePurchaseOrderListController(
         canUpdate,
         canDelete,
         open,
+        onApprove: (row) => approve.mutate(row.id),
+        onConfirm: (row) => confirm.mutate(row.id),
+        onCancel: setCancelTarget,
         onDelete: setDeleteTarget,
       }) as (row: PurchaseOrderRecord) => V2RowActionGroup[],
-    [t, canUpdate, canDelete, open],
+    [t, canUpdate, canDelete, open, approve, confirm],
   );
 
-  const { remove } = usePurchaseOrderMutations({
-    api: config.api,
-    keys: config.keys,
-    t,
-    onRemoved: () => setDeleteTarget(null),
-  });
+  const confirmCancel = () => {
+    if (cancelTarget) cancel.mutate(cancelTarget.id);
+  };
 
   const selectView = (key: string) => {
     setView(key);
@@ -124,6 +134,10 @@ export function usePurchaseOrderListController(
     deleteTarget,
     setDeleteTarget,
     remove,
+    cancelTarget,
+    setCancelTarget,
+    confirmCancel,
+    cancelling: cancel.isPending,
     view,
     selectView,
     onListError,

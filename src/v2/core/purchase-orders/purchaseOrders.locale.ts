@@ -24,7 +24,10 @@ registerV2ModuleLocale("purchaseOrders", {
       confirmError: "Không thể xác nhận đơn",
       cancelSuccess: "Đã hủy đơn mua hàng",
       cancelError: "Không thể hủy đơn",
+      save: "Lưu",
+      saveDraft: "Lưu nháp",
     },
+    actionGroups: { lookup: "Tra cứu", operate: "Thao tác" },
     columns: {
       poNo: "Số đơn",
       orderDate: "Ngày đặt",
@@ -63,6 +66,8 @@ registerV2ModuleLocale("purchaseOrders", {
       saveError: "Không thể lưu dữ liệu",
       loadError: "Không thể tải dữ liệu",
       generateNo: "Sinh số mới",
+      saveAndApproveSuccess: "Đã lưu và duyệt đơn",
+      savedDraftApproveFailed: "Đã lưu nháp nhưng chưa duyệt được",
     },
     delete: {
       title: "Xác nhận xóa đơn",
@@ -111,7 +116,10 @@ registerV2ModuleLocale("purchaseOrders", {
       confirmError: "Unable to confirm order",
       cancelSuccess: "Purchase order cancelled",
       cancelError: "Unable to cancel order",
+      save: "Save",
+      saveDraft: "Save draft",
     },
+    actionGroups: { lookup: "Lookup", operate: "Actions" },
     columns: {
       poNo: "PO No",
       orderDate: "Order Date",
@@ -150,6 +158,8 @@ registerV2ModuleLocale("purchaseOrders", {
       saveError: "Unable to save",
       loadError: "Unable to load data",
       generateNo: "Generate number",
+      saveAndApproveSuccess: "Saved and approved",
+      savedDraftApproveFailed: "Saved as draft but could not be approved",
     },
     delete: {
       title: "Confirm Delete",

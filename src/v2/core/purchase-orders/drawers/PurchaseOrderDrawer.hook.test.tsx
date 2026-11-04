@@ -126,8 +126,35 @@ describe("usePurchaseOrderDrawer", () => {
       form: { ...emptyPurchaseOrderForm(), orderDate: "" },
     };
     const { result } = useDrawer(api, null);
-    act(() => result.current.submit());
+    act(() => result.current.saveDraft());
     expect(result.current.errorField).toBe("orderDate");
     expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it("lưu và duyệt chỉ bật khi còn nháp và có quyền cập nhật", () => {
+    const { result } = useDrawer(makeApi(), "p1");
+    expect(result.current.canSaveAndApprove).toBe(true);
+
+    setStatus("APPROVED");
+    const approved = useDrawer(makeApi(), "p1");
+    expect(approved.result.current.canSaveAndApprove).toBe(false);
+
+    setStatus("DRAFT");
+    const noPermission = useDrawer(makeApi(), "p1", false);
+    expect(noPermission.result.current.canSaveAndApprove).toBe(false);
+  });
+
+  it("lưu và duyệt thiếu ngày đặt thì chặn và không gọi API", () => {
+    const api = makeApi();
+    setStatus("DRAFT", true);
+    dataState.current = {
+      ...dataState.current,
+      form: { ...emptyPurchaseOrderForm(), orderDate: "" },
+    };
+    const { result } = useDrawer(api, null);
+    act(() => result.current.saveAndApproveDraft());
+    expect(result.current.errorField).toBe("orderDate");
+    expect(api.create).not.toHaveBeenCalled();
+    expect(api.approve).not.toHaveBeenCalled();
   });
 });

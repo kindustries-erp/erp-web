@@ -1,16 +1,16 @@
 import {
-  V2ConfirmModal,
   V2StandardDrawer,
   V2DrawerLayout,
   V2DrawerSize,
 } from "@/v2/shared/components";
-import type { DrawerAction } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { PurchaseOrderCancelModal } from "../components/molecules/purchase-order-cancel-modal";
 import { PurchaseOrderStatusBadge } from "../components/molecules/purchase-order-status-badge";
 import { PurchaseOrderFormSections } from "../components/organisms/purchase-order-form";
 import { PurchaseOrderLinesTable } from "../components/organisms/purchase-order-lines-editor";
 import type { PurchaseOrderModuleConfig } from "../purchaseOrders.config.type";
 import type { PurchaseOrderDrawerState } from "./PurchaseOrderDrawer.type";
+import { buildPurchaseOrderDrawerActions } from "./PurchaseOrderDrawer.actions";
 import { usePurchaseOrderDrawer } from "./PurchaseOrderDrawer.hook";
 import "../purchaseOrders.locale";
 
@@ -31,60 +31,6 @@ export function PurchaseOrderDrawer({
     : state.viewing
       ? t("v2.purchaseOrders.form.detail", "Chi tiết")
       : t("v2.purchaseOrders.form.edit", "Chỉnh sửa");
-
-  const buildViewingActions = (): DrawerAction[] => {
-    const actions: DrawerAction[] = [
-      {
-        label: t("v2.common.close", "Đóng"),
-        onClick: props.onClose,
-        variant: "outline",
-      },
-    ];
-    if (state.canCancel) {
-      actions.unshift({
-        label: t("v2.purchaseOrders.actions.cancel", "Hủy đơn"),
-        onClick: () => state.setCancelOpen(true),
-        variant: "outline",
-        loading: state.cancelling,
-        disabled: state.cancelling || state.approving || state.confirming,
-      });
-    }
-    if (state.canConfirm) {
-      actions.unshift({
-        label: t("v2.purchaseOrders.actions.confirm", "Xác nhận"),
-        onClick: state.confirm,
-        variant: "outline",
-        loading: state.confirming,
-        disabled: state.confirming || state.approving || state.cancelling,
-      });
-    }
-    if (state.canApprove) {
-      actions.unshift({
-        label: t("v2.purchaseOrders.actions.approve", "Duyệt đơn"),
-        onClick: state.approve,
-        primary: true,
-        loading: state.approving,
-        disabled: state.approving || state.confirming || state.cancelling,
-      });
-    }
-    return actions;
-  };
-
-  const editingActions: DrawerAction[] = [
-    {
-      label: t("v2.common.cancel", "Hủy"),
-      onClick: props.onClose,
-      variant: "outline",
-      disabled: state.saving,
-    },
-    {
-      label: t("v2.common.save", "Lưu"),
-      onClick: state.submit,
-      primary: true,
-      loading: state.saving,
-      disabled: state.saving || state.loading,
-    },
-  ];
 
   return (
     <>
@@ -109,7 +55,11 @@ export function PurchaseOrderDrawer({
         size={V2DrawerSize.XL}
         loading={state.loading}
         confirmOnClose={state.dirty && !state.viewing}
-        actions={state.viewing ? buildViewingActions() : editingActions}
+        actions={buildPurchaseOrderDrawerActions({
+          t,
+          state,
+          onClose: props.onClose,
+        })}
         rightPanel={
           <PurchaseOrderFormSections
             form={state.form}
@@ -131,20 +81,11 @@ export function PurchaseOrderDrawer({
           onChangeLines={(lines) => state.setField("lines", lines)}
         />
       </V2StandardDrawer>
-      <V2ConfirmModal
+      <PurchaseOrderCancelModal
         open={state.cancelOpen}
-        title={t("v2.purchaseOrders.cancelConfirm.title", "Xác nhận hủy đơn")}
-        message={t(
-          "v2.purchaseOrders.cancelConfirm.message",
-          "Bạn có chắc chắn muốn hủy đơn mua hàng này? Hành động này không hoàn tác.",
-        )}
-        confirmLabel={t("v2.purchaseOrders.actions.cancel", "Hủy đơn")}
-        cancelLabel={t("v2.common.cancel", "Hủy")}
-        variant="danger"
-        isLoading={state.cancelling}
+        loading={state.cancelling}
         onConfirm={state.confirmCancel}
-        onCancel={() => state.setCancelOpen(false)}
-        onOpenChange={(open) => !open && state.setCancelOpen(false)}
+        onClose={() => state.setCancelOpen(false)}
       />
     </>
   );

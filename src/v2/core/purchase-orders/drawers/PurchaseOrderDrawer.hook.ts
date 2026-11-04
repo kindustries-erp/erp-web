@@ -20,7 +20,7 @@ export interface UsePurchaseOrderDrawerParams {
   state: PurchaseOrderDrawerState;
 }
 
-/** Hành động của drawer (lưu, duyệt, xác nhận, hủy) và trạng thái hiển thị; dữ liệu nằm ở data hook */
+/** Hành động của drawer (lưu nháp, lưu và duyệt, duyệt, xác nhận, hủy) và trạng thái hiển thị; dữ liệu nằm ở data hook */
 export function usePurchaseOrderDrawer({
   config,
   state,
@@ -38,13 +38,14 @@ export function usePurchaseOrderDrawer({
   });
   const { form, initial, setField, creating } = data;
 
-  const { save, approve, confirm, cancel } = usePurchaseOrderMutations({
-    api: config.api,
-    keys: config.keys,
-    t,
-    onSaved: state.onClose,
-    onActed: () => setCancelOpen(false),
-  });
+  const { save, saveAndApprove, approve, confirm, cancel } =
+    usePurchaseOrderMutations({
+      api: config.api,
+      keys: config.keys,
+      t,
+      onSaved: state.onClose,
+      onActed: () => setCancelOpen(false),
+    });
 
   const required = t(
     "v2.purchaseOrders.form.required",
@@ -55,25 +56,37 @@ export function usePurchaseOrderDrawer({
     : "";
   const errorMessage = errorField ? `${fieldLabel}: ${required}` : required;
 
-  const submit = () => {
+  /** Kiểm tra trước mọi lần lưu; trả về true nếu hợp lệ */
+  const validate = (): boolean => {
     const missing = validatePurchaseOrderForm(form, config.requiredFields);
-    if (missing) {
-      setErrorField(missing);
-      const label = t(`v2.purchaseOrders.columns.${missing}`, missing);
-      useV2ToastStore.getState().showToast({
-        variant: "destructive",
-        title: t("v2.purchaseOrders.form.missingInfo", "Thiếu thông tin"),
-        description: `${label}: ${required}`,
-      });
-      return;
+    if (!missing) {
+      setErrorField(null);
+      return true;
     }
-    setErrorField(null);
-    save.mutate({ id: state.recordId, form });
+    setErrorField(missing);
+    const label = t(`v2.purchaseOrders.columns.${missing}`, missing);
+    useV2ToastStore.getState().showToast({
+      variant: "destructive",
+      title: t("v2.purchaseOrders.form.missingInfo", "Thiếu thông tin"),
+      description: `${label}: ${required}`,
+    });
+    return false;
+  };
+
+  /** Lưu giữ nguyên trạng thái: đơn mới và đơn nháp vẫn là NHÁP */
+  const saveDraft = () => {
+    if (validate()) save.mutate({ id: state.recordId, form });
+  };
+
+  /** Lưu rồi duyệt: NHÁP → ĐÃ DUYỆT */
+  const saveAndApproveDraft = () => {
+    if (validate()) saveAndApprove.mutate({ id: state.recordId, form });
   };
 
   const id = state.recordId;
   const status = form.status;
   const canEdit = state.canUpdate && canEditPurchaseOrder(status);
+  const canSaveAndApprove = state.canUpdate && canApprovePurchaseOrder(status);
   const canApprove =
     state.canUpdate && Boolean(id) && canApprovePurchaseOrder(status);
   const canConfirm =
@@ -90,14 +103,15 @@ export function usePurchaseOrderDrawer({
     codeEditable: creating,
     viewing: mode === "view" && !creating,
     loading: data.loading,
-    saving: save.isPending,
+    saving: save.isPending || saveAndApprove.isPending,
     approving: approve.isPending,
     confirming: confirm.isPending,
     cancelling: cancel.isPending,
     dirty: isPurchaseOrderFormDirty(form, initial),
     errorField,
     errorMessage,
-    submit,
+    saveDraft,
+    saveAndApproveDraft,
     approve: () => {
       if (id) approve.mutate(id);
     },
@@ -111,6 +125,7 @@ export function usePurchaseOrderDrawer({
     setCancelOpen,
     regenerateNo: data.regenerateNo,
     canEdit,
+    canSaveAndApprove,
     canApprove,
     canConfirm,
     canCancel,

@@ -109,4 +109,74 @@ describe("usePurchaseOrderMutations", () => {
     expect(api.remove).toHaveBeenCalledWith("1");
     await waitFor(() => expect(onRemoved).toHaveBeenCalledTimes(1));
   });
+
+  it("lưu và duyệt đơn mới: tạo trước, duyệt sau, đúng thứ tự", async () => {
+    const api = makeApi();
+    const onSaved = vi.fn();
+    const { result } = renderHook(
+      () => usePurchaseOrderMutations({ api, keys, t, onSaved }),
+      { wrapper: makeWrapper() },
+    );
+
+    await act(async () => {
+      await result.current.saveAndApprove.mutateAsync({ id: null, form });
+    });
+    expect(api.create).toHaveBeenCalledWith(form);
+    expect(api.approve).toHaveBeenCalledWith("new");
+    expect(vi.mocked(api.create).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(api.approve).mock.invocationCallOrder[0],
+    );
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  });
+
+  it("lưu và duyệt đơn đang sửa: cập nhật rồi duyệt", async () => {
+    const api = makeApi();
+    const { result } = renderHook(
+      () => usePurchaseOrderMutations({ api, keys, t }),
+      { wrapper: makeWrapper() },
+    );
+
+    await act(async () => {
+      await result.current.saveAndApprove.mutateAsync({ id: "1", form });
+    });
+    expect(api.update).toHaveBeenCalledWith("1", form);
+    expect(api.create).not.toHaveBeenCalled();
+    expect(api.approve).toHaveBeenCalledWith("1");
+  });
+
+  it("lỗi ở bước lưu thì không gọi duyệt", async () => {
+    const api = makeApi({
+      create: vi.fn().mockRejectedValue(new Error("boom")),
+    });
+    const { result } = renderHook(
+      () => usePurchaseOrderMutations({ api, keys, t }),
+      { wrapper: makeWrapper() },
+    );
+
+    await act(async () => {
+      await result.current.saveAndApprove
+        .mutateAsync({ id: null, form })
+        .catch(() => undefined);
+    });
+    expect(api.approve).not.toHaveBeenCalled();
+  });
+
+  it("lưu được nhưng duyệt lỗi: vẫn báo onSaved và làm mới", async () => {
+    const api = makeApi({
+      approve: vi.fn().mockRejectedValue(new Error("not allowed")),
+    });
+    const onSaved = vi.fn();
+    const { result } = renderHook(
+      () => usePurchaseOrderMutations({ api, keys, t, onSaved }),
+      { wrapper: makeWrapper() },
+    );
+
+    await act(async () => {
+      await result.current.saveAndApprove
+        .mutateAsync({ id: null, form })
+        .catch(() => undefined);
+    });
+    expect(api.create).toHaveBeenCalledWith(form);
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  });
 });

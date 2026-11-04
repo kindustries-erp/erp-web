@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -65,5 +65,23 @@ describe("usePurchaseOrderListController", () => {
 
     expect(result.current.view).toBe("all");
     expect(result.current.tableKey).toBe(before + 1);
+  });
+
+  it("hủy đơn từ menu chỉ mở modal, chưa gọi API cho tới khi xác nhận", async () => {
+    const api = {
+      cancel: vi.fn().mockResolvedValue({ id: "p1" }),
+    } as unknown as PurchaseOrderApi;
+    const { result } = renderHook(
+      () => usePurchaseOrderListController({ ...config, api }),
+      { wrapper },
+    );
+    const row = { id: "p1", poNo: "GPO-1", status: "APPROVED" } as never;
+
+    act(() => result.current.setCancelTarget(row));
+    expect(result.current.cancelTarget).toEqual(row);
+    expect(api.cancel).not.toHaveBeenCalled();
+
+    act(() => result.current.confirmCancel());
+    await waitFor(() => expect(api.cancel).toHaveBeenCalledWith("p1"));
   });
 });

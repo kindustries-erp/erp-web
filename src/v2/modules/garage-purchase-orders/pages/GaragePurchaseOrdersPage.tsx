@@ -3,6 +3,7 @@ import { ShoppingCart } from "lucide-react";
 import { V2Button, V2ConfirmModal, V2ModulePage } from "@/v2/shared/components";
 import type { V2ModuleTab } from "@/v2/shared/components";
 import {
+  PurchaseOrderCancelModal,
   PurchaseOrderDrawer,
   usePurchaseOrdersQuery,
 } from "@/v2/core/purchase-orders";
@@ -116,6 +117,12 @@ export function GaragePurchaseOrdersPage() {
             }}
             onCancel={() => state.setDeleteTarget(null)}
             onOpenChange={(open) => !open && state.setDeleteTarget(null)}
+          />
+          <PurchaseOrderCancelModal
+            open={Boolean(state.cancelTarget)}
+            loading={state.cancelling}
+            onConfirm={state.confirmCancel}
+            onClose={() => state.setCancelTarget(null)}
           />
         </>
       }
