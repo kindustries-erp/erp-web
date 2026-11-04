@@ -166,7 +166,7 @@ bun run build-storybook
 
 ### 🔁 Hướng v2-ready (refactor v1 để migrate v2 dễ hơn)
 
-Áp dụng khi chạm module v1 (track T1 trong `/plan-and-task`). Phần lõi sau refactor phải copy sang `src/v2/modules/<m>/` được mà không viết lại.
+Áp dụng khi chạm module v1 (track T1 trong `/erp-plan`). Phần lõi sau refactor phải copy sang `src/v2/modules/<m>/` được mà không viết lại.
 
 | Việc | Làm ở v1 bây giờ | Đích khi migrate v2 |
 | :--- | :--- | :--- |
@@ -460,3 +460,29 @@ Mỗi loại có một skill duy nhất (đã gồm V1, V2 và phần phụ) và
 Đường dẫn reference đầy đủ: `.agents/skills/<skill>/references/<file>`.
 
 Quy tắc: làm theo workflow của loại tương ứng, sau đó chạy audit của Phần A (No Blue, i18n, giới hạn 180 dòng, import ngược). Với V2, chạy thêm audit ở Phần B mục "Zero-Miss Quality Gate".
+
+---
+
+## 🅳 Phần D: Enum cho Field nhập liệu & Option dùng chung
+
+Mục tiêu: mỗi key field và mỗi bộ option (trạng thái, phương thức thanh toán, loại đối tượng…) chỉ khai báo một lần, để form, bảng và filter thống nhất và tái sử dụng được.
+
+### Quy tắc
+1. **Không dùng chuỗi cứng** cho key field hoặc option lặp lại: khai báo `export enum`.
+2. **Vị trí enum**:
+   - Chỉ dùng trong một module: `<module>.enum.ts` cạnh file config field (mẫu: `src/modules/garage/components/organisms/garage-cashflow-drawer/garageCashflowDrawer.enum.ts`).
+   - Dùng từ hai module trở lên: `src/shared/` (V1) hoặc `src/v2/shared/types/` (V2). Có thể gộp vào file types sẵn có (`v2-status.ts`, `v2-tab-mode.ts`, `v2-drawer-mode.ts`) nếu đúng ngữ nghĩa.
+3. **Option = enum + map nhãn**: một map duy nhất `Record<Enum, string>` với nhãn qua `t()`. Không lặp nhãn ở nhiều nơi.
+4. **Form**: key field lấy từ enum (`name: MyFieldKey.AMOUNT`) và cấu hình theo mảng config với `V2FormGrid` (xem `standardize-drawer/references/drawer-rules.md`). Option của select/radio lấy từ map ở mục 3, không khai báo mảng inline.
+5. **Tái sử dụng**: field hoặc option dùng chung import từ một nguồn, không sao chép sang file khác.
+6. **Bảng và filter**: khi cùng ý nghĩa với field form, dùng chung enum và map nhãn.
+
+### Audit (áp dụng cho file đã tạo hoặc đã chạm)
+```bash
+# 1. Key field viết chuỗi cứng trong file config form (kỳ vọng: 0 kết quả)
+grep -rnE "name: ['\"][a-zA-Z_]+['\"]" src --include='*.fields.ts' --include='*.fields.tsx'
+
+# 2. Mảng option khai báo inline trong component (nên chuyển sang enum + map)
+grep -rnE "options: \[\s*\{" src --include='*.tsx' --include='*.ts' | grep -v '\.test\.'
+```
+Kết quả còn lại phải được giải thích trong walkthrough hoặc đưa vào enum trước khi báo xong.

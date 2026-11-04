@@ -39,6 +39,7 @@ Quy tắc:
 - **A11y**: control, overlay và field lỗi theo mục A11y trong checklist `references/atomic-ui.md`.
 - **Responsive**: dùng layout responsive. Tách `*.desktop.tsx` / `*.mobile.tsx` chỉ khi UX thực sự khác, và phải chốt với user trước.
 - **Storybook**: component trong `shared/` nên có `*.stories.tsx`.
+- **Enum nhập liệu**: key field và option dùng chung khai báo bằng `enum` (một nguồn, nhãn qua `t()`), tái sử dụng giữa form, bảng và filter. Xem `ui-structure` Phần D.
 
 ## 3. Table và Drawer
 

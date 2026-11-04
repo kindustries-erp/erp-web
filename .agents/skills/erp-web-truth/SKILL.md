@@ -62,7 +62,7 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 
 ## 7. Quy tắc làm việc
 
-- Plan theo `/plan-and-task` (cơ chế plan của agent). Chỉ làm sau khi user xác nhận `OK`. Theo dõi task trên Plane bằng skill `plane-work-items`.
+- Plan theo `/erp-plan` (cơ chế plan của agent). Chỉ làm sau khi user xác nhận `OK`. Theo dõi task trên Plane bằng skill `plane-work-items`.
 - Cấu trúc page: page → domain hook/query → domain components → shared primitives.
 - Mọi file React trên 180 dòng phải tách, trừ file V1 cũ không được chạm trong task.
 - i18n đầy đủ VI/EN, không hardcode chuỗi hiển thị.
