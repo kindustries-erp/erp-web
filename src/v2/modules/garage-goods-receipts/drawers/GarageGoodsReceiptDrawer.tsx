@@ -1,8 +1,16 @@
-import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import {
+  V2StandardDrawer,
+  V2DrawerLayout,
+  V2DrawerSize,
+} from "@/v2/shared/components/organisms/v2-standard-drawer";
 import type { DrawerAction } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { GarageGoodsReceiptStatusBadge } from "@/v2/modules/garage-goods-receipts/components/molecules/garage-goods-receipt-status-badge";
-import { GarageGoodsReceiptFormSections } from "@/v2/modules/garage-goods-receipts/components/organisms/garage-goods-receipt-form";
+import {
+  GarageGoodsReceiptFormSections,
+  GarageGoodsReceiptLinesTable,
+} from "@/v2/modules/garage-goods-receipts/components/organisms/garage-goods-receipt-form";
+import type { GarageGoodsReceiptFormLine } from "@/v2/modules/garage-goods-receipts/domain/entities/garageGoodsReceipt";
 import type { GarageGoodsReceiptDrawerState } from "./GarageGoodsReceiptDrawer.hook";
 import { useGarageGoodsReceiptDrawer } from "./GarageGoodsReceiptDrawer.hook";
 
@@ -14,6 +22,12 @@ export function GarageGoodsReceiptDrawer(props: GarageGoodsReceiptDrawerState) {
     : state.viewing
       ? t("v2.garageGoodsReceipts.form.detail", "Chi tiết")
       : t("v2.garageGoodsReceipts.form.edit", "Chỉnh sửa");
+
+  const handleLinesChange = (newLines: GarageGoodsReceiptFormLine[]) => {
+    state.setField("lines", newLines);
+    const sum = newLines.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
+    state.setField("totalAmount", String(sum));
+  };
 
   const buildViewingActions = (): DrawerAction[] => {
     const actions: DrawerAction[] = [
@@ -63,8 +77,8 @@ export function GarageGoodsReceiptDrawer(props: GarageGoodsReceiptDrawerState) {
           <GarageGoodsReceiptStatusBadge status={state.form.status} />
         ) : undefined
       }
-      layout="1-column"
-      size="xl"
+      layout={V2DrawerLayout.TWO_COLUMNS}
+      size={V2DrawerSize.XL}
       loading={state.loading}
       confirmOnClose={state.dirty && !state.viewing}
       actions={
@@ -86,16 +100,26 @@ export function GarageGoodsReceiptDrawer(props: GarageGoodsReceiptDrawerState) {
               },
             ]
       }
+      rightPanel={
+        <GarageGoodsReceiptFormSections
+          form={state.form}
+          viewing={state.viewing}
+          codeEditable={state.codeEditable}
+          onRegenerateCode={state.regenerateCode}
+          errorField={state.errorField}
+          errorMessage={state.errorMessage}
+          t={t}
+          setField={state.setField}
+          hideLines
+          columns={1}
+        />
+      }
     >
-      <GarageGoodsReceiptFormSections
-        form={state.form}
+      <GarageGoodsReceiptLinesTable
+        lines={state.form.lines || []}
         viewing={state.viewing}
-        codeEditable={state.codeEditable}
-        onRegenerateCode={state.regenerateCode}
-        errorField={state.errorField}
-        errorMessage={state.errorMessage}
         t={t}
-        setField={state.setField}
+        onChangeLines={handleLinesChange}
       />
     </V2StandardDrawer>
   );

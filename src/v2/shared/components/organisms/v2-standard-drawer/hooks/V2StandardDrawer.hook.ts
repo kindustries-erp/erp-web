@@ -1,16 +1,19 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useV2DrawerStack } from "../utils/v2DrawerStack";
+import { useTabControl } from "../utils/v2TabControl";
 import {
   V2_DRAWER_SIZE_CLASSES,
   type V2StandardDrawerProps,
-  type V2DrawerLayout,
+  V2DrawerLayout,
+  type V2DrawerLayoutType,
+  V2DrawerSize,
 } from "../V2StandardDrawer.type";
-
-import { useTabControl } from "../utils/v2TabControl";
 
 export function useStandardDrawer(props: V2StandardDrawerProps) {
   const { open, mode = "view", tabs, confirmOnClose = false, onClose } = props;
-  const size = props.size ?? (props.layout === "1-column" ? "sm" : "xl");
+  const size =
+    props.size ??
+    (props.layout === "1-column" ? V2DrawerSize.SM : V2DrawerSize.XL);
 
   // 1. Top Header Tabs
   const firstHeaderKey = tabs?.[0]?.key ?? tabs?.[0]?.id ?? "details";
@@ -130,12 +133,15 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     return () => el.removeEventListener("scroll", checkScroll);
   }, [open, checkScroll]);
 
-  const effectiveLayout: V2DrawerLayout =
-    props.layout || (size === "sm" || size === "md" ? "1-column" : "2-columns");
+  const effectiveLayout: V2DrawerLayoutType =
+    props.layout ||
+    (size === V2DrawerSize.SM || size === V2DrawerSize.MD
+      ? V2DrawerLayout.ONE_COLUMN
+      : V2DrawerLayout.TWO_COLUMNS);
 
   const sizeClass = isFullscreen
     ? "w-screen h-dvh max-w-none rounded-none border-0"
-    : V2_DRAWER_SIZE_CLASSES[size] || V2_DRAWER_SIZE_CLASSES.xl;
+    : V2_DRAWER_SIZE_CLASSES[size] || V2_DRAWER_SIZE_CLASSES[V2DrawerSize.XL];
 
   return {
     activeTabKey,

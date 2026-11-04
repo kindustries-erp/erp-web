@@ -56,4 +56,5 @@ src/v2/modules/garage-goods-receipts/
 - **Tích hợp Menu Sidebar**: Đã thêm NavItem "Nhập kho Garage" vào `sec-garage` trong `useV2AdaptedNavSections.ts` và `GarageNavSection.tsx` (nhóm GARAGE) với quyền `canReadGarageGoodsReceipts` (có fallback `canReadGarageCases`).
 - **Tích hợp Multi-tab Shell & Breadcrumb**: `useV2AdaptedTabs.ts` ánh xạ icon `Package` và label chuẩn `v2.nav.items.garageGoodsReceipts`; `V2ShellLayout.tsx` hiển thị breadcrumb `Garage > Nhập kho Garage`.
 - **URL Route & Navigation**: Truy cập trực tiếp qua URL `/garage-goods-receipts` (hỗ trợ cả alias `/v2/garage-goods-receipts`), render trực tiếp `GarageGoodsReceiptsPage`.
+- **Drawer 2 Cột Chuẩn**: `GarageGoodsReceiptDrawer` sử dụng `layout={V2DrawerLayout.TWO_COLUMNS}` và `size={V2DrawerSize.XL}`, cột phải hiển thị Form thông tin phiếu nhập, cột trái hiển thị bảng chi tiết phụ tùng nhập kho (`GarageGoodsReceiptLinesTable`). Đồng bộ outline focus `DRAWER_FOCUS_RING_CLASS`.
 

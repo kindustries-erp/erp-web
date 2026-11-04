@@ -6,10 +6,14 @@ import {
   V2ReadValue,
   V2TextField,
 } from "@/v2/shared/components/molecules/v2-form-controls";
+import { cn } from "@/v2/shared/utils/cn";
 import {
   GarageGoodsReceiptStatus,
   type GarageGoodsReceiptFormValue,
 } from "@/v2/modules/garage-goods-receipts/domain/entities/garageGoodsReceipt";
+
+export const DRAWER_FOCUS_RING_CLASS =
+  "focus:border-primary focus:ring-1 focus:ring-primary/40 focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:ring-offset-0 focus:outline-none";
 
 export interface FormSectionsProps {
   form: GarageGoodsReceiptFormValue;
@@ -23,6 +27,8 @@ export interface FormSectionsProps {
     key: K,
     value: GarageGoodsReceiptFormValue[K],
   ) => void;
+  hideLines?: boolean;
+  columns?: 1 | 2;
 }
 
 export interface FieldConfig {
@@ -53,7 +59,7 @@ export const GARAGE_RECEIPT_FORM_FIELDS: FieldConfig[] = [
           <V2TextField
             viewing={viewing}
             value={form.receiptNo}
-            className="font-mono"
+            className={cn("font-mono", DRAWER_FOCUS_RING_CLASS)}
             disabled={!codeEditable}
             onChange={(v) => setField("receiptNo", v.toUpperCase())}
           />
@@ -83,6 +89,7 @@ export const GARAGE_RECEIPT_FORM_FIELDS: FieldConfig[] = [
       <V2TextField
         viewing={viewing}
         value={form.receiptDate}
+        className={DRAWER_FOCUS_RING_CLASS}
         onChange={(v) => setField("receiptDate", v)}
       />
     ),
@@ -95,6 +102,7 @@ export const GARAGE_RECEIPT_FORM_FIELDS: FieldConfig[] = [
       <V2TextField
         viewing={viewing}
         value={form.supplierName}
+        className={DRAWER_FOCUS_RING_CLASS}
         onChange={(v) => setField("supplierName", v)}
       />
     ),
@@ -107,6 +115,7 @@ export const GARAGE_RECEIPT_FORM_FIELDS: FieldConfig[] = [
       <V2TextField
         viewing={viewing}
         value={form.branchName}
+        className={DRAWER_FOCUS_RING_CLASS}
         onChange={(v) => setField("branchName", v)}
       />
     ),
@@ -121,6 +130,7 @@ export const GARAGE_RECEIPT_FORM_FIELDS: FieldConfig[] = [
         value={Number(form.totalAmount || 0).toLocaleString("vi-VN")}
         disabled
         inputMode="decimal"
+        className={DRAWER_FOCUS_RING_CLASS}
         onChange={(v) => setField("totalAmount", v)}
       />
     ),
@@ -145,6 +155,7 @@ export const GARAGE_RECEIPT_FORM_FIELDS: FieldConfig[] = [
           searchable={false}
           clearable={false}
           value={form.status}
+          className={DRAWER_FOCUS_RING_CLASS}
           onValueChange={(v) =>
             setField("status", v as GarageGoodsReceiptStatus)
           }
@@ -175,7 +186,7 @@ export const GARAGE_RECEIPT_FORM_FIELDS: FieldConfig[] = [
         <V2ReadValue value={form.remarks} />
       ) : (
         <V2Textarea
-          className="min-h-20"
+          className={cn("min-h-20", DRAWER_FOCUS_RING_CLASS)}
           value={form.remarks}
           onChange={(e) => setField("remarks", e.target.value)}
         />

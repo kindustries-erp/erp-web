@@ -6,7 +6,9 @@ import {
   V2NumberInput,
   V2Text,
 } from "@/v2/shared/components/atoms";
+import { cn } from "@/v2/shared/utils/cn";
 import type { GarageGoodsReceiptFormLine } from "@/v2/modules/garage-goods-receipts/domain/entities/garageGoodsReceipt";
+import { DRAWER_FOCUS_RING_CLASS } from "./GarageGoodsReceiptFormSections.fields";
 
 export interface LineColumnRenderContext {
   line: GarageGoodsReceiptFormLine;
@@ -67,7 +69,7 @@ export const GARAGE_GOODS_RECEIPT_LINES_COLUMNS: GarageGoodsReceiptLineColumn[] 
               "v2.garageGoodsReceipts.form.itemCodePlaceholder",
               "Mã SKU...",
             )}
-            className="font-mono"
+            className={cn("font-mono", DRAWER_FOCUS_RING_CLASS)}
           />
         ),
     },
@@ -93,6 +95,7 @@ export const GARAGE_GOODS_RECEIPT_LINES_COLUMNS: GarageGoodsReceiptLineColumn[] 
               "v2.garageGoodsReceipts.form.itemNamePlaceholder",
               "Tên phụ tùng...",
             )}
+            className={DRAWER_FOCUS_RING_CLASS}
           />
         ),
     },
@@ -112,7 +115,7 @@ export const GARAGE_GOODS_RECEIPT_LINES_COLUMNS: GarageGoodsReceiptLineColumn[] 
             sizeVariant="xs"
             value={ctx.line.unit}
             onChange={(e) => ctx.onUpdate(ctx.index, "unit", e.target.value)}
-            className="w-16 text-center mx-auto"
+            className={cn("w-16 text-center mx-auto", DRAWER_FOCUS_RING_CLASS)}
           />
         ),
     },
@@ -136,7 +139,10 @@ export const GARAGE_GOODS_RECEIPT_LINES_COLUMNS: GarageGoodsReceiptLineColumn[] 
             onValueChange={(val) =>
               ctx.onUpdate(ctx.index, "qtyReceived", String(val ?? 0))
             }
-            className="w-20 text-right tabular-nums font-semibold ml-auto"
+            className={cn(
+              "w-20 text-right tabular-nums font-semibold ml-auto",
+              DRAWER_FOCUS_RING_CLASS,
+            )}
           />
         ),
     },
@@ -160,7 +166,10 @@ export const GARAGE_GOODS_RECEIPT_LINES_COLUMNS: GarageGoodsReceiptLineColumn[] 
             onValueChange={(val) =>
               ctx.onUpdate(ctx.index, "unitCost", String(val ?? 0))
             }
-            className="w-28 text-right tabular-nums ml-auto"
+            className={cn(
+              "w-28 text-right tabular-nums ml-auto",
+              DRAWER_FOCUS_RING_CLASS,
+            )}
           />
         ),
     },

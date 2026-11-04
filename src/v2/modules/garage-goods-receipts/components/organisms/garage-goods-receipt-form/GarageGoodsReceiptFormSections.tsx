@@ -8,13 +8,16 @@ import {
 import { GarageGoodsReceiptLinesTable } from "./GarageGoodsReceiptLinesTable";
 
 export function GarageGoodsReceiptFormSections(props: FormSectionsProps) {
-  const { form, viewing, t, setField } = props;
+  const { form, viewing, t, setField, hideLines = false, columns = 2 } = props;
 
   const handleLinesChange = (newLines: GarageGoodsReceiptFormLine[]) => {
     setField("lines", newLines);
     const sum = newLines.reduce((acc, l) => acc + (Number(l.amount) || 0), 0);
     setField("totalAmount", String(sum));
   };
+
+  const gridClass =
+    columns === 1 ? "grid gap-3 grid-cols-1" : "grid gap-3 sm:grid-cols-2";
 
   return (
     <div className="space-y-4">
@@ -24,7 +27,7 @@ export function GarageGoodsReceiptFormSections(props: FormSectionsProps) {
           "Thông tin phiếu nhập",
         )}
       >
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={gridClass}>
           {GARAGE_RECEIPT_FORM_FIELDS.map((cfg) => (
             <DrawerField
               key={cfg.key}
@@ -33,7 +36,7 @@ export function GarageGoodsReceiptFormSections(props: FormSectionsProps) {
               error={
                 props.errorField === cfg.key ? props.errorMessage : undefined
               }
-              className={cfg.className}
+              className={columns === 1 ? undefined : cfg.className}
             >
               {cfg.render(props)}
             </DrawerField>
@@ -41,12 +44,14 @@ export function GarageGoodsReceiptFormSections(props: FormSectionsProps) {
         </div>
       </DrawerSection>
 
-      <GarageGoodsReceiptLinesTable
-        lines={form.lines || []}
-        viewing={viewing}
-        t={t}
-        onChangeLines={handleLinesChange}
-      />
+      {!hideLines && (
+        <GarageGoodsReceiptLinesTable
+          lines={form.lines || []}
+          viewing={viewing}
+          t={t}
+          onChangeLines={handleLinesChange}
+        />
+      )}
     </div>
   );
 }
