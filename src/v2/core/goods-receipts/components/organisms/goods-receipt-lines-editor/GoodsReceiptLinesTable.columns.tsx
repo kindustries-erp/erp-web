@@ -1,0 +1,80 @@
+import type { GoodsReceiptLineColumn } from "./GoodsReceiptLinesTable.type";
+import {
+  renderAmountCell,
+  renderIndexCell,
+  renderItemCodeCell,
+  renderItemNameCell,
+  renderQtyCell,
+  renderRemoveCell,
+  renderUnitCell,
+  renderUnitCostCell,
+} from "./GoodsReceiptLinesTable.cells";
+
+/** Cấu hình cột của bảng dòng phụ tùng; nhãn đi qua `v2.goodsReceipts.lines.*` */
+export const GOODS_RECEIPT_LINES_COLUMNS: GoodsReceiptLineColumn[] = [
+  {
+    id: "index",
+    headerKey: "v2.table.indexHeader",
+    defaultHeader: "#",
+    headerClassName: "p-2 text-center w-10",
+    cellClassName: "p-2 text-center text-xs",
+    renderCell: renderIndexCell,
+  },
+  {
+    id: "itemCode",
+    headerKey: "v2.goodsReceipts.lines.partCode",
+    defaultHeader: "Mã PT",
+    headerClassName: "p-2 text-left min-w-[120px]",
+    cellClassName: "p-2 text-xs",
+    renderCell: renderItemCodeCell,
+  },
+  {
+    id: "itemName",
+    headerKey: "v2.goodsReceipts.lines.partName",
+    defaultHeader: "Tên phụ tùng",
+    headerClassName: "p-2 text-left min-w-[180px]",
+    cellClassName: "p-2 text-xs",
+    renderCell: renderItemNameCell,
+  },
+  {
+    id: "unit",
+    headerKey: "v2.goodsReceipts.lines.unit",
+    defaultHeader: "ĐVT",
+    headerClassName: "p-2 text-center w-20",
+    cellClassName: "p-2 text-center text-xs",
+    renderCell: renderUnitCell,
+  },
+  {
+    id: "qtyReceived",
+    headerKey: "v2.goodsReceipts.lines.qty",
+    defaultHeader: "Số lượng",
+    headerClassName: "p-2 text-right w-24",
+    cellClassName: "p-2 text-right text-xs",
+    renderCell: renderQtyCell,
+  },
+  {
+    id: "unitCost",
+    headerKey: "v2.goodsReceipts.lines.cost",
+    defaultHeader: "Đơn giá",
+    headerClassName: "p-2 text-right w-32",
+    cellClassName: "p-2 text-right text-xs",
+    renderCell: renderUnitCostCell,
+  },
+  {
+    id: "amount",
+    headerKey: "v2.goodsReceipts.lines.amount",
+    defaultHeader: "Thành tiền",
+    headerClassName: "p-2 text-right w-32",
+    cellClassName: "p-2 text-right text-xs",
+    renderCell: renderAmountCell,
+  },
+  {
+    id: "actions",
+    headerKey: "",
+    defaultHeader: "",
+    headerClassName: "p-2 text-center w-10",
+    cellClassName: "p-2 text-center text-xs",
+    hideWhenViewing: true,
+    renderCell: renderRemoveCell,
+  },
+];

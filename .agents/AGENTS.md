@@ -16,8 +16,10 @@ Source of truth for this repo (`./erp-web`).
 
 ### 2. Atomic Design & Clean Code
 
-- **Max File Size:** Any React file exceeding 180 lines MUST be split (v1 legacy files over 180 lines are exempt unless touched by the task; see `ui-structure`).
+- **Max File Size:** Với `.tsx` và `.hook.ts`: cảnh báo ở 180 dòng, chặn ở 250 dòng (không merge). File dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`) không tính vào ngưỡng. V1 legacy vượt ngưỡng được miễn trừ trừ khi task chạm tới; see `ui-structure`.
+- **Core theo họ (áp dụng cho mọi họ, không ngoại lệ):** UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ>/`. Module của họ chỉ giữ API, cấu hình ghép core, page và locale riêng. Chiều phụ thuộc `modules → core → shared`; core không import module và không chứa tên module. Import qua barrel (`@/v2/core/<họ>`, `@/v2/shared/components`), không import sâu từ module hay core. Chi tiết: `ui-structure` Phần B.
 - Extract complex state/API logic into `hooks/` (e.g., `use[Feature]Logic.ts`).
+- **Tên hook**: hook gắn một component/drawer/page dùng `[Component].hook.ts` (export `use[Component]`); hook độc lập (query, mutation, hook dùng chung, store) dùng `use<Tên>.ts`. Hook không JSX đuôi `.ts`. Chi tiết: `ui-structure`.
 - Extract helper functions into `utils/`.
 - Extract sub-components into their own files. Do NOT group multiple large React components in a single file.
 
