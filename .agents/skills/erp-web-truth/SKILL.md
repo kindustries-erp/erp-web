@@ -78,7 +78,7 @@ Tài liệu chi tiết của từng module nằm tại `.agents/skills/modules/<
 - **Sản xuất & BOM**: `production-core`, `bom-core`
 - **Kho & tồn kho**: `inventory-dashboard`, `erp-inventory-items`, `erp-inventory-stock`, `erp-inventory-tracking`, `erp-inventory-transactions`, `erp-inventory-adjustments`, `erp-inventory-vouchers`
 - **Phụ tùng VinFast**: `vinfast-parts-stock`, `vinfast-parts-dashboard`
-- **Garage**: `garage-cases`, `garage-dashboard`, `garage-goods-receipts`
+- **Garage**: `garage-cases`, `garage-dashboard`, `garage-goods-receipts`, `garage-purchase-orders` (lõi PO dùng chung ở `src/v2/core/purchase-orders/`)
 - **Đối tác & nhà cung cấp**: `business-partners`, `erp-suppliers`
 - **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`
 - **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`

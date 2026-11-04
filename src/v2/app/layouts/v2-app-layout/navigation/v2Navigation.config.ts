@@ -12,6 +12,7 @@ import {
   ReceiptText,
   Wallet,
   Settings,
+  ShoppingCart,
 } from "lucide-react";
 import type {
   RawNavDef,
@@ -132,6 +133,14 @@ export const NAV_DEFS: RawNavDef[] = [
     fallback: "Nhập kho Garage",
     icon: Package,
     href: "/garage-goods-receipts",
+  },
+  {
+    id: "garage-purchase-orders",
+    sectionId: "inventory",
+    labelKey: "v2.nav.items.garagePurchaseOrders",
+    fallback: "Đơn mua hàng Garage",
+    icon: ShoppingCart,
+    href: "/garage-purchase-orders",
   },
   // v2-module:garage-goods-receipts:nav
   // plop:v2-nav-items

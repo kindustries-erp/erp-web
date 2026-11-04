@@ -113,6 +113,18 @@ export const V2_ROUTES: V2RouteDef[] = [
     title: "Nhập kho Garage",
     permission: { collection: "garage_goods_receipts", action: "read" },
   },
+  {
+    id: "garage-purchase-orders",
+    path: "/garage-purchase-orders",
+    title: "Đơn mua hàng Garage",
+    permission: { collection: "garage_purchase_orders", action: "read" },
+  },
+  {
+    id: "garage-purchase-orders",
+    path: "/v2/garage-purchase-orders",
+    title: "Đơn mua hàng Garage",
+    permission: { collection: "garage_purchase_orders", action: "read" },
+  },
   // v2-module:garage-goods-receipts:routes
   // plop:v2-routes
 ];
