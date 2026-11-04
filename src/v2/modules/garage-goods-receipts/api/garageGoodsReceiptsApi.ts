@@ -1,4 +1,5 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
+import { GOODS_RECEIPT_DEFAULT_UNIT } from "@/v2/core/goods-receipts";
 import type {
   V2FetchOptionsParams,
   V2TableQuery,
@@ -60,7 +61,7 @@ export const toGarageGoodsReceiptPayload = (
     id: l.id,
     itemCode: l.itemCode.trim() || undefined,
     itemName: l.itemName.trim(),
-    unit: l.unit.trim() || "Cái",
+    unit: l.unit.trim() || GOODS_RECEIPT_DEFAULT_UNIT,
     qtyReceived: Number(l.qtyReceived || 0),
     unitCost: Number(l.unitCost || 0),
     amount: Number(l.amount || 0),

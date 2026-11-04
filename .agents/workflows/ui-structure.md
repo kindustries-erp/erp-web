@@ -93,6 +93,13 @@ Mỗi component **BẮT BUỘC** nằm trong một thư mục riêng biệt theo
     - `[Name].ui.hook.ts`: UI toggles, active tabs, expand/collapse state.
     - `[Name].biz.hook.ts` hoặc `[Name].hook.ts`: React Query mutations, REST API calls, RBAC permission checks, form submit.
 
+##### 🏷️ Quy Ước Tên Hook (H1–H4)
+- **H1**: tên hàm luôn bắt đầu bằng `use` (bắt buộc của React).
+- **H2 — Hook gắn với một component, drawer hoặc page**: file `[Component].hook.ts` đặt cạnh component, export `use[Component]`. Khi tách nhỏ dùng `[Component].data.hook.ts` (tải dữ liệu), `.ui.hook.ts` (trạng thái giao diện), `.biz.hook.ts` (hành động, submit).
+- **H3 — Hook độc lập, dùng lại (query, mutation, hook dùng chung, store)**: file `use<Tên>.ts`, đặt trong `api/queries/`, `api/mutations/`, `hooks/`, `stores/`.
+- **H4**: file hook không chứa JSX nên đuôi `.ts`. Cần JSX thì tách phần JSX sang helper `.tsx`.
+- Tên file phụ trợ dùng số ít: `.type.ts`, không dùng `.types.ts`.
+
 ---
 
 #### 🔹 GIAI ĐOẠN 3: Kiểm Soát Chiều Import & Ràng Buộc Phụ Thuộc
@@ -166,7 +173,7 @@ bun run build-storybook
 
 ### 🔁 Hướng v2-ready (refactor v1 để migrate v2 dễ hơn)
 
-Áp dụng khi chạm module v1 (track T1 trong `/plan-and-task`). Phần lõi sau refactor phải copy sang `src/v2/modules/<m>/` được mà không viết lại.
+Áp dụng khi chạm module v1 (track T1 trong `/erp-plan`). Phần lõi sau refactor phải copy sang `src/v2/modules/<m>/` được mà không viết lại.
 
 | Việc | Làm ở v1 bây giờ | Đích khi migrate v2 |
 | :--- | :--- | :--- |
@@ -242,8 +249,9 @@ graph TD
    - **Unit Tests**: Co-located ngay cạnh source file (`[Name].test.ts` / `[Name].test.tsx`). Test pure business rules trong `domain/rules/`, test component state, test hooks.
    - **Integration Tests**: Đặt tại `src/v2/modules/<name>/tests/integration/` nhằm test tương tác Form -> Validate -> Mutation -> Table Refresh.
    - **E2E Tests**: Đặt tại `src/v2/tests/e2e/` chạy trên browser thật kiểm tra trọn vẹn luồng nghiệp vụ tại `/v2/*`.
-6. **Kỷ Luật Code Cứng (< 180 LoC, No Blue Mandate, 100% i18n)**:
-   - Cấm bất kỳ file nào vượt quá 180 LoC. Vượt ngưỡng phải bóc tách ngay `.hook.ts`, `.helper.ts`, sub-components.
+6. **Kỷ Luật Code Cứng (ngưỡng dòng theo tầng, No Blue Mandate, 100% i18n)**:
+   - Ngưỡng theo mục *Ngưỡng kích thước* bên dưới: cảnh báo ở **180 LoC**, chặn ở **250 LoC** với `.tsx` và `.hook.ts`. Vượt 180 phải lên kế hoạch tách `.hook.ts`, `.helper.ts`, sub-components; vượt 250 không được merge.
+   - Loại trừ file dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`). Các file này không tính vào ngưỡng.
    - Cấm dùng màu `blue-*` của Tailwind mặc định. Bắt buộc dùng bảng màu HSL ngữ cảnh (`var(--primary)`, `var(--accent)`, `var(--muted)`...).
    - Cấm hardcode text thô trong JSX. Bắt buộc 100% qua `t('...')` (i18n VI/EN).
 7. **Rolling Migration Tuân Thủ Triệt Để Lệnh Của User**:
@@ -258,7 +266,14 @@ graph TD
 - **Import một chiều**: `Templates > Organisms > Molecules > Atoms`. Cấm import ngược tầng và import ngang hàng cùng tầng. Khi hai organism cần chung một phần, đưa phần đó xuống molecule hoặc truyền qua props/slot từ tầng cha.
 - **Ranh giới hook**: Atoms và Molecules chỉ nhận props, không gọi API, React Query hay store. Logic nghiệp vụ nằm trong hook của Organisms.
 - **Cấu trúc thư mục**: folder-per-component kebab-case, có `index.ts`, test co-located (`.test.tsx`).
-- **Ngưỡng kích thước**: `[Name].tsx` < 150 dòng, `.hook.ts` < 180, `.type.ts` < 80, `.helper.ts` < 100. Vượt ngưỡng thì tách theo thứ tự type → hook → helper → sub-component.
+- **Quy tắc chung cho mọi họ nghiệp vụ (áp dụng cho tất cả module V2, không có ngoại lệ theo module)**: UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ-nghiệp-vụ>/` (ví dụ `core/goods-receipts/`), mô hình giống `src/v2/core/` của API v2. Mọi module thuộc họ đó (ví dụ `modules/garage-goods-receipts/`) chỉ giữ phần riêng: API client và DTO, cấu hình ghép core (`<module>.config.ts`), locale tiêu đề và nút tạo, page và permission.
+  - **Core là nơi mặc định**: khi bắt đầu một module mới trong họ đã có core, dùng core trước. Khi bắt đầu họ mới, tạo `core/<họ>/` ngay từ đầu, không viết logic chung vào module rồi chờ tách sau.
+  - **Chiều phụ thuộc**: `modules/* → core/* → shared/`. `core/*` **không** import từ `modules/*`. Module không import module khác. Không chứa tên module cụ thể (ví dụ "garage") trong core.
+  - **Core không gắn namespace module**: nhãn đi qua `t()` với khóa `v2.<họ>.*` riêng của core (đăng ký bằng `registerV2ModuleLocale`). Component core nhận `t` và cấu hình (`config`) qua prop.
+  - **Import qua barrel, không import sâu**: module và core import họ phiếu qua `@/v2/core/<họ>` và shared qua `@/v2/shared/components` (hoặc barrel cấp `atoms`/`molecules`/`organisms`/`templates`), không đi vào file con như `@/v2/core/<họ>/hooks/...` hay `@/v2/shared/components/atoms/v2-button`. Bên trong `shared/` giữ import tương đối hoặc sâu để tránh vòng lặp. Mỗi folder component phải có `index.ts` export đủ.
+  - **Module chỉ khác nhau ở cấu hình**: khác biệt giữa các module của cùng họ (endpoint, khóa cache, quyền, cột bổ sung, trường bắt buộc) đi qua object cấu hình được inject vào core, không sao chép code.
+  - **Generic UI không thuộc họ nào** (ví dụ button, modal, bảng generic) vẫn ở `shared/`, không đưa vào core.
+- **Ngưỡng kích thước**: cảnh báo ở 180 dòng cho `[Name].tsx` và `.hook.ts`, chặn ở 250 dòng. `.type.ts` < 80, `.helper.ts` < 100. Loại trừ file dữ liệu/cấu hình thuần (xem mục 6 Core Mandates). Vượt ngưỡng thì tách theo thứ tự type → hook → helper → sub-component.
 - **Cấm hardcode**: chuỗi hiển thị đi qua `t()`; cấm màu `blue-*`.
 - **Trước khi báo xong**: chạy audit ở Giai đoạn 5 của `ui-structure.md`, type-check, và test của thư mục đã chạm.
 
@@ -279,6 +294,17 @@ src/v2/
 │   └── router/
 │       ├── v2Routes.tsx                    # Định nghĩa toàn bộ routes con của /v2/*
 │       └── guards/                         # AuthGuard, PermissionGuard
+│
+├── core/                                   # UI, rule và hook dùng chung theo họ nghiệp vụ (giống src/v2/core của API v2)
+│   └── <họ>/                               # Ví dụ goods-receipts/ (phiếu nhập)
+│       ├── domain/                         # Kiểu, rule validate/dirty, tính tiền, hằng số
+│       ├── api/                            # keys, interface API, query và mutation dùng chung
+│       ├── components/                     # molecules (badge), organisms (form, bảng, lines editor)
+│       ├── drawers/                        # Drawer chung của họ + hook dữ liệu/hành vi
+│       ├── hooks/                          # hook controller màn danh sách
+│       ├── <họ>.config.type.ts             # Kiểu cấu hình module inject vào core
+│       ├── <họ>.locale.ts                  # Khóa v2.<họ>.*
+│       └── index.ts
 │
 ├── shared/                                 # Tài sản dùng chung toàn bộ V2
 │   ├── styles/                             # Hệ thống CSS & theme độc lập V2
@@ -381,7 +407,17 @@ src/v2/
    - Tuân thủ chiều import đơn hướng: `Templates (L4) > Organisms (L3) > Molecules (L2) > Atoms (L1)`.
 
 #### 🔹 GIAI ĐOẠN 3: Triển Khai Module Scaffolding & Pure Domain Rules
-0. **Sinh khung bằng plop (ưu tiên)**: `bun plop v2-module <module> <Entity> <Plural> "<titleVi>" "<titleEn>" <apiBase> <permissionCollection> <routeInput> <navSection> <tableInput> "<fieldSpec>" <hasNextCode> <wire>`. Sau đó chạy `bunx prettier --write src/v2/modules/<module>`. Chi tiết tham số và checklist chỉnh tay: skill `plop-generate`, Generator 5.
+0. **Sinh khung bằng plop (ưu tiên)**: chọn generator theo bảng dưới (đồng bộ với `api-structure` Phần B). Sau đó chạy `bunx prettier --write src/v2/modules/<module>` hoặc `src/v2/core/<họ>`. Chi tiết tham số: skill `plop-generate`.
+
+   | Tình huống | Generator | Kết quả |
+   | :--- | :--- | :--- |
+   | Họ nghiệp vụ mới, chưa có lõi | `v2-core` (nhập họ, entity) | `src/v2/core/<họ>/`: config type, API type, keys, domain, locale, barrel, `core.manifest.json` với `exports: null` |
+   | Lõi họ đã viết xong hook UI | Khai báo `exports` trong `core.manifest.json` | Cho phép ghép module mỏng |
+   | Module thuộc họ đã có lõi | `v2-thin-module` (chọn lõi, nhập tiêu đề vi/en, route, nhóm menu, bật wire) | `src/v2/modules/<module>/`: config, API, locale, page + hook, index, test tích hợp; khi wire tự nối route, menu, i18n vi/en và page registry |
+   | Entity đơn lẻ, không thuộc họ | `v2-module` | Module standalone đầy đủ |
+   | Module V1 cũ | `table-page`, `drawer`, `modal`, `table-section` | `[LEGACY-V1]`, chỉ giữ để tham khảo |
+
+   Quy tắc: họ mới luôn tạo lõi (`v2-core`) trước, viết hook UI của lõi rồi khai báo `exports`, sau đó mới ghép module mỏng. `v2-thin-module` từ chối lõi chưa khai báo `exports` và báo lỗi rõ ràng.
 1. **Khởi tạo thư mục module `kebab-case/`** (nếu không dùng plop):
    - `domain/entities/`, `domain/rules/`.
 2. **Đưa Business Logic về Domain Rules**:
@@ -460,3 +496,29 @@ Mỗi loại có một skill duy nhất (đã gồm V1, V2 và phần phụ) và
 Đường dẫn reference đầy đủ: `.agents/skills/<skill>/references/<file>`.
 
 Quy tắc: làm theo workflow của loại tương ứng, sau đó chạy audit của Phần A (No Blue, i18n, giới hạn 180 dòng, import ngược). Với V2, chạy thêm audit ở Phần B mục "Zero-Miss Quality Gate".
+
+---
+
+## 🅳 Phần D: Enum cho Field nhập liệu & Option dùng chung
+
+Mục tiêu: mỗi key field và mỗi bộ option (trạng thái, phương thức thanh toán, loại đối tượng…) chỉ khai báo một lần, để form, bảng và filter thống nhất và tái sử dụng được.
+
+### Quy tắc
+1. **Không dùng chuỗi cứng** cho key field hoặc option lặp lại: khai báo `export enum`.
+2. **Vị trí enum**:
+   - Chỉ dùng trong một module: `<module>.enum.ts` cạnh file config field (mẫu: `src/modules/garage/components/organisms/garage-cashflow-drawer/garageCashflowDrawer.enum.ts`).
+   - Dùng từ hai module trở lên: `src/shared/` (V1) hoặc `src/v2/shared/types/` (V2). Có thể gộp vào file types sẵn có (`v2-status.ts`, `v2-tab-mode.ts`, `v2-drawer-mode.ts`) nếu đúng ngữ nghĩa.
+3. **Option = enum + map nhãn**: một map duy nhất `Record<Enum, string>` với nhãn qua `t()`. Không lặp nhãn ở nhiều nơi.
+4. **Form**: key field lấy từ enum (`name: MyFieldKey.AMOUNT`) và cấu hình theo mảng config với `V2FormGrid` (xem `standardize-drawer/references/drawer-rules.md`). Option của select/radio lấy từ map ở mục 3, không khai báo mảng inline.
+5. **Tái sử dụng**: field hoặc option dùng chung import từ một nguồn, không sao chép sang file khác.
+6. **Bảng và filter**: khi cùng ý nghĩa với field form, dùng chung enum và map nhãn.
+
+### Audit (áp dụng cho file đã tạo hoặc đã chạm)
+```bash
+# 1. Key field viết chuỗi cứng trong file config form (kỳ vọng: 0 kết quả)
+grep -rnE "name: ['\"][a-zA-Z_]+['\"]" src --include='*.fields.ts' --include='*.fields.tsx'
+
+# 2. Mảng option khai báo inline trong component (nên chuyển sang enum + map)
+grep -rnE "options: \[\s*\{" src --include='*.tsx' --include='*.ts' | grep -v '\.test\.'
+```
+Kết quả còn lại phải được giải thích trong walkthrough hoặc đưa vào enum trước khi báo xong.

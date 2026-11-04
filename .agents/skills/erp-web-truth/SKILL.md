@@ -62,7 +62,7 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 
 ## 7. Quy tắc làm việc
 
-- Plan theo `/plan-and-task` (cơ chế plan của agent). Chỉ làm sau khi user xác nhận `OK`. Theo dõi task trên Plane bằng skill `plane-work-items`.
+- Plan theo `/erp-plan` (cơ chế plan của agent). Chỉ làm sau khi user xác nhận `OK`. Theo dõi task trên Plane bằng skill `plane-work-items`.
 - Cấu trúc page: page → domain hook/query → domain components → shared primitives.
 - Mọi file React trên 180 dòng phải tách, trừ file V1 cũ không được chạm trong task.
 - i18n đầy đủ VI/EN, không hardcode chuỗi hiển thị.
@@ -78,7 +78,7 @@ Tài liệu chi tiết của từng module nằm tại `.agents/skills/modules/<
 - **Sản xuất & BOM**: `production-core`, `bom-core`
 - **Kho & tồn kho**: `inventory-dashboard`, `erp-inventory-items`, `erp-inventory-stock`, `erp-inventory-tracking`, `erp-inventory-transactions`, `erp-inventory-adjustments`, `erp-inventory-vouchers`
 - **Phụ tùng VinFast**: `vinfast-parts-stock`, `vinfast-parts-dashboard`
-- **Garage**: `garage-cases`, `garage-dashboard`, `garage-goods-receipts`
+- **Garage**: `garage-cases`, `garage-dashboard`, `garage-goods-receipts`, `garage-purchase-orders` (lõi PO dùng chung ở `src/v2/core/purchase-orders/`)
 - **Đối tác & nhà cung cấp**: `business-partners`, `erp-suppliers`
 - **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`
 - **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`

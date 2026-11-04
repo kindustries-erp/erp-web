@@ -158,6 +158,7 @@ describe("V2TabBar Molecule", () => {
     const active = screen.getByRole("tab", { name: /Chi tiết/ });
     expect(active).toHaveAttribute("aria-selected", "true");
     expect(active.className).toContain("border-primary");
+    expect(screen.getByText("5")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: "Tài chính" }));
     expect(handleChange).toHaveBeenCalledWith("tab2");
     fireEvent.click(screen.getByRole("tab", { name: "Chứng từ" }));

@@ -1,6 +1,13 @@
 import React from "react";
 import { useT } from "@/core/i18n";
-import { Wallet, Car, Users, ReceiptText, Package } from "lucide-react";
+import {
+  Wallet,
+  Car,
+  Users,
+  ReceiptText,
+  Package,
+  ShoppingCart,
+} from "lucide-react";
 import { NavSection, NavItem } from "../SidebarPrimitives";
 import type { GarageNavSectionProps } from "./GarageNavSection.type";
 import { useGarageNavSection } from "./GarageNavSection.hook";
@@ -15,16 +22,19 @@ export function GarageNavSection({
     canReadGarageCashflow,
     canReadGarageCases,
     canReadGarageGoodsReceipts,
+    canReadGaragePurchaseOrders,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
     isGoodsReceiptsActive,
+    isPurchaseOrdersActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
     handleNavGoodsReceipts,
+    handleNavPurchaseOrders,
     handleNavDebts,
     handleNavOpex,
   } = useGarageNavSection({
@@ -36,6 +46,7 @@ export function GarageNavSection({
     !canReadGarageCashflow &&
     !canReadGarageCases &&
     !canReadGarageGoodsReceipts &&
+    !canReadGaragePurchaseOrders &&
     !canReadGarageDebts &&
     !canReadGarageOpex
   ) {
@@ -65,6 +76,16 @@ export function GarageNavSection({
           active={isGoodsReceiptsActive}
           onClick={handleNavGoodsReceipts}
           contextPage="garage-goods-receipts"
+        />
+      )}
+      {canReadGaragePurchaseOrders && (
+        <NavItem
+          collapsed={collapsed}
+          icon={<ShoppingCart className="w-4 h-4 opacity-65 flex-shrink-0" />}
+          label={t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage")}
+          active={isPurchaseOrdersActive}
+          onClick={handleNavPurchaseOrders}
+          contextPage="garage-purchase-orders"
         />
       )}
       {canReadGarageCashflow && (

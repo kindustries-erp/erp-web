@@ -22,6 +22,11 @@ export function useGarageNavSection({
     useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
     canReadGarageCases;
   const canReadGarageOpex = canReadGarageCases;
+  // Menu PO garage chỉ dựa vào quyền của chính nó (không fallback sang garage)
+  const canReadGaragePurchaseOrders = useHasPermission(
+    ErpResource.GARAGE_PURCHASE_ORDERS,
+    ErpAction.READ,
+  );
 
   const isCashflowActive = currentPage === "garage-cashflow";
 
@@ -29,6 +34,8 @@ export function useGarageNavSection({
     currentPage === "garage-cases" || currentPage === "garage-dashboard";
 
   const isGoodsReceiptsActive = currentPage === "garage-goods-receipts";
+
+  const isPurchaseOrdersActive = currentPage === "garage-purchase-orders";
 
   const isDebtsActive =
     currentPage === "garage-debts" ||
@@ -40,6 +47,7 @@ export function useGarageNavSection({
   const handleNavCashflow = () => navTo("garage-cashflow");
   const handleNavCases = () => navTo("garage-cases");
   const handleNavGoodsReceipts = () => navTo("garage-goods-receipts");
+  const handleNavPurchaseOrders = () => navTo("garage-purchase-orders");
   const handleNavDebts = () => navTo("garage-debts");
   const handleNavOpex = () => navTo("garage-opex");
 
@@ -47,16 +55,19 @@ export function useGarageNavSection({
     canReadGarageCashflow,
     canReadGarageCases,
     canReadGarageGoodsReceipts,
+    canReadGaragePurchaseOrders,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
     isGoodsReceiptsActive,
+    isPurchaseOrdersActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
     handleNavGoodsReceipts,
+    handleNavPurchaseOrders,
     handleNavDebts,
     handleNavOpex,
   };

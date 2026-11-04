@@ -47,6 +47,21 @@ describe("useGarageNavSection hook", () => {
     expect(result.current.isOpexActive).toBe(false);
   });
 
+  it("reads the purchase-orders permission on its own, not from garage cases", () => {
+    vi.mocked(useHasPermission).mockImplementation(
+      (resource) => resource === ErpResource.GARAGE_PURCHASE_ORDERS,
+    );
+    const { result } = renderHook(() =>
+      useGarageNavSection({
+        currentPage: "garage-purchase-orders",
+        navTo: mockNavTo,
+      }),
+    );
+    expect(result.current.canReadGaragePurchaseOrders).toBe(true);
+    expect(result.current.canReadGarageCases).toBe(false);
+    expect(result.current.isPurchaseOrdersActive).toBe(true);
+  });
+
   it("handles active states for debts and partners sub-pages", () => {
     vi.mocked(useHasPermission).mockReturnValue(true);
     const { result } = renderHook(() =>

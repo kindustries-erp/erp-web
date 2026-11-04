@@ -53,6 +53,21 @@ describe("V2WorkspaceModeToggle", () => {
     expect(button).toBeDefined();
   });
 
+  it("renders the toggle button when user has admin_users permission", () => {
+    mockUseAuthStore.mockImplementation((selector: any) =>
+      selector({
+        profile: { email: "manager@liouni.com" },
+        effectivePermissions: [
+          { collection: "admin_users", actions: ["read"] },
+        ],
+      }),
+    );
+
+    render(<V2WorkspaceModeToggle />);
+    const button = screen.getByTestId("workspace-mode-toggle");
+    expect(button).toBeDefined();
+  });
+
   it("triggers onModeChange with V2WorkspaceMode when clicked", () => {
     mockUseAuthStore.mockImplementation((selector: any) =>
       selector({ profile: { email: "admin@liouni.com" } }),

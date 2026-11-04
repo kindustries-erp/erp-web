@@ -1,4 +1,5 @@
 import type * as React from "react";
+import { V2Size } from "@/v2/shared/types";
 import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar";
 import type { DrawerAction } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import type { DrawerRelatedTabItem } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
@@ -15,16 +16,38 @@ export type {
   V2DropdownEntry,
 };
 
-export type V2DrawerSize = "sm" | "md" | "lg" | "xl" | "full";
-export type V2DrawerMode = "view" | "edit";
-export type V2DrawerLayout = "1-column" | "2-columns";
+/**
+ * V2DrawerSize — Kế thừa từ V2Size toàn app, thu hẹp vào các kích thước hợp lệ của Drawer.
+ */
+export enum V2DrawerSize {
+  SM = V2Size.SM,
+  MD = V2Size.MD,
+  LG = V2Size.LG,
+  XL = V2Size.XL,
+  FULL = V2Size.FULL,
+}
 
-export const V2_DRAWER_SIZE_CLASSES: Record<V2DrawerSize, string> = {
-  sm: "w-full min-w-0 max-w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] lg:min-w-[420px] lg:max-w-[660px]",
-  md: "w-full min-w-0 max-w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] lg:min-w-[620px] lg:max-w-[980px]",
-  lg: "w-full min-w-0 max-w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] lg:min-w-[840px] lg:max-w-[1380px]",
-  xl: "w-full min-w-0 max-w-full md:w-[96vw] lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw] lg:min-w-[1020px] lg:max-w-[1780px]",
-  full: "w-full min-w-0 max-w-full md:w-[98vw] lg:w-[calc(100vw-36px)] xl:w-[calc(100vw-40px)] lg:min-w-[1020px]",
+export type V2DrawerSizeType = V2DrawerSize | `${V2DrawerSize}`;
+export type V2DrawerMode = "view" | "edit";
+
+export enum V2DrawerLayout {
+  ONE_COLUMN = "1-column",
+  TWO_COLUMNS = "2-columns",
+}
+
+export type V2DrawerLayoutType = V2DrawerLayout | `${V2DrawerLayout}`;
+
+export const V2_DRAWER_SIZE_CLASSES: Record<V2DrawerSizeType, string> = {
+  [V2DrawerSize.SM]:
+    "w-full min-w-0 max-w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] lg:min-w-[420px] lg:max-w-[660px]",
+  [V2DrawerSize.MD]:
+    "w-full min-w-0 max-w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] lg:min-w-[620px] lg:max-w-[980px]",
+  [V2DrawerSize.LG]:
+    "w-full min-w-0 max-w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] lg:min-w-[840px] lg:max-w-[1380px]",
+  [V2DrawerSize.XL]:
+    "w-full min-w-0 max-w-full md:w-[96vw] lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw] lg:min-w-[1020px] lg:max-w-[1780px]",
+  [V2DrawerSize.FULL]:
+    "w-full min-w-0 max-w-full md:w-[98vw] lg:w-[calc(100vw-36px)] xl:w-[calc(100vw-40px)] lg:min-w-[1020px]",
 };
 
 export interface V2DrawerChildrenContext {
@@ -48,8 +71,8 @@ export interface V2StandardDrawerProps {
   subtitle?: React.ReactNode;
   icon?: React.ReactNode;
 
-  layout?: V2DrawerLayout;
-  size?: V2DrawerSize;
+  layout?: V2DrawerLayoutType;
+  size?: V2DrawerSizeType;
 
   // Fullscreen controls
   enableFullscreen?: boolean;

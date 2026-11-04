@@ -9,6 +9,7 @@ export const v2Vi = {
         purchasing: "MUA HÀNG",
         inventory: "KHO",
         manufacturing: "SẢN XUẤT / XƯỞNG",
+        garage: "GARAGE",
         accounting: "KẾ TOÁN",
         settings: "HỆ THỐNG",
       },
@@ -36,6 +37,7 @@ export const v2Vi = {
         resetDefault: "Khôi phục mặc định",
         inventoryGroup: "Kho",
         garageGoodsReceipts: "Nhập kho Garage",
+        garagePurchaseOrders: "Đơn mua hàng Garage",
         // v2-module:garage-goods-receipts:locale-vi
         // plop:v2-nav-items
       },

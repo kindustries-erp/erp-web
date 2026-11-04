@@ -10,6 +10,7 @@ export const v2En: V2Dictionary = {
         purchasing: "PURCHASING",
         inventory: "WAREHOUSE",
         manufacturing: "MANUFACTURING / WORKSHOP",
+        garage: "GARAGE",
         accounting: "ACCOUNTING",
         settings: "SYSTEM",
       },
@@ -36,6 +37,7 @@ export const v2En: V2Dictionary = {
         resetDefault: "Reset to default",
         inventoryGroup: "Inventory",
         garageGoodsReceipts: "Garage Goods Receipts",
+        garagePurchaseOrders: "Garage Purchase Orders",
         // v2-module:garage-goods-receipts:locale-en
         // plop:v2-nav-items
       },

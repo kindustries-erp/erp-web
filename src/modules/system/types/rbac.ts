@@ -50,6 +50,7 @@ export enum ErpResource {
   GARAGE_DEBTS = "garage_debts",
   GARAGE_CASHFLOW = "garage_cashflow",
   GARAGE_GOODS_RECEIPTS = "garage_goods_receipts",
+  GARAGE_PURCHASE_ORDERS = "garage_purchase_orders",
   ACCOUNTING_CONFIGS = "accounting_configs",
   INVOICES = "invoices",
   INVOICE_DEBTS = "invoice_debts",
@@ -259,6 +260,11 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     label: "Phiếu nhập kho Garage",
     group: "Garage & Xưởng dịch vụ",
   },
+  {
+    collection: "garage_purchase_orders",
+    label: "Đơn mua hàng Garage",
+    group: "Garage & Xưởng dịch vụ",
+  },
 ];
 
 export const CRUD_ACTIONS: { action: CrudAction; label: string }[] = [
@@ -327,6 +333,7 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
       ErpResource.GARAGE_DEBTS,
       ErpResource.GARAGE_CASHFLOW,
       ErpResource.GARAGE_GOODS_RECEIPTS,
+      ErpResource.GARAGE_PURCHASE_ORDERS,
     ],
   },
   {

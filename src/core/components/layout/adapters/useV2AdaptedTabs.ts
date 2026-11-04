@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ShoppingCart } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
@@ -48,6 +49,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "garage-dashboard": LayoutDashboard,
   "garage-cases": Car,
   "garage-goods-receipts": Package,
+  "garage-purchase-orders": ShoppingCart,
   "garage-opex": ReceiptText,
   "garage-cashflow": Wallet,
   "garage-customers": Users,
@@ -114,6 +116,8 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.garageCases", "Hoạt động garage");
       case "garage-goods-receipts":
         return t("nav.items.garageGoodsReceipts", "Nhập kho Garage");
+      case "garage-purchase-orders":
+        return t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage");
       case "garage-cashflow":
         return t("nav.items.garageCashflow", "Thu chi garage");
       case "garage-debts":

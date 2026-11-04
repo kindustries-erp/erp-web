@@ -1,0 +1,13 @@
+import { {{keysFactory}}{{viewVisibilityImport}} } from "{{coreBarrel}}";
+import type { {{configType}} } from "{{coreBarrel}}";
+import { {{moduleCamel}}Api } from "./api/{{moduleCamel}}Api";
+
+/** Cấu hình ghép lõi họ {{family}} cho module {{moduleName}}: API, khóa cache, bảng và quyền riêng */
+export const {{moduleCamel}}Config: {{configType}} = {
+  api: {{moduleCamel}}Api,
+  keys: {{keysFactory}}(["v2-{{moduleName}}"]),
+  tableId: "{{tableId}}",
+  permissionCollection: "{{permissionCollection}}",
+  requiredFields: [],
+  viewVisibility: {{viewVisibilityExpr}},
+};

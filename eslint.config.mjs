@@ -37,4 +37,31 @@ export default tseslint.config(
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
+  {
+    // Chặn import sâu (xem ui-structure Phần B). Áp dụng theo từng phạm vi đã migrate;
+    // mở rộng dần sang các module V2 khác khi được migrate.
+    files: [
+      "src/v2/core/goods-receipts/**/*.{ts,tsx}",
+      "src/v2/modules/garage-goods-receipts/**/*.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/v2/core/*/**"],
+              message:
+                "Import từ barrel @/v2/core/<họ> thay vì đi vào file con.",
+            },
+            {
+              group: ["@/v2/shared/components/*/**"],
+              message:
+                "Import từ barrel @/v2/shared/components thay vì đi vào file con.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

@@ -12,6 +12,7 @@ import {
   ReceiptText,
   Wallet,
   Settings,
+  ShoppingCart,
 } from "lucide-react";
 import type {
   RawNavDef,
@@ -127,11 +128,19 @@ export const NAV_DEFS: RawNavDef[] = [
   },
   {
     id: "garage-goods-receipts",
-    sectionId: "inventory",
+    sectionId: "garage",
     labelKey: "v2.nav.items.garageGoodsReceipts",
     fallback: "Nhập kho Garage",
     icon: Package,
     href: "/garage-goods-receipts",
+  },
+  {
+    id: "garage-purchase-orders",
+    sectionId: "garage",
+    labelKey: "v2.nav.items.garagePurchaseOrders",
+    fallback: "Đơn mua hàng Garage",
+    icon: ShoppingCart,
+    href: "/garage-purchase-orders",
   },
   // v2-module:garage-goods-receipts:nav
   // plop:v2-nav-items
@@ -154,6 +163,11 @@ export const SECTION_DEFS: RawSectionDef[] = [
     id: "manufacturing",
     labelKey: "v2.nav.sections.manufacturing",
     fallback: "SẢN XUẤT",
+  },
+  {
+    id: "garage",
+    labelKey: "v2.nav.sections.garage",
+    fallback: "GARAGE",
   },
   {
     id: "accounting",

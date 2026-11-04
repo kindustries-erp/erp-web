@@ -5,7 +5,9 @@ import { GarageCashflowTable } from "../garage-cashflow-table/GarageCashflowTabl
 import { GarageCashflowExportDrawer } from "../garage-cashflow-export-drawer/GarageCashflowExportDrawer";
 import { GarageCaseStandaloneDrawer } from "../../GarageCaseStandaloneDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { GarageCashflowPrintTemplate } from "@/shared/components/print-templates/garage-cashflow-print-template";
 import { useGarageCashflowList } from "./GarageCashflowList.hook";
+import { useGarageCashflowPrint } from "../../../hooks/useGarageCashflowPrint";
 
 export interface GarageCashflowListProps {
   tabs?: TabItem[];
@@ -44,6 +46,9 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
     t,
   } = useGarageCashflowList({ onOpenCaseDetailProp, tabKey });
 
+  const { companyProfile, printRef, printData, printVoucher } =
+    useGarageCashflowPrint();
+
   return (
     <>
       <GarageCashflowTable
@@ -58,7 +63,16 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
         onOpenCaseDetail={handleOpenCaseDetail}
         canDelete={canDelete}
         onExportExcel={handleOpenExport}
+        onPrint={printVoucher}
       />
+
+      <div style={{ display: "none" }}>
+        <GarageCashflowPrintTemplate
+          ref={printRef}
+          companyProfile={companyProfile}
+          data={printData}
+        />
+      </div>
 
       <GarageCaseStandaloneDrawer
         isOpen={Boolean(selectedCaseCode)}

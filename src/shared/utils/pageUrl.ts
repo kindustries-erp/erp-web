@@ -48,6 +48,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-dashboard",
   "garage-cases",
   "garage-goods-receipts",
+  "garage-purchase-orders",
   "garage-opex",
   "garage-customers",
   "garage-partners",

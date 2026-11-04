@@ -1,4 +1,7 @@
 import type React from "react";
+import { V2Size, type V2SizeType } from "./v2-size";
+
+export { V2Size, type V2SizeType };
 
 /**
  * V2BaseProps — Base props cho mọi Container / Presentational component trong V2.
@@ -25,15 +28,10 @@ export type V2AnchorBaseProps = React.AnchorHTMLAttributes<HTMLAnchorElement>;
 export type V2InputBaseProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 /**
- * V2Size — Kích thước chuẩn hoá xuyên suốt hệ thống V2
- */
-export type V2Size = "xs" | "sm" | "md" | "lg";
-
-/**
  * V2SizedProps — Props cho component có hỗ trợ kích thước chuẩn
  */
 export interface V2SizedProps<
   T extends HTMLElement = HTMLDivElement,
 > extends V2BaseProps<T> {
-  size?: V2Size;
+  size?: V2SizeType;
 }
