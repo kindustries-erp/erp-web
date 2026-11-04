@@ -139,6 +139,61 @@ describe("GarageCashflowTable", () => {
       deleteItem?.onClick();
       expect(onDelete).toHaveBeenCalledWith(mockRow);
     });
+
+    it("includes print action labelled 'In phiếu thu' for RECEIPT when onPrint is provided", () => {
+      const onPrint = vi.fn();
+      const actionsFn = getGarageCashflowRowActions(
+        vi.fn(),
+        undefined,
+        true,
+        false,
+        undefined,
+        onPrint,
+      );
+      const actions = actionsFn(mockRow);
+
+      const printItem = actions
+        .flatMap((group: any) => group.items)
+        .find((item: any) => item.key === "print") as any;
+      expect(printItem).toBeDefined();
+      expect(printItem?.label).toBe("In phiếu thu");
+
+      printItem?.onClick();
+      expect(onPrint).toHaveBeenCalledWith(mockRow);
+    });
+
+    it("labels print action as 'In phiếu chi' for PAYMENT", () => {
+      const onPrint = vi.fn();
+      const actionsFn = getGarageCashflowRowActions(
+        vi.fn(),
+        undefined,
+        true,
+        false,
+        undefined,
+        onPrint,
+      );
+      const actions = actionsFn({ ...mockRow, voucherType: "PAYMENT" } as any);
+
+      const printItem = actions
+        .flatMap((group: any) => group.items)
+        .find((item: any) => item.key === "print") as any;
+      expect(printItem?.label).toBe("In phiếu chi");
+    });
+
+    it("omits print action when onPrint is not provided", () => {
+      const actionsFn = getGarageCashflowRowActions(
+        vi.fn(),
+        undefined,
+        true,
+        false,
+      );
+      const actions = actionsFn(mockRow);
+
+      const hasPrint = actions.some((group: any) =>
+        group.items?.some((item: any) => item.key === "print"),
+      );
+      expect(hasPrint).toBe(false);
+    });
   });
 
   describe("renderCaseCodeCell", () => {
