@@ -77,4 +77,22 @@ describe("useNavItems RBAC Guard", () => {
     expect(keys).toContain("dashboard");
     expect(keys).toContain("attachments");
   });
+
+  it("includes garage-procurement-requests when user has GARAGE_PROCUREMENT_REQUESTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      if (resource === ErpResource.GARAGE_PROCUREMENT_REQUESTS) return true;
+      return false;
+    });
+
+    const { result } = renderHook(() => useNavItems());
+    const keys = result.current.map((item) => item.key);
+
+    expect(keys).toContain("garage-procurement-requests");
+    const prItem = result.current.find(
+      (item) => item.key === "garage-procurement-requests",
+    );
+    expect(prItem?.section).toBe("GARAGE");
+    expect(prItem?.keywords).toContain("de nghi mua hang garage");
+    expect(prItem?.keywords).toContain("pr garage");
+  });
 });

@@ -7,6 +7,7 @@ import {
   ReceiptText,
   Package,
   ShoppingCart,
+  ClipboardList,
 } from "lucide-react";
 import { NavSection, NavItem } from "../SidebarPrimitives";
 import type { GarageNavSectionProps } from "./GarageNavSection.type";
@@ -22,18 +23,21 @@ export function GarageNavSection({
     canReadGarageCashflow,
     canReadGarageCases,
     canReadGarageGoodsReceipts,
+    canReadGarageProcurementRequests,
     canReadGaragePurchaseOrders,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
     isGoodsReceiptsActive,
+    isProcurementRequestsActive,
     isPurchaseOrdersActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
     handleNavGoodsReceipts,
+    handleNavProcurementRequests,
     handleNavPurchaseOrders,
     handleNavDebts,
     handleNavOpex,
@@ -46,6 +50,7 @@ export function GarageNavSection({
     !canReadGarageCashflow &&
     !canReadGarageCases &&
     !canReadGarageGoodsReceipts &&
+    !canReadGarageProcurementRequests &&
     !canReadGaragePurchaseOrders &&
     !canReadGarageDebts &&
     !canReadGarageOpex
@@ -76,6 +81,19 @@ export function GarageNavSection({
           active={isGoodsReceiptsActive}
           onClick={handleNavGoodsReceipts}
           contextPage="garage-goods-receipts"
+        />
+      )}
+      {canReadGarageProcurementRequests && (
+        <NavItem
+          collapsed={collapsed}
+          icon={<ClipboardList className="w-4 h-4 opacity-65 flex-shrink-0" />}
+          label={t(
+            "nav.items.garageProcurementRequests",
+            "Đề nghị mua hàng Garage",
+          )}
+          active={isProcurementRequestsActive}
+          onClick={handleNavProcurementRequests}
+          contextPage="garage-procurement-requests"
         />
       )}
       {canReadGaragePurchaseOrders && (

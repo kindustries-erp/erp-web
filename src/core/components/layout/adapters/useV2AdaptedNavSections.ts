@@ -30,6 +30,7 @@ import {
   Receipt,
   ReceiptText,
   ShoppingCart,
+  ClipboardList,
   Sliders,
 } from "lucide-react";
 
@@ -116,10 +117,15 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpResource.GARAGE_PROCUREMENT_ORDERS,
     ErpAction.READ,
   );
+  const canReadGarageProcurementRequests = useHasPermission(
+    ErpResource.GARAGE_PROCUREMENT_REQUESTS,
+    ErpAction.READ,
+  );
   const showGarage =
     canReadGarageCases ||
-    canReadGarageGoodsReceipts ||
+    canReadGarageProcurementRequests ||
     canReadGaragePurchaseOrders ||
+    canReadGarageGoodsReceipts ||
     canReadGarageCashflow ||
     canReadGarageDebts ||
     canReadGarageOpex;
@@ -379,6 +385,17 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           label: t("nav.items.garageCases", "Hoạt động garage"),
           icon: Car,
           href: "/garage-cases",
+        });
+      }
+      if (canReadGarageProcurementRequests) {
+        items.push({
+          id: "garage-procurement-requests",
+          label: t(
+            "nav.items.garageProcurementRequests",
+            "Đề nghị mua hàng Garage",
+          ),
+          icon: ClipboardList,
+          href: "/garage-procurement-requests",
         });
       }
       if (canReadGaragePurchaseOrders) {

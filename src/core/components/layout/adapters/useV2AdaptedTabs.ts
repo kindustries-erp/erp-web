@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, ClipboardList } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
@@ -48,6 +48,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-finished-goods": PackageCheck,
   "garage-dashboard": LayoutDashboard,
   "garage-cases": Car,
+  "garage-procurement-requests": ClipboardList,
   "garage-goods-receipts": Package,
   "garage-procurement-orders": ShoppingCart,
   "garage-opex": ReceiptText,
@@ -114,6 +115,11 @@ export function useV2AdaptedTabs(): {
       case "garage-dashboard":
       case "garage-cases":
         return t("nav.items.garageCases", "Hoạt động garage");
+      case "garage-procurement-requests":
+        return t(
+          "nav.items.garageProcurementRequests",
+          "Đề nghị mua hàng Garage",
+        );
       case "garage-goods-receipts":
         return t("nav.items.garageGoodsReceipts", "Nhập kho Garage");
       case "garage-procurement-orders":

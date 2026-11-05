@@ -26,6 +26,7 @@ import {
   Mail,
   Target,
   PackageCheck,
+  ClipboardList,
 } from "lucide-react";
 
 export interface NavSearchItem {
@@ -94,6 +95,10 @@ export function useNavItems(): NavSearchItem[] {
     ErpAction.READ,
   );
   const canReadGarage = useHasPermission(ErpResource.GARAGE, ErpAction.READ);
+  const canReadGarageProcurementRequests = useHasPermission(
+    ErpResource.GARAGE_PROCUREMENT_REQUESTS,
+    ErpAction.READ,
+  );
   const canReadGarageCashflow = useHasPermission(
     ErpResource.GARAGE_CASHFLOW,
     ErpAction.READ,
@@ -329,6 +334,28 @@ export function useNavItems(): NavSearchItem[] {
           "xuong",
         ],
         icon: <Car className="w-4 h-4" />,
+      });
+    }
+    if (canReadGarageProcurementRequests) {
+      items.push({
+        key: "garage-procurement-requests",
+        label: t(
+          "nav.items.garageProcurementRequests",
+          "Đề nghị mua hàng Garage",
+        ),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "de nghi mua hang",
+          "đề nghị mua hàng",
+          "de nghi mua hang garage",
+          "đề nghị mua hàng garage",
+          "pr garage",
+          "mua hang garage",
+          "phu tung",
+          "phụ tùng",
+        ],
+        icon: <ClipboardList className="w-4 h-4" />,
       });
     }
     if (canReadGarageCashflow) {
