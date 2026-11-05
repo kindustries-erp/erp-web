@@ -71,3 +71,5 @@ export * from "./v2-bottom-nav-hero-button";
 export * from "./v2-mobile-appearance-settings";
 export * from "./v2-mobile-nav-customize-bar";
 export * from "./v2-link-selection-modal";
+export * from "./v2-drawer-history-tab";
+export * from "./v2-group-header";

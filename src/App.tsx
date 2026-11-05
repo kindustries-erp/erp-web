@@ -138,8 +138,8 @@ const EmailInboxPage = lazy(() =>
   })),
 );
 const ErpPermissionsCorePage = lazy(() =>
-  import("@/pages/ErpPermissionsCorePage").then((m) => ({
-    default: m.ErpPermissionsCorePage,
+  import("@/v2/modules/rbac-roles").then((m) => ({
+    default: m.RolesPage,
   })),
 );
 const ErpInvoicesPage = lazy(() =>

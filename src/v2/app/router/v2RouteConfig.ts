@@ -138,6 +138,13 @@ export const V2_ROUTES: V2RouteDef[] = [
     permission: { collection: "garage_procurement_orders", action: "read" },
   },
   // v2-module:garage-goods-receipts:routes
+  {
+    id: "erp-permissions-core",
+    path: "/v2/erp-permissions-core",
+    title: "Phân quyền & Vai trò",
+    permission: { collection: "admin_users", action: "read" },
+  },
+  // v2-module:rbac-roles:routes
   // plop:v2-routes
 ];
 

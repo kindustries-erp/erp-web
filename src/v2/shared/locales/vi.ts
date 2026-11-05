@@ -40,6 +40,8 @@ export const v2Vi = {
         garageProcurementRequests: "Đề nghị mua hàng Garage",
         garageProcurementOrders: "Đơn mua hàng Garage",
         // v2-module:garage-goods-receipts:locale-vi
+        erpPermissionsCore: "Phân quyền & Vai trò",
+        // v2-module:rbac-roles:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",
