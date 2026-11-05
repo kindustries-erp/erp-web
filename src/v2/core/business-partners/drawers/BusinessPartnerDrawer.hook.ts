@@ -6,7 +6,6 @@ import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
 import { businessPartnersV2Api } from "../api/businessPartnersApi";
 import { useSaveBusinessPartnerMutation } from "../api/mutations/useBusinessPartnerMutations";
 import { businessPartnerKeys } from "../api/queries/businessPartnerKeys";
-import type { BusinessPartner } from "../domain/entities/businessPartner";
 import {
   emptyBusinessPartnerForm,
   type BusinessPartnerFormValue,
