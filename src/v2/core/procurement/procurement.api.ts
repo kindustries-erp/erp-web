@@ -46,7 +46,7 @@ export const toProcurementListParams = (query: V2TableQuery) => ({
  * Tạo API client cho một họ chứng từ procurement theo base path.
  * Hành động duyệt là POST `{base}/{id}/{action}`; hành động có lý do gửi `{ reason }`.
  */
-export function createProcurementApi<T, D = any, C = any, H = any>(
+export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
   basePath: string,
   options: {
     supportsDelete?: boolean;

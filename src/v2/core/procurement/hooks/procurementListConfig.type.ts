@@ -19,5 +19,5 @@ export interface ProcurementListConfig<T extends { id: string }> {
   /** PR: dòng có còn phần chưa đặt để tạo PO không */
   canOrderFromRequest?: (row: T) => boolean;
   /** PO: API của đề nghị mua, để điền sẵn khi tạo PO từ PR */
-  requestApi?: ProcurementApi<any, any, any, any>;
+  requestApi?: ProcurementApi<unknown>;
 }

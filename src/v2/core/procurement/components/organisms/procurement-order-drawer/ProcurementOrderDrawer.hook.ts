@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { todayIsoDate } from "../procurement.rules";
+import { todayIsoDate } from "../../../procurement.rules";
 import {
   emptyOrderForm,
   hasOrderFormErrors,
@@ -11,20 +11,20 @@ import {
   validateOrderForm,
   type ProcurementOrderFormErrors,
   type ProcurementOrderFormValue,
-} from "../form/procurementOrder.form";
-import { toOrderLinePayload } from "../form/procurementLine.form";
+} from "../../../form/procurementOrder.form";
+import { toOrderLinePayload } from "../../../form/procurementLine.form";
 import type {
   ProcurementOrderDetail,
   ProcurementPoDraft,
   ProcurementRequestDetail,
-} from "../procurement.types";
-import { orderFormFromRequestDraft } from "../form/procurementOrder.form";
+} from "../../../procurement.types";
+import { orderFormFromRequestDraft } from "../../../form/procurementOrder.form";
 import {
   showProcurementError,
   showProcurementSuccess,
   showProcurementWarning,
-} from "../procurement.toast";
-import type { ProcurementDrawerProps } from "./procurementDrawer.type";
+} from "../../../procurement.toast";
+import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
 
 /** Trạng thái drawer PO: tải chi tiết, form, lưu. Sửa được khi đơn còn nháp. */
 export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {

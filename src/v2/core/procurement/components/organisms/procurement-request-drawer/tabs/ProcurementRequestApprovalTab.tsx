@@ -9,7 +9,7 @@ import type {
 import type {
   ProcurementApi,
   ProcurementApprovalEvent,
-} from "../../procurement.types";
+} from "../../../../procurement.types";
 
 export interface ProcurementRequestApprovalTabProps {
   documentId?: string | null;

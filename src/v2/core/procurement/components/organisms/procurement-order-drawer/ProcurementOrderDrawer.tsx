@@ -1,11 +1,9 @@
 import { V2StandardDrawer } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import type { ProcurementDrawerProps } from "./procurementDrawer.type";
+import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
 import { useProcurementOrderDrawer } from "./ProcurementOrderDrawer.hook";
-import {
-  ProcurementOrderMainSections,
-  ProcurementOrderSummary,
-} from "./ProcurementOrderDrawer.sections";
+import { ProcurementOrderMainSections } from "./ProcurementOrderMainSections";
+import { ProcurementOrderSummarySection } from "./sections/ProcurementOrderSummarySection";
 
 /** Drawer đơn mua hàng 2 cột: trái là đầu đơn và dòng hàng, phải là tổng quan. */
 export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
@@ -62,12 +60,14 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
           errors={state.errors}
           viewing={state.viewing}
           branchLocked={state.branchLocked}
-          detail={state.detail}
           setField={state.setField}
         />
       }
       rightPanel={
-        <ProcurementOrderSummary form={state.form} detail={state.detail} />
+        <ProcurementOrderSummarySection
+          form={state.form}
+          detail={state.detail}
+        />
       }
     />
   );

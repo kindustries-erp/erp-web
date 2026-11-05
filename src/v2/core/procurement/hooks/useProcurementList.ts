@@ -1,18 +1,15 @@
 import * as React from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import type { V2RowActionGroup } from "@/v2/shared/types/v2-table";
-import {
-  showProcurementError,
-  showProcurementSuccess,
-} from "../procurement.toast";
+import { showProcurementError } from "../procurement.toast";
 import {
   PROCUREMENT_REASON_ACTIONS,
   type ProcurementActionKey,
 } from "../procurement.rules";
 import type { ProcurementListConfig } from "./procurementListConfig.type";
 import { useProcurementPurge } from "./useProcurementPurge";
+import { useProcurementTransition } from "./useProcurementTransition";
+import { useProcurementRowActions } from "./useProcurementRowActions";
 import {
   consumeProcurementRequestIntent,
   useProcurementIntentStore,
@@ -31,12 +28,16 @@ export interface ProcurementDrawerTarget {
   fromRequestId?: string | null;
 }
 
-/** Trạng thái màn danh sách: drawer, hành động dòng, modal, xóa nháp và luồng tạo PO từ PR. */
+/** Kiểu trả về của `useProcurementList`, dùng cho các component con nhận state. */
+export type ProcurementListState<T extends { id: string }> = ReturnType<
+  typeof useProcurementList<T>
+>;
+
+/** Trạng thái màn danh sách: drawer, modal lý do/xác nhận/xóa và luồng tạo PO từ PR. */
 export function useProcurementList<T extends { id: string }>(
   config: ProcurementListConfig<T>,
 ) {
   const { t } = useV2Translation();
-  const queryClient = useQueryClient();
   const canCreate = useV2HasPermission({
     collection: config.permissionCollection,
     action: "create",
@@ -78,42 +79,12 @@ export function useProcurementList<T extends { id: string }>(
     [t],
   );
 
-  const transition = useMutation({
-    mutationFn: (vars: {
-      id: string;
-      action: ProcurementActionKey;
-      reason?: string;
-    }) => config.api.transition(vars.id, vars.action, vars.reason),
-    onSuccess: () => {
-      showProcurementSuccess(
-        t("v2.procurement.actionDone", "Đã cập nhật chứng từ"),
-      );
+  const { transition, remove } = useProcurementTransition(config, {
+    onTransitioned: () => {
       setReasonTarget(null);
       setConfirmTarget(null);
-      void queryClient.invalidateQueries({ queryKey: [config.queryKey] });
     },
-    onError: (error) =>
-      showProcurementError(
-        error,
-        t("v2.procurement.actionError", "Không thực hiện được thao tác"),
-      ),
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: string) => {
-      if (!config.api.remove) throw new Error("remove not supported");
-      return config.api.remove(id);
-    },
-    onSuccess: () => {
-      showProcurementSuccess(t("v2.procurement.deleteDone", "Đã xóa đơn nháp"));
-      setDeleteTarget(null);
-      void queryClient.invalidateQueries({ queryKey: [config.queryKey] });
-    },
-    onError: (error) =>
-      showProcurementError(
-        error,
-        t("v2.procurement.actionError", "Không thực hiện được thao tác"),
-      ),
+    onRemoved: () => setDeleteTarget(null),
   });
 
   const start = React.useCallback((row: T, action: ProcurementActionKey) => {
@@ -135,70 +106,22 @@ export function useProcurementList<T extends { id: string }>(
     [config.poHref],
   );
 
-  const rowActions = React.useCallback(
-    (row: T): V2RowActionGroup[] => {
-      const view = {
-        label: t("v2.procurement.actions.view", "Xem"),
-        onClick: () => setDrawer({ id: row.id, mode: "view" }),
-      };
-      const edit =
-        canUpdate && config.isEditable(row)
-          ? [
-              {
-                label: t("v2.procurement.actions.edit", "Sửa"),
-                onClick: () => setDrawer({ id: row.id, mode: "edit" }),
-              },
-            ]
-          : [];
-      const transitions = canUpdate
-        ? config.availableActions(row).map((action) => ({
-            label: t(`v2.procurement.actions.${action}`, action),
-            onClick: () => start(row, action),
-            variant:
-              action === "cancel" || action === "reject"
-                ? ("danger" as const)
-                : ("default" as const),
-          }))
-        : [];
-      const fromRequest =
-        canCreate && config.poHref && config.canOrderFromRequest?.(row)
-          ? [
-              {
-                label: t("v2.procurement.actions.createOrder", "Tạo PO từ PR"),
-                onClick: () => orderFromRequest(row),
-              },
-            ]
-          : [];
-      const deletable =
-        canDelete && config.api.remove && config.isEditable(row)
-          ? [
-              {
-                label: t("v2.procurement.actions.delete", "Xóa"),
-                onClick: () => setDeleteTarget(row),
-                variant: "danger" as const,
-              },
-            ]
-          : [];
-      const purgeable = purgeState.purgeActions(row);
-      return [
-        { items: [view, ...edit, ...fromRequest] },
-        ...(transitions.length ? [{ items: transitions }] : []),
-        ...(deletable.length || purgeable.length
-          ? [{ items: [...deletable, ...purgeable] }]
-          : []),
-      ];
-    },
-    [
-      canCreate,
-      canDelete,
-      canUpdate,
-      config,
-      orderFromRequest,
-      start,
-      t,
-      purgeState,
-    ],
+  const openDrawer = React.useCallback(
+    (id: string, mode: "view" | "edit") => setDrawer({ id, mode }),
+    [],
   );
+
+  const rowActions = useProcurementRowActions<T>({
+    config,
+    canCreate,
+    canUpdate,
+    canDelete,
+    openDrawer,
+    start,
+    openDelete: (row) => setDeleteTarget(row),
+    orderFromRequest,
+    purgeActions: purgeState.purgeActions,
+  });
 
   const submitReason = (reason: string) => {
     if (!reasonTarget) return;
@@ -213,7 +136,7 @@ export function useProcurementList<T extends { id: string }>(
     canCreate,
     canUpdate,
     drawer,
-    openView: (id: string) => setDrawer({ id, mode: "view" }),
+    openView: (id: string) => openDrawer(id, "view"),
     openCreate: () => setDrawer({ id: null, mode: "edit" }),
     closeDrawer: () => setDrawer(null),
     rowActions,

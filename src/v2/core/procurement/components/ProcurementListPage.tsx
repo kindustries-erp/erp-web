@@ -1,9 +1,5 @@
 import * as React from "react";
-import {
-  V2ConfirmModal,
-  V2ModulePage,
-  type V2ModuleTab,
-} from "@/v2/shared/components";
+import { V2ModulePage, type V2ModuleTab } from "@/v2/shared/components";
 import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.type";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
@@ -13,9 +9,10 @@ import {
 import { useProcurementList } from "../hooks/useProcurementList";
 import { useProcurementQuery } from "../hooks/useProcurementQuery";
 import type { ProcurementListConfig } from "../hooks/procurementListConfig.type";
-import { ProcurementReasonModal } from "./ProcurementReasonModal";
 import { V2Button } from "@/v2/shared/components";
-import type { ProcurementDrawerProps } from "../drawers/procurementDrawer.type";
+import type { ProcurementDrawerProps } from "../procurement.drawer.type";
+import type { ProcurementDocumentRef } from "../procurement.types";
+import { ProcurementListModals } from "./ProcurementListModals";
 
 export interface ProcurementPageDisplay<T> {
   tableId: string;
@@ -28,6 +25,15 @@ export interface ProcurementPageDisplay<T> {
   ) => V2Column<T>[];
   /** Drawer chi tiết/sửa của họ chứng từ, dựng bởi module */
   renderDrawer: (props: ProcurementDrawerProps) => React.ReactNode;
+}
+
+/** Chứng từ mở trong drawer: ưu tiên row từ drawer, không có thì lấy id đang mở. */
+function resolveDrawerTarget<T>(
+  row: ProcurementDocumentRef | undefined,
+  openId: string | null,
+): T | null {
+  const target = row ?? (openId ? { id: openId } : null);
+  return target as T | null;
 }
 
 export interface ProcurementListPageProps<T extends { id: string }> {
@@ -74,11 +80,6 @@ export function ProcurementListPage<T extends { id: string }>({
     [columns, config, display.tableId, state, t],
   );
 
-  const reasonLabel = state.reasonTarget
-    ? `${t(`v2.procurement.actions.${state.reasonTarget.action}`, state.reasonTarget.action)} ${config.rowLabel(state.reasonTarget.row)}`
-    : "";
-  const confirm = state.confirmTarget;
-
   return (
     <V2ModulePage<T>
       title={t(display.titleKey, "")}
@@ -107,77 +108,18 @@ export function ProcurementListPage<T extends { id: string }>({
                 fromRequestId: drawer.fromRequestId ?? null,
                 requestApi: config.requestApi,
                 onTransition: (action, row) => {
-                  const target =
-                    row ?? (drawer.id ? ({ id: drawer.id } as T) : null);
+                  const target = resolveDrawerTarget<T>(row, drawer.id);
                   if (target) state.start(target, action);
                 },
                 canCreateOrder: state.canCreate && Boolean(config.poHref),
                 onOrderFromRequest: (row) => {
-                  const target =
-                    row ?? (drawer.id ? ({ id: drawer.id } as T) : null);
+                  const target = resolveDrawerTarget<T>(row, drawer.id);
                   if (target) state.orderFromRequest(target);
                 },
               })}
             </React.Fragment>
           )}
-          <ProcurementReasonModal
-            open={Boolean(state.reasonTarget)}
-            title={reasonLabel}
-            isLoading={state.isTransitioning}
-            onCancel={state.closeReason}
-            onConfirm={state.submitReason}
-          />
-          <V2ConfirmModal
-            open={Boolean(state.deleteTarget)}
-            title={t("v2.procurement.delete.title", "Xóa đơn nháp")}
-            message={
-              state.deleteTarget
-                ? `${t("v2.procurement.delete.message", "Đơn nháp sẽ bị xóa. Bạn có chắc không?")} ${config.rowLabel(state.deleteTarget)}`
-                : ""
-            }
-            confirmLabel={t("v2.procurement.actions.delete", "Xóa")}
-            cancelLabel={t("v2.common.cancel", "Hủy")}
-            variant="danger"
-            isLoading={state.isTransitioning}
-            onConfirm={state.confirmDelete}
-            onCancel={state.closeDelete}
-            onOpenChange={(open) => !open && state.closeDelete()}
-          />
-          <V2ConfirmModal
-            open={Boolean(state.purgeTarget)}
-            title={t("v2.procurement.purge.title", "Xóa vĩnh viễn đơn nháp")}
-            message={
-              state.purgeTarget
-                ? `${t("v2.procurement.purge.message", "Đơn nháp sẽ bị xóa khỏi hệ thống và không khôi phục được. Bạn có chắc không?")} ${config.rowLabel(state.purgeTarget)}`
-                : ""
-            }
-            confirmLabel={t("v2.procurement.actions.purge", "Xóa vĩnh viễn")}
-            cancelLabel={t("v2.common.cancel", "Hủy")}
-            variant="danger"
-            isLoading={state.isTransitioning}
-            onConfirm={state.confirmPurge}
-            onCancel={state.closePurge}
-            onOpenChange={(open) => !open && state.closePurge()}
-          />
-          <V2ConfirmModal
-            open={Boolean(confirm)}
-            title={t("v2.procurement.confirm.title", "Xác nhận thao tác")}
-            message={
-              confirm
-                ? `${t("v2.procurement.confirm.message", "Bạn có chắc muốn thực hiện thao tác này?")} ${config.rowLabel(confirm.row)}`
-                : ""
-            }
-            confirmLabel={
-              confirm
-                ? t(`v2.procurement.actions.${confirm.action}`, confirm.action)
-                : ""
-            }
-            cancelLabel={t("v2.common.cancel", "Hủy")}
-            isLoading={state.isTransitioning}
-            onConfirm={state.confirmAction}
-            onCancel={state.closeConfirm}
-            onOpenChange={(open) => !open && state.closeConfirm()}
-          />
+          <ProcurementListModals config={config} state={state} />
         </>
       }
     />

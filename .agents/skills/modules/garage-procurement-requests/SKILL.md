@@ -14,8 +14,9 @@ description: Module tri thức Frontend V2 cho Quản lý Đề nghị Mua hàng
 - **Core** `src/v2/core/procurement/` quản lý mọi thành phần tái sử dụng của họ mua hàng (PR và PO):
   - **Table Columns** (`columns/procurementRequestColumns.tsx`): 8 cột dữ liệu với `headerFilter`, `V2TableText` tương tác click xem chi tiết + copy, format tiền tệ VNĐ, badge trạng thái ngữ nghĩa (`ProcurementStatusBadge`).
   - **Table Query & Search Engine**: Hàm `toProcurementListParams` chuyển đổi đầy đủ `V2TableQuery` (gồm `column_filters`, `column_search`, `column_operators`, `date_ranges`, `sort`, `search`) sang query params JSON chuẩn V2, kết nối trực tiếp với Database QueryBuilder bên API backend (`TABLE_COLUMNS`).
-  - **Drawer Chuẩn V2** (`drawers/ProcurementRequestDrawer.tsx`): Tích hợp 3 Top Navigation Tabs (`general`: Chi tiết & Dòng hàng, `audit`: Nhật ký duyệt `DrawerAuditTimeline`, `traceability`: Chứng từ PO liên kết qua `DrawerRelatedDeck`).
-  - **Atomic Sections (< 180 LoC)**: Tách biệt rõ `ProcurementRequestHeaderSection.tsx`, `ProcurementLinesEditor.tsx`, `ProcurementLineRow.tsx`, `ProcurementRequestSummarySection.tsx`, `ProcurementRequestApprovalTab.tsx`, `ProcurementRequestRelatedTab.tsx`, `useProcurementDrawerActions.ts`.
+  - **Drawer Chuẩn V2** (`components/organisms/procurement-request-drawer/ProcurementRequestDrawer.tsx`): Tích hợp 3 Top Navigation Tabs (`general`: Chi tiết & Dòng hàng, `audit`: Nhật ký duyệt `DrawerAuditTimeline`, `traceability`: Chứng từ PO liên kết qua `DrawerRelatedDeck`). Mỗi drawer nằm trong folder riêng, có `index.ts`.
+  - **Atomic Sections (< 180 LoC)**: Tách biệt rõ `ProcurementRequestMainSections.tsx`, `sections/ProcurementRequestHeaderSection.tsx`, `sections/ProcurementRequestSummarySection.tsx`, `tabs/ProcurementRequestApprovalTab.tsx`, `tabs/ProcurementRequestRelatedTab.tsx`, `ProcurementRequestDrawer.biz.hook.ts` (nút duyệt footer). Dòng hàng dùng chung `components/organisms/procurement-lines-editor/`.
+  - **Hook danh sách (< 180 LoC)**: `useProcurementList` là orchestrator, ghép `useProcurementTransition` (mutation chuyển trạng thái/xóa nháp) và `useProcurementRowActions` (nhóm thao tác theo dòng). Modal lý do/xác nhận/xóa/purge nằm ở `components/ProcurementListModals.tsx`.
   - **Hành động trực tiếp**: Ở chế độ xem (View Mode), các thao tác duyệt (Gửi duyệt, Duyệt, Từ chối, Hủy...) được kích hoạt trực tiếp từ Drawer Footer hoặc menu dropdown `Thao tác`.
 
 ```
@@ -38,19 +39,23 @@ src/v2/core/procurement/
 │   │   └── procurement-lines-editor/      # Bảng nhập dòng hàng hóa / dịch vụ
 │   │       ├── ProcurementLinesEditor.tsx # Khung bảng và nút thêm dòng (< 90 LoC)
 │   │       └── ProcurementLineRow.tsx     # Dòng chi tiết nhập liệu mobile-first (< 160 LoC)
-│   ├── ProcurementListPage.tsx            # Template bảng V2ModulePage (< 180 LoC)
+│   │   ├── procurement-request-drawer/    # Drawer đề nghị mua (folder-per-component)
+│   │   │   ├── ProcurementRequestDrawer.tsx        # V2StandardDrawer với Top Tabs
+│   │   │   ├── ProcurementRequestDrawer.hook.ts    # Hook form, mode, tabs
+│   │   │   ├── ProcurementRequestDrawer.biz.hook.ts # Hook nút duyệt footer
+│   │   │   ├── ProcurementRequestMainSections.tsx  # Phần trái: đầu đề + dòng hàng
+│   │   │   ├── sections/                           # Header, Summary
+│   │   │   ├── tabs/                               # ApprovalTab, RelatedTab
+│   │   │   └── index.ts
+│   │   └── procurement-order-drawer/      # Drawer đơn mua (PO), cùng cấu trúc
+│   ├── ProcurementListPage.tsx            # Template bảng V2ModulePage (< 130 LoC)
+│   ├── ProcurementListModals.tsx          # 4 modal: lý do, xóa, purge, xác nhận
 │   └── ProcurementReasonModal.tsx         # Modal nhập lý do từ chối/hủy/đóng
-├── drawers/
-│   ├── sections/
-│   │   ├── ProcurementRequestHeaderSection.tsx   # Thông tin đề nghị (< 120 LoC)
-│   │   └── ProcurementRequestSummarySection.tsx  # Cột tổng quan phải (< 60 LoC)
-│   ├── tabs/
-│   │   ├── ProcurementRequestApprovalTab.tsx     # Tab nhật ký duyệt (< 90 LoC)
-│   │   └── ProcurementRequestRelatedTab.tsx      # Tab chứng từ PO liên kết (< 130 LoC, DrawerRelatedDeck)
-│   ├── ProcurementRequestDrawer.tsx       # V2StandardDrawer với Top Tabs (< 130 LoC)
-│   ├── ProcurementRequestDrawer.hook.ts   # Hook quản lý form, mode, tabs (< 130 LoC)
-│   ├── useProcurementDrawerActions.ts     # Hook quản lý nút duyệt footer (< 80 LoC)
-│   └── procurementDrawer.type.ts          # Contract props
+├── hooks/
+│   ├── useProcurementList.ts              # Orchestrator màn danh sách (< 180 LoC)
+│   ├── useProcurementTransition.ts        # Mutation chuyển trạng thái, xóa nháp
+│   └── useProcurementRowActions.ts        # Nhóm thao tác theo dòng
+├── procurement.drawer.type.ts             # Contract props drawer (ProcurementDocumentRef)
 ├── procurement.api.ts                     # API client & toProcurementListParams (< 130 LoC)
 └── procurement.locale.ts                  # Từ điển vi/en (v2.procurement.*)
 ```

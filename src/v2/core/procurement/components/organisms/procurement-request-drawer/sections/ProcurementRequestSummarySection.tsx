@@ -1,14 +1,14 @@
 import * as React from "react";
 import { DrawerRow, DrawerSection } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { ProcurementStatusBadge } from "../../components/molecules/procurement-status-badge";
-import { formatProcurementMoney } from "../../procurement.rules";
+import { ProcurementStatusBadge } from "../../../molecules/procurement-status-badge";
+import { formatProcurementMoney } from "../../../../procurement.rules";
 import {
   procurementLineAmount,
   sumProcurementLines,
-} from "../../form/procurementLine.form";
-import type { ProcurementRequestFormValue } from "../../form/procurementRequest.form";
-import type { ProcurementRequestDetail } from "../../procurement.types";
+} from "../../../../form/procurementLine.form";
+import type { ProcurementRequestFormValue } from "../../../../form/procurementRequest.form";
+import type { ProcurementRequestDetail } from "../../../../procurement.types";
 
 export interface ProcurementRequestSummarySectionProps {
   form: ProcurementRequestFormValue;

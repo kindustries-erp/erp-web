@@ -6,7 +6,7 @@ import {
   PROCUREMENT_REQUEST_FROM,
   todayIsoDate,
   type ProcurementActionKey,
-} from "../procurement.rules";
+} from "../../../procurement.rules";
 import {
   emptyRequestForm,
   hasRequestFormErrors,
@@ -17,14 +17,14 @@ import {
   validateRequestForm,
   type ProcurementRequestFormErrors,
   type ProcurementRequestFormValue,
-} from "../form/procurementRequest.form";
-import type { ProcurementRequestDetail } from "../procurement.types";
+} from "../../../form/procurementRequest.form";
+import type { ProcurementRequestDetail } from "../../../procurement.types";
 import {
   showProcurementError,
   showProcurementSuccess,
   showProcurementWarning,
-} from "../procurement.toast";
-import type { ProcurementDrawerProps } from "./procurementDrawer.type";
+} from "../../../procurement.toast";
+import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
 
 export type ProcurementDrawerTabKey = "general" | "audit" | "traceability";
 

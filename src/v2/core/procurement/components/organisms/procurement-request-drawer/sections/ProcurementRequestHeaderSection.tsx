@@ -10,11 +10,11 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   ProcurementBranchPicker,
   ProcurementDateField,
-} from "../../components/molecules/procurement-pickers/ProcurementPickers";
+} from "../../../molecules/procurement-pickers/ProcurementPickers";
 import type {
   ProcurementRequestFormErrors,
   ProcurementRequestFormValue,
-} from "../../form/procurementRequest.form";
+} from "../../../../form/procurementRequest.form";
 
 export interface ProcurementRequestHeaderSectionProps {
   form: ProcurementRequestFormValue;

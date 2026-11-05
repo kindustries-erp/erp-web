@@ -1,8 +1,4 @@
-import type {
-  V2FetchOptions,
-  V2FetchOptionsParams,
-  V2TableQuery,
-} from "@/v2/shared/types/v2-table";
+import type { V2FetchOptions, V2TableQuery } from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
 
 /** Dòng danh sách PO (đã bỏ dòng chi tiết, khớp response danh sách của API). */
@@ -120,7 +116,12 @@ export type ProcurementLinePayload = Record<string, unknown>;
  * base path riêng (ví dụ `/api/v2/garage-procurement-orders`).
  * D: chi tiết, C: payload tạo, H: payload sửa đầu đơn.
  */
-export interface ProcurementApi<T, D = any, C = any, H = any> {
+/** Tham chiếu tối thiểu tới một chứng từ (đủ để chuyển trạng thái hoặc mở PO). */
+export interface ProcurementDocumentRef {
+  id: string;
+}
+
+export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   list: (query: V2TableQuery) => Promise<{ items: T[]; total: number }>;
   transition: (
     id: string,

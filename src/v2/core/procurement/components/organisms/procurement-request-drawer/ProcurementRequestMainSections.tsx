@@ -1,21 +1,14 @@
 import * as React from "react";
 import { DrawerSection } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { ProcurementLinesEditor } from "../components/organisms/procurement-lines-editor/ProcurementLinesEditor";
-import {
-  ProcurementRequestHeaderSection,
-  type ProcurementRequestHeaderSectionProps,
-} from "./sections/ProcurementRequestHeaderSection";
-import {
-  ProcurementRequestSummarySection,
-  type ProcurementRequestSummarySectionProps,
-} from "./sections/ProcurementRequestSummarySection";
-import type { ProcurementLineFormValue } from "../form/procurementLine.form";
+import type { ProcurementLineFormValue } from "../../../form/procurementLine.form";
 import type {
   ProcurementRequestFormErrors,
   ProcurementRequestFormValue,
-} from "../form/procurementRequest.form";
-import type { ProcurementRequestDetail } from "../procurement.types";
+} from "../../../form/procurementRequest.form";
+import type { ProcurementRequestDetail } from "../../../procurement.types";
+import { ProcurementLinesEditor } from "../procurement-lines-editor/ProcurementLinesEditor";
+import { ProcurementRequestHeaderSection } from "./sections/ProcurementRequestHeaderSection";
 
 export interface ProcurementRequestSectionsProps {
   form: ProcurementRequestFormValue;
@@ -74,12 +67,3 @@ export function ProcurementRequestMainSections(
     </div>
   );
 }
-
-/** Re-export section tổng quan bên phải. */
-export const ProcurementRequestSummary = ProcurementRequestSummarySection;
-export {
-  ProcurementRequestHeaderSection,
-  ProcurementRequestSummarySection,
-  type ProcurementRequestHeaderSectionProps,
-  type ProcurementRequestSummarySectionProps,
-};

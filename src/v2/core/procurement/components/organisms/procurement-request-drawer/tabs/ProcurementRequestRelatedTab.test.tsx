@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ProcurementRequestRelatedTab } from "./ProcurementRequestRelatedTab";
-import type { ProcurementRequestDetail } from "../../procurement.types";
+import type { ProcurementRequestDetail } from "../../../../procurement.types";
 
 const mockDetail: ProcurementRequestDetail = {
   id: "pr-1",

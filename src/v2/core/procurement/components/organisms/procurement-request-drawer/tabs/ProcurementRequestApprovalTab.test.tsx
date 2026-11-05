@@ -9,7 +9,7 @@ import {
 import type {
   ProcurementApi,
   ProcurementApprovalEvent,
-} from "../../procurement.types";
+} from "../../../../procurement.types";
 
 const createTestQueryClient = () =>
   new QueryClient({

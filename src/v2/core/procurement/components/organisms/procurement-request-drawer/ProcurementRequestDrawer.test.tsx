@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ProcurementRequestDrawer } from "./ProcurementRequestDrawer";
-import type { ProcurementDrawerProps } from "./procurementDrawer.type";
-import type { ProcurementRequestDetail } from "../procurement.types";
+import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
+import type { ProcurementRequestDetail } from "../../../procurement.types";
 
 const createTestQueryClient = () =>
   new QueryClient({

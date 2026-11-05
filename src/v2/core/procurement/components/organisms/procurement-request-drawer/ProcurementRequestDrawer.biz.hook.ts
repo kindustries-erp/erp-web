@@ -4,8 +4,11 @@ import type {
   V2DropdownEntry,
 } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import type { ProcurementActionKey } from "../procurement.rules";
-import type { ProcurementRequestDetail } from "../procurement.types";
+import type { ProcurementActionKey } from "../../../procurement.rules";
+import type {
+  ProcurementDocumentRef,
+  ProcurementRequestDetail,
+} from "../../../procurement.types";
 
 export interface UseProcurementDrawerActionsInput {
   viewing: boolean;
@@ -16,7 +19,10 @@ export interface UseProcurementDrawerActionsInput {
   loading: boolean;
   onClose: () => void;
   onSubmit: () => void;
-  onTransition?: (action: ProcurementActionKey, row?: any) => void;
+  onTransition?: (
+    action: ProcurementActionKey,
+    row?: ProcurementDocumentRef,
+  ) => void;
 }
 
 /** Hook quản lý thanh nút và menu thao tác của Drawer đề nghị mua. */

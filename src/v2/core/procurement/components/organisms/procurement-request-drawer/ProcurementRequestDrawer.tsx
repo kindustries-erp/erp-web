@@ -3,18 +3,16 @@ import { FileText, History, Link2 } from "lucide-react";
 import { V2StandardDrawer } from "@/v2/shared/components";
 import type { V2TabItemData } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import type { ProcurementDrawerProps } from "./procurementDrawer.type";
+import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
 import {
   useProcurementRequestDrawer,
   type ProcurementDrawerTabKey,
 } from "./ProcurementRequestDrawer.hook";
-import {
-  ProcurementRequestMainSections,
-  ProcurementRequestSummary,
-} from "./ProcurementRequestDrawer.sections";
+import { ProcurementRequestMainSections } from "./ProcurementRequestMainSections";
+import { ProcurementRequestSummarySection } from "./sections/ProcurementRequestSummarySection";
 import { ProcurementRequestApprovalTab } from "./tabs/ProcurementRequestApprovalTab";
 import { ProcurementRequestRelatedTab } from "./tabs/ProcurementRequestRelatedTab";
-import { useProcurementDrawerActions } from "./useProcurementDrawerActions";
+import { useProcurementDrawerActions } from "./ProcurementRequestDrawer.biz.hook";
 
 /** Drawer đề nghị mua chuẩn V2: 3 top navigation tabs, 2 cột và thao tác duyệt trực tiếp. */
 export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
@@ -58,6 +56,8 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
   });
 
   const isGeneral = state.tab === "general";
+  const detail = state.detail;
+  const onOrderFromRequest = props.onOrderFromRequest;
   const leftPanel = isGeneral ? (
     <ProcurementRequestMainSections
       form={state.form}
@@ -76,11 +76,11 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
     />
   ) : (
     <ProcurementRequestRelatedTab
-      detail={state.detail}
+      detail={detail}
       canCreateOrder={props.canCreateOrder}
       onOrderFromRequest={
-        state.detail && props.onOrderFromRequest
-          ? () => props.onOrderFromRequest!(state.detail)
+        detail && onOrderFromRequest
+          ? () => onOrderFromRequest(detail)
           : undefined
       }
     />
@@ -116,7 +116,10 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
       leftPanel={leftPanel}
       rightPanel={
         isGeneral ? (
-          <ProcurementRequestSummary form={state.form} detail={state.detail} />
+          <ProcurementRequestSummarySection
+            form={state.form}
+            detail={state.detail}
+          />
         ) : undefined
       }
     />

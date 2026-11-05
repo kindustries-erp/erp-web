@@ -9,8 +9,8 @@ import {
 } from "@/v2/shared/components";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { ProcurementStatusBadge } from "../../components/molecules/procurement-status-badge";
-import type { ProcurementRequestDetail } from "../../procurement.types";
+import { ProcurementStatusBadge } from "../../../molecules/procurement-status-badge";
+import type { ProcurementRequestDetail } from "../../../../procurement.types";
 
 export interface ProcurementRequestRelatedTabProps {
   detail?: ProcurementRequestDetail;
