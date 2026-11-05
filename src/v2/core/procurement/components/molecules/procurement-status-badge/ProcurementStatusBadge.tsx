@@ -19,16 +19,20 @@ export function getProcurementBadgeVariant(value: string): V2BadgeVariant {
   switch (value) {
     case "APPROVED":
     case "FULL":
+    case "PAID":
       return V2BadgeVariant.SUCCESS;
     case "SUBMITTED":
     case "PENDING_APPROVAL":
+    case "ISSUED":
     case "PARTIAL":
+    case "PARTIALLY_PAID":
       return V2BadgeVariant.WARNING;
     case "REJECTED":
     case "CANCELLED":
       return V2BadgeVariant.DESTRUCTIVE;
     case "CLOSED":
     case "NONE":
+    case "UNPAID":
       return V2BadgeVariant.OUTLINE;
     case "DRAFT":
     default:

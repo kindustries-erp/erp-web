@@ -21,6 +21,8 @@ export interface ProcurementOrderRow {
   paymentStatus: string;
   supplierInvoiceNo: string | null;
   createdBy: string | null;
+  /** Email người tạo, chỉ có trong danh sách. */
+  createdByEmail?: string | null;
   issuedAt: string | null;
 }
 

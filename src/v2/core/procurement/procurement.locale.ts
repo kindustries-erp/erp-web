@@ -38,6 +38,9 @@ registerV2ModuleLocale("procurement", {
       NONE: "Chưa nhận",
       PARTIAL: "Nhận một phần",
       FULL: "Đã nhận đủ",
+      UNPAID: "Chưa thanh toán",
+      PARTIALLY_PAID: "Thanh toán một phần",
+      PAID: "Đã thanh toán",
     },
     columns: {
       orderNo: "Số đơn",
@@ -169,6 +172,9 @@ registerV2ModuleLocale("procurement", {
       NONE: "Not received",
       PARTIAL: "Partially received",
       FULL: "Fully received",
+      UNPAID: "Unpaid",
+      PARTIALLY_PAID: "Partially paid",
+      PAID: "Paid",
     },
     columns: {
       orderNo: "Order no.",

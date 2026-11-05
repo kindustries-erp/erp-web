@@ -5,6 +5,10 @@ import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.type";
 import { ProcurementStatusBadge } from "../components/molecules/procurement-status-badge";
 import type { ProcurementRequestRow } from "../procurement.types";
+import {
+  getOrderingStatusOptions,
+  getRequestStatusOptions,
+} from "./procurementStatusOptions";
 
 type T = (key: string, fallback: string) => string;
 
@@ -15,28 +19,6 @@ const formatMoney = (value: string | number | null | undefined) =>
 
 const formatDate = (value: string | null | undefined) =>
   value ? value.slice(0, 10) : "—";
-
-const getRequestStatusOptions = (t: T) => [
-  { value: "DRAFT", label: t("v2.procurement.status.DRAFT", "Bản nháp") },
-  {
-    value: "PENDING_APPROVAL",
-    label: t("v2.procurement.status.PENDING_APPROVAL", "Chờ duyệt"),
-  },
-  {
-    value: "SUBMITTED",
-    label: t("v2.procurement.status.SUBMITTED", "Chờ duyệt"),
-  },
-  { value: "APPROVED", label: t("v2.procurement.status.APPROVED", "Đã duyệt") },
-  { value: "REJECTED", label: t("v2.procurement.status.REJECTED", "Từ chối") },
-  { value: "CANCELLED", label: t("v2.procurement.status.CANCELLED", "Đã hủy") },
-  { value: "CLOSED", label: t("v2.procurement.status.CLOSED", "Đã đóng") },
-];
-
-const getOrderingStatusOptions = (t: T) => [
-  { value: "NONE", label: t("v2.procurement.status.NONE", "Chưa đặt") },
-  { value: "PARTIAL", label: t("v2.procurement.status.PARTIAL", "Đang đặt") },
-  { value: "FULL", label: t("v2.procurement.status.FULL", "Đã đặt đủ") },
-];
 
 /** Cột bảng đề nghị mua hàng (PR) garage chuẩn V2 table. */
 export function buildProcurementRequestColumns(

@@ -1,9 +1,15 @@
 import * as React from "react";
+import { V2TableText } from "@/v2/shared/components/molecules/v2-table-text";
 import { headerFilter } from "@/v2/shared/components/organisms/v2-standard-table/utils/v2HeaderFilterBuilder";
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.type";
 import { ProcurementStatusBadge } from "../components/molecules/procurement-status-badge";
 import type { ProcurementOrderRow } from "../procurement.types";
+import {
+  getOrderFulfillmentOptions,
+  getOrderStatusOptions,
+  getPaymentStatusOptions,
+} from "./procurementStatusOptions";
 
 type T = (key: string, fallback: string) => string;
 
@@ -15,16 +21,27 @@ const formatMoney = (value: string | number | null | undefined) =>
 const formatDate = (value: string | null | undefined) =>
   value ? value.slice(0, 10) : "—";
 
-/** Cột bảng đơn mua hàng (PO) garage. */
+/** Cột bảng đơn mua hàng (PO) garage chuẩn V2 table. */
 export function buildProcurementOrderColumns(
   t: T,
+  openDetail?: (id: string) => void,
 ): V2Column<ProcurementOrderRow>[] {
   return [
     {
       key: "orderNo",
-      ...headerFilter(t("v2.procurement.columns.orderNo", "Số đơn")),
+      ...headerFilter(t("v2.procurement.columns.orderNo", "Số đơn"), {
+        showBlankOption: false,
+      }),
       size: 150,
-      cell: (row) => <span className="font-medium">{row.orderNo}</span>,
+      mobileSlot: "title",
+      cell: (row) => (
+        <V2TableText
+          text={row.orderNo}
+          enableCopy
+          onTextClick={openDetail ? () => openDetail(row.id) : undefined}
+          onDetailClick={openDetail ? () => openDetail(row.id) : undefined}
+        />
+      ),
     },
     {
       key: "supplierName",
@@ -53,14 +70,20 @@ export function buildProcurementOrderColumns(
     },
     {
       key: "status",
-      label: t("v2.procurement.columns.status", "Trạng thái"),
+      ...headerFilter.select(
+        t("v2.procurement.columns.status", "Trạng thái"),
+        getOrderStatusOptions(t),
+      ),
       size: 140,
       align: TableColumnAlign.CENTER,
       cell: (row) => <ProcurementStatusBadge value={row.status} t={t} />,
     },
     {
       key: "fulfillmentStatus",
-      label: t("v2.procurement.columns.fulfillment", "Nhận hàng"),
+      ...headerFilter.select(
+        t("v2.procurement.columns.fulfillment", "Nhận hàng"),
+        getOrderFulfillmentOptions(t),
+      ),
       size: 140,
       align: TableColumnAlign.CENTER,
       cell: (row) => (
@@ -69,9 +92,13 @@ export function buildProcurementOrderColumns(
     },
     {
       key: "paymentStatus",
-      label: t("v2.procurement.columns.payment", "Thanh toán"),
-      size: 120,
-      cell: (row) => row.paymentStatus,
+      ...headerFilter.select(
+        t("v2.procurement.columns.payment", "Thanh toán"),
+        getPaymentStatusOptions(t),
+      ),
+      size: 140,
+      align: TableColumnAlign.CENTER,
+      cell: (row) => <ProcurementStatusBadge value={row.paymentStatus} t={t} />,
     },
     {
       key: "supplierInvoiceNo",
@@ -82,8 +109,8 @@ export function buildProcurementOrderColumns(
     {
       key: "createdBy",
       ...headerFilter(t("v2.procurement.columns.createdBy", "Người tạo")),
-      size: 140,
-      cell: (row) => row.createdBy ?? "—",
+      size: 200,
+      cell: (row) => row.createdByEmail ?? "—",
     },
   ];
 }

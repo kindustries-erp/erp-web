@@ -30,7 +30,8 @@ src/v2/core/procurement/
 ├── columns/
 │   ├── procurementColumns.tsx             # Facade re-export
 │   ├── procurementRequestColumns.tsx      # Cột bảng PR chuẩn V2 (< 130 LoC)
-│   └── procurementOrderColumns.tsx        # Cột bảng PO (< 90 LoC)
+│   ├── procurementOrderColumns.tsx        # Cột bảng PO: số đơn click+copy, header filter status/fulfillment/payment, người tạo = email
+│   └── procurementStatusOptions.ts        # Bộ option lọc trạng thái dùng chung cho PR và PO
 ├── components/
 │   ├── molecules/
 │   │   ├── procurement-pickers/           # Branch picker, Date picker

@@ -101,4 +101,66 @@ describe("procurementColumns", () => {
     expect(columns.some((c) => c.key === "orderNo")).toBe(true);
     expect(columns.some((c) => c.key === "totalAmount")).toBe(true);
   });
+
+  it("cột PO có header filter cho tổng tiền, trạng thái, nhận hàng và thanh toán", () => {
+    const columns = buildProcurementOrderColumns(mockT);
+    for (const key of [
+      "totalAmount",
+      "status",
+      "fulfillmentStatus",
+      "paymentStatus",
+    ]) {
+      const col = columns.find((c) => c.key === key);
+      expect(col?.filter, key).toBeDefined();
+    }
+  });
+
+  it("cột số đơn PO mở chi tiết khi click và có copy", () => {
+    const openDetail = vi.fn();
+    const columns = buildProcurementOrderColumns(mockT, openDetail);
+    const colOrderNo = columns.find((c) => c.key === "orderNo")!;
+    const { container } = render(
+      <div>
+        {colOrderNo.cell(
+          {
+            id: "po-1",
+            orderNo: "PO-2026-001",
+          } as Parameters<typeof colOrderNo.cell>[0],
+          0,
+        )}
+      </div>,
+    );
+    expect(container).toHaveTextContent("PO-2026-001");
+    const trigger = container.querySelector("button, [role='button'], span");
+    if (trigger) fireEvent.click(trigger);
+    expect(openDetail).toHaveBeenCalledWith("po-1");
+  });
+
+  it("cột người tạo PO hiển thị email, không hiển thị uuid", () => {
+    const columns = buildProcurementOrderColumns(mockT);
+    const colCreatedBy = columns.find((c) => c.key === "createdBy")!;
+    const { container } = render(
+      <div>
+        {colCreatedBy.cell(
+          {
+            id: "po-1",
+            createdBy: "5f0c2a7e-0000-4000-8000-000000000000",
+            createdByEmail: "a@liouni.com",
+          } as Parameters<typeof colCreatedBy.cell>[0],
+          0,
+        )}
+      </div>,
+    );
+    expect(container).toHaveTextContent("a@liouni.com");
+    expect(container).not.toHaveTextContent("5f0c2a7e");
+  });
+
+  it("badge trạng thái thanh toán và phát hành có màu semantic", () => {
+    expect(getProcurementBadgeVariant("PAID")).toBe(V2BadgeVariant.SUCCESS);
+    expect(getProcurementBadgeVariant("PARTIALLY_PAID")).toBe(
+      V2BadgeVariant.WARNING,
+    );
+    expect(getProcurementBadgeVariant("UNPAID")).toBe(V2BadgeVariant.OUTLINE);
+    expect(getProcurementBadgeVariant("ISSUED")).toBe(V2BadgeVariant.WARNING);
+  });
 });
