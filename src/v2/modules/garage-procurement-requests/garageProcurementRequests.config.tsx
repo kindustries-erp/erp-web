@@ -16,6 +16,7 @@ import { ProcurementRequestDrawer } from "@/v2/core/procurement";
 export const garageProcurementRequestsApi =
   createProcurementApi<ProcurementRequestRow>(
     "/api/v2/garage-procurement-requests",
+    { supportsDelete: true, supportsPurge: true },
   );
 
 export const garageProcurementRequestsConfig: ProcurementListConfig<ProcurementRequestRow> =

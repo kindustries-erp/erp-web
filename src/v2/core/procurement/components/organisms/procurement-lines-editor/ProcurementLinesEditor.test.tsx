@@ -1,6 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { emptyProcurementLine } from "../../../form/procurementLine.form";
+import {
+  emptyProcurementLine,
+  procurementLineFromDetail,
+} from "../../../form/procurementLine.form";
 import { ProcurementLinesEditor } from "./ProcurementLinesEditor";
 
 describe("ProcurementLinesEditor", () => {
@@ -53,5 +56,24 @@ describe("ProcurementLinesEditor", () => {
     expect(
       screen.queryByRole("button", { name: /xóa dòng|remove line/i }),
     ).toBeNull();
+  });
+
+  it("mở dòng có số từ API không làm vỡ bảng", () => {
+    const line = procurementLineFromDetail({
+      id: "l1",
+      lineType: "GOODS",
+      itemName: "Dầu nhớt",
+      qtyOrdered: 2,
+      unitPrice: 150000,
+    });
+    render(
+      <ProcurementLinesEditor
+        lines={[line]}
+        onChange={vi.fn()}
+        viewing={false}
+        priceLabel="Đơn giá"
+      />,
+    );
+    expect(screen.getByDisplayValue("Dầu nhớt")).toBeTruthy();
   });
 });

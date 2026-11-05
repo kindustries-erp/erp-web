@@ -10,6 +10,7 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   emptyProcurementLine,
   procurementLineAmount,
+  toNumberOrNull,
   type ProcurementLineFormValue,
 } from "../../../form/procurementLine.form";
 
@@ -101,7 +102,7 @@ export function ProcurementLinesEditor({
             aria-label={t("v2.procurement.lines.qty", "Số lượng")}
             decimals={3}
             min={0}
-            value={numberOrNull(line.qty)}
+            value={toNumberOrNull(line.qty)}
             onValueChange={(v) =>
               patch(line.key, { qty: v === null ? "" : String(v) })
             }
@@ -111,7 +112,7 @@ export function ProcurementLinesEditor({
             aria-label={priceLabel}
             decimals={3}
             min={0}
-            value={numberOrNull(line.price)}
+            value={toNumberOrNull(line.price)}
             onValueChange={(v) =>
               patch(line.key, { price: v === null ? "" : String(v) })
             }
@@ -146,12 +147,6 @@ export function ProcurementLinesEditor({
     </div>
   );
 }
-
-const numberOrNull = (value: string): number | null => {
-  if (value.trim() === "") return null;
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
-};
 
 const formatAmount = (amount: number | null): string =>
   amount === null

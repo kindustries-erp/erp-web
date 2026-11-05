@@ -126,6 +126,22 @@ export function ProcurementListPage<T extends { id: string }>({
             onOpenChange={(open) => !open && state.closeDelete()}
           />
           <V2ConfirmModal
+            open={Boolean(state.purgeTarget)}
+            title={t("v2.procurement.purge.title", "Xóa vĩnh viễn đơn nháp")}
+            message={
+              state.purgeTarget
+                ? `${t("v2.procurement.purge.message", "Đơn nháp sẽ bị xóa khỏi hệ thống và không khôi phục được. Bạn có chắc không?")} ${config.rowLabel(state.purgeTarget)}`
+                : ""
+            }
+            confirmLabel={t("v2.procurement.actions.purge", "Xóa vĩnh viễn")}
+            cancelLabel={t("v2.common.cancel", "Hủy")}
+            variant="danger"
+            isLoading={state.isTransitioning}
+            onConfirm={state.confirmPurge}
+            onCancel={state.closePurge}
+            onOpenChange={(open) => !open && state.closePurge()}
+          />
+          <V2ConfirmModal
             open={Boolean(confirm)}
             title={t("v2.procurement.confirm.title", "Xác nhận thao tác")}
             message={

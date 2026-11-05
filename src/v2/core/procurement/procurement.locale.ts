@@ -16,6 +16,7 @@ registerV2ModuleLocale("procurement", {
       cancel: "Hủy",
       close: "Đóng",
       delete: "Xóa",
+      purge: "Xóa vĩnh viễn",
     },
     confirm: {
       title: "Xác nhận thao tác",
@@ -101,6 +102,12 @@ registerV2ModuleLocale("procurement", {
       fillRequired: "Vui lòng điền các trường bắt buộc",
     },
     deleteDone: "Đã xóa đơn nháp",
+    purgeDone: "Đã xóa vĩnh viễn đơn nháp",
+    purge: {
+      title: "Xóa vĩnh viễn đơn nháp",
+      message:
+        "Đơn nháp sẽ bị xóa khỏi hệ thống và không khôi phục được. Bạn có chắc không?",
+    },
     delete: {
       title: "Xóa đơn nháp",
       message: "Đơn nháp sẽ bị xóa. Bạn có chắc không?",
@@ -125,6 +132,7 @@ registerV2ModuleLocale("procurement", {
       cancel: "Cancel",
       close: "Close",
       delete: "Delete",
+      purge: "Delete permanently",
     },
     confirm: {
       title: "Confirm action",
@@ -210,6 +218,12 @@ registerV2ModuleLocale("procurement", {
       fillRequired: "Please fill in the required fields",
     },
     deleteDone: "Draft deleted",
+    purgeDone: "Draft permanently deleted",
+    purge: {
+      title: "Delete draft permanently",
+      message:
+        "The draft will be removed from the system and cannot be restored. Are you sure?",
+    },
     delete: {
       title: "Delete draft",
       message: "The draft will be deleted. Are you sure?",

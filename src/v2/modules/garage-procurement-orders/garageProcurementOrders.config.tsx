@@ -20,6 +20,7 @@ export const garageProcurementOrdersApi =
     "/api/v2/garage-procurement-orders",
     {
       supportsDelete: true,
+      supportsPurge: true,
     },
   );
 

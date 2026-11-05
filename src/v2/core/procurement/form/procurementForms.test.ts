@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   emptyProcurementLine,
   procurementLineAmount,
+  procurementLineFromDetail,
   sumProcurementLines,
+  toNumberOrNull,
   validateProcurementLines,
 } from "./procurementLine.form";
 import {
@@ -52,6 +54,56 @@ describe("dòng chứng từ", () => {
     );
     expect(validateProcurementLines([filledLine({ qty: "0" })])).toBe("qty");
     expect(validateProcurementLines([filledLine()])).toBeNull();
+  });
+});
+
+describe("dòng từ API (API trả số, không phải chuỗi)", () => {
+  it("toNumberOrNull nhận số và không gọi trim trên số", () => {
+    expect(toNumberOrNull(150000)).toBe(150000);
+    expect(toNumberOrNull(0)).toBe(0);
+    expect(toNumberOrNull(null)).toBeNull();
+    expect(toNumberOrNull(undefined)).toBeNull();
+    expect(toNumberOrNull("  ")).toBeNull();
+  });
+
+  it("dòng PO từ API có số lượng và đơn giá dạng số vẫn thành form chuỗi", () => {
+    const line = procurementLineFromDetail({
+      id: "l1",
+      lineType: "GOODS",
+      itemName: "Dầu nhớt",
+      qtyOrdered: 2,
+      unitPrice: 150000,
+    });
+    expect(line.qty).toBe("2");
+    expect(line.price).toBe("150000");
+    expect(procurementLineAmount(line)).toBe(300000);
+    expect(sumProcurementLines([line])).toBe(300000);
+  });
+
+  it("dòng PR từ API dùng qtyRequested và estUnitPrice dạng số", () => {
+    const line = procurementLineFromDetail({
+      id: "l2",
+      lineType: "GOODS",
+      itemName: "Vật tư",
+      qtyRequested: 3,
+      estUnitPrice: 90000,
+    });
+    expect(line.qty).toBe("3");
+    expect(line.price).toBe("90000");
+  });
+
+  it("giá trị null từ API thành ô trống và không gây lỗi", () => {
+    const line = procurementLineFromDetail({
+      id: "l3",
+      lineType: "SERVICE",
+      itemName: "Dịch vụ",
+      qtyOrdered: 1,
+      unitPrice: null,
+      estUnitPrice: null,
+    });
+    expect(line.price).toBe("");
+    expect(procurementLineAmount(line)).toBeNull();
+    expect(sumProcurementLines([line])).toBe(0);
   });
 });
 

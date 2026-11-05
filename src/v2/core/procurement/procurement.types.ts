@@ -47,12 +47,13 @@ export interface ProcurementDetailLine {
   itemCode?: string | null;
   itemName?: string | null;
   description?: string | null;
-  qtyOrdered?: string;
-  qtyRequested?: string;
-  qtyFulfilled?: string;
-  unitPrice?: string | null;
-  estUnitPrice?: string | null;
-  amount?: string | null;
+  /** API trả số; chuỗi vẫn được chấp nhận để tương thích dữ liệu cũ. */
+  qtyOrdered?: number | string | null;
+  qtyRequested?: number | string | null;
+  qtyFulfilled?: number | string | null;
+  unitPrice?: number | string | null;
+  estUnitPrice?: number | string | null;
+  amount?: number | string | null;
   requestLineId?: string | null;
 }
 
@@ -116,6 +117,8 @@ export interface ProcurementApi<T, D = any, C = any, H = any> {
     lines: ProcurementLinePayload[],
   ) => Promise<unknown>;
   remove?: (id: string) => Promise<unknown>;
+  /** Xóa cứng nháp; chỉ người có quyền purge mới thấy nút */
+  purge?: (id: string) => Promise<unknown>;
   /** Chỉ PR có: bản nháp PO điền sẵn (chỉ đọc) */
   poDraft?: (id: string) => Promise<ProcurementPoDraft>;
   options?: (params: V2FetchOptionsParams) => Promise<unknown>;

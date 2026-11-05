@@ -12,6 +12,7 @@ import {
   type ProcurementActionKey,
 } from "../procurement.rules";
 import type { ProcurementListConfig } from "./procurementListConfig.type";
+import { useProcurementPurge } from "./useProcurementPurge";
 import {
   consumeProcurementRequestIntent,
   useProcurementIntentStore,
@@ -56,6 +57,7 @@ export function useProcurementList<T extends { id: string }>(
   const [confirmTarget, setConfirmTarget] =
     React.useState<ProcurementActionTarget<T> | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<T | null>(null);
+  const purgeState = useProcurementPurge(config);
   const pendingRequestId = useProcurementIntentStore((s) => s.pendingRequestId);
 
   // Mở sẵn drawer tạo PO nếu vừa được chuyển sang từ một PR
@@ -177,13 +179,25 @@ export function useProcurementList<T extends { id: string }>(
               },
             ]
           : [];
+      const purgeable = purgeState.purgeActions(row);
       return [
         { items: [view, ...edit, ...fromRequest] },
         ...(transitions.length ? [{ items: transitions }] : []),
-        ...(deletable.length ? [{ items: deletable }] : []),
+        ...(deletable.length || purgeable.length
+          ? [{ items: [...deletable, ...purgeable] }]
+          : []),
       ];
     },
-    [canCreate, canDelete, canUpdate, config, orderFromRequest, start, t],
+    [
+      canCreate,
+      canDelete,
+      canUpdate,
+      config,
+      orderFromRequest,
+      start,
+      t,
+      purgeState,
+    ],
   );
 
   const submitReason = (reason: string) => {
@@ -205,7 +219,11 @@ export function useProcurementList<T extends { id: string }>(
     reasonTarget,
     confirmTarget,
     deleteTarget,
-    isTransitioning: transition.isPending || remove.isPending,
+    isTransitioning:
+      transition.isPending || remove.isPending || purgeState.isPurging,
+    purgeTarget: purgeState.purgeTarget,
+    closePurge: purgeState.closePurge,
+    confirmPurge: purgeState.confirmPurge,
     closeReason: () => setReasonTarget(null),
     closeConfirm: () => setConfirmTarget(null),
     closeDelete: () => setDeleteTarget(null),

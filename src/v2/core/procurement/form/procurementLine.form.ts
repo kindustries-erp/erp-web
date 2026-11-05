@@ -32,12 +32,22 @@ export const emptyProcurementLine = (): ProcurementLineFormValue => ({
   requestLineId: null,
 });
 
-/** Chuỗi rỗng hoặc không phải số thì trả null. */
-export const toNumberOrNull = (value: string): number | null => {
+/** Chuỗi rỗng, null, undefined hoặc không phải số thì trả null. Nhận cả số (API trả số). */
+export const toNumberOrNull = (
+  value: string | number | null | undefined,
+): number | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (value.trim() === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 };
+
+/** Đổi số/chuỗi từ API thành chuỗi cho ô nhập; null hoặc rỗng thì trả null. */
+const toInputText = (
+  value: string | number | null | undefined,
+): string | null =>
+  value === null || value === undefined || value === "" ? null : String(value);
 
 /** Thành tiền = số lượng x đơn giá, làm tròn 3 số lẻ; thiếu một trong hai thì null. */
 export const procurementLineAmount = (
@@ -100,7 +110,7 @@ export const procurementLineFromDetail = (
   itemCode: detail.itemCode ?? "",
   itemName: detail.itemName ?? "",
   description: detail.description ?? "",
-  qty: detail.qtyOrdered ?? detail.qtyRequested ?? "0",
-  price: detail.unitPrice ?? detail.estUnitPrice ?? "",
+  qty: toInputText(detail.qtyOrdered ?? detail.qtyRequested) ?? "0",
+  price: toInputText(detail.unitPrice ?? detail.estUnitPrice) ?? "",
   requestLineId: detail.requestLineId ?? null,
 });

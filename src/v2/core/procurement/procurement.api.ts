@@ -22,7 +22,11 @@ export const toProcurementListParams = (query: V2TableQuery) => ({
  */
 export function createProcurementApi<T, D = any, C = any, H = any>(
   basePath: string,
-  options: { supportsDelete?: boolean; supportsPoDraft?: boolean } = {},
+  options: {
+    supportsDelete?: boolean;
+    supportsPoDraft?: boolean;
+    supportsPurge?: boolean;
+  } = {},
 ): ProcurementApi<T, D, C, H> {
   return {
     list: async (query) => {
@@ -74,6 +78,14 @@ export function createProcurementApi<T, D = any, C = any, H = any>(
     remove: options.supportsDelete
       ? async (id) => {
           const { data } = await v2HttpClient.delete(`${basePath}/${id}`);
+          return data;
+        }
+      : undefined,
+    purge: options.supportsPurge
+      ? async (id) => {
+          const { data } = await v2HttpClient.delete(
+            `${basePath}/${id}/permanent`,
+          );
           return data;
         }
       : undefined,
