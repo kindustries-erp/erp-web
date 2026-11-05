@@ -85,7 +85,7 @@ export function GarageNavSection({
           label={t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage")}
           active={isPurchaseOrdersActive}
           onClick={handleNavPurchaseOrders}
-          contextPage="garage-purchase-orders"
+          contextPage="garage-procurement-orders"
         />
       )}
       {canReadGarageCashflow && (

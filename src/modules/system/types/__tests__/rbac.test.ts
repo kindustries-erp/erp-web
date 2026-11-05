@@ -15,16 +15,16 @@ describe("RBAC Configuration & Resource Collections", () => {
     expect(item?.label).toBe("Phiếu nhập kho Garage");
   });
 
-  it("contains garage_purchase_orders in RBAC_COLLECTIONS and garage group", () => {
+  it("contains garage_procurement_orders in RBAC_COLLECTIONS and garage group", () => {
     const item = RBAC_COLLECTIONS.find(
-      (c) => c.collection === "garage_purchase_orders",
+      (c) => c.collection === "garage_procurement_orders",
     );
     expect(item?.label).toBe("Đơn mua hàng Garage");
     const garageGroup = PERMISSION_RESOURCE_GROUPS.find(
       (g) => g.groupKey === "garage",
     );
     expect(garageGroup?.resources).toContain(
-      ErpResource.GARAGE_PURCHASE_ORDERS,
+      ErpResource.GARAGE_PROCUREMENT_ORDERS,
     );
   });
 

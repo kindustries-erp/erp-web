@@ -119,3 +119,9 @@ Hàm quyền nằm trong `domain/purchaseOrderRules.ts` (`canEditPurchaseOrder`,
 ## 8. Tái dùng cho PO thường (sau này)
 
 Core `v2/core/purchase-orders/` đã tách sẵn: một module mới chỉ cần API client theo `PurchaseOrderApi`, cấu hình ghép core và page. Chưa làm UI cho `purchase-orders` (bảng dùng chung `erp_purchase_orders`); cần plan riêng.
+
+## Trạng thái: đã thay thế (2026-11-05)
+
+- Module `src/v2/modules/garage-purchase-orders` đã gỡ khỏi web v2 (route, menu, trang). Luồng thay thế: [`garage-procurement-orders`](../garage-procurement-orders/SKILL.md) và `garage-procurement-requests`, dựng trên lõi `src/v2/core/procurement/`.
+- Phần API GPO còn được giữ đến khi đếm và xác nhận dữ liệu để drop.
+

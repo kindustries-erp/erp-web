@@ -113,7 +113,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
     canReadGarageCases;
   const canReadGaragePurchaseOrders = useHasPermission(
-    ErpResource.GARAGE_PURCHASE_ORDERS,
+    ErpResource.GARAGE_PROCUREMENT_ORDERS,
     ErpAction.READ,
   );
   const showGarage =
@@ -383,10 +383,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
       }
       if (canReadGaragePurchaseOrders) {
         items.push({
-          id: "garage-purchase-orders",
+          id: "garage-procurement-orders",
           label: t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage"),
           icon: ShoppingCart,
-          href: "/garage-purchase-orders",
+          href: "/garage-procurement-orders",
         });
       }
       if (canReadGarageGoodsReceipts) {

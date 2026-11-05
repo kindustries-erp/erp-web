@@ -49,11 +49,11 @@ describe("useGarageNavSection hook", () => {
 
   it("reads the purchase-orders permission on its own, not from garage cases", () => {
     vi.mocked(useHasPermission).mockImplementation(
-      (resource) => resource === ErpResource.GARAGE_PURCHASE_ORDERS,
+      (resource) => resource === ErpResource.GARAGE_PROCUREMENT_ORDERS,
     );
     const { result } = renderHook(() =>
       useGarageNavSection({
-        currentPage: "garage-purchase-orders",
+        currentPage: "garage-procurement-orders",
         navTo: mockNavTo,
       }),
     );

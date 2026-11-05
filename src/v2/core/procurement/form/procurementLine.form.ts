@@ -1,0 +1,106 @@
+import type {
+  ProcurementDetailLine,
+  ProcurementLinePayload,
+} from "../procurement.types";
+
+export type ProcurementLineType = "GOODS" | "SERVICE";
+
+/** Một dòng trên form. Số lượng và đơn giá giữ dạng chuỗi để người dùng gõ tự do. */
+export interface ProcurementLineFormValue {
+  key: string;
+  lineType: ProcurementLineType;
+  itemCode: string;
+  itemName: string;
+  description: string;
+  qty: string;
+  /** Đơn giá (PO) hoặc đơn giá dự kiến (PR) */
+  price: string;
+  requestLineId: string | null;
+}
+
+let lineSeq = 0;
+export const newProcurementLineKey = (): string => `line-${++lineSeq}`;
+
+export const emptyProcurementLine = (): ProcurementLineFormValue => ({
+  key: newProcurementLineKey(),
+  lineType: "GOODS",
+  itemCode: "",
+  itemName: "",
+  description: "",
+  qty: "1",
+  price: "",
+  requestLineId: null,
+});
+
+/** Chuỗi rỗng hoặc không phải số thì trả null. */
+export const toNumberOrNull = (value: string): number | null => {
+  if (value.trim() === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+/** Thành tiền = số lượng x đơn giá, làm tròn 3 số lẻ; thiếu một trong hai thì null. */
+export const procurementLineAmount = (
+  line: Pick<ProcurementLineFormValue, "qty" | "price">,
+): number | null => {
+  const qty = toNumberOrNull(line.qty);
+  const price = toNumberOrNull(line.price);
+  if (qty === null || price === null) return null;
+  return Math.round(qty * price * 1000) / 1000;
+};
+
+export const sumProcurementLines = (
+  lines: Array<Pick<ProcurementLineFormValue, "qty" | "price">>,
+): number => lines.reduce((sum, l) => sum + (procurementLineAmount(l) ?? 0), 0);
+
+/** Mã lỗi dòng đầu tiên gặp phải, hoặc null nếu hợp lệ. */
+export type ProcurementLinesError = "empty" | "itemName" | "qty";
+
+export const validateProcurementLines = (
+  lines: ProcurementLineFormValue[],
+): ProcurementLinesError | null => {
+  if (lines.length === 0) return "empty";
+  if (lines.some((l) => !l.itemName.trim())) return "itemName";
+  if (lines.some((l) => (toNumberOrNull(l.qty) ?? 0) <= 0)) return "qty";
+  return null;
+};
+
+const textOrUndefined = (value: string): string | undefined =>
+  value.trim() || undefined;
+
+export const toOrderLinePayload = (
+  line: ProcurementLineFormValue,
+): ProcurementLinePayload => ({
+  lineType: line.lineType,
+  itemCode: textOrUndefined(line.itemCode),
+  itemName: textOrUndefined(line.itemName),
+  description: textOrUndefined(line.description),
+  qtyOrdered: toNumberOrNull(line.qty),
+  unitPrice: toNumberOrNull(line.price) ?? undefined,
+  requestLineId: line.requestLineId ?? undefined,
+});
+
+export const toRequestLinePayload = (
+  line: ProcurementLineFormValue,
+): ProcurementLinePayload => ({
+  lineType: line.lineType,
+  itemCode: textOrUndefined(line.itemCode),
+  itemName: textOrUndefined(line.itemName),
+  description: textOrUndefined(line.description),
+  qtyRequested: toNumberOrNull(line.qty),
+  estUnitPrice: toNumberOrNull(line.price) ?? undefined,
+});
+
+/** Dòng chi tiết từ API thành dòng form; số lượng/đơn giá lấy theo trường có sẵn của PR hoặc PO. */
+export const procurementLineFromDetail = (
+  detail: ProcurementDetailLine,
+): ProcurementLineFormValue => ({
+  key: newProcurementLineKey(),
+  lineType: detail.lineType,
+  itemCode: detail.itemCode ?? "",
+  itemName: detail.itemName ?? "",
+  description: detail.description ?? "",
+  qty: detail.qtyOrdered ?? detail.qtyRequested ?? "0",
+  price: detail.unitPrice ?? detail.estUnitPrice ?? "",
+  requestLineId: detail.requestLineId ?? null,
+});
