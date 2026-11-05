@@ -478,7 +478,7 @@ export default function (plop) {
         type: "list",
         name: "coreInput",
         message: "Chọn họ lõi (đã khai báo exports):",
-        choices: () => listWebCoreFamilies(plop.getDestBasePath()),
+        choices: listWebCoreFamilies(plop.getDestBasePath()),
       },
       {
         type: "input",

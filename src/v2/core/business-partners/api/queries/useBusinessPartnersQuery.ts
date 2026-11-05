@@ -6,17 +6,44 @@ import type {
   BusinessPartner,
   BusinessPartnerType,
 } from "../../domain/entities/businessPartner";
+import type { BusinessPartnerApi } from "../businessPartnerApi.type";
+import type { BusinessPartnerKeys } from "./businessPartnerKeys";
 import { businessPartnersV2Api } from "../businessPartnersApi";
 import { businessPartnerKeys } from "./businessPartnerKeys";
 
+export interface UseBusinessPartnersQueryParams {
+  api: BusinessPartnerApi;
+  keys: BusinessPartnerKeys;
+  query: V2TableQuery;
+  onError?: (error: unknown) => void;
+}
+
+export function useBusinessPartnersQuery(
+  params: UseBusinessPartnersQueryParams,
+): V2ModuleListData<BusinessPartner>;
 export function useBusinessPartnersQuery(
   partnerType: BusinessPartnerType,
   query: V2TableQuery,
   onError?: (error: unknown) => void,
+): V2ModuleListData<BusinessPartner>;
+export function useBusinessPartnersQuery(
+  first: UseBusinessPartnersQueryParams | BusinessPartnerType,
+  second?: V2TableQuery,
+  third?: (error: unknown) => void,
 ): V2ModuleListData<BusinessPartner> {
+  const isObjectParams = typeof first === "object";
+  const api = isObjectParams
+    ? first.api
+    : {
+        list: (q: V2TableQuery) => businessPartnersV2Api.list(first, q),
+      };
+  const keys = isObjectParams ? first.keys : businessPartnerKeys;
+  const query = isObjectParams ? first.query : second!;
+  const onError = isObjectParams ? first.onError : third;
+
   const result = useQuery({
-    queryKey: businessPartnerKeys.list(partnerType, query),
-    queryFn: () => businessPartnersV2Api.list(partnerType, query),
+    queryKey: keys.list(query),
+    queryFn: () => api.list(query),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
@@ -29,7 +56,6 @@ export function useBusinessPartnersQuery(
   return {
     items: (result.data?.items ?? []) as BusinessPartner[],
     total: result.data?.total ?? 0,
-    // Ô tổng cột mã = số đối tác khớp bộ lọc (không có cột số để cộng)
     summaries: { code: result.data?.total ?? 0, ...result.data?.summaries },
     loading: result.isFetching,
     refetch: () => void result.refetch(),

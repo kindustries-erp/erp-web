@@ -7,35 +7,41 @@ import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { useV2TablePreferencesStore } from "@/v2/shared/preferences/useV2TablePreferencesStore";
 import { applyV2SystemView } from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
+import type { BusinessPartnerModuleConfig } from "../businessPartners.config.type";
 import { useRemoveBusinessPartnerMutation } from "../api/mutations/useBusinessPartnerMutations";
-import {
-  buildBusinessPartnerColumns,
-  PARTNER_VIEW_VISIBILITY,
-} from "../components/organisms/business-partner-table";
-import type {
-  BusinessPartner,
-  BusinessPartnerType,
-} from "../domain/entities/businessPartner";
+import { buildBusinessPartnerColumns } from "../components/organisms/business-partner-table";
+import type { BusinessPartner } from "../domain/entities/businessPartner";
 
-export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
+export interface BusinessPartnerDrawerTarget {
+  id: string | null;
+  mode: "view" | "edit";
+}
+
+/**
+ * Controller hook quản lý trạng thái màn danh sách họ đối tác kinh doanh (customers / suppliers):
+ * phân quyền, drawer, xóa, view modes, columns và row actions.
+ */
+export function useBusinessPartnerListController(
+  config: BusinessPartnerModuleConfig,
+) {
   const { t } = useV2Translation();
+  const { tableId, viewVisibility, permissionCollection, api, keys } = config;
+
   const canCreate = useV2HasPermission({
-    collection: "business_partners",
+    collection: permissionCollection,
     action: "create",
   });
   const canUpdate = useV2HasPermission({
-    collection: "business_partners",
+    collection: permissionCollection,
     action: "update",
   });
   const canDelete = useV2HasPermission({
-    collection: "business_partners",
+    collection: permissionCollection,
     action: "delete",
   });
-  const tableId = `erp-${partnerType.toLowerCase()}s-table`;
-  const [drawer, setDrawer] = React.useState<{
-    id: string | null;
-    mode: "view" | "edit";
-  } | null>(null);
+
+  const [drawer, setDrawer] =
+    React.useState<BusinessPartnerDrawerTarget | null>(null);
   const [deleteTarget, setDeleteTarget] =
     React.useState<BusinessPartner | null>(null);
   const [view, setView] = React.useState(
@@ -47,9 +53,9 @@ export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
 
   React.useEffect(() => {
     if (!useV2TablePreferencesStore.getState().tables[tableId]?.columns) {
-      applyV2SystemView(tableId, "overview", PARTNER_VIEW_VISIBILITY.overview);
+      applyV2SystemView(tableId, "overview", viewVisibility.overview);
     }
-  }, [tableId]);
+  }, [tableId, viewVisibility]);
 
   const onListError = React.useCallback(
     (error: unknown) => {
@@ -70,10 +76,12 @@ export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
     (id: string | null, mode: "view" | "edit") => setDrawer({ id, mode }),
     [],
   );
+
   const columns = React.useMemo(
     () => buildBusinessPartnerColumns(t, (id) => open(id, "view")),
     [t, open],
   );
+
   const rowActions = React.useCallback(
     (row: BusinessPartner): V2RowActionGroup[] => {
       const items: V2RowActionGroup["items"] = [
@@ -83,37 +91,43 @@ export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
           onClick: () => open(row.id, "view"),
         },
       ];
-      if (canUpdate)
+      if (canUpdate) {
         items.push({
           label: t("v2.partners.actions.edit", "Chỉnh sửa"),
           icon: <Pencil className="h-3.5 w-3.5" />,
           onClick: () => open(row.id, "edit"),
         });
-      if (canDelete)
+      }
+      if (canDelete) {
         items.push({
           label: t("v2.partners.actions.delete", "Xóa"),
           icon: <Trash2 className="h-3.5 w-3.5" />,
           variant: "danger",
           onClick: () => setDeleteTarget(row),
         });
+      }
       return [{ items }];
     },
     [canDelete, canUpdate, open, t],
   );
 
-  const remove = useRemoveBusinessPartnerMutation(t, () =>
-    setDeleteTarget(null),
+  const remove = useRemoveBusinessPartnerMutation(
+    t,
+    () => setDeleteTarget(null),
+    { api, keys },
   );
 
-  const selectView = (key: string) => {
-    const visibility =
-      PARTNER_VIEW_VISIBILITY[key as keyof typeof PARTNER_VIEW_VISIBILITY];
-    setView(key);
-    if (visibility) {
-      applyV2SystemView(tableId, key, visibility);
-      setTableKey((value) => value + 1);
-    }
-  };
+  const selectView = React.useCallback(
+    (key: string) => {
+      const visibility = viewVisibility[key];
+      setView(key);
+      if (visibility) {
+        applyV2SystemView(tableId, key, visibility);
+        setTableKey((value) => value + 1);
+      }
+    },
+    [tableId, viewVisibility],
+  );
 
   return {
     t,
@@ -123,6 +137,7 @@ export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
     rowActions,
     canCreate,
     canUpdate,
+    canDelete,
     drawer,
     setDrawer,
     open,
@@ -135,6 +150,6 @@ export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
   };
 }
 
-export type BusinessPartnersPageState = ReturnType<
-  typeof useBusinessPartnersPage
+export type BusinessPartnerListControllerState = ReturnType<
+  typeof useBusinessPartnerListController
 >;

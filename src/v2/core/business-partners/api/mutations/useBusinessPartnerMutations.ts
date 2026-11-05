@@ -9,6 +9,8 @@ import type {
   BusinessPartnerFormValue,
   BusinessPartnerType,
 } from "../../domain/entities/businessPartner";
+import type { BusinessPartnerApi } from "../businessPartnerApi.type";
+import type { BusinessPartnerKeys } from "../queries/businessPartnerKeys";
 import { businessPartnersV2Api } from "../businessPartnersApi";
 import { businessPartnerKeys } from "../queries/businessPartnerKeys";
 
@@ -20,20 +22,33 @@ export interface SaveBusinessPartnerInput {
   form: BusinessPartnerFormValue;
 }
 
+export interface MutationConfigOption {
+  api?: BusinessPartnerApi;
+  keys?: BusinessPartnerKeys;
+}
+
 /** Tạo mới hoặc cập nhật; thành công làm mới danh sách và đóng drawer qua `onSaved` */
 export function useSaveBusinessPartnerMutation(
   t: Translate,
   onSaved: (saved: BusinessPartner) => void,
+  config?: MutationConfigOption,
 ) {
   const queryClient = useQueryClient();
+  const api = config?.api;
+  const keys = config?.keys ?? businessPartnerKeys;
+
   return useMutation({
-    mutationFn: ({ id, partnerType, form }: SaveBusinessPartnerInput) =>
-      id
+    mutationFn: ({ id, partnerType, form }: SaveBusinessPartnerInput) => {
+      if (api) {
+        return id ? api.update(id, form) : api.create(form);
+      }
+      return id
         ? businessPartnersV2Api.update(id, partnerType, form)
-        : businessPartnersV2Api.create(partnerType, form),
+        : businessPartnersV2Api.create(partnerType, form);
+    },
     onSuccess: async (saved, { id }) => {
       await queryClient.invalidateQueries({
-        queryKey: businessPartnerKeys.all,
+        queryKey: keys.all,
       });
       // Tiêu đề tách tạo/sửa như V1
       useV2ToastStore.getState().showToast({
@@ -66,13 +81,18 @@ export function useSaveBusinessPartnerMutation(
 export function useRemoveBusinessPartnerMutation(
   t: Translate,
   onRemoved: () => void,
+  config?: MutationConfigOption,
 ) {
   const queryClient = useQueryClient();
+  const api = config?.api;
+  const keys = config?.keys ?? businessPartnerKeys;
+
   return useMutation({
-    mutationFn: (id: string) => businessPartnersV2Api.remove(id),
+    mutationFn: (id: string) =>
+      api ? api.remove(id) : businessPartnersV2Api.remove(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: businessPartnerKeys.all,
+        queryKey: keys.all,
       });
       useV2ToastStore.getState().showToast({
         variant: "success",

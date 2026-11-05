@@ -3,8 +3,9 @@ import { V2AdminRouteId } from "@/v2/shared/types";
 import { GarageGoodsReceiptsPage } from "@/v2/modules/garage-goods-receipts"; // v2-module:garage-goods-receipts:imports
 import { GaragePurchaseOrdersPage } from "@/v2/modules/garage-purchase-orders";
 import { InvoiceShapePage } from "@/v2/modules/finance-invoice";
+import { BusinessPartnersCustomersPage } from "@/v2/modules/business-partners-customers"; // v2-module:business-partners-customers:imports
+import { BusinessPartnersSuppliersPage } from "@/v2/modules/business-partners-suppliers"; // v2-module:business-partners-suppliers:imports
 // plop:v2-page-imports
-import { BusinessPartnersPage } from "@/v2/modules/business-partners";
 import { V2AdminDashboardPage } from "@/v2/modules/admin-dashboard";
 
 /**
@@ -15,9 +16,11 @@ export const V2_PAGE_REGISTRY: Record<string, () => ReactNode> = {
   "garage-goods-receipts": () => <GarageGoodsReceiptsPage />,
   "garage-purchase-orders": () => <GaragePurchaseOrdersPage />,
   // v2-module:garage-goods-receipts:pages
+  customers: () => <BusinessPartnersCustomersPage />,
+  // v2-module:business-partners-customers:pages
+  suppliers: () => <BusinessPartnersSuppliersPage />,
+  // v2-module:business-partners-suppliers:pages
   // plop:v2-pages
   [V2AdminRouteId.DASHBOARD]: () => <V2AdminDashboardPage />,
-  customers: () => <BusinessPartnersPage partnerType="CUSTOMER" />,
-  suppliers: () => <BusinessPartnersPage partnerType="VENDOR" />,
   invoices: () => <InvoiceShapePage />,
 };

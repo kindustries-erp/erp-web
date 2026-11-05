@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "business-partners",
+  "entity": "BusinessPartner",
+  "barrel": "src/v2/core/business-partners/index.ts",
+  "localeNamespace": "businessPartners",
+  "exports": {
+    "configType": "BusinessPartnerModuleConfig",
+    "apiType": "BusinessPartnerApi",
+    "keysFactory": "createBusinessPartnerKeys",
+    "recordType": "BusinessPartner",
+    "formValueType": "BusinessPartnerFormValue",
+    "listController": "useBusinessPartnerListController",
+    "query": "useBusinessPartnersQuery",
+    "drawer": "BusinessPartnerDrawer",
+    "viewVisibility": "businessPartnerViewVisibility",
+    "nextCode": true,
+    "syncFromInvoices": true
+  }
+}
+

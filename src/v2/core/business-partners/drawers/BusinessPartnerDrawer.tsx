@@ -2,17 +2,22 @@ import { V2StandardDrawer } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { BusinessPartnerStatusBadge } from "../components/molecules/business-partner-status-badge";
 import { BusinessPartnerFormSections } from "../components/organisms/business-partner-form";
-import type { BusinessPartnerDrawerState } from "./BusinessPartnerDrawer.hook";
+import type { BusinessPartnerDrawerProps } from "./BusinessPartnerDrawer.type";
 import { useBusinessPartnerDrawer } from "./BusinessPartnerDrawer.hook";
 
-export function BusinessPartnerDrawer(props: BusinessPartnerDrawerState) {
+export function BusinessPartnerDrawer(props: BusinessPartnerDrawerProps) {
   const { t } = useV2Translation();
   const state = useBusinessPartnerDrawer(props);
+  const partnerType =
+    props.partnerType ?? props.config?.partnerType ?? "CUSTOMER";
+  const partnerId =
+    props.recordId !== undefined ? props.recordId : (props.partnerId ?? null);
+
   const type = t(
-    props.partnerType === "VENDOR"
+    partnerType === "VENDOR"
       ? "v2.partners.form.supplier"
       : "v2.partners.form.customer",
-    props.partnerType === "VENDOR" ? "nhà cung cấp" : "khách hàng",
+    partnerType === "VENDOR" ? "nhà cung cấp" : "khách hàng",
   );
   const titleKey = state.creating
     ? "v2.partners.form.create"
@@ -23,7 +28,7 @@ export function BusinessPartnerDrawer(props: BusinessPartnerDrawerState) {
 
   return (
     <V2StandardDrawer
-      id={`business-partner-${props.partnerId ?? "new"}`}
+      id={`business-partner-${partnerId ?? "new"}`}
       open={props.open}
       onClose={props.onClose}
       mode={state.creating ? "edit" : state.mode}

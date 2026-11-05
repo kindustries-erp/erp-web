@@ -10,24 +10,15 @@ import type { BusinessPartner } from "../domain/entities/businessPartner";
 import {
   emptyBusinessPartnerForm,
   type BusinessPartnerFormValue,
-  type BusinessPartnerType,
 } from "../domain/entities/businessPartner";
 import {
   canEditBusinessPartnerCode,
   isBusinessPartnerFormDirty,
   validateBusinessPartnerForm,
 } from "../domain/rules/businessPartnerRules";
+import type { BusinessPartnerDrawerProps } from "./BusinessPartnerDrawer.type";
 
-export interface BusinessPartnerDrawerState {
-  open: boolean;
-  partnerId: string | null;
-  mode: "view" | "edit";
-  partnerType: BusinessPartnerType;
-  canUpdate: boolean;
-  onClose: () => void;
-  /** Gọi khi tạo mới xong (thay cho đóng), để người mở drawer nhận đối tác vừa tạo */
-  onCreated?: (partner: BusinessPartner) => void;
-}
+export type BusinessPartnerDrawerState = BusinessPartnerDrawerProps;
 
 const toForm = (
   data: Awaited<ReturnType<typeof businessPartnersV2Api.get>>,
@@ -44,9 +35,16 @@ const toForm = (
   notes: data.notes ?? "",
 });
 
-export function useBusinessPartnerDrawer(state: BusinessPartnerDrawerState) {
+export function useBusinessPartnerDrawer(props: BusinessPartnerDrawerProps) {
   const { t } = useV2Translation();
-  const [mode, setMode] = React.useState(state.mode);
+  const partnerId =
+    props.recordId !== undefined ? props.recordId : (props.partnerId ?? null);
+  const partnerType =
+    props.partnerType ?? props.config?.partnerType ?? "CUSTOMER";
+  const api = props.config?.api;
+  const keys = props.config?.keys ?? businessPartnerKeys;
+
+  const [mode, setMode] = React.useState(props.mode);
   const [form, setForm] = React.useState<BusinessPartnerFormValue>(
     emptyBusinessPartnerForm,
   );
@@ -54,33 +52,36 @@ export function useBusinessPartnerDrawer(state: BusinessPartnerDrawerState) {
     emptyBusinessPartnerForm,
   );
   const [nameError, setNameError] = React.useState("");
-  const creating = !state.partnerId;
+  const creating = !partnerId;
+
   const detail = useQuery({
-    queryKey: businessPartnerKeys.detail(state.partnerId ?? "new"),
-    queryFn: () => businessPartnersV2Api.get(state.partnerId!),
-    enabled: state.open && Boolean(state.partnerId),
+    queryKey: keys.detail(partnerId ?? "new"),
+    queryFn: () =>
+      api ? api.get(partnerId!) : businessPartnersV2Api.get(partnerId!),
+    enabled: props.open && Boolean(partnerId),
   });
 
-  React.useEffect(() => setMode(state.mode), [state.mode, state.open]);
+  React.useEffect(() => setMode(props.mode), [props.mode, props.open]);
   React.useEffect(() => {
-    if (!state.open) return;
+    if (!props.open) return;
     setNameError("");
     if (detail.data) {
       const loaded = toForm(detail.data);
       setForm(loaded);
       setInitial(loaded);
-    } else if (!state.partnerId) {
+    } else if (!partnerId) {
       const fresh = emptyBusinessPartnerForm();
       setForm(fresh);
       setInitial(fresh);
-      void businessPartnersV2Api
-        .nextCode(state.partnerType)
-        .then(({ nextCode }) => {
-          setForm((value) => ({ ...value, code: nextCode }));
-          setInitial((value) => ({ ...value, code: nextCode }));
-        });
+      const fetchNext = api?.nextCode
+        ? api.nextCode()
+        : businessPartnersV2Api.nextCode(partnerType);
+      void fetchNext.then(({ nextCode }) => {
+        setForm((value) => ({ ...value, code: nextCode }));
+        setInitial((value) => ({ ...value, code: nextCode }));
+      });
     }
-  }, [state.open, state.partnerId, state.partnerType, detail.data]);
+  }, [props.open, partnerId, partnerType, detail.data, api]);
 
   React.useEffect(() => {
     if (!detail.error) return;
@@ -95,23 +96,36 @@ export function useBusinessPartnerDrawer(state: BusinessPartnerDrawerState) {
     });
   }, [detail.error, t]);
 
-  const save = useSaveBusinessPartnerMutation(t, (saved) => {
-    if (!state.partnerId && state.onCreated) state.onCreated(saved);
-    else state.onClose();
-  });
+  const save = useSaveBusinessPartnerMutation(
+    t,
+    (saved) => {
+      if (!partnerId && props.onCreated) props.onCreated(saved);
+      else props.onClose();
+    },
+    { api, keys },
+  );
 
-  const setField = <K extends keyof BusinessPartnerFormValue>(
-    key: K,
-    value: BusinessPartnerFormValue[K],
-  ) => setForm((current) => ({ ...current, [key]: value }));
+  const setField = React.useCallback(
+    <K extends keyof BusinessPartnerFormValue>(
+      field: K,
+      value: BusinessPartnerFormValue[K],
+    ) => {
+      if (field === "name") setNameError("");
+      setForm((current) => ({ ...current, [field]: value }));
+    },
+    [],
+  );
 
-  const regenerateCode = () => {
-    void businessPartnersV2Api
-      .nextCode(state.partnerType)
-      .then(({ nextCode }) => setField("code", nextCode));
-  };
+  const regenerateCode = React.useCallback(() => {
+    const fetchNext = api?.nextCode
+      ? api.nextCode()
+      : businessPartnersV2Api.nextCode(partnerType);
+    void fetchNext.then(({ nextCode }) => {
+      setField("code", nextCode);
+    });
+  }, [api, partnerType, setField]);
 
-  const submit = () => {
+  const submit = React.useCallback(() => {
     if (validateBusinessPartnerForm(form)) {
       const message = t(
         "v2.partners.form.requiredName",
@@ -125,27 +139,22 @@ export function useBusinessPartnerDrawer(state: BusinessPartnerDrawerState) {
       });
       return;
     }
-    setNameError("");
-    save.mutate({
-      id: state.partnerId,
-      partnerType: state.partnerType,
-      form,
-    });
-  };
+    save.mutate({ id: partnerId, partnerType, form });
+  }, [form, partnerId, partnerType, save, t]);
 
   return {
-    form,
-    setField,
     mode,
     setMode,
+    form,
+    setField,
+    regenerateCode,
+    nameError,
     creating,
-    codeEditable: canEditBusinessPartnerCode(creating),
     viewing: mode === "view" && !creating,
+    codeEditable: canEditBusinessPartnerCode(creating),
+    dirty: isBusinessPartnerFormDirty(form, initial),
     loading: detail.isFetching,
     saving: save.isPending,
-    dirty: isBusinessPartnerFormDirty(form, initial),
-    nameError,
     submit,
-    regenerateCode,
   };
 }
