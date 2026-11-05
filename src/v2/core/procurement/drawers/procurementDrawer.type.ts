@@ -1,3 +1,4 @@
+import type { ProcurementActionKey } from "../procurement.rules";
 import type { ProcurementApi } from "../procurement.types";
 
 /** Props chung của drawer chứng từ procurement. `documentId` null nghĩa là tạo mới. */
@@ -14,4 +15,10 @@ export interface ProcurementDrawerProps {
   fromRequestId?: string | null;
   /** API đề nghị mua, dùng để đọc PR và bản nháp PO */
   requestApi?: ProcurementApi<any, any, any, any>;
+  /** Thực hiện chuyển trạng thái (duyệt, từ chối, hủy...) từ drawer */
+  onTransition?: (action: ProcurementActionKey, row?: any) => void;
+  /** Có quyền tạo PO từ PR không */
+  canCreateOrder?: boolean;
+  /** Điều hướng sang lập PO từ PR */
+  onOrderFromRequest?: (row: any) => void;
 }

@@ -58,17 +58,23 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
           valueClassName,
         )}
       >
-        <V2Text
-          variant="body-sm"
-          weight="medium"
-          truncate={truncateLines}
-          className={cn(
-            multiline ? "whitespace-normal text-right break-words" : "truncate",
-            "text-foreground",
-          )}
-        >
-          {value}
-        </V2Text>
+        {typeof value === "string" || typeof value === "number" ? (
+          <V2Text
+            variant="body-sm"
+            weight="medium"
+            truncate={truncateLines}
+            className={cn(
+              multiline
+                ? "whitespace-normal text-right break-words"
+                : "truncate",
+              "text-foreground",
+            )}
+          >
+            {value}
+          </V2Text>
+        ) : (
+          <div className="flex items-center justify-end">{value}</div>
+        )}
         {copyable && (
           <V2Button
             type="button"

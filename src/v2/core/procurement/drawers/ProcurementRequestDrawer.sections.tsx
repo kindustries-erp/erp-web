@@ -1,24 +1,16 @@
-import {
-  DrawerField,
-  DrawerRow,
-  DrawerSection,
-  V2ReadValue,
-  V2Textarea,
-  V2TextField,
-} from "@/v2/shared/components";
+import * as React from "react";
+import { DrawerSection } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { ProcurementLinesEditor } from "../components/organisms/procurement-lines-editor/ProcurementLinesEditor";
 import {
-  ProcurementBranchPicker,
-  ProcurementDateField,
-} from "../components/molecules/procurement-pickers/ProcurementPickers";
-import { ProcurementStatusText } from "../columns/procurementColumns";
-import { formatProcurementMoney } from "../procurement.rules";
+  ProcurementRequestHeaderSection,
+  type ProcurementRequestHeaderSectionProps,
+} from "./sections/ProcurementRequestHeaderSection";
 import {
-  procurementLineAmount,
-  sumProcurementLines,
-  type ProcurementLineFormValue,
-} from "../form/procurementLine.form";
+  ProcurementRequestSummarySection,
+  type ProcurementRequestSummarySectionProps,
+} from "./sections/ProcurementRequestSummarySection";
+import type { ProcurementLineFormValue } from "../form/procurementLine.form";
 import type {
   ProcurementRequestFormErrors,
   ProcurementRequestFormValue,
@@ -51,80 +43,19 @@ export function ProcurementRequestMainSections(
   const { t } = useV2Translation();
   const { form, errors, headerViewing, linesViewing, branchLocked, setField } =
     props;
-  const requiredError = t(
-    "v2.procurement.errors.required",
-    "Trường này bắt buộc",
-  );
   const linesError = errors.lines
     ? t(LINES_ERROR_KEY[errors.lines], "Dòng chứng từ chưa hợp lệ")
     : undefined;
 
   return (
     <div className="space-y-3">
-      <DrawerSection
-        title={t("v2.procurement.sections.header", "Thông tin đề nghị")}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <DrawerField
-            label={t("v2.procurement.fields.branch", "Chi nhánh")}
-            required
-            error={errors.branchId ? requiredError : undefined}
-          >
-            <ProcurementBranchPicker
-              value={form.branchId}
-              label={form.branchName}
-              viewing={headerViewing || branchLocked}
-              onChange={(id) => setField("branchId", id)}
-            />
-          </DrawerField>
-          <DrawerField
-            label={t("v2.procurement.fields.requestDate", "Ngày đề nghị")}
-            required
-            error={errors.requestDate ? requiredError : undefined}
-          >
-            <ProcurementDateField
-              value={form.requestDate}
-              viewing={headerViewing}
-              onChange={(v) => setField("requestDate", v)}
-            />
-          </DrawerField>
-          <DrawerField
-            label={t("v2.procurement.fields.neededDate", "Ngày cần hàng")}
-          >
-            <ProcurementDateField
-              value={form.neededDate}
-              viewing={headerViewing}
-              minDate={form.requestDate}
-              onChange={(v) => setField("neededDate", v)}
-            />
-          </DrawerField>
-          <DrawerField label={t("v2.procurement.fields.title", "Nội dung")}>
-            {headerViewing ? (
-              <V2ReadValue value={form.title} />
-            ) : (
-              <V2TextField
-                viewing={false}
-                value={form.title}
-                onChange={(v) => setField("title", v)}
-              />
-            )}
-          </DrawerField>
-          <DrawerField
-            label={t("v2.procurement.fields.remarks", "Ghi chú")}
-            className="sm:col-span-2"
-          >
-            {headerViewing ? (
-              <V2ReadValue value={form.remarks} />
-            ) : (
-              <V2Textarea
-                value={form.remarks}
-                rows={2}
-                onChange={(e) => setField("remarks", e.target.value)}
-              />
-            )}
-          </DrawerField>
-        </div>
-      </DrawerSection>
+      <ProcurementRequestHeaderSection
+        form={form}
+        errors={errors}
+        headerViewing={headerViewing}
+        branchLocked={branchLocked}
+        setField={setField}
+      />
 
       <DrawerSection
         title={t("v2.procurement.sections.lines", "Dòng hàng")}
@@ -144,41 +75,11 @@ export function ProcurementRequestMainSections(
   );
 }
 
-/** Phần phải: tổng dự kiến, trạng thái đặt hàng và người tạo. */
-export function ProcurementRequestSummary({
-  form,
-  detail,
-}: Pick<ProcurementRequestSectionsProps, "form" | "detail">) {
-  const { t } = useV2Translation();
-  const estimated = sumProcurementLines(form.lines);
-  const hasPrice = form.lines.some((l) => procurementLineAmount(l) !== null);
-  return (
-    <div className="space-y-3">
-      <DrawerSection title={t("v2.procurement.sections.summary", "Tổng quan")}>
-        <DrawerRow
-          label={t("v2.procurement.columns.estimatedTotal", "Tổng dự kiến")}
-          value={hasPrice ? formatProcurementMoney(estimated) : "—"}
-        />
-        <DrawerRow
-          label={t("v2.procurement.columns.status", "Trạng thái")}
-          value={
-            <ProcurementStatusText value={detail?.status ?? "DRAFT"} t={t} />
-          }
-        />
-        <DrawerRow
-          label={t("v2.procurement.columns.ordering", "Tiến độ đặt")}
-          value={
-            <ProcurementStatusText
-              value={detail?.orderingStatus ?? "NONE"}
-              t={t}
-            />
-          }
-        />
-        <DrawerRow
-          label={t("v2.procurement.columns.createdBy", "Người tạo")}
-          value={detail?.createdBy ?? "—"}
-        />
-      </DrawerSection>
-    </div>
-  );
-}
+/** Re-export section tổng quan bên phải. */
+export const ProcurementRequestSummary = ProcurementRequestSummarySection;
+export {
+  ProcurementRequestHeaderSection,
+  ProcurementRequestSummarySection,
+  type ProcurementRequestHeaderSectionProps,
+  type ProcurementRequestSummarySectionProps,
+};

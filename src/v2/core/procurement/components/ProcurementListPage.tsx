@@ -22,7 +22,10 @@ export interface ProcurementPageDisplay<T> {
   titleKey: string;
   descriptionKey: string;
   icon: React.ReactNode;
-  buildColumns: (t: (key: string, fallback: string) => string) => V2Column<T>[];
+  buildColumns: (
+    t: (key: string, fallback: string) => string,
+    openDetail?: (id: string) => void,
+  ) => V2Column<T>[];
   /** Drawer chi tiết/sửa của họ chứng từ, dựng bởi module */
   renderDrawer: (props: ProcurementDrawerProps) => React.ReactNode;
 }
@@ -40,7 +43,10 @@ export function ProcurementListPage<T extends { id: string }>({
   const { t } = useV2Translation();
   const state = useProcurementList(config);
   const { drawer } = state;
-  const columns = React.useMemo(() => display.buildColumns(t), [display, t]);
+  const columns = React.useMemo(
+    () => display.buildColumns(t, state.openView),
+    [display, state.openView, t],
+  );
 
   const tabs = React.useMemo<V2ModuleTab<T>[]>(
     () => [
@@ -54,6 +60,7 @@ export function ProcurementListPage<T extends { id: string }>({
           columns,
           getRowKey: (row) => row.id,
           mode: "server",
+          fetchOptions: config.api.options,
           rowActions: state.rowActions,
           preferencesStorage: v2ColumnPreferencesStorage,
           viewPresetStorage: v2ViewPresetStorage,
@@ -99,6 +106,17 @@ export function ProcurementListPage<T extends { id: string }>({
                 api: config.api,
                 fromRequestId: drawer.fromRequestId ?? null,
                 requestApi: config.requestApi,
+                onTransition: (action, row) => {
+                  const target =
+                    row ?? (drawer.id ? ({ id: drawer.id } as T) : null);
+                  if (target) state.start(target, action);
+                },
+                canCreateOrder: state.canCreate && Boolean(config.poHref),
+                onOrderFromRequest: (row) => {
+                  const target =
+                    row ?? (drawer.id ? ({ id: drawer.id } as T) : null);
+                  if (target) state.orderFromRequest(target);
+                },
               })}
             </React.Fragment>
           )}

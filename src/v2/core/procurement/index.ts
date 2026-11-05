@@ -16,6 +16,7 @@ export * from "./form/procurementRequest.form";
 export * from "./procurement.toast";
 export * from "./components/organisms/procurement-lines-editor/ProcurementLinesEditor";
 export * from "./components/molecules/procurement-pickers/ProcurementPickers";
+export * from "./components/molecules/procurement-status-badge";
 export * from "./api/procurementLookups";
 export * from "./hooks/useProcurementQuery";
 export * from "./hooks/procurementListConfig.type";

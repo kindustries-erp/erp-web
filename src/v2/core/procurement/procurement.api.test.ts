@@ -1,13 +1,72 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { del } = vi.hoisted(() => ({ del: vi.fn() }));
+const { del, get } = vi.hoisted(() => ({ del: vi.fn(), get: vi.fn() }));
 
 vi.mock("@/v2/shared/api/v2HttpClient", () => ({
-  v2HttpClient: { delete: del },
+  v2HttpClient: { delete: del, get },
   V2_API_BASE_URL: "http://test",
 }));
 
-import { createProcurementApi } from "./procurement.api";
+import {
+  createProcurementApi,
+  toProcurementListParams,
+} from "./procurement.api";
+import { TableSortState, type V2TableQuery } from "@/v2/shared/types/v2-table";
+
+describe("toProcurementListParams", () => {
+  it("serialize đúng phân trang và từ khóa tìm kiếm", () => {
+    const query: V2TableQuery = {
+      page: 2,
+      pageSize: 50,
+      search: "  phụ tùng  ",
+      sorts: [],
+      columnFilters: {},
+      columnSearch: {},
+      columnOperators: {},
+      dateRanges: {},
+    };
+
+    expect(toProcurementListParams(query)).toEqual({
+      page: 2,
+      pageSize: 50,
+      search: "phụ tùng",
+      sort: undefined,
+      column_filters: undefined,
+      column_search: undefined,
+      column_operators: undefined,
+      date_ranges: undefined,
+    });
+  });
+
+  it("serialize bộ lọc cột, tìm kiếm cột, ngày và sắp xếp sang JSON chuẩn V2", () => {
+    const query: V2TableQuery = {
+      page: 1,
+      pageSize: 20,
+      search: "",
+      sorts: [
+        { columnKey: "createdAt", direction: TableSortState.DESC },
+        { columnKey: "requestNo", direction: TableSortState.ASC },
+      ],
+      columnFilters: { status: ["PENDING_APPROVAL"] },
+      columnSearch: { requestNo: "PR-2026" },
+      columnOperators: {},
+      dateRanges: { requestDate: { from: "2026-11-01", to: "2026-11-05" } },
+    };
+
+    const params = toProcurementListParams(query);
+    expect(params.search).toBeUndefined();
+    expect(params.sort).toBe("-createdAt,requestNo");
+    expect(params.column_filters).toBe(
+      JSON.stringify({ status: ["PENDING_APPROVAL"] }),
+    );
+    expect(params.column_search).toBe(JSON.stringify({ requestNo: "PR-2026" }));
+    expect(params.date_ranges).toBe(
+      JSON.stringify({
+        requestDate: { from: "2026-11-01", to: "2026-11-05" },
+      }),
+    );
+  });
+});
 
 describe("createProcurementApi: xóa mềm và xóa cứng", () => {
   beforeEach(() => {
@@ -45,5 +104,37 @@ describe("createProcurementApi: xóa mềm và xóa cứng", () => {
     await api.remove?.("o1");
 
     expect(del).toHaveBeenCalledWith("/api/v2/garage-procurement-orders/o1");
+  });
+
+  it("options gọi GET {base}/column-options với tham số cột", async () => {
+    get.mockResolvedValueOnce({
+      data: { items: [{ label: "HN", value: "b-1" }], total: 1, next: null },
+    });
+    const api = createProcurementApi("/api/v2/garage-procurement-requests");
+
+    const result = await api.options?.({
+      columnKey: "branchName",
+      search: "HN",
+      pageParam: 1,
+      filtersStr: '{"status":["APPROVED"]}',
+    });
+
+    expect(get).toHaveBeenCalledWith(
+      "/api/v2/garage-procurement-requests/column-options",
+      {
+        params: {
+          column: "branchName",
+          search: "HN",
+          page: 1,
+          pageSize: 20,
+          filters: '{"status":["APPROVED"]}',
+        },
+      },
+    );
+    expect(result).toEqual({
+      items: [{ label: "HN", value: "b-1" }],
+      total: 1,
+      next: null,
+    });
   });
 });

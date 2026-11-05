@@ -1,4 +1,5 @@
 import type {
+  V2FetchOptions,
   V2FetchOptionsParams,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
@@ -31,11 +32,28 @@ export interface ProcurementOrderRow {
 export interface ProcurementRequestRow {
   id: string;
   requestNo: string;
+  requestDate?: string | null;
+  neededDate?: string | null;
   title: string | null;
   status: string;
   orderingStatus: string;
+  estimatedTotal?: string | number | null;
+  branchId?: string | null;
   branchName: string | null;
   createdBy: string | null;
+  createdAt: string;
+}
+
+/** Sự kiện phê duyệt trong nhật ký duyệt của đề nghị mua hàng. */
+export interface ProcurementApprovalEvent {
+  id: string;
+  docType: string;
+  docId: string;
+  action: string;
+  actorId?: string | null;
+  actorName?: string | null;
+  actorEmail?: string | null;
+  reason?: string | null;
   createdAt: string;
 }
 
@@ -121,5 +139,7 @@ export interface ProcurementApi<T, D = any, C = any, H = any> {
   purge?: (id: string) => Promise<unknown>;
   /** Chỉ PR có: bản nháp PO điền sẵn (chỉ đọc) */
   poDraft?: (id: string) => Promise<ProcurementPoDraft>;
-  options?: (params: V2FetchOptionsParams) => Promise<unknown>;
+  /** Nhật ký các bước duyệt của đề nghị mua hàng */
+  approvalEvents?: (id: string) => Promise<ProcurementApprovalEvent[]>;
+  options?: V2FetchOptions;
 }

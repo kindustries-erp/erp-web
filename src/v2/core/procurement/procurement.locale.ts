@@ -17,6 +17,7 @@ registerV2ModuleLocale("procurement", {
       close: "Đóng",
       delete: "Xóa",
       purge: "Xóa vĩnh viễn",
+      more: "Thao tác",
     },
     confirm: {
       title: "Xác nhận thao tác",
@@ -28,7 +29,9 @@ registerV2ModuleLocale("procurement", {
     status: {
       DRAFT: "Nháp",
       PENDING_APPROVAL: "Chờ duyệt",
+      SUBMITTED: "Chờ duyệt",
       APPROVED: "Đã duyệt",
+      REJECTED: "Từ chối",
       ISSUED: "Đã phát hành",
       CLOSED: "Đã đóng",
       CANCELLED: "Đã hủy",
@@ -70,6 +73,15 @@ registerV2ModuleLocale("procurement", {
       lines: "Dòng hàng",
       summary: "Tổng quan",
       payment: "Thanh toán",
+      orderingProgress: "Tiến độ đặt hàng",
+    },
+    audit: {
+      empty: "Chưa có sự kiện phê duyệt nào",
+    },
+    related: {
+      createPoTitle: "Khởi tạo đơn mua hàng (PO)",
+      createPoDesc:
+        "Đề nghị đã được duyệt. Bạn có thể tạo đơn mua PO điền sẵn từ các dòng hàng của đề nghị này.",
     },
     lines: {
       type: "Loại",
@@ -95,6 +107,9 @@ registerV2ModuleLocale("procurement", {
       createOrder: "Tạo đơn mua hàng",
       request: "Đề nghị mua",
       createRequest: "Tạo đề nghị mua",
+      tabGeneral: "Chi tiết",
+      tabAudit: "Nhật ký duyệt",
+      tabTraceability: "Chứng từ liên kết",
       saved: "Đã lưu đơn mua",
       savedRequest: "Đã lưu đề nghị mua",
       saveError: "Không lưu được chứng từ",
@@ -133,6 +148,7 @@ registerV2ModuleLocale("procurement", {
       close: "Close",
       delete: "Delete",
       purge: "Delete permanently",
+      more: "Actions",
     },
     confirm: {
       title: "Confirm action",
@@ -144,7 +160,9 @@ registerV2ModuleLocale("procurement", {
     status: {
       DRAFT: "Draft",
       PENDING_APPROVAL: "Pending approval",
+      SUBMITTED: "Pending approval",
       APPROVED: "Approved",
+      REJECTED: "Rejected",
       ISSUED: "Issued",
       CLOSED: "Closed",
       CANCELLED: "Cancelled",
@@ -186,6 +204,15 @@ registerV2ModuleLocale("procurement", {
       lines: "Items",
       summary: "Overview",
       payment: "Payment",
+      orderingProgress: "Ordering progress",
+    },
+    audit: {
+      empty: "No approval events recorded",
+    },
+    related: {
+      createPoTitle: "Create purchase order (PO)",
+      createPoDesc:
+        "The request has been approved. You can create a pre-filled PO from items in this request.",
     },
     lines: {
       type: "Type",
@@ -211,6 +238,9 @@ registerV2ModuleLocale("procurement", {
       createOrder: "Create purchase order",
       request: "Purchase request",
       createRequest: "Create purchase request",
+      tabGeneral: "Details",
+      tabAudit: "Approval history",
+      tabTraceability: "Related documents",
       saved: "Purchase order saved",
       savedRequest: "Purchase request saved",
       saveError: "Unable to save the document",

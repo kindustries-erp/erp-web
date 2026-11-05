@@ -1,19 +1,45 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
-import type { V2TableQuery } from "@/v2/shared/types/v2-table";
+import type {
+  V2FetchOptionsParams,
+  V2FetchOptionsResult,
+  V2TableQuery,
+} from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
 import { PROCUREMENT_REASON_ACTIONS } from "./procurement.rules";
 import type {
   ProcurementApi,
+  ProcurementApprovalEvent,
   ProcurementLinePayload,
   ProcurementListResponse,
   ProcurementPoDraft,
 } from "./procurement.types";
 
-/** Tham số danh sách của API procurement: phân trang, sắp xếp và tìm kiếm chung. */
+/** Tham số danh sách của API procurement: phân trang, sắp xếp và bộ lọc bảng V2. */
 export const toProcurementListParams = (query: V2TableQuery) => ({
   page: query.page,
   pageSize: query.pageSize,
   search: query.search?.trim() || undefined,
+  sort: query.sorts?.length
+    ? query.sorts
+        .map((s) => (s.direction === "desc" ? `-${s.columnKey}` : s.columnKey))
+        .join(",")
+    : undefined,
+  column_filters:
+    query.columnFilters && Object.keys(query.columnFilters).length
+      ? JSON.stringify(query.columnFilters)
+      : undefined,
+  column_search:
+    query.columnSearch && Object.keys(query.columnSearch).length
+      ? JSON.stringify(query.columnSearch)
+      : undefined,
+  column_operators:
+    query.columnOperators && Object.keys(query.columnOperators).length
+      ? JSON.stringify(query.columnOperators)
+      : undefined,
+  date_ranges:
+    query.dateRanges && Object.keys(query.dateRanges).length
+      ? JSON.stringify(query.dateRanges)
+      : undefined,
 });
 
 /**
@@ -75,6 +101,12 @@ export function createProcurementApi<T, D = any, C = any, H = any>(
           return data;
         }
       : undefined,
+    approvalEvents: async (id) => {
+      const { data } = await v2HttpClient.get<ProcurementApprovalEvent[]>(
+        `${basePath}/${id}/approval-events`,
+      );
+      return data;
+    },
     remove: options.supportsDelete
       ? async (id) => {
           const { data } = await v2HttpClient.delete(`${basePath}/${id}`);
@@ -89,5 +121,20 @@ export function createProcurementApi<T, D = any, C = any, H = any>(
           return data;
         }
       : undefined,
+    options: async (params: V2FetchOptionsParams) => {
+      const { data } = await v2HttpClient.get<V2FetchOptionsResult>(
+        `${basePath}/column-options`,
+        {
+          params: {
+            column: params.columnKey,
+            search: params.search,
+            page: params.pageParam,
+            pageSize: 20,
+            filters: params.filtersStr,
+          },
+        },
+      );
+      return data;
+    },
   };
 }

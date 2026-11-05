@@ -1,7 +1,12 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { todayIsoDate } from "../procurement.rules";
+import {
+  availableProcurementActions,
+  PROCUREMENT_REQUEST_FROM,
+  todayIsoDate,
+  type ProcurementActionKey,
+} from "../procurement.rules";
 import {
   emptyRequestForm,
   hasRequestFormErrors,
@@ -21,6 +26,8 @@ import {
 } from "../procurement.toast";
 import type { ProcurementDrawerProps } from "./procurementDrawer.type";
 
+export type ProcurementDrawerTabKey = "general" | "audit" | "traceability";
+
 /**
  * Trạng thái drawer PR. Đầu đề (chi nhánh, ngày, nội dung) chỉ nhập lúc tạo;
  * khi nháp, sửa được dòng hàng qua `replaceLines`.
@@ -30,6 +37,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
   const queryClient = useQueryClient();
   const creating = !props.documentId;
   const [mode, setMode] = React.useState(props.mode);
+  const [tab, setTab] = React.useState<ProcurementDrawerTabKey>("general");
   const [form, setForm] = React.useState<ProcurementRequestFormValue>(() =>
     emptyRequestForm(todayIsoDate()),
   );
@@ -47,6 +55,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
   React.useEffect(() => {
     if (!props.open) return;
     setErrors({});
+    setTab("general");
     if (detail.data) setForm(requestFormFromDetail(detail.data));
     else if (creating) setForm(emptyRequestForm(todayIsoDate()));
   }, [props.open, detail.data, creating]);
@@ -56,6 +65,11 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
   const readOnly = !editable || mode === "view";
   const headerViewing = !creating && readOnly;
   const linesViewing = !creating && readOnly;
+
+  const availableActions = React.useMemo<ProcurementActionKey[]>(() => {
+    if (creating || !detail.data) return [];
+    return availableProcurementActions(PROCUREMENT_REQUEST_FROM, status);
+  }, [creating, detail.data, status]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -118,7 +132,10 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
     branchLocked: !creating,
     mode,
     setMode,
+    tab,
+    setTab,
     status,
+    availableActions,
     detail: detail.data,
     loading: detail.isFetching,
     saving: save.isPending,
