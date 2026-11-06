@@ -46,8 +46,10 @@ export function V2ModulePage<T>({
       <V2Stack
         as="section"
         fill
-        gap="md"
-        className={cn("px-2 sm:px-5 pt-1.5 sm:pt-[18px] pb-2", className)}
+        className={cn(
+          "px-2 sm:px-5 pt-1.5 sm:pt-[18px] pb-2 gap-2 sm:gap-4",
+          className,
+        )}
       >
         <V2PageHeader
           title={title}
@@ -63,7 +65,7 @@ export function V2ModulePage<T>({
           tabs={tabs}
           activeTabKey={page.activeKey}
           onTabChange={page.handleTabChange}
-          className="shrink-0"
+          className={cn("shrink-0", tabs.length <= 1 && "hidden")}
         />
         <V2Stack grow>
           {tabs.map((tab) => (

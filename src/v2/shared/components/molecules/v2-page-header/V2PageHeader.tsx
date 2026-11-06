@@ -1,4 +1,5 @@
 import * as React from "react";
+import { cn } from "@/v2/shared/utils/cn";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2PageIcon } from "@/v2/shared/components/atoms/v2-page-icon";
 import { V2PageToolbarSlot } from "@/v2/shared/components/molecules/v2-page-toolbar-slot";
@@ -15,8 +16,13 @@ export const V2PageHeader: React.FC<V2PageHeaderProps> = ({
   activeKey,
   register = noopRegister,
 }) => (
-  <header className="flex shrink-0 items-center justify-between gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
-    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+  <header
+    className={cn(
+      "flex shrink-0 items-center justify-between gap-2 sm:gap-3 flex-wrap sm:flex-nowrap",
+      !actions && tabKeys.length === 0 && "hidden sm:flex",
+    )}
+  >
+    <div className="hidden sm:flex min-w-0 items-center gap-2 sm:gap-3">
       {icon && <V2PageIcon>{icon}</V2PageIcon>}
       <div className="min-w-0">
         <V2Text
@@ -40,7 +46,7 @@ export const V2PageHeader: React.FC<V2PageHeaderProps> = ({
         )}
       </div>
     </div>
-    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+    <div className="flex w-full sm:w-auto shrink-0 items-center justify-between sm:justify-end gap-1.5 sm:gap-2">
       {tabKeys.map((key) => (
         <V2PageToolbarSlot
           key={key}
@@ -49,7 +55,7 @@ export const V2PageHeader: React.FC<V2PageHeaderProps> = ({
           register={register}
         />
       ))}
-      {actions}
+      {actions && <div className="shrink-0">{actions}</div>}
     </div>
   </header>
 );

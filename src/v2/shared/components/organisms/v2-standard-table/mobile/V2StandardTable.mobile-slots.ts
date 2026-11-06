@@ -3,12 +3,14 @@ import type { V2Column } from "../V2StandardTable.type";
 export interface V2MobileSlots<T> {
   title?: V2Column<T>;
   subtitle?: V2Column<T>;
+  badge?: V2Column<T>;
   meta: V2Column<T>[];
 }
 
 /**
  * Chọn cột nào hiện ở đâu trên card. Cột đặt `mobileSlot` rõ ràng thì giữ nguyên,
- * cột còn lại tự xếp: cột đầu là tiêu đề, cột hai là phụ đề, phần còn lại là meta.
+ * cột còn lại tự xếp: cột đầu là tiêu đề, cột hai là phụ đề, cột badge (nếu có hoặc cột status),
+ * phần còn lại là meta.
  */
 export const resolveMobileSlots = <T>(
   columns: V2Column<T>[],
@@ -20,8 +22,14 @@ export const resolveMobileSlots = <T>(
   const subtitle =
     visible.find((column) => column.mobileSlot === "subtitle") ??
     visible.find((column) => !column.mobileSlot && column !== title);
+  const badge =
+    visible.find((column) => column.mobileSlot === "badge") ??
+    visible.find(
+      (column) =>
+        column.key === "status" && column !== title && column !== subtitle,
+    );
   const meta = visible.filter(
-    (column) => column !== title && column !== subtitle,
+    (column) => column !== title && column !== subtitle && column !== badge,
   );
-  return { title, subtitle, meta };
+  return { title, subtitle, badge, meta };
 };

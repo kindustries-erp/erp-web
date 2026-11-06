@@ -53,6 +53,7 @@ export function buildProcurementOrderColumns(
       key: "branchName",
       ...headerFilter(t("v2.procurement.columns.branch", "Chi nhánh")),
       size: 140,
+      mobileSlot: "hidden",
       cell: (row) => row.branchName ?? "—",
     },
     {
@@ -76,6 +77,7 @@ export function buildProcurementOrderColumns(
       ),
       size: 140,
       align: TableColumnAlign.CENTER,
+      mobileSlot: "badge",
       cell: (row) => <ProcurementStatusBadge value={row.status} t={t} />,
     },
     {
