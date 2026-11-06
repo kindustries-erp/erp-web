@@ -70,6 +70,7 @@ registerV2ModuleLocale("procurement", {
     },
     fields: {
       branch: "Chi nhánh",
+      branchPlaceholder: "Chọn chi nhánh",
       orderDate: "Ngày đơn",
       expectedDate: "Ngày dự kiến nhận",
       supplier: "Nhà cung cấp",
@@ -219,6 +220,7 @@ registerV2ModuleLocale("procurement", {
     },
     fields: {
       branch: "Branch",
+      branchPlaceholder: "Select a branch",
       orderDate: "Order date",
       expectedDate: "Expected receipt date",
       supplier: "Supplier",

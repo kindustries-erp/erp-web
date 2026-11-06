@@ -132,6 +132,7 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
                 errors={state.errors}
                 headerViewing={state.headerViewing}
                 branchLocked={state.branchLocked}
+                branchOptional={state.branchOptional}
                 setField={state.setField}
               />
               <ProcurementRequestSummarySection

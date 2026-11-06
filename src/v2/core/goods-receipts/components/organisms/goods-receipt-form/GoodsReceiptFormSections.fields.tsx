@@ -6,10 +6,8 @@ import {
   V2ReadValue,
   V2TextField,
 } from "@/v2/shared/components";
-import {
-  GoodsReceiptStatus,
-  type GoodsReceiptFormValue,
-} from "@/v2/core/goods-receipts";
+import type { GoodsReceiptFormValue } from "@/v2/core/goods-receipts";
+import { ProcurementBranchPicker } from "@/v2/core/procurement";
 import { GoodsReceiptStatusBadge } from "../../molecules/goods-receipt-status-badge/GoodsReceiptStatusBadge";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
@@ -66,12 +64,17 @@ const renderSupplierName: FieldRenderer = ({ form, viewing, setField }) => (
   />
 );
 
+/** Phiếu nhập chọn tối đa một chi nhánh; để trống thì tồn kho vào nhóm không chi nhánh. */
 const renderBranchName: FieldRenderer = ({ form, viewing, setField }) => (
-  <V2TextField
+  <ProcurementBranchPicker
+    value={form.branchId}
+    label={form.branchName}
     viewing={viewing}
-    value={form.branchName}
-    className={V2_DRAWER_FOCUS_RING_CLASS}
-    onChange={(v) => setField("branchName", v)}
+    clearable
+    onChange={(id, name) => {
+      setField("branchId", id);
+      setField("branchName", name);
+    }}
   />
 );
 

@@ -41,11 +41,6 @@ export function GoodsReceiptFormSections(props: FormSectionsProps) {
       value: form.supplierName || "—",
     },
     {
-      key: "branchName",
-      label: t("v2.goodsReceipts.columns.branchName", "Chi nhánh"),
-      value: form.branchName || "—",
-    },
-    {
       key: "totalAmount",
       label: t("v2.goodsReceipts.columns.totalAmount", "Tổng tiền"),
       value: Number(form.totalAmount || 0).toLocaleString("vi-VN") + " ₫",
@@ -54,6 +49,11 @@ export function GoodsReceiptFormSections(props: FormSectionsProps) {
       key: "status",
       label: t("v2.goodsReceipts.columns.status", "Trạng thái"),
       value: <GoodsReceiptStatusBadge status={form.status} />,
+    },
+    {
+      key: "branchName",
+      label: t("v2.goodsReceipts.columns.branchName", "Chi nhánh"),
+      value: form.branchName || "—",
     },
     {
       key: "remarks",

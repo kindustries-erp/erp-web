@@ -28,11 +28,6 @@ export const GOODS_RECEIPT_FIELD_META: GoodsReceiptFieldMeta[] = [
     defaultLabel: "Nhà cung cấp",
   },
   {
-    key: "branchName",
-    labelKey: "v2.goodsReceipts.columns.branchName",
-    defaultLabel: "Chi nhánh",
-  },
-  {
     key: "totalAmount",
     labelKey: "v2.goodsReceipts.columns.totalAmount",
     defaultLabel: "Tổng tiền",
@@ -41,6 +36,11 @@ export const GOODS_RECEIPT_FIELD_META: GoodsReceiptFieldMeta[] = [
     key: "status",
     labelKey: "v2.goodsReceipts.columns.status",
     defaultLabel: "Trạng thái",
+  },
+  {
+    key: "branchName",
+    labelKey: "v2.goodsReceipts.columns.branchName",
+    defaultLabel: "Chi nhánh",
   },
   {
     key: "remarks",

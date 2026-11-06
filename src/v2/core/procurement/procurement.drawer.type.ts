@@ -29,4 +29,9 @@ export interface ProcurementDrawerProps {
   onOrderFromRequest?: (row: ProcurementDocumentRef) => void;
   /** Lưu xong: mở lại chứng từ vừa lưu ở chế độ xem. Thiếu thì đóng drawer. */
   onSaved?: (id: string) => void;
+  /**
+   * Chi nhánh tùy chọn (Garage): được để trống, chọn 1 hoặc bỏ trống khi còn nháp,
+   * và đặt dưới các trường chính. Mặc định false giữ hành vi luồng thường.
+   */
+  branchOptional?: boolean;
 }

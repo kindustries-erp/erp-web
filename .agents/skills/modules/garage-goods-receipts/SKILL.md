@@ -73,3 +73,12 @@ Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự 
 - **Đơn vị mặc định**: `GOODS_RECEIPT_DEFAULT_UNIT` (core), không hardcode `"Cái"` trong module.
 - **Drawer remount**: `GarageGoodsReceiptsPage` đặt `key` theo `id` và `mode` để reset state mỗi lần mở, thay cho effect đồng bộ mode.
 - **Lưu và hủy sửa**: lưu phiếu cũ thì về chế độ xem (`setMode("view")`), phiếu mới thì đóng drawer. Hủy khi đã đổi hỏi xác nhận bằng `V2ConfirmModal` (z-[700]), đồng ý thì `resetForm` và về view. Menu dòng: TRA CỨU [Xem chi tiết] → THAO TÁC [Chỉnh sửa, Xóa]. Chỉnh sửa luôn hiện khi có quyền, nhưng chỉ bật cho phiếu nháp (không phải nháp thì mờ kèm lý do `disabledReason`); Xóa chỉ cho phiếu nháp. **Nút sửa chỉ bật sau khi đã tải xong** (`loaded` từ data hook): form khởi tạo có status DRAFT mặc định nên không được dùng để quyết định quyền trước khi tải.
+
+## 4. Cập nhật 2026-11-06: chi nhánh tùy chọn
+
+- Ô `branchName` trên phiếu nhập Garage đổi từ ô text sang `ProcurementBranchPicker` (import từ `@/v2/core/procurement` barrel), `clearable`. Form lưu cả `branchId` và `branchName`.
+- Tối đa 1 chi nhánh; để trống = nhóm tồn kho không chi nhánh.
+- Vị trí: row chi nhánh nằm **sau `status`, trước `remarks`** (`GoodsReceiptFormSections.fields.config.ts`, `GoodsReceiptFormSections.tsx`).
+- Payload (`toGarageGoodsReceiptPayload`): gửi `branchId` và `branchName` là `null` khi rỗng để xóa chi nhánh cũ khi sửa.
+- Picker dùng react-query: test render form phải bọc `QueryClientProvider` (`GoodsReceiptFormSections.test.tsx`).
+- Test: `api/garageGoodsReceiptsPayload.test.ts`.

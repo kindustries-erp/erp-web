@@ -38,6 +38,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
   const { t } = useV2Translation();
   const queryClient = useQueryClient();
   const creating = !props.documentId;
+  const branchOptional = Boolean(props.branchOptional);
   const [mode, setMode] = React.useState(props.mode);
   const [tab, setTab] = React.useState<ProcurementDrawerTabKey>("general");
   const [form, setForm] = React.useState<ProcurementRequestFormValue>(() =>
@@ -88,7 +89,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
       if (creating) return props.api.create(toRequestCreatePayload(form));
       await props.api.updateHeader?.(
         props.documentId!,
-        toRequestHeaderPayload(form),
+        toRequestHeaderPayload(form, branchOptional),
       );
       await props.api.replaceLines(
         props.documentId!,
@@ -117,7 +118,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
   ) => setForm((current) => ({ ...current, [key]: value }));
 
   const submit = () => {
-    const next = validateRequestForm(form);
+    const next = validateRequestForm(form, branchOptional);
     setErrors(next);
     if (hasRequestFormErrors(next)) {
       showProcurementWarning(
@@ -156,8 +157,12 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
     editable,
     viewing,
     dirty,
-    /** Chi nhánh khóa sau khi tạo: PO đã liên kết có thể đang dùng chi nhánh cũ */
-    branchLocked: !creating,
+    /**
+     * Chi nhánh khóa sau khi tạo (luồng thường). Với chi nhánh tùy chọn, được sửa khi còn nháp
+     * vì header chỉ hiện ở chế độ sửa khi là nháp.
+     */
+    branchLocked: branchOptional ? false : !creating,
+    branchOptional,
     mode,
     setMode,
     tab,

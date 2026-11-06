@@ -81,6 +81,7 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
               errors={state.errors}
               viewing={state.viewing}
               branchLocked={state.branchLocked}
+              branchOptional={state.branchOptional}
               setField={state.setField}
             />
             <ProcurementOrderSummarySection

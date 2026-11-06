@@ -76,3 +76,13 @@ src/v2/core/procurement/
 - **Thao tác duyệt ngay trong Drawer**: Người dùng có thể Duyệt, Từ chối, Gửi duyệt, Hủy trực tiếp từ Drawer Footer khi đang xem đề nghị.
 - **Mobile-First Ergonomics**: Kích thước vùng bấm chạm $\ge 44\text{px}$, input font $\ge 16\text{px}$ trên mobile, responsive layout co giãn 1 cột trên điện thoại / 2 cột trên máy tính.
 - **Đa ngôn ngữ 100%**: 100% chuỗi văn bản sử dụng `t()` với prefix `v2.procurement.*` và `v2.garageProcurementRequests.*`.
+
+## 4. Cập nhật 2026-11-06: chi nhánh tùy chọn
+
+- Chi nhánh ở drawer đề nghị Garage là **tùy chọn**: chọn 1 chi nhánh hoặc để trống. Cờ `branchOptional` truyền từ `garageProcurementRequests.config.tsx` (`renderDrawer` → `<ProcurementRequestDrawer branchOptional />`). Luồng mua hàng thường không truyền cờ nên giữ nguyên bắt buộc.
+- Ô chi nhánh dùng `ProcurementBranchPicker` (`clearable` khi tùy chọn), không còn ô text tự do. Placeholder `v2.procurement.fields.branchPlaceholder`.
+- Vị trí: ô chi nhánh nằm **sau các trường chính, trước ghi chú** (helper `placeBranchField` trong `procurement.branch.ts`).
+- Sửa chi nhánh chỉ khi DRAFT (`branchLocked` = `false` ở chế độ tùy chọn; trạng thái khác thì khóa theo quy ước cũ). Gửi `null` khi bỏ trống; tạo mới gửi `undefined` khi rỗng (tránh lỗi `@IsUUID` của chuỗi rỗng).
+- Form: `validateRequestForm(form, branchOptional)`, `toRequestCreatePayload`, `toRequestHeaderPayload(form, branchOptional)` (core `form/procurementRequest.form.ts`).
+- Test: `procurement.branch.test.ts`, `form/procurementBranchOptional.form.test.ts`.
+- Ràng buộc PO: chi nhánh PO phải khớp PR nguồn kể cả khi cùng trống (backend kiểm tra).

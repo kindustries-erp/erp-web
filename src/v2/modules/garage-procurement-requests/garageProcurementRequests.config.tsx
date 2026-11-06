@@ -40,5 +40,7 @@ export const garageProcurementRequestsDisplay: ProcurementPageDisplay<Procuremen
     descriptionKey: "v2.garageProcurementRequests.description",
     icon: <ClipboardList className="h-4 w-4" />,
     buildColumns: buildProcurementRequestColumns,
-    renderDrawer: (props) => <ProcurementRequestDrawer {...props} />,
+    renderDrawer: (props) => (
+      <ProcurementRequestDrawer {...props} branchOptional />
+    ),
   };
