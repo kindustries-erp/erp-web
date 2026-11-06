@@ -286,7 +286,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
                 as="span"
                 variant="body-sm"
                 truncate
-                className="text-muted-fg font-medium flex-1 min-w-0"
+                className="text-muted-fg font-medium flex-1 min-w-0 hidden sm:inline"
               >
                 {displayName}
               </V2Text>
@@ -297,7 +297,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="text-faint flex-shrink-0 opacity-70"
+                className="text-faint flex-shrink-0 opacity-70 hidden sm:inline"
                 aria-hidden="true"
               >
                 <polyline points="7 10 12 5 17 10" />

@@ -58,4 +58,25 @@ describe("V2Header Organism", () => {
     expect(screen.getByTestId("custom-user-menu")).toBeInTheDocument();
     expect(screen.getByTestId("custom-notification")).toBeInTheDocument();
   });
+
+  it("áp dụng class responsive: ẩn breadcrumbs trên mobile, avatar order-1 và notification order-2", () => {
+    const { container } = render(
+      <V2Header
+        breadcrumbs={[{ label: "Trang chủ" }]}
+        userName="Admin"
+        notificationNode={<div data-testid="bell">Bell</div>}
+      />,
+    );
+
+    const breadcrumbContainer = container.querySelector("nav")?.parentElement;
+    expect(breadcrumbContainer).toHaveClass("hidden");
+    expect(breadcrumbContainer).toHaveClass("sm:flex");
+
+    const avatarContainer = screen.getByText("AD").closest(".order-1");
+    expect(avatarContainer).toBeInTheDocument();
+    expect(avatarContainer).toHaveClass("sm:order-3");
+
+    const notificationContainer = screen.getByTestId("bell").parentElement;
+    expect(notificationContainer).toHaveClass("order-2");
+  });
 });

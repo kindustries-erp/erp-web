@@ -37,8 +37,27 @@ export const V2Header: React.FC<V2HeaderProps> = ({
       )}
       {...props}
     >
-      {/* Left: Breadcrumbs or Title */}
-      <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+      {/* ── Left on mobile (order-1): Avatar only. On desktop (order-3): Right ── */}
+      <div className="order-1 sm:order-3 flex items-center shrink-0">
+        {resolvedUserMenuNode ? (
+          resolvedUserMenuNode
+        ) : (
+          <V2UserBadge
+            name={userName}
+            role={userRole}
+            tenantName={tenantName || branchName}
+            avatarUrl={logoUrl}
+            onClick={onBranchClick}
+            className={cn(
+              "shrink-0 min-w-0 max-w-full",
+              onBranchClick && "cursor-pointer active:scale-95 transition-all",
+            )}
+          />
+        )}
+      </div>
+
+      {/* ── Breadcrumbs or Title: Hidden on mobile, order-1 on desktop (left) ── */}
+      <div className="hidden sm:flex sm:order-1 items-center gap-2 min-w-0 flex-1 overflow-hidden">
         {breadcrumbs.length > 0 ? (
           <nav
             aria-label="Breadcrumb"
@@ -94,26 +113,14 @@ export const V2Header: React.FC<V2HeaderProps> = ({
         )}
       </div>
 
-      {/* Right Actions: Notification, Language Switcher, User Menu / Badge */}
-      <div className="flex items-center gap-1.5 shrink-0 max-w-[70%] justify-end">
+      {/* ── Right Actions: Notification bell, Impersonation banner, Language Switcher (order-2) ── */}
+      <div className="order-2 sm:order-2 flex items-center gap-1.5 shrink-0 justify-end">
         <V2ImpersonationBanner compact />
         {notificationNode}
-        {showLanguageSwitcher && <V2LanguageSwitcher />}
-
-        {resolvedUserMenuNode ? (
-          resolvedUserMenuNode
-        ) : (
-          <V2UserBadge
-            name={userName}
-            role={userRole}
-            tenantName={tenantName || branchName}
-            avatarUrl={logoUrl}
-            onClick={onBranchClick}
-            className={cn(
-              "min-w-0 max-w-full",
-              onBranchClick && "cursor-pointer active:scale-95 transition-all",
-            )}
-          />
+        {showLanguageSwitcher && (
+          <div className="hidden sm:block">
+            <V2LanguageSwitcher />
+          </div>
         )}
       </div>
     </header>

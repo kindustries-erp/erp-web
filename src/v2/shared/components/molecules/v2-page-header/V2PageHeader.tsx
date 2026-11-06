@@ -3,6 +3,7 @@ import { cn } from "@/v2/shared/utils/cn";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2PageIcon } from "@/v2/shared/components/atoms/v2-page-icon";
 import { V2PageToolbarSlot } from "@/v2/shared/components/molecules/v2-page-toolbar-slot";
+import { V2TabCombobox } from "@/v2/shared/components/molecules/v2-tab-combobox";
 import type { V2PageHeaderProps } from "./V2PageHeader.type";
 
 const noopRegister = () => {};
@@ -15,15 +16,25 @@ export const V2PageHeader: React.FC<V2PageHeaderProps> = ({
   tabKeys = [],
   activeKey,
   register = noopRegister,
+  pageTabs,
+  activePageTab,
+  onPageTabSelect,
 }) => (
   <header
     className={cn(
       "flex shrink-0 items-center justify-between gap-2 sm:gap-3 flex-wrap sm:flex-nowrap",
-      !actions && tabKeys.length === 0 && "hidden sm:flex",
+      !actions && tabKeys.length === 0 && !pageTabs && "hidden sm:flex",
     )}
   >
-    <div className="hidden sm:flex min-w-0 items-center gap-2 sm:gap-3">
-      {icon && <V2PageIcon>{icon}</V2PageIcon>}
+    <div
+      className={cn(
+        "min-w-0 items-center gap-2 sm:gap-3 order-1",
+        pageTabs && pageTabs.length > 1 ? "hidden sm:flex" : "flex",
+      )}
+    >
+      {icon && (
+        <V2PageIcon className="hidden sm:inline-flex">{icon}</V2PageIcon>
+      )}
       <div className="min-w-0">
         <V2Text
           as="h1"
@@ -46,16 +57,34 @@ export const V2PageHeader: React.FC<V2PageHeaderProps> = ({
         )}
       </div>
     </div>
-    <div className="flex w-full sm:w-auto shrink-0 items-center justify-between sm:justify-end gap-1.5 sm:gap-2">
-      {tabKeys.map((key) => (
-        <V2PageToolbarSlot
-          key={key}
-          tabKey={key}
-          active={key === activeKey}
-          register={register}
+
+    {pageTabs && pageTabs.length > 1 && (
+      <div className="flex sm:hidden order-1 min-w-0 max-w-[220px]">
+        <V2TabCombobox
+          items={pageTabs}
+          activeKey={activePageTab}
+          onSelect={onPageTabSelect}
         />
-      ))}
-      {actions && <div className="shrink-0">{actions}</div>}
-    </div>
+      </div>
+    )}
+
+    {actions && (
+      <div className="order-2 sm:order-3 shrink-0 ml-auto sm:ml-0">
+        {actions}
+      </div>
+    )}
+
+    {tabKeys.length > 0 && (
+      <div className="order-3 sm:order-2 flex w-full sm:w-auto shrink-0 items-center justify-between sm:justify-end gap-1.5 sm:gap-2">
+        {tabKeys.map((key) => (
+          <V2PageToolbarSlot
+            key={key}
+            tabKey={key}
+            active={key === activeKey}
+            register={register}
+          />
+        ))}
+      </div>
+    )}
   </header>
 );

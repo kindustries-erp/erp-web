@@ -27,7 +27,12 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
     filtersStrFor: view.filtersStrFor,
   });
   const { panel, toolbarConfig } = useV2FilterPanelToolbar({
-    toolbar: props.toolbar,
+    toolbar: props.toolbar
+      ? {
+          ...props.toolbar,
+          filterPanel: props.toolbar.filterPanel ?? {},
+        }
+      : undefined,
     columns,
     filters,
     canFilter: (column) =>
@@ -103,7 +108,7 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         total={view.total}
         onPageChange={state.setPage}
         onPageSizeChange={state.setPageSize}
-        className="mt-2 shrink-0 pb-20 sm:pb-0"
+        className="mt-2 shrink-0 pb-12 sm:pb-0"
       />
       <V2Modal
         open={panel.open}

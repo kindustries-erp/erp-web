@@ -4,10 +4,12 @@ import { registerV2ModuleLocale } from "@/v2/shared/locales";
 registerV2ModuleLocale("garageProcurementRequests", {
   vi: {
     title: "Đề nghị mua hàng Garage",
+    tab: "Đề nghị mua hàng",
     description: "Đề nghị mua phụ tùng, duyệt trước khi lập đơn mua",
   },
   en: {
     title: "Garage Purchase Requests",
+    tab: "Purchase Requests",
     description: "Spare-part purchase requests, approved before ordering",
   },
 });
