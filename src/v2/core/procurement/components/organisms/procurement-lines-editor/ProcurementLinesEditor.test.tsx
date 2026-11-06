@@ -76,4 +76,29 @@ describe("ProcurementLinesEditor", () => {
     );
     expect(screen.getByDisplayValue("Dầu nhớt")).toBeTruthy();
   });
+
+  it("render đúng các cột theo array config", () => {
+    const line = procurementLineFromDetail({
+      id: "l2",
+      lineType: "SERVICE",
+      itemCode: "DV-001",
+      itemName: "Công thay thế",
+      qtyOrdered: 1,
+      unitPrice: 200000,
+    });
+    render(
+      <ProcurementLinesEditor
+        lines={[line]}
+        onChange={vi.fn()}
+        viewing
+        priceLabel="Đơn giá dự kiến"
+      />,
+    );
+    expect(screen.getByText("Loại")).toBeInTheDocument();
+    expect(screen.getByText("Mã")).toBeInTheDocument();
+    expect(screen.getByText("Tên")).toBeInTheDocument();
+    expect(screen.getByText("Đơn giá dự kiến")).toBeInTheDocument();
+    expect(screen.getByText("DV-001")).toBeInTheDocument();
+    expect(screen.getByText("Công thay thế")).toBeInTheDocument();
+  });
 });

@@ -2,11 +2,15 @@ import * as React from "react";
 import {
   DrawerSection,
   V2DrawerFieldGrid,
-  V2ReadValue,
+  V2DrawerRowList,
   V2Textarea,
   V2TextField,
+  type DrawerRowConfig,
+  type V2DrawerFieldItem,
 } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { cn } from "@/v2/shared/utils/cn";
+import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import {
   ProcurementBranchPicker,
   ProcurementDateField,
@@ -27,15 +31,6 @@ export interface ProcurementRequestHeaderSectionProps {
   ) => void;
 }
 
-interface HeaderFieldConfig {
-  key: string;
-  label: string;
-  required?: boolean;
-  error?: string;
-  className?: string;
-  render: () => React.ReactNode;
-}
-
 /** Section đầu đề đề nghị mua (cột phải): chi nhánh, ngày đề nghị, ngày cần, nội dung, ghi chú. */
 export function ProcurementRequestHeaderSection({
   form,
@@ -50,7 +45,47 @@ export function ProcurementRequestHeaderSection({
     "Trường này bắt buộc",
   );
 
-  const fields: HeaderFieldConfig[] = [
+  if (headerViewing) {
+    const rows: DrawerRowConfig[] = [
+      {
+        key: "branch",
+        label: t("v2.procurement.fields.branch", "Chi nhánh"),
+        value: form.branchName || "—",
+      },
+      {
+        key: "requestDate",
+        label: t("v2.procurement.fields.requestDate", "Ngày đề nghị"),
+        value: form.requestDate || "—",
+      },
+      {
+        key: "neededDate",
+        label: t("v2.procurement.fields.neededDate", "Ngày cần hàng"),
+        value: form.neededDate || "—",
+      },
+      {
+        key: "title",
+        label: t("v2.procurement.fields.title", "Nội dung"),
+        value: form.title || "—",
+        multiline: true,
+      },
+      {
+        key: "remarks",
+        label: t("v2.procurement.fields.remarks", "Ghi chú"),
+        value: form.remarks || "—",
+        multiline: true,
+      },
+    ];
+
+    return (
+      <DrawerSection
+        title={t("v2.procurement.sections.header", "Thông tin đề nghị")}
+      >
+        <V2DrawerRowList rows={rows} />
+      </DrawerSection>
+    );
+  }
+
+  const fields: V2DrawerFieldItem[] = [
     {
       key: "branchId",
       label: t("v2.procurement.fields.branch", "Chi nhánh"),
@@ -60,7 +95,7 @@ export function ProcurementRequestHeaderSection({
         <ProcurementBranchPicker
           value={form.branchId}
           label={form.branchName}
-          viewing={headerViewing || branchLocked}
+          viewing={branchLocked}
           onChange={(id) => setField("branchId", id)}
         />
       ),
@@ -73,7 +108,7 @@ export function ProcurementRequestHeaderSection({
       render: () => (
         <ProcurementDateField
           value={form.requestDate}
-          viewing={headerViewing}
+          viewing={false}
           onChange={(v) => setField("requestDate", v)}
         />
       ),
@@ -84,7 +119,7 @@ export function ProcurementRequestHeaderSection({
       render: () => (
         <ProcurementDateField
           value={form.neededDate}
-          viewing={headerViewing}
+          viewing={false}
           minDate={form.requestDate}
           onChange={(v) => setField("neededDate", v)}
         />
@@ -93,31 +128,27 @@ export function ProcurementRequestHeaderSection({
     {
       key: "title",
       label: t("v2.procurement.fields.title", "Nội dung"),
-      render: () =>
-        headerViewing ? (
-          <V2ReadValue value={form.title} />
-        ) : (
-          <V2TextField
-            viewing={false}
-            value={form.title}
-            onChange={(v) => setField("title", v)}
-          />
-        ),
+      render: () => (
+        <V2TextField
+          viewing={false}
+          value={form.title}
+          className={V2_DRAWER_FOCUS_RING_CLASS}
+          onChange={(v) => setField("title", v)}
+        />
+      ),
     },
     {
       key: "remarks",
       label: t("v2.procurement.fields.remarks", "Ghi chú"),
       className: "sm:col-span-2",
-      render: () =>
-        headerViewing ? (
-          <V2ReadValue value={form.remarks} />
-        ) : (
-          <V2Textarea
-            value={form.remarks}
-            rows={2}
-            onChange={(e) => setField("remarks", e.target.value)}
-          />
-        ),
+      render: () => (
+        <V2Textarea
+          className={cn("min-h-20", V2_DRAWER_FOCUS_RING_CLASS)}
+          value={form.remarks}
+          rows={2}
+          onChange={(e) => setField("remarks", e.target.value)}
+        />
+      ),
     },
   ];
 
@@ -125,7 +156,6 @@ export function ProcurementRequestHeaderSection({
     <DrawerSection
       title={t("v2.procurement.sections.header", "Thông tin đề nghị")}
     >
-      {/* Đầu đề nằm ở cột phải (một cột), giống phiếu nhập kho */}
       <V2DrawerFieldGrid fields={fields} columns={1} />
     </DrawerSection>
   );

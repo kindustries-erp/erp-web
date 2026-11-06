@@ -1,5 +1,10 @@
 import * as React from "react";
-import { V2Badge, V2Divider } from "@/v2/shared/components/atoms";
+import {
+  V2Badge,
+  V2Divider,
+  V2Input,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { cn } from "@/v2/shared/utils/cn";
 import type { V2GroupHeaderProps } from "./V2GroupHeader.type";
 
@@ -8,6 +13,7 @@ export function V2GroupHeader({
   count,
   variant = "badge",
   icon,
+  search,
   action,
   showDivider = true,
   className,
@@ -35,17 +41,39 @@ export function V2GroupHeader({
           badgeClassName,
         )}
       >
-        {icon && <span className="shrink-0 text-muted-foreground">{icon}</span>}
-        <span>{title}</span>
-        {count !== undefined && (
-          <span className="text-[11px] font-medium text-muted-foreground tabular-nums font-mono">
-            ({count})
+        {icon && (
+          <span className="shrink-0 text-muted-foreground" aria-hidden="true">
+            {icon}
           </span>
+        )}
+        <V2Text as="span" variant="caption" weight="bold">
+          {title}
+        </V2Text>
+        {count !== undefined && (
+          <V2Text
+            as="span"
+            variant="caption"
+            className="text-[11px] font-medium text-muted-foreground tabular-nums font-mono"
+          >
+            ({count})
+          </V2Text>
         )}
       </V2Badge>
 
       {showDivider && (
         <V2Divider orientation="horizontal" className="flex-1 min-w-[30px]" />
+      )}
+
+      {search && (
+        <div className="w-48 sm:w-56 shrink-0">
+          <V2Input
+            sizeVariant="xs"
+            value={search.value}
+            placeholder={search.placeholder}
+            onChange={(e) => search.onChange(e.target.value)}
+            className={search.className}
+          />
+        </div>
       )}
 
       {action && <div className="flex items-center shrink-0">{action}</div>}

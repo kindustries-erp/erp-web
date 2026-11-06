@@ -31,4 +31,18 @@ describe("V2GroupHeader", () => {
     const { container } = render(<V2GroupHeader title="Báo cáo" />);
     expect(container.querySelector(".h-px")).toBeInTheDocument();
   });
+
+  it("renders search input when search prop is provided", () => {
+    render(
+      <V2GroupHeader
+        title="Dòng hàng"
+        search={{
+          value: "Lọc",
+          onChange: () => {},
+          placeholder: "Tìm kiếm...",
+        }}
+      />,
+    );
+    expect(screen.getByPlaceholderText("Tìm kiếm...")).toBeInTheDocument();
+  });
 });

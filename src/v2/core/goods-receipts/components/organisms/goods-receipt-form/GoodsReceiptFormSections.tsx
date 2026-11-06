@@ -1,10 +1,13 @@
 import {
   DrawerSection,
   V2DrawerFieldGrid,
+  V2DrawerRowList,
+  type DrawerRowConfig,
   type V2DrawerFieldItem,
 } from "@/v2/shared/components";
 import {
   GoodsReceiptLinesTable,
+  GoodsReceiptStatusBadge,
   sumGoodsReceiptLineAmounts,
 } from "@/v2/core/goods-receipts";
 import type { GoodsReceiptFormLine } from "@/v2/core/goods-receipts";
@@ -20,6 +23,46 @@ export function GoodsReceiptFormSections(props: FormSectionsProps) {
     setField("totalAmount", String(sumGoodsReceiptLineAmounts(newLines)));
   };
 
+  const receiptRows: DrawerRowConfig[] = [
+    {
+      key: "receiptNo",
+      label: t("v2.goodsReceipts.columns.receiptNo", "Số phiếu"),
+      value: form.receiptNo || "—",
+      copyable: Boolean(form.receiptNo),
+    },
+    {
+      key: "receiptDate",
+      label: t("v2.goodsReceipts.columns.receiptDate", "Ngày nhập"),
+      value: form.receiptDate || "—",
+    },
+    {
+      key: "supplierName",
+      label: t("v2.goodsReceipts.columns.supplierName", "Nhà cung cấp"),
+      value: form.supplierName || "—",
+    },
+    {
+      key: "branchName",
+      label: t("v2.goodsReceipts.columns.branchName", "Chi nhánh"),
+      value: form.branchName || "—",
+    },
+    {
+      key: "totalAmount",
+      label: t("v2.goodsReceipts.columns.totalAmount", "Tổng tiền"),
+      value: Number(form.totalAmount || 0).toLocaleString("vi-VN") + " ₫",
+    },
+    {
+      key: "status",
+      label: t("v2.goodsReceipts.columns.status", "Trạng thái"),
+      value: <GoodsReceiptStatusBadge status={form.status} />,
+    },
+    {
+      key: "remarks",
+      label: t("v2.goodsReceipts.columns.remarks", "Ghi chú"),
+      value: form.remarks || "—",
+      multiline: true,
+    },
+  ];
+
   const fields: V2DrawerFieldItem[] = GOODS_RECEIPT_FIELD_META.map((meta) => ({
     key: meta.key,
     label: t(meta.labelKey, meta.defaultLabel),
@@ -34,7 +77,11 @@ export function GoodsReceiptFormSections(props: FormSectionsProps) {
       <DrawerSection
         title={t("v2.goodsReceipts.form.identity", "Thông tin phiếu nhập")}
       >
-        <V2DrawerFieldGrid fields={fields} columns={columns} />
+        {viewing ? (
+          <V2DrawerRowList rows={receiptRows} />
+        ) : (
+          <V2DrawerFieldGrid fields={fields} columns={columns} />
+        )}
       </DrawerSection>
 
       {!hideLines && (
