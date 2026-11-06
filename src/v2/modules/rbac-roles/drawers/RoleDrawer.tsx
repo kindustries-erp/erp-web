@@ -109,6 +109,7 @@ export function RoleDrawer(props: RoleDrawerProps) {
           loading={state.loading}
           error={null}
           isView={state.viewing}
+          isWildcard={state.isWildcard}
           onReload={state.reload}
           t={t}
         />

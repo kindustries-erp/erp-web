@@ -12,7 +12,7 @@ import { V2GroupHeader } from "@/v2/shared/components/molecules/v2-group-header"
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import {
-  CRUD_ACTIONS,
+  MATRIX_COLUMNS,
   type PermissionMap,
   type ResourceItem,
 } from "../../../domain/entities/permission";
@@ -41,7 +41,7 @@ export function RolePermissionsMatrixTable(props: MatrixTableProps) {
           <TableHeader className="sticky top-0 z-20 bg-muted/90 backdrop-blur-md border-b-0 [&_tr]:border-b-0">
             <TableRow className="hover:bg-transparent border-none">
               <TableHead
-                className={`py-2.5 px-3 text-left font-semibold text-muted-foreground ${isView ? "w-[44%]" : "w-[40%]"}`}
+                className={`py-2.5 px-3 text-left font-semibold text-muted-foreground ${isView ? "w-[34%]" : "w-[28%]"}`}
               >
                 <V2Text
                   variant="caption"
@@ -51,10 +51,10 @@ export function RolePermissionsMatrixTable(props: MatrixTableProps) {
                   {t("v2.rbacRoles.matrix.resource", "Tài nguyên")}
                 </V2Text>
               </TableHead>
-              {CRUD_ACTIONS.map(({ action, labelKey }) => (
+              {MATRIX_COLUMNS.map(({ action, labelKey }) => (
                 <TableHead
                   key={action}
-                  className={`py-2.5 px-2 text-center font-semibold text-muted-foreground ${isView ? "w-[14%]" : "w-[12%]"}`}
+                  className={`py-2.5 px-2 text-center font-semibold text-muted-foreground ${isView ? "w-[11%]" : "w-[10%]"}`}
                 >
                   <div className="flex flex-col items-center gap-1.5">
                     {!isView && (
@@ -98,7 +98,7 @@ export function RolePermissionsMatrixTable(props: MatrixTableProps) {
                 <React.Fragment key={grp.groupKey}>
                   <TableRow className="hover:bg-transparent border-none">
                     <TableCell
-                      colSpan={isView ? 5 : 6}
+                      colSpan={isView ? 7 : 8}
                       className={`w-full pb-1.5 px-3 bg-transparent ${grpIdx === 0 ? "pt-2" : "pt-5"}`}
                     >
                       <V2GroupHeader
@@ -133,12 +133,13 @@ export function RolePermissionsMatrixTable(props: MatrixTableProps) {
                     <RolePermissionsMatrixRow
                       key={item.resource}
                       item={item}
+                      actions={h.actionsOf(item.resource)}
                       isView={isView}
                       permMap={permMap}
                       isRowFull={h.isRowFull(item.resource)}
-                      anyRowChecked={CRUD_ACTIONS.some(
-                        (a) => permMap[item.resource]?.[a.action],
-                      )}
+                      anyRowChecked={h
+                        .actionsOf(item.resource)
+                        .some((a) => Boolean(permMap[item.resource]?.[a]))}
                       onToggle={h.toggle}
                       onToggleRow={h.toggleRow}
                     />

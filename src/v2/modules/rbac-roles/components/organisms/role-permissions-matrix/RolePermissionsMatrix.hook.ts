@@ -1,13 +1,25 @@
 import * as React from "react";
 import { PERMISSION_RESOURCE_GROUPS } from "@/modules/system/types/rbac";
-import type {
-  CrudAction,
-  GroupedResource,
-  PermissionMap,
-  ResourceItem,
+import {
+  supportedActionsOf,
+  type GroupedResource,
+  type PermissionAction,
+  type PermissionMap,
+  type ResourceItem,
 } from "../../../domain/entities/permission";
 
-const ACTIONS: CrudAction[] = ["create", "read", "update", "delete"];
+/** Gán `value` cho các action của một resource (bỏ qua action không hỗ trợ). */
+function withActions(
+  prev: PermissionMap,
+  resource: string,
+  actions: PermissionAction[],
+  value: boolean,
+): PermissionMap {
+  const next = { ...prev };
+  next[resource] = { ...next[resource] };
+  for (const a of actions) next[resource][a] = value;
+  return next;
+}
 
 export function useRolePermissionsMatrix(
   permMap: PermissionMap,
@@ -51,31 +63,48 @@ export function useRolePermissionsMatrix(
     return groups;
   }, [resources, t]);
 
-  const toggle = (resource: string, action: CrudAction) => {
-    if (isView) return;
-    setPermMap((prev) => ({
-      ...prev,
-      [resource]: {
-        ...prev[resource],
-        [action]: !prev[resource]?.[action],
-      },
-    }));
+  const actionsOf = (resource: string): PermissionAction[] => {
+    const item = resources.find((r) => r.resource === resource);
+    return item ? supportedActionsOf(item) : [];
+  };
+
+  const toggle = (resource: string, action: PermissionAction) => {
+    if (isView || !actionsOf(resource).includes(action)) return;
+    setPermMap((prev) =>
+      withActions(prev, resource, [action], !prev[resource]?.[action]),
+    );
   };
 
   const toggleRow = (resource: string, value: boolean) => {
     if (isView) return;
-    setPermMap((prev) => ({
-      ...prev,
-      [resource]: { create: value, read: value, update: value, delete: value },
-    }));
+    setPermMap((prev) =>
+      withActions(prev, resource, actionsOf(resource), value),
+    );
   };
 
-  const toggleColumn = (action: CrudAction, value: boolean) => {
+  const toggleColumn = (action: PermissionAction, value: boolean) => {
     if (isView) return;
     setPermMap((prev) => {
-      const next = { ...prev };
+      let next = prev;
       for (const r of resources) {
-        next[r.resource] = { ...next[r.resource], [action]: value };
+        if (supportedActionsOf(r).includes(action)) {
+          next = withActions(next, r.resource, [action], value);
+        }
+      }
+      return next;
+    });
+  };
+
+  const toggleItems = (items: ResourceItem[], value: boolean) => {
+    setPermMap((prev) => {
+      let next = prev;
+      for (const item of items) {
+        next = withActions(
+          next,
+          item.resource,
+          supportedActionsOf(item),
+          value,
+        );
       }
       return next;
     });
@@ -83,42 +112,30 @@ export function useRolePermissionsMatrix(
 
   const toggleAll = (value: boolean) => {
     if (isView) return;
-    setPermMap(() => {
-      const next: PermissionMap = {};
-      for (const r of resources) {
-        next[r.resource] = {
-          create: value,
-          read: value,
-          update: value,
-          delete: value,
-        };
-      }
-      return next;
-    });
+    toggleItems(resources, value);
   };
 
   const toggleGroup = (items: ResourceItem[], value: boolean) => {
     if (isView) return;
-    setPermMap((prev) => {
-      const next = { ...prev };
-      for (const item of items) {
-        next[item.resource] = {
-          create: value,
-          read: value,
-          update: value,
-          delete: value,
-        };
-      }
-      return next;
-    });
+    toggleItems(items, value);
   };
 
-  const isRowFull = (resource: string) =>
-    ACTIONS.every((a) => Boolean(permMap[resource]?.[a]));
+  const isRowFull = (resource: string) => {
+    const acts = actionsOf(resource);
+    return (
+      acts.length > 0 && acts.every((a) => Boolean(permMap[resource]?.[a]))
+    );
+  };
 
-  const isColumnFull = (action: CrudAction) =>
-    resources.length > 0 &&
-    resources.every((r) => Boolean(permMap[r.resource]?.[action]));
+  const isColumnFull = (action: PermissionAction) => {
+    const supporting = resources.filter((r) =>
+      supportedActionsOf(r).includes(action),
+    );
+    return (
+      supporting.length > 0 &&
+      supporting.every((r) => Boolean(permMap[r.resource]?.[action]))
+    );
+  };
 
   const isGroupFull = (items: ResourceItem[]) =>
     items.length > 0 && items.every((i) => isRowFull(i.resource));
@@ -128,22 +145,20 @@ export function useRolePermissionsMatrix(
 
   const isAnyChecked = () =>
     resources.some((r) =>
-      ACTIONS.some((a) => Boolean(permMap[r.resource]?.[a])),
+      actionsOf(r.resource).some((a) => Boolean(permMap[r.resource]?.[a])),
     );
 
   const totalGrantedPermissions = React.useMemo(() => {
     let count = 0;
     for (const res of Object.values(permMap)) {
-      if (res?.create) count++;
-      if (res?.read) count++;
-      if (res?.update) count++;
-      if (res?.delete) count++;
+      count += Object.values(res ?? {}).filter(Boolean).length;
     }
     return count;
   }, [permMap]);
 
   return {
     groupedResources,
+    actionsOf,
     toggle,
     toggleRow,
     toggleColumn,

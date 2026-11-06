@@ -1,11 +1,26 @@
 export type CrudAction = "create" | "read" | "update" | "delete";
 
+export type ApprovalAction = "approve" | "reject";
+
+/** Mọi action có thể tick trên ma trận: CRUD cố định + action bổ sung theo resource. */
+export type PermissionAction = CrudAction | ApprovalAction;
+
 export const CRUD_ACTIONS: { action: CrudAction; labelKey: string }[] = [
   { action: "read", labelKey: "v2.rbacRoles.actions.read" },
   { action: "create", labelKey: "v2.rbacRoles.actions.createAction" },
   { action: "update", labelKey: "v2.rbacRoles.actions.updateAction" },
   { action: "delete", labelKey: "v2.rbacRoles.actions.deleteAction" },
 ];
+
+/** Cột bổ sung, chỉ hiện với resource khai báo `actions` chứa action đó. */
+export const EXTRA_ACTIONS: { action: ApprovalAction; labelKey: string }[] = [
+  { action: "approve", labelKey: "v2.rbacRoles.actions.approveAction" },
+  { action: "reject", labelKey: "v2.rbacRoles.actions.rejectAction" },
+];
+
+/** Toàn bộ cột của ma trận, theo thứ tự hiển thị. */
+export const MATRIX_COLUMNS: { action: PermissionAction; labelKey: string }[] =
+  [...CRUD_ACTIONS, ...EXTRA_ACTIONS];
 
 export interface CorePermissionItem {
   id?: string;
@@ -15,11 +30,24 @@ export interface CorePermissionItem {
   conditions?: Record<string, unknown> | null;
 }
 
-export type PermissionMap = Record<string, Record<CrudAction, boolean>>;
+export type PermissionMap = Record<
+  string,
+  Partial<Record<PermissionAction, boolean>>
+>;
 
 export interface ResourceItem {
   resource: string;
   label: string;
+  /** Action bổ sung ngoài CRUD mà resource hỗ trợ (ví dụ approve/reject). */
+  actions?: string[];
+}
+
+/** Các action UI cần vẽ cho một resource: CRUD luôn có, cộng action bổ sung. */
+export function supportedActionsOf(item: ResourceItem): PermissionAction[] {
+  const extra = EXTRA_ACTIONS.filter((a) =>
+    item.actions?.includes(a.action),
+  ).map((a) => a.action);
+  return [...CRUD_ACTIONS.map((a) => a.action), ...extra];
 }
 
 export interface GroupedResource {
@@ -48,8 +76,26 @@ export const FALLBACK_RESOURCES: ResourceItem[] = [
   { resource: "garage_debts", label: "Công nợ Garage" },
   { resource: "garage_cashflow", label: "Thu chi xưởng Garage" },
   { resource: "garage_goods_receipts", label: "Nhập kho Garage" },
-  { resource: "garage_procurement_requests", label: "Yêu cầu mua hàng Garage" },
-  { resource: "garage_procurement_orders", label: "Đơn mua hàng Garage" },
+  {
+    resource: "garage_procurement_requests",
+    label: "Yêu cầu mua hàng Garage",
+    actions: ["approve", "reject"],
+  },
+  {
+    resource: "garage_procurement_orders",
+    label: "Đơn mua hàng Garage",
+    actions: ["approve", "reject"],
+  },
+  {
+    resource: "procurement_requests",
+    label: "Đề nghị mua hàng (Procurement Requests)",
+    actions: ["approve", "reject"],
+  },
+  {
+    resource: "procurement_orders",
+    label: "Đơn mua hàng mới (Procurement Orders)",
+    actions: ["approve", "reject"],
+  },
   { resource: "vinfast", label: "Phụ tùng VinFast" },
   { resource: "vehicles", label: "Xe cộ & Phương tiện" },
   { resource: "invoices", label: "Hóa đơn điện tử" },

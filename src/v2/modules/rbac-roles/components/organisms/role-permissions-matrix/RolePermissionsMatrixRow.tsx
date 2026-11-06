@@ -2,19 +2,21 @@ import * as React from "react";
 import { TableRow, TableCell, Checkbox } from "@/v2/shared/ui";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import {
-  CRUD_ACTIONS,
-  type CrudAction,
+  MATRIX_COLUMNS,
+  type PermissionAction,
   type PermissionMap,
   type ResourceItem,
 } from "../../../domain/entities/permission";
 
 interface RolePermissionsMatrixRowProps {
   item: ResourceItem;
+  /** Các action resource này hỗ trợ; ô ngoài danh sách hiển thị gạch. */
+  actions: PermissionAction[];
   isView: boolean;
   permMap: PermissionMap;
   isRowFull: boolean;
   anyRowChecked: boolean;
-  onToggle: (res: string, action: CrudAction) => void;
+  onToggle: (res: string, action: PermissionAction) => void;
   onToggleRow: (res: string, checked: boolean) => void;
 }
 
@@ -22,6 +24,7 @@ export const RolePermissionsMatrixRow: React.FC<
   RolePermissionsMatrixRowProps
 > = ({
   item,
+  actions,
   isView,
   permMap,
   isRowFull,
@@ -29,10 +32,11 @@ export const RolePermissionsMatrixRow: React.FC<
   onToggle,
   onToggleRow,
 }) => {
+  const colWidth = isView ? "w-[11%]" : "w-[10%]";
   return (
     <TableRow className="hover:bg-muted/40 transition-colors border-none">
       <TableCell
-        className={`py-2 pl-9 pr-3 text-foreground font-medium ${isView ? "w-[44%]" : "w-[40%]"}`}
+        className={`py-2 pl-9 pr-3 text-foreground font-medium ${isView ? "w-[34%]" : "w-[28%]"}`}
       >
         <div className="flex flex-col gap-0.5">
           <V2Text variant="body-sm" weight="medium" className="leading-snug">
@@ -47,18 +51,21 @@ export const RolePermissionsMatrixRow: React.FC<
           </V2Text>
         </div>
       </TableCell>
-      {CRUD_ACTIONS.map(({ action }) => (
-        <TableCell
-          key={action}
-          className={`py-2 px-2 text-center ${isView ? "w-[14%]" : "w-[12%]"}`}
-        >
-          <div className="flex justify-center items-center">
-            <Checkbox
-              checked={Boolean(permMap[item.resource]?.[action])}
-              disabled={isView}
-              onCheckedChange={() => onToggle(item.resource, action)}
-            />
-          </div>
+      {MATRIX_COLUMNS.map(({ action }) => (
+        <TableCell key={action} className={`py-2 px-2 text-center ${colWidth}`}>
+          {actions.includes(action) ? (
+            <div className="flex justify-center items-center">
+              <Checkbox
+                checked={Boolean(permMap[item.resource]?.[action])}
+                disabled={isView}
+                onCheckedChange={() => onToggle(item.resource, action)}
+              />
+            </div>
+          ) : (
+            <span className="text-muted-foreground/50" aria-hidden>
+              —
+            </span>
+          )}
         </TableCell>
       ))}
       {!isView && (

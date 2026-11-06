@@ -18,9 +18,12 @@ import type {
 import { isRoleFormDirty, validateRoleForm } from "../domain/rules/roleRules";
 import type { SystemUserOption } from "../components/organisms/role-users-section";
 import {
+  EMPTY_ROLE_PERMISSION_META,
   buildInitialPermissionMap,
   buildRoleHistoryItems,
+  extractRolePermissionMeta,
   serializePermissionsMap,
+  type RolePermissionMeta,
 } from "./RoleDrawer.helper";
 
 export interface RoleDrawerProps {
@@ -41,6 +44,9 @@ export function useRoleDrawer(props: RoleDrawerProps) {
   const [initialForm, setInitialForm] =
     React.useState<RoleFormValue>(emptyRoleForm);
   const [permMap, setPermMap] = React.useState<PermissionMap>({});
+  const [permMeta, setPermMeta] = React.useState<RolePermissionMeta>(
+    EMPTY_ROLE_PERMISSION_META,
+  );
   const [resources, setResources] = React.useState<ResourceItem[]>([]);
   const [selectedUserIds, setSelectedUserIds] = React.useState<string[]>([]);
   const [allUsers, setAllUsers] = React.useState<SystemUserOption[]>([]);
@@ -86,6 +92,7 @@ export function useRoleDrawer(props: RoleDrawerProps) {
         const rolePerms =
           permsResult.status === "fulfilled" ? permsResult.value : [];
         setPermMap(buildInitialPermissionMap(resList, rolePerms));
+        setPermMeta(extractRolePermissionMeta(resList, rolePerms));
 
         if (usersResult.status === "fulfilled") {
           setSelectedUserIds(usersResult.value.map((u) => u.id));
@@ -96,6 +103,7 @@ export function useRoleDrawer(props: RoleDrawerProps) {
         setForm(fresh);
         setInitialForm(fresh);
         setPermMap(buildInitialPermissionMap(resList, []));
+        setPermMeta(EMPTY_ROLE_PERMISSION_META);
         setSelectedUserIds([]);
       }
     } finally {
@@ -135,7 +143,10 @@ export function useRoleDrawer(props: RoleDrawerProps) {
       }
       if (roleId) {
         await Promise.all([
-          rolesV2Api.savePermissions(roleId, serializePermissionsMap(permMap)),
+          rolesV2Api.savePermissions(
+            roleId,
+            serializePermissionsMap(permMap, permMeta),
+          ),
           rolesV2Api.saveUsers(roleId, selectedUserIds),
         ]);
       }
@@ -170,6 +181,7 @@ export function useRoleDrawer(props: RoleDrawerProps) {
     setField,
     permMap,
     setPermMap,
+    isWildcard: permMeta.isWildcard,
     resources,
     selectedUserIds,
     setSelectedUserIds,

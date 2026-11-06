@@ -17,6 +17,8 @@ interface MatrixProps {
   loading: boolean;
   error: string | null;
   isView: boolean;
+  /** Role `*:*`: chỉ xem, không cho chỉnh từng ô. */
+  isWildcard?: boolean;
   onReload?: () => void;
   t: (key: string, fallback?: string) => string;
 }
@@ -28,16 +30,14 @@ export function RolePermissionsMatrix({
   loading,
   error,
   isView,
+  isWildcard = false,
   onReload,
   t,
 }: MatrixProps) {
   const grantedCount = React.useMemo(() => {
     let c = 0;
     for (const res of Object.values(permMap)) {
-      if (res?.create) c++;
-      if (res?.read) c++;
-      if (res?.update) c++;
-      if (res?.delete) c++;
+      c += Object.values(res ?? {}).filter(Boolean).length;
     }
     return c;
   }, [permMap]);
@@ -60,6 +60,17 @@ export function RolePermissionsMatrix({
         <div className="rounded-lg px-3 py-2 border border-destructive/30 bg-destructive/10 mb-3">
           <V2Text variant="body-sm" color="destructive">
             {error}
+          </V2Text>
+        </div>
+      )}
+
+      {isWildcard && (
+        <div className="rounded-lg px-3 py-2 border border-border bg-muted/30 mb-3">
+          <V2Text variant="body-sm" color="muted">
+            {t(
+              "v2.rbacRoles.matrix.wildcardNote",
+              "Vai trò toàn quyền (*:*): mọi tài nguyên đã được cấp, không chỉnh từng ô tại đây.",
+            )}
           </V2Text>
         </div>
       )}
@@ -101,7 +112,7 @@ export function RolePermissionsMatrix({
           permMap={permMap}
           setPermMap={setPermMap}
           resources={resources}
-          isView={isView}
+          isView={isView || isWildcard}
           t={t}
         />
       )}

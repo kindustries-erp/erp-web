@@ -4,7 +4,10 @@ import type {
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 import type { Role, RoleFormValue } from "../domain/entities/role";
-import { FALLBACK_RESOURCES } from "../domain/entities/permission";
+import {
+  FALLBACK_RESOURCES,
+  type ResourceItem,
+} from "../domain/entities/permission";
 import type {
   RoleEnvelopeDto,
   RoleListResultDto,
@@ -114,9 +117,10 @@ export const rolesV2Api = {
   getResources: async () => {
     try {
       const { data } = await v2HttpClient.get<{
-        resources: { resource: string; label: string }[];
+        resources: ResourceItem[];
       }>("/api/v1/rbac-core/collections");
-      const list = data?.resources ?? (Array.isArray(data) ? data : []);
+      const list: ResourceItem[] =
+        data?.resources ?? (Array.isArray(data) ? data : []);
       const filtered = list.filter(
         (r) => r && r.resource && r.resource !== "*",
       );

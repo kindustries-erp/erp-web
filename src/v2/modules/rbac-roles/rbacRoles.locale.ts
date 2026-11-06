@@ -18,6 +18,8 @@ registerV2ModuleLocale("rbacRoles", {
       createAction: "Thêm",
       updateAction: "Sửa",
       deleteAction: "Xóa",
+      approveAction: "Duyệt",
+      rejectAction: "Từ chối",
     },
     actionGroups: {
       query: "Tra cứu",
@@ -51,6 +53,8 @@ registerV2ModuleLocale("rbacRoles", {
       empty: "Chưa có danh sách tài nguyên",
       emptyDesc: "Hệ thống chưa tải được danh sách tài nguyên hoặc phân quyền.",
       reload: "Tải lại dữ liệu",
+      wildcardNote:
+        "Vai trò toàn quyền (*:*): mọi tài nguyên đã được cấp, không chỉnh từng ô tại đây.",
     },
     users: {
       empty: "Chưa có người dùng nào được gán",
@@ -106,6 +110,8 @@ registerV2ModuleLocale("rbacRoles", {
       createAction: "Create",
       updateAction: "Update",
       deleteAction: "Delete",
+      approveAction: "Approve",
+      rejectAction: "Reject",
     },
     actionGroups: {
       query: "Inquiry",
@@ -139,6 +145,8 @@ registerV2ModuleLocale("rbacRoles", {
       empty: "No resources found",
       emptyDesc: "Unable to load resources list.",
       reload: "Reload Data",
+      wildcardNote:
+        "Full-access role (*:*): all resources are granted; individual cells cannot be edited here.",
     },
     users: {
       empty: "No users assigned",
