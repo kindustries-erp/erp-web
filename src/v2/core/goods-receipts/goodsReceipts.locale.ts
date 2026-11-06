@@ -20,6 +20,7 @@ registerV2ModuleLocale("goodsReceipts", {
     actions: {
       view: "Xem chi tiết",
       edit: "Chỉnh sửa",
+      saveDraft: "Lưu nháp",
       editDisabledReason: "Chỉ sửa được khi còn nháp",
       delete: "Xóa",
       post: "Ghi sổ nhập kho",

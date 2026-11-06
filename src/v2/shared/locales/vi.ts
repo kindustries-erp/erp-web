@@ -52,6 +52,7 @@ export const v2Vi = {
     common: {
       close: "Đóng",
       save: "Lưu",
+      saveDraft: "Lưu nháp",
       cancel: "Hủy",
       edit: "Sửa",
       done: "Xong",

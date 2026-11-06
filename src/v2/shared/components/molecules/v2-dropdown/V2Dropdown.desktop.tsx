@@ -1,6 +1,7 @@
 import * as React from "react";
 import { MoreHorizontal, Loader2 } from "lucide-react";
 import { AppPopover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type {
@@ -28,12 +29,21 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
   const isControlled = open !== undefined;
   const isOpen = isControlled ? open : internalOpen;
 
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
   const handleOpenChange = (nextOpen: boolean) => {
     if (!isControlled) {
       setInternalOpen(nextOpen);
     }
     onOpenChange?.(nextOpen);
   };
+
+  useV2PopoverDismiss({
+    open: isOpen,
+    onClose: () => handleOpenChange(false),
+    containerRef,
+    panelSelector: "[data-v2-dropdown-panel]",
+  });
 
   const triggerNode = trigger ?? children ?? (
     <button
@@ -80,7 +90,7 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
   };
 
   const dropdownMenuContent = (
-    <div className="flex flex-col py-0.5 space-y-0.5">
+    <div data-v2-dropdown-panel="" className="flex flex-col py-0.5 space-y-0.5">
       {normalizedGroups.map((group, groupIdx) => {
         const visibleItems = group.items.filter((item) => !item.hidden);
         if (visibleItems.length === 0) return null;
@@ -130,25 +140,27 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
   );
 
   return (
-    <AppPopover
-      open={isOpen}
-      onOpenChange={handleOpenChange}
-      align={align}
-      side={side}
-      sideOffset={sideOffset}
-      glass={true}
-      arrow={false}
-      hideCloseButton={true}
-      modal={modal}
-      triggerClassName={triggerClassName}
-      className={cn(
-        "p-1 min-w-[170px] max-w-[280px] shadow-lg border-border/80 dark:border-white/[0.08] dark:bg-[#1b1f27] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)]",
-        className,
-      )}
-      content={dropdownMenuContent}
-    >
-      {triggerNode}
-    </AppPopover>
+    <div ref={containerRef} className="inline-flex">
+      <AppPopover
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+        align={align}
+        side={side}
+        sideOffset={sideOffset}
+        glass={true}
+        arrow={false}
+        hideCloseButton={true}
+        modal={modal}
+        triggerClassName={triggerClassName}
+        className={cn(
+          "p-1 min-w-[170px] max-w-[280px] shadow-lg border-border/80 dark:border-white/[0.08] dark:bg-[#1b1f27] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)]",
+          className,
+        )}
+        content={dropdownMenuContent}
+      >
+        {triggerNode}
+      </AppPopover>
+    </div>
   );
 };
 V2DropdownDesktop.displayName = "V2DropdownDesktop";

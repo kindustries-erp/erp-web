@@ -89,7 +89,7 @@ export function useProcurementDrawerActions(
         disabled: saving,
       },
       {
-        label: t("v2.common.save", "Lưu"),
+        label: t("v2.procurement.actions.saveDraft", "Lưu nháp"),
         onClick: onSubmit,
         primary: true,
         loading: saving,

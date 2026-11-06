@@ -72,7 +72,6 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
           <V2Dropdown
             groups={actionGroups}
             items={actionDropdownItems}
-            modal={true}
             trigger={
               <V2Button
                 type="button"

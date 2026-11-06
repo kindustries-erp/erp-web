@@ -1,5 +1,4 @@
 import * as React from "react";
-import { DrawerSection } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { ProcurementLineFormValue } from "../../../form/procurementLine.form";
 import type {
@@ -37,19 +36,12 @@ export function ProcurementRequestMainSections({
     : undefined;
 
   return (
-    <DrawerSection
-      title={t("v2.procurement.sections.lines", "Dòng hàng")}
-      count={form.lines.length}
-    >
-      <ProcurementLinesEditor
-        lines={form.lines}
-        onChange={(lines: ProcurementLineFormValue[]) =>
-          setField("lines", lines)
-        }
-        viewing={linesViewing}
-        priceLabel={t("v2.procurement.lines.estPrice", "Đơn giá dự kiến")}
-        errorText={linesError}
-      />
-    </DrawerSection>
+    <ProcurementLinesEditor
+      lines={form.lines}
+      onChange={(lines: ProcurementLineFormValue[]) => setField("lines", lines)}
+      viewing={linesViewing}
+      priceLabel={t("v2.procurement.lines.estPrice", "Đơn giá dự kiến")}
+      errorText={linesError}
+    />
   );
 }

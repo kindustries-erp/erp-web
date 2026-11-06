@@ -72,7 +72,7 @@ describe("ProcurementRequestDrawer — chế độ xem/sửa", () => {
     });
     fireEvent.click(editButton);
     expect(
-      await screen.findByRole("button", { name: "Lưu" }),
+      await screen.findByRole("button", { name: /lưu nháp/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Hủy" })).toBeInTheDocument();
   });
@@ -106,7 +106,7 @@ describe("ProcurementRequestDrawer — chế độ xem/sửa", () => {
   it("lưu thành công ở chế độ sửa gọi onSaved với id của bản ghi, không đóng drawer", async () => {
     const { onSaved, onClose, api } = renderDrawer({ mode: "edit" });
     await screen.findByDisplayValue("Đề nghị mua lốp");
-    fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+    fireEvent.click(screen.getByRole("button", { name: /lưu nháp/i }));
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith("req-200"));
     expect(api.updateHeader).toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();

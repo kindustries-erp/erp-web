@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Plus } from "lucide-react";
-import { V2Button } from "@/v2/shared/components";
+import { V2Button, DrawerSection } from "@/v2/shared/components";
 import {
   Table,
   TableBody,
@@ -28,6 +28,8 @@ export interface ProcurementLinesEditorProps {
   viewing: boolean;
   priceLabel: string;
   errorText?: string;
+  title?: React.ReactNode;
+  addButtonLabel?: string;
 }
 
 /** Bảng dòng chứng từ PR/PO chuẩn V2: dùng Table và array config, đồng bộ kiến trúc với GoodsReceiptLinesTable. */
@@ -37,6 +39,8 @@ export function ProcurementLinesEditor({
   viewing,
   priceLabel,
   errorText,
+  title,
+  addButtonLabel,
 }: ProcurementLinesEditorProps) {
   const { t } = useV2Translation();
   const patch = (key: string, ch: Partial<ProcurementLineFormValue>) =>
@@ -74,7 +78,22 @@ export function ProcurementLinesEditor({
     amountIndex >= 0 ? visibleColumns.length - (amountIndex + 1) : 0;
 
   return (
-    <div className="space-y-3">
+    <DrawerSection
+      title={title ?? t("v2.procurement.sections.lines", "Dòng hàng")}
+      count={lines.length}
+      titleExtra={
+        !viewing && (
+          <V2Button
+            variant="outline"
+            size="sm"
+            onClick={() => onChange([...lines, emptyProcurementLine()])}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            {addButtonLabel ?? t("v2.procurement.lines.add", "Thêm dòng")}
+          </V2Button>
+        )
+      }
+    >
       <div className="overflow-x-auto rounded border border-border">
         <Table className="w-full text-xs">
           <TableHeader>
@@ -149,18 +168,9 @@ export function ProcurementLinesEditor({
         </Table>
       </div>
 
-      {errorText && <p className="text-sm text-destructive">{errorText}</p>}
-
-      {!viewing && (
-        <V2Button
-          variant="outline"
-          size="sm"
-          onClick={() => onChange([...lines, emptyProcurementLine()])}
-        >
-          <Plus className="mr-1 h-4 w-4" />
-          {t("v2.procurement.lines.add", "Thêm dòng")}
-        </V2Button>
+      {errorText && (
+        <p className="mt-2 text-sm text-destructive">{errorText}</p>
       )}
-    </div>
+    </DrawerSection>
   );
 }

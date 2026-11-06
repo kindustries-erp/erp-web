@@ -9,6 +9,7 @@ registerV2ModuleLocale("procurement", {
     actions: {
       view: "Xem chi tiết",
       edit: "Chỉnh sửa",
+      saveDraft: "Lưu nháp",
       editDisabledReason: "Chỉ sửa được khi còn nháp",
       create: "Tạo mới",
       createOrder: "Tạo PO từ PR",
