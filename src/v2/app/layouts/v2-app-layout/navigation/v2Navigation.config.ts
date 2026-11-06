@@ -153,12 +153,12 @@ export const NAV_DEFS: RawNavDef[] = [
   },
   // v2-module:garage-goods-receipts:nav
   {
-    id: "erp-permissions-core",
+    id: "permission",
     sectionId: "settings",
-    labelKey: "v2.nav.items.erpPermissionsCore",
+    labelKey: "v2.nav.items.permission",
     fallback: "Phân quyền & Vai trò",
     icon: FileText,
-    href: "/v2/erp-permissions-core",
+    href: "/permission",
   },
   // v2-module:rbac-roles:nav
   // plop:v2-nav-items

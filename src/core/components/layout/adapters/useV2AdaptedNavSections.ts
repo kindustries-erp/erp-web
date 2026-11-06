@@ -572,10 +572,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/erp-users",
         });
         accessChildren.push({
-          id: "erp-permissions-core",
+          id: "permission",
           label: t("nav.items.phanquyen", "Phân quyền & Vai trò"),
           icon: Shield,
-          href: "/erp-permissions-core",
+          href: "/permission",
         });
       }
       if (canReadActivityLogs) {

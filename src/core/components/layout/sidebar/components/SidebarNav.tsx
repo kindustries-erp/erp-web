@@ -428,6 +428,7 @@ export function SidebarNav({
               label={t("nav.items.accessControl")}
               active={
                 currentPage === "erp-users" ||
+                currentPage === "permission" ||
                 currentPage === "erp-permissions-core" ||
                 currentPage === "erp-activity-logs"
               }
@@ -442,9 +443,12 @@ export function SidebarNav({
                   />
                   <NavGroupItem
                     label={t("nav.items.phanquyen")}
-                    active={currentPage === "erp-permissions-core"}
-                    onClick={() => navTo("erp-permissions-core")}
-                    contextPage="erp-permissions-core"
+                    active={
+                      currentPage === "permission" ||
+                      currentPage === "erp-permissions-core"
+                    }
+                    onClick={() => navTo("permission")}
+                    contextPage="permission"
                   />
                 </>
               )}

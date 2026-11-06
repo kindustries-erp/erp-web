@@ -12,7 +12,7 @@ import { buildRolesColumns } from "../components/organisms/role-table/RoleTable.
 import { rolesViewVisibility } from "../components/organisms/role-table/RoleTable.views";
 import type { Role } from "../domain/entities/role";
 
-const TABLE_ID = "erp-permissions-core-table";
+const TABLE_ID = "permission-table";
 
 export function useRolesPage() {
   const { t } = useV2Translation();
@@ -73,29 +73,44 @@ export function useRolesPage() {
 
   const rowActions = React.useCallback(
     (row: Role): V2RowActionGroup[] => {
-      const items: V2RowActionGroup["items"] = [
+      const groups: V2RowActionGroup[] = [];
+
+      const queryItems: V2RowActionGroup["items"] = [
         {
           label: t("v2.rbacRoles.actions.view", "Xem chi tiết"),
           icon: <Eye className="h-3.5 w-3.5" />,
           onClick: () => open(row.id, "view"),
         },
       ];
+      groups.push({
+        groupLabel: t("v2.rbacRoles.actionGroups.query", "Tra cứu"),
+        items: queryItems,
+      });
+
+      const actionItems: V2RowActionGroup["items"] = [];
       if (canUpdate) {
-        items.push({
+        actionItems.push({
           label: t("v2.rbacRoles.actions.edit", "Chỉnh sửa"),
           icon: <Pencil className="h-3.5 w-3.5" />,
           onClick: () => open(row.id, "edit"),
         });
       }
       if (canDelete && !row.isSystem) {
-        items.push({
+        actionItems.push({
           label: t("v2.rbacRoles.actions.delete", "Xóa"),
           icon: <Trash2 className="h-3.5 w-3.5" />,
           variant: "danger",
           onClick: () => setDeleteTarget(row),
         });
       }
-      return [{ items }];
+      if (actionItems.length > 0) {
+        groups.push({
+          groupLabel: t("v2.rbacRoles.actionGroups.actions", "Thao tác"),
+          items: actionItems,
+        });
+      }
+
+      return groups;
     },
     [canDelete, canUpdate, open, t],
   );

@@ -23,7 +23,10 @@ export const V2_PAGE_REGISTRY: Record<string, () => ReactNode> = {
   // v2-module:business-partners-customers:pages
   suppliers: () => <BusinessPartnersSuppliersPage />,
   // v2-module:business-partners-suppliers:pages
+  permission: () => <RolesPage />,
+  "permission-v2": () => <RolesPage />,
   "erp-permissions-core": () => <RolesPage />,
+  "erp-permissions-core-v2": () => <RolesPage />,
   // v2-module:rbac-roles:pages
   // plop:v2-pages
   [V2AdminRouteId.DASHBOARD]: () => <V2AdminDashboardPage />,

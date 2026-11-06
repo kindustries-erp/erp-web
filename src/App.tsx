@@ -289,6 +289,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-users": ErpUsersPage,
   "erp-activity-logs": ErpActivityLogsPage,
   "email-inbox": EmailInboxPage,
+  permission: ErpPermissionsCorePage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices": ErpInvoicesPage,
   "erp-invoices-in": () => <ErpInvoicesPage initialTab="in" />,

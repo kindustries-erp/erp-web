@@ -594,7 +594,7 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Shield className="w-4 h-4" />,
       });
       items.push({
-        key: "erp-permissions-core",
+        key: "permission",
         label: t("nav.items.phanquyen"),
         group: accessGroup,
         section: settingsSection,

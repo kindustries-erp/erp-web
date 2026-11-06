@@ -23,6 +23,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-customers",
   "erp-users",
   "erp-activity-logs",
+  "permission",
   "erp-permissions-core",
   "inventory-dashboard",
   "invoice-dashboard",
@@ -86,6 +87,9 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "chart-of-accounts": "settings-accounts",
   "settings-custom-fields": "custom-fields",
   "module-config": "custom-fields",
+  "erp-permissions-core": "permission",
+  permission: "permission",
+  permissions: "permission",
 };
 
 export interface PageUrlParsedState {
@@ -223,7 +227,10 @@ export function pageToPath(
   tab?: string,
   extraParams?: Record<string, string | number | boolean | undefined | null>,
 ): string {
-  const slug = page === "dashboard" ? "" : page;
+  let slug: string = page === "dashboard" ? "" : page;
+  if (page === "permission" || page === "erp-permissions-core") {
+    slug = "permission";
+  }
   const base = slug ? `/${slug}` : "/";
   const searchParams = new URLSearchParams();
 
@@ -284,6 +291,12 @@ export function pathToPage(
     page = "garage-cases";
   } else if (slug === "garage-cashflow") {
     page = "garage-cashflow";
+  } else if (
+    slug === "permission" ||
+    slug === "permissions" ||
+    slug === "erp-permissions-core"
+  ) {
+    page = "permission";
   } else {
     page = ALL_PAGE_KEYS.includes(slug as PageKey)
       ? (slug as PageKey)

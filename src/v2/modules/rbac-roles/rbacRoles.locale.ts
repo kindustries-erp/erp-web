@@ -19,6 +19,10 @@ registerV2ModuleLocale("rbacRoles", {
       updateAction: "Sửa",
       deleteAction: "Xóa",
     },
+    actionGroups: {
+      query: "Tra cứu",
+      actions: "Thao tác",
+    },
     columns: {
       code: "Mã vai trò",
       name: "Tên vai trò",
@@ -102,6 +106,10 @@ registerV2ModuleLocale("rbacRoles", {
       createAction: "Create",
       updateAction: "Update",
       deleteAction: "Delete",
+    },
+    actionGroups: {
+      query: "Inquiry",
+      actions: "Actions",
     },
     columns: {
       code: "Role Code",

@@ -139,7 +139,25 @@ export const V2_ROUTES: V2RouteDef[] = [
   },
   // v2-module:garage-goods-receipts:routes
   {
+    id: "permission",
+    path: "/permission",
+    title: "Phân quyền & Vai trò",
+    permission: { collection: "admin_users", action: "read" },
+  },
+  {
+    id: "permission-v2",
+    path: "/v2/permission",
+    title: "Phân quyền & Vai trò",
+    permission: { collection: "admin_users", action: "read" },
+  },
+  {
     id: "erp-permissions-core",
+    path: "/erp-permissions-core",
+    title: "Phân quyền & Vai trò",
+    permission: { collection: "admin_users", action: "read" },
+  },
+  {
+    id: "erp-permissions-core-v2",
     path: "/v2/erp-permissions-core",
     title: "Phân quyền & Vai trò",
     permission: { collection: "admin_users", action: "read" },
