@@ -15,6 +15,7 @@ export interface V2BottomSheetProps {
   bodyClassName?: string;
   headerClassName?: string;
   footerClassName?: string;
+  /** Custom height/max-height class (mặc định: "h-[100dvh] max-h-[100dvh]" cho full screen height) */
   maxHeightClass?: string;
   closeAriaLabel?: string;
 }

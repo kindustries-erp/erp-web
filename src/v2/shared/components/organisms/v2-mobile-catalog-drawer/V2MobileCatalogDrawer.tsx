@@ -64,7 +64,6 @@ export const V2MobileCatalogDrawer: React.FC<V2MobileCatalogDrawerProps> = ({
         "Toàn bộ chức năng và nghiệp vụ ERP",
       )}
       icon={LayoutGrid}
-      maxHeightClass="max-h-[88vh]"
     >
       <div className="space-y-4 pb-6">
         {/* Quick theme & language settings */}
