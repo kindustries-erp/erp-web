@@ -83,7 +83,7 @@ export function useRolePermissionsMatrix(
 
   const toggleAll = (value: boolean) => {
     if (isView) return;
-    setPermMap((prev) => {
+    setPermMap(() => {
       const next: PermissionMap = {};
       for (const r of resources) {
         next[r.resource] = {

@@ -1,8 +1,5 @@
 import * as React from "react";
-import type {
-  V2MultiSelectOption,
-  V2MultiSelectProps,
-} from "./V2MultiSelect.type";
+import type { V2MultiSelectOption } from "./V2MultiSelect.type";
 
 interface UseV2MultiSelectParams {
   options: V2MultiSelectOption[];

@@ -13,7 +13,6 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import {
   CRUD_ACTIONS,
-  type CrudAction,
   type PermissionMap,
   type ResourceItem,
 } from "../../../domain/entities/permission";
