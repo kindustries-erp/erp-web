@@ -4,6 +4,7 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { ProcurementListConfig } from "../hooks/procurementListConfig.type";
 import type { ProcurementListState } from "../hooks/useProcurementList";
 import { ProcurementReasonModal } from "./ProcurementReasonModal";
+import { SubmitApprovalModal } from "./organisms/submit-approval-modal";
 
 export interface ProcurementListModalsProps<T extends { id: string }> {
   config: ProcurementListConfig<T>;
@@ -29,6 +30,19 @@ export function ProcurementListModals<T extends { id: string }>({
         isLoading={state.isTransitioning}
         onCancel={state.closeReason}
         onConfirm={state.submitReason}
+      />
+      <SubmitApprovalModal
+        open={Boolean(state.approval.submitTarget)}
+        rowLabel={
+          state.approval.submitTarget
+            ? config.rowLabel(state.approval.submitTarget)
+            : ""
+        }
+        approvers={state.approval.approvers}
+        loading={state.approval.approversLoading}
+        submitting={state.isTransitioning}
+        onConfirm={state.submitWithApprover}
+        onCancel={state.approval.closeSubmit}
       />
       <V2ConfirmModal
         open={Boolean(state.deleteTarget)}

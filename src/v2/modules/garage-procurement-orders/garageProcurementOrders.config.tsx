@@ -28,6 +28,7 @@ export const garageProcurementOrdersConfig: ProcurementListConfig<ProcurementOrd
   {
     api: garageProcurementOrdersApi,
     queryKey: "v2-garage-procurement-orders",
+    approvalConfigPath: "/api/v2/approval-config/garage-procurement-orders",
     permissionCollection: "garage_procurement_orders",
     availableActions: (row) =>
       availableProcurementActions(PROCUREMENT_ORDER_FROM, row.status),

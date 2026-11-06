@@ -62,10 +62,18 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
       );
       return { items: data.rows, total: data.total };
     },
-    transition: async (id, action: ProcurementActionKey, reason) => {
-      const body = PROCUREMENT_REASON_ACTIONS.includes(action)
-        ? { reason: reason ?? "" }
-        : undefined;
+    transition: async (
+      id,
+      action: ProcurementActionKey,
+      reason,
+      approverId,
+    ) => {
+      const body =
+        action === "submit" && approverId
+          ? { approverId }
+          : PROCUREMENT_REASON_ACTIONS.includes(action)
+            ? { reason: reason ?? "" }
+            : undefined;
       const { data } = await v2HttpClient.post(
         `${basePath}/${id}/${action}`,
         body,

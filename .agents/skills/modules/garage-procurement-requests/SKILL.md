@@ -86,3 +86,11 @@ src/v2/core/procurement/
 - Form: `validateRequestForm(form, branchOptional)`, `toRequestCreatePayload`, `toRequestHeaderPayload(form, branchOptional)` (core `form/procurementRequest.form.ts`).
 - Test: `procurement.branch.test.ts`, `form/procurementBranchOptional.form.test.ts`.
 - Ràng buộc PO: chi nhánh PO phải khớp PR nguồn kể cả khi cùng trống (backend kiểm tra).
+
+## 5. Cập nhật 2026-11-06: khóa duyệt và chọn người duyệt
+
+- Khóa bật/tắt chỉ ở BE, **không có công tắc trên UI**. Web đọc khóa qua `fetchApprovalSetting` (`{path}/setting`) để quyết định gating.
+- Khi khóa **bật**: "Gửi duyệt" mở `SubmitApprovalModal` (`organisms/submit-approval-modal`), chọn người duyệt bằng `ApproverPicker` (`molecules/approver-picker`, dữ liệu từ `fetchApprovers`). Xác nhận bị khóa đến khi chọn người. Nút Duyệt/Từ chối chỉ hiện với đúng người được chỉ định (`applyApprovalGate`, `approval.gate.ts`).
+- Khi khóa **tắt**: "Gửi duyệt" tự duyệt, không mở modal.
+- Hook: `useProcurementApprovalGate` (orchestrator trong `useProcurementList`), `useApprovalSettingQuery`, `useApproversQuery`. Submit gửi `{ approverId }` qua `ProcurementApi.transition(id, 'submit', undefined, approverId)`.
+- Label: tiêu đề và nhãn ở `procurement.approval.locale.ts` (`v2.procurementApproval.*`, VI/EN).

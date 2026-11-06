@@ -15,6 +15,8 @@ export interface ProcurementOrderRow {
   fulfillmentStatus: string;
   totalAmount: string;
   approvedTotal: string | null;
+  /** Người duyệt được chỉ định khi gửi duyệt (null nếu không có). */
+  approverId?: string | null;
   remarks: string | null;
   branchId?: string | null;
   branchName: string | null;
@@ -39,6 +41,8 @@ export interface ProcurementRequestRow {
   branchId?: string | null;
   branchName: string | null;
   createdBy: string | null;
+  /** Người duyệt được chỉ định khi gửi duyệt. */
+  approverId?: string | null;
   createdAt: string;
 }
 
@@ -125,10 +129,12 @@ export interface ProcurementDocumentRef {
 
 export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   list: (query: V2TableQuery) => Promise<{ items: T[]; total: number }>;
+  /** `approverId` chỉ dùng cho gửi duyệt khi khóa duyệt đang bật. */
   transition: (
     id: string,
     action: ProcurementActionKey,
     reason?: string,
+    approverId?: string | null,
   ) => Promise<unknown>;
   get: (id: string) => Promise<D>;
   create: (payload: C) => Promise<{ id: string }>;
@@ -145,4 +151,16 @@ export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   /** Nhật ký các bước duyệt của đề nghị mua hàng */
   approvalEvents?: (id: string) => Promise<ProcurementApprovalEvent[]>;
   options?: V2FetchOptions;
+}
+
+/** Khóa bật/tắt duyệt của một họ chứng từ (đọc từ API cấu hình duyệt). */
+export interface ProcurementApprovalSetting {
+  docType: string;
+  approvalEnabled: boolean;
+}
+
+/** Người có quyền duyệt, dùng cho dropdown chọn người duyệt. */
+export interface ProcurementApprover {
+  id: string;
+  email: string;
 }

@@ -19,6 +19,10 @@ import {
   type ProcurementRequestFormValue,
 } from "../../../form/procurementRequest.form";
 import { isProcurementFormDirty } from "../../../form/procurementDirty";
+import {
+  applyApprovalGate,
+  NO_APPROVAL_GATE,
+} from "../../../approval/approval.gate";
 import type { ProcurementRequestDetail } from "../../../procurement.types";
 import {
   showProcurementError,
@@ -81,8 +85,12 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
 
   const availableActions = React.useMemo<ProcurementActionKey[]>(() => {
     if (creating || !detail.data) return [];
-    return availableProcurementActions(PROCUREMENT_REQUEST_FROM, status);
-  }, [creating, detail.data, status]);
+    return applyApprovalGate(
+      availableProcurementActions(PROCUREMENT_REQUEST_FROM, status),
+      props.approval ?? NO_APPROVAL_GATE,
+      detail.data.approverId,
+    );
+  }, [creating, detail.data, status, props.approval]);
 
   const save = useMutation({
     mutationFn: async () => {

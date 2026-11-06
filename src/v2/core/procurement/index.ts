@@ -1,4 +1,5 @@
 import "./procurement.locale";
+import "./procurement.approval.locale";
 
 export * from "./procurement.rules";
 export * from "./procurement.types";
@@ -20,4 +21,8 @@ export * from "./components/molecules/procurement-status-badge";
 export * from "./api/procurementLookups";
 export * from "./hooks/useProcurementQuery";
 export * from "./hooks/procurementListConfig.type";
+export * from "./approval/approval.gate";
+export * from "./approval/approval.api";
+export * from "./components/molecules/approver-picker";
+export * from "./components/organisms/submit-approval-modal";
 export * from "./procurement.intent";

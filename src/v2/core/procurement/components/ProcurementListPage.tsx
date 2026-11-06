@@ -87,11 +87,13 @@ export function ProcurementListPage<T extends { id: string }>({
       icon={display.icon}
       tabs={tabs}
       actions={
-        state.canCreate ? (
-          <V2Button size="sm" onClick={state.openCreate}>
-            {t("v2.procurement.actions.create", "Tạo mới")}
-          </V2Button>
-        ) : undefined
+        <>
+          {state.canCreate && (
+            <V2Button size="sm" onClick={state.openCreate}>
+              {t("v2.procurement.actions.create", "Tạo mới")}
+            </V2Button>
+          )}
+        </>
       }
       overlays={
         <>
@@ -106,6 +108,7 @@ export function ProcurementListPage<T extends { id: string }>({
                 queryKey: config.queryKey,
                 api: config.api,
                 fromRequestId: drawer.fromRequestId ?? null,
+                approval: state.approval.gate,
                 requestApi: config.requestApi,
                 onTransition: (action, row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);
