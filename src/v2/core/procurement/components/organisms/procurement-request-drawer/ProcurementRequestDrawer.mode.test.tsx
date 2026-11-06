@@ -103,6 +103,32 @@ describe("ProcurementRequestDrawer — chế độ xem/sửa", () => {
     expect(await screen.findByText("Đề nghị mua lốp")).toBeInTheDocument();
   });
 
+  it("ở chế độ xem, nút chính Gửi duyệt nằm bên phải nút Đóng", async () => {
+    renderDrawer({ onTransition: vi.fn() });
+    const submit = await screen.findByRole("button", { name: /gửi duyệt/i });
+    // Có thêm nút X ở header cùng nhãn "Đóng": lấy nút có chữ "Đóng" ở footer
+    const close = screen
+      .getAllByRole("button", { name: "Đóng" })
+      .find((b) => b.textContent?.trim() === "Đóng") as HTMLElement;
+    expect(close).toBeDefined();
+    // DOCUMENT_POSITION_FOLLOWING: nút Gửi duyệt đứng sau nút Đóng trong DOM
+    expect(
+      close.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("lưu nháp xong quay về chế độ xem (không cần list đổi mode)", async () => {
+    renderDrawer({ mode: "edit" });
+    await screen.findByDisplayValue("Đề nghị mua lốp");
+    fireEvent.click(screen.getByRole("button", { name: /lưu nháp/i }));
+    expect(
+      await screen.findByRole("button", { name: /chỉnh sửa/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /lưu nháp/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("lưu thành công ở chế độ sửa gọi onSaved với id của bản ghi, không đóng drawer", async () => {
     const { onSaved, onClose, api } = renderDrawer({ mode: "edit" });
     await screen.findByDisplayValue("Đề nghị mua lốp");

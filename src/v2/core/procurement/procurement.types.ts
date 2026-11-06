@@ -41,21 +41,25 @@ export interface ProcurementRequestRow {
   branchId?: string | null;
   branchName: string | null;
   createdBy: string | null;
+  /** Email người tạo (API), hiển thị ở cột "Người tạo". */
+  createdByEmail?: string | null;
   /** Người duyệt được chỉ định khi gửi duyệt. */
   approverId?: string | null;
+  /** Email người duyệt: người đã duyệt, chưa duyệt thì người được giao. */
+  approverEmail?: string | null;
   createdAt: string;
 }
 
-/** Sự kiện phê duyệt trong nhật ký duyệt của đề nghị mua hàng. */
+/** Sự kiện trong nhật ký duyệt (khớp DTO API). Không có id nội bộ của nhật ký. */
 export interface ProcurementApprovalEvent {
-  id: string;
-  docType: string;
-  docId: string;
   action: string;
-  actorId?: string | null;
-  actorName?: string | null;
-  actorEmail?: string | null;
-  reason?: string | null;
+  fromStatus: string;
+  toStatus: string;
+  actorId: string;
+  actorName: string | null;
+  actorEmail: string | null;
+  actorRoles: string[];
+  comment: string | null;
   createdAt: string;
 }
 

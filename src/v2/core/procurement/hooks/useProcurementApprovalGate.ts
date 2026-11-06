@@ -4,11 +4,21 @@ import {
   applyApprovalGate,
   requiresApproverPick,
   type ApprovalGate,
+  type ApprovalSubject,
 } from "../approval/approval.gate";
 import type { ProcurementActionKey } from "../procurement.rules";
 import type { ProcurementListConfig } from "./procurementListConfig.type";
 import { useApprovalSettingQuery } from "./useApprovalSettingQuery";
 import { useApproversQuery } from "./useApproversQuery";
+
+/** Lấy người duyệt và người tạo từ dòng danh sách (PR/PO đều có; dòng khác thì trả null). */
+const approvalSubjectOf = (row: object): ApprovalSubject => {
+  const r = row as Partial<ApprovalSubject>;
+  return {
+    approverId: r.approverId ?? null,
+    createdBy: r.createdBy ?? null,
+  };
+};
 
 /**
  * Ghép khóa duyệt vào màn danh sách: lọc hành động theo khóa và người duyệt,
@@ -36,7 +46,7 @@ export function useProcurementApprovalGate<T extends { id: string }>(
         applyApprovalGate(
           config.availableActions(row),
           gate,
-          (row as { approverId?: string | null }).approverId,
+          approvalSubjectOf(row),
         ),
     }),
     [config, gate],

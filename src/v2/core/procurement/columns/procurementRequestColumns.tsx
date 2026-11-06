@@ -103,7 +103,14 @@ export function buildProcurementRequestColumns(
       ...headerFilter(t("v2.procurement.columns.createdBy", "Người tạo")),
       size: 140,
       mobileSlot: "hidden",
-      cell: (row) => row.createdBy ?? "—",
+      cell: (row) => row.createdByEmail ?? "—",
+    },
+    {
+      key: "approver",
+      ...headerFilter(t("v2.procurement.columns.approver", "Người duyệt")),
+      size: 160,
+      mobileSlot: "hidden",
+      cell: (row) => row.approverEmail ?? "—",
     },
   ];
 }

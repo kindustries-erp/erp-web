@@ -48,4 +48,35 @@ describe("V2 DrawerAuditTimeline Molecule", () => {
 
     expect(screen.getByText("Không có dữ liệu lịch sử")).toBeInTheDocument();
   });
+
+  it("layout stacked: hành động, tác nhân và thời gian tách thành các dòng riêng", () => {
+    const { container } = render(
+      <DrawerAuditTimeline
+        layout="stacked"
+        items={[
+          {
+            id: "s1",
+            action: "Đã hủy",
+            actor: "Trưởng garage",
+            timestamp: "06/11/2026 13:39",
+            details: "Lý do: Test hủy",
+            badge: <span>Đã hủy</span>,
+            variant: "danger",
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Trưởng garage")).toBeInTheDocument();
+    expect(screen.getByText("06/11/2026 13:39")).toBeInTheDocument();
+    expect(screen.getByText("Lý do: Test hủy")).toBeInTheDocument();
+    // Tác nhân và thời gian nằm trong cùng một dòng phụ, cho phép xuống dòng.
+    const meta = screen.getByText("Trưởng garage").parentElement;
+    expect(meta).toBe(screen.getByText("06/11/2026 13:39").parentElement);
+    expect(container.querySelector(".whitespace-nowrap")).toBeNull();
+  });
+
+  it("layout mặc định inline vẫn đặt thời gian ở cột phải (không đổi hành vi cũ)", () => {
+    const { container } = render(<DrawerAuditTimeline items={MOCK_ITEMS} />);
+    expect(container.querySelector(".whitespace-nowrap")).not.toBeNull();
+  });
 });

@@ -24,13 +24,24 @@ export interface ProcurementRequestFormErrors {
   lines?: ProcurementLinesError;
 }
 
+/**
+ * Ngày cần hàng sau khi đổi ngày đề nghị. Đang đồng bộ (trống hoặc bằng ngày đề nghị cũ)
+ * thì theo ngày đề nghị mới; người dùng đã sửa lệch thì giữ nguyên.
+ */
+export const nextNeededDate = (
+  prevRequestDate: string,
+  neededDate: string,
+  nextRequestDate: string,
+): string =>
+  !neededDate || neededDate === prevRequestDate ? nextRequestDate : neededDate;
+
 export const emptyRequestForm = (
   today: string,
 ): ProcurementRequestFormValue => ({
   branchId: "",
   branchName: "",
   requestDate: today,
-  neededDate: "",
+  neededDate: today,
   title: "",
   remarks: "",
   lines: [emptyProcurementLine()],

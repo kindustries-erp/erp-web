@@ -12,7 +12,7 @@ description: Module tri thức Frontend V2 cho Quản lý Đề nghị Mua hàng
   - Cấu hình hiển thị bảng `garageProcurementRequestsDisplay` (`tableId: erp-garage-procurement-requests-table`), tiêu đề, mô tả, quyền RBAC (`garage_procurement_requests`).
   - Gắn component `GarageProcurementRequestsPage` dùng khung `ProcurementListPage` từ core.
 - **Core** `src/v2/core/procurement/` quản lý mọi thành phần tái sử dụng của họ mua hàng (PR và PO):
-  - **Table Columns** (`columns/procurementRequestColumns.tsx`): 8 cột dữ liệu với `headerFilter`, `V2TableText` tương tác click xem chi tiết + copy, format tiền tệ VNĐ, badge trạng thái ngữ nghĩa (`ProcurementStatusBadge`).
+  - **Table Columns** (`columns/procurementRequestColumns.tsx`): 9 cột dữ liệu với `headerFilter`, `V2TableText` tương tác click xem chi tiết + copy, format tiền tệ VNĐ, badge trạng thái ngữ nghĩa (`ProcurementStatusBadge`). Cột "Người tạo" (`createdBy`) và "Người duyệt" (`approver`) hiển thị `createdByEmail` / `approverEmail` từ API; filter và options dùng email (không UUID). Người duyệt = người đã duyệt, chưa duyệt thì người được giao (`COALESCE(approvedBy, approverId)`).
   - **Table Query & Search Engine**: Hàm `toProcurementListParams` chuyển đổi đầy đủ `V2TableQuery` (gồm `column_filters`, `column_search`, `column_operators`, `date_ranges`, `sort`, `search`) sang query params JSON chuẩn V2, kết nối trực tiếp với Database QueryBuilder bên API backend (`TABLE_COLUMNS`).
   - **Drawer Chuẩn V2** (`components/organisms/procurement-request-drawer/ProcurementRequestDrawer.tsx`): Tích hợp 3 Top Navigation Tabs (`general`: Chi tiết & Dòng hàng, `audit`: Nhật ký duyệt `DrawerAuditTimeline`, `traceability`: Chứng từ PO liên kết qua `DrawerRelatedDeck`). Mỗi drawer nằm trong folder riêng, có `index.ts`.
   - **Atomic Sections (< 180 LoC)**: Tách biệt rõ `ProcurementRequestMainSections.tsx`, `sections/ProcurementRequestHeaderSection.tsx`, `sections/ProcurementRequestSummarySection.tsx`, `tabs/ProcurementRequestApprovalTab.tsx`, `tabs/ProcurementRequestRelatedTab.tsx`, `ProcurementRequestDrawer.biz.hook.ts` (nút duyệt footer). Dòng hàng dùng chung `components/organisms/procurement-lines-editor/`.
@@ -44,12 +44,12 @@ src/v2/core/procurement/
 │   │       ├── ProcurementLinesEditor.tsx # Khung bảng và nút thêm dòng (< 90 LoC)
 │   │       └── ProcurementLineRow.tsx     # Dòng chi tiết nhập liệu mobile-first (< 160 LoC)
 │   │   ├── procurement-request-drawer/    # Drawer đề nghị mua (folder-per-component)
-│   │   │   ├── ProcurementRequestDrawer.tsx        # V2StandardDrawer với Top Tabs
+│   │   │   ├── ProcurementRequestDrawer.tsx        # V2StandardDrawer với 2 Top Tabs
 │   │   │   ├── ProcurementRequestDrawer.hook.ts    # Hook form, mode, tabs
-│   │   │   ├── ProcurementRequestDrawer.biz.hook.ts # Hook nút duyệt footer
-│   │   │   ├── ProcurementRequestMainSections.tsx  # Phần trái: đầu đề + dòng hàng
-│   │   │   ├── sections/                           # Header, Summary
-│   │   │   ├── tabs/                               # ApprovalTab, RelatedTab
+│   │   │   ├── ProcurementRequestDrawer.biz.hook.ts # Nút footer + useProcurementRequestSave (lưu)
+│   │   │   ├── ProcurementRequestMainSections.tsx  # Phần trái: dòng hàng
+│   │   │   ├── sections/                           # HeaderSection (+ HeaderView), SummarySection, AuditSection (+ helper)
+│   │   │   ├── tabs/                               # RelatedTab
 │   │   │   └── index.ts
 │   │   └── procurement-order-drawer/      # Drawer đơn mua (PO), cùng cấu trúc
 │   ├── ProcurementListPage.tsx            # Template bảng V2ModulePage (< 130 LoC)
@@ -72,7 +72,8 @@ src/v2/core/procurement/
 - **Search & Filter Đồng Bộ Hai Chiều (Web ↔ Backend)**:
   - Frontend chuyển đổi các filter header sang `column_filters`, `column_search`, `date_ranges`, `sort` dạng JSON.
   - Backend `ListProcurementRequestsDto` kế thừa `TableQueryDto`, query service bóc tách bằng `applyTableFilters`, `applyTableSort` và `applyMultiKeywordMultiFieldFilter` lọc chính xác trên SQL TypeORM.
-- **Drawer Top Tabs & Audit Timeline**: 3 tab chuyển đổi mượt mà. Tab `audit` tích hợp `DrawerAuditTimeline`, tab `traceability` dùng `DrawerRelatedDeck` chuẩn V2.
+- **Drawer Top Tabs & Audit Timeline**: 2 tab (`general`: Chi tiết, `traceability`: Chứng từ liên kết qua `DrawerRelatedDeck`). Nhật ký duyệt là `ProcurementRequestAuditSection` (`DrawerSection` + `DrawerAuditTimeline layout="stacked"`) nằm ở cột phải, dưới Tổng quan; không còn là tab. Section mặc định thu gọn (`defaultCollapsed`, vẫn hiện số lượng). Mỗi dòng: hành động, badge trạng thái theo `toStatus`, "tác nhân · dd/MM/yyyy HH:mm", lý do (`comment`). Dữ liệu qua `toAuditRows` (helper thuần): tác nhân = họ tên, rồi email, rồi "Không xác định"; không bao giờ hiện UUID (cập nhật 2026-11-06).
+- **Nguồn dữ liệu nhật ký (API)**: `GET /api/v2/garage-procurement-requests/:id/approval-events` trả `actorName`, `actorEmail` (resolve bởi `ApprovalActorService`) và `comment`; không có `id` nội bộ. Hành động "Đóng" và "Hủy" đều được ghi nhật ký; nút "Đóng" ở chân drawer chỉ đóng cửa sổ.
 - **Thao tác duyệt ngay trong Drawer**: Người dùng có thể Duyệt, Từ chối, Gửi duyệt, Hủy trực tiếp từ Drawer Footer khi đang xem đề nghị.
 - **Mobile-First Ergonomics**: Kích thước vùng bấm chạm $\ge 44\text{px}$, input font $\ge 16\text{px}$ trên mobile, responsive layout co giãn 1 cột trên điện thoại / 2 cột trên máy tính.
 - **Đa ngôn ngữ 100%**: 100% chuỗi văn bản sử dụng `t()` với prefix `v2.procurement.*` và `v2.garageProcurementRequests.*`.
@@ -86,6 +87,12 @@ src/v2/core/procurement/
 - Form: `validateRequestForm(form, branchOptional)`, `toRequestCreatePayload`, `toRequestHeaderPayload(form, branchOptional)` (core `form/procurementRequest.form.ts`).
 - Test: `procurement.branch.test.ts`, `form/procurementBranchOptional.form.test.ts`.
 - Ràng buộc PO: chi nhánh PO phải khớp PR nguồn kể cả khi cùng trống (backend kiểm tra).
+
+## 6. Cập nhật 2026-11-06: layout đầu đề và lưu nháp
+
+- Lưu nháp (cập nhật) đưa drawer về chế độ xem trước khi báo `onSaved` (`useProcurementRequestSave`, `onUpdated: setMode("view")`). Trước đó drawer ở lại chế độ sửa vì list không remount khi mode đổi từ bên trong drawer.
+- Đầu đề khi sửa: Chi nhánh (một hàng) → Ngày đề nghị | Ngày cần hàng (cùng hàng) → Nội dung → Ghi chú. Chi nhánh đặt trên đầu, không còn đẩy xuống dưới theo `placeBranchField` ở PR.
+- Ngày cần hàng mặc định bằng ngày đề nghị khi tạo mới. Đổi ngày đề nghị kéo theo ngày cần nếu ngày cần đang đồng bộ (trống hoặc bằng ngày đề nghị cũ); đã sửa lệch thì giữ (`nextNeededDate`, `form/procurementRequest.form.ts`).
 
 ## 5. Cập nhật 2026-11-06: khóa duyệt và chọn người duyệt
 

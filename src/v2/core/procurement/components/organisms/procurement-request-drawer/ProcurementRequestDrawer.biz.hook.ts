@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   DrawerAction,
   V2DropdownEntry,
@@ -6,9 +7,20 @@ import type {
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { ProcurementActionKey } from "../../../procurement.rules";
 import type {
+  ProcurementApi,
   ProcurementDocumentRef,
   ProcurementRequestDetail,
 } from "../../../procurement.types";
+import {
+  toRequestCreatePayload,
+  toRequestHeaderPayload,
+  toRequestLinesPayload,
+  type ProcurementRequestFormValue,
+} from "../../../form/procurementRequest.form";
+import {
+  showProcurementError,
+  showProcurementSuccess,
+} from "../../../procurement.toast";
 
 export interface UseProcurementDrawerActionsInput {
   viewing: boolean;
@@ -65,14 +77,15 @@ export function useProcurementDrawerActions(
         },
       ];
       if (canUpdate && onTransition) {
+        // Nút chính đứng sau "Đóng" để nằm bên phải (footer render theo thứ tự mảng)
         if (availableActions.includes("approve")) {
-          list.unshift({
+          list.push({
             label: t("v2.procurement.actions.approve", "Duyệt"),
             onClick: () => onTransition("approve", detail),
             primary: true,
           });
         } else if (availableActions.includes("submit")) {
-          list.unshift({
+          list.push({
             label: t("v2.procurement.actions.submit", "Gửi duyệt"),
             onClick: () => onTransition("submit", detail),
             primary: true,
@@ -111,4 +124,55 @@ export function useProcurementDrawerActions(
   ]);
 
   return { actions, actionDropdownItems };
+}
+
+export interface UseProcurementRequestSaveInput {
+  api: ProcurementApi<unknown>;
+  queryKey: string;
+  documentId: string | null;
+  creating: boolean;
+  form: ProcurementRequestFormValue;
+  branchOptional: boolean;
+  onSaved?: (id: string) => void;
+  onClose: () => void;
+  /** Cập nhật xong (không phải tạo mới): drawer về chế độ xem */
+  onUpdated: () => void;
+}
+
+/**
+ * Lưu đề nghị: tạo mới, hoặc cập nhật đầu đề và thay dòng khi còn nháp.
+ * Thành công: làm mới danh sách; sửa xong thì về view trước khi báo `onSaved`.
+ */
+export function useProcurementRequestSave(
+  input: UseProcurementRequestSaveInput,
+) {
+  const { t } = useV2Translation();
+  const queryClient = useQueryClient();
+  const { api, queryKey, documentId, creating, form, branchOptional } = input;
+
+  return useMutation({
+    mutationFn: async () => {
+      if (creating) return api.create(toRequestCreatePayload(form));
+      await api.updateHeader?.(
+        documentId!,
+        toRequestHeaderPayload(form, branchOptional),
+      );
+      await api.replaceLines(documentId!, toRequestLinesPayload(form));
+      return { id: documentId! };
+    },
+    onSuccess: ({ id }) => {
+      showProcurementSuccess(
+        t("v2.procurement.drawer.savedRequest", "Đã lưu đề nghị mua"),
+      );
+      void queryClient.invalidateQueries({ queryKey: [queryKey] });
+      if (!creating) input.onUpdated();
+      if (input.onSaved) input.onSaved(id);
+      else input.onClose();
+    },
+    onError: (error) =>
+      showProcurementError(
+        error,
+        t("v2.procurement.drawer.saveError", "Không lưu được chứng từ"),
+      ),
+  });
 }

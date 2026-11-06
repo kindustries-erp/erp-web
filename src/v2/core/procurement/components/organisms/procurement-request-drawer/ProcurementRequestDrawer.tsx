@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FileText, History, Link2 } from "lucide-react";
+import { FileText, Link2 } from "lucide-react";
 import { V2StandardDrawer } from "@/v2/shared/components";
 import type { V2TabItemData } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -13,7 +13,7 @@ import {
 import { ProcurementRequestMainSections } from "./ProcurementRequestMainSections";
 import { ProcurementRequestHeaderSection } from "./sections/ProcurementRequestHeaderSection";
 import { ProcurementRequestSummarySection } from "./sections/ProcurementRequestSummarySection";
-import { ProcurementRequestApprovalTab } from "./tabs/ProcurementRequestApprovalTab";
+import { ProcurementRequestAuditSection } from "./sections/ProcurementRequestAuditSection";
 import { ProcurementRequestRelatedTab } from "./tabs/ProcurementRequestRelatedTab";
 import { useProcurementDrawerActions } from "./ProcurementRequestDrawer.biz.hook";
 
@@ -34,11 +34,6 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
         key: "general",
         label: t("v2.procurement.drawer.tabGeneral", "Chi tiết"),
         icon: <FileText className="h-4 w-4" />,
-      },
-      {
-        key: "audit",
-        label: t("v2.procurement.drawer.tabAudit", "Nhật ký duyệt"),
-        icon: <History className="h-4 w-4" />,
       },
       {
         key: "traceability",
@@ -70,12 +65,6 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
       errors={state.errors}
       linesViewing={state.linesViewing}
       setField={state.setField}
-    />
-  ) : state.tab === "audit" ? (
-    <ProcurementRequestApprovalTab
-      documentId={props.documentId}
-      api={props.api}
-      queryKey={props.queryKey}
     />
   ) : (
     <ProcurementRequestRelatedTab
@@ -139,6 +128,13 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
                 form={state.form}
                 detail={state.detail}
               />
+              {!state.creating && props.documentId && (
+                <ProcurementRequestAuditSection
+                  documentId={props.documentId}
+                  api={props.api}
+                  queryKey={props.queryKey}
+                />
+              )}
             </div>
           ) : undefined
         }

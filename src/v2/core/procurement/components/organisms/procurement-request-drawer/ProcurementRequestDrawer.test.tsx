@@ -90,7 +90,11 @@ describe("ProcurementRequestDrawer", () => {
     );
 
     expect(await screen.findByText("Chi tiết")).toBeInTheDocument();
-    expect(screen.getByText("Nhật ký duyệt")).toBeInTheDocument();
+    // Nhật ký là section ở cột phải, không còn là nút tab
+    expect(await screen.findByText("Nhật ký duyệt")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Nhật ký duyệt" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Chứng từ liên kết")).toBeInTheDocument();
   });
 

@@ -16,18 +16,29 @@ export const NO_APPROVAL_GATE: ApprovalGate = {
   currentUserId: null,
 };
 
+/** Thông tin người duyệt và người tạo của một chứng từ, dùng để quyết định quyền duyệt. */
+export interface ApprovalSubject {
+  approverId: string | null | undefined;
+  createdBy: string | null | undefined;
+}
+
 /**
- * Lọc hành động theo khóa duyệt. Duyệt/từ chối chỉ hiện khi khóa bật và
- * (chứng từ chưa chỉ định người duyệt, hoặc người đang đăng nhập chính là người được chọn).
+ * Lọc hành động theo khóa duyệt. Duyệt/từ chối hiện khi khóa bật và:
+ * - người đang đăng nhập không phải người tạo chứng từ (khớp backend `assertNotSelfApproval`), và
+ * - chứng từ chưa chỉ định người duyệt (giữ như cũ), hoặc người đăng nhập chính là người được chọn.
  */
 export function applyApprovalGate(
   actions: ProcurementActionKey[],
   gate: ApprovalGate,
-  approverId: string | null | undefined,
+  subject: ApprovalSubject,
 ): ProcurementActionKey[] {
   if (!gate.configured) return actions;
+  const { approverId, createdBy } = subject;
+  const isCreator = Boolean(createdBy) && createdBy === gate.currentUserId;
   const canDecide =
-    gate.enabled && (!approverId || approverId === gate.currentUserId);
+    gate.enabled &&
+    !isCreator &&
+    (!approverId || approverId === gate.currentUserId);
   return actions.filter(
     (action) => (action !== "approve" && action !== "reject") || canDecide,
   );
