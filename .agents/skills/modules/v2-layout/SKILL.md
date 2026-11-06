@@ -16,6 +16,7 @@ Kiến trúc Layout V2 (`src/v2/app/layouts/` và `src/v2/shared/components/`) l
 - **Platform Split Tự Động (`useViewport`)**: Tự động chuyển đổi giao diện dựa trên kích thước màn hình mà không bị giật lag layout:
   - Màn hình Desktop (>= 768px): Hiển thị kiến trúc Floating 2-Cards.
   - Màn hình Mobile (< 768px): Tối ưu thành thanh điều hướng dưới đáy (`V2BottomNav`) và Header gọn nhẹ.
+    - **Mobile Touch Optimization**: Triệt tiêu hoàn toàn `-webkit-tap-highlight-color` (khử outline flash khi chạm) và focus ring giả lập trên mobile browser, hỗ trợ `touch-manipulation` loại bỏ độ trễ 300ms và phản hồi co nhả êm ái (`active:scale-95` / `active:scale-90`).
 - **Kỷ luật Code Cứng**: 100% file < 150 LoC (cách xa ngưỡng trần 180 LoC), 100% co-located unit test, cấm class màu xanh dương mặc định (`blue-*`).
 
 ---

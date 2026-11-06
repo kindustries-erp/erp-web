@@ -36,7 +36,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         onClick={onClick}
         aria-label={label}
         className={cn(
-          "group relative flex items-center justify-center transition-all duration-150 select-none hover:bg-transparent mx-auto active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus:bg-transparent shadow-none",
+          "group relative flex items-center justify-center transition-all duration-150 select-none hover:bg-transparent mx-auto active:scale-95 touch-manipulation [-webkit-tap-highlight-color:transparent] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus:bg-transparent shadow-none",
           showLabel
             ? "h-auto flex-col py-1.5 px-1 text-xs font-medium rounded-lg min-w-0 max-w-[64px] w-full"
             : "h-10 w-10 p-0 rounded-xl",
