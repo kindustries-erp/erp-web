@@ -3,9 +3,13 @@ import { registerV2ModuleLocale } from "@/v2/shared/locales";
 /** Chữ hiển thị dùng chung của họ procurement (PR và PO). Khóa: `v2.procurement.*` */
 registerV2ModuleLocale("procurement", {
   vi: {
+    tabs: {
+      list: "Danh sách",
+    },
     actions: {
-      view: "Xem",
-      edit: "Sửa",
+      view: "Xem chi tiết",
+      edit: "Chỉnh sửa",
+      editDisabledReason: "Chỉ sửa được khi còn nháp",
       create: "Tạo mới",
       createOrder: "Tạo PO từ PR",
       submit: "Gửi duyệt",
@@ -18,6 +22,10 @@ registerV2ModuleLocale("procurement", {
       delete: "Xóa",
       purge: "Xóa vĩnh viễn",
       more: "Thao tác",
+    },
+    actionGroups: {
+      lookup: "Tra cứu",
+      operate: "Thao tác",
     },
     confirm: {
       title: "Xác nhận thao tác",
@@ -82,6 +90,8 @@ registerV2ModuleLocale("procurement", {
       empty: "Chưa có sự kiện phê duyệt nào",
     },
     related: {
+      noLinks: "Chưa có chứng từ liên kết",
+      noOrdersYet: "Chưa có đơn mua hàng nào",
       createPoTitle: "Khởi tạo đơn mua hàng (PO)",
       createPoDesc:
         "Đề nghị đã được duyệt. Bạn có thể tạo đơn mua PO điền sẵn từ các dòng hàng của đề nghị này.",
@@ -110,6 +120,11 @@ registerV2ModuleLocale("procurement", {
       createOrder: "Tạo đơn mua hàng",
       request: "Đề nghị mua",
       createRequest: "Tạo đề nghị mua",
+      editRequest: "Sửa đề nghị mua",
+      editOrder: "Sửa đơn mua hàng",
+      discardTitle: "Bỏ thay đổi?",
+      discardMessage: "Các thay đổi chưa lưu sẽ bị bỏ. Bạn có chắc không?",
+      discardConfirm: "Bỏ thay đổi",
       tabGeneral: "Chi tiết",
       tabAudit: "Nhật ký duyệt",
       tabTraceability: "Chứng từ liên kết",
@@ -137,9 +152,13 @@ registerV2ModuleLocale("procurement", {
     search: "Tìm theo số chứng từ",
   },
   en: {
+    tabs: {
+      list: "List",
+    },
     actions: {
-      view: "View",
+      view: "View details",
       edit: "Edit",
+      editDisabledReason: "Only drafts can be edited",
       create: "Create",
       createOrder: "Create PO from request",
       submit: "Submit",
@@ -152,6 +171,10 @@ registerV2ModuleLocale("procurement", {
       delete: "Delete",
       purge: "Delete permanently",
       more: "Actions",
+    },
+    actionGroups: {
+      lookup: "Lookup",
+      operate: "Actions",
     },
     confirm: {
       title: "Confirm action",
@@ -216,6 +239,8 @@ registerV2ModuleLocale("procurement", {
       empty: "No approval events recorded",
     },
     related: {
+      noLinks: "No related documents",
+      noOrdersYet: "No purchase orders yet",
       createPoTitle: "Create purchase order (PO)",
       createPoDesc:
         "The request has been approved. You can create a pre-filled PO from items in this request.",
@@ -244,6 +269,11 @@ registerV2ModuleLocale("procurement", {
       createOrder: "Create purchase order",
       request: "Purchase request",
       createRequest: "Create purchase request",
+      editRequest: "Edit purchase request",
+      editOrder: "Edit purchase order",
+      discardTitle: "Discard changes?",
+      discardMessage: "Unsaved changes will be lost. Are you sure?",
+      discardConfirm: "Discard changes",
       tabGeneral: "Details",
       tabAudit: "Approval history",
       tabTraceability: "Related documents",

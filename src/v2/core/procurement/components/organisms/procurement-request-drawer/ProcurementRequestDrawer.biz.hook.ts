@@ -18,6 +18,8 @@ export interface UseProcurementDrawerActionsInput {
   saving: boolean;
   loading: boolean;
   onClose: () => void;
+  /** Hủy sửa: về chế độ xem (có xác nhận nếu đã đổi) */
+  onCancelEdit: () => void;
   onSubmit: () => void;
   onTransition?: (
     action: ProcurementActionKey,
@@ -38,6 +40,7 @@ export function useProcurementDrawerActions(
     saving,
     loading,
     onClose,
+    onCancelEdit,
     onSubmit,
     onTransition,
   } = input;
@@ -81,7 +84,7 @@ export function useProcurementDrawerActions(
     return [
       {
         label: t("v2.common.cancel", "Hủy"),
-        onClick: onClose,
+        onClick: onCancelEdit,
         variant: "outline",
         disabled: saving,
       },
@@ -96,6 +99,7 @@ export function useProcurementDrawerActions(
   }, [
     viewing,
     onClose,
+    onCancelEdit,
     canUpdate,
     onTransition,
     availableActions,

@@ -53,7 +53,10 @@ export function ProcurementOrderSummarySection({
       >
         <DrawerRow
           label={t("v2.procurement.columns.payment", "Thanh toán")}
-          value={detail?.paymentStatus ?? "UNPAID"}
+          value={t(
+            `v2.procurement.status.${detail?.paymentStatus ?? "UNPAID"}`,
+            detail?.paymentStatus ?? "UNPAID",
+          )}
         />
         <DrawerRow
           label={t("v2.procurement.columns.createdBy", "Người tạo")}

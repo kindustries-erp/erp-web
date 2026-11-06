@@ -27,4 +27,6 @@ export interface ProcurementDrawerProps {
   canCreateOrder?: boolean;
   /** Điều hướng sang lập PO từ PR */
   onOrderFromRequest?: (row: ProcurementDocumentRef) => void;
+  /** Lưu xong: mở lại chứng từ vừa lưu ở chế độ xem. Thiếu thì đóng drawer. */
+  onSaved?: (id: string) => void;
 }

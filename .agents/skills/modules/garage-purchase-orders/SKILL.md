@@ -78,9 +78,11 @@ Khớp `PURCHASE_ORDER_TRANSITIONS` của API. UI chỉ ẩn/hiện; API vẫn l
 | Hủy đơn | `APPROVED`, `CONFIRMED`, `PARTIAL_RECEIVED` | `PurchaseOrderCancelModal` (dùng chung drawer và trang) trước khi gọi API |
 | Xóa | `DRAFT` | `V2ConfirmModal`, xóa mềm (`isDeleted`) |
 
-Menu dòng (`PurchaseOrderTable.rowActions.tsx`) chia hai nhóm như bảng Hóa đơn: **Tra cứu** (Xem chi tiết) và **Thao tác** (Chỉnh sửa, Lưu, Xác nhận đơn, Hủy đơn, Xóa). Nhóm rỗng bị bỏ. Mục đầu của Thao tác là Chỉnh sửa vì `getQuickActions` lấy mục đầu hai nhóm làm nút nhanh khi hover. Menu "Lưu" trên đơn nháp là `approve` (đơn đã lưu rồi).
+Menu dòng (`PurchaseOrderTable.rowActions.tsx`) chia hai nhóm như bảng Hóa đơn: **Tra cứu** (Xem chi tiết) và **Thao tác** (Chỉnh sửa, Lưu, Xác nhận đơn, Hủy đơn, Xóa). Nhóm rỗng bị bỏ. Mục đầu của Thao tác là Chỉnh sửa vì `getQuickActions` lấy mục đầu hai nhóm làm nút nhanh khi hover. Chỉnh sửa luôn hiện khi có quyền; khi trạng thái không cho sửa (ngoài DRAFT/APPROVED/CONFIRMED/PARTIAL_RECEIVED) thì mờ kèm `disabledReason`. Drawer chỉ bật Chỉnh sửa sau khi đã tải xong (`loaded`). Menu "Lưu" trên đơn nháp là `approve` (đơn đã lưu rồi).
 
 Drawer: footer dựng bởi `drawers/PurchaseOrderDrawer.actions.ts`. Đơn nháp có `[Hủy, Lưu nháp, Lưu]`; khi thiếu quyền `update` chỉ còn `[Hủy, Lưu nháp]` (Lưu nháp là primary). Đơn đã duyệt trở đi có `[Hủy, Lưu]`.
+
+Sau khi lưu đơn cũ thì drawer về chế độ xem (`handleSaved` trong `PurchaseOrderDrawer.hook.ts`); đơn mới đóng drawer. Hủy khi đã đổi hỏi xác nhận bằng `V2ConfirmModal` (`cancelEdit` → `confirmDiscard` reset form rồi về view), giống họ procurement.
 
 `saveAndApprove` (`api/mutations/usePurchaseOrderMutations.ts`) là hai lời gọi API (tạo/sửa rồi `approve`), không có endpoint gộp. Nếu lưu được nhưng duyệt lỗi, lỗi được ném dưới dạng `PurchaseOrderPartialApproveError`: báo "Đã lưu nháp nhưng chưa duyệt được", làm mới danh sách và đóng drawer để không tạo trùng khi bấm lại.
 

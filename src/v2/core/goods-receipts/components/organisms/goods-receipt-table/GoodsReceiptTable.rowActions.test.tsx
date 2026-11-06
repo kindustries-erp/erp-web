@@ -1,41 +1,78 @@
 import { describe, expect, it, vi } from "vitest";
-import type { GoodsReceiptRecord } from "../../../domain/goodsReceipt";
+import {
+  GoodsReceiptStatus,
+  type GoodsReceiptRecord,
+} from "../../../domain/goodsReceipt";
 import { buildGoodsReceiptRowActions } from "./GoodsReceiptTable.rowActions";
 
 const t = (_key: string, fallback?: string) => fallback ?? "";
-const row = { id: "r1", receiptNo: "GGR-1" } as GoodsReceiptRecord;
+const draft = {
+  id: "r1",
+  receiptNo: "GGR-1",
+  status: GoodsReceiptStatus.DRAFT,
+} as GoodsReceiptRecord;
+const posted = {
+  id: "r2",
+  receiptNo: "GGR-2",
+  status: GoodsReceiptStatus.POSTED,
+} as GoodsReceiptRecord;
 
 const labelsOf = (
   groups: ReturnType<ReturnType<typeof buildGoodsReceiptRowActions>>,
-) => groups.flatMap((group) => group.items.map((item) => item.label));
+) =>
+  groups.map((group) => ({
+    group: group.groupLabel,
+    items: group.items.map((item) => item.label),
+  }));
 
 describe("buildGoodsReceiptRowActions", () => {
-  it("chỉ hiện xem khi không có quyền sửa và xóa", () => {
-    const actions = buildGoodsReceiptRowActions({
+  it("không có quyền sửa và xóa: chỉ còn nhóm Tra cứu", () => {
+    const groups = buildGoodsReceiptRowActions({
       t,
       canUpdate: false,
       canDelete: false,
       open: vi.fn(),
       onDelete: vi.fn(),
-    })(row);
-    expect(labelsOf(actions)).toEqual(["Xem chi tiết"]);
+    })(draft);
+    expect(labelsOf(groups)).toEqual([
+      { group: "Tra cứu", items: ["Xem chi tiết"] },
+    ]);
   });
 
-  it("thêm sửa và xóa theo quyền, và gọi đúng callback", () => {
+  it("phiếu nháp có quyền: Thao tác gồm Chỉnh sửa đứng đầu rồi Xóa, và gọi đúng callback", () => {
     const open = vi.fn();
     const onDelete = vi.fn();
-    const actions = buildGoodsReceiptRowActions({
+    const groups = buildGoodsReceiptRowActions({
       t,
       canUpdate: true,
       canDelete: true,
       open,
       onDelete,
-    })(row);
+    })(draft);
 
-    expect(labelsOf(actions)).toEqual(["Xem chi tiết", "Chỉnh sửa", "Xóa"]);
-    actions[0].items[2].onClick();
-    expect(onDelete).toHaveBeenCalledWith(row);
-    actions[0].items[1].onClick();
+    expect(labelsOf(groups)).toEqual([
+      { group: "Tra cứu", items: ["Xem chi tiết"] },
+      { group: "Thao tác", items: ["Chỉnh sửa", "Xóa"] },
+    ]);
+    groups[1].items[0].onClick();
     expect(open).toHaveBeenCalledWith("r1", "edit");
+    groups[1].items[1].onClick();
+    expect(onDelete).toHaveBeenCalledWith(draft);
+  });
+
+  it("phiếu đã ghi sổ: Chỉnh sửa vẫn hiện nhưng mờ kèm lý do, không có Xóa", () => {
+    const groups = buildGoodsReceiptRowActions({
+      t,
+      canUpdate: true,
+      canDelete: true,
+      open: vi.fn(),
+      onDelete: vi.fn(),
+    })(posted);
+    expect(labelsOf(groups)).toEqual([
+      { group: "Tra cứu", items: ["Xem chi tiết"] },
+      { group: "Thao tác", items: ["Chỉnh sửa"] },
+    ]);
+    expect(groups[1].items[0].disabled).toBe(true);
+    expect(groups[1].items[0].disabledReason).toBe("Chỉ sửa được khi còn nháp");
   });
 });

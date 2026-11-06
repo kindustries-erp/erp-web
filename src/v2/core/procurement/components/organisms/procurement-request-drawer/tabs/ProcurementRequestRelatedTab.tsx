@@ -35,7 +35,7 @@ export function ProcurementRequestRelatedTab({
   if (!detail) {
     return (
       <V2EmptyState
-        title={t("v2.procurement.audit.empty", "Chưa có thông tin liên kết")}
+        title={t("v2.procurement.related.noLinks", "Chưa có chứng từ liên kết")}
       />
     );
   }

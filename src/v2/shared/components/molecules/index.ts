@@ -15,6 +15,7 @@ export * from "./v2-topbar";
 export * from "./v2-user-badge";
 export * from "./v2-drawer-section";
 export * from "./v2-drawer-field";
+export * from "./v2-drawer-field-grid";
 export * from "./v2-drawer-audit-timeline";
 export * from "./v2-drawer-header";
 export * from "./v2-drawer-footer";

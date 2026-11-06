@@ -111,6 +111,7 @@ export function ProcurementListPage<T extends { id: string }>({
                   const target = resolveDrawerTarget<T>(row, drawer.id);
                   if (target) state.start(target, action);
                 },
+                onSaved: state.openSaved,
                 canCreateOrder: state.canCreate && Boolean(config.poHref),
                 onOrderFromRequest: (row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);

@@ -138,6 +138,8 @@ export function useProcurementList<T extends { id: string }>(
     drawer,
     openView: (id: string) => openDrawer(id, "view"),
     openCreate: () => setDrawer({ id: null, mode: "edit" }),
+    /** Sau khi lưu (tạo hoặc sửa): mở lại chứng từ ở chế độ xem */
+    openSaved: (id: string) => setDrawer({ id, mode: "view" }),
     closeDrawer: () => setDrawer(null),
     rowActions,
     start,

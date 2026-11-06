@@ -14,6 +14,7 @@ registerV2ModuleLocale("purchaseOrders", {
     actions: {
       view: "Xem chi tiết",
       edit: "Chỉnh sửa",
+      editDisabledReason: "Trạng thái hiện tại không cho phép sửa",
       delete: "Xóa",
       approve: "Duyệt đơn",
       confirm: "Xác nhận đơn",
@@ -28,6 +29,11 @@ registerV2ModuleLocale("purchaseOrders", {
       saveDraft: "Lưu nháp",
     },
     actionGroups: { lookup: "Tra cứu", operate: "Thao tác" },
+    discard: {
+      title: "Bỏ thay đổi?",
+      message: "Các thay đổi chưa lưu sẽ bị bỏ. Bạn có chắc không?",
+      confirm: "Bỏ thay đổi",
+    },
     columns: {
       poNo: "Số đơn",
       orderDate: "Ngày đặt",
@@ -106,6 +112,7 @@ registerV2ModuleLocale("purchaseOrders", {
     actions: {
       view: "View details",
       edit: "Edit",
+      editDisabledReason: "The current status does not allow editing",
       delete: "Delete",
       approve: "Approve",
       confirm: "Confirm",
@@ -120,6 +127,11 @@ registerV2ModuleLocale("purchaseOrders", {
       saveDraft: "Save draft",
     },
     actionGroups: { lookup: "Lookup", operate: "Actions" },
+    discard: {
+      title: "Discard changes?",
+      message: "Unsaved changes will be lost. Are you sure?",
+      confirm: "Discard changes",
+    },
     columns: {
       poNo: "PO No",
       orderDate: "Order Date",

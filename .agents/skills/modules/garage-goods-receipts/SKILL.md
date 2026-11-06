@@ -66,8 +66,10 @@ Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự 
 - **Tích hợp Menu Sidebar**: NavItem "Nhập kho Garage" trong `sec-garage` (`useV2AdaptedNavSections.ts`, `GarageNavSection.tsx`), quyền `canReadGarageGoodsReceipts` (có fallback `canReadGarageCases`).
 - **Multi-tab Shell & Breadcrumb**: `useV2AdaptedTabs.ts` ánh xạ icon `Package` và label `v2.nav.items.garageGoodsReceipts`; `V2ShellLayout.tsx` hiển thị breadcrumb `Garage > Nhập kho Garage`.
 - **URL Route**: `/garage-goods-receipts` (alias `/v2/garage-goods-receipts`), render `GarageGoodsReceiptsPage`.
+- **Lưới trường dùng chung**: form phiếu nhập render qua `V2DrawerFieldGrid` (shared molecule), cùng lưới với đầu đề PR/PO procurement. Bảng dòng phụ tùng giữ riêng vì khác nghiệp vụ với bảng dòng procurement.
 - **Drawer 2 cột**: `GoodsReceiptDrawer` dùng `V2DrawerLayout.TWO_COLUMNS` và `V2DrawerSize.XL`; cột trái là bảng dòng phụ tùng, cột phải là form thông tin phiếu.
 - **Sinh mã phiếu**: `nextCode` qua `useQuery` (khóa `keys.nextCode()`), bật khi tạo mới. Nút sinh lại dùng `queryClient.fetchQuery`. Không gọi API bằng `useEffect`.
 - **Validate**: báo đúng trường thiếu qua `requiredFields` và nhãn `v2.goodsReceipts.columns.<trường>`.
 - **Đơn vị mặc định**: `GOODS_RECEIPT_DEFAULT_UNIT` (core), không hardcode `"Cái"` trong module.
 - **Drawer remount**: `GarageGoodsReceiptsPage` đặt `key` theo `id` và `mode` để reset state mỗi lần mở, thay cho effect đồng bộ mode.
+- **Lưu và hủy sửa**: lưu phiếu cũ thì về chế độ xem (`setMode("view")`), phiếu mới thì đóng drawer. Hủy khi đã đổi hỏi xác nhận bằng `V2ConfirmModal` (z-[700]), đồng ý thì `resetForm` và về view. Menu dòng: TRA CỨU [Xem chi tiết] → THAO TÁC [Chỉnh sửa, Xóa]. Chỉnh sửa luôn hiện khi có quyền, nhưng chỉ bật cho phiếu nháp (không phải nháp thì mờ kèm lý do `disabledReason`); Xóa chỉ cho phiếu nháp. **Nút sửa chỉ bật sau khi đã tải xong** (`loaded` từ data hook): form khởi tạo có status DRAFT mặc định nên không được dùng để quyết định quyền trước khi tải.

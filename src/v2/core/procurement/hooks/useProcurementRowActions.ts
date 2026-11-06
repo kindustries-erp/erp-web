@@ -1,8 +1,9 @@
 import * as React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import type { V2RowAction, V2RowActionGroup } from "@/v2/shared/types/v2-table";
+import type { V2RowAction } from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "../procurement.rules";
 import type { ProcurementListConfig } from "./procurementListConfig.type";
+import { buildProcurementRowActions } from "./procurementRowActions.builder";
 
 export interface ProcurementRowActionsInput<T extends { id: string }> {
   config: ProcurementListConfig<T>;
@@ -21,7 +22,7 @@ export interface ProcurementRowActionsInput<T extends { id: string }> {
   purgeActions: (row: T) => V2RowAction[];
 }
 
-/** Dựng nhóm thao tác theo dòng: xem, sửa, tạo PO, chuyển trạng thái, xóa. */
+/** Trả về hàm dựng menu theo dòng (xem `buildProcurementRowActions`), được memo theo quyền và cấu hình. */
 export function useProcurementRowActions<T extends { id: string }>({
   config,
   canCreate,
@@ -35,59 +36,20 @@ export function useProcurementRowActions<T extends { id: string }>({
 }: ProcurementRowActionsInput<T>) {
   const { t } = useV2Translation();
 
-  return React.useCallback(
-    (row: T): V2RowActionGroup[] => {
-      const view = {
-        label: t("v2.procurement.actions.view", "Xem"),
-        onClick: () => openDrawer(row.id, "view"),
-      };
-      const edit =
-        canUpdate && config.isEditable(row)
-          ? [
-              {
-                label: t("v2.procurement.actions.edit", "Sửa"),
-                onClick: () => openDrawer(row.id, "edit"),
-              },
-            ]
-          : [];
-      const transitions = canUpdate
-        ? config.availableActions(row).map((action) => ({
-            label: t(`v2.procurement.actions.${action}`, action),
-            onClick: () => start(row, action),
-            variant:
-              action === "cancel" || action === "reject"
-                ? ("danger" as const)
-                : ("default" as const),
-          }))
-        : [];
-      const fromRequest =
-        canCreate && config.poHref && config.canOrderFromRequest?.(row)
-          ? [
-              {
-                label: t("v2.procurement.actions.createOrder", "Tạo PO từ PR"),
-                onClick: () => orderFromRequest(row),
-              },
-            ]
-          : [];
-      const deletable =
-        canDelete && config.api.remove && config.isEditable(row)
-          ? [
-              {
-                label: t("v2.procurement.actions.delete", "Xóa"),
-                onClick: () => openDelete(row),
-                variant: "danger" as const,
-              },
-            ]
-          : [];
-      const purgeable = purgeActions(row);
-      return [
-        { items: [view, ...edit, ...fromRequest] },
-        ...(transitions.length ? [{ items: transitions }] : []),
-        ...(deletable.length || purgeable.length
-          ? [{ items: [...deletable, ...purgeable] }]
-          : []),
-      ];
-    },
+  return React.useMemo(
+    () =>
+      buildProcurementRowActions<T>({
+        t,
+        config,
+        canCreate,
+        canUpdate,
+        canDelete,
+        openDrawer,
+        start,
+        openDelete,
+        orderFromRequest,
+        purgeActions,
+      }),
     [
       canCreate,
       canDelete,

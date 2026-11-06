@@ -8,6 +8,8 @@ export interface BuildPurchaseOrderDrawerActionsParams {
   t: Translate;
   state: PurchaseOrderDrawerHook;
   onClose: () => void;
+  /** Hủy sửa: về chế độ xem (có xác nhận nếu đã đổi) */
+  onCancelEdit: () => void;
 }
 
 /** Nút chế độ xem: Đóng cùng các hành động chuyển trạng thái theo quyền và trạng thái */
@@ -61,11 +63,11 @@ const buildViewingActions = ({
 const buildEditingActions = ({
   t,
   state,
-  onClose,
+  onCancelEdit,
 }: BuildPurchaseOrderDrawerActionsParams): DrawerAction[] => {
   const cancel: DrawerAction = {
     label: t("v2.common.cancel", "Hủy"),
-    onClick: onClose,
+    onClick: onCancelEdit,
     variant: "outline",
     disabled: state.saving,
   };

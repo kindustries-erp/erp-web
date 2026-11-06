@@ -6,13 +6,11 @@ import type {
   ProcurementOrderFormValue,
 } from "../../../form/procurementOrder.form";
 import { ProcurementLinesEditor } from "../procurement-lines-editor/ProcurementLinesEditor";
-import { ProcurementOrderHeaderSection } from "./sections/ProcurementOrderHeaderSection";
 
 export interface ProcurementOrderMainSectionsProps {
   form: ProcurementOrderFormValue;
   errors: ProcurementOrderFormErrors;
   viewing: boolean;
-  branchLocked: boolean;
   setField: <K extends keyof ProcurementOrderFormValue>(
     key: K,
     value: ProcurementOrderFormValue[K],
@@ -25,12 +23,11 @@ const LINES_ERROR_KEY = {
   qty: "v2.procurement.errors.qty",
 } as const;
 
-/** Phần trái: thông tin đầu đơn và bảng dòng. */
+/** Phần trái của drawer đơn mua: bảng dòng hàng. Đầu đơn nằm ở cột phải. */
 export function ProcurementOrderMainSections({
   form,
   errors,
   viewing,
-  branchLocked,
   setField,
 }: ProcurementOrderMainSectionsProps) {
   const { t } = useV2Translation();
@@ -39,29 +36,19 @@ export function ProcurementOrderMainSections({
     : undefined;
 
   return (
-    <div className="space-y-3">
-      <ProcurementOrderHeaderSection
-        form={form}
-        errors={errors}
+    <DrawerSection
+      title={t("v2.procurement.sections.lines", "Dòng hàng")}
+      count={form.lines.length}
+    >
+      <ProcurementLinesEditor
+        lines={form.lines}
+        onChange={(lines: ProcurementLineFormValue[]) =>
+          setField("lines", lines)
+        }
         viewing={viewing}
-        branchLocked={branchLocked}
-        setField={setField}
+        priceLabel={t("v2.procurement.lines.price", "Đơn giá")}
+        errorText={linesError}
       />
-
-      <DrawerSection
-        title={t("v2.procurement.sections.lines", "Dòng hàng")}
-        count={form.lines.length}
-      >
-        <ProcurementLinesEditor
-          lines={form.lines}
-          onChange={(lines: ProcurementLineFormValue[]) =>
-            setField("lines", lines)
-          }
-          viewing={viewing}
-          priceLabel={t("v2.procurement.lines.price", "Đơn giá")}
-          errorText={linesError}
-        />
-      </DrawerSection>
-    </div>
+    </DrawerSection>
   );
 }

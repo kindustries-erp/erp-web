@@ -4,11 +4,14 @@ import { V2StandardDrawer } from "@/v2/shared/components";
 import type { V2TabItemData } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
+import { ProcurementDiscardModal } from "../../ProcurementDiscardModal";
+import { ProcurementStatusBadge } from "../../molecules/procurement-status-badge";
 import {
   useProcurementRequestDrawer,
   type ProcurementDrawerTabKey,
 } from "./ProcurementRequestDrawer.hook";
 import { ProcurementRequestMainSections } from "./ProcurementRequestMainSections";
+import { ProcurementRequestHeaderSection } from "./sections/ProcurementRequestHeaderSection";
 import { ProcurementRequestSummarySection } from "./sections/ProcurementRequestSummarySection";
 import { ProcurementRequestApprovalTab } from "./tabs/ProcurementRequestApprovalTab";
 import { ProcurementRequestRelatedTab } from "./tabs/ProcurementRequestRelatedTab";
@@ -20,7 +23,9 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
   const state = useProcurementRequestDrawer(props);
   const title = state.creating
     ? t("v2.procurement.drawer.createRequest", "Tạo đề nghị mua")
-    : t("v2.procurement.drawer.request", "Đề nghị mua");
+    : state.viewing
+      ? t("v2.procurement.drawer.request", "Đề nghị mua")
+      : t("v2.procurement.drawer.editRequest", "Sửa đề nghị mua");
 
   const tabs: V2TabItemData[] = React.useMemo(() => {
     if (state.creating) return [];
@@ -51,6 +56,7 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
     saving: state.saving,
     loading: state.loading,
     onClose: props.onClose,
+    onCancelEdit: state.cancelEdit,
     onSubmit: state.submit,
     onTransition: props.onTransition,
   });
@@ -62,10 +68,7 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
     <ProcurementRequestMainSections
       form={state.form}
       errors={state.errors}
-      headerViewing={state.headerViewing}
       linesViewing={state.linesViewing}
-      branchLocked={state.branchLocked}
-      detail={state.detail}
       setField={state.setField}
     />
   ) : state.tab === "audit" ? (
@@ -87,41 +90,63 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
   );
 
   return (
-    <V2StandardDrawer
-      id={`procurement-request-${props.documentId ?? "new"}`}
-      open={props.open}
-      onClose={props.onClose}
-      mode={state.viewing ? "view" : "edit"}
-      onToggleEdit={
-        !state.creating &&
-        state.editable &&
-        props.canUpdate &&
-        state.linesViewing
-          ? () => state.setMode("edit")
-          : undefined
-      }
-      title={title}
-      subtitle={state.detail?.requestNo}
-      layout={isGeneral ? "2-columns" : "1-column"}
-      size="xl"
-      loading={state.loading}
-      tabs={tabs.length ? tabs : undefined}
-      activeTabKey={state.tab}
-      onTabChange={(k) => state.setTab(k as ProcurementDrawerTabKey)}
-      actions={actions}
-      actionDropdownItems={
-        actionDropdownItems.length ? actionDropdownItems : undefined
-      }
-      actionDropdownTriggerLabel={t("v2.procurement.actions.more", "Thao tác")}
-      leftPanel={leftPanel}
-      rightPanel={
-        isGeneral ? (
-          <ProcurementRequestSummarySection
-            form={state.form}
-            detail={state.detail}
-          />
-        ) : undefined
-      }
-    />
+    <>
+      <V2StandardDrawer
+        id={`procurement-request-${props.documentId ?? "new"}`}
+        open={props.open}
+        onClose={props.onClose}
+        mode={state.viewing ? "view" : "edit"}
+        onToggleEdit={
+          !state.creating && state.editable && props.canUpdate && state.viewing
+            ? () => state.setMode("edit")
+            : undefined
+        }
+        confirmOnClose={state.dirty && !state.viewing}
+        title={title}
+        titleExtra={
+          state.detail ? (
+            <ProcurementStatusBadge value={state.status} t={t} />
+          ) : undefined
+        }
+        subtitle={state.detail?.requestNo}
+        layout={isGeneral ? "2-columns" : "1-column"}
+        size="xl"
+        loading={state.loading}
+        tabs={tabs.length ? tabs : undefined}
+        activeTabKey={state.tab}
+        onTabChange={(k) => state.setTab(k as ProcurementDrawerTabKey)}
+        actions={actions}
+        actionDropdownItems={
+          actionDropdownItems.length ? actionDropdownItems : undefined
+        }
+        actionDropdownTriggerLabel={t(
+          "v2.procurement.actions.more",
+          "Thao tác",
+        )}
+        leftPanel={leftPanel}
+        rightPanel={
+          isGeneral ? (
+            <div className="space-y-3">
+              <ProcurementRequestHeaderSection
+                form={state.form}
+                errors={state.errors}
+                headerViewing={state.headerViewing}
+                branchLocked={state.branchLocked}
+                setField={state.setField}
+              />
+              <ProcurementRequestSummarySection
+                form={state.form}
+                detail={state.detail}
+              />
+            </div>
+          ) : undefined
+        }
+      />
+      <ProcurementDiscardModal
+        open={state.discardOpen}
+        onCancel={state.closeDiscard}
+        onConfirm={state.confirmDiscard}
+      />
+    </>
   );
 }

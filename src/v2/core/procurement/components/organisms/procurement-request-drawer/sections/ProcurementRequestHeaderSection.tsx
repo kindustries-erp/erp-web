@@ -1,7 +1,7 @@
 import * as React from "react";
 import {
-  DrawerField,
   DrawerSection,
+  V2DrawerFieldGrid,
   V2ReadValue,
   V2Textarea,
   V2TextField,
@@ -36,7 +36,7 @@ interface HeaderFieldConfig {
   render: () => React.ReactNode;
 }
 
-/** Section thông tin đề nghị mua: chi nhánh, ngày đề nghị, ngày cần, nội dung, ghi chú (array config). */
+/** Section đầu đề đề nghị mua (cột phải): chi nhánh, ngày đề nghị, ngày cần, nội dung, ghi chú. */
 export function ProcurementRequestHeaderSection({
   form,
   errors,
@@ -125,19 +125,8 @@ export function ProcurementRequestHeaderSection({
     <DrawerSection
       title={t("v2.procurement.sections.header", "Thông tin đề nghị")}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
-        {fields.map((f) => (
-          <DrawerField
-            key={f.key}
-            label={f.label}
-            required={f.required}
-            error={f.error}
-            className={f.className}
-          >
-            {f.render()}
-          </DrawerField>
-        ))}
-      </div>
+      {/* Đầu đề nằm ở cột phải (một cột), giống phiếu nhập kho */}
+      <V2DrawerFieldGrid fields={fields} columns={1} />
     </DrawerSection>
   );
 }

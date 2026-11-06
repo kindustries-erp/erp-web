@@ -104,12 +104,18 @@ export function usePurchaseOrderDrawerData({
       .then(({ nextNo: no }) => setField("poNo", no));
   };
 
+  /** Bỏ thay đổi chưa lưu: đưa form về bản gốc */
+  const resetForm = () => setForm(initial);
+
   return {
     form,
     initial,
     setField,
+    resetForm,
     regenerateNo,
     creating,
     loading: detail.isFetching,
+    /** Đã có dữ liệu server; trước đó form mang status DRAFT mặc định, không được dùng để quyết định quyền sửa */
+    loaded: Boolean(detail.data),
   };
 }

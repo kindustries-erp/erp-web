@@ -30,6 +30,7 @@ export function useGoodsReceiptDrawer({
   const [mode, setMode] = React.useState(state.mode);
   const [errorField, setErrorField] =
     React.useState<GoodsReceiptFormField | null>(null);
+  const [discardOpen, setDiscardOpen] = React.useState(false);
 
   const data = useGoodsReceiptDrawerData({
     config,
@@ -46,11 +47,17 @@ export function useGoodsReceiptDrawer({
     }
   };
 
+  /** Lưu xong: phiếu cũ về chế độ xem; phiếu mới đóng drawer */
+  const handleSaved = () => {
+    if (creating) state.onClose();
+    else setMode("view");
+  };
+
   const { save, post, cancel } = useGoodsReceiptMutations({
     api: config.api,
     keys: config.keys,
     t,
-    onSaved: state.onClose,
+    onSaved: handleSaved,
     onPosted: onRefreshDetail,
     onCancelled: onRefreshDetail,
   });
@@ -88,15 +95,31 @@ export function useGoodsReceiptDrawer({
     if (state.recordId) cancel.mutate(state.recordId);
   };
 
-  const canEdit = state.canUpdate && form.status === GoodsReceiptStatus.DRAFT;
-  const canPost =
+  /** Hủy sửa: tạo mới thì đóng; phiếu cũ có thay đổi thì hỏi trước, rồi về chế độ xem */
+  const cancelEdit = () => {
+    if (creating) state.onClose();
+    else if (isGoodsReceiptFormDirty(form, initial)) setDiscardOpen(true);
+    else setMode("view");
+  };
+
+  const confirmDiscard = () => {
+    data.resetForm();
+    setErrorField(null);
+    setDiscardOpen(false);
+    setMode("view");
+  };
+
+  // Phiếu cũ: chỉ coi là nháp/đã ghi sổ khi đã tải xong; trước đó form còn status mặc định
+  const isLoadedRecord = Boolean(state.recordId) && data.loaded;
+  const canEdit =
     state.canUpdate &&
-    form.status === GoodsReceiptStatus.DRAFT &&
-    Boolean(state.recordId);
+    isLoadedRecord &&
+    form.status === GoodsReceiptStatus.DRAFT;
+  const canPost = canEdit;
   const canCancel =
     state.canUpdate &&
-    form.status === GoodsReceiptStatus.POSTED &&
-    Boolean(state.recordId);
+    isLoadedRecord &&
+    form.status === GoodsReceiptStatus.POSTED;
 
   return {
     form,
@@ -114,6 +137,10 @@ export function useGoodsReceiptDrawer({
     errorField,
     errorMessage,
     submit,
+    cancelEdit,
+    discardOpen,
+    closeDiscard: () => setDiscardOpen(false),
+    confirmDiscard,
     post: postRecord,
     cancel: cancelRecord,
     canEdit,

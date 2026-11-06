@@ -16,6 +16,7 @@ const dataState = vi.hoisted(() => ({
     regenerateNo: () => undefined,
     creating: false,
     loading: false,
+    loaded: true,
   },
 }));
 

@@ -104,12 +104,18 @@ export function useGoodsReceiptDrawerData({
       .then(({ nextCode: code }) => setField("receiptNo", code));
   };
 
+  /** Bỏ thay đổi chưa lưu: đưa form về bản gốc */
+  const resetForm = () => setForm(initial);
+
   return {
     form,
     initial,
     setField,
+    resetForm,
     regenerateCode,
     creating,
     loading: detail.isFetching,
+    /** Đã có dữ liệu server; trước đó form mang status DRAFT mặc định, không được dùng để quyết định quyền sửa */
+    loaded: Boolean(detail.data),
   };
 }

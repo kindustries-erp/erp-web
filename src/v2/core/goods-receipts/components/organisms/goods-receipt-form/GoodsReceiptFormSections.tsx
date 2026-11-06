@@ -1,4 +1,8 @@
-import { DrawerField, DrawerSection } from "@/v2/shared/components";
+import {
+  DrawerSection,
+  V2DrawerFieldGrid,
+  type V2DrawerFieldItem,
+} from "@/v2/shared/components";
 import {
   GoodsReceiptLinesTable,
   sumGoodsReceiptLineAmounts,
@@ -16,29 +20,21 @@ export function GoodsReceiptFormSections(props: FormSectionsProps) {
     setField("totalAmount", String(sumGoodsReceiptLineAmounts(newLines)));
   };
 
-  const gridClass =
-    columns === 1 ? "grid gap-3 grid-cols-1" : "grid gap-3 sm:grid-cols-2";
+  const fields: V2DrawerFieldItem[] = GOODS_RECEIPT_FIELD_META.map((meta) => ({
+    key: meta.key,
+    label: t(meta.labelKey, meta.defaultLabel),
+    required: meta.required,
+    error: props.errorField === meta.key ? props.errorMessage : undefined,
+    className: meta.className,
+    render: () => GOODS_RECEIPT_FIELD_RENDERERS[meta.key]?.(props),
+  }));
 
   return (
     <div className="space-y-4">
       <DrawerSection
         title={t("v2.goodsReceipts.form.identity", "Thông tin phiếu nhập")}
       >
-        <div className={gridClass}>
-          {GOODS_RECEIPT_FIELD_META.map((meta) => (
-            <DrawerField
-              key={meta.key}
-              label={t(meta.labelKey, meta.defaultLabel)}
-              required={meta.required}
-              error={
-                props.errorField === meta.key ? props.errorMessage : undefined
-              }
-              className={columns === 1 ? undefined : meta.className}
-            >
-              {GOODS_RECEIPT_FIELD_RENDERERS[meta.key]?.(props)}
-            </DrawerField>
-          ))}
-        </div>
+        <V2DrawerFieldGrid fields={fields} columns={columns} />
       </DrawerSection>
 
       {!hideLines && (

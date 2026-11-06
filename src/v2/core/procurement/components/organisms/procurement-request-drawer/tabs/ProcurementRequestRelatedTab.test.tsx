@@ -24,7 +24,7 @@ const mockDetail: ProcurementRequestDetail = {
 describe("ProcurementRequestRelatedTab", () => {
   it("render V2EmptyState khi detail là undefined", () => {
     render(<ProcurementRequestRelatedTab />);
-    expect(screen.getByText("Chưa có thông tin liên kết")).toBeDefined();
+    expect(screen.getByText("Chưa có chứng từ liên kết")).toBeDefined();
   });
 
   it("render thông tin tiến độ đặt hàng và DrawerRelatedDeck", () => {

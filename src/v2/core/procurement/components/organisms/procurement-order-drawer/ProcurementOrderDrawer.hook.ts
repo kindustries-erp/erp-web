@@ -13,6 +13,7 @@ import {
   type ProcurementOrderFormValue,
 } from "../../../form/procurementOrder.form";
 import { toOrderLinePayload } from "../../../form/procurementLine.form";
+import { isProcurementFormDirty } from "../../../form/procurementDirty";
 import type {
   ProcurementOrderDetail,
   ProcurementPoDraft,
@@ -26,7 +27,10 @@ import {
 } from "../../../procurement.toast";
 import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
 
-/** Trạng thái drawer PO: tải chi tiết, form, lưu. Sửa được khi đơn còn nháp. */
+/**
+ * Trạng thái drawer PO: tải chi tiết, form, lưu. Sửa được khi đơn còn nháp.
+ * Chế độ view/edit do `props.mode` quyết định lúc mở; list remount khi đổi mode (key).
+ */
 export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const { t } = useV2Translation();
   const queryClient = useQueryClient();
@@ -35,7 +39,11 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const [form, setForm] = React.useState<ProcurementOrderFormValue>(() =>
     emptyOrderForm(todayIsoDate()),
   );
+  const [initial, setInitial] = React.useState<ProcurementOrderFormValue>(
+    () => form,
+  );
   const [errors, setErrors] = React.useState<ProcurementOrderFormErrors>({});
+  const [discardOpen, setDiscardOpen] = React.useState(false);
 
   const detail = useQuery({
     queryKey: [props.queryKey, "detail", props.documentId],
@@ -62,25 +70,32 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
       Boolean(props.requestApi?.poDraft),
   });
 
-  React.useEffect(() => setMode(props.mode), [props.mode, props.open]);
-
   React.useEffect(() => {
     if (!props.open) return;
     setErrors({});
-    if (detail.data) setForm(orderFormFromDetail(detail.data));
-    else if (creating && fromRequest.data)
-      setForm(
-        orderFormFromRequestDraft(
-          fromRequest.data.request,
-          fromRequest.data.draft,
-        ),
+    if (detail.data) {
+      const next = orderFormFromDetail(detail.data);
+      setForm(next);
+      setInitial(next);
+    } else if (creating && fromRequest.data) {
+      const next = orderFormFromRequestDraft(
+        fromRequest.data.request,
+        fromRequest.data.draft,
       );
-    else if (creating) setForm(emptyOrderForm(todayIsoDate()));
+      setForm(next);
+      setInitial(next);
+    } else if (creating) {
+      const empty = emptyOrderForm(todayIsoDate());
+      setForm(empty);
+      setInitial(empty);
+    }
   }, [props.open, detail.data, creating, fromRequest.data]);
 
   const status = detail.data?.status ?? "DRAFT";
-  const editable = creating || status === "DRAFT";
+  // Chỉ sửa được khi đã tải xong và là nháp; trước khi tải, status mặc định không đáng tin
+  const editable = creating || (Boolean(detail.data) && status === "DRAFT");
   const viewing = !editable || mode === "view";
+  const dirty = isProcurementFormDirty(form, initial);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -90,12 +105,13 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
       await props.api.replaceLines(id, form.lines.map(toOrderLinePayload));
       return { id };
     },
-    onSuccess: () => {
+    onSuccess: ({ id }) => {
       showProcurementSuccess(
         t("v2.procurement.drawer.saved", "Đã lưu đơn mua"),
       );
       void queryClient.invalidateQueries({ queryKey: [props.queryKey] });
-      props.onClose();
+      if (props.onSaved) props.onSaved(id);
+      else props.onClose();
     },
     onError: (error) =>
       showProcurementError(
@@ -125,12 +141,27 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     save.mutate();
   };
 
+  /** Hủy sửa: tạo mới thì đóng; đơn cũ có thay đổi thì hỏi trước, rồi về chế độ xem. */
+  const cancelEdit = () => {
+    if (creating) props.onClose();
+    else if (dirty) setDiscardOpen(true);
+    else setMode("view");
+  };
+
+  const confirmDiscard = () => {
+    setForm(initial);
+    setErrors({});
+    setDiscardOpen(false);
+    setMode("view");
+  };
+
   return {
     form,
     setField,
     errors,
     creating,
     viewing,
+    dirty,
     branchLocked: !creating,
     editable,
     mode,
@@ -140,5 +171,9 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     loading: detail.isFetching || fromRequest.isFetching,
     saving: save.isPending,
     submit,
+    cancelEdit,
+    discardOpen,
+    closeDiscard: () => setDiscardOpen(false),
+    confirmDiscard,
   };
 }
