@@ -253,7 +253,7 @@ export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
 ```
 
 ### 4.5. `V2AppLayoutMobile` ([`V2AppLayout.mobile.tsx`](erp/erp-web/src/v2/app/layouts/v2-app-layout/V2AppLayout.mobile.tsx))
-- **Mobile Topbar**: Tích hợp `userMenuNode` (mở UserMenuPopover đầy đủ tính năng: hồ sơ, cài đặt, theme, ngôn ngữ, đăng xuất) và `notificationNode`. Kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
+- **Mobile Topbar**: Tích hợp `userMenuNode` (mở V2UserMenu / Bottom Sheet đầy đủ tính năng: hồ sơ, cài đặt, theme, ngôn ngữ, đăng xuất) và `notificationNode`. Kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
 - **Cài đặt Giao diện & Ngôn ngữ Nhanh (Catalog Modal)**: Tích hợp card Quick Settings ngay đầu modal danh mục cho phép đổi nhanh Sáng / Tối / Midnight và công tắc Ngôn ngữ thông qua props `currentTheme` và `onThemeChange`.
 - **Main Spacing**: Giảm padding lồng ghép từ 36px xuống `px-2 py-2.5 pb-20 sm:px-4 sm:py-4`, tương thích mượt mà với `PageLayout` (`px-2 sm:px-5`).
 - **Thanh Điều Hướng 6 Items Chuẩn**:
