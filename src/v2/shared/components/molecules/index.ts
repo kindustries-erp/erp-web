@@ -43,6 +43,7 @@ export * from "./v2-stat-card";
 export * from "./v2-search-input";
 export * from "./v2-combobox";
 export * from "./v2-multi-combobox";
+export * from "./v2-multi-select";
 export * from "./v2-date-picker";
 export * from "./v2-empty-state";
 export * from "./v2-file-upload";

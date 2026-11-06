@@ -89,13 +89,13 @@ export function MultiSelect({
                 <Badge
                   key={o.value}
                   variant="outline"
-                  className="max-w-full gap-1.5 border-[#d8e0ee] bg-[#f8fafc] px-2.5 py-1 text-[11px] font-semibold leading-[14px] text-foreground shadow-[0_1px_1px_rgba(15,23,42,0.04)]"
+                  className="max-w-full gap-1.5 border border-border bg-muted/60 dark:bg-muted/30 px-2.5 py-1 text-[11px] font-medium leading-[14px] text-foreground shadow-xs"
                 >
                   <span className="max-w-[220px] truncate">{o.label}</span>
                   <button
                     type="button"
                     onClick={(e) => removeTag(o.value, e)}
-                    className="rounded-full text-primary/70 hover:bg-primary/10 hover:text-red-500 transition-colors"
+                    className="rounded-full text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
                     aria-label={`Bỏ chọn ${o.label}`}
                   >
                     <X className="w-3 h-3" />

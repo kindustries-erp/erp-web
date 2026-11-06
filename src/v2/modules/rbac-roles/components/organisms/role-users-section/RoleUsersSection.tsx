@@ -1,5 +1,6 @@
-import { Badge } from "@/v2/shared/ui";
-import { MultiSelect } from "@/shared/components/MultiSelect";
+import { V2Badge, V2BadgeVariant } from "@/v2/shared/components/atoms/v2-badge";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2MultiSelect } from "@/v2/shared/components/molecules/v2-multi-select";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 
 export interface SystemUserOption {
@@ -35,10 +36,10 @@ export function RoleUsersSection({
       title={t("v2.rbacRoles.tabs.users", "Người dùng được gán vai trò")}
       titleExtra={
         selectedUserIds.length > 0 ? (
-          <span className="text-xs font-medium text-muted-foreground">
+          <V2Text variant="body-sm" color="muted" weight="medium">
             {selectedUserIds.length}{" "}
             {t("v2.rbacRoles.columns.users", "người dùng").toLowerCase()}
-          </span>
+          </V2Text>
         ) : undefined
       }
     >
@@ -50,25 +51,25 @@ export function RoleUsersSection({
             allUsers
               .filter((u) => selectedUserIds.includes(u.id))
               .map((u) => (
-                <Badge
+                <V2Badge
                   key={u.id}
-                  variant="secondary"
-                  className="px-2.5 py-0.5 text-xs font-normal"
+                  variant={V2BadgeVariant.OUTLINE}
+                  className="px-2.5 py-1 text-xs font-normal border-border bg-muted/60 dark:bg-muted/30 text-foreground"
                 >
                   {u.display}
-                </Badge>
+                </V2Badge>
               ))
           ) : (
-            <span className="text-xs text-muted-foreground italic">
+            <V2Text variant="body-sm" color="muted" className="italic">
               {t("v2.rbacRoles.users.empty", "Chưa có người dùng nào được gán")}
-            </span>
+            </V2Text>
           )}
         </div>
       ) : (
-        <MultiSelect
+        <V2MultiSelect
           options={userOptions}
           value={selectedUserIds}
-          onChange={onUsersChange}
+          onValueChange={onUsersChange}
           placeholder={t(
             "v2.rbacRoles.users.placeholder",
             "Chọn người dùng...",

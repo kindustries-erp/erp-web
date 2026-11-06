@@ -21,7 +21,7 @@ export function V2GroupHeader({
         return "inline-flex items-center gap-1.5 text-foreground shrink-0";
       case "badge":
       default:
-        return "inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-muted/80 dark:bg-muted/60 border border-border/70 text-foreground shadow-xs shrink-0";
+        return "inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-muted/80 dark:bg-muted/60 border border-border text-foreground shadow-xs shrink-0";
     }
   }, [variant]);
 

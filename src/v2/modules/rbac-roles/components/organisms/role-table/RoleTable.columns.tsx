@@ -1,4 +1,10 @@
-import { Badge } from "@/v2/shared/ui";
+import {
+  V2Badge,
+  V2BadgeVariant,
+  V2BadgeSize,
+} from "@/v2/shared/components/atoms/v2-badge";
+import { V2TableDateCell } from "@/v2/shared/components/atoms/v2-table-date-cell";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2TableText } from "@/v2/shared/components/molecules/v2-table-text";
 import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table";
 import { ColumnValueType, TableColumnAlign } from "@/v2/shared/types/v2-table";
@@ -43,9 +49,13 @@ export const buildRolesColumns = (
     mobileSlot: "subtitle",
     filter: { valueType: ColumnValueType.TEXT, showBlankOption: true },
     cell: (row) => (
-      <span className="block truncate text-muted-foreground">
+      <V2Text
+        variant="body-sm"
+        truncate
+        className="block text-muted-foreground"
+      >
         {value(row.description)}
-      </span>
+      </V2Text>
     ),
   },
   {
@@ -57,23 +67,31 @@ export const buildRolesColumns = (
     cell: (row) => {
       const list = formatUsers(row.users);
       if (!list || list.length === 0) {
-        return <span className="text-muted-foreground/60">—</span>;
+        return (
+          <V2Text variant="caption" className="text-muted-foreground/60">
+            —
+          </V2Text>
+        );
       }
       return (
         <div className="flex flex-wrap items-center gap-1 max-w-full overflow-hidden">
           {list.slice(0, 3).map((u) => (
-            <Badge
+            <V2Badge
               key={u.id || u.email}
-              variant="outline"
-              className="text-[11px] px-1.5 py-0 h-5 max-w-[130px] truncate"
+              variant={V2BadgeVariant.OUTLINE}
+              size={V2BadgeSize.SM}
+              className="font-normal text-[11px] px-1.5 py-0 h-5 max-w-[130px] truncate border-border text-foreground/80 dark:text-foreground/90 bg-muted/20 dark:bg-muted/10"
             >
               {u.email || u.id}
-            </Badge>
+            </V2Badge>
           ))}
           {list.length > 3 && (
-            <span className="text-[11px] text-muted-foreground">
+            <V2Text
+              variant="caption"
+              className="text-[11px] text-muted-foreground"
+            >
               +{list.length - 3}
-            </span>
+            </V2Text>
           )}
         </div>
       );
@@ -137,9 +155,6 @@ export const buildRolesColumns = (
     align: TableColumnAlign.RIGHT,
     mobileSlot: "hidden",
     filter: { valueType: ColumnValueType.DATE },
-    cell: (row) =>
-      row.createdAt
-        ? new Intl.DateTimeFormat("vi-VN").format(new Date(row.createdAt))
-        : "—",
+    cell: (row) => <V2TableDateCell date={row.createdAt} />,
   },
 ];

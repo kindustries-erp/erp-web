@@ -1,7 +1,8 @@
 import * as React from "react";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
-import { Badge } from "@/v2/shared/ui";
+import { V2Badge, V2BadgeVariant } from "@/v2/shared/components/atoms/v2-badge";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { RefreshCw, ShieldAlert } from "lucide-react";
 import type {
   PermissionMap,
@@ -45,16 +46,21 @@ export function RolePermissionsMatrix({
     <DrawerSection
       title={t("v2.rbacRoles.matrix.title", "Ma trận phân quyền & chức năng")}
       titleExtra={
-        <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5">
+        <V2Badge
+          variant={V2BadgeVariant.OUTLINE}
+          className="text-xs font-semibold px-2 py-0.5 border-border"
+        >
           {grantedCount}{" "}
           {t("v2.rbacRoles.matrix.grantedUnit", "quyền được cấp")}
-        </Badge>
+        </V2Badge>
       }
       bodyClassName="pt-1 px-1 sm:px-1.5"
     >
       {error && (
-        <div className="text-xs text-destructive rounded-lg px-3 py-2 border border-destructive/30 bg-destructive/10 mb-3">
-          {error}
+        <div className="rounded-lg px-3 py-2 border border-destructive/30 bg-destructive/10 mb-3">
+          <V2Text variant="body-sm" color="destructive">
+            {error}
+          </V2Text>
         </div>
       )}
 
@@ -68,17 +74,21 @@ export function RolePermissionsMatrix({
           ))}
         </div>
       ) : resources.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 px-4 text-center border border-dashed border-border/70 rounded-xl bg-muted/10">
+        <div className="flex flex-col items-center justify-center py-10 px-4 text-center border border-dashed border-border rounded-xl bg-muted/10">
           <ShieldAlert className="h-8 w-8 text-muted-foreground/60 mb-2" />
-          <p className="text-sm font-medium text-foreground mb-1">
+          <V2Text
+            variant="body"
+            weight="medium"
+            className="mb-1 text-foreground"
+          >
             {t("v2.rbacRoles.matrix.empty", "Chưa có danh sách tài nguyên")}
-          </p>
-          <p className="text-xs text-muted-foreground mb-4 max-w-sm">
+          </V2Text>
+          <V2Text variant="body-sm" color="muted" className="mb-4 max-w-sm">
             {t(
               "v2.rbacRoles.matrix.emptyDesc",
               "Hệ thống chưa tải được danh sách tài nguyên hoặc phân quyền hệ thống.",
             )}
-          </p>
+          </V2Text>
           {onReload && (
             <V2Button size="sm" variant="outline" onClick={onReload}>
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
