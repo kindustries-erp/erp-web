@@ -14,8 +14,23 @@ import {
 
 const sizeClasses: Record<V2HeroButtonSize, string> = {
   [V2HeroButtonSize.SM]: "h-11 w-11",
-  [V2HeroButtonSize.DEFAULT]: "h-[52px] w-[52px]",
-  [V2HeroButtonSize.LG]: "h-14 w-14",
+  [V2HeroButtonSize.MD]: "h-[52px] w-[52px]",
+  [V2HeroButtonSize.DEFAULT]: "h-[60px] w-[60px]",
+  [V2HeroButtonSize.LG]: "h-16 w-16",
+};
+
+const iconSizes: Record<V2HeroButtonSize, number> = {
+  [V2HeroButtonSize.SM]: 20,
+  [V2HeroButtonSize.MD]: 24,
+  [V2HeroButtonSize.DEFAULT]: 28,
+  [V2HeroButtonSize.LG]: 30,
+};
+
+const translateClasses: Record<V2HeroButtonSize, string> = {
+  [V2HeroButtonSize.SM]: "-translate-y-4",
+  [V2HeroButtonSize.MD]: "-translate-y-5",
+  [V2HeroButtonSize.DEFAULT]: "-translate-y-6",
+  [V2HeroButtonSize.LG]: "-translate-y-6",
 };
 
 export const V2BottomNavHeroButton: React.FC<V2BottomNavHeroButtonProps> = ({
@@ -28,12 +43,22 @@ export const V2BottomNavHeroButton: React.FC<V2BottomNavHeroButtonProps> = ({
   className,
   ...props
 }) => {
-  const resolvedSizeClass =
-    sizeClasses[size as V2HeroButtonSize] ??
-    sizeClasses[V2HeroButtonSize.DEFAULT];
+  const normalizedSize =
+    (size as V2HeroButtonSize) in sizeClasses
+      ? (size as V2HeroButtonSize)
+      : V2HeroButtonSize.DEFAULT;
+
+  const resolvedSizeClass = sizeClasses[normalizedSize];
+  const resolvedIconSize = iconSizes[normalizedSize];
+  const resolvedTranslateClass = translateClasses[normalizedSize];
 
   return (
-    <div className="relative flex flex-col items-center justify-center shrink-0 -translate-y-5 z-20">
+    <div
+      className={cn(
+        "relative flex flex-col items-center justify-center shrink-0 z-20",
+        resolvedTranslateClass,
+      )}
+    >
       <V2Button
         type="button"
         variant="default"
@@ -52,7 +77,7 @@ export const V2BottomNavHeroButton: React.FC<V2BottomNavHeroButtonProps> = ({
         <V2NavIcon
           icon={icon}
           isActive={isActive}
-          size={24}
+          size={resolvedIconSize}
           className="text-primary-fg"
         />
         <V2Text as="span" className="sr-only">
