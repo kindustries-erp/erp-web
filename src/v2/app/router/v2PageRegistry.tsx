@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
 import { V2AdminRouteId } from "@/v2/shared/types";
 import { GarageGoodsReceiptsPage } from "@/v2/modules/garage-goods-receipts"; // v2-module:garage-goods-receipts:imports
-import { GaragePurchaseOrdersPage } from "@/v2/modules/garage-purchase-orders";
+import { GarageProcurementOrdersPage } from "@/v2/modules/garage-procurement-orders";
+import { GarageProcurementRequestsPage } from "@/v2/modules/garage-procurement-requests";
 import { InvoiceShapePage } from "@/v2/modules/finance-invoice";
+import { BusinessPartnersCustomersPage } from "@/v2/modules/business-partners-customers"; // v2-module:business-partners-customers:imports
+import { BusinessPartnersSuppliersPage } from "@/v2/modules/business-partners-suppliers"; // v2-module:business-partners-suppliers:imports
+import { RolesPage } from "@/v2/modules/rbac-roles"; // v2-module:rbac-roles:imports
 // plop:v2-page-imports
-import { BusinessPartnersPage } from "@/v2/modules/business-partners";
 import { V2AdminDashboardPage } from "@/v2/modules/admin-dashboard";
 
 /**
@@ -13,11 +16,19 @@ import { V2AdminDashboardPage } from "@/v2/modules/admin-dashboard";
  */
 export const V2_PAGE_REGISTRY: Record<string, () => ReactNode> = {
   "garage-goods-receipts": () => <GarageGoodsReceiptsPage />,
-  "garage-purchase-orders": () => <GaragePurchaseOrdersPage />,
+  "garage-procurement-requests": () => <GarageProcurementRequestsPage />,
+  "garage-procurement-orders": () => <GarageProcurementOrdersPage />,
   // v2-module:garage-goods-receipts:pages
+  customers: () => <BusinessPartnersCustomersPage />,
+  // v2-module:business-partners-customers:pages
+  suppliers: () => <BusinessPartnersSuppliersPage />,
+  // v2-module:business-partners-suppliers:pages
+  permission: () => <RolesPage />,
+  "permission-v2": () => <RolesPage />,
+  "erp-permissions-core": () => <RolesPage />,
+  "erp-permissions-core-v2": () => <RolesPage />,
+  // v2-module:rbac-roles:pages
   // plop:v2-pages
   [V2AdminRouteId.DASHBOARD]: () => <V2AdminDashboardPage />,
-  customers: () => <BusinessPartnersPage partnerType="CUSTOMER" />,
-  suppliers: () => <BusinessPartnersPage partnerType="VENDOR" />,
   invoices: () => <InvoiceShapePage />,
 };

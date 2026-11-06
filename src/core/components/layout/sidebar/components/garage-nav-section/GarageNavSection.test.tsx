@@ -18,6 +18,8 @@ vi.mock("@/core/i18n", () => ({
       "nav.items.garageCashflow": "Thu chi garage",
       "nav.items.garageCases": "Hoạt động garage",
       "nav.items.garageGoodsReceipts": "Nhập kho Garage",
+      "nav.items.garageProcurementRequests": "Đề nghị mua hàng Garage",
+      "nav.items.garagePurchaseOrders": "Đơn mua hàng Garage",
       "nav.items.garageDebts": "Công nợ garage",
       "nav.items.garageOpex": "Chi phí vận hành Garage",
     };
@@ -49,17 +51,32 @@ describe("useGarageNavSection hook", () => {
 
   it("reads the purchase-orders permission on its own, not from garage cases", () => {
     vi.mocked(useHasPermission).mockImplementation(
-      (resource) => resource === ErpResource.GARAGE_PURCHASE_ORDERS,
+      (resource) => resource === ErpResource.GARAGE_PROCUREMENT_ORDERS,
     );
     const { result } = renderHook(() =>
       useGarageNavSection({
-        currentPage: "garage-purchase-orders",
+        currentPage: "garage-procurement-orders",
         navTo: mockNavTo,
       }),
     );
     expect(result.current.canReadGaragePurchaseOrders).toBe(true);
     expect(result.current.canReadGarageCases).toBe(false);
     expect(result.current.isPurchaseOrdersActive).toBe(true);
+  });
+
+  it("reads the procurement-requests permission on its own", () => {
+    vi.mocked(useHasPermission).mockImplementation(
+      (resource) => resource === ErpResource.GARAGE_PROCUREMENT_REQUESTS,
+    );
+    const { result } = renderHook(() =>
+      useGarageNavSection({
+        currentPage: "garage-procurement-requests",
+        navTo: mockNavTo,
+      }),
+    );
+    expect(result.current.canReadGarageProcurementRequests).toBe(true);
+    expect(result.current.canReadGarageCases).toBe(false);
+    expect(result.current.isProcurementRequestsActive).toBe(true);
   });
 
   it("handles active states for debts and partners sub-pages", () => {
@@ -123,6 +140,26 @@ describe("GarageNavSection component", () => {
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
   });
 
+  it("renders procurement-requests when user has GARAGE_PROCUREMENT_REQUESTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.GARAGE_PROCUREMENT_REQUESTS;
+    });
+
+    render(
+      <GarageNavSection
+        collapsed={false}
+        currentPage="garage-procurement-requests"
+        navTo={mockNavTo}
+      />,
+    );
+
+    expect(screen.getByText("GARAGE")).toBeInTheDocument();
+    expect(screen.getByText("Đề nghị mua hàng Garage")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Đề nghị mua hàng Garage"));
+    expect(mockNavTo).toHaveBeenCalledWith("garage-procurement-requests");
+  });
+
   it("renders only cashflow when user has only GARAGE_CASHFLOW permission", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       return resource === ErpResource.GARAGE_CASHFLOW;
@@ -164,6 +201,26 @@ describe("GarageNavSection component", () => {
     expect(screen.queryByText("Hoạt động garage")).toBeNull();
     expect(screen.getByText("Công nợ garage")).toBeInTheDocument();
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
+  });
+
+  it("renders procurement-requests when user has GARAGE_PROCUREMENT_REQUESTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.GARAGE_PROCUREMENT_REQUESTS;
+    });
+
+    render(
+      <GarageNavSection
+        collapsed={false}
+        currentPage="garage-procurement-requests"
+        navTo={mockNavTo}
+      />,
+    );
+
+    expect(screen.getByText("GARAGE")).toBeInTheDocument();
+    expect(screen.getByText("Đề nghị mua hàng Garage")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Đề nghị mua hàng Garage"));
+    expect(mockNavTo).toHaveBeenCalledWith("garage-procurement-requests");
   });
 
   it("renders 4 flat nav items with Thu chi garage positioned below Hoạt động garage", () => {

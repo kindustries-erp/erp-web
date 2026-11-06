@@ -24,7 +24,11 @@ export function useGarageNavSection({
   const canReadGarageOpex = canReadGarageCases;
   // Menu PO garage chỉ dựa vào quyền của chính nó (không fallback sang garage)
   const canReadGaragePurchaseOrders = useHasPermission(
-    ErpResource.GARAGE_PURCHASE_ORDERS,
+    ErpResource.GARAGE_PROCUREMENT_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadGarageProcurementRequests = useHasPermission(
+    ErpResource.GARAGE_PROCUREMENT_REQUESTS,
     ErpAction.READ,
   );
 
@@ -35,7 +39,10 @@ export function useGarageNavSection({
 
   const isGoodsReceiptsActive = currentPage === "garage-goods-receipts";
 
-  const isPurchaseOrdersActive = currentPage === "garage-purchase-orders";
+  const isProcurementRequestsActive =
+    currentPage === "garage-procurement-requests";
+
+  const isPurchaseOrdersActive = currentPage === "garage-procurement-orders";
 
   const isDebtsActive =
     currentPage === "garage-debts" ||
@@ -47,7 +54,9 @@ export function useGarageNavSection({
   const handleNavCashflow = () => navTo("garage-cashflow");
   const handleNavCases = () => navTo("garage-cases");
   const handleNavGoodsReceipts = () => navTo("garage-goods-receipts");
-  const handleNavPurchaseOrders = () => navTo("garage-purchase-orders");
+  const handleNavProcurementRequests = () =>
+    navTo("garage-procurement-requests");
+  const handleNavPurchaseOrders = () => navTo("garage-procurement-orders");
   const handleNavDebts = () => navTo("garage-debts");
   const handleNavOpex = () => navTo("garage-opex");
 
@@ -55,18 +64,21 @@ export function useGarageNavSection({
     canReadGarageCashflow,
     canReadGarageCases,
     canReadGarageGoodsReceipts,
+    canReadGarageProcurementRequests,
     canReadGaragePurchaseOrders,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
     isGoodsReceiptsActive,
+    isProcurementRequestsActive,
     isPurchaseOrdersActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
     handleNavGoodsReceipts,
+    handleNavProcurementRequests,
     handleNavPurchaseOrders,
     handleNavDebts,
     handleNavOpex,

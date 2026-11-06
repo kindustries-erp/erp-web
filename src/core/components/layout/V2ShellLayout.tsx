@@ -176,7 +176,17 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.garage", "Garage") },
           { label: t("nav.items.garageGoodsReceipts", "Nhập kho Garage") },
         ];
-      case "garage-purchase-orders":
+      case "garage-procurement-requests":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          {
+            label: t(
+              "nav.items.garageProcurementRequests",
+              "Đề nghị mua hàng Garage",
+            ),
+          },
+        ];
+      case "garage-procurement-orders":
         return [
           { label: t("nav.sections.garage", "Garage") },
           { label: t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage") },
@@ -230,6 +240,22 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         return [
           { label: t("nav.sections.settings", "Thiết lập") },
           { label: t("nav.items.sysTags", "Tags") },
+        ];
+      case "permission":
+      case "erp-permissions-core":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("breadcrumb.phanquyen", "Phân quyền & Vai trò") },
+        ];
+      case "erp-users":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("breadcrumb.users", "Quản lý người dùng") },
+        ];
+      case "erp-activity-logs":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("breadcrumb.activitylog", "Nhật ký hoạt động") },
         ];
       default:
         return [

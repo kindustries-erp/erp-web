@@ -89,7 +89,7 @@ describe("V2AppLayout Switcher", () => {
     expect(screen.queryByText("Quay lại ERP V1")).not.toBeInTheDocument();
   });
 
-  it("hiển thị chính xác 5 menu items ở bottom nav (2-Bubble-2) và cho phép tùy chỉnh", () => {
+  it("hiển thị chính xác 7 menu items ở bottom nav (3-Bubble-3) và cho phép tùy chỉnh", () => {
     Object.defineProperty(window, "innerWidth", {
       writable: true,
       configurable: true,
@@ -105,7 +105,7 @@ describe("V2AppLayout Switcher", () => {
 
     const bottomNav = screen.getByTestId("v2-bottom-nav");
     const navButtons = bottomNav.querySelectorAll("button");
-    expect(navButtons.length).toBe(5);
+    expect(navButtons.length).toBe(7);
 
     const heroBtn = screen.getByTestId("bottom-nav-hero-button");
     expect(heroBtn).toBeInTheDocument();
@@ -119,14 +119,14 @@ describe("V2AppLayout Switcher", () => {
     const editBtn = screen.getByText("Sửa");
     fireEvent.click(editBtn);
 
-    // Đang có 4/4 mục. Tìm một mục chưa được chọn và click -> Bị chặn và hiện thông báo
+    // Đang có 6/6 mục. Tìm một mục chưa được chọn và click -> Bị chặn và hiện thông báo
     const customerBtn = screen.queryByRole("button", { name: /Khách hàng/i });
     if (customerBtn) {
       fireEvent.click(customerBtn);
       // Hiển thị thông báo giới hạn
       expect(screen.getByTestId("limit-warning-banner")).toBeInTheDocument();
       expect(
-        screen.getByText(/Đã chọn đủ 4\/4 mục lối tắt/i),
+        screen.getByText(/Đã chọn đủ 6\/6 mục lối tắt/i),
       ).toBeInTheDocument();
     }
 

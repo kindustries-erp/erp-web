@@ -1,4 +1,5 @@
 import {
+  V2ConfirmModal,
   V2StandardDrawer,
   V2DrawerLayout,
   V2DrawerSize,
@@ -59,6 +60,7 @@ export function PurchaseOrderDrawer({
           t,
           state,
           onClose: props.onClose,
+          onCancelEdit: state.cancelEdit,
         })}
         rightPanel={
           <PurchaseOrderFormSections
@@ -86,6 +88,22 @@ export function PurchaseOrderDrawer({
         loading={state.cancelling}
         onConfirm={state.confirmCancel}
         onClose={() => state.setCancelOpen(false)}
+      />
+      <V2ConfirmModal
+        open={state.discardOpen}
+        title={t("v2.purchaseOrders.discard.title", "Bỏ thay đổi?")}
+        message={t(
+          "v2.purchaseOrders.discard.message",
+          "Các thay đổi chưa lưu sẽ bị bỏ. Bạn có chắc không?",
+        )}
+        confirmLabel={t("v2.purchaseOrders.discard.confirm", "Bỏ thay đổi")}
+        cancelLabel={t("v2.common.cancel", "Hủy")}
+        variant="danger"
+        className="z-[700]"
+        overlayClassName="z-[699]"
+        onConfirm={state.confirmDiscard}
+        onCancel={() => state.closeDiscard()}
+        onOpenChange={(next) => !next && state.closeDiscard()}
       />
     </>
   );

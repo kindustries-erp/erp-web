@@ -30,6 +30,7 @@ import {
   Receipt,
   ReceiptText,
   ShoppingCart,
+  ClipboardList,
   Sliders,
 } from "lucide-react";
 
@@ -113,13 +114,18 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
     canReadGarageCases;
   const canReadGaragePurchaseOrders = useHasPermission(
-    ErpResource.GARAGE_PURCHASE_ORDERS,
+    ErpResource.GARAGE_PROCUREMENT_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadGarageProcurementRequests = useHasPermission(
+    ErpResource.GARAGE_PROCUREMENT_REQUESTS,
     ErpAction.READ,
   );
   const showGarage =
     canReadGarageCases ||
-    canReadGarageGoodsReceipts ||
+    canReadGarageProcurementRequests ||
     canReadGaragePurchaseOrders ||
+    canReadGarageGoodsReceipts ||
     canReadGarageCashflow ||
     canReadGarageDebts ||
     canReadGarageOpex;
@@ -381,12 +387,23 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/garage-cases",
         });
       }
+      if (canReadGarageProcurementRequests) {
+        items.push({
+          id: "garage-procurement-requests",
+          label: t(
+            "nav.items.garageProcurementRequests",
+            "Đề nghị mua hàng Garage",
+          ),
+          icon: ClipboardList,
+          href: "/garage-procurement-requests",
+        });
+      }
       if (canReadGaragePurchaseOrders) {
         items.push({
-          id: "garage-purchase-orders",
+          id: "garage-procurement-orders",
           label: t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage"),
           icon: ShoppingCart,
-          href: "/garage-purchase-orders",
+          href: "/garage-procurement-orders",
         });
       }
       if (canReadGarageGoodsReceipts) {
@@ -555,10 +572,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/erp-users",
         });
         accessChildren.push({
-          id: "erp-permissions-core",
+          id: "permission",
           label: t("nav.items.phanquyen", "Phân quyền & Vai trò"),
           icon: Shield,
-          href: "/erp-permissions-core",
+          href: "/permission",
         });
       }
       if (canReadActivityLogs) {

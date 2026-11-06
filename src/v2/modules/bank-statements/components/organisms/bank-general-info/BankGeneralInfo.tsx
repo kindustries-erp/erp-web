@@ -7,7 +7,7 @@ import {
   V2Textarea,
 } from "@/v2/shared/components";
 import { formatDateTimeParts } from "@/v2/shared/components/atoms/v2-table-date-cell/v2TableDate";
-import { BusinessPartnerPicker } from "@/v2/modules/business-partners/components/organisms/business-partner-picker";
+import { BusinessPartnerPicker } from "@/v2/core/business-partners";
 import { CashClassificationFields } from "../../molecules/cash-classification-fields";
 import type { BankGeneralInfoProps } from "./BankGeneralInfo.type";
 

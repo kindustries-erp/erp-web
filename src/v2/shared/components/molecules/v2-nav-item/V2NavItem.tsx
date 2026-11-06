@@ -17,6 +17,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
   label,
   icon,
   isActive = false,
+  showLabel = true,
   badgeCount,
   variant = V2NavItemVariant.SIDEBAR,
   indicator = V2NavIndicator.PILL,
@@ -35,13 +36,18 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         onClick={onClick}
         aria-label={label}
         className={cn(
-          "group relative h-auto flex flex-col items-center justify-center py-1.5 px-1 text-xs font-medium transition-all duration-150 select-none rounded-lg hover:bg-transparent min-w-0 max-w-[64px] w-full mx-auto active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus:bg-transparent shadow-none",
+          "group relative flex items-center justify-center transition-all duration-150 select-none hover:bg-transparent mx-auto active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus:bg-transparent shadow-none",
+          showLabel
+            ? "h-auto flex-col py-1.5 px-1 text-xs font-medium rounded-lg min-w-0 max-w-[64px] w-full"
+            : "h-10 w-10 p-0 rounded-xl",
           isActive
             ? "text-foreground font-semibold"
             : "text-muted-fg hover:text-foreground",
           indicator === V2NavIndicator.PILL &&
             isActive &&
-            "bg-foreground/5 dark:bg-white/10 text-foreground",
+            (showLabel
+              ? "bg-foreground/5 dark:bg-white/10 text-foreground"
+              : "bg-foreground/10 dark:bg-white/15 text-foreground"),
           className,
         )}
         {...props}
@@ -50,7 +56,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           <V2NavIcon
             icon={icon}
             isActive={isActive}
-            size={18}
+            size={showLabel ? 18 : 22}
             className={cn(
               "transition-transform duration-200",
               isActive && "text-foreground",
@@ -68,9 +74,11 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
         <V2Text
           as="span"
           variant="caption"
-          truncate
+          truncate={showLabel}
           className={cn(
-            "mt-0.5 max-w-[62px] text-[10px] leading-tight text-inherit font-inherit transition-colors text-center tracking-tight",
+            !showLabel && "sr-only",
+            showLabel &&
+              "mt-0.5 max-w-[62px] text-[10px] leading-tight text-inherit font-inherit transition-colors text-center tracking-tight",
             isActive ? "font-semibold text-foreground" : "font-normal",
           )}
         >
@@ -80,7 +88,10 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           <span
             data-testid="bottom-nav-dot"
             aria-hidden="true"
-            className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary shadow-xs transition-transform duration-200"
+            className={cn(
+              "absolute left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-primary shadow-xs transition-transform duration-200",
+              showLabel ? "bottom-0.5" : "bottom-1",
+            )}
           />
         )}
       </V2Button>

@@ -1,6 +1,6 @@
 ---
 name: erp-web-structure
-description: Playbook cấu trúc UI của erp-web (React/Vite) - chuẩn Atomic Design 5 tầng, quy tắc import, folder-per-component, co-located test, giới hạn 180 dòng, i18n, No Blue, quy trình migrate module V1 sang V2 (src/v2/, dual-run /v2/, generator plop), và cửa vào cho Table và Drawer (chọn skill standardize-table hoặc standardize-drawer). Dùng khi tạo mới, tách file lớn, chuẩn hóa component, làm bảng hoặc drawer, hoặc migrate V2 trong erp-web. Nạp erp-web-truth trước.
+description: Playbook cấu trúc UI của erp-web (React/Vite) - chuẩn Atomic Design 5 tầng, quy tắc import, folder-per-component, co-located test, giới hạn 180 dòng, i18n, No Blue, Mobile-First chuẩn công thái học di động, quy trình migrate module V1 sang V2 (src/v2/, dual-run /v2/, generator plop), và cửa vào cho Table và Drawer (chọn skill standardize-table hoặc standardize-drawer). Dùng khi tạo mới, tách file lớn, chuẩn hóa component, làm bảng hoặc drawer, hoặc migrate V2 trong erp-web. Nạp erp-web-truth trước.
 ---
 
 # ERP Web — Structure & Refactor
@@ -39,7 +39,7 @@ Quy tắc:
 - **Màu**: không dùng `blue-*`. Dùng token ngữ cảnh (bảng token và màu raw được chấp nhận: `erp-web-truth/references/ui-shell-and-theme.md` mục 4).
 - **Zustand**: đọc state bằng selector riêng lẻ (`useXStore((s) => s.field)`). Tránh `const { a, b } = useXStore()` vì component render lại theo cả store.
 - **A11y**: control, overlay và field lỗi theo mục A11y trong checklist `references/atomic-ui.md`.
-- **Responsive**: dùng layout responsive. Tách `*.desktop.tsx` / `*.mobile.tsx` chỉ khi UX thực sự khác, và phải chốt với user trước.
+- **Mobile-First & Responsive**: thiết kế và viết CSS Mobile-First (style gốc cho mobile, mở rộng bằng `sm:`, `md:`, `lg:`). Touch target $\ge 44\text{px}$, input font $\ge 16\text{px}$ chống iOS Safari zoom, bọc safe-area insets. Tách `*.desktop.tsx` / `*.mobile.tsx` (Platform Split) khi UX khác biệt căn bản (App Layout, Drawer Bottom Sheet, Table vs Card List) qua Switcher `< 15 LoC`.
 - **Storybook**: component trong `shared/` nên có `*.stories.tsx`.
 - **Enum nhập liệu**: key field và option dùng chung khai báo bằng `enum` (một nguồn, nhãn qua `t()`), tái sử dụng giữa form, bảng và filter. Xem `ui-structure` Phần D.
 
@@ -82,6 +82,7 @@ Module mẫu đã hoàn chỉnh: `src/v2/modules/business-partners/`.
 - [ ] `bun run test` (hoặc scope liên quan) pass. Ghi rõ scope.
 - [ ] Không có file vượt 180 dòng trong phạm vi đã đổi (trừ V1 cũ không được chạm).
 - [ ] Không có chuỗi hardcode, không có `blue-*`, không import V1 từ V2.
+- [ ] Tuân thủ Mobile-First: touch targets $\ge 44\text{px}$, input font $\ge 16\text{px}$ trên mobile, không tràn ngang layout.
 - [ ] Route và luồng gọi API khớp contract thật của backend.
 - [ ] Đã kiểm trên cả light và dark khi đụng token.
 

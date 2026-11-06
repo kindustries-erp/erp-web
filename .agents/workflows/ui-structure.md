@@ -1,5 +1,5 @@
 ---
-description: Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (< 180 LoC, co-located testing, No Blue, i18n VI/EN). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate). Phần C là cửa vào cho Table và Drawer (chọn skill và workflow chi tiết)
+description: Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (< 180 LoC, co-located testing, No Blue, i18n VI/EN, Mobile-First chuẩn công thái học). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate). Phần C là cửa vào cho Table và Drawer (chọn skill và workflow chi tiết)
 ---
 
 # 🏗️ ERP Web Structure Workflow (`/ui-structure`)
@@ -16,20 +16,26 @@ Workflow này hướng dẫn Developer và Agent quy trình chuẩn 5 giai đo�
 
 ---
 
-### 🎯 4 Nguyên Tắc Sống Còn (Core Directives)
+### 🎯 5 Nguyên Tắc Sống Còn (Core Directives)
 
 ```mermaid
 graph LR
     A["1. Layer Identification"] --> B["2. Folder Scaffolding"]
     B --> C["3. Unidirectional Import"]
     C --> D["4. Size Bound < 180 LoC"]
-    D --> E["5. Zero-Miss Quality Gate"]
+    D --> E["5. Mobile-First Ergonomics"]
+    E --> F["6. Zero-Miss Quality Gate"]
 ```
 
 1. **Phân Tầng Tuyệt Đối**: Mọi UI component phải thuộc chính xác 1 trong 5 tầng (`Atoms`, `Molecules`, `Organisms`, `Templates`, `Pages`). Không có component "vô thừa nhận" hoặc dồn đống trong `shared`.
 2. **Import Một Chiều (Top-Down)**: `Templates > Organisms > Molecules > Atoms`. Tầng cao import tầng thấp. **CẤM** import ngược dòng. **CẤM** import ngang hàng cùng cấp trong cùng một scope.
 3. **Folder-per-Component (`kebab-case`)**: Mỗi component có 1 thư mục riêng, file chính `PascalCase.tsx`, các file vệ tinh chuẩn số ít (`.hook.ts`, `.state.ts`, `.type.ts`, `.schema.ts`, `.helper.ts`, `.test.tsx`, `index.ts`).
 4. **Giới Hạn Cứng < 180 LoC & Co-located Test**: Không file nào vượt quá 180 dòng. Test nằm ngay bên cạnh component (co-located).
+5. **Tư Duy Mobile-First & Chuẩn Công Thái Học Di Động**: 
+   - **Mobile-First CSS**: Style mặc định viết cho Mobile trước (`w-full`, layout cột đơn `flex-col`, khoảng cách chạm rộng), sau đó mở rộng dần bằng `sm:`, `md:`, `lg:` cho Desktop. Tuyệt đối không viết Desktop-first rồi override ngược bằng `max-*`.
+   - **Touch Target $\ge 44 \times 44\text{px}$**: Mọi button, icon-button, tab, checkbox touch container phải đạt kích thước chạm tối thiểu $44\text{px}$.
+   - **Chống Auto-Zoom trên iOS**: Font-size của `<input>`, `<select>`, `<textarea>` trên mobile phải $\ge 16\text{px}$ (`text-base sm:text-sm`).
+   - **Safe Area Insets**: Luôn tính đến tai thỏ và thanh home indicator (`pb-[calc(env(safe-area-inset-bottom)+0.75rem)]`).
 
 ---
 
@@ -63,6 +69,29 @@ Component của bạn thuộc nhóm nào?
 │
 └── 6. Không chứa JSX (Types, Constants, Shared Hooks, Utility Functions)?
     └── 👉 NON-UI FOUNDATIONS (@/shared/types, constants, hooks, utils hoặc module-level)
+```
+
+##### 📱 Cây Quyết Định Chiến Lược Hiển Thị Mobile (Responsive vs Platform Split):
+
+```
+Khi triển khai giao diện Mobile:
+├── 1. Là Atoms & Molecules (Button, Input, Badge, Combobox, FilterChips, TableCell)?
+│   └── 👉 100% Mobile-First Responsive: 1 file TSX duy nhất, dùng Tailwind breakpoints (sm:, md:), KHÔNG tách file .mobile.tsx.
+│
+├── 2. Là Form Section, Form Grid, Modals, Card Items đơn giản?
+│   └── 👉 Mobile-First Responsive: 1 file TSX (grid-cols-1 sm:grid-cols-2, gap-3 sm:gap-4).
+│
+└── 3. Là Khối Phức Hợp Lớn / Layout Trang (Organisms L3, Templates L4, Pages L5)?
+    ├── Luồng dữ liệu và cấu trúc DOM Mobile tương đồng > 80% với Desktop?
+    │   └── 👉 Mobile-First Responsive: 1 file TSX, dùng flex-col md:flex-row, overflow-x-auto cho bảng/tabs.
+    └── Cấu trúc DOM và luồng trải nghiệm hoàn toàn khác biệt:
+        ├── Layout chính (Sidebar Desktop vs Bottom Nav Mobile)?
+        ├── Bảng dữ liệu lớn (Spreadsheet Table nhiều cột Desktop vs Infinite Card List vuốt chạm Mobile)?
+        └── Drawer/Chi tiết (Slide-over 65vw từ phải Desktop vs Bottom Sheet 85vh kéo từ đáy Mobile)?
+        └── 👉 BẮT BUỘC PLATFORM SPLIT:
+            ├── [Name].tsx          # Switcher (< 15 LoC, useViewport)
+            ├── [Name].desktop.tsx  # Desktop variant
+            └── [Name].mobile.tsx   # Mobile variant (touch, safe-area, bottom action bar)
 ```
 
 ---
@@ -161,11 +190,17 @@ wc -l src/modules/[target-module]/components/*/*/*
 # 4. Quét vi phạm import ngược dòng (Organisms import Templates)
 grep -rn "templates/" src/modules/[target-module]/components/organisms/
 
-# 5. Chạy Type Check & Co-located Tests
+# 5. Quét vi phạm Mobile-First: Input font nhỏ (< 16px) gây auto-zoom trên iOS
+grep -rnE "<(input|textarea|select)[^>]*className=[\"'][^\"']*text-xs" src/modules/[target-module]/
+
+# 6. Quét vi phạm Mobile-First: Hardcoded fixed width lớn gây vỡ màn hình mobile
+grep -rnE "w-\[[4-9][0-9]{2,}px\]" src/modules/[target-module]/components/
+
+# 7. Chạy Type Check & Co-located Tests
 bun run type:check
 bun run test src/modules/[target-module]/components/
 
-# 6. Kiểm tra Storybook Build (nếu thuộc shared/v2)
+# 8. Kiểm tra Storybook Build (nếu thuộc shared/v2)
 bun run build-storybook
 ```
 
@@ -208,6 +243,12 @@ Quy tắc:
 - [ ] **i18n 100%**: Tất cả user-facing text bọc trong `t(...)` có fallback tiếng Việt và đồng bộ VI/EN.
 - [ ] **Co-located Stories**: Có file `[ComponentName].stories.tsx` đối với shared/v2 components, render độc lập không phụ thuộc V1.
 - [ ] **Co-located Test**: File `[ComponentName].test.tsx` nằm trực tiếp cùng cấp trong folder.
+- [ ] **Mobile-First CSS & Ergonomics**:
+  - [ ] Style mặc định viết cho Mobile trước (`w-full`, layout cột), mở rộng dần qua `sm:`, `md:`, `lg:`.
+  - [ ] Touch target tối thiểu $\ge 44 \times 44\text{px}$ cho tất cả button, action icon, interactive controls.
+  - [ ] Form input/select/textarea có font-size $\ge 16\text{px}$ trên mobile (`text-base sm:text-sm`) chống iOS Safari auto-zoom.
+  - [ ] Không có layout tràn viền ngang (`w-[...px]` lớn); container cuộn ngang có `overflow-x-auto`.
+  - [ ] Xử lý Safe Area insets (`env(safe-area-inset-bottom)`) cho sticky footer / bottom action bar.
 - [ ] **Type Check & Test Pass**: `bun run type:check` 0 lỗi, unit test pass 100% và `bun run build-storybook` thành công.
 
 
@@ -241,10 +282,11 @@ graph TD
    - Mọi Shared Component trong `src/v2/shared/components/` và `src/v2/shared/ui/` bắt buộc phải có file Storybook co-located: `[ComponentName].stories.tsx`.
    - **Hệ thống Theme V2 độc lập**: Cấu hình theme riêng biệt tại `src/v2/shared/styles/` (`v2-theme.css`, `index.css`) và `src/v2/shared/theme/` (`applyV2Theme`, 4 themes: `Default`, `Classic`, `OrcaQ`, `Midnight`), không phụ thuộc theme V1.
    - **Storybook Scope Cô Lập Tuyệt Đối**: `.storybook/main.ts` chỉ quét `src/v2/**/*.stories.*`, `.storybook/preview.tsx` chỉ import `@/v2/shared/styles/index.css`. Storybook kết nối độc lập với V2 Theme Toolbar và V2 Locale Toolbar.
-4. **Platform Split (Desktop vs Mobile) Phân Cấp Cây Giao Diện**:
-   - Tách rời giao diện bằng component tree độc lập: `[Name].desktop.tsx` và `[Name].mobile.tsx`.
+4. **Platform Split (Desktop vs Mobile) & Chuẩn Công Thái Học Di Động**:
+   - Tách rời giao diện bằng component tree độc lập: `[Name].desktop.tsx` và `[Name].mobile.tsx` khi UX khác biệt căn bản.
    - File entry `[Name].tsx` là **Switcher thuần túy (< 15 LoC)**, dùng `useViewport()` hook để render variant tương ứng.
-   - **Bắt buộc áp dụng**: Layouts, Drawers (Desktop: Slide từ phải 65vw; Mobile: Bottom Sheet), Modals, Pages có trải nghiệm khác biệt.
+   - **Bắt buộc áp dụng**: Layouts (Sidebar vs Bottom Nav), Drawers (Desktop: Slide từ phải 65vw; Mobile: Bottom Sheet 85vh kéo từ đáy), Tables (Spreadsheet Table vs Infinite Card List), Modals/Pages có trải nghiệm khác biệt.
+   - **Tuân thủ chuẩn Mobile-First Ergonomics**: Touch target $\ge 44\text{px}$, font input $\ge 16\text{px}$ chống iOS zoom, bọc safe-area insets (`env(safe-area-inset-bottom)`).
 5. **Testing Pyramid 3 Tầng Toàn Diện**:
    - **Unit Tests**: Co-located ngay cạnh source file (`[Name].test.ts` / `[Name].test.tsx`). Test pure business rules trong `domain/rules/`, test component state, test hooks.
    - **Integration Tests**: Đặt tại `src/v2/modules/<name>/tests/integration/` nhằm test tương tác Form -> Validate -> Mutation -> Table Refresh.
@@ -447,6 +489,7 @@ src/v2/
    - Hiển thị bảng dạng Spreadsheet/Data Table nhiều cột, sticky headers, top action bar, drawer từ phải (65vw).
 3. **Mobile Variant (`*.mobile.tsx`)**:
    - Hiển thị danh sách thẻ card vuốt chạm, scroll pagination, bottom sticky action bar, bottom sheet kéo từ dưới lên.
+   - Bắt buộc tuân thủ: Touch target $\ge 44\text{px}$, padding đáy an toàn `pb-[calc(env(safe-area-inset-bottom)+1rem)]`, input font `text-base sm:text-sm` chống iOS auto-zoom, nút hành động chính ghim tại bottom bar để thao tác bằng ngón cái.
 4. **Co-located Testing**:
    - Viết unit test cho component Desktop và Mobile tương ứng.
 
@@ -460,6 +503,12 @@ grep -rn "blue-" src/v2/modules/[target-module]/
 # 1b. Không import V1 (chỉ authStore được phép) và mọi key dịch có tiền tố v2.
 grep -rnE "from \"@/(core|shared|modules|pages|components)/" src/v2/modules/[target-module] --include="*.ts" --include="*.tsx" | grep -vE "\.test\.|\.stories\.|authStore"
 grep -rnP "\bt\(\s*\"(?!v2\.)[a-zA-Z]+\.[A-Za-z.]+\"" src/v2/modules/[target-module] --include="*.ts" --include="*.tsx"
+
+# 1c. Quét vi phạm Mobile-First: Input font nhỏ (< 16px) gây auto-zoom trên iOS
+grep -rnE "<(input|textarea|select)[^>]*className=[\"'][^\"']*text-xs" src/v2/modules/[target-module]/
+
+# 1d. Quét vi phạm Mobile-First: Hardcoded fixed width lớn gây vỡ màn hình mobile
+grep -rnE "w-\[[4-9][0-9]{2,}px\]" src/v2/modules/[target-module]/components/
 
 # 2. Quét vi phạm kích thước file (> 180 LoC)
 find src/v2/modules/[target-module]/ -name "*.tsx" -o -name "*.ts" | xargs wc -l | awk '$1 > 180 {print}'

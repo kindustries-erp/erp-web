@@ -30,6 +30,7 @@ export function usePurchaseOrderDrawer({
   const [errorField, setErrorField] =
     React.useState<PurchaseOrderFormField | null>(null);
   const [cancelOpen, setCancelOpen] = React.useState(false);
+  const [discardOpen, setDiscardOpen] = React.useState(false);
 
   const data = usePurchaseOrderDrawerData({
     config,
@@ -38,12 +39,18 @@ export function usePurchaseOrderDrawer({
   });
   const { form, initial, setField, creating } = data;
 
+  /** Lưu xong: đơn cũ về chế độ xem; đơn mới đóng drawer */
+  const handleSaved = () => {
+    if (creating) state.onClose();
+    else setMode("view");
+  };
+
   const { save, saveAndApprove, approve, confirm, cancel } =
     usePurchaseOrderMutations({
       api: config.api,
       keys: config.keys,
       t,
-      onSaved: state.onClose,
+      onSaved: handleSaved,
       onActed: () => setCancelOpen(false),
     });
 
@@ -83,16 +90,43 @@ export function usePurchaseOrderDrawer({
     if (validate()) saveAndApprove.mutate({ id: state.recordId, form });
   };
 
+  /** Hủy sửa: tạo mới thì đóng; đơn cũ có thay đổi thì hỏi trước, rồi về chế độ xem */
+  const cancelEdit = () => {
+    if (creating) state.onClose();
+    else if (isPurchaseOrderFormDirty(form, initial)) setDiscardOpen(true);
+    else setMode("view");
+  };
+
+  const confirmDiscard = () => {
+    data.resetForm();
+    setErrorField(null);
+    setDiscardOpen(false);
+    setMode("view");
+  };
+
   const id = state.recordId;
   const status = form.status;
-  const canEdit = state.canUpdate && canEditPurchaseOrder(status);
-  const canSaveAndApprove = state.canUpdate && canApprovePurchaseOrder(status);
+  // Đơn cũ: chỉ đánh giá trạng thái khi đã tải xong; trước đó form còn status mặc định
+  const loadedOrNew = creating || data.loaded;
+  const canEdit =
+    state.canUpdate && loadedOrNew && canEditPurchaseOrder(status);
+  const canSaveAndApprove =
+    state.canUpdate && loadedOrNew && canApprovePurchaseOrder(status);
   const canApprove =
-    state.canUpdate && Boolean(id) && canApprovePurchaseOrder(status);
+    state.canUpdate &&
+    Boolean(id) &&
+    data.loaded &&
+    canApprovePurchaseOrder(status);
   const canConfirm =
-    state.canUpdate && Boolean(id) && canConfirmPurchaseOrder(status);
+    state.canUpdate &&
+    Boolean(id) &&
+    data.loaded &&
+    canConfirmPurchaseOrder(status);
   const canCancel =
-    state.canUpdate && Boolean(id) && canCancelPurchaseOrder(status);
+    state.canUpdate &&
+    Boolean(id) &&
+    data.loaded &&
+    canCancelPurchaseOrder(status);
 
   return {
     form,
@@ -123,6 +157,10 @@ export function usePurchaseOrderDrawer({
     },
     cancelOpen,
     setCancelOpen,
+    cancelEdit,
+    discardOpen,
+    closeDiscard: () => setDiscardOpen(false),
+    confirmDiscard,
     regenerateNo: data.regenerateNo,
     canEdit,
     canSaveAndApprove,

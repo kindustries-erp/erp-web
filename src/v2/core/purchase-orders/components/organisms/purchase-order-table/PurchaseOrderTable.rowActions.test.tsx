@@ -69,21 +69,26 @@ describe("buildPurchaseOrderRowActions", () => {
     ]);
   });
 
-  it("đã nhận đủ hoặc đã hủy: chỉ còn nhóm TRA CỨU", () => {
+  it("đã nhận đủ hoặc đã hủy: Chỉnh sửa mờ, không có mục ghi khác", () => {
     const received = build(PurchaseOrderStatus.RECEIVED, {
       canUpdate: true,
       canDelete: true,
     });
-    expect(received.map((group) => group.groupLabel)).toEqual(["Tra cứu"]);
-    expect(labelsOf(received)).toEqual(["Xem chi tiết"]);
-    expect(
-      labelsOf(
-        build(PurchaseOrderStatus.CANCELLED, {
-          canUpdate: true,
-          canDelete: true,
-        }),
-      ),
-    ).toEqual(["Xem chi tiết"]);
+    expect(received.map((group) => group.groupLabel)).toEqual([
+      "Tra cứu",
+      "Thao tác",
+    ]);
+    expect(labelsOf(received)).toEqual(["Xem chi tiết", "Chỉnh sửa"]);
+    expect(received[1].items[0].disabled).toBe(true);
+    expect(received[1].items[0].disabledReason).toBe(
+      "Trạng thái hiện tại không cho phép sửa",
+    );
+    const cancelled = build(PurchaseOrderStatus.CANCELLED, {
+      canUpdate: true,
+      canDelete: true,
+    });
+    expect(labelsOf(cancelled)).toEqual(["Xem chi tiết", "Chỉnh sửa"]);
+    expect(cancelled[1].items[0].disabled).toBe(true);
   });
 
   it("không có quyền cập nhật thì không có mục ghi, chỉ còn xem; xóa cần quyền xóa", () => {

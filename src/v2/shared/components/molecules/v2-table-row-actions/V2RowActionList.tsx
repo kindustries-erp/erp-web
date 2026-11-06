@@ -28,6 +28,7 @@ export const V2RowActionList: React.FC<V2RowActionListProps> = ({
             variant="ghost"
             role="menuitem"
             disabled={item.disabled}
+            title={item.disabled ? item.disabledReason : undefined}
             className={cn(
               "h-auto w-full justify-start gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium",
               item.variant === "danger" &&

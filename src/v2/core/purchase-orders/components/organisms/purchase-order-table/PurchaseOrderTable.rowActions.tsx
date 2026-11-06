@@ -32,8 +32,9 @@ export interface BuildPurchaseOrderRowActionsParams {
 
 /**
  * Menu dòng chia nhóm như bảng Hóa đơn: TRA CỨU (xem) và THAO TÁC (sửa, lưu, xác nhận, hủy, xóa).
- * Mỗi mục hiện theo quyền và trạng thái; nhóm rỗng bị bỏ. Mục đầu của THAO TÁC là Chỉnh sửa
- * để nút nhanh khi hover vẫn là Xem + Chỉnh sửa. API vẫn là chốt chặn cuối cùng.
+ * Mục hiện theo quyền; các mục ghi chỉ bật theo trạng thái (Chỉnh sửa mờ kèm lý do khi
+ * không còn nháp). Nhóm rỗng bị bỏ. Mục đầu của THAO TÁC là Chỉnh sửa để nút nhanh khi hover
+ * là Xem + Chỉnh sửa. API vẫn là chốt chặn cuối cùng.
  */
 export const buildPurchaseOrderRowActions =
   ({
@@ -62,10 +63,16 @@ export const buildPurchaseOrderRowActions =
       groupLabel: t("v2.purchaseOrders.actionGroups.operate", "Thao tác"),
       items: [],
     };
-    if (canUpdate && canEditPurchaseOrder(row.status))
+    // Luôn hiện Chỉnh sửa khi có quyền (khớp bảng hóa đơn); không sửa được thì mờ kèm lý do
+    if (canUpdate)
       operate.items.push({
         label: t("v2.purchaseOrders.actions.edit", "Chỉnh sửa"),
         icon: <Pencil className="h-3.5 w-3.5" />,
+        disabled: !canEditPurchaseOrder(row.status),
+        disabledReason: t(
+          "v2.purchaseOrders.actions.editDisabledReason",
+          "Trạng thái hiện tại không cho phép sửa",
+        ),
         onClick: () => open(row.id, "edit"),
       });
     if (canUpdate && canApprovePurchaseOrder(row.status))

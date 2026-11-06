@@ -54,7 +54,8 @@ describe("v2Navigation", () => {
 
     expect(garage?.items.map((item) => item.id)).toEqual([
       "garage-goods-receipts",
-      "garage-purchase-orders",
+      "garage-procurement-requests",
+      "garage-procurement-orders",
     ]);
     expect(inventory?.items.some((item) => item.id.startsWith("garage-"))).toBe(
       false,

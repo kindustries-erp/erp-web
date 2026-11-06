@@ -6,6 +6,12 @@ import { registerV2ModuleLocale } from "@/v2/shared/locales";
  */
 registerV2ModuleLocale("goodsReceipts", {
   vi: {
+    actionGroups: { lookup: "Tra cứu", operate: "Thao tác" },
+    discard: {
+      title: "Bỏ thay đổi?",
+      message: "Các thay đổi chưa lưu sẽ bị bỏ. Bạn có chắc không?",
+      confirm: "Bỏ thay đổi",
+    },
     list: "Danh sách phiếu nhập",
     create: "Tạo phiếu nhập kho",
     empty: "Chưa có phiếu nhập kho nào",
@@ -14,6 +20,7 @@ registerV2ModuleLocale("goodsReceipts", {
     actions: {
       view: "Xem chi tiết",
       edit: "Chỉnh sửa",
+      editDisabledReason: "Chỉ sửa được khi còn nháp",
       delete: "Xóa",
       post: "Ghi sổ nhập kho",
       cancel: "Hủy phiếu",
@@ -70,6 +77,12 @@ registerV2ModuleLocale("goodsReceipts", {
     },
   },
   en: {
+    actionGroups: { lookup: "Lookup", operate: "Actions" },
+    discard: {
+      title: "Discard changes?",
+      message: "Unsaved changes will be lost. Are you sure?",
+      confirm: "Discard changes",
+    },
     list: "Receipts List",
     create: "Create Goods Receipt",
     empty: "No goods receipts found",
@@ -78,6 +91,7 @@ registerV2ModuleLocale("goodsReceipts", {
     actions: {
       view: "View details",
       edit: "Edit",
+      editDisabledReason: "Only drafts can be edited",
       delete: "Delete",
       post: "Post Receipt",
       cancel: "Cancel Receipt",

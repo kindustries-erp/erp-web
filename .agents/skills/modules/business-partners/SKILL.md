@@ -1,6 +1,6 @@
 ---
 name: business-partners
-description: Module tri thức Đối tác (Khách hàng & Nhà cung cấp) bản V2 trong erp-web (src/v2/modules/business-partners). Chứa cấu trúc module, luồng API qua v2HttpClient, preference bảng dùng chung V2, quy tắc domain và danh sách parity với bản V1.
+description: Module tri thức Đối tác (Khách hàng & Nhà cung cấp) bản V2 trong erp-web gồm V2 Core (src/v2/core/business-partners) và 2 thin modules (src/v2/modules/business-partners-customers và src/v2/modules/business-partners-suppliers). Chứa cấu trúc module, luồng API qua v2HttpClient, preference bảng dùng chung V2, quy tắc domain và danh sách parity với bản V1.
 ---
 
 # 📦 Module Tri Thức: Business Partners V2 - Frontend (`erp-web`)
@@ -9,99 +9,58 @@ description: Module tri thức Đối tác (Khách hàng & Nhà cung cấp) bả
 
 - Route: `/v2/customers` (`partnerType = CUSTOMER`) và `/v2/suppliers` (`partnerType = VENDOR`).
 - Quyền: `business_partners` với action `read` (route guard), `create` / `update` / `delete` (nút và row action).
-- Backend: `/api/v1/business-partners` (không đổi), xóa là xóa mềm.
-- Module V2 **không import** code V1 (`@/core/*`, `@/shared/*`, `@/modules/*` ngoại trừ `authStore`). Xem mục 5.
+- Backend: `/api/v2/business-partners` và `/api/v1/business-partners`, xóa là xóa mềm.
+- Kiến trúc họ nghiệp vụ: Tách lõi dùng chung tại `src/v2/core/business-partners/` và 2 thin module mỏng tại `src/v2/modules/business-partners-customers/` và `src/v2/modules/business-partners-suppliers/`.
+- Module V2 **không import** code V1 (`@/core/*`, `@/shared/*`, `@/modules/*` ngoại trừ `authStore`).
 
 ## 2. Cấu trúc
 
+### A. V2 Core (`src/v2/core/business-partners/`)
 ```text
-src/v2/modules/business-partners/
+src/v2/core/business-partners/
+├── core.manifest.json                  # Khai báo exports cho PlopJS discovery
+├── businessPartners.config.type.ts   # BusinessPartnerModuleConfig
+├── businessPartners.locale.ts        # i18n VI/EN v2.businessPartners.*
 ├── api/
-│   ├── businessPartnersApi.ts          # businessPartnersV2Api (qua v2HttpClient) + toBusinessPartnerListParams
-│   ├── dtos/businessPartner.dto.ts     # Hình dạng response/payload backend
+│   ├── businessPartnerApi.type.ts      # Interface BusinessPartnerApi
+│   ├── businessPartnersApi.ts          # businessPartnersV2Api (qua v2HttpClient)
+│   ├── dtos/businessPartner.dto.ts     # DTOs
 │   ├── queries/                        # useBusinessPartnersQuery, businessPartnerKeys
-│   └── mutations/                      # useSaveBusinessPartnerMutation, useRemoveBusinessPartnerMutation
+│   └── mutations/                      # useSaveBusinessPartnerMutation, useRemoveBusinessPartnerMutation, useSyncBusinessPartnersMutation
 ├── domain/
 │   ├── entities/businessPartner.ts     # BusinessPartner, BusinessPartnerFormValue
-│   └── rules/businessPartnerRules.ts   # validate form, dirty, khóa mã, trạng thái ngưng
-├── components/                         # Atomic: molecules/ và organisms/ (mỗi thư mục có index.ts + test)
-│   ├── molecules/business-partner-status-badge/   # Nhãn Hoạt động/Ngưng dùng ở cột bảng và tiêu đề drawer
+│   └── rules/                          # businessPartnerRules (validate, dirty, lock code), partnerSelection
+├── components/                         # Atomic: molecules/ và organisms/
+│   ├── molecules/business-partner-status-badge/   # Nhãn Hoạt động/Ngưng
 │   └── organisms/
-│       ├── business-partner-table/     # Cột bảng + 3 chế độ xem hệ thống
+│       ├── business-partner-table/     # Cột bảng + 3 chế độ xem hệ thống (overview, legal, all)
 │       ├── business-partner-form/      # Các section form + control (view/edit)
-│       └── business-partner-picker/    # Ô chọn đối tượng cho sao kê (V2Combobox, tìm trên server, giá trị mã hóa)
-├── domain/rules/partnerSelection.ts    # Mã hóa lựa chọn (master:<id> | invoice:<MST>:<tên>) và đổi thành payload API (partnerId | invoicePartner)
-├── drawers/                            # Drawer chi tiết/tạo mới (hook + drawer, ghép organism form)
-├── pages/                              # BusinessPartnersPage (có nút "Đồng bộ từ hóa đơn") + useBusinessPartnersPage
-├── tests/integration/                  # Page + form + mutation với service mock
-└── businessPartners.locale.ts          # i18n VI/EN (registerV2ModuleLocale "partners"), gồm picker và sync
+│       ├── business-partner-picker/    # Ô chọn đối tượng cho sao kê
+│       └── business-partner-sync-dialog/# Modal đồng bộ hóa đơn
+├── drawers/                            # BusinessPartnerDrawer (hỗ trợ config) + hook
+├── hooks/                              # useBusinessPartnerListController (quản lý bảng, drawer, xóa, view mode)
+└── index.ts                            # Master barrel export duy nhất (@/v2/core/business-partners)
 ```
 
-Dùng ngoài module: `src/modules/bank-statements/components/BankTransactionPartnerField.tsx` (ô "Đối tượng" trong drawer sao kê v1, gọi picker v2) và `src/pages/finance/components/bank-transaction-detail-drawer/BankTransactionDetailDrawer.hook.ts` (gửi `partnerId`/`invoicePartner` khi đối tượng đổi).
+### B. Thin Modules (`src/v2/modules/`)
+- **Khách hàng** (`src/v2/modules/business-partners-customers/`):
+  - `tableId`: `business-partners-customers-table`
+  - `partnerType`: `CUSTOMER`
+  - `BusinessPartnersCustomersPage.tsx` + `hook.ts` + `config.ts` + `locale.ts` + `integration test`
+- **Nhà cung cấp** (`src/v2/modules/business-partners-suppliers/`):
+  - `tableId`: `business-partners-suppliers-table`
+  - `partnerType`: `VENDOR`
+  - `BusinessPartnersSuppliersPage.tsx` (có nút "Đồng bộ từ hóa đơn") + `hook.ts` + `config.ts` + `locale.ts` + `integration test`
+
+Dùng ngoài module:
+- `src/v2/modules/bank-statements`: import `BusinessPartnerPicker`, `toPartnerOptionValue`, `toPartnerSelectionPayload` từ `@/v2/core/business-partners`.
+- `src/modules/bank-statements/components/BankTransactionPartnerField.tsx` & `BankTransactionDetailDrawer.hook.ts`: import từ `@/v2/core/business-partners`.
 
 ## 3. Luồng dữ liệu
 
 - Tạo nhanh trong ô chọn: picker có nút "+ Tạo đối tác mới" mở `BusinessPartnerDrawer` (partnerId null); `onCreated` trả đối tác vừa tạo về picker, picker chọn `master:<id>`. Drawer chỉ gọi `onCreated` khi tạo mới; sửa thì vẫn đóng như cũ.
 - Z-index: sheet v2 (`ui/sheet`) và popover desktop v2 nằm `z-[450]` để hiện trên drawer v1 (`z-400`).
 - Đồng bộ có xem trước: nút "Đồng bộ từ hóa đơn" mở `BusinessPartnerSyncDialog` (organism), dialog gọi `syncFromInvoices(true)` để liệt kê, chỉ gọi `syncFromInvoices(false)` khi người dùng bấm "Tạo đối tác". Nút xác nhận bị khóa khi không có đối tác mới.
-- API mới: `GET /business-partners/options` (`listSelectOptions(direction, search, page)`), `POST /business-partners/sync-from-invoices` (`syncFromInvoices(dryRun)`). Hook: `useBusinessPartnerSelectOptionsQuery` (khóa `businessPartnerKeys.selectOptions`), `useSyncBusinessPartnersMutation` (làm mới toàn bộ `businessPartnerKeys.all` và toast thành công/lỗi).
-
+- API: `GET /api/v2/business-partners/options` (`listSelectOptions(direction, search, page)`), `POST /api/v2/business-partners/sync-from-invoices` (`syncFromInvoices(dryRun)`).
 - Mọi request đi qua `src/v2/shared/api/v2HttpClient.ts`: gắn Bearer token, refresh 401 (single-flight), retry GET khi 502/503/504 hoặc lỗi mạng, mở modal khi 409 `DOCUMENT_IN_USE`.
-- Lỗi và thành công của mutation hiện toast qua `useV2ToastStore` (`V2Toaster` mount ở `AppProviders`). Thông báo lỗi ưu tiên `message` từ server, không có thì dùng chuỗi đã dịch.
-- Bảng dùng `V2StandardTable` server mode; `tableId` là `erp-customers-table` / `erp-vendors-table` (giữ nguyên từ V1 để migrate đúng preference).
-
-## 4. Preference bảng (dùng chung V2)
-
-- Store: `src/v2/shared/preferences/useV2TablePreferencesStore.ts`, persist key `v2_table_preferences`.
-- Đồng bộ server: `PATCH /api/v1/app/table-preferences/:tableId` (mỗi bảng một bản ghi riêng, tách khỏi blob V1 `tableConfigs`). Nạp lại khi đăng nhập qua `loadV2ServerPreferences()`.
-- Migration một lần từ `erp_preferences` (V1): `migrationVersion` = 1. Map key view hệ thống `legal_tax` → `legal`, `all_columns` → `all`.
-- Storage cho bảng: `v2ColumnPreferencesStorage`, `v2ViewPresetStorage`, `applyV2SystemView`.
-
-## 5. Phụ thuộc còn lại từ V1 (có chủ đích)
-
-- `@/modules/auth/domain/authStore`: session đăng nhập dùng chung giữa V1 và V2 (theo workflow Dual-Run).
-- Translation V2 đã tách khỏi V1: `useV2Translation` đọc `useV2LocaleStore` (seed một lần từ `erp-app` của V1 bằng cách đọc localStorage). Mọi key phải có tiền tố `v2.`.
-
-## 6. Parity với V1 (`modules/business-partners-core`)
-
-| Tính năng V1 | V2 |
-|---|---|
-| Cột STT 1-based | Có (V2StandardTable tự render `__index`) |
-| Badge "Ngưng" + tooltip cạnh mã khi INACTIVE | Có |
-| Copy mã, MST, điện thoại, email | Có |
-| Mã chỉ nhập khi tạo; nút sinh mã chỉ hiện khi tạo | Có |
-| Lọc khoảng ngày `createdAt` | Có (`date_ranges`, backend đã hỗ trợ) |
-| Page size mặc định 50 (màn hình ≥ 900px) / 20 | Có (`getDefaultPageSize` của V2) |
-| Toast tạo/sửa/xóa thành công và thất bại | Có, tiêu đề tách tạo/sửa như V1 (`createSuccess`/`updateSuccess`, `createError`/`updateError`) |
-| Toast thiếu tên đối tác | Có |
-| Toast lỗi tải danh sách và chi tiết | Có |
-| Modal chứng từ phụ thuộc khi xóa (409) | Có (`V2DocumentDependencyModal`) |
-| Lưu cột/view theo bảng, đồng bộ server | Có (mục 4) |
-| Chặn trang khi không có quyền đọc | Có (route guard) |
-| Ô tổng (summary row): số đối tác trên trang và tổng toàn bộ | Có, mới (cột mã, `variant: count`, `summaries.code = total`); V1 không có |
-
-Khác biệt có chủ đích: nút Sửa và Xóa ở hàng và nút Thêm được kiểm tra quyền `update`, `delete`, `create` (V1 hiện luôn). Mã được viết hoa ngay khi nhập (như V1).
-
-Khác biệt đã biết: thông báo lỗi mạng/timeout dùng chuỗi do caller truyền (V1 có chuỗi riêng); V2 không đặt cờ 403 toàn cục và không có luồng impersonation (đều là hạ tầng auth, không thuộc module này).
-
-## 6b. Tổng và đếm (API v2)
-
-- API trả `summaries` theo tên cột số. BP không có cột số nên `summaries` rỗng.
-- Hook `useBusinessPartnersQuery` đặt `summaries.code = total` và cột mã có `summary: { variant: "count", accessor: () => 1 }`. Subtotal trang là số dòng trên trang, total là số đối tác khớp bộ lọc.
-- Trong sinh mã plop: `decimal` là tiền (variant `amount`), `number` là số lượng (variant `qty`). Cả hai đều có ô tổng.
-
-## 7. Kiểm thử
-
-```bash
-cd erp/erp-web
-bun run test src/v2/modules/business-partners/
-bun run test src/v2/shared/api src/v2/shared/preferences src/v2/shared/stores
-# Test mới: summary cột mã, summaries của hook query, tiêu đề toast tạo/sửa
-# (BusinessPartnerTable.columns.test.tsx, useBusinessPartnersQuery.test.tsx, useBusinessPartnerMutations.test.tsx)
-bunx tsc --noEmit
-```
-
-## 8. Liên quan
-
-- Workflow: `/ui-structure` (Rolling Migration: chỉ chạy khi có lệnh từ user).
-- Module V1 đối chiếu: `src/modules/business-partners-core/` (vẫn được dùng bởi PurchaseOrder V1, không xóa).
+- Lỗi và thành công của mutation hiện toast qua `useV2ToastStore` (`V2Toaster` mount ở `AppProviders`).
