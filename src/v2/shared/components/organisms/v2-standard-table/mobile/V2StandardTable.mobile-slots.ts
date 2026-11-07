@@ -3,7 +3,10 @@ import type { V2Column } from "../V2StandardTable.type";
 export interface V2MobileSlots<T> {
   title?: V2Column<T>;
   subtitle?: V2Column<T>;
+  /** Badge đầu tiên, giữ lại để tương thích ngược */
   badge?: V2Column<T>;
+  /** Danh sách toàn bộ cột badge cần hiển thị trên header card */
+  badges: V2Column<T>[];
   meta: V2Column<T>[];
 }
 
@@ -22,14 +25,25 @@ export const resolveMobileSlots = <T>(
   const subtitle =
     visible.find((column) => column.mobileSlot === "subtitle") ??
     visible.find((column) => !column.mobileSlot && column !== title);
-  const badge =
-    visible.find((column) => column.mobileSlot === "badge") ??
-    visible.find(
-      (column) =>
-        column.key === "status" && column !== title && column !== subtitle,
-    );
-  const meta = visible.filter(
-    (column) => column !== title && column !== subtitle && column !== badge,
+
+  const explicitBadges = visible.filter(
+    (column) => column.mobileSlot === "badge",
   );
-  return { title, subtitle, badge, meta };
+  const fallbackBadge = visible.find(
+    (column) =>
+      column.key === "status" && column !== title && column !== subtitle,
+  );
+  const badges =
+    explicitBadges.length > 0
+      ? explicitBadges
+      : fallbackBadge
+        ? [fallbackBadge]
+        : [];
+  const badge = badges[0];
+
+  const meta = visible.filter(
+    (column) =>
+      column !== title && column !== subtitle && !badges.includes(column),
+  );
+  return { title, subtitle, badge, badges, meta };
 };

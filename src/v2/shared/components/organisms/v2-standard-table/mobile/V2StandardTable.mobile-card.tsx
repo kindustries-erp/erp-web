@@ -38,7 +38,8 @@ export function V2StandardTableMobileCard<T>({
   const { t } = useV2Translation();
   const index = startIndex + rowIndex + 1;
   const groups = rowActions?.(row) ?? [];
-  const { title, subtitle, badge, meta } = slots;
+  const { title, subtitle, badge, badges, meta } = slots;
+  const badgeList = badges && badges.length > 0 ? badges : badge ? [badge] : [];
 
   return (
     <li
@@ -70,11 +71,11 @@ export function V2StandardTableMobileCard<T>({
             >
               #{index}
             </V2Text>
-            {badge && (
-              <div className="inline-flex items-center shrink-0">
-                {badge.cell(row, index)}
+            {badgeList.map((col) => (
+              <div key={col.key} className="inline-flex items-center shrink-0">
+                {col.cell(row, index)}
               </div>
-            )}
+            ))}
           </div>
           <V2Text
             as="div"

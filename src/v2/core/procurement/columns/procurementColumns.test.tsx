@@ -111,6 +111,14 @@ describe("procurementColumns", () => {
       <div>{colStatus.cell(mockRow, 0)}</div>,
     );
     expect(statusContainer).toHaveTextContent("APPROVED");
+
+    // Kiểm tra mobileSlot cấu hình chuẩn cho mobile card (badge kép và meta người tạo/duyệt)
+    expect(columns.find((c) => c.key === "status")?.mobileSlot).toBe("badge");
+    expect(columns.find((c) => c.key === "orderingStatus")?.mobileSlot).toBe(
+      "badge",
+    );
+    expect(columns.find((c) => c.key === "createdBy")?.mobileSlot).toBe("meta");
+    expect(columns.find((c) => c.key === "approver")?.mobileSlot).toBe("meta");
   });
 
   it("buildProcurementOrderColumns tạo đủ danh sách cột cho PO", () => {

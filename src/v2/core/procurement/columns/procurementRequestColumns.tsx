@@ -1,4 +1,5 @@
 import * as React from "react";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2TableText } from "@/v2/shared/components/molecules/v2-table-text";
 import { headerFilter } from "@/v2/shared/components/organisms/v2-standard-table/utils/v2HeaderFilterBuilder";
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
@@ -94,6 +95,7 @@ export function buildProcurementRequestColumns(
       ),
       size: 140,
       align: TableColumnAlign.CENTER,
+      mobileSlot: "badge",
       cell: (row) => (
         <ProcurementStatusBadge value={row.orderingStatus} t={t} />
       ),
@@ -102,15 +104,33 @@ export function buildProcurementRequestColumns(
       key: "createdBy",
       ...headerFilter(t("v2.procurement.columns.createdBy", "Người tạo")),
       size: 140,
-      mobileSlot: "hidden",
-      cell: (row) => row.createdByEmail ?? "—",
+      mobileSlot: "meta",
+      cell: (row) => (
+        <V2Text
+          as="span"
+          variant="body-sm"
+          color={row.createdByEmail ? "default" : "muted"}
+          className="truncate block"
+        >
+          {row.createdByEmail ?? "—"}
+        </V2Text>
+      ),
     },
     {
       key: "approver",
       ...headerFilter(t("v2.procurement.columns.approver", "Người duyệt")),
       size: 160,
-      mobileSlot: "hidden",
-      cell: (row) => row.approverEmail ?? "—",
+      mobileSlot: "meta",
+      cell: (row) => (
+        <V2Text
+          as="span"
+          variant="body-sm"
+          color={row.approverEmail ? "default" : "muted"}
+          className="truncate block"
+        >
+          {row.approverEmail ?? "—"}
+        </V2Text>
+      ),
     },
   ];
 }

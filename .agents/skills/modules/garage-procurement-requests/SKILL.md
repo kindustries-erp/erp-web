@@ -101,3 +101,10 @@ src/v2/core/procurement/
 - Khi khóa **tắt**: "Gửi duyệt" tự duyệt, không mở modal.
 - Hook: `useProcurementApprovalGate` (orchestrator trong `useProcurementList`), `useApprovalSettingQuery`, `useApproversQuery`. Submit gửi `{ approverId }` qua `ProcurementApi.transition(id, 'submit', undefined, approverId)`.
 - Label: tiêu đề và nhãn ở `procurement.approval.locale.ts` (`v2.procurementApproval.*`, VI/EN).
+
+## 7. Cập nhật 2026-11-07: tối ưu hóa Mobile Card
+
+- **Hỗ trợ đa badge trên card mobile**: `resolveMobileSlots` và `V2StandardTableMobileCard` mở rộng mảng `badges: V2Column<T>[]`, giữ `badge?: V2Column<T>` tương thích ngược. Mọi cột có `mobileSlot === "badge"` đều được render trên header card cạnh `#STT`.
+- **Cột Tiến độ đặt (`orderingStatus`)**: Cấu hình `mobileSlot: "badge"`, hiển thị badge kế bên badge trạng thái duyệt (`status`).
+- **Cột Người tạo (`createdBy`) và Người duyệt (`approver`)**: Chuyển từ `mobileSlot: "hidden"` sang `mobileSlot: "meta"`, hiển thị email qua atom `V2Text` variant `body-sm`, màu sắc semantic `foreground` / `muted`.
+

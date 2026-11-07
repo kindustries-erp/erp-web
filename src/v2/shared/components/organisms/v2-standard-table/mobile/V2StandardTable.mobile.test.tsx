@@ -44,6 +44,31 @@ describe("V2StandardTableMobile", () => {
     expect(within(first).getByText("Đã duyệt")).toBeInTheDocument();
   });
 
+  it("renders multiple badges side-by-side next to STT in card header", () => {
+    const columnsWithBadges: NonNullable<
+      Parameters<typeof render>[0]
+    >["columns"] = [
+      ...makeColumns(),
+      {
+        key: "status",
+        label: "Trạng thái",
+        mobileSlot: "badge",
+        cell: () => <span>Đã duyệt</span>,
+      },
+      {
+        key: "orderingStatus",
+        label: "Tiến độ đặt",
+        mobileSlot: "badge",
+        cell: () => <span>Một phần</span>,
+      },
+    ];
+    render({ columns: columnsWithBadges });
+    const first = screen.getAllByRole("listitem")[0];
+    expect(within(first).getByText("#1")).toBeInTheDocument();
+    expect(within(first).getByText("Đã duyệt")).toBeInTheDocument();
+    expect(within(first).getByText("Một phần")).toBeInTheDocument();
+  });
+
   it("scrolls the card list inside its own container, keeping pagination fixed", () => {
     render({ items: makeRows(3), total: 3 });
     const list = screen.getAllByRole("listitem")[0].parentElement;
