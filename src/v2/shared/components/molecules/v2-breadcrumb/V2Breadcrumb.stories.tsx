@@ -26,3 +26,21 @@ export const DeepPath: Story = {
     ],
   },
 };
+
+export const WithLinks: Story = {
+  args: {
+    items: [
+      { label: "Trang chủ", href: "/v2" },
+      { label: "Bán hàng", href: "/v2/sales" },
+      { label: "Đơn bán hàng" },
+    ],
+    mobileMode: "last-only",
+  },
+};
+
+export const FullOnMobile: Story = {
+  args: {
+    items: [{ label: "Hệ thống" }, { label: "Phân quyền" }],
+    mobileMode: "full",
+  },
+};

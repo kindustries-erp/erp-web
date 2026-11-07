@@ -1,8 +1,9 @@
 import * as React from "react";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Text } from "@/v2/shared/components/atoms";
 import { Badge } from "@/v2/shared/ui";
+import { V2Breadcrumb } from "@/v2/shared/components/molecules/v2-breadcrumb";
 import { V2UserBadge } from "@/v2/shared/components/molecules/v2-user-badge";
 import { V2LanguageSwitcher } from "@/v2/shared/components/molecules/v2-language-switcher";
 import { V2ImpersonationBanner } from "@/v2/shared/components/molecules/v2-impersonation-banner";
@@ -32,7 +33,7 @@ export const V2Header: React.FC<V2HeaderProps> = ({
     <header
       data-testid="v2-header"
       className={cn(
-        "flex h-14 w-full shrink-0 items-center justify-between border-b border-border bg-card/60 px-3 sm:px-4 backdrop-blur-md select-none gap-2",
+        "flex h-11 sm:h-14 w-full shrink-0 items-center justify-between border-b border-border bg-card/60 px-2.5 sm:px-4 backdrop-blur-md select-none gap-2",
         className,
       )}
       {...props}
@@ -56,43 +57,16 @@ export const V2Header: React.FC<V2HeaderProps> = ({
         )}
       </div>
 
-      {/* ── Breadcrumbs or Title: Hidden on mobile, order-1 on desktop (left) ── */}
-      <div className="hidden sm:flex sm:order-1 items-center gap-2 min-w-0 flex-1 overflow-hidden">
+      {/* ── Breadcrumbs or Title: Last item on mobile (order-2), full breadcrumbs on desktop (order-1) ── */}
+      <div className="flex order-2 sm:order-1 items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden">
         {breadcrumbs.length > 0 ? (
-          <nav
-            aria-label="Breadcrumb"
-            className="flex items-center gap-1.5 text-xs min-w-0 overflow-hidden"
-          >
-            {breadcrumbs.map((crumb, idx) => (
-              <React.Fragment key={crumb.label}>
-                {idx > 0 && (
-                  <ChevronRight size={14} className="text-muted-fg shrink-0" />
-                )}
-                {crumb.href ? (
-                  <V2Text
-                    asChild
-                    variant="body-sm"
-                    className="text-muted-fg hover:text-foreground truncate transition-colors"
-                  >
-                    <a href={crumb.href}>{crumb.label}</a>
-                  </V2Text>
-                ) : (
-                  <V2Text
-                    variant="body-sm"
-                    weight="semibold"
-                    className="text-foreground truncate"
-                  >
-                    {crumb.label}
-                  </V2Text>
-                )}
-              </React.Fragment>
-            ))}
-          </nav>
+          <V2Breadcrumb items={breadcrumbs} mobileMode="last-only" />
         ) : title ? (
           <V2Text
             as="h1"
-            variant="h4"
-            className="tracking-tight text-foreground truncate"
+            variant="body-sm"
+            weight="semibold"
+            className="sm:text-lg tracking-tight text-foreground truncate"
           >
             {title}
           </V2Text>
@@ -113,8 +87,8 @@ export const V2Header: React.FC<V2HeaderProps> = ({
         )}
       </div>
 
-      {/* ── Right Actions: Notification bell, Impersonation banner, Language Switcher (order-2) ── */}
-      <div className="order-2 sm:order-2 flex items-center gap-1.5 shrink-0 justify-end">
+      {/* ── Right Actions: Notification bell, Impersonation banner, Language Switcher (order-3 on mobile, order-2 on desktop) ── */}
+      <div className="order-3 sm:order-2 flex items-center gap-1.5 shrink-0 justify-end">
         <V2ImpersonationBanner compact />
         {notificationNode}
         {showLanguageSwitcher && (
