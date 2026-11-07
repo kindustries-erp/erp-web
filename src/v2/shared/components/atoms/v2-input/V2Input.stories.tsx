@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import { V2Input } from "./V2Input";
 
 const meta: Meta<typeof V2Input> = {
-  title: "V2/Atoms/V2Input",
+  title: "Components/Atoms/V2Input",
   component: V2Input,
   parameters: {
     layout: "centered",

@@ -4,7 +4,7 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2DrawerSheet } from "./V2DrawerSheet";
 
 const meta: Meta<typeof V2DrawerSheet> = {
-  title: "Components/Molecules/Overlay & Menu/V2DrawerSheet",
+  title: "Components/Molecules/V2DrawerSheet",
   component: V2DrawerSheet,
   tags: ["autodocs"],
 };

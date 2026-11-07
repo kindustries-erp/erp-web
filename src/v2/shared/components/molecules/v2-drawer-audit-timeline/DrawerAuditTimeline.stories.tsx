@@ -4,7 +4,7 @@ import { DrawerAuditTimeline } from "./DrawerAuditTimeline";
 import type { DrawerAuditItem } from "./DrawerAuditTimeline.type";
 
 const meta: Meta<typeof DrawerAuditTimeline> = {
-  title: "Components/Molecules/Overlay & Menu/V2DrawerAuditTimeline",
+  title: "Components/Molecules/V2DrawerAuditTimeline",
   component: DrawerAuditTimeline,
   tags: ["autodocs"],
   decorators: [

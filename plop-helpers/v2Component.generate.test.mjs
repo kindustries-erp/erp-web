@@ -50,19 +50,16 @@ describe("addBarrelExport", () => {
 });
 
 describe("v2-component generator", () => {
-  it("creates the five component files and wires the molecules barrel", async () => {
+  it("creates the molecule files without default test or stories and wires the barrel", async () => {
     const { dest, result } = await runGenerator();
     expect(result.failures).toEqual([]);
 
     const base = join(dest, "src/v2/shared/components/molecules/v2-traceability-canvas");
-    for (const file of [
-      "V2TraceabilityCanvas.tsx",
-      "V2TraceabilityCanvas.type.ts",
-      "V2TraceabilityCanvas.test.tsx",
-      "V2TraceabilityCanvas.stories.tsx",
-      "index.ts",
-    ]) {
+    for (const file of ["V2TraceabilityCanvas.tsx", "V2TraceabilityCanvas.type.ts", "index.ts"]) {
       expect(existsSync(join(base, file)), file).toBe(true);
+    }
+    for (const file of ["V2TraceabilityCanvas.test.tsx", "V2TraceabilityCanvas.stories.tsx"]) {
+      expect(existsSync(join(base, file)), file).toBe(false);
     }
 
     const barrel = readFileSync(join(dest, "src/v2/shared/components/molecules/index.ts"), "utf8");
@@ -72,7 +69,7 @@ describe("v2-component generator", () => {
   it("leaves no placeholders and no V1 imports", async () => {
     const { dest } = await runGenerator();
     const base = join(dest, "src/v2/shared/components/molecules/v2-traceability-canvas");
-    for (const file of ["V2TraceabilityCanvas.tsx", "V2TraceabilityCanvas.stories.tsx", "index.ts"]) {
+    for (const file of ["V2TraceabilityCanvas.tsx", "index.ts"]) {
       const text = readFileSync(join(base, file), "utf8");
       expect(text, file).not.toMatch(/\{\{/);
       expect(text, file).not.toMatch(/from "@\/(core|shared|modules|pages|components)\//);

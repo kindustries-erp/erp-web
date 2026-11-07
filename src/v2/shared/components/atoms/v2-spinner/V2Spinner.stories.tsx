@@ -3,7 +3,7 @@ import React from "react";
 import { V2Spinner } from "./V2Spinner";
 
 const meta: Meta<typeof V2Spinner> = {
-  title: "Components/Atoms/Display/V2Spinner",
+  title: "Components/Atoms/V2Spinner",
   component: V2Spinner,
   tags: ["autodocs"],
 };

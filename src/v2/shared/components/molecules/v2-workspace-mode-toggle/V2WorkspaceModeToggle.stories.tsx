@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2WorkspaceModeToggle } from "./V2WorkspaceModeToggle";
 
 const meta: Meta<typeof V2WorkspaceModeToggle> = {
-  title: "Molecules/V2WorkspaceModeToggle",
+  title: "Components/Molecules/V2WorkspaceModeToggle",
   component: V2WorkspaceModeToggle,
 };
 

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2Sparkline } from "./V2Sparkline";
 
 const meta: Meta<typeof V2Sparkline> = {
-  title: "Components/Atoms/Display/V2Sparkline",
+  title: "Components/Atoms/V2Sparkline",
   component: V2Sparkline,
   tags: ["autodocs"],
   args: {

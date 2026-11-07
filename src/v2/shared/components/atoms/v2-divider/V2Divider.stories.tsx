@@ -3,7 +3,7 @@ import React from "react";
 import { V2Divider } from "./V2Divider";
 
 const meta: Meta<typeof V2Divider> = {
-  title: "Components/Atoms/Display/V2Divider",
+  title: "Components/Atoms/V2Divider",
   component: V2Divider,
   tags: ["autodocs"],
 };
