@@ -58,7 +58,7 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
                   disabled: state.saving,
                 },
                 {
-                  label: t("v2.common.save", "Lưu"),
+                  label: t("v2.procurement.actions.saveDraft", "Lưu nháp"),
                   onClick: state.submit,
                   primary: true,
                   loading: state.saving,
@@ -81,6 +81,7 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
               errors={state.errors}
               viewing={state.viewing}
               branchLocked={state.branchLocked}
+              branchOptional={state.branchOptional}
               setField={state.setField}
             />
             <ProcurementOrderSummarySection

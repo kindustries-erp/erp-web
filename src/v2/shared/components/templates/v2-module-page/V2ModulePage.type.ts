@@ -13,6 +13,7 @@ export type V2ModulePageTabVariant =
   (typeof V2_MODULE_PAGE_TAB_VARIANTS)[number];
 import type { V2StandardTableProps } from "@/v2/shared/components/organisms/v2-standard-table";
 import type { V2TableQuery } from "@/v2/shared/types/v2-table";
+import type { V2TabComboboxItem } from "@/v2/shared/components/molecules/v2-tab-combobox";
 
 type V2ModuleTabBase = Omit<V2TabItemData, "key" | "content">;
 
@@ -72,4 +73,10 @@ export interface V2ModulePageProps<T> {
   /** Drawer, modal do page quản lý */
   overlays?: React.ReactNode;
   className?: string;
+  /** Tab trang (ví dụ chuyển giữa các trang liên quan PR / PO) */
+  pageTabs?: V2TabComboboxItem[];
+  /** Khóa tab trang đang kích hoạt */
+  activePageTab?: string;
+  /** Callback chuyển tab trang */
+  onPageTabSelect?: (key: string) => void;
 }

@@ -10,6 +10,7 @@ import type { ProcurementListConfig } from "./procurementListConfig.type";
 import { useProcurementPurge } from "./useProcurementPurge";
 import { useProcurementTransition } from "./useProcurementTransition";
 import { useProcurementRowActions } from "./useProcurementRowActions";
+import { useProcurementApprovalGate } from "./useProcurementApprovalGate";
 import {
   consumeProcurementRequestIntent,
   useProcurementIntentStore,
@@ -59,6 +60,7 @@ export function useProcurementList<T extends { id: string }>(
     React.useState<ProcurementActionTarget<T> | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<T | null>(null);
   const purgeState = useProcurementPurge(config);
+  const approval = useProcurementApprovalGate(config);
   const pendingRequestId = useProcurementIntentStore((s) => s.pendingRequestId);
 
   // Mở sẵn drawer tạo PO nếu vừa được chuyển sang từ một PR
@@ -83,17 +85,24 @@ export function useProcurementList<T extends { id: string }>(
     onTransitioned: () => {
       setReasonTarget(null);
       setConfirmTarget(null);
+      approval.closeSubmit();
     },
     onRemoved: () => setDeleteTarget(null),
   });
 
-  const start = React.useCallback((row: T, action: ProcurementActionKey) => {
-    if (PROCUREMENT_REASON_ACTIONS.includes(action)) {
-      setReasonTarget({ row, action });
-    } else {
-      setConfirmTarget({ row, action });
-    }
-  }, []);
+  const { requestSubmit } = approval;
+  const start = React.useCallback(
+    (row: T, action: ProcurementActionKey) => {
+      // Gửi duyệt khi khóa bật: mở modal chọn người duyệt trước
+      if (requestSubmit(row, action)) return;
+      if (PROCUREMENT_REASON_ACTIONS.includes(action)) {
+        setReasonTarget({ row, action });
+      } else {
+        setConfirmTarget({ row, action });
+      }
+    },
+    [requestSubmit],
+  );
 
   /** Đổi URL sang trang PO và báo V2 Routes đổi trang (V2 không dùng router thư viện). */
   const orderFromRequest = React.useCallback(
@@ -112,7 +121,7 @@ export function useProcurementList<T extends { id: string }>(
   );
 
   const rowActions = useProcurementRowActions<T>({
-    config,
+    config: approval.approvalConfig,
     canCreate,
     canUpdate,
     canDelete,
@@ -144,6 +153,15 @@ export function useProcurementList<T extends { id: string }>(
     rowActions,
     start,
     orderFromRequest,
+    approval,
+    submitWithApprover: (approverId: string) => {
+      if (!approval.submitTarget) return;
+      transition.mutate({
+        id: approval.submitTarget.id,
+        action: "submit",
+        approverId,
+      });
+    },
     reasonTarget,
     confirmTarget,
     deleteTarget,

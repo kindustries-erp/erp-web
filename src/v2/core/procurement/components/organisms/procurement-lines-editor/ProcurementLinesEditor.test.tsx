@@ -101,4 +101,23 @@ describe("ProcurementLinesEditor", () => {
     expect(screen.getByText("DV-001")).toBeInTheDocument();
     expect(screen.getByText("Công thay thế")).toBeInTheDocument();
   });
+
+  it("hiển thị số dòng trong DrawerSection count và cho phép tùy biến title, addButtonLabel", () => {
+    const lines = [emptyProcurementLine(), emptyProcurementLine()];
+    render(
+      <ProcurementLinesEditor
+        lines={lines}
+        onChange={vi.fn()}
+        viewing={false}
+        priceLabel="Đơn giá"
+        title="Chi tiết vật tư đề nghị"
+        addButtonLabel="Thêm vật tư"
+      />,
+    );
+    expect(screen.getByText("Chi tiết vật tư đề nghị")).toBeInTheDocument();
+    expect(screen.getByText("(2)")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /thêm vật tư/i }),
+    ).toBeInTheDocument();
+  });
 });

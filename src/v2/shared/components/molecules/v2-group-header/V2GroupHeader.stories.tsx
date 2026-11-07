@@ -3,7 +3,7 @@ import React from "react";
 import { V2GroupHeader } from "./V2GroupHeader";
 
 const meta: Meta<typeof V2GroupHeader> = {
-  title: "Components/Molecules/Overlay & Menu/V2GroupHeader",
+  title: "Components/Molecules/V2GroupHeader",
   component: V2GroupHeader,
   tags: ["autodocs"],
 };

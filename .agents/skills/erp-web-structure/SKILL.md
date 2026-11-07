@@ -40,7 +40,8 @@ Quy tắc:
 - **Zustand**: đọc state bằng selector riêng lẻ (`useXStore((s) => s.field)`). Tránh `const { a, b } = useXStore()` vì component render lại theo cả store.
 - **A11y**: control, overlay và field lỗi theo mục A11y trong checklist `references/atomic-ui.md`.
 - **Mobile-First & Responsive**: thiết kế và viết CSS Mobile-First (style gốc cho mobile, mở rộng bằng `sm:`, `md:`, `lg:`). Touch target $\ge 44\text{px}$, input font $\ge 16\text{px}$ chống iOS Safari zoom, bọc safe-area insets. Tách `*.desktop.tsx` / `*.mobile.tsx` (Platform Split) khi UX khác biệt căn bản (App Layout, Drawer Bottom Sheet, Table vs Card List) qua Switcher `< 15 LoC`.
-- **Storybook**: component trong `shared/` nên có `*.stories.tsx`.
+- **Storybook (tùy chọn)**: khuyến khích `*.stories.tsx` cho atoms; không bắt buộc, không nằm trong gate CI. Story phải đặt trong `src/v2/shared/components/<tầng>/<folder>/` và có `title: "Components/<Tầng>/<Name>"` (`.storybook/main.ts` chỉ quét vùng này).
+- **Test theo tầng**: bắt buộc cho Organism và luồng page (`tests/integration/`); Atom/Molecule chỉ test khi có logic riêng.
 - **Enum nhập liệu**: key field và option dùng chung khai báo bằng `enum` (một nguồn, nhãn qua `t()`), tái sử dụng giữa form, bảng và filter. Xem `ui-structure` Phần D.
 
 ## 3. Table và Drawer
@@ -71,7 +72,7 @@ Nguyên tắc chính:
 Generator (plop):
 
 - `v2-module`: tạo module đầy đủ trong `src/v2/modules/<module>/` (api, domain, components, drawers, pages, locale, tests), đồng thời nối route, menu và i18n.
-- `v2-component`: tạo component dùng chung (index, component, type, test, stories) và nối barrel của tầng Atomic đã chọn.
+- `v2-component`: tạo component dùng chung (index, component, type; organism thêm test, atom thêm stories) và nối barrel của tầng Atomic đã chọn.
 
 Module mẫu đã hoàn chỉnh: `src/v2/modules/business-partners/`.
 

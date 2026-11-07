@@ -386,7 +386,7 @@ export default function (plop) {
   // 6. GENERATOR: Component V2 dùng chung (src/v2/shared/components/<layer>)
   plop.setGenerator("v2-component", {
     description:
-      "Tạo component V2 dùng chung (index, component, type, test, stories) và nối barrel của tầng",
+      "Tạo component V2 dùng chung (index, component, type; organism thêm test, atom thêm stories) và nối barrel của tầng",
     prompts: [
       {
         type: "list",

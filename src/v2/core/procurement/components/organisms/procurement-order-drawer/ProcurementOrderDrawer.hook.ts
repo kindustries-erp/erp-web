@@ -35,6 +35,7 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const { t } = useV2Translation();
   const queryClient = useQueryClient();
   const creating = !props.documentId;
+  const branchOptional = Boolean(props.branchOptional);
   const [mode, setMode] = React.useState(props.mode);
   const [form, setForm] = React.useState<ProcurementOrderFormValue>(() =>
     emptyOrderForm(todayIsoDate()),
@@ -101,7 +102,10 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     mutationFn: async () => {
       if (creating) return props.api.create(toOrderCreatePayload(form));
       const id = props.documentId!;
-      await props.api.updateHeader?.(id, toOrderHeaderPayload(form));
+      await props.api.updateHeader?.(
+        id,
+        toOrderHeaderPayload(form, branchOptional),
+      );
       await props.api.replaceLines(id, form.lines.map(toOrderLinePayload));
       return { id };
     },
@@ -126,7 +130,7 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   ) => setForm((current) => ({ ...current, [key]: value }));
 
   const submit = () => {
-    const next = validateOrderForm(form);
+    const next = validateOrderForm(form, branchOptional);
     setErrors(next);
     if (hasOrderFormErrors(next)) {
       showProcurementWarning(
@@ -162,7 +166,9 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     creating,
     viewing,
     dirty,
-    branchLocked: !creating,
+    /** Chi nhánh tùy chọn được sửa khi nháp; PO lập từ PR vẫn khóa theo PR trong section */
+    branchLocked: branchOptional ? false : !creating,
+    branchOptional,
     editable,
     mode,
     setMode,

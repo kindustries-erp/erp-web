@@ -18,6 +18,11 @@ export interface ProcurementListConfig<T extends { id: string }> {
   poHref?: string;
   /** PR: dòng có còn phần chưa đặt để tạo PO không */
   canOrderFromRequest?: (row: T) => boolean;
+  /**
+   * Đường dẫn API cấu hình duyệt (`{path}/setting`, `{path}/approvers`).
+   * Thiếu thì màn không có khóa duyệt và hành vi như cũ.
+   */
+  approvalConfigPath?: string;
   /** PO: API của đề nghị mua, để điền sẵn khi tạo PO từ PR */
   requestApi?: ProcurementApi<unknown>;
 }

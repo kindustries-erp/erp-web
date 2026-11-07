@@ -66,7 +66,7 @@ export const V2BottomNavHeroButton: React.FC<V2BottomNavHeroButtonProps> = ({
         aria-label={label}
         data-testid="bottom-nav-hero-button"
         className={cn(
-          "relative flex items-center justify-center rounded-full bg-primary text-primary-fg shadow-xl shadow-black/20 dark:shadow-black/70 transition-all duration-200 active:scale-90 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 select-none border-4 border-background cursor-pointer p-0",
+          "relative flex items-center justify-center rounded-full bg-primary text-primary-fg shadow-xl shadow-black/20 dark:shadow-black/70 transition-all duration-200 active:scale-90 hover:scale-105 touch-manipulation [-webkit-tap-highlight-color:transparent] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 select-none border-4 border-background cursor-pointer p-0",
           resolvedSizeClass,
           isActive &&
             "ring-2 ring-primary ring-offset-2 ring-offset-background",

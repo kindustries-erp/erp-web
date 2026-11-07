@@ -4,7 +4,7 @@ import { V2DrawerHistoryTab } from "./V2DrawerHistoryTab";
 import type { DrawerAuditItem } from "./V2DrawerHistoryTab.type";
 
 const meta: Meta<typeof V2DrawerHistoryTab> = {
-  title: "Components/Molecules/Overlay & Menu/V2DrawerHistoryTab",
+  title: "Components/Molecules/V2DrawerHistoryTab",
   component: V2DrawerHistoryTab,
   tags: ["autodocs"],
 };

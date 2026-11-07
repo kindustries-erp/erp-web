@@ -21,7 +21,8 @@ function normalizeBranch(item: any): Branch {
     id: item.id,
     code: item.code ?? item.branch_code ?? "",
     name: item.name ?? item.branch_name ?? "",
-    is_active: item.is_active !== false,
+    // API v2 trả isActive; giữ fallback is_active cho phản hồi cũ.
+    is_active: (item.isActive ?? item.is_active) !== false,
   };
 }
 

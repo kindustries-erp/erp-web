@@ -3,7 +3,7 @@ import React from "react";
 import { V2SubtotalSummaryCell } from "./V2SubtotalSummaryCell";
 
 const meta: Meta<typeof V2SubtotalSummaryCell> = {
-  title: "Components/Molecules/Table/V2SubtotalSummaryCell",
+  title: "Components/Molecules/V2SubtotalSummaryCell",
   component: V2SubtotalSummaryCell,
   tags: ["autodocs"],
   decorators: [

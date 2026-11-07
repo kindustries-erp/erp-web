@@ -51,7 +51,12 @@ export function ProcurementRequestSummarySection({
     {
       key: "createdBy",
       label: t("v2.procurement.columns.createdBy", "Người tạo"),
-      value: detail?.createdBy ?? "—",
+      value: detail?.createdByEmail ?? "—",
+    },
+    {
+      key: "approver",
+      label: t("v2.procurement.columns.approver", "Người duyệt"),
+      value: detail?.approverEmail ?? "—",
     },
   ];
 

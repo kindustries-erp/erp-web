@@ -1,6 +1,5 @@
 import { cn } from "@/shared/utils";
-import { UserMenuPopover } from "./UserMenuPopover";
-import { V2NotificationPopover } from "@/v2/shared/components";
+import { V2UserMenu, V2NotificationPopover } from "@/v2/shared/components";
 import { useQuery } from "@tanstack/react-query";
 import { notificationsApi } from "@/core/api/notifications";
 
@@ -37,7 +36,7 @@ export function SidebarBottom({
             : "flex items-center gap-[6px]",
         )}
       >
-        <UserMenuPopover
+        <V2UserMenu
           onOpenProfile={() => setProfileOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenChangelog={() => setChangelogOpen?.(true)}
@@ -67,7 +66,7 @@ export function SidebarBottom({
               <polyline points="7 14 12 19 17 14" />
             </svg>
           </div>
-        </UserMenuPopover>
+        </V2UserMenu>
 
         <V2NotificationPopover notifications={notifications}>
           <button className="relative flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-[color:var(--faint)] hover:text-foreground hover:bg-surface-hover border-none bg-transparent cursor-pointer flex-shrink-0">

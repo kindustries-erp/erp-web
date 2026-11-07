@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2FilePreviewPanel } from "./V2FilePreviewPanel";
 
 const meta: Meta<typeof V2FilePreviewPanel> = {
-  title: "Components/Organisms/Drawer/V2FilePreviewPanel",
+  title: "Components/Organisms/V2FilePreviewPanel",
   component: V2FilePreviewPanel,
   tags: ["autodocs"],
   args: { height: 360 },

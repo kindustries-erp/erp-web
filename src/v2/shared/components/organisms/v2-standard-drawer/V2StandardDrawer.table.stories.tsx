@@ -17,7 +17,7 @@ const lines: Line[] = Array.from({ length: 60 }, (_, i) => ({
 }));
 
 const meta: Meta<typeof V2StandardDrawer> = {
-  title: "Components/Organisms/Drawer/V2StandardDrawer",
+  title: "Components/Organisms/V2StandardDrawer",
   component: V2StandardDrawer,
   decorators: [
     (Story) => (

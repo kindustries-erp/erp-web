@@ -4,7 +4,7 @@ import { V2Button } from "@/v2/shared/components/atoms";
 import { V2ExportExcelDrawer } from "./V2ExportExcelDrawer";
 
 const meta: Meta<typeof V2ExportExcelDrawer> = {
-  title: "Components/Organisms/Drawers/V2ExportExcelDrawer",
+  title: "Components/Organisms/V2ExportExcelDrawer",
   component: V2ExportExcelDrawer,
   tags: ["autodocs"],
 };

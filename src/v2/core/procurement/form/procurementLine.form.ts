@@ -101,7 +101,11 @@ export const toRequestLinePayload = (
   estUnitPrice: toNumberOrNull(line.price) ?? undefined,
 });
 
-/** Dòng chi tiết từ API thành dòng form; số lượng/đơn giá lấy theo trường có sẵn của PR hoặc PO. */
+/**
+ * Dòng chi tiết từ API thành dòng form. Số lượng ưu tiên `qtyRequested` (PR): PR luôn trả
+ * `qtyOrdered = 0` cho tới khi đặt hàng, nên không được dùng `qtyOrdered` trước. PO không có
+ * `qtyRequested` nên rơi xuống `qtyOrdered`.
+ */
 export const procurementLineFromDetail = (
   detail: ProcurementDetailLine,
 ): ProcurementLineFormValue => ({
@@ -110,7 +114,7 @@ export const procurementLineFromDetail = (
   itemCode: detail.itemCode ?? "",
   itemName: detail.itemName ?? "",
   description: detail.description ?? "",
-  qty: toInputText(detail.qtyOrdered ?? detail.qtyRequested) ?? "0",
+  qty: toInputText(detail.qtyRequested ?? detail.qtyOrdered) ?? "0",
   price: toInputText(detail.unitPrice ?? detail.estUnitPrice) ?? "",
   requestLineId: detail.requestLineId ?? null,
 });

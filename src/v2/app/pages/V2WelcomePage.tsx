@@ -1,11 +1,18 @@
 import * as React from "react";
+import { useCallback } from "react";
 import { Layers, Smartphone, ShieldCheck, Zap, ArrowRight } from "lucide-react";
-import { V2Button, V2Text } from "@/v2/shared/components";
-import { Badge } from "@/v2/shared/ui";
+import { V2Button, V2Text, V2Badge, V2Panel } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 
 export const V2WelcomePage: React.FC = () => {
   const { t } = useV2Translation();
+
+  const handleExplore = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", "/v2/sales-orders");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
+  }, []);
 
   const features = [
     {
@@ -47,24 +54,24 @@ export const V2WelcomePage: React.FC = () => {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 py-2">
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
-        <div className="relative z-10 max-w-2xl space-y-4">
+    <div className="mx-auto max-w-5xl space-y-6 py-2">
+      <V2Panel className="p-6 sm:p-8 bg-card border-border shadow-xs">
+        <div className="max-w-2xl space-y-4">
           <div className="flex items-center gap-2">
-            <Badge
+            <V2Badge
               variant="outline"
-              className="gap-1.5 py-1 px-3 text-xs font-semibold text-primary"
+              size="sm"
+              className="gap-1.5 font-semibold text-primary"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {t("v2.welcome.badgeReady", "Nền tảng V2 Sẵn sàng")}
-            </Badge>
+            </V2Badge>
           </div>
 
           <V2Text
             as="h1"
             variant="h1"
-            className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground"
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight"
           >
             {t("v2.welcome.heroTitle", "Khung Ứng Dụng ERP V2")}
           </V2Text>
@@ -80,42 +87,36 @@ export const V2WelcomePage: React.FC = () => {
             )}
           </V2Text>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="pt-2">
             <V2Button
               variant="default"
-              onClick={() => {
-                const aside = document.querySelector("aside");
-                if (aside) aside.scrollIntoView({ behavior: "smooth" });
-              }}
+              size="sm"
+              onClick={handleExplore}
               className="gap-2 text-xs"
               rightIcon={<ArrowRight size={14} />}
             >
-              <span>{t("v2.welcome.exploreBtn", "Khám phá giao diện V2")}</span>
+              {t("v2.welcome.exploreBtn", "Khám phá giao diện V2")}
             </V2Button>
           </div>
         </div>
-      </div>
+      </V2Panel>
 
-      {/* Feature Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {features.map((feat) => {
           const Icon = feat.icon;
           return (
-            <div
+            <V2Panel
               key={feat.title}
-              className="flex flex-col justify-between rounded-xl border border-border bg-card p-5 shadow-xs transition-shadow hover:shadow-sm"
+              className="flex flex-col justify-between p-5 hover:shadow-xs transition-shadow"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Icon size={20} />
                   </div>
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] font-normal"
-                  >
+                  <V2Badge variant="secondary" size="xs">
                     {feat.tag}
-                  </Badge>
+                  </V2Badge>
                 </div>
                 <V2Text as="h2" variant="h4" weight="bold">
                   {feat.title}
@@ -128,7 +129,7 @@ export const V2WelcomePage: React.FC = () => {
                   {feat.desc}
                 </V2Text>
               </div>
-            </div>
+            </V2Panel>
           );
         })}
       </div>

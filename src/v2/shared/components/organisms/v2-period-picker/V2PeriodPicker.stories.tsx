@@ -4,7 +4,7 @@ import { V2PeriodPicker } from "./V2PeriodPicker";
 import type { V2PeriodUnit } from "./V2PeriodPicker.type";
 
 const meta: Meta<typeof V2PeriodPicker> = {
-  title: "Components/Molecules/Form & Input/V2PeriodPicker",
+  title: "Components/Organisms/V2PeriodPicker",
   component: V2PeriodPicker,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
