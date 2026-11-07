@@ -3,7 +3,7 @@ import * as React from "react";
 import { V2UserMenu } from "./V2UserMenu";
 
 const meta: Meta<typeof V2UserMenu> = {
-  title: "Components/Molecules/Navigation & Sidebar/V2UserMenu",
+  title: "Components/Molecules/V2UserMenu",
   component: V2UserMenu,
   tags: ["autodocs"],
   parameters: {
