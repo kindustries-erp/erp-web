@@ -57,7 +57,7 @@ export const V2AdminBottomNav: React.FC<V2AdminBottomNavProps> = ({
   const isDot = indicator === V2NavIndicator.DOT;
 
   const containerClasses = cn(
-    "fixed z-30 flex items-center justify-around select-none animate-slide-in-from-bottom transition-all duration-300",
+    "fixed z-30 flex items-center justify-around select-none touch-manipulation [-webkit-tap-highlight-color:transparent] animate-slide-in-from-bottom transition-all duration-300",
     isFloating
       ? "bottom-3 inset-x-3 max-w-lg mx-auto h-16 rounded-2xl border border-border/80 dark:border-white/10 bg-card/85 dark:bg-card/90 px-2 shadow-xl dark:shadow-2xl dark:shadow-black/60 backdrop-blur-xl"
       : "bottom-0 inset-x-0 h-16 bg-background/90 dark:bg-card/90 backdrop-blur-xl border-t border-border/80 dark:border-white/10 px-2 pb-safe",
@@ -83,7 +83,7 @@ export const V2AdminBottomNav: React.FC<V2AdminBottomNavProps> = ({
             aria-current={isActive ? "page" : undefined}
             data-testid={`admin-nav-item-${item.id}`}
             className={cn(
-              "group relative h-auto flex flex-1 flex-col items-center justify-center py-1.5 px-1 rounded-xl hover:bg-transparent transition-all duration-200 select-none active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 shadow-none",
+              "group relative h-auto flex flex-1 flex-col items-center justify-center py-1.5 px-1 rounded-xl hover:bg-transparent transition-all duration-200 select-none active:scale-95 touch-manipulation [-webkit-tap-highlight-color:transparent] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 shadow-none",
               isActive
                 ? "text-primary font-semibold"
                 : "text-muted-fg hover:text-foreground",

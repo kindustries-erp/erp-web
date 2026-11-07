@@ -18,7 +18,7 @@ const sampleLogs: V2SyncProgressEntry[] = [
 ];
 
 const meta: Meta<typeof V2SyncProgress> = {
-  title: "Components/Molecules/Display/V2SyncProgress",
+  title: "Components/Molecules/V2SyncProgress",
   component: V2SyncProgress,
   tags: ["autodocs"],
   args: { status: "idle", logs: [], labels },

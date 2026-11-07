@@ -28,6 +28,7 @@ export const garageProcurementOrdersConfig: ProcurementListConfig<ProcurementOrd
   {
     api: garageProcurementOrdersApi,
     queryKey: "v2-garage-procurement-orders",
+    approvalConfigPath: "/api/v2/approval-config/garage-procurement-orders",
     permissionCollection: "garage_procurement_orders",
     availableActions: (row) =>
       availableProcurementActions(PROCUREMENT_ORDER_FROM, row.status),
@@ -46,5 +47,7 @@ export const garageProcurementOrdersDisplay: ProcurementPageDisplay<ProcurementO
     descriptionKey: "v2.garageProcurementOrders.description",
     icon: <ShoppingCart className="h-4 w-4" />,
     buildColumns: buildProcurementOrderColumns,
-    renderDrawer: (props) => <ProcurementOrderDrawer {...props} />,
+    renderDrawer: (props) => (
+      <ProcurementOrderDrawer {...props} branchOptional />
+    ),
   };

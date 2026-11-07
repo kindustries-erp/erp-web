@@ -43,7 +43,7 @@ describe("procurementColumns", () => {
     const openDetail = vi.fn();
     const columns = buildProcurementRequestColumns(mockT, openDetail);
 
-    expect(columns).toHaveLength(8);
+    expect(columns).toHaveLength(9);
     const keys = columns.map((c) => c.key);
     expect(keys).toEqual([
       "requestNo",
@@ -54,6 +54,7 @@ describe("procurementColumns", () => {
       "status",
       "orderingStatus",
       "createdBy",
+      "approver",
     ]);
 
     const mockRow: ProcurementRequestRow = {
@@ -66,9 +67,26 @@ describe("procurementColumns", () => {
       estimatedTotal: 15000000,
       status: "APPROVED",
       orderingStatus: "PARTIAL",
-      createdBy: "Nguyen Van A",
+      createdBy: "5f0c2a7e-0000-4000-8000-000000000000",
+      createdByEmail: "nguyen.a@liouni.com",
+      approverId: null,
+      approverEmail: "truong.garage@liouni.com",
       createdAt: "2026-11-05T08:00:00Z",
     };
+
+    // Người tạo và người duyệt hiển thị email, không hiển thị UUID
+    const colCreator = columns.find((c) => c.key === "createdBy")!;
+    const { container: creatorContainer } = render(
+      <div>{colCreator.cell(mockRow, 0)}</div>,
+    );
+    expect(creatorContainer).toHaveTextContent("nguyen.a@liouni.com");
+    expect(creatorContainer).not.toHaveTextContent("5f0c2a7e");
+
+    const colApprover = columns.find((c) => c.key === "approver")!;
+    const { container: approverContainer } = render(
+      <div>{colApprover.cell(mockRow, 0)}</div>,
+    );
+    expect(approverContainer).toHaveTextContent("truong.garage@liouni.com");
 
     // Kiểm tra cell của requestNo gọi openDetail khi click
     const colRequestNo = columns.find((c) => c.key === "requestNo")!;
@@ -93,6 +111,14 @@ describe("procurementColumns", () => {
       <div>{colStatus.cell(mockRow, 0)}</div>,
     );
     expect(statusContainer).toHaveTextContent("APPROVED");
+
+    // Kiểm tra mobileSlot cấu hình chuẩn cho mobile card (badge kép và meta người tạo/duyệt)
+    expect(columns.find((c) => c.key === "status")?.mobileSlot).toBe("badge");
+    expect(columns.find((c) => c.key === "orderingStatus")?.mobileSlot).toBe(
+      "badge",
+    );
+    expect(columns.find((c) => c.key === "createdBy")?.mobileSlot).toBe("meta");
+    expect(columns.find((c) => c.key === "approver")?.mobileSlot).toBe("meta");
   });
 
   it("buildProcurementOrderColumns tạo đủ danh sách cột cho PO", () => {

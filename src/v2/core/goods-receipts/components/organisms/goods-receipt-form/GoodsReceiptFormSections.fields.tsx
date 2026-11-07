@@ -3,14 +3,12 @@ import { RotateCw } from "lucide-react";
 import {
   V2Button,
   V2Textarea,
-  V2Combobox,
   V2ReadValue,
   V2TextField,
 } from "@/v2/shared/components";
-import {
-  GoodsReceiptStatus,
-  type GoodsReceiptFormValue,
-} from "@/v2/core/goods-receipts";
+import type { GoodsReceiptFormValue } from "@/v2/core/goods-receipts";
+import { ProcurementBranchPicker } from "@/v2/core/procurement";
+import { GoodsReceiptStatusBadge } from "../../molecules/goods-receipt-status-badge/GoodsReceiptStatusBadge";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import type { FormSectionsProps } from "./GoodsReceiptFormSections.type";
@@ -66,12 +64,17 @@ const renderSupplierName: FieldRenderer = ({ form, viewing, setField }) => (
   />
 );
 
+/** Phiếu nhập chọn tối đa một chi nhánh; để trống thì tồn kho vào nhóm không chi nhánh. */
 const renderBranchName: FieldRenderer = ({ form, viewing, setField }) => (
-  <V2TextField
+  <ProcurementBranchPicker
+    value={form.branchId}
+    label={form.branchName}
     viewing={viewing}
-    value={form.branchName}
-    className={V2_DRAWER_FOCUS_RING_CLASS}
-    onChange={(v) => setField("branchName", v)}
+    clearable
+    onChange={(id, name) => {
+      setField("branchId", id);
+      setField("branchName", name);
+    }}
   />
 );
 
@@ -86,40 +89,11 @@ const renderTotalAmount: FieldRenderer = ({ form, viewing, setField }) => (
   />
 );
 
-const renderStatus: FieldRenderer = ({ form, viewing, t, setField }) =>
-  viewing ? (
-    <V2ReadValue
-      value={
-        form.status === GoodsReceiptStatus.POSTED
-          ? t("v2.goodsReceipts.status.posted", "Đã ghi sổ")
-          : form.status === GoodsReceiptStatus.CANCELLED
-            ? t("v2.goodsReceipts.status.cancelled", "Đã hủy")
-            : t("v2.goodsReceipts.status.draft", "Nháp")
-      }
-    />
-  ) : (
-    <V2Combobox
-      searchable={false}
-      clearable={false}
-      value={form.status}
-      className={V2_DRAWER_FOCUS_RING_CLASS}
-      onValueChange={(v) => setField("status", v as GoodsReceiptStatus)}
-      options={[
-        {
-          value: GoodsReceiptStatus.DRAFT,
-          label: t("v2.goodsReceipts.status.draft", "Nháp"),
-        },
-        {
-          value: GoodsReceiptStatus.POSTED,
-          label: t("v2.goodsReceipts.status.posted", "Đã ghi sổ"),
-        },
-        {
-          value: GoodsReceiptStatus.CANCELLED,
-          label: t("v2.goodsReceipts.status.cancelled", "Đã hủy"),
-        },
-      ]}
-    />
-  );
+const renderStatus: FieldRenderer = ({ form }) => (
+  <div className="flex items-center min-h-[36px]">
+    <GoodsReceiptStatusBadge status={form.status} />
+  </div>
+);
 
 const renderRemarks: FieldRenderer = ({ form, viewing, setField }) =>
   viewing ? (

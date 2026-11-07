@@ -49,9 +49,10 @@ export const emptyOrderForm = (today: string): ProcurementOrderFormValue => ({
 
 export const validateOrderForm = (
   form: ProcurementOrderFormValue,
+  branchOptional = false,
 ): ProcurementOrderFormErrors => {
   const errors: ProcurementOrderFormErrors = {};
-  if (!form.branchId) errors.branchId = true;
+  if (!branchOptional && !form.branchId) errors.branchId = true;
   if (!form.orderDate) errors.orderDate = true;
   const linesError = validateProcurementLines(form.lines);
   if (linesError) errors.lines = linesError;
@@ -63,9 +64,9 @@ export const hasOrderFormErrors = (errors: ProcurementOrderFormErrors) =>
 
 const trimOrNull = (value: string): string | null => value.trim() || null;
 
-/** Payload tạo đơn: chi nhánh, ngày, NCC (nếu có), PR nguồn (nếu có) và các dòng. */
+/** Payload tạo đơn: chi nhánh (rỗng thì bỏ qua), ngày, NCC, PR nguồn và các dòng. */
 export const toOrderCreatePayload = (form: ProcurementOrderFormValue) => ({
-  branchId: form.branchId,
+  branchId: form.branchId || undefined,
   branchName: form.branchName.trim() || undefined,
   orderDate: form.orderDate,
   expectedDate: form.expectedDate || undefined,
@@ -76,8 +77,20 @@ export const toOrderCreatePayload = (form: ProcurementOrderFormValue) => ({
   lines: form.lines.map(toOrderLinePayload),
 });
 
-/** Payload sửa đầu đơn (chỉ khi còn nháp); các trường rỗng gửi null để xóa giá trị cũ. */
-export const toOrderHeaderPayload = (form: ProcurementOrderFormValue) => ({
+/**
+ * Payload sửa đầu đơn (chỉ khi còn nháp); các trường rỗng gửi null để xóa giá trị cũ.
+ * Chi nhánh chỉ gửi khi tùy chọn (Garage); luồng thường không gửi để giữ hành vi cũ.
+ */
+export const toOrderHeaderPayload = (
+  form: ProcurementOrderFormValue,
+  branchOptional = false,
+) => ({
+  ...(branchOptional
+    ? {
+        branchId: form.branchId || null,
+        branchName: trimOrNull(form.branchName),
+      }
+    : {}),
   orderDate: form.orderDate,
   expectedDate: form.expectedDate || null,
   supplierId: form.supplierId,

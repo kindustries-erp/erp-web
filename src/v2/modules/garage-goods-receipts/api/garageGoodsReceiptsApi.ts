@@ -51,8 +51,9 @@ export const toGarageGoodsReceiptPayload = (
   receiptDate: form.receiptDate.trim(),
   supplierId: form.supplierId.trim() || undefined,
   supplierName: form.supplierName.trim() || undefined,
-  branchId: form.branchId.trim() || undefined,
-  branchName: form.branchName.trim() || undefined,
+  // Chi nhánh tùy chọn: rỗng gửi null để cập nhật xóa được chi nhánh cũ
+  branchId: form.branchId.trim() || null,
+  branchName: form.branchName.trim() || null,
   totalAmount: form.totalAmount.trim() ? Number(form.totalAmount) : undefined,
   status: form.status,
   paymentStatus: form.paymentStatus,

@@ -24,13 +24,24 @@ export interface ProcurementRequestFormErrors {
   lines?: ProcurementLinesError;
 }
 
+/**
+ * Ngày cần hàng sau khi đổi ngày đề nghị. Đang đồng bộ (trống hoặc bằng ngày đề nghị cũ)
+ * thì theo ngày đề nghị mới; người dùng đã sửa lệch thì giữ nguyên.
+ */
+export const nextNeededDate = (
+  prevRequestDate: string,
+  neededDate: string,
+  nextRequestDate: string,
+): string =>
+  !neededDate || neededDate === prevRequestDate ? nextRequestDate : neededDate;
+
 export const emptyRequestForm = (
   today: string,
 ): ProcurementRequestFormValue => ({
   branchId: "",
   branchName: "",
   requestDate: today,
-  neededDate: "",
+  neededDate: today,
   title: "",
   remarks: "",
   lines: [emptyProcurementLine()],
@@ -38,9 +49,10 @@ export const emptyRequestForm = (
 
 export const validateRequestForm = (
   form: ProcurementRequestFormValue,
+  branchOptional = false,
 ): ProcurementRequestFormErrors => {
   const errors: ProcurementRequestFormErrors = {};
-  if (!form.branchId) errors.branchId = true;
+  if (!branchOptional && !form.branchId) errors.branchId = true;
   if (!form.requestDate) errors.requestDate = true;
   const linesError = validateProcurementLines(form.lines);
   if (linesError) errors.lines = linesError;
@@ -50,8 +62,9 @@ export const validateRequestForm = (
 export const hasRequestFormErrors = (errors: ProcurementRequestFormErrors) =>
   Object.keys(errors).length > 0;
 
+/** Chi nhánh rỗng gửi undefined (tạo) để API không nhận chuỗi rỗng khi là UUID. */
 export const toRequestCreatePayload = (form: ProcurementRequestFormValue) => ({
-  branchId: form.branchId,
+  branchId: form.branchId || undefined,
   branchName: form.branchName.trim() || undefined,
   requestDate: form.requestDate,
   neededDate: form.neededDate || undefined,
@@ -60,8 +73,20 @@ export const toRequestCreatePayload = (form: ProcurementRequestFormValue) => ({
   lines: form.lines.map(toRequestLinePayload),
 });
 
-/** Payload sửa đầu đề khi còn nháp (không gồm chi nhánh). Trường rỗng gửi null. */
-export const toRequestHeaderPayload = (form: ProcurementRequestFormValue) => ({
+/**
+ * Payload sửa đầu đề khi còn nháp. Trường rỗng gửi null.
+ * Chi nhánh chỉ gửi khi tùy chọn (Garage); luồng thường không gửi để giữ hành vi cũ.
+ */
+export const toRequestHeaderPayload = (
+  form: ProcurementRequestFormValue,
+  branchOptional = false,
+) => ({
+  ...(branchOptional
+    ? {
+        branchId: form.branchId || null,
+        branchName: form.branchName.trim() || null,
+      }
+    : {}),
   requestDate: form.requestDate,
   neededDate: form.neededDate || null,
   title: form.title.trim() || null,

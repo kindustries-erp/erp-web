@@ -1,11 +1,8 @@
-import * as React from "react";
 import {
   DrawerSection,
   V2DrawerFieldGrid,
-  V2DrawerRowList,
   V2Textarea,
   V2TextField,
-  type DrawerRowConfig,
   type V2DrawerFieldItem,
 } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -15,28 +12,36 @@ import {
   ProcurementBranchPicker,
   ProcurementDateField,
 } from "../../../molecules/procurement-pickers/ProcurementPickers";
-import type {
-  ProcurementRequestFormErrors,
-  ProcurementRequestFormValue,
+import {
+  nextNeededDate,
+  type ProcurementRequestFormErrors,
+  type ProcurementRequestFormValue,
 } from "../../../../form/procurementRequest.form";
+import { ProcurementRequestHeaderView } from "./ProcurementRequestHeaderView";
 
 export interface ProcurementRequestHeaderSectionProps {
   form: ProcurementRequestFormValue;
   errors: ProcurementRequestFormErrors;
   headerViewing: boolean;
   branchLocked: boolean;
+  /** Chi nhánh tùy chọn (Garage): không bắt buộc, bỏ trống được */
+  branchOptional?: boolean;
   setField: <K extends keyof ProcurementRequestFormValue>(
     key: K,
     value: ProcurementRequestFormValue[K],
   ) => void;
 }
 
-/** Section đầu đề đề nghị mua (cột phải): chi nhánh, ngày đề nghị, ngày cần, nội dung, ghi chú. */
+/**
+ * Section đầu đề đề nghị mua (cột phải). Sửa: chi nhánh một hàng, hai ngày cùng hàng
+ * (ngày cần theo ngày đề nghị khi chưa sửa lệch), rồi nội dung và ghi chú.
+ */
 export function ProcurementRequestHeaderSection({
   form,
   errors,
   headerViewing,
   branchLocked,
+  branchOptional = false,
   setField,
 }: ProcurementRequestHeaderSectionProps) {
   const { t } = useV2Translation();
@@ -44,43 +49,12 @@ export function ProcurementRequestHeaderSection({
     "v2.procurement.errors.required",
     "Trường này bắt buộc",
   );
+  const title = t("v2.procurement.sections.header", "Thông tin đề nghị");
 
   if (headerViewing) {
-    const rows: DrawerRowConfig[] = [
-      {
-        key: "branch",
-        label: t("v2.procurement.fields.branch", "Chi nhánh"),
-        value: form.branchName || "—",
-      },
-      {
-        key: "requestDate",
-        label: t("v2.procurement.fields.requestDate", "Ngày đề nghị"),
-        value: form.requestDate || "—",
-      },
-      {
-        key: "neededDate",
-        label: t("v2.procurement.fields.neededDate", "Ngày cần hàng"),
-        value: form.neededDate || "—",
-      },
-      {
-        key: "title",
-        label: t("v2.procurement.fields.title", "Nội dung"),
-        value: form.title || "—",
-        multiline: true,
-      },
-      {
-        key: "remarks",
-        label: t("v2.procurement.fields.remarks", "Ghi chú"),
-        value: form.remarks || "—",
-        multiline: true,
-      },
-    ];
-
     return (
-      <DrawerSection
-        title={t("v2.procurement.sections.header", "Thông tin đề nghị")}
-      >
-        <V2DrawerRowList rows={rows} />
+      <DrawerSection title={title}>
+        <ProcurementRequestHeaderView form={form} />
       </DrawerSection>
     );
   }
@@ -89,14 +63,19 @@ export function ProcurementRequestHeaderSection({
     {
       key: "branchId",
       label: t("v2.procurement.fields.branch", "Chi nhánh"),
-      required: true,
+      required: !branchOptional,
       error: errors.branchId ? requiredError : undefined,
+      className: "sm:col-span-2",
       render: () => (
         <ProcurementBranchPicker
           value={form.branchId}
           label={form.branchName}
           viewing={branchLocked}
-          onChange={(id) => setField("branchId", id)}
+          clearable={branchOptional}
+          onChange={(id, name) => {
+            setField("branchId", id);
+            setField("branchName", name);
+          }}
         />
       ),
     },
@@ -109,7 +88,13 @@ export function ProcurementRequestHeaderSection({
         <ProcurementDateField
           value={form.requestDate}
           viewing={false}
-          onChange={(v) => setField("requestDate", v)}
+          onChange={(v) => {
+            setField(
+              "neededDate",
+              nextNeededDate(form.requestDate, form.neededDate, v),
+            );
+            setField("requestDate", v);
+          }}
         />
       ),
     },
@@ -128,6 +113,7 @@ export function ProcurementRequestHeaderSection({
     {
       key: "title",
       label: t("v2.procurement.fields.title", "Nội dung"),
+      className: "sm:col-span-2",
       render: () => (
         <V2TextField
           viewing={false}
@@ -153,10 +139,8 @@ export function ProcurementRequestHeaderSection({
   ];
 
   return (
-    <DrawerSection
-      title={t("v2.procurement.sections.header", "Thông tin đề nghị")}
-    >
-      <V2DrawerFieldGrid fields={fields} columns={1} />
+    <DrawerSection title={title}>
+      <V2DrawerFieldGrid fields={fields} />
     </DrawerSection>
   );
 }

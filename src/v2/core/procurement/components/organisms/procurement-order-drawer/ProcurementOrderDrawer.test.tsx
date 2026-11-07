@@ -62,10 +62,10 @@ describe("ProcurementOrderDrawer — chế độ xem/sửa", () => {
     expect(screen.getByText("Đơn mua hàng")).toBeInTheDocument();
   });
 
-  it("ở chế độ sửa hiện Hủy và Lưu, tiêu đề Sửa đơn mua hàng", async () => {
+  it("ở chế độ sửa hiện Hủy và Lưu nháp, tiêu đề Sửa đơn mua hàng", async () => {
     renderDrawer({ mode: "edit" });
     expect(
-      await screen.findByRole("button", { name: "Lưu" }),
+      await screen.findByRole("button", { name: /lưu nháp/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Hủy" })).toBeInTheDocument();
     expect(screen.getByText("Sửa đơn mua hàng")).toBeInTheDocument();
@@ -73,7 +73,7 @@ describe("ProcurementOrderDrawer — chế độ xem/sửa", () => {
 
   it("hủy sửa khi đã đổi ghi chú thì hỏi xác nhận trước khi về chế độ xem", async () => {
     renderDrawer({ mode: "edit" });
-    await screen.findByRole("button", { name: "Lưu" });
+    await screen.findByRole("button", { name: /lưu nháp/i });
     fireEvent.change(await screen.findByDisplayValue("Ghi chú gốc"), {
       target: { value: "Ghi chú mới" },
     });

@@ -7,17 +7,23 @@ import {
   listSupplierOptions,
 } from "../../../api/procurementLookups";
 
-/** Chọn chi nhánh (bắt buộc cho PR và PO). Danh sách ít thay đổi nên cache lâu. */
+/**
+ * Chọn một chi nhánh. `clearable` cho phép bỏ trống (chi nhánh tùy chọn).
+ * `onChange` nhận id và tên chi nhánh; bỏ trống thì nhận chuỗi rỗng.
+ * Danh sách ít thay đổi nên cache lâu.
+ */
 export function ProcurementBranchPicker({
   value,
   label,
   viewing,
+  clearable = false,
   onChange,
 }: {
   value: string;
   label: string;
   viewing: boolean;
-  onChange: (branchId: string) => void;
+  clearable?: boolean;
+  onChange: (branchId: string, branchName: string) => void;
 }) {
   const { t } = useV2Translation();
   const options = useQuery({
@@ -29,11 +35,19 @@ export function ProcurementBranchPicker({
   return (
     <V2Combobox
       aria-label={t("v2.procurement.fields.branch", "Chi nhánh")}
+      placeholder={t(
+        "v2.procurement.fields.branchPlaceholder",
+        "Chọn chi nhánh",
+      )}
       options={options.data ?? []}
       loading={options.isFetching}
       value={value || null}
       fallbackLabel={label || undefined}
-      onValueChange={(v) => onChange(v ?? "")}
+      clearable={clearable}
+      onValueChange={(v) => {
+        const picked = options.data?.find((o) => o.value === v);
+        onChange(v ?? "", picked?.label ?? "");
+      }}
     />
   );
 }

@@ -104,7 +104,7 @@ export function GoodsReceiptDrawer({
                   disabled: state.saving,
                 },
                 {
-                  label: t("v2.common.save", "Lưu"),
+                  label: t("v2.goodsReceipts.actions.saveDraft", "Lưu nháp"),
                   onClick: state.submit,
                   primary: true,
                   loading: state.saving,

@@ -25,7 +25,7 @@ const demoItems: V2TabComboboxItem[] = [
 ];
 
 const meta: Meta<typeof V2TabCombobox> = {
-  title: "Components/Molecules/Navigation/V2TabCombobox",
+  title: "Components/Molecules/V2TabCombobox",
   component: V2TabCombobox,
   tags: ["autodocs"],
   args: {

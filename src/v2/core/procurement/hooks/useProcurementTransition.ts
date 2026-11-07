@@ -27,7 +27,9 @@ export function useProcurementTransition<T extends { id: string }>(
       id: string;
       action: ProcurementActionKey;
       reason?: string;
-    }) => config.api.transition(vars.id, vars.action, vars.reason),
+      approverId?: string | null;
+    }) =>
+      config.api.transition(vars.id, vars.action, vars.reason, vars.approverId),
     onSuccess: () => {
       showProcurementSuccess(
         t("v2.procurement.actionDone", "Đã cập nhật chứng từ"),

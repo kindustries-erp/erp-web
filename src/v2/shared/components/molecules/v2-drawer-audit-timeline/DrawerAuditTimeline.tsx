@@ -3,6 +3,7 @@ import { Activity, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import type {
+  DrawerAuditItem,
   DrawerAuditTimelineProps,
   DrawerAuditVariant,
 } from "./DrawerAuditTimeline.type";
@@ -33,10 +34,81 @@ function DefaultNodeIcon({
   }
 }
 
+/** Layout inline: hành động, tác nhân, badge và giờ trên một hàng (giờ ở cột phải). */
+function InlineEventHead({ item }: { item: DrawerAuditItem }) {
+  return (
+    <div className="flex items-center justify-between gap-2 mb-1">
+      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+        <V2Text variant="body-sm" weight="semibold" className="truncate">
+          {item.action}
+        </V2Text>
+        {item.actor && (
+          <V2Text
+            variant="caption"
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-fg leading-none"
+          >
+            {item.actor}
+          </V2Text>
+        )}
+        {item.badge}
+      </div>
+
+      <V2Text
+        variant="caption"
+        color="muted"
+        className="whitespace-nowrap shrink-0 leading-none"
+      >
+        {item.timestamp}
+      </V2Text>
+    </div>
+  );
+}
+
+/**
+ * Layout stacked (cột hẹp): hàng 1 là hành động và badge; hàng 2 là
+ * "tác nhân · thời gian", cho phép xuống dòng thay vì tràn ngang.
+ */
+function StackedEventHead({ item }: { item: DrawerAuditItem }) {
+  return (
+    <>
+      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+        <V2Text
+          variant="body-sm"
+          weight="semibold"
+          className="break-words min-w-0"
+        >
+          {item.action}
+        </V2Text>
+        {item.badge}
+      </div>
+      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0">
+        {item.actor && (
+          <V2Text
+            variant="caption"
+            color="muted"
+            className="break-words min-w-0"
+          >
+            {item.actor}
+          </V2Text>
+        )}
+        {item.actor && (
+          <span aria-hidden className="text-muted-fg">
+            ·
+          </span>
+        )}
+        <V2Text variant="caption" color="muted" className="break-words min-w-0">
+          {item.timestamp}
+        </V2Text>
+      </div>
+    </>
+  );
+}
+
 export const DrawerAuditTimeline: React.FC<DrawerAuditTimelineProps> = ({
   items,
   emptyMessage = "Chưa có lịch sử thao tác",
   className,
+  layout = "inline",
 }) => {
   if (!items || items.length === 0) {
     return (
@@ -74,34 +146,11 @@ export const DrawerAuditTimeline: React.FC<DrawerAuditTimelineProps> = ({
 
               {/* Event Content Container */}
               <div className="flex-1 min-w-0 bg-surface/50 rounded-lg p-2.5 border border-border/60 hover:border-border transition-colors">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                    <V2Text
-                      variant="body-sm"
-                      weight="semibold"
-                      className="truncate"
-                    >
-                      {item.action}
-                    </V2Text>
-                    {item.actor && (
-                      <V2Text
-                        variant="caption"
-                        className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-fg leading-none"
-                      >
-                        {item.actor}
-                      </V2Text>
-                    )}
-                    {item.badge}
-                  </div>
-
-                  <V2Text
-                    variant="caption"
-                    color="muted"
-                    className="whitespace-nowrap shrink-0 leading-none"
-                  >
-                    {item.timestamp}
-                  </V2Text>
-                </div>
+                {layout === "stacked" ? (
+                  <StackedEventHead item={item} />
+                ) : (
+                  <InlineEventHead item={item} />
+                )}
 
                 {item.details && (
                   <V2Text

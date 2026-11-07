@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2NumberInput } from "./V2NumberInput";
 
 const meta: Meta<typeof V2NumberInput> = {
-  title: "Components/Atoms/Forms & Inputs/V2NumberInput",
+  title: "Components/Atoms/V2NumberInput",
   component: V2NumberInput,
   tags: ["autodocs"],
   args: { value: null, onValueChange: () => {} },

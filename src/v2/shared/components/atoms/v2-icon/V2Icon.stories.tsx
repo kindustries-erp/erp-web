@@ -3,7 +3,7 @@ import { V2Icon } from "./V2Icon";
 import { LayoutDashboard, Car, Wallet, Boxes, Package } from "./icons";
 
 const meta: Meta<typeof V2Icon> = {
-  title: "V2/Atoms/V2Icon",
+  title: "Components/Atoms/V2Icon",
   component: V2Icon,
   tags: ["autodocs"],
   argTypes: {

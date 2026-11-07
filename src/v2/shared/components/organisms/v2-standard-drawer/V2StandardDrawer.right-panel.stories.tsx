@@ -8,7 +8,7 @@ import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { Meta } from "@storybook/react";
 
 const meta: Meta<typeof V2StandardDrawer> = {
-  title: "Components/Organisms/Drawer/V2StandardDrawer",
+  title: "Components/Organisms/V2StandardDrawer",
   component: V2StandardDrawer,
 };
 

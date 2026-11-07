@@ -17,6 +17,7 @@ import {
 import {
   emptyRequestForm,
   hasRequestFormErrors,
+  nextNeededDate,
   toRequestCreatePayload,
   toRequestHeaderPayload,
   validateRequestForm,
@@ -92,6 +93,21 @@ describe("dòng từ API (API trả số, không phải chuỗi)", () => {
     expect(line.price).toBe("90000");
   });
 
+  it("PR đã lưu: qtyOrdered = 0 không được ghi đè qtyRequested", () => {
+    const line = procurementLineFromDetail({
+      id: "l4",
+      lineType: "GOODS",
+      itemName: "Lọc gió",
+      qtyRequested: 3,
+      qtyOrdered: 0,
+      estUnitPrice: 1000,
+    });
+    expect(line.qty).toBe("3");
+    expect(line.price).toBe("1000");
+    expect(procurementLineAmount(line)).toBe(3000);
+    expect(sumProcurementLines([line])).toBe(3000);
+  });
+
   it("giá trị null từ API thành ô trống và không gây lỗi", () => {
     const line = procurementLineFromDetail({
       id: "l3",
@@ -162,6 +178,28 @@ describe("form đề nghị mua (PR)", () => {
       qtyRequested: 2,
       estUnitPrice: 150000,
     });
+  });
+
+  it("tạo mới: ngày cần hàng mặc định bằng ngày đề nghị", () => {
+    const form = emptyRequestForm("2026-11-05");
+    expect(form.requestDate).toBe("2026-11-05");
+    expect(form.neededDate).toBe("2026-11-05");
+  });
+
+  it("đổi ngày đề nghị: ngày cần đang đồng bộ thì đổi theo", () => {
+    expect(nextNeededDate("2026-11-05", "2026-11-05", "2026-11-08")).toBe(
+      "2026-11-08",
+    );
+  });
+
+  it("đổi ngày đề nghị: ngày cần trống thì lấy ngày đề nghị mới", () => {
+    expect(nextNeededDate("2026-11-05", "", "2026-11-08")).toBe("2026-11-08");
+  });
+
+  it("đổi ngày đề nghị: ngày cần đã sửa lệch thì giữ nguyên", () => {
+    expect(nextNeededDate("2026-11-05", "2026-11-20", "2026-11-08")).toBe(
+      "2026-11-20",
+    );
   });
 
   it("payload sửa đầu đề không có chi nhánh và gửi null cho ô trống", () => {

@@ -45,7 +45,7 @@ const sampleNotifications: CoreNotification[] = [
 ];
 
 const meta: Meta<typeof V2NotificationPopover> = {
-  title: "Components/Molecules/Feedback & Overlay/V2NotificationPopover",
+  title: "Components/Molecules/V2NotificationPopover",
   component: V2NotificationPopover,
   tags: ["autodocs"],
   decorators: [

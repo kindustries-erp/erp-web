@@ -61,8 +61,8 @@ export interface GarageGoodsReceiptPayloadDto {
   receiptDate: string;
   supplierId?: string;
   supplierName?: string;
-  branchId?: string;
-  branchName?: string;
+  branchId?: string | null;
+  branchName?: string | null;
   totalAmount?: number;
   status?: string;
   paymentStatus?: string;

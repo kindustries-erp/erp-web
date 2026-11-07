@@ -10,6 +10,7 @@ import { useProcurementList } from "../hooks/useProcurementList";
 import { useProcurementQuery } from "../hooks/useProcurementQuery";
 import type { ProcurementListConfig } from "../hooks/procurementListConfig.type";
 import { V2Button } from "@/v2/shared/components";
+import type { V2TabComboboxItem } from "@/v2/shared/components/molecules/v2-tab-combobox";
 import type { ProcurementDrawerProps } from "../procurement.drawer.type";
 import type { ProcurementDocumentRef } from "../procurement.types";
 import { ProcurementListModals } from "./ProcurementListModals";
@@ -39,12 +40,18 @@ function resolveDrawerTarget<T>(
 export interface ProcurementListPageProps<T extends { id: string }> {
   config: ProcurementListConfig<T>;
   display: ProcurementPageDisplay<T>;
+  pageTabs?: V2TabComboboxItem[];
+  activePageTab?: string;
+  onPageTabSelect?: (key: string) => void;
 }
 
 /** Trang danh sách chứng từ procurement: bảng server-side, hành động theo dòng, modal xác nhận. */
 export function ProcurementListPage<T extends { id: string }>({
   config,
   display,
+  pageTabs,
+  activePageTab,
+  onPageTabSelect,
 }: ProcurementListPageProps<T>) {
   const { t } = useV2Translation();
   const state = useProcurementList(config);
@@ -86,12 +93,17 @@ export function ProcurementListPage<T extends { id: string }>({
       description={t(display.descriptionKey, "")}
       icon={display.icon}
       tabs={tabs}
+      pageTabs={pageTabs}
+      activePageTab={activePageTab}
+      onPageTabSelect={onPageTabSelect}
       actions={
-        state.canCreate ? (
-          <V2Button size="sm" onClick={state.openCreate}>
-            {t("v2.procurement.actions.create", "Tạo mới")}
-          </V2Button>
-        ) : undefined
+        <>
+          {state.canCreate && (
+            <V2Button size="sm" onClick={state.openCreate}>
+              {t("v2.procurement.actions.create", "Tạo mới")}
+            </V2Button>
+          )}
+        </>
       }
       overlays={
         <>
@@ -106,6 +118,7 @@ export function ProcurementListPage<T extends { id: string }>({
                 queryKey: config.queryKey,
                 api: config.api,
                 fromRequestId: drawer.fromRequestId ?? null,
+                approval: state.approval.gate,
                 requestApi: config.requestApi,
                 onTransition: (action, row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);

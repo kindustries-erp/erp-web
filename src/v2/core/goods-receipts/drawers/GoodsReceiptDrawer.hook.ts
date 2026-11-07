@@ -84,7 +84,10 @@ export function useGoodsReceiptDrawer({
       return;
     }
     setErrorField(null);
-    save.mutate({ id: state.recordId, form });
+    save.mutate({
+      id: state.recordId,
+      form: { ...form, status: GoodsReceiptStatus.DRAFT },
+    });
   };
 
   const postRecord = () => {

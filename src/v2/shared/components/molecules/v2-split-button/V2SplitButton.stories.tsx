@@ -4,7 +4,7 @@ import { DownloadCloud } from "lucide-react";
 import { V2SplitButton } from "./V2SplitButton";
 
 const meta: Meta<typeof V2SplitButton> = {
-  title: "Components/Molecules/Overlay & Menu/V2SplitButton",
+  title: "Components/Molecules/V2SplitButton",
   component: V2SplitButton,
   tags: ["autodocs"],
 };

@@ -52,6 +52,7 @@ export const v2En: V2Dictionary = {
     common: {
       close: "Close",
       save: "Save",
+      saveDraft: "Save Draft",
       cancel: "Cancel",
       edit: "Edit",
       done: "Done",

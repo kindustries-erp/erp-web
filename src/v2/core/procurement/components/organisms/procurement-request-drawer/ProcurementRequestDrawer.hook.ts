@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   availableProcurementActions,
@@ -11,23 +11,21 @@ import {
   emptyRequestForm,
   hasRequestFormErrors,
   requestFormFromDetail,
-  toRequestCreatePayload,
-  toRequestHeaderPayload,
-  toRequestLinesPayload,
   validateRequestForm,
   type ProcurementRequestFormErrors,
   type ProcurementRequestFormValue,
 } from "../../../form/procurementRequest.form";
 import { isProcurementFormDirty } from "../../../form/procurementDirty";
-import type { ProcurementRequestDetail } from "../../../procurement.types";
 import {
-  showProcurementError,
-  showProcurementSuccess,
-  showProcurementWarning,
-} from "../../../procurement.toast";
+  applyApprovalGate,
+  NO_APPROVAL_GATE,
+} from "../../../approval/approval.gate";
+import type { ProcurementRequestDetail } from "../../../procurement.types";
+import { showProcurementWarning } from "../../../procurement.toast";
 import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
+import { useProcurementRequestSave } from "./ProcurementRequestDrawer.biz.hook";
 
-export type ProcurementDrawerTabKey = "general" | "audit" | "traceability";
+export type ProcurementDrawerTabKey = "general" | "traceability";
 
 /**
  * Trạng thái drawer PR. Đầu đề (chi nhánh, ngày, nội dung) chỉ nhập lúc tạo;
@@ -36,8 +34,8 @@ export type ProcurementDrawerTabKey = "general" | "audit" | "traceability";
  */
 export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
   const { t } = useV2Translation();
-  const queryClient = useQueryClient();
   const creating = !props.documentId;
+  const branchOptional = Boolean(props.branchOptional);
   const [mode, setMode] = React.useState(props.mode);
   const [tab, setTab] = React.useState<ProcurementDrawerTabKey>("general");
   const [form, setForm] = React.useState<ProcurementRequestFormValue>(() =>
@@ -80,35 +78,23 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
 
   const availableActions = React.useMemo<ProcurementActionKey[]>(() => {
     if (creating || !detail.data) return [];
-    return availableProcurementActions(PROCUREMENT_REQUEST_FROM, status);
-  }, [creating, detail.data, status]);
+    return applyApprovalGate(
+      availableProcurementActions(PROCUREMENT_REQUEST_FROM, status),
+      props.approval ?? NO_APPROVAL_GATE,
+      { approverId: detail.data.approverId, createdBy: detail.data.createdBy },
+    );
+  }, [creating, detail.data, status, props.approval]);
 
-  const save = useMutation({
-    mutationFn: async () => {
-      if (creating) return props.api.create(toRequestCreatePayload(form));
-      await props.api.updateHeader?.(
-        props.documentId!,
-        toRequestHeaderPayload(form),
-      );
-      await props.api.replaceLines(
-        props.documentId!,
-        toRequestLinesPayload(form),
-      );
-      return { id: props.documentId! };
-    },
-    onSuccess: ({ id }) => {
-      showProcurementSuccess(
-        t("v2.procurement.drawer.savedRequest", "Đã lưu đề nghị mua"),
-      );
-      void queryClient.invalidateQueries({ queryKey: [props.queryKey] });
-      if (props.onSaved) props.onSaved(id);
-      else props.onClose();
-    },
-    onError: (error) =>
-      showProcurementError(
-        error,
-        t("v2.procurement.drawer.saveError", "Không lưu được chứng từ"),
-      ),
+  const save = useProcurementRequestSave({
+    api: props.api,
+    queryKey: props.queryKey,
+    documentId: props.documentId,
+    creating,
+    form,
+    branchOptional,
+    onSaved: props.onSaved,
+    onClose: props.onClose,
+    onUpdated: () => setMode("view"),
   });
 
   const setField = <K extends keyof ProcurementRequestFormValue>(
@@ -117,7 +103,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
   ) => setForm((current) => ({ ...current, [key]: value }));
 
   const submit = () => {
-    const next = validateRequestForm(form);
+    const next = validateRequestForm(form, branchOptional);
     setErrors(next);
     if (hasRequestFormErrors(next)) {
       showProcurementWarning(
@@ -156,8 +142,12 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
     editable,
     viewing,
     dirty,
-    /** Chi nhánh khóa sau khi tạo: PO đã liên kết có thể đang dùng chi nhánh cũ */
-    branchLocked: !creating,
+    /**
+     * Chi nhánh khóa sau khi tạo (luồng thường). Với chi nhánh tùy chọn, được sửa khi còn nháp
+     * vì header chỉ hiện ở chế độ sửa khi là nháp.
+     */
+    branchLocked: branchOptional ? false : !creating,
+    branchOptional,
     mode,
     setMode,
     tab,

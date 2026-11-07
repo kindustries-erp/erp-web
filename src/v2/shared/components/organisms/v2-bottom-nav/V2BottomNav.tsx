@@ -56,9 +56,9 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
   };
 
   const containerClasses = cn(
-    "fixed z-40 flex items-center justify-between select-none animate-slide-in-from-bottom transition-all duration-300",
+    "fixed z-40 flex items-center justify-between select-none touch-manipulation [-webkit-tap-highlight-color:transparent] animate-slide-in-from-bottom transition-all duration-300",
     variant === V2BottomNavVariant.FLOATING || isHeroLayout
-      ? "bottom-3 inset-x-3.5 max-w-lg mx-auto h-14 rounded-3xl border border-border/80 dark:border-white/10 bg-card/90 dark:bg-card/95 px-2 shadow-2xl dark:shadow-black/70 backdrop-blur-xl"
+      ? "bottom-3 inset-x-3.5 max-w-lg mx-auto h-14 rounded-2xl border border-border/80 dark:border-white/10 bg-card/90 dark:bg-card/95 px-2 shadow-2xl dark:shadow-black/70 backdrop-blur-xl"
       : "bottom-0 inset-x-0 h-14 w-full border-t border-border/80 dark:border-white/10 bg-background/90 dark:bg-card/90 px-1 pb-safe backdrop-blur-xl",
     className,
   );

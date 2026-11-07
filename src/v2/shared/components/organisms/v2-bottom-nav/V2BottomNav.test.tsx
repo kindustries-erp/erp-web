@@ -37,7 +37,7 @@ describe("V2BottomNav Organism", () => {
     );
 
     const nav = screen.getByTestId("v2-bottom-nav");
-    expect(nav.className).toContain("rounded-3xl");
+    expect(nav.className).toContain("rounded-2xl");
     expect(nav.className).toContain("shadow-2xl");
     expect(nav.className).toContain("h-14");
 

@@ -27,6 +27,12 @@ describe("V2BottomSheet Component", () => {
     );
 
     expect(screen.getByTestId("v2-bottom-sheet-content")).toBeDefined();
+    expect(screen.getByTestId("v2-bottom-sheet-content").className).toContain(
+      "h-[100dvh]",
+    );
+    expect(screen.getByTestId("v2-bottom-sheet-content").className).toContain(
+      "max-h-[100dvh]",
+    );
     expect(screen.getByTestId("v2-bottom-sheet-drag-handle")).toBeDefined();
     expect(screen.getByText("Danh mục phân hệ")).toBeDefined();
     expect(screen.getByText("Nội dung phân hệ")).toBeDefined();

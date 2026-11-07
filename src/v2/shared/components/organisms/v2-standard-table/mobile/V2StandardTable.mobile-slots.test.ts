@@ -21,22 +21,56 @@ describe("resolveMobileSlots", () => {
       col("b"),
       col("c", "title"),
       col("d", "subtitle"),
+      col("s", "badge"),
       col("e", "meta"),
     ]);
     expect(slots.title?.key).toBe("c");
     expect(slots.subtitle?.key).toBe("d");
+    expect(slots.badge?.key).toBe("s");
     expect(keys(slots.meta)).toEqual(["b", "e"]);
+  });
+
+  it("auto-detects status column as badge when not explicitly specified", () => {
+    const slots = resolveMobileSlots([
+      col("code", "title"),
+      col("date", "subtitle"),
+      col("status"),
+      col("total"),
+    ]);
+    expect(slots.title?.key).toBe("code");
+    expect(slots.subtitle?.key).toBe("date");
+    expect(slots.badge?.key).toBe("status");
+    expect(keys(slots.meta)).toEqual(["total"]);
+  });
+
+  it("supports multiple explicit badge columns without leaking them into meta", () => {
+    const slots = resolveMobileSlots([
+      col("code", "title"),
+      col("date", "subtitle"),
+      col("status", "badge"),
+      col("orderingStatus", "badge"),
+      col("createdBy", "meta"),
+    ]);
+    expect(slots.title?.key).toBe("code");
+    expect(slots.subtitle?.key).toBe("date");
+    expect(slots.badge?.key).toBe("status");
+    expect(keys(slots.badges)).toEqual(["status", "orderingStatus"]);
+    expect(keys(slots.meta)).toEqual(["createdBy"]);
   });
 
   it("handles a single column and an empty list", () => {
     expect(resolveMobileSlots([col("a")])).toMatchObject({
       title: { key: "a" },
       subtitle: undefined,
+      badge: undefined,
+      badges: [],
       meta: [],
     });
     expect(resolveMobileSlots([])).toEqual({
       title: undefined,
       subtitle: undefined,
+      badge: undefined,
+      badges: [],
       meta: [],
     });
   });

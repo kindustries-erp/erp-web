@@ -51,4 +51,22 @@ describe("V2PageHeader", () => {
     );
     expect(register).toHaveBeenCalledWith("in", expect.any(HTMLElement));
   });
+
+  it("renders V2TabCombobox on mobile when pageTabs has multiple items", () => {
+    const handleSelect = vi.fn();
+    render(
+      <V2PageHeader
+        title="Mua hàng Garage"
+        pageTabs={[
+          { value: "pr", label: "Đề nghị mua hàng" },
+          { value: "po", label: "Đơn mua hàng" },
+        ]}
+        activePageTab="pr"
+        onPageTabSelect={handleSelect}
+      />,
+    );
+
+    expect(screen.getByTestId("v2-tab-combobox")).toBeInTheDocument();
+    expect(screen.getByText("Đề nghị mua hàng")).toBeInTheDocument();
+  });
 });

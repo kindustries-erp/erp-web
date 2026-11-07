@@ -1,24 +1,32 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { emptyGoodsReceiptForm } from "@/v2/core/goods-receipts";
 import { GoodsReceiptFormSections } from "./GoodsReceiptFormSections";
 
+// Ô chi nhánh dùng react-query (danh sách chi nhánh), nên cần provider
 const renderSections = (viewing: boolean, setField = vi.fn()) =>
   render(
-    <GoodsReceiptFormSections
-      form={{
-        ...emptyGoodsReceiptForm(),
-        receiptNo: "Mẫu",
-        receiptDate: "Mẫu",
-      }}
-      viewing={viewing}
-      codeEditable
-      onRegenerateCode={vi.fn()}
-      errorField={null}
-      errorMessage=""
-      t={(_key, fallback) => fallback ?? ""}
-      setField={setField}
-    />,
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <GoodsReceiptFormSections
+        form={{
+          ...emptyGoodsReceiptForm(),
+          receiptNo: "Mẫu",
+          receiptDate: "Mẫu",
+        }}
+        viewing={viewing}
+        codeEditable
+        onRegenerateCode={vi.fn()}
+        errorField={null}
+        errorMessage=""
+        t={(_key, fallback) => fallback ?? ""}
+        setField={setField}
+      />
+    </QueryClientProvider>,
   );
 
 describe("GoodsReceiptFormSections", () => {

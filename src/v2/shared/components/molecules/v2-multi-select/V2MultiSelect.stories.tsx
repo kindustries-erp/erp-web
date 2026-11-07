@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2MultiSelect } from "./V2MultiSelect";
 
 const meta: Meta<typeof V2MultiSelect> = {
-  title: "V2/Molecules/V2MultiSelect",
+  title: "Components/Molecules/V2MultiSelect",
   component: V2MultiSelect,
   parameters: {
     layout: "centered",

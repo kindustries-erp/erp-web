@@ -5,7 +5,7 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2PageHeader } from "./V2PageHeader";
 
 const meta: Meta<typeof V2PageHeader> = {
-  title: "Components/Molecules/Header & Account/V2PageHeader",
+  title: "Components/Molecules/V2PageHeader",
   component: V2PageHeader,
   tags: ["autodocs"],
 };

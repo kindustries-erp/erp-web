@@ -3,7 +3,7 @@ import React from "react";
 import { V2DrawerFieldGrid } from "./V2DrawerFieldGrid";
 
 const meta: Meta<typeof V2DrawerFieldGrid> = {
-  title: "Components/Molecules/Overlay & Menu/V2DrawerFieldGrid",
+  title: "Components/Molecules/V2DrawerFieldGrid",
   component: V2DrawerFieldGrid,
   tags: ["autodocs"],
 };

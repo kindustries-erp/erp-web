@@ -30,7 +30,7 @@ graph LR
 1. **Phân Tầng Tuyệt Đối**: Mọi UI component phải thuộc chính xác 1 trong 5 tầng (`Atoms`, `Molecules`, `Organisms`, `Templates`, `Pages`). Không có component "vô thừa nhận" hoặc dồn đống trong `shared`.
 2. **Import Một Chiều (Top-Down)**: `Templates > Organisms > Molecules > Atoms`. Tầng cao import tầng thấp. **CẤM** import ngược dòng. **CẤM** import ngang hàng cùng cấp trong cùng một scope.
 3. **Folder-per-Component (`kebab-case`)**: Mỗi component có 1 thư mục riêng, file chính `PascalCase.tsx`, các file vệ tinh chuẩn số ít (`.hook.ts`, `.state.ts`, `.type.ts`, `.schema.ts`, `.helper.ts`, `.test.tsx`, `index.ts`).
-4. **Giới Hạn Cứng < 180 LoC & Co-located Test**: Không file nào vượt quá 180 dòng. Test nằm ngay bên cạnh component (co-located).
+4. **Giới Hạn Cứng < 180 LoC & Co-located Test**: Không file nào vượt quá 180 dòng. Test nằm ngay bên cạnh component (co-located). Trọng tâm test là Organism (L3) và Integration (page); Atom/Molecule chỉ có test khi có logic riêng (filter, format, validate, state).
 5. **Tư Duy Mobile-First & Chuẩn Công Thái Học Di Động**: 
    - **Mobile-First CSS**: Style mặc định viết cho Mobile trước (`w-full`, layout cột đơn `flex-col`, khoảng cách chạm rộng), sau đó mở rộng dần bằng `sm:`, `md:`, `lg:` cho Desktop. Tuyệt đối không viết Desktop-first rồi override ngược bằng `max-*`.
    - **Touch Target $\ge 44 \times 44\text{px}$**: Mọi button, icon-button, tab, checkbox touch container phải đạt kích thước chạm tối thiểu $44\text{px}$.
@@ -108,8 +108,8 @@ Mỗi component **BẮT BUỘC** nằm trong một thư mục riêng biệt theo
 ├── [ComponentName].type.ts        # TypeScript props, interfaces (< 80 LoC)
 ├── [ComponentName].schema.ts      # Zod validation schema (nếu có form, < 80 LoC)
 ├── [ComponentName].helper.ts      # Parsers, formatters nội bộ (< 100 LoC)
-├── [ComponentName].stories.tsx    # Co-located Storybook Stories (bắt buộc cho shared/v2)
-├── [ComponentName].test.tsx       # Co-located Unit Test bắt buộc
+├── [ComponentName].stories.tsx    # Co-located Storybook Stories (tùy chọn, khuyến khích cho atoms/ui)
+├── [ComponentName].test.tsx       # Co-located Test (bắt buộc cho Organism; Atom/Molecule khi có logic riêng)
 └── index.ts                       # Public barrel export: export * from "./[ComponentName]";
 ```
 
@@ -168,12 +168,12 @@ Khi một file component tiến gần mốc 150-180 dòng, thực hiện phân t
 
 Trước khi kết thúc task refactor hoặc code mới, Developer / Agent **BẮT BUỘC** thực hiện quy trình kiểm duyệt 2 bước:
 
-##### 1. Viết Co-located Unit Test (`.test.tsx`):
+##### 1. Viết Test theo chiến lược Organism + Integration (`.test.tsx`):
+- **Bắt buộc**: Organism (L3) và luồng page có `tests/integration/` (render page + API mock, kiểm tra hành vi người dùng).
+- **Atom / Molecule**: chỉ viết test khi có logic riêng (filter, format, validate, state). Không viết test chỉ kiểm tra render/props khi organism cha đã bao phủ.
+- Test logic thuần (`*.helper.ts`, domain rules, hook nghiệp vụ) luôn được giữ.
 - Nằm cùng cấp bên trong folder component: `[ComponentName].test.tsx`.
-- Tối thiểu phải test được:
-  - Component render không bị crash.
-  - Hiển thị đúng props truyền vào.
-  - Các tương tác cơ bản (click toggle, nhập input, hiển thị tooltip).
+- Tối thiểu phải test được (cho Organism): render không crash, hiển thị đúng props/dữ liệu, tương tác chính (click, nhập, submit).
 
 ##### 2. Chạy Bộ Lệnh Grep Audit CLI Bắt Buộc:
 
@@ -200,7 +200,7 @@ grep -rnE "w-\[[4-9][0-9]{2,}px\]" src/modules/[target-module]/components/
 bun run type:check
 bun run test src/modules/[target-module]/components/
 
-# 8. Kiểm tra Storybook Build (nếu thuộc shared/v2)
+# 8. (Tùy chọn) Kiểm tra Storybook Build — chỉ khi đã thêm/sửa file .stories.tsx
 bun run build-storybook
 ```
 
@@ -241,15 +241,15 @@ Quy tắc:
 - [ ] **Giới Hạn File**: 100% các file đều $< 180\text{ LoC}$.
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong mã nguồn giao diện.
 - [ ] **i18n 100%**: Tất cả user-facing text bọc trong `t(...)` có fallback tiếng Việt và đồng bộ VI/EN.
-- [ ] **Co-located Stories**: Có file `[ComponentName].stories.tsx` đối với shared/v2 components, render độc lập không phụ thuộc V1.
-- [ ] **Co-located Test**: File `[ComponentName].test.tsx` nằm trực tiếp cùng cấp trong folder.
+- [ ] **Co-located Stories (tùy chọn)**: Khuyến khích `[ComponentName].stories.tsx` cho shared/v2 atoms và ui; render độc lập không phụ thuộc V1.
+- [ ] **Co-located Test**: Organism và luồng page có test; Atom/Molecule chỉ khi có logic riêng. File `[ComponentName].test.tsx` nằm trực tiếp cùng cấp trong folder.
 - [ ] **Mobile-First CSS & Ergonomics**:
   - [ ] Style mặc định viết cho Mobile trước (`w-full`, layout cột), mở rộng dần qua `sm:`, `md:`, `lg:`.
   - [ ] Touch target tối thiểu $\ge 44 \times 44\text{px}$ cho tất cả button, action icon, interactive controls.
   - [ ] Form input/select/textarea có font-size $\ge 16\text{px}$ trên mobile (`text-base sm:text-sm`) chống iOS Safari auto-zoom.
   - [ ] Không có layout tràn viền ngang (`w-[...px]` lớn); container cuộn ngang có `overflow-x-auto`.
   - [ ] Xử lý Safe Area insets (`env(safe-area-inset-bottom)`) cho sticky footer / bottom action bar.
-- [ ] **Type Check & Test Pass**: `bun run type:check` 0 lỗi, unit test pass 100% và `bun run build-storybook` thành công.
+- [ ] **Type Check & Test Pass**: `bun run type:check` 0 lỗi, test liên quan pass 100%. `bun run build-storybook` chỉ bắt buộc khi task có sửa file `.stories.tsx`.
 
 
 ---
@@ -279,9 +279,11 @@ graph TD
    - `src/v2/shared/components/`: Các UI components chuẩn hệ sinh thái Atomic Design (Atoms, Molecules, Organisms, Templates).
    - **Quy tắc Import 1 Chiều Bắt Buộc (Unidirectional Dependency)**: Các component trong cấu trúc Atoms, Molecules ĐƯỢC PHÉP import từ `shared/ui` của Shadcn UI (`@/v2/shared/ui`) và wrap/custom lại cho phù hợp dự án. **TUYỆT ĐỐI CẤM CHIỀU NGƯỢC LẠI** (`shared/ui` không bao giờ import từ `atoms`, `molecules`, `organisms` hay bất kỳ tầng nào cao hơn).
 3. **Component-Driven Development (Storybook) & V2 Theme Cô Lập**:
-   - Mọi Shared Component trong `src/v2/shared/components/` và `src/v2/shared/ui/` bắt buộc phải có file Storybook co-located: `[ComponentName].stories.tsx`.
+   - Storybook là công cụ phát triển/tài liệu, **không phải lớp test bắt buộc**. Khuyến khích có `[ComponentName].stories.tsx` cho atoms; không bắt buộc cho mọi component. Không có stories nào được chạy trong CI.
+   - **Vị trí bắt buộc**: story phải nằm trong đúng folder component của tầng, `src/v2/shared/components/<atoms|molecules|organisms|templates>/<kebab-folder>/[ComponentName].stories.tsx` (hoặc file phụ `[ComponentName].<biến-thể>.stories.tsx` cùng folder). Không đặt story ở `src/v2/shared/ui/`, `src/v2/modules/**/pages/` hay thư mục khác. `.storybook/main.ts` chỉ quét `src/v2/shared/components/**`.
+   - **Title bắt buộc**: `title: "Components/<Atoms|Molecules|Organisms|Templates>/<ComponentName>"`, trong đó Tầng khớp tên thư mục cha và không có nhóm con. Không dùng `V2/…`, `Molecules/…` không có `Components/`, `Use Cases/…`.
    - **Hệ thống Theme V2 độc lập**: Cấu hình theme riêng biệt tại `src/v2/shared/styles/` (`v2-theme.css`, `index.css`) và `src/v2/shared/theme/` (`applyV2Theme`, 4 themes: `Default`, `Classic`, `OrcaQ`, `Midnight`), không phụ thuộc theme V1.
-   - **Storybook Scope Cô Lập Tuyệt Đối**: `.storybook/main.ts` chỉ quét `src/v2/**/*.stories.*`, `.storybook/preview.tsx` chỉ import `@/v2/shared/styles/index.css`. Storybook kết nối độc lập với V2 Theme Toolbar và V2 Locale Toolbar.
+   - **Storybook Scope Cô Lập Tuyệt Đối**: `.storybook/main.ts` chỉ quét `src/v2/shared/components/**/*.stories.*`, `.storybook/preview.tsx` chỉ import `@/v2/shared/styles/index.css`. Storybook kết nối độc lập với V2 Theme Toolbar và V2 Locale Toolbar.
 4. **Platform Split (Desktop vs Mobile) & Chuẩn Công Thái Học Di Động**:
    - Tách rời giao diện bằng component tree độc lập: `[Name].desktop.tsx` và `[Name].mobile.tsx` khi UX khác biệt căn bản.
    - File entry `[Name].tsx` là **Switcher thuần túy (< 15 LoC)**, dùng `useViewport()` hook để render variant tương ứng.
