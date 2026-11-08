@@ -84,7 +84,7 @@ Source of truth for this repo (`./erp-web`).
 - before commit/push, `cd` into the repo root (`./erp-web`)
 - **Strict Git Workflow**: You MUST follow the exact commit/push sequence defined below (test -> commit -> pull --rebase -> check:ci -> push, theo `erp-git-workflow`).
 - push this repo with `github-industries`
-- when debugging and testing API locally, always start dev on port 10010
+- when debugging and testing API locally, always start dev on the port defined by `PORT` in `erp/erp-api/.env`
 - by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
 - before any DB scan or write, run `SELECT current_database();` to confirm the actual DB and report it before writing; never infer the DB from a file name
 - reuse existing components/hooks/utils/helpers/functions/page patterns first
@@ -123,7 +123,7 @@ Source of truth for this repo (`./erp-web`).
 - load `@.agents/skills/erp-web-truth/SKILL.md`
 - use repo-local context as default guidance
 - MUST use bun/bunx exclusively (do NOT use npm)
-- when debugging and testing API locally, always start dev on port 10010
+- when debugging and testing API locally, always start dev on the port defined by `PORT` in `erp/erp-api/.env`
 - by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
 - before any DB scan or write, run `SELECT current_database();` to confirm the actual DB and report it before writing; never infer the DB from a file name
 - follow DB -> API -> UI -> QC

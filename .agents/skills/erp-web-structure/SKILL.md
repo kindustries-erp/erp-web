@@ -93,3 +93,4 @@ Module mẫu đã hoàn chỉnh: `src/v2/modules/business-partners/`.
 - `references/v2-migration.md`: nguyên tắc V2, cây module chuẩn, hạ tầng shared V2, quy ước, playbook migrate, bảng parity, bẫy đã gặp, audit, trạng thái migrate.
 - Workflow đầy đủ: `.agents/workflows/ui-structure.md` (Phần A, B, C). Workflow chi tiết cho bảng và drawer: `.agents/workflows/standardize-table.md`, `.agents/workflows/standardize-drawer.md`.
 - Các skill chuẩn hóa theo loại: `standardize-table` (gồm trang bảng và V2), `standardize-drawer` (gồm V2 và truy vết chứng từ), `standardize-modal`, `standardize-dashboard-page`.
+- Field nhập liệu và focus ring trong dark theme (không viền trắng, dùng `V2_DRAWER_FOCUS_RING_CLASS`): `standardize-drawer/references/v2-drawer.md`, mục "Field trong card & focus ring".

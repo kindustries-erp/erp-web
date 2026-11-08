@@ -6,6 +6,7 @@ import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import { useV2Combobox } from "./V2Combobox.hook";
 import { V2ComboboxList } from "./V2ComboboxList";
 import type { V2ComboboxProps } from "./V2Combobox.type";
@@ -62,7 +63,8 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
       disabled={disabled}
       className={cn(
         "flex h-8 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+        V2_DRAWER_FOCUS_RING_CLASS,
+        "disabled:cursor-not-allowed disabled:opacity-50",
         canClear && "pr-8",
       )}
     >
