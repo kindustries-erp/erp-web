@@ -6,12 +6,14 @@ registerV2ModuleLocale("garageProcurementRequests", {
     title: "Đề nghị mua hàng Garage",
     tab: "Đề nghị mua hàng",
     create: "Tạo đề nghị",
+    actionCreate: "Tạo đề nghị mua hàng",
     description: "Đề nghị mua phụ tùng, duyệt trước khi lập đơn mua",
   },
   en: {
     title: "Garage Purchase Requests",
     tab: "Purchase Requests",
     create: "New Request",
+    actionCreate: "Create Purchase Request",
     description: "Spare-part purchase requests, approved before ordering",
   },
 });

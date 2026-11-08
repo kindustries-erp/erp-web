@@ -237,7 +237,9 @@ export function pageToPath(
     tab ||
     (page === "erp-invoices" || page === "garage-cases"
       ? "dashboard"
-      : undefined);
+      : page === "garage-procurement"
+        ? "requests"
+        : undefined);
   if (effectiveTab) {
     searchParams.set(ErpUrlQueryParam.TAB, effectiveTab);
   }

@@ -141,7 +141,7 @@ export const NAV_DEFS: RawNavDef[] = [
     labelKey: "v2.nav.items.garageProcurement",
     fallback: "Mua hàng Garage",
     icon: ClipboardList,
-    href: "/garage-procurement",
+    href: "/garage-procurement?tab=requests",
   },
   // v2-module:garage-goods-receipts:nav
   {

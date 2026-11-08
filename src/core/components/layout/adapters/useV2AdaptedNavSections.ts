@@ -392,7 +392,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           id: "garage-procurement",
           label: t("nav.items.garageProcurement", "Mua hàng Garage"),
           icon: ClipboardList,
-          href: "/garage-procurement",
+          href: "/garage-procurement?tab=requests",
         });
       }
       if (canReadGarageGoodsReceipts) {

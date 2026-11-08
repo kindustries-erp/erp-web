@@ -33,4 +33,6 @@ export interface V2PopoverProps {
   triggerClassName?: string;
   /** Chế độ modal chặn tương tác nền */
   modal?: boolean;
+  /** Style tùy chỉnh cho PopoverContent */
+  style?: React.CSSProperties;
 }

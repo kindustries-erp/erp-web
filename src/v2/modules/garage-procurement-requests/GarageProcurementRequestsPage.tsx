@@ -9,6 +9,7 @@ import {
   type ProcurementDocumentRef,
 } from "@/v2/core/procurement";
 import { V2ModulePage, type V2ModuleTab } from "@/v2/shared/components";
+import { V2Icon } from "@/v2/shared/components/atoms";
 import { V2SplitButton } from "@/v2/shared/components/molecules/v2-split-button";
 import {
   V2Dropdown,
@@ -18,6 +19,7 @@ import {
   v2ColumnPreferencesStorage,
   v2ViewPresetStorage,
 } from "@/v2/shared/preferences/v2TablePreferenceStorages";
+import { updateV2SearchParams } from "@/v2/shared/utils/v2Url";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   garageProcurementRequestsConfig,
@@ -56,6 +58,17 @@ export function GarageProcurementRequestsPage({
     return defaultTab;
   });
 
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.get("tab")) {
+        updateV2SearchParams((search) => {
+          search.set("tab", "requests");
+        }, "replace");
+      }
+    }
+  }, []);
+
   const requestsState = useProcurementList(garageProcurementRequestsConfig);
   const ordersState = useProcurementList(garageProcurementOrdersConfig);
 
@@ -75,7 +88,7 @@ export function GarageProcurementRequestsPage({
       {
         key: "requests",
         label: t("v2.garageProcurementRequests.tab", "Đề nghị mua hàng"),
-        icon: <ClipboardList className="h-4 w-4" />,
+        icon: <V2Icon icon={ClipboardList} size={15} />,
         kind: "list",
         resetKey: garageProcurementRequestsDisplay.tableId,
         table: {
@@ -100,7 +113,7 @@ export function GarageProcurementRequestsPage({
       {
         key: "orders",
         label: t("v2.garageProcurementOrders.tab", "Đơn mua hàng"),
-        icon: <ShoppingCart className="h-4 w-4" />,
+        icon: <V2Icon icon={ShoppingCart} size={15} />,
         kind: "list",
         resetKey: garageProcurementOrdersDisplay.tableId,
         table: {
@@ -135,17 +148,20 @@ export function GarageProcurementRequestsPage({
           {
             id: "create-request",
             label: t(
-              "v2.garageProcurementRequests.tab",
+              "v2.garageProcurementRequests.actionCreate",
               "Tạo đề nghị mua hàng",
             ),
-            icon: <ClipboardList className="h-4 w-4" />,
+            icon: <V2Icon icon={ClipboardList} size={15} />,
             onClick: requestsState.openCreate,
             disabled: !requestsState.canCreate,
           },
           {
             id: "create-order",
-            label: t("v2.garageProcurementOrders.tab", "Tạo đơn mua hàng"),
-            icon: <ShoppingCart className="h-4 w-4" />,
+            label: t(
+              "v2.garageProcurementOrders.actionCreate",
+              "Tạo đơn mua hàng",
+            ),
+            icon: <V2Icon icon={ShoppingCart} size={15} />,
             onClick: ordersState.openCreate,
             disabled: !ordersState.canCreate,
           },
@@ -174,9 +190,9 @@ export function GarageProcurementRequestsPage({
     : t("v2.garageProcurementRequests.create", "Tạo đề nghị");
 
   const currentIcon = isOrders ? (
-    <ShoppingCart className="h-4 w-4" />
+    <V2Icon icon={ShoppingCart} size={16} />
   ) : (
-    <ClipboardList className="h-4 w-4" />
+    <V2Icon icon={ClipboardList} size={16} />
   );
 
   return (

@@ -267,7 +267,7 @@ describe("useV2AdaptedNavSections - garage-procurement in sec-garage", () => {
     const item = findNavChild(garageSec?.items, "garage-procurement");
 
     expect(item).toBeDefined();
-    expect(item?.href).toBe("/garage-procurement");
+    expect(item?.href).toBe("/garage-procurement?tab=requests");
     expect(item?.label).toBe("Mua hàng Garage");
     expect(item?.icon).toBe(ClipboardList);
   });

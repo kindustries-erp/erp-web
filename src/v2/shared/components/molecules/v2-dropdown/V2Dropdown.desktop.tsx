@@ -1,6 +1,6 @@
 import * as React from "react";
 import { MoreHorizontal } from "lucide-react";
-import { V2Button, V2Text } from "@/v2/shared/components";
+import { V2Button, V2Icon, V2Text } from "@/v2/shared/components/atoms";
 import { AppPopover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -11,6 +11,11 @@ import type {
   V2DropdownItem,
   V2DropdownGroup,
 } from "./V2Dropdown.type";
+
+const GLASS_STYLE: React.CSSProperties = {
+  backdropFilter: "blur(var(--glass-blur, 8px)) saturate(180%)",
+  WebkitBackdropFilter: "blur(var(--glass-blur, 8px)) saturate(180%)",
+};
 
 export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
   trigger,
@@ -55,7 +60,7 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
       className="w-7 h-7 rounded-lg text-muted-fg hover:bg-surface-hover hover:text-foreground"
       aria-label={t("v2.common.actions", "Thao tác")}
     >
-      <MoreHorizontal className="w-4 h-4" />
+      <V2Icon icon={MoreHorizontal} size={16} />
     </V2Button>
   );
 
@@ -116,6 +121,22 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
                 </V2Text>
               )}
               {visibleItems.map((item, itemIdx) => {
+                const iconNode = item.icon ? (
+                  typeof item.icon === "function" ||
+                  (typeof item.icon === "object" &&
+                    !React.isValidElement(item.icon)) ? (
+                    <V2Icon
+                      icon={item.icon as any}
+                      size={15}
+                      className="shrink-0 text-muted-fg opacity-85"
+                    />
+                  ) : (
+                    <span className="shrink-0 text-muted-fg opacity-85 inline-flex items-center [&>svg]:h-3.5 [&>svg]:w-3.5">
+                      {item.icon}
+                    </span>
+                  )
+                ) : null;
+
                 const btn = (
                   <V2Button
                     key={item.key || item.label || itemIdx}
@@ -126,21 +147,17 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
                     isLoading={item.loading}
                     onClick={() => handleItemClick(item)}
                     className={cn(
-                      "h-auto w-full justify-start gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium",
-                      "text-foreground hover:bg-surface-hover dark:hover:bg-teal-500/10 dark:hover:text-teal-300 active:bg-surface-active",
+                      "h-auto w-full justify-start gap-2.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-left whitespace-nowrap transition-colors",
+                      "text-foreground hover:bg-[color:var(--sidebar-hover-bg,rgba(0,0,0,0.05))] hover:text-foreground dark:hover:bg-teal-500/10 dark:hover:text-teal-300 active:bg-[color:var(--sidebar-hover-bg,rgba(0,0,0,0.08))] dark:active:bg-teal-500/15",
                       item.variant === "danger" &&
                         "text-destructive hover:bg-destructive/10 active:bg-destructive/15",
                     )}
                   >
-                    {item.icon && (
-                      <span className="shrink-0 text-muted-fg opacity-85">
-                        {item.icon}
-                      </span>
-                    )}
+                    {iconNode}
                     <V2Text
                       as="span"
                       variant="body-sm"
-                      className="truncate flex-1 font-medium text-inherit"
+                      className="truncate text-left font-medium text-inherit whitespace-nowrap"
                     >
                       {item.label}
                     </V2Text>
@@ -181,8 +198,10 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
         hideCloseButton={true}
         modal={modal}
         triggerClassName={triggerClassName}
+        style={GLASS_STYLE}
         className={cn(
-          "p-1 min-w-[170px] max-w-[280px] shadow-lg border-border/80 dark:border-white/[0.08] dark:bg-[#1b1f27] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)]",
+          "w-max min-w-0 max-w-xs p-1 rounded-xl",
+          "border border-border/70 shadow-[var(--popup-shadow)]",
           className,
         )}
         content={dropdownMenuContent}
