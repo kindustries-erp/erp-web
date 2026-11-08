@@ -7,7 +7,7 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import type { Meta } from "@storybook/react";
 
 const meta: Meta<typeof V2StandardDrawer> = {
-  title: "Components/Organisms/Drawer/V2StandardDrawer",
+  title: "Components/Organisms/V2StandardDrawer",
   component: V2StandardDrawer,
 };
 

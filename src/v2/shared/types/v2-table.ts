@@ -113,6 +113,8 @@ export interface V2RowAction {
   icon?: ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  /** Lý do hiển thị khi `disabled`, ví dụ "Chỉ sửa được khi còn nháp" */
+  disabledReason?: string;
   variant?: "default" | "danger";
 }
 

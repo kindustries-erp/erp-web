@@ -337,6 +337,14 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - Inactive tab của `button-group` để nền và viền trong suốt; chỉ active tab có nền fill.
 - Drawer có thể được mở từ route V1, nơi `v2-theme.css` không được import. Sheet mang `data-v2-standard-drawer`; `src/styles/panels.css` cung cấp Midnight drawer tokens theo marker này để portal content vẫn nhận dark surface.
 
+### Field trong card & focus ring
+
+- Field (input, textarea, combobox trigger, multi-select, date picker) dùng `bg-background` và `border-input`, lấy từ token theme. Không dùng `bg-white`, `border-white`, `bg-slate-*` không kèm cặp `dark:`.
+- Focus dùng `V2_DRAWER_FOCUS_RING_CLASS` (`src/v2/shared/utils/v2FocusRing.ts`): ring 1px `--primary` 40%, `ring-offset-0`. Không dùng `focus-visible:ring-ring` đứng một mình, vì ring đậm và offset mặc định trắng làm viền trắng trong dark theme.
+- Cấm `ring-offset-<n>` nếu dòng đó không có `ring-offset-background` hoặc `ring-offset-0`. Test `src/v2/shared/utils/v2FocusRing.guard.test.ts` kiểm tra điều này cho toàn bộ `src/v2`.
+- Input trong popover tự focus (ví dụ ô tìm kiếm của `V2Combobox`) cũng theo cùng chuẩn. Variant `search` và `ghost` tắt ring bằng `focus:ring-0 focus-visible:ring-0`.
+- Khi đụng field trong drawer/card, kiểm tra ít nhất 3 theme: `default`, `classic-dark`, `midnight` (Storybook hoặc app thật).
+
 ## 3. Mở V2 drawer chồng lên drawer v1 (DrawerModal)
 
 - `V2StandardDrawer` nhận prop `baseZIndex`. Mặc định z-index tầng đầu là `V2_BASE_DRAWER_Z_INDEX` (50), đủ cho các trang V2.

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ShieldAlert, ArrowLeftRight, Briefcase } from "lucide-react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   V2Button,
@@ -20,9 +21,15 @@ export const V2WorkspaceModeToggle: React.FC<V2WorkspaceModeToggleProps> = ({
   const { t } = useV2Translation();
   const profileEmail = useAuthStore((s) => s.profile?.email);
   const employeeEmail = useAuthStore((s) => s.employee?.email);
+  const hasAdminPermission = useV2HasPermission({
+    collection: "admin_users",
+    action: "read",
+  });
 
-  const isSuperAdmin =
-    profileEmail === "admin@liouni.com" || employeeEmail === "admin@liouni.com";
+  const canAccessAdmin =
+    profileEmail === "admin@liouni.com" ||
+    employeeEmail === "admin@liouni.com" ||
+    hasAdminPermission;
 
   const [isAdminMode, setIsAdminMode] = React.useState<boolean>(() => {
     return typeof window !== "undefined"
@@ -38,7 +45,7 @@ export const V2WorkspaceModeToggle: React.FC<V2WorkspaceModeToggleProps> = ({
     return () => window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
-  if (!isSuperAdmin) return null;
+  if (!canAccessAdmin) return null;
 
   const handleToggle = () => {
     const targetPath = isAdminMode ? "/v2" : "/v2/admin/dashboard";

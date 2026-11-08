@@ -7,6 +7,7 @@ export interface V2DropdownItem {
   icon?: React.ReactNode;
   variant?: "default" | "danger";
   disabled?: boolean;
+  disabledReason?: string;
   loading?: boolean;
   preventClose?: boolean;
   hidden?: boolean;

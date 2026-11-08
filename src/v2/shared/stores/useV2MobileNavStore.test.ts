@@ -15,15 +15,25 @@ describe("useV2MobileNavStore", () => {
     expect(useV2MobileNavStore.getState().isPinned("dashboard")).toBe(false);
   });
 
-  it("cho phép setPinnedIds tối đa 4 items", () => {
+  it("cho phép setPinnedIds tối đa 6 items", () => {
     const { setPinnedIds } = useV2MobileNavStore.getState();
-    setPinnedIds(["item-1", "item-2", "item-3", "item-4", "item-5", "item-6"]);
+    setPinnedIds([
+      "item-1",
+      "item-2",
+      "item-3",
+      "item-4",
+      "item-5",
+      "item-6",
+      "item-7",
+    ]);
 
     expect(useV2MobileNavStore.getState().pinnedIds).toEqual([
       "item-1",
       "item-2",
       "item-3",
       "item-4",
+      "item-5",
+      "item-6",
     ]);
     expect(useV2MobileNavStore.getState().pinnedIds.length).toBe(
       MAX_PINNED_MOBILE_NAV,
@@ -44,17 +54,19 @@ describe("useV2MobileNavStore", () => {
     expect(useV2MobileNavStore.getState().isPinned("sales")).toBe(false);
   });
 
-  it("togglePinnedId chặn thêm khi đã đủ 4 items", () => {
+  it("togglePinnedId chặn thêm khi đã đủ 6 items", () => {
     const { setPinnedIds, togglePinnedId } = useV2MobileNavStore.getState();
-    setPinnedIds(["1", "2", "3", "4"]);
+    setPinnedIds(["1", "2", "3", "4", "5", "6"]);
 
-    const blocked = togglePinnedId("5");
+    const blocked = togglePinnedId("7");
     expect(blocked).toBe(false);
     expect(useV2MobileNavStore.getState().pinnedIds).toEqual([
       "1",
       "2",
       "3",
       "4",
+      "5",
+      "6",
     ]);
   });
 

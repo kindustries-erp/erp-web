@@ -16,8 +16,10 @@ Source of truth for this repo (`./erp-web`).
 
 ### 2. Atomic Design & Clean Code
 
-- **Max File Size:** Any React file exceeding 180 lines MUST be split (v1 legacy files over 180 lines are exempt unless touched by the task; see `ui-structure`).
+- **Max File Size:** Với `.tsx` và `.hook.ts`: cảnh báo ở 180 dòng, chặn ở 250 dòng (không merge). File dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`) không tính vào ngưỡng. V1 legacy vượt ngưỡng được miễn trừ trừ khi task chạm tới; see `ui-structure`.
+- **Core theo họ (áp dụng cho mọi họ, không ngoại lệ):** UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ>/`. Module của họ chỉ giữ API, cấu hình ghép core, page và locale riêng. Chiều phụ thuộc `modules → core → shared`; core không import module và không chứa tên module. Import qua barrel (`@/v2/core/<họ>`, `@/v2/shared/components`), không import sâu từ module hay core. Chi tiết: `ui-structure` Phần B.
 - Extract complex state/API logic into `hooks/` (e.g., `use[Feature]Logic.ts`).
+- **Tên hook**: hook gắn một component/drawer/page dùng `[Component].hook.ts` (export `use[Component]`); hook độc lập (query, mutation, hook dùng chung, store) dùng `use<Tên>.ts`. Hook không JSX đuôi `.ts`. Chi tiết: `ui-structure`.
 - Extract helper functions into `utils/`.
 - Extract sub-components into their own files. Do NOT group multiple large React components in a single file.
 
@@ -82,7 +84,7 @@ Source of truth for this repo (`./erp-web`).
 - before commit/push, `cd` into the repo root (`./erp-web`)
 - **Strict Git Workflow**: You MUST follow the exact commit/push sequence defined below (test -> commit -> pull --rebase -> check:ci -> push, theo `erp-git-workflow`).
 - push this repo with `github-industries`
-- when debugging and testing API locally, always start dev on port 10010
+- when debugging and testing API locally, always start dev on the port defined by `PORT` in `erp/erp-api/.env`
 - by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
 - before any DB scan or write, run `SELECT current_database();` to confirm the actual DB and report it before writing; never infer the DB from a file name
 - reuse existing components/hooks/utils/helpers/functions/page patterns first
@@ -121,7 +123,7 @@ Source of truth for this repo (`./erp-web`).
 - load `@.agents/skills/erp-web-truth/SKILL.md`
 - use repo-local context as default guidance
 - MUST use bun/bunx exclusively (do NOT use npm)
-- when debugging and testing API locally, always start dev on port 10010
+- when debugging and testing API locally, always start dev on the port defined by `PORT` in `erp/erp-api/.env`
 - by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
 - before any DB scan or write, run `SELECT current_database();` to confirm the actual DB and report it before writing; never infer the DB from a file name
 - follow DB -> API -> UI -> QC

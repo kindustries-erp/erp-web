@@ -138,8 +138,8 @@ const EmailInboxPage = lazy(() =>
   })),
 );
 const ErpPermissionsCorePage = lazy(() =>
-  import("@/pages/ErpPermissionsCorePage").then((m) => ({
-    default: m.ErpPermissionsCorePage,
+  import("@/v2/modules/rbac-roles").then((m) => ({
+    default: m.RolesPage,
   })),
 );
 const ErpInvoicesPage = lazy(() =>
@@ -210,6 +210,20 @@ const GarageGoodsReceiptsPage = lazy(() =>
     }),
   ),
 );
+const GarageProcurementRequestsPage = lazy(() =>
+  import("@/v2/modules/garage-procurement-requests/GarageProcurementRequestsPage").then(
+    (m) => ({
+      default: m.GarageProcurementRequestsPage,
+    }),
+  ),
+);
+const GarageProcurementOrdersPage = lazy(() =>
+  import("@/v2/modules/garage-procurement-orders/GarageProcurementOrdersPage").then(
+    (m) => ({
+      default: m.GarageProcurementOrdersPage,
+    }),
+  ),
+);
 const GarageOpex = lazy(() =>
   import("@/modules/garage/pages/GarageOpex").then((m) => ({
     default: m.GarageOpex,
@@ -275,6 +289,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-users": ErpUsersPage,
   "erp-activity-logs": ErpActivityLogsPage,
   "email-inbox": EmailInboxPage,
+  permission: ErpPermissionsCorePage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices": ErpInvoicesPage,
   "erp-invoices-in": () => <ErpInvoicesPage initialTab="in" />,
@@ -295,6 +310,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
   "garage-goods-receipts": GarageGoodsReceiptsPage,
+  "garage-procurement-requests": GarageProcurementRequestsPage,
+  "garage-procurement-orders": GarageProcurementOrdersPage,
   "garage-opex": GarageOpex,
   "garage-cashflow": GarageCashflowPage,
   "garage-customers": GaragePartners,

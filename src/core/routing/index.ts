@@ -48,7 +48,7 @@ export const ROUTES: RouteConfig[] = [
   { key: "suppliers", label: "Nhà cung cấp", group: "purchasing" },
   { key: "permissions", label: "Phân quyền & Vai trò", group: "system" },
   {
-    key: "erp-permissions-core",
+    key: "permission",
     label: "Phân quyền & Vai trò",
     group: "system",
   },

@@ -9,6 +9,7 @@ export const v2Vi = {
         purchasing: "MUA HÀNG",
         inventory: "KHO",
         manufacturing: "SẢN XUẤT / XƯỞNG",
+        garage: "GARAGE",
         accounting: "KẾ TOÁN",
         settings: "HỆ THỐNG",
       },
@@ -36,7 +37,11 @@ export const v2Vi = {
         resetDefault: "Khôi phục mặc định",
         inventoryGroup: "Kho",
         garageGoodsReceipts: "Nhập kho Garage",
+        garageProcurementRequests: "Đề nghị mua hàng Garage",
+        garageProcurementOrders: "Đơn mua hàng Garage",
         // v2-module:garage-goods-receipts:locale-vi
+        erpPermissionsCore: "Phân quyền & Vai trò",
+        // v2-module:rbac-roles:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",
@@ -47,6 +52,7 @@ export const v2Vi = {
     common: {
       close: "Đóng",
       save: "Lưu",
+      saveDraft: "Lưu nháp",
       cancel: "Hủy",
       edit: "Sửa",
       done: "Xong",

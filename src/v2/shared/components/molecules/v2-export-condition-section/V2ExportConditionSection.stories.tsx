@@ -5,7 +5,7 @@ import type { V2ExportMode } from "./V2ExportConditionSection.type";
 import type { V2ExportPeriodType } from "@/v2/shared/utils/exportPeriod";
 
 const meta: Meta<typeof V2ExportConditionSection> = {
-  title: "Components/Molecules/Forms & Inputs/V2ExportConditionSection",
+  title: "Components/Molecules/V2ExportConditionSection",
   component: V2ExportConditionSection,
   tags: ["autodocs"],
 };

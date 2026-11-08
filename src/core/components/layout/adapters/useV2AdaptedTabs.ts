@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ShoppingCart, ClipboardList } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
@@ -47,7 +48,9 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-finished-goods": PackageCheck,
   "garage-dashboard": LayoutDashboard,
   "garage-cases": Car,
+  "garage-procurement-requests": ClipboardList,
   "garage-goods-receipts": Package,
+  "garage-procurement-orders": ShoppingCart,
   "garage-opex": ReceiptText,
   "garage-cashflow": Wallet,
   "garage-customers": Users,
@@ -63,6 +66,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   attachments: Paperclip,
   "email-inbox": Mail,
   "erp-users": Users,
+  permission: Shield,
   "erp-permissions-core": Shield,
   "erp-activity-logs": FileText,
   "settings-branch": Building2,
@@ -112,8 +116,15 @@ export function useV2AdaptedTabs(): {
       case "garage-dashboard":
       case "garage-cases":
         return t("nav.items.garageCases", "Hoạt động garage");
+      case "garage-procurement-requests":
+        return t(
+          "nav.items.garageProcurementRequests",
+          "Đề nghị mua hàng Garage",
+        );
       case "garage-goods-receipts":
         return t("nav.items.garageGoodsReceipts", "Nhập kho Garage");
+      case "garage-procurement-orders":
+        return t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage");
       case "garage-cashflow":
         return t("nav.items.garageCashflow", "Thu chi garage");
       case "garage-debts":
@@ -142,6 +153,7 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.emailInbox", "Hòm thư");
       case "erp-users":
         return t("nav.items.users", "Người dùng");
+      case "permission":
       case "erp-permissions-core":
         return t("nav.items.phanquyen", "Phân quyền");
       case "erp-activity-logs":

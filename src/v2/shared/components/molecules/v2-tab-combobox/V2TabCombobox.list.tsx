@@ -38,7 +38,7 @@ export const V2TabComboboxList: React.FC<V2TabComboboxListProps> = ({
                 "h-8 w-full justify-between rounded-md px-2.5 text-xs font-normal transition-colors",
                 isSelected
                   ? "bg-primary/10 font-semibold text-primary hover:bg-primary/15"
-                  : "text-foreground hover:bg-surface-hover",
+                  : "text-foreground hover:bg-surface-hover dark:hover:bg-white/[0.05]",
               )}
             >
               <div className="flex min-w-0 items-center gap-2">

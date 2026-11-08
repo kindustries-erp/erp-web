@@ -37,8 +37,12 @@ describe("V2BottomNav Organism", () => {
     );
 
     const nav = screen.getByTestId("v2-bottom-nav");
-    expect(nav.className).toContain("rounded-3xl");
+    expect(nav.className).toContain("rounded-2xl");
     expect(nav.className).toContain("shadow-2xl");
+    expect(nav.className).toContain("h-14");
+
+    const homeLabel = screen.getByText("Trang chủ");
+    expect(homeLabel.className).toContain("sr-only");
   });
 
   it("render biến thể hero-center với nút trung tâm FAB", () => {
@@ -76,5 +80,25 @@ describe("V2BottomNav Organism", () => {
     );
 
     expect(screen.getByTestId("bottom-nav-dot")).toBeInTheDocument();
+  });
+
+  it("hỗ trợ truyền heroButtonSize cho nút trung tâm", () => {
+    const heroItem = {
+      id: "create",
+      label: "Tạo mới",
+      icon: Plus,
+      href: "#create",
+    };
+
+    render(
+      <V2BottomNav
+        items={mockNavItems}
+        centerHeroItem={heroItem}
+        heroButtonSize="lg"
+      />,
+    );
+
+    const heroBtn = screen.getByTestId("bottom-nav-hero-button");
+    expect(heroBtn.className).toContain("h-16 w-16");
   });
 });

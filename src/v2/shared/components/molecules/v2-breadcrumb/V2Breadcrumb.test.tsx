@@ -26,6 +26,46 @@ describe("V2Breadcrumb Molecule", () => {
     expect(currentPage).toHaveAttribute("aria-current", "page");
   });
 
+  it("mặc định mobileMode='last-only': ẩn cấp cha trên mobile và hiện item cuối cùng", () => {
+    const items = [
+      { label: "Kế toán", href: "/accounting" },
+      { label: "Hóa đơn VAT" },
+    ];
+
+    const { container } = render(<V2Breadcrumb items={items} />);
+
+    const parentWrapper = screen.getByText("Kế toán").closest("div");
+    expect(parentWrapper).toHaveClass("hidden");
+    expect(parentWrapper).toHaveClass("sm:inline-flex");
+
+    const link = screen.getByRole("link", { name: "Kế toán" });
+    expect(link).toHaveAttribute("href", "/accounting");
+
+    const lastWrapper = screen.getByText("Hóa đơn VAT").closest("div");
+    expect(lastWrapper).not.toHaveClass("hidden");
+    expect(lastWrapper).toHaveClass("truncate");
+
+    // Separator ẩn trên mobile
+    const separator = container.querySelector("[aria-hidden='true']");
+    expect(separator).toHaveClass("hidden");
+    expect(separator).toHaveClass("sm:inline-flex");
+  });
+
+  it("khi mobileMode='full': hiển thị đầy đủ mọi cấp trên cả mobile", () => {
+    const items = [{ label: "Hệ thống" }, { label: "Phân quyền" }];
+
+    const { container } = render(
+      <V2Breadcrumb items={items} mobileMode="full" />,
+    );
+
+    const parentWrapper = screen.getByText("Hệ thống").closest("div");
+    expect(parentWrapper).not.toHaveClass("hidden");
+    expect(parentWrapper).toHaveClass("inline-flex");
+
+    const separator = container.querySelector("[aria-hidden='true']");
+    expect(separator).not.toHaveClass("hidden");
+  });
+
   it("returns null when items is empty", () => {
     const { container } = render(<V2Breadcrumb items={[]} />);
     expect(container.firstChild).toBeNull();

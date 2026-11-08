@@ -3,7 +3,7 @@ import React from "react";
 import { V2TableFilterChip } from "./V2TableFilterChip";
 
 const meta: Meta<typeof V2TableFilterChip> = {
-  title: "Components/Molecules/Table/V2TableFilterChip",
+  title: "Components/Molecules/V2TableFilterChip",
   component: V2TableFilterChip,
   tags: ["autodocs"],
 };

@@ -32,7 +32,7 @@ graph LR
 2. **🛑 Zero Premature Plan**:
    - **KHÔNG TỰ Ý** tạo `implementation_plan.md`, `walkthrough.md` hay danh sách task chi tiết (`X.Y.Z`).
    - Đi thẳng vào phân tích giao diện và giải đáp thắc mắc.
-   - Chỉ chuyển sang lập kế hoạch khi người dùng yêu cầu rõ ràng (ví dụ: *"OK, lên plan đi"* hoặc gõ `/plan-and-task`).
+   - Chỉ chuyển sang lập kế hoạch khi người dùng yêu cầu rõ ràng (ví dụ: *"OK, lên plan đi"* hoặc gõ `/erp-plan`).
 3. **📌 Dẫn Chứng Trực Tiếp Từ Mã Nguồn (Evidence-First)**:
    - Luôn trích dẫn chính xác file component và dòng code (ví dụ `[src/modules/...#L30-L55]`).
    - Đối chiếu với hợp đồng API thực tế xem response data có khớp với TypeScript interface không.

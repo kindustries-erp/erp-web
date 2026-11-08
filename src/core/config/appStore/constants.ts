@@ -109,6 +109,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.users",
     group: "settings",
   },
+  permission: {
+    labelKey: "nav.items.phanquyen",
+    group: "settings",
+  },
   "erp-permissions-core": {
     labelKey: "nav.items.phanquyen",
     group: "settings",
@@ -307,6 +311,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
+  permission: [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
   "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
   attachments: [["breadcrumb.settings"], ["nav.items.attachments"]],
   "invoice-dashboard": [

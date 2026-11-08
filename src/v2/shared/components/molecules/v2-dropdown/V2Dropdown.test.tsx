@@ -95,4 +95,32 @@ describe("V2Dropdown Molecule", () => {
     fireEvent.click(syncBtn);
     expect(MOCK_GROUPS[0].items[0].onClick).toHaveBeenCalledTimes(1);
   });
+
+  it("closes dropdown when clicking outside via pointerdown", () => {
+    vi.spyOn(useViewportModule, "useViewport").mockReturnValue({
+      width: 1280,
+      height: 800,
+      isMobile: false,
+      isTablet: false,
+      isDesktop: true,
+    });
+
+    render(
+      <div>
+        <div data-testid="outside">Vùng ngoài</div>
+        <V2Dropdown
+          groups={MOCK_GROUPS}
+          trigger={<button type="button">Thao tác</button>}
+        />
+      </div>,
+    );
+
+    const trigger = screen.getByText("Thao tác");
+    fireEvent.click(trigger);
+    expect(screen.getByText("ĐỒNG BỘ")).toBeInTheDocument();
+
+    const outside = screen.getByTestId("outside");
+    fireEvent.pointerDown(outside);
+    expect(screen.queryByText("ĐỒNG BỘ")).not.toBeInTheDocument();
+  });
 });

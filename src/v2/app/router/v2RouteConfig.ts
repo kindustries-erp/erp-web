@@ -41,6 +41,12 @@ export const V2_ROUTES: V2RouteDef[] = [
     title: "Nhà cung cấp",
     permission: { collection: "business_partners", action: "read" },
   },
+  {
+    id: "invoices",
+    path: "/v2/invoices",
+    title: "Hóa đơn điện tử",
+    permission: { collection: "invoices", action: "read" },
+  },
   { id: "inventory", path: "/v2/inventory", title: "Kho vận (Inventory)" },
   {
     id: "settings",
@@ -107,7 +113,56 @@ export const V2_ROUTES: V2RouteDef[] = [
     title: "Nhập kho Garage",
     permission: { collection: "garage_goods_receipts", action: "read" },
   },
+  {
+    id: "garage-procurement-requests",
+    path: "/garage-procurement-requests",
+    title: "Đề nghị mua hàng Garage",
+    permission: { collection: "garage_procurement_requests", action: "read" },
+  },
+  {
+    id: "garage-procurement-orders",
+    path: "/garage-procurement-orders",
+    title: "Đơn mua hàng Garage",
+    permission: { collection: "garage_procurement_orders", action: "read" },
+  },
+  {
+    id: "garage-procurement-requests",
+    path: "/v2/garage-procurement-requests",
+    title: "Đề nghị mua hàng Garage",
+    permission: { collection: "garage_procurement_requests", action: "read" },
+  },
+  {
+    id: "garage-procurement-orders",
+    path: "/v2/garage-procurement-orders",
+    title: "Đơn mua hàng Garage",
+    permission: { collection: "garage_procurement_orders", action: "read" },
+  },
   // v2-module:garage-goods-receipts:routes
+  {
+    id: "permission",
+    path: "/permission",
+    title: "Phân quyền & Vai trò",
+    permission: { collection: "admin_users", action: "read" },
+  },
+  {
+    id: "permission-v2",
+    path: "/v2/permission",
+    title: "Phân quyền & Vai trò",
+    permission: { collection: "admin_users", action: "read" },
+  },
+  {
+    id: "erp-permissions-core",
+    path: "/erp-permissions-core",
+    title: "Phân quyền & Vai trò",
+    permission: { collection: "admin_users", action: "read" },
+  },
+  {
+    id: "erp-permissions-core-v2",
+    path: "/v2/erp-permissions-core",
+    title: "Phân quyền & Vai trò",
+    permission: { collection: "admin_users", action: "read" },
+  },
+  // v2-module:rbac-roles:routes
   // plop:v2-routes
 ];
 

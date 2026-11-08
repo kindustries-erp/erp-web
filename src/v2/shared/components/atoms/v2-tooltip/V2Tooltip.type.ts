@@ -21,4 +21,6 @@ export interface V2TooltipProps {
   className?: string;
   /** Cho phép asChild trên trigger */
   asChild?: boolean;
+  /** Kích hoạt tooltip khi trigger nhận focus (mặc định: true). Đặt false nếu chỉ muốn hover */
+  triggerOnFocus?: boolean;
 }

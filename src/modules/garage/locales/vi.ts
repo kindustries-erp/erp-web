@@ -47,6 +47,8 @@ export const garageVi = {
       viewDetail: "Xem chi tiết",
       edit: "Chỉnh sửa",
       deleteVoucher: "Xóa phiếu",
+      printReceipt: "In phiếu thu",
+      printPayment: "In phiếu chi",
       other: "Khác",
       exportExcel: "Xuất Excel",
     },

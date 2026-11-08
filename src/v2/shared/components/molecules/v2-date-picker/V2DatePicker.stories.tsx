@@ -7,7 +7,7 @@ import { buildV2DatePresets } from "./V2DatePicker.helper";
 import type { V2DateRangeValue } from "./V2DatePicker.type";
 
 const meta: Meta<typeof V2DatePicker> = {
-  title: "Components/Molecules/Forms & Inputs/V2DatePicker",
+  title: "Components/Molecules/V2DatePicker",
   component: V2DatePicker,
   tags: ["autodocs"],
   args: { value: null, onValueChange: () => {} },

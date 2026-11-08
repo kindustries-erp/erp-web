@@ -1,0 +1,25 @@
+import { registerV2ModuleLocale } from "@/v2/shared/locales";
+
+/** Chữ hiển thị riêng của module {{moduleName}}; phần dùng chung nằm ở lõi {{family}} */
+registerV2ModuleLocale("{{localeNamespace}}", {
+  vi: {
+    title: "{{titleVi}}",
+    description: "{{titleVi}}",
+    create: "Thêm {{titleVi}}",
+    list: "Danh sách",
+    empty: "Chưa có dữ liệu",
+    deleteTitle: "Xác nhận xóa",
+    deleteMessage: "Bạn có chắc muốn xóa?",
+    deleteLabel: "Xóa",
+  },
+  en: {
+    title: "{{titleEn}}",
+    description: "{{titleEn}}",
+    create: "Add {{titleEn}}",
+    list: "List",
+    empty: "No data yet",
+    deleteTitle: "Confirm deletion",
+    deleteMessage: "Are you sure you want to delete?",
+    deleteLabel: "Delete",
+  },
+});

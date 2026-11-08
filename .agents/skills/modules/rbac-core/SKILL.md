@@ -128,7 +128,8 @@ Tất cả các endpoint dưới đây đều được bảo vệ bởi `JwtAuth
 | `PATCH` | `/api/v1/rbac-core/roles/:id` | Cập nhật tên, mô tả, trạng thái hoạt động của vai trò |
 | `DELETE` | `/api/v1/rbac-core/roles/:id` | Xóa vai trò (tự động xóa cascade permissions và gán người dùng) |
 | `GET` | `/api/v1/rbac-core/roles/:roleId/permissions` | Lấy danh sách quyền chi tiết của vai trò |
-| `PATCH` | `/api/v1/rbac-core/roles/:roleId/permissions` | Lưu ma trận quyền của vai trò (`permissions: [{ resource, action, conditions }]`) |
+| `PATCH` | `/api/v1/rbac-core/roles/:roleId/permissions` | Lưu ma trận quyền của vai trò (`permissions: [{ resource, action, conditions }]`). Backend thay toàn bộ quyền, nên web giữ lại dòng ngoài ma trận (`preserved`) và `conditions` khi lưu (`RoleDrawer.helper.ts`). |
+| `GET` | `/api/v1/rbac-core/collections` | Danh sách resource; resource có `actions` (ví dụ `approve`, `reject`) hiển thị thêm cột Duyệt/Từ chối trên ma trận V2 |
 | `GET` | `/api/v1/rbac-core/roles/:roleId/users` | Lấy danh sách người dùng được gán vào vai trò |
 | `PATCH` | `/api/v1/rbac-core/roles/:roleId/users` | Cập nhật danh sách người dùng gán vào vai trò (`userIds: string[]`) |
 | `GET` | `/api/v1/rbac-core/collections` | Lấy danh sách toàn bộ tài nguyên (resources) khả dụng trong hệ thống |

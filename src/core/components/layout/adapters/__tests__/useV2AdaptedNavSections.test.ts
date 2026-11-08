@@ -4,7 +4,7 @@ import { useV2AdaptedNavSections } from "../useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "../useV2AdaptedTabs";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource } from "@/modules/system/types/rbac";
-import { Package } from "lucide-react";
+import { ClipboardList, Package } from "lucide-react";
 import {
   Banknote,
   Landmark,
@@ -56,6 +56,11 @@ vi.mock("@/core/config/appStore", async (importOriginal) => {
         {
           instanceId: "tab-garage-goods-receipts-1",
           pageKey: "garage-goods-receipts",
+          instanceIndex: 1,
+        },
+        {
+          instanceId: "tab-garage-procurement-requests-1",
+          pageKey: "garage-procurement-requests",
           instanceIndex: 1,
         },
       ],
@@ -188,6 +193,17 @@ describe("useV2AdaptedTabs - custom-fields tab", () => {
     expect(goodsReceiptTab?.label).toBe("Nhập kho Garage");
     expect(goodsReceiptTab?.icon).toBe(Package);
   });
+
+  it("resolves label and icon for garage-procurement-requests tab", () => {
+    const { result } = renderHook(() => useV2AdaptedTabs());
+    const prTab = result.current.tabs.find(
+      (t) => t.id === "tab-garage-procurement-requests-1",
+    );
+
+    expect(prTab).toBeDefined();
+    expect(prTab?.label).toBe("Đề nghị mua hàng Garage");
+    expect(prTab?.icon).toBe(ClipboardList);
+  });
 });
 
 describe("useV2AdaptedNavSections - garage-goods-receipts in sec-garage", () => {
@@ -231,6 +247,39 @@ describe("useV2AdaptedNavSections - garage-goods-receipts in sec-garage", () => 
     const { result } = renderHook(() => useV2AdaptedNavSections());
     const garageSec = result.current.find((s) => s.id === "sec-garage");
     const item = findNavChild(garageSec?.items, "garage-goods-receipts");
+
+    expect(item).toBeUndefined();
+  });
+});
+
+describe("useV2AdaptedNavSections - garage-procurement-requests in sec-garage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("includes garage-procurement-requests when user has explicit GARAGE_PROCUREMENT_REQUESTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.GARAGE_PROCUREMENT_REQUESTS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const garageSec = result.current.find((s) => s.id === "sec-garage");
+    const item = findNavChild(garageSec?.items, "garage-procurement-requests");
+
+    expect(item).toBeDefined();
+    expect(item?.href).toBe("/garage-procurement-requests");
+    expect(item?.label).toBe("Đề nghị mua hàng Garage");
+    expect(item?.icon).toBe(ClipboardList);
+  });
+
+  it("excludes garage-procurement-requests when user lacks garage procurement requests permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ADMIN_USERS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const garageSec = result.current.find((s) => s.id === "sec-garage");
+    const item = findNavChild(garageSec?.items, "garage-procurement-requests");
 
     expect(item).toBeUndefined();
   });

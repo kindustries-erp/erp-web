@@ -14,7 +14,7 @@ const options = [
 ];
 
 const meta: Meta<typeof V2Combobox> = {
-  title: "Components/Molecules/Forms & Inputs/V2Combobox",
+  title: "Components/Molecules/V2Combobox",
   component: V2Combobox,
   tags: ["autodocs"],
   args: {

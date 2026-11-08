@@ -12,6 +12,8 @@ import {
   ReceiptText,
   Wallet,
   Settings,
+  ShoppingCart,
+  ClipboardList,
 } from "lucide-react";
 import type {
   RawNavDef,
@@ -127,13 +129,38 @@ export const NAV_DEFS: RawNavDef[] = [
   },
   {
     id: "garage-goods-receipts",
-    sectionId: "inventory",
+    sectionId: "garage",
     labelKey: "v2.nav.items.garageGoodsReceipts",
     fallback: "Nhập kho Garage",
     icon: Package,
     href: "/garage-goods-receipts",
   },
+  {
+    id: "garage-procurement-requests",
+    sectionId: "garage",
+    labelKey: "v2.nav.items.garageProcurementRequests",
+    fallback: "Đề nghị mua hàng Garage",
+    icon: ClipboardList,
+    href: "/garage-procurement-requests",
+  },
+  {
+    id: "garage-procurement-orders",
+    sectionId: "garage",
+    labelKey: "v2.nav.items.garageProcurementOrders",
+    fallback: "Đơn mua hàng Garage",
+    icon: ShoppingCart,
+    href: "/garage-procurement-orders",
+  },
   // v2-module:garage-goods-receipts:nav
+  {
+    id: "permission",
+    sectionId: "settings",
+    labelKey: "v2.nav.items.permission",
+    fallback: "Phân quyền & Vai trò",
+    icon: FileText,
+    href: "/permission",
+  },
+  // v2-module:rbac-roles:nav
   // plop:v2-nav-items
 ];
 
@@ -154,6 +181,11 @@ export const SECTION_DEFS: RawSectionDef[] = [
     id: "manufacturing",
     labelKey: "v2.nav.sections.manufacturing",
     fallback: "SẢN XUẤT",
+  },
+  {
+    id: "garage",
+    labelKey: "v2.nav.sections.garage",
+    fallback: "GARAGE",
   },
   {
     id: "accounting",
