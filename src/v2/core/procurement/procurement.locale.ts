@@ -11,6 +11,8 @@ registerV2ModuleLocale("procurement", {
       edit: "Chỉnh sửa",
       saveDraft: "Lưu nháp",
       editDisabledReason: "Chỉ sửa được khi còn nháp",
+      submitNotCreatorReason: "Chỉ người tạo mới được gửi duyệt",
+      viewDetailInDrawer: "Xem chi tiết phiếu trong Drawer",
       create: "Tạo mới",
       createOrder: "Tạo PO từ PR",
       submit: "Gửi duyệt",
@@ -35,6 +37,16 @@ registerV2ModuleLocale("procurement", {
       reasonLabel: "Lý do",
       reasonPlaceholder: "Nhập lý do",
       reasonRequired: "Vui lòng nhập lý do",
+    },
+    summaryCard: {
+      docNo: "Số phiếu",
+      copyDocNo: "Sao chép mã phiếu",
+      copiedDocNo: "Đã sao chép",
+    },
+    approveModal: {
+      title: "Duyệt đề nghị mua hàng",
+      message:
+        "Bạn có chắc chắn muốn duyệt phiếu này không? Sau khi duyệt, phiếu sẽ chuyển sang trạng thái Đã duyệt.",
     },
     status: {
       DRAFT: "Nháp",
@@ -165,6 +177,8 @@ registerV2ModuleLocale("procurement", {
       view: "View details",
       edit: "Edit",
       editDisabledReason: "Only drafts can be edited",
+      submitNotCreatorReason: "Only the creator can submit for approval",
+      viewDetailInDrawer: "View details in Drawer",
       create: "Create",
       createOrder: "Create PO from request",
       submit: "Submit",
@@ -189,6 +203,16 @@ registerV2ModuleLocale("procurement", {
       reasonLabel: "Reason",
       reasonPlaceholder: "Enter a reason",
       reasonRequired: "Please enter a reason",
+    },
+    summaryCard: {
+      docNo: "Document No",
+      copyDocNo: "Copy document number",
+      copiedDocNo: "Copied",
+    },
+    approveModal: {
+      title: "Approve procurement request",
+      message:
+        "Are you sure you want to approve this request? Once approved, it will be marked as Approved.",
     },
     status: {
       DRAFT: "Draft",

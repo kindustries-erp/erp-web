@@ -1,5 +1,6 @@
 import * as React from "react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { V2Tooltip } from "@/v2/shared/components/atoms/v2-tooltip";
 import type { V2RowActionGroup } from "@/v2/shared/types/v2-table";
 import { cn } from "@/v2/shared/utils/cn";
 
@@ -22,29 +23,44 @@ export const V2RowActionList: React.FC<V2RowActionListProps> = ({
             {group.groupLabel}
           </div>
         )}
-        {group.items.map((item) => (
-          <V2Button
-            key={item.label}
-            variant="ghost"
-            role="menuitem"
-            disabled={item.disabled}
-            title={item.disabled ? item.disabledReason : undefined}
-            className={cn(
-              "h-auto w-full justify-start gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium",
-              item.variant === "danger" &&
-                "text-destructive hover:bg-destructive/10 hover:text-destructive",
-            )}
-            onClick={() => {
-              item.onClick();
-              onAction?.();
-            }}
-          >
-            {item.icon && (
-              <span className="shrink-0 text-muted-fg">{item.icon}</span>
-            )}
-            <span className="flex-1 truncate text-left">{item.label}</span>
-          </V2Button>
-        ))}
+        {group.items.map((item) => {
+          const button = (
+            <V2Button
+              key={item.label}
+              variant="ghost"
+              role="menuitem"
+              disabled={item.disabled}
+              className={cn(
+                "h-auto w-full justify-start gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium",
+                item.variant === "danger" &&
+                  "text-destructive hover:bg-destructive/10 hover:text-destructive",
+              )}
+              onClick={() => {
+                item.onClick();
+                onAction?.();
+              }}
+            >
+              {item.icon && (
+                <span className="shrink-0 text-muted-fg">{item.icon}</span>
+              )}
+              <span className="flex-1 truncate text-left">{item.label}</span>
+            </V2Button>
+          );
+
+          if (item.disabled && item.disabledReason) {
+            return (
+              <V2Tooltip
+                key={item.label}
+                content={item.disabledReason}
+                side="right"
+              >
+                <span className="block w-full">{button}</span>
+              </V2Tooltip>
+            );
+          }
+
+          return button;
+        })}
       </React.Fragment>
     ))}
   </>

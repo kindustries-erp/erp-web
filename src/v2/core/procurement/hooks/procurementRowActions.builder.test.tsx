@@ -7,6 +7,8 @@ import { buildProcurementRowActions } from "./procurementRowActions.builder";
 type Row = { id: string; status: string };
 const LABELS: Record<string, string> = {
   "v2.procurement.actions.submit": "Gửi duyệt",
+  "v2.procurement.actions.submitNotCreatorReason":
+    "Chỉ người tạo mới được gửi duyệt",
   "v2.procurement.actions.recall": "Thu hồi",
   "v2.procurement.actions.approve": "Duyệt",
   "v2.procurement.actions.reject": "Từ chối",
@@ -62,6 +64,50 @@ describe("buildProcurementRowActions", () => {
       "Xem chi tiết",
       "Chỉnh sửa",
     ]);
+  });
+
+  it("gửi duyệt: disable kèm lý do khi người dùng không phải người tạo", () => {
+    const build = buildProcurementRowActions<any>({
+      t,
+      config: makeConfig(["submit"], true),
+      canCreate: false,
+      canUpdate: true,
+      canDelete: false,
+      currentUserId: "user-1",
+      currentUserEmail: "user1@liouni.com",
+      ...deps(),
+    });
+    const groups = build({
+      id: "p6",
+      status: "DRAFT",
+      createdBy: "user-2",
+      createdByEmail: "user2@liouni.com",
+    });
+    const submit = groups[1].items.find((i) => i.label === "Gửi duyệt")!;
+    expect(submit.disabled).toBe(true);
+    expect(submit.disabledReason).toBe("Chỉ người tạo mới được gửi duyệt");
+  });
+
+  it("gửi duyệt: sáng bình thường khi người dùng chính là người tạo", () => {
+    const build = buildProcurementRowActions<any>({
+      t,
+      config: makeConfig(["submit"], true),
+      canCreate: false,
+      canUpdate: true,
+      canDelete: false,
+      currentUserId: "user-1",
+      currentUserEmail: "user1@liouni.com",
+      ...deps(),
+    });
+    const groups = build({
+      id: "p7",
+      status: "DRAFT",
+      createdBy: "user-1",
+      createdByEmail: "user1@liouni.com",
+    });
+    const submit = groups[1].items.find((i) => i.label === "Gửi duyệt")!;
+    expect(submit.disabled).toBe(false);
+    expect(submit.disabledReason).toBeUndefined();
   });
 
   it("chờ duyệt: chuyển trạng thái thường trước, từ chối (danger) sau, không có Xóa", () => {
@@ -134,5 +180,49 @@ describe("buildProcurementRowActions", () => {
       "Xem chi tiết",
       "Chỉnh sửa",
     ]);
+  });
+
+  it("gửi duyệt: disable kèm lý do khi người dùng không phải người tạo", () => {
+    const build = buildProcurementRowActions<any>({
+      t,
+      config: makeConfig(["submit"], true),
+      canCreate: false,
+      canUpdate: true,
+      canDelete: false,
+      currentUserId: "user-1",
+      currentUserEmail: "user1@liouni.com",
+      ...deps(),
+    });
+    const groups = build({
+      id: "p6",
+      status: "DRAFT",
+      createdBy: "user-2",
+      createdByEmail: "user2@liouni.com",
+    });
+    const submit = groups[1].items.find((i) => i.label === "Gửi duyệt")!;
+    expect(submit.disabled).toBe(true);
+    expect(submit.disabledReason).toBe("Chỉ người tạo mới được gửi duyệt");
+  });
+
+  it("gửi duyệt: sáng bình thường khi người dùng chính là người tạo", () => {
+    const build = buildProcurementRowActions<any>({
+      t,
+      config: makeConfig(["submit"], true),
+      canCreate: false,
+      canUpdate: true,
+      canDelete: false,
+      currentUserId: "user-1",
+      currentUserEmail: "user1@liouni.com",
+      ...deps(),
+    });
+    const groups = build({
+      id: "p7",
+      status: "DRAFT",
+      createdBy: "user-1",
+      createdByEmail: "user1@liouni.com",
+    });
+    const submit = groups[1].items.find((i) => i.label === "Gửi duyệt")!;
+    expect(submit.disabled).toBe(false);
+    expect(submit.disabledReason).toBeUndefined();
   });
 });

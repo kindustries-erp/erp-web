@@ -1,9 +1,11 @@
 import * as React from "react";
-import { MoreHorizontal, Loader2 } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
+import { V2Button, V2Text } from "@/v2/shared/components";
 import { AppPopover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2Tooltip } from "@/v2/shared/components/atoms/v2-tooltip";
 import type {
   V2DropdownProps,
   V2DropdownItem,
@@ -46,13 +48,15 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
   });
 
   const triggerNode = trigger ?? children ?? (
-    <button
+    <V2Button
       type="button"
-      className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-muted-fg hover:bg-surface-hover hover:text-foreground cursor-pointer transition-colors"
+      variant="ghost"
+      size="icon-xs"
+      className="w-7 h-7 rounded-lg text-muted-fg hover:bg-surface-hover hover:text-foreground"
       aria-label={t("v2.common.actions", "Thao tác")}
     >
       <MoreHorizontal className="w-4 h-4" />
-    </button>
+    </V2Button>
   );
 
   const normalizedGroups: V2DropdownGroup[] = React.useMemo(() => {
@@ -102,36 +106,61 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
             )}
             <div className="flex flex-col">
               {group.groupLabel && (
-                <div className="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-muted-fg dark:text-teal-400/80 uppercase select-none">
-                  {group.groupLabel}
-                </div>
-              )}
-              {visibleItems.map((item, itemIdx) => (
-                <button
-                  key={item.key || item.label || itemIdx}
-                  type="button"
-                  disabled={item.disabled || item.loading}
-                  onClick={() => handleItemClick(item)}
-                  className={cn(
-                    "flex items-center gap-2 w-full px-2.5 py-1.5 text-xs text-left rounded-md transition-colors select-none",
-                    "text-foreground hover:bg-surface-hover dark:hover:bg-teal-500/10 dark:hover:text-teal-300 active:bg-surface-active cursor-pointer",
-                    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
-                    item.variant === "danger" &&
-                      "text-destructive hover:bg-destructive/10 active:bg-destructive/15",
-                  )}
+                <V2Text
+                  as="div"
+                  variant="caption"
+                  weight="semibold"
+                  className="px-2.5 py-1 text-[10px] tracking-wider text-muted-fg dark:text-teal-400/80 uppercase select-none"
                 >
-                  {item.loading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-fg shrink-0" />
-                  ) : item.icon ? (
-                    <span className="shrink-0 text-muted-fg opacity-85">
-                      {item.icon}
-                    </span>
-                  ) : null}
-                  <span className="truncate flex-1 font-medium">
-                    {item.label}
-                  </span>
-                </button>
-              ))}
+                  {group.groupLabel}
+                </V2Text>
+              )}
+              {visibleItems.map((item, itemIdx) => {
+                const btn = (
+                  <V2Button
+                    key={item.key || item.label || itemIdx}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={item.disabled}
+                    isLoading={item.loading}
+                    onClick={() => handleItemClick(item)}
+                    className={cn(
+                      "h-auto w-full justify-start gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium",
+                      "text-foreground hover:bg-surface-hover dark:hover:bg-teal-500/10 dark:hover:text-teal-300 active:bg-surface-active",
+                      item.variant === "danger" &&
+                        "text-destructive hover:bg-destructive/10 active:bg-destructive/15",
+                    )}
+                  >
+                    {item.icon && (
+                      <span className="shrink-0 text-muted-fg opacity-85">
+                        {item.icon}
+                      </span>
+                    )}
+                    <V2Text
+                      as="span"
+                      variant="body-sm"
+                      className="truncate flex-1 font-medium text-inherit"
+                    >
+                      {item.label}
+                    </V2Text>
+                  </V2Button>
+                );
+
+                if (item.disabled && item.disabledReason) {
+                  return (
+                    <V2Tooltip
+                      key={item.key || item.label || itemIdx}
+                      content={item.disabledReason}
+                      side="right"
+                    >
+                      <span className="block w-full">{btn}</span>
+                    </V2Tooltip>
+                  );
+                }
+
+                return btn;
+              })}
             </div>
           </React.Fragment>
         );

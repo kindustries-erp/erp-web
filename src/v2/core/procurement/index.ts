@@ -24,5 +24,7 @@ export * from "./hooks/procurementListConfig.type";
 export * from "./approval/approval.gate";
 export * from "./approval/approval.api";
 export * from "./components/molecules/approver-picker";
+export * from "./components/molecules/procurement-doc-summary-card";
 export * from "./components/organisms/submit-approval-modal";
+export * from "./components/organisms/procurement-approve-modal";
 export * from "./procurement.intent";

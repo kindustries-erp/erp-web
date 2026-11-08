@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { showProcurementError } from "../procurement.toast";
@@ -120,11 +121,18 @@ export function useProcurementList<T extends { id: string }>(
     [],
   );
 
+  const currentUserId = useAuthStore((s) => s.profile?.id ?? null);
+  const currentUserEmail = useAuthStore(
+    (s) => s.profile?.email ?? s.employee?.email ?? null,
+  );
+
   const rowActions = useProcurementRowActions<T>({
     config: approval.approvalConfig,
     canCreate,
     canUpdate,
     canDelete,
+    currentUserId,
+    currentUserEmail,
     openDrawer,
     start,
     openDelete: (row) => setDeleteTarget(row),

@@ -16,6 +16,7 @@ export interface DrawerAction {
   onClick?: () => void;
   primary?: boolean;
   disabled?: boolean;
+  disabledReason?: string;
   loading?: boolean;
   align?: "left" | "right";
   variant?: DrawerActionVariant;

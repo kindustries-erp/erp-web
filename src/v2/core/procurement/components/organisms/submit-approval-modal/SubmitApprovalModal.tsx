@@ -2,12 +2,17 @@ import * as React from "react";
 import { V2Button, V2Modal, V2Text } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { ApproverPicker } from "../../molecules/approver-picker";
+import { ProcurementDocSummaryCard } from "../../molecules/procurement-doc-summary-card";
 import type { ProcurementApprover } from "../../../procurement.types";
 
 export interface SubmitApprovalModalProps {
   open: boolean;
   /** Tên chứng từ đang gửi duyệt, hiển thị trong tiêu đề */
   rowLabel: string;
+  /** Dòng chứng từ đang xử lý (dùng để hiển thị tóm tắt thông tin cơ bản) */
+  target?: any | null;
+  /** Callback mở Drawer xem chi tiết (khi bấm thì modal sẽ đóng) */
+  onViewDetail?: () => void;
   approvers: ProcurementApprover[];
   loading?: boolean;
   submitting?: boolean;
@@ -19,6 +24,8 @@ export interface SubmitApprovalModalProps {
 export function SubmitApprovalModal({
   open,
   rowLabel,
+  target,
+  onViewDetail,
   approvers,
   loading = false,
   submitting = false,
@@ -32,13 +39,15 @@ export function SubmitApprovalModal({
     if (!open) setApproverId(null);
   }, [open]);
 
+  const docNo = target?.requestNo || target?.orderNo || rowLabel;
+
   return (
     <V2Modal
       open={open}
       onOpenChange={(next) => !next && onCancel()}
-      size="sm"
+      size="md"
       title={t("v2.procurementApproval.submitTitle", "Gửi duyệt")}
-      description={rowLabel}
+      description={target ? undefined : rowLabel}
       footer={
         <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <V2Button variant="outline" onClick={onCancel} disabled={submitting}>
@@ -54,17 +63,31 @@ export function SubmitApprovalModal({
         </div>
       }
     >
-      <div className="flex flex-col gap-2">
-        <V2Text variant="body" weight="medium">
-          {t("v2.procurementApproval.approver", "Người duyệt")}
-        </V2Text>
-        <ApproverPicker
-          value={approverId}
-          options={approvers}
-          loading={loading}
-          disabled={submitting}
-          onChange={setApproverId}
-        />
+      <div className="flex flex-col gap-4">
+        {target && (
+          <ProcurementDocSummaryCard
+            documentNo={docNo}
+            title={target.title || target.remarks}
+            date={target.requestDate || target.orderDate || target.createdAt}
+            branchName={target.branchName}
+            estimatedTotal={target.estimatedTotal ?? target.totalAmount}
+            createdByEmail={target.createdByEmail}
+            onViewDetail={onViewDetail}
+          />
+        )}
+
+        <div className="flex flex-col gap-2">
+          <V2Text variant="body" weight="medium">
+            {t("v2.procurementApproval.approver", "Người duyệt")}
+          </V2Text>
+          <ApproverPicker
+            value={approverId}
+            options={approvers}
+            loading={loading}
+            disabled={submitting}
+            onChange={setApproverId}
+          />
+        </div>
       </div>
     </V2Modal>
   );
