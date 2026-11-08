@@ -29,7 +29,7 @@ export const garageProcurementRequestsConfig: ProcurementListConfig<ProcurementR
       availableProcurementActions(PROCUREMENT_REQUEST_FROM, row.status),
     isEditable: (row) => row.status === "DRAFT",
     rowLabel: (row) => row.requestNo,
-    poHref: "/garage-procurement-orders",
+    poHref: "/garage-procurement?tab=orders",
     canOrderFromRequest: (row) =>
       row.status === "APPROVED" && row.orderingStatus !== "FULL",
   };

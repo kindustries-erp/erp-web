@@ -10,7 +10,7 @@ description: Module tri thức Frontend V2 cho Quản lý Đề nghị Mua hàng
 - **Module** `src/v2/modules/garage-procurement-requests/` là lớp mỏng đặc thù của Garage:
   - Khởi tạo API client với base path `/api/v2/garage-procurement-requests`.
   - Cấu hình hiển thị bảng `garageProcurementRequestsDisplay` (`tableId: erp-garage-procurement-requests-table`), tiêu đề, mô tả, quyền RBAC (`garage_procurement_requests`).
-  - Gắn component `GarageProcurementRequestsPage` dùng khung `ProcurementListPage` từ core.
+  - Gắn component `GarageProcurementRequestsPage` (còn alias `GarageProcurementPage`): trang hợp nhất 2 tab (`requests` và `orders`), đồng bộ URL `/garage-procurement?tab=requests,orders`, nút Tạo mới dùng `V2SplitButton` + `V2Dropdown` và menu duy nhất trên sidebar là "Mua hàng Garage" (`/garage-procurement`).
 - **Core** `src/v2/core/procurement/` quản lý mọi thành phần tái sử dụng của họ mua hàng (PR và PO):
   - **Table Columns** (`columns/procurementRequestColumns.tsx`): 9 cột dữ liệu với `headerFilter`, `V2TableText` tương tác click xem chi tiết + copy, format tiền tệ VNĐ, badge trạng thái ngữ nghĩa (`ProcurementStatusBadge`). Cột "Người tạo" (`createdBy`) và "Người duyệt" (`approver`) hiển thị `createdByEmail` / `approverEmail` từ API; filter và options dùng email (không UUID). Người duyệt = người đã duyệt, chưa duyệt thì người được giao (`COALESCE(approvedBy, approverId)`).
   - **Table Query & Search Engine**: Hàm `toProcurementListParams` chuyển đổi đầy đủ `V2TableQuery` (gồm `column_filters`, `column_search`, `column_operators`, `date_ranges`, `sort`, `search`) sang query params JSON chuẩn V2, kết nối trực tiếp với Database QueryBuilder bên API backend (`TABLE_COLUMNS`).

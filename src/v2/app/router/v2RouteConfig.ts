@@ -114,28 +114,16 @@ export const V2_ROUTES: V2RouteDef[] = [
     permission: { collection: "garage_goods_receipts", action: "read" },
   },
   {
-    id: "garage-procurement-requests",
-    path: "/garage-procurement-requests",
-    title: "Đề nghị mua hàng Garage",
+    id: "garage-procurement",
+    path: "/garage-procurement",
+    title: "Mua hàng Garage",
     permission: { collection: "garage_procurement_requests", action: "read" },
   },
   {
-    id: "garage-procurement-orders",
-    path: "/garage-procurement-orders",
-    title: "Đơn mua hàng Garage",
-    permission: { collection: "garage_procurement_orders", action: "read" },
-  },
-  {
-    id: "garage-procurement-requests",
-    path: "/v2/garage-procurement-requests",
-    title: "Đề nghị mua hàng Garage",
+    id: "garage-procurement",
+    path: "/v2/garage-procurement",
+    title: "Mua hàng Garage",
     permission: { collection: "garage_procurement_requests", action: "read" },
-  },
-  {
-    id: "garage-procurement-orders",
-    path: "/v2/garage-procurement-orders",
-    title: "Đơn mua hàng Garage",
-    permission: { collection: "garage_procurement_orders", action: "read" },
   },
   // v2-module:garage-goods-receipts:routes
   {

@@ -50,6 +50,9 @@ describe("V2PageHeader", () => {
       "hidden",
     );
     expect(register).toHaveBeenCalledWith("in", expect.any(HTMLElement));
+
+    const toolbarContainer = slots[0]?.parentElement;
+    expect(toolbarContainer).toHaveClass("sm:ml-auto");
   });
 
   it("renders V2TabCombobox on mobile when pageTabs has multiple items", () => {

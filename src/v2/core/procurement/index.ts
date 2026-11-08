@@ -7,6 +7,7 @@ export * from "./procurement.api";
 export * from "./hooks/useProcurementList";
 export * from "./columns/procurementColumns";
 export * from "./components/ProcurementListPage";
+export * from "./components/ProcurementListModals";
 export * from "./components/ProcurementReasonModal";
 export * from "./procurement.drawer.type";
 export * from "./components/organisms/procurement-order-drawer";

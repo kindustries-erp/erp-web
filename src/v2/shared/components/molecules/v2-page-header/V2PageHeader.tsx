@@ -75,7 +75,7 @@ export const V2PageHeader: React.FC<V2PageHeaderProps> = ({
     )}
 
     {tabKeys.length > 0 && (
-      <div className="order-3 sm:order-2 flex w-full sm:w-auto shrink-0 items-center justify-between sm:justify-end gap-1.5 sm:gap-2">
+      <div className="order-3 sm:order-2 flex w-full sm:w-auto shrink-0 items-center justify-between sm:justify-end gap-1.5 sm:gap-2 sm:ml-auto">
         {tabKeys.map((key) => (
           <V2PageToolbarSlot
             key={key}

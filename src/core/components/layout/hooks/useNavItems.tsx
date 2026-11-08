@@ -338,11 +338,8 @@ export function useNavItems(): NavSearchItem[] {
     }
     if (canReadGarageProcurementRequests) {
       items.push({
-        key: "garage-procurement-requests",
-        label: t(
-          "nav.items.garageProcurementRequests",
-          "Đề nghị mua hàng Garage",
-        ),
+        key: "garage-procurement",
+        label: t("nav.items.garageProcurement", "Mua hàng Garage"),
         section: garageSection,
         keywords: [
           "garage",
@@ -352,6 +349,7 @@ export function useNavItems(): NavSearchItem[] {
           "đề nghị mua hàng garage",
           "pr garage",
           "mua hang garage",
+          "mua hàng garage",
           "phu tung",
           "phụ tùng",
         ],

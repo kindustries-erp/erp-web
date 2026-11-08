@@ -178,20 +178,12 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.garage", "Garage") },
           { label: t("nav.items.garageGoodsReceipts", "Nhập kho Garage") },
         ];
-      case "garage-procurement-requests":
+      case "garage-procurement":
         return [
           { label: t("nav.sections.garage", "Garage") },
           {
-            label: t(
-              "nav.items.garageProcurementRequests",
-              "Đề nghị mua hàng Garage",
-            ),
+            label: t("nav.items.garageProcurement", "Mua hàng Garage"),
           },
-        ];
-      case "garage-procurement-orders":
-        return [
-          { label: t("nav.sections.garage", "Garage") },
-          { label: t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage") },
         ];
       case "garage-cashflow":
         return [

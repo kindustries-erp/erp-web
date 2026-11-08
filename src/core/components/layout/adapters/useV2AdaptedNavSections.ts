@@ -387,23 +387,12 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/garage-cases",
         });
       }
-      if (canReadGarageProcurementRequests) {
+      if (canReadGarageProcurementRequests || canReadGaragePurchaseOrders) {
         items.push({
-          id: "garage-procurement-requests",
-          label: t(
-            "nav.items.garageProcurementRequests",
-            "Đề nghị mua hàng Garage",
-          ),
+          id: "garage-procurement",
+          label: t("nav.items.garageProcurement", "Mua hàng Garage"),
           icon: ClipboardList,
-          href: "/garage-procurement-requests",
-        });
-      }
-      if (canReadGaragePurchaseOrders) {
-        items.push({
-          id: "garage-procurement-orders",
-          label: t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage"),
-          icon: ShoppingCart,
-          href: "/garage-procurement-orders",
+          href: "/garage-procurement",
         });
       }
       if (canReadGarageGoodsReceipts) {
