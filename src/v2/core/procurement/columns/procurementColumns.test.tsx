@@ -69,8 +69,16 @@ describe("procurementColumns", () => {
       orderingStatus: "PARTIAL",
       createdBy: "5f0c2a7e-0000-4000-8000-000000000000",
       createdByEmail: "nguyen.a@liouni.com",
-      approverId: null,
-      approverEmail: "truong.garage@liouni.com",
+      approval: {
+        approverId: null,
+        approverEmail: "truong.garage@liouni.com",
+        submit: null,
+        approve: null,
+        reject: null,
+        cancel: null,
+        close: null,
+        issue: null,
+      },
       createdAt: "2026-11-05T08:00:00Z",
     };
 

@@ -15,8 +15,8 @@ export interface ProcurementOrderRow {
   fulfillmentStatus: string;
   totalAmount: string;
   approvedTotal: string | null;
-  /** Người duyệt được chỉ định khi gửi duyệt (null nếu không có). */
-  approverId?: string | null;
+  /** Khối vòng đời duyệt dùng chung PR/PO (API). */
+  approval?: ProcurementApprovalSummary;
   remarks: string | null;
   branchId?: string | null;
   branchName: string | null;
@@ -43,11 +43,29 @@ export interface ProcurementRequestRow {
   createdBy: string | null;
   /** Email người tạo (API), hiển thị ở cột "Người tạo". */
   createdByEmail?: string | null;
-  /** Người duyệt được chỉ định khi gửi duyệt. */
-  approverId?: string | null;
-  /** Email người duyệt: người đã duyệt, chưa duyệt thì người được giao. */
-  approverEmail?: string | null;
+  /** Khối vòng đời duyệt dùng chung PR/PO (API). */
+  approval?: ProcurementApprovalSummary;
   createdAt: string;
+}
+
+/** Một bước duyệt: người thực hiện, email, thời điểm, lý do (reject/cancel/close). */
+export interface ProcurementApprovalStep {
+  by: string | null;
+  byEmail: string | null;
+  at: string | null;
+  reason?: string | null;
+}
+
+/** Khối approval của API. Bước chưa xảy ra là null. */
+export interface ProcurementApprovalSummary {
+  approverId: string | null;
+  approverEmail: string | null;
+  submit: ProcurementApprovalStep | null;
+  approve: ProcurementApprovalStep | null;
+  reject: ProcurementApprovalStep | null;
+  cancel: ProcurementApprovalStep | null;
+  close: ProcurementApprovalStep | null;
+  issue: ProcurementApprovalStep | null;
 }
 
 /** Sự kiện trong nhật ký duyệt (khớp DTO API). Không có id nội bộ của nhật ký. */

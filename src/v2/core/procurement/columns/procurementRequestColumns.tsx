@@ -125,10 +125,10 @@ export function buildProcurementRequestColumns(
         <V2Text
           as="span"
           variant="body-sm"
-          color={row.approverEmail ? "default" : "muted"}
+          color={row.approval?.approverEmail ? "default" : "muted"}
           className="truncate block"
         >
-          {row.approverEmail ?? "—"}
+          {row.approval?.approverEmail ?? "—"}
         </V2Text>
       ),
     },

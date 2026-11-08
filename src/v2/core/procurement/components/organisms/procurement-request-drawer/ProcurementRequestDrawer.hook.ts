@@ -81,7 +81,10 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
     return applyApprovalGate(
       availableProcurementActions(PROCUREMENT_REQUEST_FROM, status),
       props.approval ?? NO_APPROVAL_GATE,
-      { approverId: detail.data.approverId, createdBy: detail.data.createdBy },
+      {
+        approverId: detail.data.approval?.approverId ?? null,
+        createdBy: detail.data.createdBy,
+      },
     );
   }, [creating, detail.data, status, props.approval]);
 
