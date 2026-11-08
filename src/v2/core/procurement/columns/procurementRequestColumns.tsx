@@ -34,6 +34,10 @@ export function buildProcurementRequestColumns(
       }),
       size: 160,
       mobileSlot: "title",
+      summary: {
+        variant: "label",
+        label: t("v2.procurement.columns.summaryTotal", "Tổng cộng:"),
+      },
       cell: (row) => (
         <V2TableText
           text={row.requestNo}
@@ -74,6 +78,10 @@ export function buildProcurementRequestColumns(
       ),
       size: 140,
       align: TableColumnAlign.RIGHT,
+      summary: {
+        variant: "amount",
+        metricTitle: t("v2.procurement.columns.estimatedTotal", "Tổng dự kiến"),
+      },
       cell: (row) => formatMoney(row.estimatedTotal),
     },
     {

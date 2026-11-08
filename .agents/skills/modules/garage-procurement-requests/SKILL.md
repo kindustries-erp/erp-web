@@ -108,3 +108,9 @@ src/v2/core/procurement/
 - **Cột Tiến độ đặt (`orderingStatus`)**: Cấu hình `mobileSlot: "badge"`, hiển thị badge kế bên badge trạng thái duyệt (`status`).
 - **Cột Người tạo (`createdBy`) và Người duyệt (`approver`)**: Chuyển từ `mobileSlot: "hidden"` sang `mobileSlot: "meta"`, hiển thị email qua atom `V2Text` variant `body-sm`, màu sắc semantic `foreground` / `muted`.
 
+
+## 8. Cập nhật: response danh sách và hàng tổng
+
+- **Hợp đồng list**: `ProcurementApi.list` đọc `{ items, pagination: { total }, summaries }` từ API (`procurement.api.ts`), trả về `{ items, total, summaries }`. `useProcurementQuery` truyền `summaries` vào `V2ModuleListData`, và `V2ModuleListTab` gắn vào `column.summary.total`.
+- **Hàng tổng**: cột `estimatedTotal` có `summary: { variant: "amount", metricTitle }`. Cột `requestNo` có `summary: { variant: "label", label }` làm nhãn "Tổng cộng:" (key `v2.procurement.columns.summaryTotal`).
+- **Phạm vi**: chỉ áp dụng cho PR garage và PO garage. Kiểu `ProcurementListResponse<T>` có `pagination` và `summaries` (xem `procurement.types.ts`).

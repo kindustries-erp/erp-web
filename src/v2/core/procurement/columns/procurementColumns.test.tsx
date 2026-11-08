@@ -34,6 +34,32 @@ describe("procurementColumns", () => {
     );
   });
 
+  it("cột tiền PR và PO có summary amount, cột số chứng từ có nhãn Tổng cộng", () => {
+    const prColumns = buildProcurementRequestColumns(mockT);
+    const poColumns = buildProcurementOrderColumns(mockT);
+    const find = (cols: { key: string }[], key: string) =>
+      cols.find((c) => c.key === key) as {
+        summary?: { variant: string; label?: string; metricTitle?: string };
+      };
+
+    expect(find(prColumns, "estimatedTotal").summary).toEqual({
+      variant: "amount",
+      metricTitle: "Tổng dự kiến",
+    });
+    expect(find(prColumns, "requestNo").summary).toEqual({
+      variant: "label",
+      label: "Tổng cộng:",
+    });
+    expect(find(poColumns, "totalAmount").summary).toEqual({
+      variant: "amount",
+      metricTitle: "Tổng tiền",
+    });
+    expect(find(poColumns, "orderNo").summary).toEqual({
+      variant: "label",
+      label: "Tổng cộng:",
+    });
+  });
+
   it("ProcurementStatusBadge render đúng nhãn và variant", () => {
     render(<ProcurementStatusBadge value="APPROVED" t={mockT} />);
     expect(screen.getByText("APPROVED")).toBeInTheDocument();

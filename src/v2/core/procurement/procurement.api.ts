@@ -60,7 +60,11 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
         basePath,
         { params: toProcurementListParams(query) },
       );
-      return { items: data.rows, total: data.total };
+      return {
+        items: data.items,
+        total: data.pagination.total,
+        summaries: data.summaries,
+      };
     },
     transition: async (
       id,

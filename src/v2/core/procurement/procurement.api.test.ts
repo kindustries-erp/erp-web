@@ -68,6 +68,41 @@ describe("toProcurementListParams", () => {
   });
 });
 
+describe("createProcurementApi: list theo response chuẩn", () => {
+  const query: V2TableQuery = {
+    page: 2,
+    pageSize: 20,
+    search: "",
+    sorts: [],
+    columnFilters: {},
+    columnSearch: {},
+    columnOperators: {},
+    dateRanges: {},
+  };
+
+  it("đọc items, pagination.total và summaries từ response", async () => {
+    get.mockResolvedValueOnce({
+      data: {
+        items: [{ id: "p1", requestNo: "DNM-001" }],
+        pagination: { page: 2, pageSize: 20, total: 45, totalPages: 3 },
+        summaries: { estimatedTotal: 7500000 },
+      },
+    });
+    const api = createProcurementApi("/api/v2/garage-procurement-requests");
+
+    const result = await api.list(query);
+
+    expect(get).toHaveBeenCalledWith("/api/v2/garage-procurement-requests", {
+      params: expect.objectContaining({ page: 2, pageSize: 20 }),
+    });
+    expect(result).toEqual({
+      items: [{ id: "p1", requestNo: "DNM-001" }],
+      total: 45,
+      summaries: { estimatedTotal: 7500000 },
+    });
+  });
+});
+
 describe("createProcurementApi: xóa mềm và xóa cứng", () => {
   beforeEach(() => {
     del.mockReset();

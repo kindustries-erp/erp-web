@@ -111,10 +111,19 @@ export interface ProcurementRequestDetail extends ProcurementRequestRow {
   lines: ProcurementDetailLine[];
 }
 
-/** Kết quả danh sách chuẩn của API: `rows` đổi thành `items` ở phía web. */
-export interface ProcurementListResponse<T> {
-  rows: T[];
+/** Phân trang của danh sách API (object `pagination`). */
+export interface ProcurementPagination {
+  page: number;
+  pageSize: number;
   total: number;
+  totalPages: number;
+}
+
+/** Kết quả danh sách chuẩn của API: `items`, `pagination`, `summaries` (tổng cột số trên toàn bộ dòng khớp). */
+export interface ProcurementListResponse<T> {
+  items: T[];
+  pagination: ProcurementPagination;
+  summaries: Record<string, number>;
 }
 
 /** Dòng bản nháp PO điền sẵn từ PR đã duyệt (còn lại chưa đặt). */
@@ -150,7 +159,11 @@ export interface ProcurementDocumentRef {
 }
 
 export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
-  list: (query: V2TableQuery) => Promise<{ items: T[]; total: number }>;
+  list: (query: V2TableQuery) => Promise<{
+    items: T[];
+    total: number;
+    summaries?: Record<string, number>;
+  }>;
   /** `approverId` chỉ dùng cho gửi duyệt khi khóa duyệt đang bật. */
   transition: (
     id: string,

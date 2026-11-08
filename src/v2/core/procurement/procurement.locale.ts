@@ -81,6 +81,7 @@ registerV2ModuleLocale("procurement", {
       invoiceNo: "Số hóa đơn NCC",
       createdBy: "Người tạo",
       approver: "Người duyệt",
+      summaryTotal: "Tổng cộng:",
     },
     fields: {
       branch: "Chi nhánh",
@@ -247,6 +248,7 @@ registerV2ModuleLocale("procurement", {
       invoiceNo: "Supplier invoice no.",
       createdBy: "Created by",
       approver: "Approver",
+      summaryTotal: "Total:",
     },
     fields: {
       branch: "Branch",
