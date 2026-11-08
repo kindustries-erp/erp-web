@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ShoppingCart, ClipboardList } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";

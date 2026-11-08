@@ -12,7 +12,6 @@ import {
   ReceiptText,
   Wallet,
   Settings,
-  ShoppingCart,
   ClipboardList,
 } from "lucide-react";
 import type {

@@ -29,7 +29,6 @@ import {
   PackageCheck,
   Receipt,
   ReceiptText,
-  ShoppingCart,
   ClipboardList,
   Sliders,
 } from "lucide-react";
