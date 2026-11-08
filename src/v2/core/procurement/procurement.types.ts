@@ -1,4 +1,8 @@
-import type { V2FetchOptions, V2TableQuery } from "@/v2/shared/types/v2-table";
+import type {
+  V2FetchOptions,
+  V2SummaryMetric,
+  V2TableQuery,
+} from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
 
 /** Dòng danh sách PO (đã bỏ dòng chi tiết, khớp response danh sách của API). */
@@ -123,7 +127,7 @@ export interface ProcurementPagination {
 export interface ProcurementListResponse<T> {
   items: T[];
   pagination: ProcurementPagination;
-  summaries: Record<string, number>;
+  summaries: Record<string, V2SummaryMetric | null>;
 }
 
 /** Dòng bản nháp PO điền sẵn từ PR đã duyệt (còn lại chưa đặt). */
@@ -162,7 +166,7 @@ export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   list: (query: V2TableQuery) => Promise<{
     items: T[];
     total: number;
-    summaries?: Record<string, number>;
+    summaries?: Record<string, V2SummaryMetric | null>;
   }>;
   /** `approverId` chỉ dùng cho gửi duyệt khi khóa duyệt đang bật. */
   transition: (

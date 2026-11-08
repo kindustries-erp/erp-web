@@ -195,14 +195,15 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - Popover của ô tổng (`V2SubtotalSummaryCell`) rộng 320px, giữ glass/blur; nhãn `truncate`, giá trị `shrink-0 whitespace-nowrap` để không tràn.
 - Giá trị (`summary/V2StandardTable.summary.ts` + `summary/V2StandardTable.summary.hook.ts`):
   - `mode="client"`: tự tính từ toàn bộ dòng đã lọc/sắp xếp (subtotal trang, lũy kế, tổng).
-  - `mode="server"`: subtotal trang lấy từ `items`; **tổng toàn bộ phải truyền qua `summary.total`** (từ API); **lũy kế được bảng tự tích lũy theo từng trang**, reset khi đổi filter/sort/pageSize. Trang chưa đi qua thì không có lũy kế.
+  - `mode="server"`: ưu tiên số của API (`summary.total`, `summary.pageSubtotal`, `summary.cumulative`); thiếu số thì bảng tự tính (subtotal cộng từ `items`; lũy kế tích lũy theo các trang đã xem, reset khi đổi filter/sort/pageSize, trang chưa đi qua thì không có lũy kế). `null` từ API hiển thị "—".
+- **Hợp đồng server (`summary_keys`)**: `V2ModuleListTab` lấy key từ mọi cột có `summary` (trừ `variant: "label"`) và gắn vào `query.summaryKeys` khi gọi `tab.useData`. API client gọi `toSummaryKeysParam(query)` (`shared/utils/toSummaryKeysParam.ts`), không tự ghép chuỗi. Response: `summaries[key] = { total, pageSubtotal, cumulative }` hoặc `null` (`V2SummaryMetric`, `shared/types/v2-table.ts`). Không dùng số trơn như trước.
 - Story: `V2StandardTable` → `WithSummary` (client), `WithSummaryServer`, `BenchmarkParity` (so khớp chuẩn mực V1); template → `V2ModulePage` → `ListAndDashboard`.
 
 ## 8. Tìm kiếm toàn cục, query trên URL và dữ liệu từ khung trang
 
 - `V2TableQuery.search?: string` và `toolbar.search = { placeholder? }`: ô tìm kiếm (`V2SearchInput`, debounce 300ms, Enter/nút xóa áp dụng ngay) ở đầu cụm toolbar. Đổi tìm kiếm thì về trang 1; `resetAll` xóa luôn tìm kiếm. Chế độ `client` lọc theo giá trị mọi cột (dấu `;` nhiều từ khóa, `"..."` khớp chính xác); chế độ `server` chỉ báo `query.search`.
 - Bảng là uncontrolled: đồng bộ URL bằng `useV2TableUrlState` (truyền `initialQuery`, `onQueryChange`). Khi bảng nằm trong `V2ModulePage`, khung đã làm sẵn với tiền tố là khóa tab.
-- Chế độ `server` với hàng tổng: tổng toàn bộ do hook trả về trong `summaries` của `useData`, khung gắn vào `summary.total` của cột.
+- Chế độ `server` với hàng tổng: hook trả `summaries` (metric theo key) trong `useData`, khung gắn vào `summary.total/pageSubtotal/cumulative` của cột. Không tự cộng dồn tổng ở FE khi API đã trả số.
 - Bảng nhúng trong drawer: xem `v2-foundation` mục 5.
 
 ## 9. Playground trên Storybook (nguồn prop là type gốc)

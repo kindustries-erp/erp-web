@@ -6,6 +6,7 @@ import type {
 } from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
 import { PROCUREMENT_REASON_ACTIONS } from "./procurement.rules";
+import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
 import type {
   ProcurementApi,
   ProcurementApprovalEvent,
@@ -40,6 +41,7 @@ export const toProcurementListParams = (query: V2TableQuery) => ({
     query.dateRanges && Object.keys(query.dateRanges).length
       ? JSON.stringify(query.dateRanges)
       : undefined,
+  summary_keys: toSummaryKeysParam(query),
 });
 
 /**

@@ -35,7 +35,25 @@ describe("toProcurementListParams", () => {
       column_search: undefined,
       column_operators: undefined,
       date_ranges: undefined,
+      summary_keys: undefined,
     });
+  });
+
+  it("gửi summary_keys từ các key cột có tổng", () => {
+    const query: V2TableQuery = {
+      page: 3,
+      pageSize: 20,
+      sorts: [],
+      columnFilters: {},
+      columnSearch: {},
+      columnOperators: {},
+      dateRanges: {},
+      summaryKeys: ["estimatedTotal", "totalAmount"],
+    };
+
+    expect(toProcurementListParams(query).summary_keys).toBe(
+      "estimatedTotal,totalAmount",
+    );
   });
 
   it("serialize bộ lọc cột, tìm kiếm cột, ngày và sắp xếp sang JSON chuẩn V2", () => {
@@ -85,7 +103,9 @@ describe("createProcurementApi: list theo response chuẩn", () => {
       data: {
         items: [{ id: "p1", requestNo: "DNM-001" }],
         pagination: { page: 2, pageSize: 20, total: 45, totalPages: 3 },
-        summaries: { estimatedTotal: 7500000 },
+        summaries: {
+          estimatedTotal: { total: 7500000, pageSubtotal: 1, cumulative: 2 },
+        },
       },
     });
     const api = createProcurementApi("/api/v2/garage-procurement-requests");
@@ -98,7 +118,9 @@ describe("createProcurementApi: list theo response chuẩn", () => {
     expect(result).toEqual({
       items: [{ id: "p1", requestNo: "DNM-001" }],
       total: 45,
-      summaries: { estimatedTotal: 7500000 },
+      summaries: {
+        estimatedTotal: { total: 7500000, pageSubtotal: 1, cumulative: 2 },
+      },
     });
   });
 });

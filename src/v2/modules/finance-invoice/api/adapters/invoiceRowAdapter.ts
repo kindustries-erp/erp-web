@@ -55,18 +55,12 @@ export function toInvoiceRow(
   };
 }
 
-const SUMMARY_KEYS = [
-  "preVatAmount",
-  "vatAmount",
-  "totalAmount",
-  "discountAmount",
-  "netOffAmount",
-  "remainingAmount",
-] as const;
-
-/** Tổng server (`summaries` của API v2) → đủ các key cột tiền của bảng V2, thiếu thì 0 */
-export function toInvoiceSummary(summaries?: InvoiceSummariesDto) {
-  return Object.fromEntries(
-    SUMMARY_KEYS.map((key) => [key, summaries?.[key] ?? 0]),
-  ) as Record<(typeof SUMMARY_KEYS)[number], number>;
+/**
+ * `summaries` của API v2 → giữ đúng các key API đã trả (kể cả `null`).
+ * Key không có trong kết quả không được điền: bảng tự tính, không hiện 0 giả.
+ */
+export function toInvoiceSummary(
+  summaries?: InvoiceSummariesDto,
+): InvoiceSummariesDto {
+  return { ...summaries };
 }

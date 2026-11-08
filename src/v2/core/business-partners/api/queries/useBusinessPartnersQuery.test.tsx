@@ -43,7 +43,9 @@ describe("useBusinessPartnersQuery summaries", () => {
     const { result } = renderWith();
 
     await waitFor(() => expect(result.current.total).toBe(42));
-    expect(result.current.summaries).toEqual({ code: 42 });
+    expect(result.current.summaries).toEqual({
+      code: { total: 42, pageSubtotal: 0, cumulative: 20 },
+    });
   });
 
   it("merges API summaries for numeric columns, if the API returns any", async () => {
@@ -53,13 +55,16 @@ describe("useBusinessPartnersQuery summaries", () => {
       page: 1,
       pageSize: 20,
       totalPages: 1,
-      summaries: { amount: 1500 },
+      summaries: { amount: { total: 1500, pageSubtotal: 0, cumulative: 0 } },
     });
 
     const { result } = renderWith();
 
     await waitFor(() =>
-      expect(result.current.summaries).toEqual({ code: 5, amount: 1500 }),
+      expect(result.current.summaries).toEqual({
+        code: { total: 5, pageSubtotal: 0, cumulative: 5 },
+        amount: { total: 1500, pageSubtotal: 0, cumulative: 0 },
+      }),
     );
   });
 });

@@ -1,3 +1,5 @@
+import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
+
 /** Hình dạng bản ghi và payload của `/api/v2/business-partners` (khớp backend, không phụ thuộc V1) */
 
 export interface BusinessPartnerDto {
@@ -25,7 +27,7 @@ export interface BusinessPartnerListResultDto {
   pageSize: number;
   totalPages: number;
   /** Tổng toàn bộ dòng khớp bộ lọc theo tên cột số; BP không có cột số nên thường rỗng */
-  summaries?: Record<string, number>;
+  summaries?: Record<string, V2SummaryMetric | null>;
 }
 
 export interface ColumnOptionDto {

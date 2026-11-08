@@ -8,7 +8,6 @@ export interface RoleListResultDto {
   page: number;
   pageSize: number;
   totalPages: number;
-  summaries?: Record<string, number>;
 }
 
 export interface ColumnOptionsResultDto {

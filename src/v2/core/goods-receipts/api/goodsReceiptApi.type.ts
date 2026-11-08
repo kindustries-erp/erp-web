@@ -1,6 +1,7 @@
 import type {
   V2FetchOptionsParams,
   V2FetchOptionsResult,
+  V2SummaryMetric,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 import type {
@@ -12,7 +13,8 @@ import type {
 export interface GoodsReceiptListResult {
   items: GoodsReceiptRecord[];
   total: number;
-  summaries?: Record<string, number>;
+  /** Số liệu tổng theo key đã gửi trong `summary_keys`; `null` = API không tính được */
+  summaries?: Record<string, V2SummaryMetric | null>;
 }
 
 /**

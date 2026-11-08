@@ -44,26 +44,23 @@ describe("toInvoiceRow", () => {
 });
 
 describe("toInvoiceSummary", () => {
-  it("keeps the v2 summary keys for the amount columns", () => {
+  it("keeps the metric and null values returned for each summary key", () => {
     const summary = toInvoiceSummary({
-      preVatAmount: 10,
-      vatAmount: 1,
-      totalAmount: 11,
-      discountAmount: 0,
-      netOffAmount: 5,
-      remainingAmount: 6,
+      totalAmount: { total: 11, pageSubtotal: 4, cumulative: 7 },
+      unknownKey: null,
     });
     expect(summary).toEqual({
-      preVatAmount: 10,
-      vatAmount: 1,
-      totalAmount: 11,
-      discountAmount: 0,
-      netOffAmount: 5,
-      remainingAmount: 6,
+      totalAmount: { total: 11, pageSubtotal: 4, cumulative: 7 },
+      unknownKey: null,
     });
   });
 
-  it("returns zeros when summaries are missing", () => {
-    expect(toInvoiceSummary(undefined).totalAmount).toBe(0);
+  it("does not fill keys the API did not return, so the table computes them", () => {
+    const summary = toInvoiceSummary({});
+    expect(summary.totalAmount).toBeUndefined();
+  });
+
+  it("returns an empty object when summaries are missing", () => {
+    expect(toInvoiceSummary(undefined)).toEqual({});
   });
 });
