@@ -556,6 +556,7 @@ Mỗi loại có một skill duy nhất (đã gồm V1, V2 và phần phụ) và
 | Drawer chi tiết hoặc form (V1) | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) (4 bước) | `references/drawer-rules.md` |
 | Drawer dưới `src/v2/` | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) | `references/v2-drawer.md` |
 | Tab chứng từ liên kết, cấn trừ, truy vết | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) | `references/drawer-rules.md` mục 11 |
+| Module V2 đầy đủ, full-stack (API + bảng + drawer + QC) | `erp-v2-feature` | [`/erp-v2-feature`](./erp-v2-feature.md) | `skills/erp-v2-feature/references/checklist.md` |
 
 Đường dẫn reference đầy đủ: `.agents/skills/<skill>/references/<file>`.
 
