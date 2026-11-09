@@ -17,7 +17,7 @@ Repo liên quan:
 Thu thập: tên module (kebab-case), `EntityName`/`PluralName`, fieldSpec (`name:type[:required]`), `apiBase`, `permissionCollection`, route, `navSection`, `tableInput` id.
 
 Kiểm tra:
-- API: đã có module v2 chưa, theo `erp-api/.agents/skills/erp-api-structure/references/v2-module.md`?
+- API: đã có module v2 chưa, theo `erp/erp-api/.agents/skills/erp-api-structure/references/v2-module.md`?
 - Web: đã có `src/v2/modules/<module>` hoặc họ lõi `src/v2/core/<họ>` chưa?
 
 Quyết định:
@@ -29,7 +29,7 @@ Chọn generator web: họ mới → `v2-core`; họ đã có lõi → `v2-thin-
 ## Bước 1. API (DB → API)
 
 - Entity và migration nếu cần. **Migration DB phải được anh duyệt riêng trước khi chạy.**
-- Sinh bằng `api-module-v2` (hoặc `api-voucher-v2` cho chứng từ), dùng cùng fieldSpec với web.
+- Sinh bằng generator plop `api-module-v2` (hoặc `api-voucher-v2` cho chứng từ), chạy từ `erp/erp-api`; tham số xem `erp/erp-api/.agents/skills/plop-generate/SKILL.md`. Dùng cùng fieldSpec với web.
 - Endpoint phải có: list (filter, sort, phân trang, tổng cho cột `number`/`decimal`), detail, create, update, status, và `next-code` nếu `hasNextCode`.
 - Hợp đồng HTTP theo `v2-module.md` mục 2b. DTO là nguồn sự thật cho drawer.
 - Test API và build theo repo.
@@ -48,7 +48,7 @@ Chọn generator web: họ mới → `v2-core`; họ đã có lõi → `v2-thin-
 ## Bước 3. UI drawer
 
 - `V2StandardDrawer` theo `standardize-drawer/references/v2-drawer.md`.
-- Form map 1-1 với DTO của API. Key field và option lấy từ enum theo Phần D của `ui-structure.md`.
+- Form map 1-1 với DTO của API. Key field và option lấy từ enum theo Phần D của `.agents/workflows/ui-structure.md`.
 - Validate trong `domain/rules`.
 - Footer, tab liên kết, multi-drawer nếu cần.
 

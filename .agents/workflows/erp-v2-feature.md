@@ -9,7 +9,7 @@ Skill: `.agents/skills/erp-v2-feature/SKILL.md`. Checklist: `references/checklis
 Chạy theo đúng thứ tự, dừng chờ `OK` tại các điểm trong SKILL.md:
 
 1. **Intake và kiểm tra trạng thái** (chỉ đọc): API và web đã có module chưa.
-2. **API**: entity và migration (dừng chờ duyệt nếu có DB change), sinh bằng `api-module-v2`, test và build.
+2. **API**: entity và migration (dừng chờ duyệt nếu có DB change), sinh bằng generator plop `api-module-v2` (từ `erp/erp-api`), test và build.
 3. **UI bảng**: `plop v2-module` hoặc `v2-thin-module`, hoàn thiện column selector, views, filter, summary row.
 4. **UI drawer**: `V2StandardDrawer`, form khớp DTO, enum và option dùng chung.
 5. **Nối và i18n**: route, menu, page registry, locale vi/en.
