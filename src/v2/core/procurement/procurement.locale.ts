@@ -6,6 +6,17 @@ registerV2ModuleLocale("procurement", {
     tabs: {
       list: "Danh sách",
     },
+    filters: {
+      title: "Bộ lọc có sẵn",
+      status: "Trạng thái",
+      all: "Tất cả",
+      deleted: "Đã xóa mềm",
+    },
+    views: {
+      title: "Chế độ xem",
+      overview: "Tổng quan",
+      all: "Tất cả cột",
+    },
     actions: {
       view: "Xem chi tiết",
       edit: "Chỉnh sửa",
@@ -173,6 +184,17 @@ registerV2ModuleLocale("procurement", {
   en: {
     tabs: {
       list: "List",
+    },
+    filters: {
+      title: "Saved filters",
+      status: "Status",
+      all: "All",
+      deleted: "Soft-deleted",
+    },
+    views: {
+      title: "View mode",
+      overview: "Overview",
+      all: "All columns",
     },
     actions: {
       view: "View details",

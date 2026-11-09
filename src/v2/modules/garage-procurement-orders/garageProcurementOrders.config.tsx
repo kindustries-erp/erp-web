@@ -40,9 +40,38 @@ export const garageProcurementOrdersConfig: ProcurementListConfig<ProcurementOrd
     >("/api/v2/garage-procurement-requests", { supportsPoDraft: true }),
   };
 
+/** Cột theo view: "overview" ẩn cột phụ, "all" hiện đủ cột. Giữ hằng số để không đổi identity. */
+const ORDER_VIEW_VISIBILITY = {
+  overview: {
+    orderNo: true,
+    supplierName: true,
+    branchName: false,
+    orderDate: true,
+    totalAmount: true,
+    status: true,
+    fulfillmentStatus: true,
+    paymentStatus: true,
+    supplierInvoiceNo: false,
+    createdBy: false,
+  },
+  all: {
+    orderNo: true,
+    supplierName: true,
+    branchName: true,
+    orderDate: true,
+    totalAmount: true,
+    status: true,
+    fulfillmentStatus: true,
+    paymentStatus: true,
+    supplierInvoiceNo: true,
+    createdBy: true,
+  },
+};
+
 export const garageProcurementOrdersDisplay: ProcurementPageDisplay<ProcurementOrderRow> =
   {
     tableId: "erp-garage-procurement-orders-table",
+    viewVisibility: ORDER_VIEW_VISIBILITY,
     titleKey: "v2.garageProcurementOrders.title",
     descriptionKey: "v2.garageProcurementOrders.description",
     icon: <ShoppingCart className="h-4 w-4" />,

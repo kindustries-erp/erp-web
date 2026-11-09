@@ -6,6 +6,7 @@ import {
   v2ColumnPreferencesStorage,
   v2ViewPresetStorage,
 } from "@/v2/shared/preferences/v2TablePreferenceStorages";
+import { withProcurementFilter } from "../procurement.api";
 import { useProcurementList } from "../hooks/useProcurementList";
 import { useProcurementQuery } from "../hooks/useProcurementQuery";
 import type { ProcurementListConfig } from "../hooks/procurementListConfig.type";
@@ -13,6 +14,7 @@ import { V2Button } from "@/v2/shared/components";
 import type { V2TabComboboxItem } from "@/v2/shared/components/molecules/v2-tab-combobox";
 import type { ProcurementDrawerProps } from "../procurement.drawer.type";
 import type { ProcurementDocumentRef } from "../procurement.types";
+import type { ProcurementViewVisibility } from "../hooks/useProcurementListView";
 import { ProcurementListModals } from "./ProcurementListModals";
 
 export interface ProcurementPageDisplay<T> {
@@ -26,6 +28,8 @@ export interface ProcurementPageDisplay<T> {
   ) => V2Column<T>[];
   /** Drawer chi tiết/sửa của họ chứng từ, dựng bởi module */
   renderDrawer: (props: ProcurementDrawerProps) => React.ReactNode;
+  /** Cột hiển thị theo từng view hệ thống ("overview", "all") */
+  viewVisibility?: ProcurementViewVisibility;
 }
 
 /** Chứng từ mở trong drawer: ưu tiên row từ drawer, không có thì lấy id đang mở. */
@@ -73,7 +77,7 @@ export function ProcurementListPage<T extends { id: string }>({
           columns,
           getRowKey: (row) => row.id,
           mode: "server",
-          fetchOptions: config.api.options,
+          fetchOptions: withProcurementFilter(config.api.options, {}),
           rowActions: state.rowActions,
           preferencesStorage: v2ColumnPreferencesStorage,
           viewPresetStorage: v2ViewPresetStorage,

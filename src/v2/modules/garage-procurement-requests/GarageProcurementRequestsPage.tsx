@@ -2,11 +2,9 @@ import * as React from "react";
 import { ClipboardList, ShoppingCart } from "lucide-react";
 import {
   useProcurementList,
-  useProcurementQuery,
   ProcurementListModals,
   type ProcurementRequestRow,
   type ProcurementOrderRow,
-  type ProcurementDocumentRef,
 } from "@/v2/core/procurement";
 import { V2ModulePage, type V2ModuleTab } from "@/v2/shared/components";
 import { V2Icon } from "@/v2/shared/components/atoms";
@@ -15,11 +13,6 @@ import {
   V2Dropdown,
   type V2DropdownGroup,
 } from "@/v2/shared/components/molecules/v2-dropdown";
-import {
-  v2ColumnPreferencesStorage,
-  v2ViewPresetStorage,
-} from "@/v2/shared/preferences/v2TablePreferenceStorages";
-import { updateV2SearchParams } from "@/v2/shared/utils/v2Url";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   garageProcurementRequestsConfig,
@@ -29,16 +22,14 @@ import {
   garageProcurementOrdersConfig,
   garageProcurementOrdersDisplay,
 } from "../garage-procurement-orders/garageProcurementOrders.config";
+import {
+  resolveDrawerTarget,
+  useGarageProcurementActiveTab,
+  useGarageProcurementListStates,
+} from "./GarageProcurementRequestsPage.hook";
+import { buildGarageProcurementTabs } from "./GarageProcurementRequestsPage.tabs";
 import "./garageProcurementRequests.locale";
 import "../garage-procurement-orders/garageProcurementOrders.locale";
-
-function resolveDrawerTarget<T>(
-  row: ProcurementDocumentRef | undefined,
-  openId: string | null,
-): T | null {
-  const target = row ?? (openId ? { id: openId } : null);
-  return target as T | null;
-}
 
 export interface GarageProcurementRequestsPageProps {
   defaultTab?: "requests" | "orders";
@@ -49,94 +40,30 @@ export function GarageProcurementRequestsPage({
 }: GarageProcurementRequestsPageProps = {}) {
   const { t } = useV2Translation();
 
-  const [activeTab, setActiveTab] = React.useState<string>(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab");
-      if (tab === "orders" || tab === "requests") return tab;
-    }
-    return defaultTab;
-  });
-
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (!params.get("tab")) {
-        updateV2SearchParams((search) => {
-          search.set("tab", "requests");
-        }, "replace");
-      }
-    }
-  }, []);
+  const [activeTab, setActiveTab] = useGarageProcurementActiveTab(defaultTab);
 
   const requestsState = useProcurementList(garageProcurementRequestsConfig);
   const ordersState = useProcurementList(garageProcurementOrdersConfig);
 
-  const requestColumns = React.useMemo(
-    () =>
-      garageProcurementRequestsDisplay.buildColumns(t, requestsState.openView),
-    [requestsState.openView, t],
-  );
-
-  const orderColumns = React.useMemo(
-    () => garageProcurementOrdersDisplay.buildColumns(t, ordersState.openView),
-    [ordersState.openView, t],
-  );
+  const { requests: requestTab, orders: orderTab } =
+    useGarageProcurementListStates(t, requestsState, ordersState);
 
   const tabs = React.useMemo<V2ModuleTab<any>[]>(
-    () => [
-      {
-        key: "requests",
-        label: t("v2.garageProcurementRequests.tab", "Đề nghị mua hàng"),
-        icon: <V2Icon icon={ClipboardList} size={15} />,
-        kind: "list",
-        resetKey: garageProcurementRequestsDisplay.tableId,
-        table: {
-          tableId: garageProcurementRequestsDisplay.tableId,
-          columns: requestColumns,
-          getRowKey: (row: ProcurementRequestRow) => row.id,
-          mode: "server",
-          fetchOptions: garageProcurementRequestsConfig.api.options,
-          rowActions: requestsState.rowActions,
-          preferencesStorage: v2ColumnPreferencesStorage,
-          viewPresetStorage: v2ViewPresetStorage,
-          emptyLabel: t("v2.procurement.empty", "Không có dữ liệu"),
-          toolbar: { search: {} },
-        },
-        useData: (query) =>
-          useProcurementQuery(
-            garageProcurementRequestsConfig,
-            query,
-            requestsState.onListError,
-          ),
-      },
-      {
-        key: "orders",
-        label: t("v2.garageProcurementOrders.tab", "Đơn mua hàng"),
-        icon: <V2Icon icon={ShoppingCart} size={15} />,
-        kind: "list",
-        resetKey: garageProcurementOrdersDisplay.tableId,
-        table: {
-          tableId: garageProcurementOrdersDisplay.tableId,
-          columns: orderColumns,
-          getRowKey: (row: ProcurementOrderRow) => row.id,
-          mode: "server",
-          fetchOptions: garageProcurementOrdersConfig.api.options,
-          rowActions: ordersState.rowActions,
-          preferencesStorage: v2ColumnPreferencesStorage,
-          viewPresetStorage: v2ViewPresetStorage,
-          emptyLabel: t("v2.procurement.empty", "Không có dữ liệu"),
-          toolbar: { search: {} },
-        },
-        useData: (query) =>
-          useProcurementQuery(
-            garageProcurementOrdersConfig,
-            query,
-            ordersState.onListError,
-          ),
-      },
+    () =>
+      buildGarageProcurementTabs({
+        t,
+        requests: requestTab,
+        orders: orderTab,
+        onRequestsError: requestsState.onListError,
+        onOrdersError: ordersState.onListError,
+      }),
+    [
+      orderTab,
+      ordersState.onListError,
+      requestTab,
+      requestsState.onListError,
+      t,
     ],
-    [orderColumns, ordersState, requestColumns, requestsState, t],
   );
 
   const isOrders = activeTab === "orders";

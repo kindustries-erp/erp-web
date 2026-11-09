@@ -10,6 +10,7 @@ vi.mock("@/v2/shared/api/v2HttpClient", () => ({
 import {
   createProcurementApi,
   toProcurementListParams,
+  withProcurementFilter,
 } from "./procurement.api";
 import { TableSortState, type V2TableQuery } from "@/v2/shared/types/v2-table";
 
@@ -193,5 +194,52 @@ describe("createProcurementApi: xóa mềm và xóa cứng", () => {
       total: 1,
       next: null,
     });
+  });
+});
+
+describe("bộ lọc procurement trong query API", () => {
+  const base: V2TableQuery = {
+    page: 1,
+    pageSize: 20,
+    sorts: [],
+    columnFilters: {},
+    columnSearch: {},
+    columnOperators: {},
+    dateRanges: {},
+  };
+
+  it("gửi status và deleted=only khi có bộ lọc", () => {
+    const params = toProcurementListParams({
+      ...base,
+      status: "APPROVED",
+      deleted: "only",
+    });
+
+    expect(params.status).toBe("APPROVED");
+    expect(params.deleted).toBe("only");
+  });
+
+  it("không gửi status rỗng và bỏ qua deleted khi không lọc", () => {
+    const params = toProcurementListParams({ ...base, status: "" });
+
+    expect(params.status).toBeUndefined();
+    expect(params.deleted).toBeUndefined();
+  });
+
+  it("withProcurementFilter chuyển deleted xuống hàm gợi ý cột", async () => {
+    const options = vi
+      .fn()
+      .mockResolvedValue({ items: [], total: 0, next: null });
+    const wrapped = withProcurementFilter(options, { deleted: "only" });
+
+    await wrapped?.({ columnKey: "requestNo", search: "", pageParam: 1 });
+
+    expect(options).toHaveBeenCalledWith(
+      expect.objectContaining({ columnKey: "requestNo", deleted: "only" }),
+    );
+  });
+
+  it("withProcurementFilter trả undefined khi không có hàm options", () => {
+    expect(withProcurementFilter(undefined, {})).toBeUndefined();
   });
 });

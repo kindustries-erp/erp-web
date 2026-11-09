@@ -175,6 +175,8 @@ export function useProcurementList<T extends { id: string }>(
     deleteTarget,
     isTransitioning:
       transition.isPending || remove.isPending || purgeState.isPurging,
+    /** Nút xóa vĩnh viễn của một dòng (chế độ xem phiếu đã xóa mềm) */
+    purgeActions: purgeState.purgeActions,
     purgeTarget: purgeState.purgeTarget,
     closePurge: purgeState.closePurge,
     confirmPurge: purgeState.confirmPurge,

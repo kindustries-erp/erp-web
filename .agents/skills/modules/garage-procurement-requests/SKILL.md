@@ -114,3 +114,12 @@ src/v2/core/procurement/
 - **Hợp đồng list**: `ProcurementApi.list` gửi `summary_keys` (qua `toSummaryKeysParam`) và đọc `{ items, pagination: { total }, summaries }` từ API (`procurement.api.ts`), trả về `{ items, total, summaries }`. `summaries[key]` là `{ total, pageSubtotal, cumulative }` hoặc `null`. `useProcurementQuery` truyền `summaries` vào `V2ModuleListData`, và `V2ModuleListTab` gắn vào `column.summary`.
 - **Hàng tổng**: cột `estimatedTotal` có `summary: { variant: "amount", metricTitle }`. Cột `requestNo` có `summary: { variant: "label", label }` làm nhãn "Tổng cộng:" (key `v2.procurement.columns.summaryTotal`).
 - **Phạm vi**: chỉ áp dụng cho PR garage và PO garage. Kiểu `ProcurementListResponse<T>` có `pagination` và `summaries` (xem `procurement.types.ts`).
+
+## 9. Cập nhật: bộ lọc có sẵn, chế độ xem và xóa mềm (cả hai tab)
+
+- **Hook dùng chung**: `core/procurement/hooks/useProcurementListTabState.ts` ghép bộ lọc, chế độ xem, cột, thao tác dòng và `fetchOptions` cho một tab. Module chỉ truyền `api`, `buildColumns`, `viewVisibility` và danh sách trạng thái (`hooks/useProcurementListFilter.ts`, `hooks/useProcurementListView.ts`).
+- **Bộ lọc có sẵn** (popover `view • filter`, `toolbar.filterGroup`): `Tất cả` → không lọc; từng trạng thái → `status`; `Đã xóa mềm` → `deleted=only`. Đổi bộ lọc bump `resetCount` để bảng về trang 1. Trạng thái đưa vào: PR `Nháp / Chờ duyệt / Đã duyệt`; PO thêm `Đã phát hành`.
+- **Chế độ xem** (`toolbar.viewModes`): `Tổng quan` và `Tất cả cột`, đổi cột qua `applyV2SystemView` theo `viewVisibility` của `*Display` trong `*.config.tsx`.
+- **Chế độ đã xóa mềm**: không mở được drawer (click bị bỏ qua); menu dòng chỉ còn `Xóa vĩnh viễn` khi có quyền `purge` (`purgeActions` của `useProcurementList`).
+- **Tách file**: `GarageProcurementRequestsPage.hook.ts` (state hai tab, `resolveDrawerTarget`, tab đang mở) và `GarageProcurementRequestsPage.tabs.tsx` (dựng `V2ModuleTab`). Trang chính 244 dòng.
+- **Query**: `ProcurementTableQuery = V2TableQuery & { status?, deleted? }`; `toProcurementListParams` gửi `status` và `deleted`; `withProcurementFilter` gắn `deleted` vào gợi ý cột.

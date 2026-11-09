@@ -1,9 +1,23 @@
 import type {
-  V2FetchOptions,
+  V2FetchOptionsParams,
+  V2FetchOptionsResult,
   V2SummaryMetric,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
+
+/** Bộ lọc riêng của danh sách procurement, gửi thêm vào query API. */
+export interface ProcurementListFilter {
+  /** Trạng thái chứng từ; thiếu thì không lọc theo trạng thái */
+  status?: string;
+  /** only: chỉ phiếu đã xóa mềm (xóa cứng cần quyền purge) */
+  deleted?: "only";
+}
+
+export type ProcurementTableQuery = V2TableQuery & ProcurementListFilter;
+
+export type ProcurementFetchOptionsParams = V2FetchOptionsParams &
+  Pick<ProcurementListFilter, "deleted">;
 
 /** Dòng danh sách PO (đã bỏ dòng chi tiết, khớp response danh sách của API). */
 export interface ProcurementOrderRow {
@@ -163,7 +177,7 @@ export interface ProcurementDocumentRef {
 }
 
 export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
-  list: (query: V2TableQuery) => Promise<{
+  list: (query: ProcurementTableQuery) => Promise<{
     items: T[];
     total: number;
     summaries?: Record<string, V2SummaryMetric | null>;
@@ -189,7 +203,9 @@ export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   poDraft?: (id: string) => Promise<ProcurementPoDraft>;
   /** Nhật ký các bước duyệt của đề nghị mua hàng */
   approvalEvents?: (id: string) => Promise<ProcurementApprovalEvent[]>;
-  options?: V2FetchOptions;
+  options?: (
+    params: ProcurementFetchOptionsParams,
+  ) => Promise<V2FetchOptionsResult>;
 }
 
 /** Khóa bật/tắt duyệt của một họ chứng từ (đọc từ API cấu hình duyệt). */
