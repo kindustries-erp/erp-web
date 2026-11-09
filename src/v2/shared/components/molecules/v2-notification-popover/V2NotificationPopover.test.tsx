@@ -53,23 +53,25 @@ vi.mock("@/v2/shared/hooks/useViewport", () => ({
 const mockNotifications: CoreNotification[] = [
   {
     id: "notif-1",
-    userId: "user-1",
     title: "Đơn hàng mới #1001",
     message: "Khách hàng Nguyễn Văn A vừa đặt hàng.",
     type: "INFO",
     isRead: false,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
   {
     id: "notif-2",
-    userId: "user-1",
     title: "Cập nhật tồn kho",
     message: "Mã SKU ABC đã hết hàng.",
     type: "WARNING",
     isRead: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
 ];
 
