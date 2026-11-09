@@ -17,7 +17,7 @@ import { ProcurementOrderDrawer } from "@/v2/core/procurement";
 /** Đơn mua hàng garage (lõi procurement-orders, API v2). */
 export const garageProcurementOrdersApi =
   createProcurementApi<ProcurementOrderRow>(
-    "/api/v2/garage-procurement-orders",
+    "/api/v2/procurement-orders-garage",
     {
       supportsDelete: true,
       supportsPurge: true,
@@ -37,7 +37,7 @@ export const garageProcurementOrdersConfig: ProcurementListConfig<ProcurementOrd
     requestApi: createProcurementApi<
       ProcurementRequestRow,
       ProcurementRequestDetail
-    >("/api/v2/garage-procurement-requests", { supportsPoDraft: true }),
+    >("/api/v2/procurement-requests-garage", { supportsPoDraft: true }),
   };
 
 /** Cột theo view: "overview" ẩn cột phụ, "all" hiện đủ cột. Giữ hằng số để không đổi identity. */

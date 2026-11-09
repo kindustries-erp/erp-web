@@ -109,11 +109,11 @@ describe("createProcurementApi: list theo response chuẩn", () => {
         },
       },
     });
-    const api = createProcurementApi("/api/v2/garage-procurement-requests");
+    const api = createProcurementApi("/api/v2/procurement-requests-garage");
 
     const result = await api.list(query);
 
-    expect(get).toHaveBeenCalledWith("/api/v2/garage-procurement-requests", {
+    expect(get).toHaveBeenCalledWith("/api/v2/procurement-requests-garage", {
       params: expect.objectContaining({ page: 2, pageSize: 20 }),
     });
     expect(result).toEqual({
@@ -133,7 +133,7 @@ describe("createProcurementApi: xóa mềm và xóa cứng", () => {
   });
 
   it("xóa cứng gọi DELETE {base}/{id}/permanent khi bật supportsPurge", async () => {
-    const api = createProcurementApi("/api/v2/garage-procurement-requests", {
+    const api = createProcurementApi("/api/v2/procurement-requests-garage", {
       supportsDelete: true,
       supportsPurge: true,
     });
@@ -141,12 +141,12 @@ describe("createProcurementApi: xóa mềm và xóa cứng", () => {
     await api.purge?.("p1");
 
     expect(del).toHaveBeenCalledWith(
-      "/api/v2/garage-procurement-requests/p1/permanent",
+      "/api/v2/procurement-requests-garage/p1/permanent",
     );
   });
 
   it("không có purge khi không bật supportsPurge, không gọi HTTP", () => {
-    const api = createProcurementApi("/api/v2/garage-procurement-orders", {
+    const api = createProcurementApi("/api/v2/procurement-orders-garage", {
       supportsDelete: true,
     });
 
@@ -155,20 +155,20 @@ describe("createProcurementApi: xóa mềm và xóa cứng", () => {
   });
 
   it("xóa mềm vẫn gọi DELETE {base}/{id} khi bật supportsDelete", async () => {
-    const api = createProcurementApi("/api/v2/garage-procurement-orders", {
+    const api = createProcurementApi("/api/v2/procurement-orders-garage", {
       supportsDelete: true,
     });
 
     await api.remove?.("o1");
 
-    expect(del).toHaveBeenCalledWith("/api/v2/garage-procurement-orders/o1");
+    expect(del).toHaveBeenCalledWith("/api/v2/procurement-orders-garage/o1");
   });
 
   it("options gọi GET {base}/column-options với tham số cột", async () => {
     get.mockResolvedValueOnce({
       data: { items: [{ label: "HN", value: "b-1" }], total: 1, next: null },
     });
-    const api = createProcurementApi("/api/v2/garage-procurement-requests");
+    const api = createProcurementApi("/api/v2/procurement-requests-garage");
 
     const result = await api.options?.({
       columnKey: "branchName",
@@ -178,7 +178,7 @@ describe("createProcurementApi: xóa mềm và xóa cứng", () => {
     });
 
     expect(get).toHaveBeenCalledWith(
-      "/api/v2/garage-procurement-requests/column-options",
+      "/api/v2/procurement-requests-garage/column-options",
       {
         params: {
           column: "branchName",

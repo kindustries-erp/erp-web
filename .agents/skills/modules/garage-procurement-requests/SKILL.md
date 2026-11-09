@@ -8,7 +8,7 @@ description: Module tri thức Frontend V2 cho Quản lý Đề nghị Mua hàng
 ## 1. Ranh giới Module và Core
 
 - **Module** `src/v2/modules/garage-procurement-requests/` là lớp mỏng đặc thù của Garage:
-  - Khởi tạo API client với base path `/api/v2/garage-procurement-requests`.
+  - Khởi tạo API client với base path `/api/v2/procurement-requests-garage`.
   - Cấu hình hiển thị bảng `garageProcurementRequestsDisplay` (`tableId: procurement-requests-garage-table`, cấu hình bảng đi qua `/api/v2/table-preferences`), tiêu đề, mô tả, quyền RBAC (`garage_procurement_requests`).
   - Gắn component `GarageProcurementRequestsPage` (còn alias `GarageProcurementPage`): trang hợp nhất 2 tab (`requests` và `orders`), đồng bộ URL `/garage-procurement?tab=requests,orders` (mặc định mở `?tab=requests`), nút Tạo mới dùng `V2SplitButton` + `V2Dropdown` và menu duy nhất trên sidebar là "Mua hàng Garage" (`/garage-procurement?tab=requests`).
 - **Core** `src/v2/core/procurement/` quản lý mọi thành phần tái sử dụng của họ mua hàng (PR và PO):
@@ -73,7 +73,7 @@ src/v2/core/procurement/
   - Frontend chuyển đổi các filter header sang `column_filters`, `column_search`, `date_ranges`, `sort` dạng JSON.
   - Backend `ListProcurementRequestsDto` kế thừa `TableQueryDto`, query service bóc tách bằng `applyTableFilters`, `applyTableSort` và `applyMultiKeywordMultiFieldFilter` lọc chính xác trên SQL TypeORM.
 - **Drawer Top Tabs & Audit Timeline**: 2 tab (`general`: Chi tiết, `traceability`: Chứng từ liên kết qua `DrawerRelatedDeck`). Nhật ký duyệt là `ProcurementRequestAuditSection` (`DrawerSection` + `DrawerAuditTimeline layout="stacked"`) nằm ở cột phải, dưới Tổng quan; không còn là tab. Section mặc định thu gọn (`defaultCollapsed`, vẫn hiện số lượng). Mỗi dòng: hành động, badge trạng thái theo `toStatus`, "tác nhân · dd/MM/yyyy HH:mm", lý do (`comment`). Dữ liệu qua `toAuditRows` (helper thuần): tác nhân = họ tên, rồi email, rồi "Không xác định"; không bao giờ hiện UUID (cập nhật 2026-11-06).
-- **Nguồn dữ liệu nhật ký (API)**: `GET /api/v2/garage-procurement-requests/:id/approval-events` trả `actorName`, `actorEmail` (resolve bởi `ApprovalActorService`) và `comment`; không có `id` nội bộ. Hành động "Đóng" và "Hủy" đều được ghi nhật ký; nút "Đóng" ở chân drawer chỉ đóng cửa sổ.
+- **Nguồn dữ liệu nhật ký (API)**: `GET /api/v2/procurement-requests-garage/:id/approval-events` trả `actorName`, `actorEmail` (resolve bởi `ApprovalActorService`) và `comment`; không có `id` nội bộ. Hành động "Đóng" và "Hủy" đều được ghi nhật ký; nút "Đóng" ở chân drawer chỉ đóng cửa sổ.
 - **Thao tác duyệt ngay trong Drawer**: Người dùng có thể Duyệt, Từ chối, Gửi duyệt, Hủy trực tiếp từ Drawer Footer khi đang xem đề nghị.
 - **Mobile-First Ergonomics**: Kích thước vùng bấm chạm $\ge 44\text{px}$, input font $\ge 16\text{px}$ trên mobile, responsive layout co giãn 1 cột trên điện thoại / 2 cột trên máy tính.
 - **Đa ngôn ngữ 100%**: 100% chuỗi văn bản sử dụng `t()` với prefix `v2.procurement.*` và `v2.garageProcurementRequests.*`.

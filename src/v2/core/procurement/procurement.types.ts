@@ -168,7 +168,7 @@ export type ProcurementLinePayload = Record<string, unknown>;
 
 /**
  * Hợp đồng gọi API của một họ chứng từ procurement. Mỗi module cung cấp
- * base path riêng (ví dụ `/api/v2/garage-procurement-orders`).
+ * base path riêng (ví dụ `/api/v2/procurement-orders-garage`).
  * D: chi tiết, C: payload tạo, H: payload sửa đầu đơn.
  */
 /** Tham chiếu tối thiểu tới một chứng từ (đủ để chuyển trạng thái hoặc mở PO). */

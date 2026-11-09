@@ -15,7 +15,7 @@ import { ProcurementRequestDrawer } from "@/v2/core/procurement";
 /** Đề nghị mua hàng garage (lõi procurement-requests, API v2). */
 export const garageProcurementRequestsApi =
   createProcurementApi<ProcurementRequestRow>(
-    "/api/v2/garage-procurement-requests",
+    "/api/v2/procurement-requests-garage",
     { supportsDelete: true, supportsPurge: true },
   );
 
