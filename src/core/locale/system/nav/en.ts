@@ -120,6 +120,7 @@ export const navEn = {
     garage: "Garage",
     garageDashboard: "Garage Dashboard",
     garageCases: "Garage Activities",
+    garageProcurement: "Garage Procurement",
     garageProcurementRequests: "Garage Purchase Requests",
     garageOpex: "Garage Operating Expenses",
     garageCashflow: "Garage Cashflow",

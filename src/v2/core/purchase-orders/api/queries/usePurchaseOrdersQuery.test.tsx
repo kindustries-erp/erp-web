@@ -32,11 +32,10 @@ const makeWrapper = () => {
 };
 
 describe("usePurchaseOrdersQuery", () => {
-  it("trả về danh sách, tổng và tổng hợp từ API", async () => {
+  it("trả về danh sách và tổng từ API", async () => {
     list.mockResolvedValue({
       items: [{ id: "p1", poNo: "GPO-1" }],
       total: 1,
-      summaries: { totalAmount: 500 },
     });
 
     const { result } = renderHook(
@@ -46,7 +45,7 @@ describe("usePurchaseOrdersQuery", () => {
 
     await waitFor(() => expect(result.current.total).toBe(1));
     expect(result.current.items).toHaveLength(1);
-    expect(result.current.summaries).toEqual({ totalAmount: 500 });
+    expect(result.current.summaries).toBeUndefined();
     expect(list).toHaveBeenCalledWith(query);
   });
 

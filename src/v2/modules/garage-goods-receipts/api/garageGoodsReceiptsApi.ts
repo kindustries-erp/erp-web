@@ -4,6 +4,7 @@ import type {
   V2FetchOptionsParams,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
+import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
 import type {
   GarageGoodsReceipt,
   GarageGoodsReceiptFormValue,
@@ -42,6 +43,7 @@ export const toGarageGoodsReceiptsListParams = (query: V2TableQuery) => ({
   date_ranges: Object.keys(query.dateRanges).length
     ? JSON.stringify(query.dateRanges)
     : undefined,
+  summary_keys: toSummaryKeysParam(query),
 });
 
 export const toGarageGoodsReceiptPayload = (

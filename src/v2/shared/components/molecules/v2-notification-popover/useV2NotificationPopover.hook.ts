@@ -18,6 +18,7 @@ export function useV2NotificationPopover({
   const { t } = useV2Translation();
   const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [desktopOpen, setDesktopOpen] = React.useState(false);
 
   const { data: internalNotifications = [] } = useQuery({
     queryKey: ["notifications"],
@@ -56,13 +57,15 @@ export function useV2NotificationPopover({
     },
   });
 
+  // Click nội dung thông báo: điều hướng và đóng panel (desktop và mobile) để không che modal/drawer.
+  // Đánh dấu đã đọc do icon riêng đảm nhiệm.
   const handleNotificationItemClick = React.useCallback(
     (notif: CoreNotification) => {
-      markAsReadMutation.mutate(notif.id);
       onNotificationClick?.(notif);
       setMobileOpen(false);
+      setDesktopOpen(false);
     },
-    [markAsReadMutation, onNotificationClick],
+    [onNotificationClick],
   );
 
   return {
@@ -70,6 +73,8 @@ export function useV2NotificationPopover({
     notifications,
     mobileOpen,
     setMobileOpen,
+    desktopOpen,
+    setDesktopOpen,
     markAsReadMutation,
     deleteMutation,
     markAllAsReadMutation,

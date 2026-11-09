@@ -2,6 +2,7 @@ interface ApiErrorBody {
   code?: string;
   message?: string | string[];
   dependencies?: string[];
+  currentStatus?: string;
 }
 
 const errorBody = (error: unknown): ApiErrorBody | undefined =>
@@ -22,6 +23,16 @@ export function extractV2ApiError(error: unknown, fallback: string): string {
 export const isDocumentInUseError = (error: unknown): boolean =>
   (error as { response?: { status?: number } })?.response?.status === 409 &&
   errorBody(error)?.code === "DOCUMENT_IN_USE";
+
+/** 409 do chứng từ đã đổi trạng thái (ví dụ đã duyệt rồi) so với lúc người dùng thao tác. */
+export const isStatusConflictError = (error: unknown): boolean =>
+  (error as { response?: { status?: number } })?.response?.status === 409 &&
+  errorBody(error)?.code === "INVALID_STATUS_TRANSITION";
+
+export const readCurrentStatus = (error: unknown): string | null => {
+  const status = errorBody(error)?.currentStatus;
+  return typeof status === "string" ? status : null;
+};
 
 export const readDocumentDependencies = (
   error: unknown,

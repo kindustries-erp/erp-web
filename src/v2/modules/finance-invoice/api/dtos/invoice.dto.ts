@@ -1,4 +1,5 @@
 import type { InvoiceDirection } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
+import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
 
 /** Một dòng hóa đơn từ `GET /api/v1/erp-invoices`; số tiền API trả dạng chuỗi decimal */
 export interface InvoiceDto {
@@ -31,8 +32,8 @@ export interface InvoiceDto {
   description?: string | null;
 }
 
-/** Tổng toàn bộ dòng khớp bộ lọc của `GET /api/v2/invoices`, key theo tên cột */
-export type InvoiceSummariesDto = Record<string, number>;
+/** Số liệu tổng theo key đã gửi trong `summary_keys` của `GET /api/v2/invoices`; `null` = không tính được */
+export type InvoiceSummariesDto = Record<string, V2SummaryMetric | null>;
 
 /** `GET /api/v2/invoices` */
 export interface InvoiceListResponseDto {

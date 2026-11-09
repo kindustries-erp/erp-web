@@ -141,3 +141,5 @@ Khi nhận yêu cầu tạo màn hình hoặc module V2 mới:
 2. **Chạy Plop generator tương ứng** để tạo boilerplate chuẩn.
 3. **Review và customize** các trường và nghiệp vụ riêng. Nếu không bật `wire`, tự đăng ký route và menu.
 4. **Kiểm tra**: `bunx tsc --noEmit` và `bunx vitest run` trên module vừa sinh.
+
+Nếu cần làm cả API và drawer, dùng skill `erp-v2-feature` (full-stack) thay vì chỉ chạy generator.

@@ -18,6 +18,7 @@ vi.mock("@/core/i18n", () => ({
       "nav.items.garageCashflow": "Thu chi garage",
       "nav.items.garageCases": "Hoạt động garage",
       "nav.items.garageGoodsReceipts": "Nhập kho Garage",
+      "nav.items.garageProcurement": "Mua hàng Garage",
       "nav.items.garageProcurementRequests": "Đề nghị mua hàng Garage",
       "nav.items.garagePurchaseOrders": "Đơn mua hàng Garage",
       "nav.items.garageDebts": "Công nợ garage",
@@ -154,10 +155,10 @@ describe("GarageNavSection component", () => {
     );
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
-    expect(screen.getByText("Đề nghị mua hàng Garage")).toBeInTheDocument();
+    expect(screen.getByText("Mua hàng Garage")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Đề nghị mua hàng Garage"));
-    expect(mockNavTo).toHaveBeenCalledWith("garage-procurement-requests");
+    fireEvent.click(screen.getByText("Mua hàng Garage"));
+    expect(mockNavTo).toHaveBeenCalledWith("garage-procurement");
   });
 
   it("renders only cashflow when user has only GARAGE_CASHFLOW permission", () => {
@@ -217,10 +218,10 @@ describe("GarageNavSection component", () => {
     );
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
-    expect(screen.getByText("Đề nghị mua hàng Garage")).toBeInTheDocument();
+    expect(screen.getByText("Mua hàng Garage")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("Đề nghị mua hàng Garage"));
-    expect(mockNavTo).toHaveBeenCalledWith("garage-procurement-requests");
+    fireEvent.click(screen.getByText("Mua hàng Garage"));
+    expect(mockNavTo).toHaveBeenCalledWith("garage-procurement");
   });
 
   it("renders 4 flat nav items with Thu chi garage positioned below Hoạt động garage", () => {

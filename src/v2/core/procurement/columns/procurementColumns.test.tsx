@@ -34,6 +34,32 @@ describe("procurementColumns", () => {
     );
   });
 
+  it("cột tiền PR và PO có summary amount, cột số chứng từ có nhãn Tổng cộng", () => {
+    const prColumns = buildProcurementRequestColumns(mockT);
+    const poColumns = buildProcurementOrderColumns(mockT);
+    const find = (cols: { key: string }[], key: string) =>
+      cols.find((c) => c.key === key) as {
+        summary?: { variant: string; label?: string; metricTitle?: string };
+      };
+
+    expect(find(prColumns, "estimatedTotal").summary).toEqual({
+      variant: "amount",
+      metricTitle: "Tổng dự kiến",
+    });
+    expect(find(prColumns, "requestNo").summary).toEqual({
+      variant: "label",
+      label: "Tổng cộng:",
+    });
+    expect(find(poColumns, "totalAmount").summary).toEqual({
+      variant: "amount",
+      metricTitle: "Tổng tiền",
+    });
+    expect(find(poColumns, "orderNo").summary).toEqual({
+      variant: "label",
+      label: "Tổng cộng:",
+    });
+  });
+
   it("ProcurementStatusBadge render đúng nhãn và variant", () => {
     render(<ProcurementStatusBadge value="APPROVED" t={mockT} />);
     expect(screen.getByText("APPROVED")).toBeInTheDocument();
@@ -69,8 +95,16 @@ describe("procurementColumns", () => {
       orderingStatus: "PARTIAL",
       createdBy: "5f0c2a7e-0000-4000-8000-000000000000",
       createdByEmail: "nguyen.a@liouni.com",
-      approverId: null,
-      approverEmail: "truong.garage@liouni.com",
+      approval: {
+        approverId: null,
+        approverEmail: "truong.garage@liouni.com",
+        submit: null,
+        approve: null,
+        reject: null,
+        cancel: null,
+        close: null,
+        issue: null,
+      },
       createdAt: "2026-11-05T08:00:00Z",
     };
 

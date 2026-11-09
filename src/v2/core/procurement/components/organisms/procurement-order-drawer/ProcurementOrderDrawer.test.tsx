@@ -94,4 +94,9 @@ describe("ProcurementOrderDrawer — chế độ xem/sửa", () => {
     ).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it("hiển thị phân vùng Nhật ký duyệt khi xem đơn đã lưu", async () => {
+    renderDrawer({ documentId: "po-1" });
+    expect(await screen.findByText("Nhật ký duyệt")).toBeInTheDocument();
+  });
 });

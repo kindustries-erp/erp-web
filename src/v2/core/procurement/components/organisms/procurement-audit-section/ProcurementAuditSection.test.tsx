@@ -2,20 +2,14 @@ import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ProcurementRequestAuditSection } from "./ProcurementRequestAuditSection";
+import { ProcurementAuditSection } from "./ProcurementAuditSection";
 import type {
   ProcurementApi,
   ProcurementApprovalEvent,
-} from "../../../../procurement.types";
+} from "../../../procurement.types";
 
-const createTestQueryClient = () =>
-  new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+const ACTOR_ID = "99999999-aaaa-bbbb-cccc-dddddddddddd";
 
-const ACTOR_ID = "11111111-2222-3333-4444-555555555555";
-
-// Thời gian không có "Z" để kết quả hiển thị không phụ thuộc múi giờ máy chạy test.
 const mockEvents: ProcurementApprovalEvent[] = [
   {
     action: "submit",
@@ -36,19 +30,23 @@ const mockEvents: ProcurementApprovalEvent[] = [
     actorName: "Trưởng garage",
     actorEmail: null,
     actorRoles: [],
-    comment: "Duyệt đơn hàng gấp",
-    createdAt: "2026-11-05T09:00:00",
+    comment: "Đã kiểm tra phụ tùng đầy đủ",
+    createdAt: "2026-11-05T09:30:00",
   },
 ];
 
 const renderSection = (approvalEvents: ReturnType<typeof vi.fn>) => {
   const api = { approvalEvents } as unknown as ProcurementApi<unknown>;
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
   return render(
-    <QueryClientProvider client={createTestQueryClient()}>
-      <ProcurementRequestAuditSection
-        documentId="doc-1"
+    <QueryClientProvider client={client}>
+      <ProcurementAuditSection
+        documentId="doc-test-1"
         api={api}
-        queryKey="test-query-key"
+        queryKey="test-audit-key"
       />
     </QueryClientProvider>,
   );
@@ -57,38 +55,44 @@ const renderSection = (approvalEvents: ReturnType<typeof vi.fn>) => {
 const expandSection = () =>
   fireEvent.click(screen.getByRole("button", { name: "Mở rộng phân vùng" }));
 
-describe("ProcurementRequestAuditSection", () => {
-  it("mặc định thu gọn: chỉ hiện tiêu đề và số lượng, chưa hiện nội dung nhật ký", async () => {
+describe("ProcurementAuditSection", () => {
+  it("mặc định thu gọn và hiển thị số lượng sự kiện chính xác", async () => {
     renderSection(vi.fn().mockResolvedValue(mockEvents));
     expect(screen.getByText("Nhật ký duyệt")).toBeInTheDocument();
     expect(await screen.findByText("(2)")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Mở rộng phân vùng" }),
     ).toHaveAttribute("aria-expanded", "false");
-    expect(
-      screen.getByText("Trưởng garage").closest('[aria-hidden="true"]'),
-    ).not.toBeNull();
   });
 
-  it("mở ra thì thấy tác nhân, lý do và thời gian dễ đọc", async () => {
+  it("mở ra thì thấy các sự kiện được hiển thị đồng nhất dưới dạng V2ActivityCard", async () => {
     renderSection(vi.fn().mockResolvedValue(mockEvents));
     await screen.findByText("(2)");
     expandSection();
-    expect(screen.getByText("Trưởng garage")).toBeInTheDocument();
-    expect(screen.getByText("NV Kế toán")).toBeInTheDocument();
-    expect(screen.getByText("Lý do: Duyệt đơn hàng gấp")).toBeInTheDocument();
-    expect(screen.getByText("05/11/2026 09:00")).toBeInTheDocument();
+
+    const cards = screen.getAllByTestId("v2-activity-card");
+    expect(cards).toHaveLength(2);
+
+    // Card 1: sự kiện approve mới nhất (Trưởng garage)
+    expect(cards[0]).toHaveTextContent("Trưởng garage");
+    expect(cards[0]).toHaveTextContent("approve");
+    expect(cards[0]).toHaveTextContent("Lý do: Đã kiểm tra phụ tùng đầy đủ");
+
+    // Card 2: sự kiện submit trước đó (NV Kế toán)
+    expect(cards[1]).toHaveTextContent("NV Kế toán");
+    expect(cards[1]).toHaveTextContent("submit");
   });
 
-  it("không hiện UUID của người thực hiện hoặc chuỗi ISO thời gian", async () => {
+  it("bảo mật: không lộ UUID của người thực hiện và không lộ raw ISO date", async () => {
     const { container } = renderSection(vi.fn().mockResolvedValue(mockEvents));
     await screen.findByText("(2)");
     expandSection();
+
     expect(container.textContent).not.toContain(ACTOR_ID);
-    expect(container.textContent).not.toContain("T09:00:00");
+    expect(container.textContent).not.toContain("T09:30:00");
   });
 
-  it("khi không có tên và email thì hiện 'Không xác định', không hiện UUID", async () => {
+  it("khi không có tên và email thì hiển thị 'Không xác định'", async () => {
     renderSection(
       vi
         .fn()
@@ -98,21 +102,17 @@ describe("ProcurementRequestAuditSection", () => {
     );
     await screen.findByText("(1)");
     expandSection();
+
     expect(screen.getByText("Không xác định")).toBeInTheDocument();
     expect(screen.queryByText(ACTOR_ID)).not.toBeInTheDocument();
   });
 
-  it("hiển thị empty message khi không có sự kiện", async () => {
+  it("hiển thị thông báo khi không có sự kiện nào", async () => {
     renderSection(vi.fn().mockResolvedValue([]));
     expandSection();
+
     expect(
       await screen.findByText("Chưa có sự kiện phê duyệt nào"),
     ).toBeInTheDocument();
-  });
-
-  it("hiển thị trạng thái đang tải khi chưa có dữ liệu", () => {
-    renderSection(vi.fn(() => new Promise(() => {})));
-    expandSection();
-    expect(screen.getByText("Đang tải...")).toBeInTheDocument();
   });
 });

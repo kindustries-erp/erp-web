@@ -10,6 +10,8 @@ export interface ProcurementRowActionsInput<T extends { id: string }> {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  currentUserId?: string | null;
+  currentUserEmail?: string | null;
   /** Mở drawer của một chứng từ ở chế độ xem hoặc sửa */
   openDrawer: (id: string, mode: "view" | "edit") => void;
   /** Mở modal lý do hoặc xác nhận cho một hành động chuyển trạng thái */
@@ -28,6 +30,8 @@ export function useProcurementRowActions<T extends { id: string }>({
   canCreate,
   canUpdate,
   canDelete,
+  currentUserId,
+  currentUserEmail,
   openDrawer,
   start,
   openDelete,
@@ -44,6 +48,8 @@ export function useProcurementRowActions<T extends { id: string }>({
         canCreate,
         canUpdate,
         canDelete,
+        currentUserId,
+        currentUserEmail,
         openDrawer,
         start,
         openDelete,
@@ -54,6 +60,8 @@ export function useProcurementRowActions<T extends { id: string }>({
       canCreate,
       canDelete,
       canUpdate,
+      currentUserId,
+      currentUserEmail,
       config,
       openDelete,
       openDrawer,

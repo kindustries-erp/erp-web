@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronDown } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2Tooltip } from "@/v2/shared/components/atoms/v2-tooltip";
 import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
@@ -15,7 +16,7 @@ function ActionButton({ action }: { action: DrawerAction }) {
       ? "destructive"
       : (action.variant ?? "secondary");
 
-  return (
+  const button = (
     <V2Button
       type={action.type || "button"}
       variant={variant as any}
@@ -29,6 +30,16 @@ function ActionButton({ action }: { action: DrawerAction }) {
       </V2Text>
     </V2Button>
   );
+
+  if (action.disabled && action.disabledReason) {
+    return (
+      <V2Tooltip content={action.disabledReason} side="top">
+        <span className="inline-block">{button}</span>
+      </V2Tooltip>
+    );
+  }
+
+  return button;
 }
 
 export const DrawerFooter: React.FC<DrawerFooterProps> = ({

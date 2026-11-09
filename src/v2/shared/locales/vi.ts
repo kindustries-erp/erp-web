@@ -79,6 +79,7 @@ export const v2Vi = {
       empty: "Chưa có thông báo nào",
       deleteAll: "Xóa tất cả",
       markAllAsRead: "Đánh dấu đã đọc tất cả",
+      markAsRead: "Đánh dấu đã đọc",
       deleteItem: "Xóa thông báo",
     },
     topbar: {
@@ -237,6 +238,9 @@ export const v2Vi = {
       relatedInfo: "Thông tin liên quan",
       expand: "Mở rộng",
       collapse: "Thu gọn",
+    },
+    activityTimeline: {
+      empty: "Chưa có sự kiện nào",
     },
     dropdown: {
       optionsTitle: "Tùy chọn thao tác",

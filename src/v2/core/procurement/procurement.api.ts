@@ -1,22 +1,36 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import type {
-  V2FetchOptionsParams,
+  V2FetchOptions,
   V2FetchOptionsResult,
-  V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
 import { PROCUREMENT_REASON_ACTIONS } from "./procurement.rules";
+import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
 import type {
   ProcurementApi,
   ProcurementApprovalEvent,
+  ProcurementFetchOptionsParams,
   ProcurementLinePayload,
   ProcurementListResponse,
   ProcurementPoDraft,
+  ProcurementTableQuery,
 } from "./procurement.types";
 
-/** Tham số danh sách của API procurement: phân trang, sắp xếp và bộ lọc bảng V2. */
-export const toProcurementListParams = (query: V2TableQuery) => ({
+/**
+ * Gắn bộ lọc procurement (đã xóa mềm) vào hàm lấy gợi ý cột của bảng V2.
+ * Thiếu API thì trả undefined để bảng dùng cấu hình mặc định.
+ */
+export const withProcurementFilter = (
+  options: ProcurementApi<unknown>["options"],
+  filter: Pick<ProcurementFetchOptionsParams, "deleted">,
+): V2FetchOptions | undefined =>
+  options ? (params) => options({ ...params, ...filter }) : undefined;
+
+/** Tham số danh sách của API procurement: phân trang, sắp xếp, bộ lọc bảng V2 và bộ lọc riêng. */
+export const toProcurementListParams = (query: ProcurementTableQuery) => ({
   page: query.page,
+  status: query.status || undefined,
+  deleted: query.deleted,
   pageSize: query.pageSize,
   search: query.search?.trim() || undefined,
   sort: query.sorts?.length
@@ -40,6 +54,7 @@ export const toProcurementListParams = (query: V2TableQuery) => ({
     query.dateRanges && Object.keys(query.dateRanges).length
       ? JSON.stringify(query.dateRanges)
       : undefined,
+  summary_keys: toSummaryKeysParam(query),
 });
 
 /**
@@ -60,7 +75,11 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
         basePath,
         { params: toProcurementListParams(query) },
       );
-      return { items: data.rows, total: data.total };
+      return {
+        items: data.items,
+        total: data.pagination.total,
+        summaries: data.summaries,
+      };
     },
     transition: async (
       id,
@@ -129,7 +148,7 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
           return data;
         }
       : undefined,
-    options: async (params: V2FetchOptionsParams) => {
+    options: async (params: ProcurementFetchOptionsParams) => {
       const { data } = await v2HttpClient.get<V2FetchOptionsResult>(
         `${basePath}/column-options`,
         {
@@ -139,6 +158,7 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
             page: params.pageParam,
             pageSize: 20,
             filters: params.filtersStr,
+            deleted: params.deleted,
           },
         },
       );

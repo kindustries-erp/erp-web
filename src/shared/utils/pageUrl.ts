@@ -49,8 +49,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-dashboard",
   "garage-cases",
   "garage-goods-receipts",
-  "garage-procurement-requests",
-  "garage-procurement-orders",
+  "garage-procurement",
   "garage-opex",
   "garage-customers",
   "garage-partners",
@@ -238,7 +237,9 @@ export function pageToPath(
     tab ||
     (page === "erp-invoices" || page === "garage-cases"
       ? "dashboard"
-      : undefined);
+      : page === "garage-procurement"
+        ? "requests"
+        : undefined);
   if (effectiveTab) {
     searchParams.set(ErpUrlQueryParam.TAB, effectiveTab);
   }

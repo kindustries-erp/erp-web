@@ -3,8 +3,10 @@ import type { V2Column } from "../V2StandardTable.type";
 
 export interface V2ColumnSummaryValues {
   pageValue: number;
-  totalValue: number;
-  cumulativeValue?: number;
+  /** `null` = API không tính được, hiển thị "—" */
+  totalValue: number | null;
+  /** `null` = API không tính được, hiển thị "—"; `undefined` = để bảng tự tính */
+  cumulativeValue?: number | null;
 }
 
 /** Trạng thái tích lũy theo trang của một cột (chế độ server); reset khi signature đổi */

@@ -10,6 +10,7 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import { useV2MultiSelect } from "./V2MultiSelect.hook";
 import { V2MultiSelectDropdown } from "./V2MultiSelectDropdown";
 import type { V2MultiSelectProps } from "./V2MultiSelect.type";
@@ -58,7 +59,7 @@ export const V2MultiSelect: React.FC<V2MultiSelectProps> = ({
       className={cn(
         "flex items-center justify-between w-full min-h-[38px] px-3 py-1.5 text-xs rounded-lg cursor-pointer",
         "border border-input bg-surface text-foreground transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        V2_DRAWER_FOCUS_RING_CLASS,
         disabled && "opacity-50 cursor-not-allowed pointer-events-none",
         triggerClassName,
       )}

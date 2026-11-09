@@ -5,13 +5,15 @@ import type { ProcurementListConfig } from "../hooks/procurementListConfig.type"
 import type { ProcurementListState } from "../hooks/useProcurementList";
 import { ProcurementReasonModal } from "./ProcurementReasonModal";
 import { SubmitApprovalModal } from "./organisms/submit-approval-modal";
+import { ProcurementApproveModal } from "./organisms/procurement-approve-modal";
+import { ProcurementAlreadyDecidedModal } from "./organisms/procurement-already-decided-modal";
 
 export interface ProcurementListModalsProps<T extends { id: string }> {
   config: ProcurementListConfig<T>;
   state: ProcurementListState<T>;
 }
 
-/** Bốn modal của màn danh sách: lý do, xóa nháp, xóa vĩnh viễn, xác nhận thao tác. */
+/** Bốn modal của màn danh sách: lý do, xóa nháp, xóa vĩnh viễn, duyệt, xác nhận thao tác. */
 export function ProcurementListModals<T extends { id: string }>({
   config,
   state,
@@ -21,6 +23,7 @@ export function ProcurementListModals<T extends { id: string }>({
     ? `${t(`v2.procurement.actions.${state.reasonTarget.action}`, state.reasonTarget.action)} ${config.rowLabel(state.reasonTarget.row)}`
     : "";
   const confirm = state.confirmTarget;
+  const isApproveConfirm = confirm?.action === "approve";
 
   return (
     <>
@@ -38,11 +41,36 @@ export function ProcurementListModals<T extends { id: string }>({
             ? config.rowLabel(state.approval.submitTarget)
             : ""
         }
+        target={state.approval.submitTarget}
+        onViewDetail={() => {
+          if (state.approval.submitTarget) {
+            state.openView(state.approval.submitTarget.id);
+            state.approval.closeSubmit();
+          }
+        }}
         approvers={state.approval.approvers}
         loading={state.approval.approversLoading}
         submitting={state.isTransitioning}
         onConfirm={state.submitWithApprover}
         onCancel={state.approval.closeSubmit}
+      />
+      <ProcurementApproveModal
+        open={Boolean(confirm && isApproveConfirm)}
+        rowLabel={confirm ? config.rowLabel(confirm.row) : ""}
+        target={confirm?.row}
+        loading={state.isTransitioning}
+        onConfirm={state.confirmAction}
+        onCancel={state.closeConfirm}
+        onViewDetail={() => {
+          if (confirm?.row) {
+            state.openView(confirm.row.id);
+            state.closeConfirm();
+          }
+        }}
+      />
+      <ProcurementAlreadyDecidedModal
+        target={state.alreadyDecided}
+        onClose={state.closeAlreadyDecided}
       />
       <V2ConfirmModal
         open={Boolean(state.deleteTarget)}
@@ -77,7 +105,7 @@ export function ProcurementListModals<T extends { id: string }>({
         onOpenChange={(open) => !open && state.closePurge()}
       />
       <V2ConfirmModal
-        open={Boolean(confirm)}
+        open={Boolean(confirm && !isApproveConfirm)}
         title={t("v2.procurement.confirm.title", "Xác nhận thao tác")}
         message={
           confirm

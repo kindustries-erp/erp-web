@@ -7,6 +7,7 @@ import { useProcurementOrderDrawer } from "./ProcurementOrderDrawer.hook";
 import { ProcurementOrderMainSections } from "./ProcurementOrderMainSections";
 import { ProcurementOrderHeaderSection } from "./sections/ProcurementOrderHeaderSection";
 import { ProcurementOrderSummarySection } from "./sections/ProcurementOrderSummarySection";
+import { ProcurementAuditSection } from "../procurement-audit-section";
 
 /** Drawer đơn mua hàng 2 cột: trái là dòng hàng, phải là đầu đơn và tổng quan. */
 export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
@@ -88,6 +89,13 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
               form={state.form}
               detail={state.detail}
             />
+            {!state.creating && props.documentId && (
+              <ProcurementAuditSection
+                documentId={props.documentId}
+                api={props.api}
+                queryKey={props.queryKey}
+              />
+            )}
           </div>
         }
       />

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { showProcurementError } from "../procurement.toast";
@@ -11,6 +12,7 @@ import { useProcurementPurge } from "./useProcurementPurge";
 import { useProcurementTransition } from "./useProcurementTransition";
 import { useProcurementRowActions } from "./useProcurementRowActions";
 import { useProcurementApprovalGate } from "./useProcurementApprovalGate";
+import { useProcurementAlreadyDecided } from "./useProcurementAlreadyDecided";
 import {
   consumeProcurementRequestIntent,
   useProcurementIntentStore,
@@ -81,6 +83,9 @@ export function useProcurementList<T extends { id: string }>(
     [t],
   );
 
+  const alreadyDecidedState = useProcurementAlreadyDecided();
+  const { showAlreadyDecided } = alreadyDecidedState;
+
   const { transition, remove } = useProcurementTransition(config, {
     onTransitioned: () => {
       setReasonTarget(null);
@@ -88,6 +93,20 @@ export function useProcurementList<T extends { id: string }>(
       approval.closeSubmit();
     },
     onRemoved: () => setDeleteTarget(null),
+    onAlreadyDecided: (status) => {
+      const row =
+        confirmTarget?.row ??
+        reasonTarget?.row ??
+        approval.submitTarget ??
+        null;
+      setReasonTarget(null);
+      setConfirmTarget(null);
+      approval.closeSubmit();
+      showAlreadyDecided({
+        rowLabel: row ? config.rowLabel(row) : "",
+        status,
+      });
+    },
   });
 
   const { requestSubmit } = approval;
@@ -120,11 +139,18 @@ export function useProcurementList<T extends { id: string }>(
     [],
   );
 
+  const currentUserId = useAuthStore((s) => s.profile?.id ?? null);
+  const currentUserEmail = useAuthStore(
+    (s) => s.profile?.email ?? s.employee?.email ?? null,
+  );
+
   const rowActions = useProcurementRowActions<T>({
     config: approval.approvalConfig,
     canCreate,
     canUpdate,
     canDelete,
+    currentUserId,
+    currentUserEmail,
     openDrawer,
     start,
     openDelete: (row) => setDeleteTarget(row),
@@ -167,9 +193,14 @@ export function useProcurementList<T extends { id: string }>(
     deleteTarget,
     isTransitioning:
       transition.isPending || remove.isPending || purgeState.isPurging,
+    /** Nút xóa vĩnh viễn của một dòng (chế độ xem phiếu đã xóa mềm) */
+    purgeActions: purgeState.purgeActions,
     purgeTarget: purgeState.purgeTarget,
     closePurge: purgeState.closePurge,
     confirmPurge: purgeState.confirmPurge,
+    alreadyDecided: alreadyDecidedState.alreadyDecided,
+    showAlreadyDecided,
+    closeAlreadyDecided: alreadyDecidedState.closeAlreadyDecided,
     closeReason: () => setReasonTarget(null),
     closeConfirm: () => setConfirmTarget(null),
     closeDelete: () => setDeleteTarget(null),

@@ -38,6 +38,8 @@ export interface BuildProcurementRowActionsInput<T extends { id: string }> {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  currentUserId?: string | null;
+  currentUserEmail?: string | null;
   /** Mở drawer của một chứng từ ở chế độ xem hoặc sửa */
   openDrawer: (id: string, mode: "view" | "edit") => void;
   /** Mở modal lý do hoặc xác nhận cho một hành động chuyển trạng thái */
@@ -65,6 +67,8 @@ export function buildProcurementRowActions<T extends { id: string }>(
     canCreate,
     canUpdate,
     canDelete,
+    currentUserId,
+    currentUserEmail,
     openDrawer,
     start,
     openDelete,
@@ -108,14 +112,46 @@ export function buildProcurementRowActions<T extends { id: string }>(
         : [];
 
     const transitions: V2RowAction[] = canUpdate
-      ? config.availableActions(row).map((action) => ({
-          label: t(`v2.procurement.actions.${action}`, action),
-          icon: ACTION_ICONS[action],
-          onClick: () => start(row, action),
-          variant: isDangerAction(action)
-            ? ("danger" as const)
-            : ("default" as const),
-        }))
+      ? config.availableActions(row).map((action) => {
+          let disabled = false;
+          let disabledReason: string | undefined;
+
+          if (action === "submit") {
+            const r = row as {
+              createdBy?: string | null;
+              createdByEmail?: string | null;
+            };
+            const hasCreatorInfo = Boolean(r.createdBy || r.createdByEmail);
+            const idMatch = Boolean(
+              r.createdBy && currentUserId && r.createdBy === currentUserId,
+            );
+            const emailMatch = Boolean(
+              r.createdByEmail &&
+              currentUserEmail &&
+              r.createdByEmail.toLowerCase() === currentUserEmail.toLowerCase(),
+            );
+            const isCreator = !hasCreatorInfo || idMatch || emailMatch;
+
+            if (!isCreator) {
+              disabled = true;
+              disabledReason = t(
+                "v2.procurement.actions.submitNotCreatorReason",
+                "Chỉ người tạo mới được gửi duyệt",
+              );
+            }
+          }
+
+          return {
+            label: t(`v2.procurement.actions.${action}`, action),
+            icon: ACTION_ICONS[action],
+            disabled,
+            disabledReason,
+            onClick: () => start(row, action),
+            variant: isDangerAction(action)
+              ? ("danger" as const)
+              : ("default" as const),
+          };
+        })
       : [];
     const normalTransitions = transitions.filter((a) => a.variant !== "danger");
     const dangerTransitions = transitions.filter((a) => a.variant === "danger");

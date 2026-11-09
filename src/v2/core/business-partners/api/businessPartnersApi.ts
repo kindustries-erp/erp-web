@@ -1,4 +1,5 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
+import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
 import type {
   V2FetchOptionsParams,
   V2TableQuery,
@@ -48,6 +49,7 @@ export const toBusinessPartnerListParams = (
   date_ranges: Object.keys(query.dateRanges).length
     ? JSON.stringify(query.dateRanges)
     : undefined,
+  summary_keys: toSummaryKeysParam(query),
 });
 
 export const toBusinessPartnerPayload = (

@@ -12,6 +12,7 @@ export const V2CopyButton: React.FC<V2CopyButtonProps> = ({
   onCopy,
   timeoutMs = 1500,
   className,
+  tabIndex,
 }) => {
   const { t } = useV2Translation();
   const [copied, setCopied] = React.useState(false);
@@ -37,6 +38,7 @@ export const V2CopyButton: React.FC<V2CopyButtonProps> = ({
       type="button"
       variant="ghost"
       size="xs"
+      tabIndex={tabIndex}
       aria-label={text}
       title={text}
       className={cn("h-6 w-6 p-0", className)}

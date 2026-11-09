@@ -34,6 +34,10 @@ export function buildProcurementOrderColumns(
       }),
       size: 150,
       mobileSlot: "title",
+      summary: {
+        variant: "label",
+        label: t("v2.procurement.columns.summaryTotal", "Tổng cộng:"),
+      },
       cell: (row) => (
         <V2TableText
           text={row.orderNo}
@@ -67,6 +71,10 @@ export function buildProcurementOrderColumns(
       ...headerFilter.amount(t("v2.procurement.columns.total", "Tổng tiền")),
       size: 140,
       align: TableColumnAlign.RIGHT,
+      summary: {
+        variant: "amount",
+        metricTitle: t("v2.procurement.columns.total", "Tổng tiền"),
+      },
       cell: (row) => formatMoney(row.totalAmount),
     },
     {

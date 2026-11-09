@@ -202,6 +202,12 @@ bun run test src/modules/[target-module]/components/
 
 # 8. (Tùy chọn) Kiểm tra Storybook Build — chỉ khi đã thêm/sửa file .stories.tsx
 bun run build-storybook
+
+# 9. Viền/focus ring trắng trong dark theme: ring-offset-N phải đi kèm ring-offset-background hoặc ring-offset-0 (phải trả về 0 kết quả)
+grep -rnE "ring-offset-[1-9]" src/modules/[target-module]/components/ | grep -vE "ring-offset-background|ring-offset-0"
+
+# 10. Màu sáng cứng thiếu cặp dark: (rà thủ công từng dòng, field trong card/drawer không được có bg-white/border-white/bg-slate-* mà thiếu dark:)
+grep -rnE "(bg|border)-(white|slate-[0-9]+)" src/modules/[target-module]/components/ | grep -v "dark:"
 ```
 
 ---
@@ -240,6 +246,7 @@ Quy tắc:
 - [ ] **Import Một Chiều**: Không có import ngược dòng (`Templates > Organisms > Molecules > Atoms`) và không import ngang hàng cùng cấp.
 - [ ] **Giới Hạn File**: 100% các file đều $< 180\text{ LoC}$.
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong mã nguồn giao diện.
+- [ ] **Field & Focus Ring theo theme**: Field dùng `bg-background`/`border-input`; focus dùng `V2_DRAWER_FOCUS_RING_CLASS`; không có `ring-offset-<n>` thiếu `ring-offset-background` (audit #9, #10). Chi tiết: `standardize-drawer/references/v2-drawer.md`, mục "Field trong card & focus ring".
 - [ ] **i18n 100%**: Tất cả user-facing text bọc trong `t(...)` có fallback tiếng Việt và đồng bộ VI/EN.
 - [ ] **Co-located Stories (tùy chọn)**: Khuyến khích `[ComponentName].stories.tsx` cho shared/v2 atoms và ui; render độc lập không phụ thuộc V1.
 - [ ] **Co-located Test**: Organism và luồng page có test; Atom/Molecule chỉ khi có logic riêng. File `[ComponentName].test.tsx` nằm trực tiếp cùng cấp trong folder.
@@ -512,6 +519,12 @@ grep -rnE "<(input|textarea|select)[^>]*className=[\"'][^\"']*text-xs" src/v2/mo
 # 1d. Quét vi phạm Mobile-First: Hardcoded fixed width lớn gây vỡ màn hình mobile
 grep -rnE "w-\[[4-9][0-9]{2,}px\]" src/v2/modules/[target-module]/components/
 
+# 1e. Viền/focus ring trắng dark theme: ring-offset-N thiếu ring-offset-background hoặc ring-offset-0 (phải trả về 0)
+grep -rnE "ring-offset-[1-9]" src/v2/modules/[target-module]/ | grep -vE "ring-offset-background|ring-offset-0"
+
+# 1f. Màu sáng cứng thiếu cặp dark: (rà thủ công kết quả, field trong card/drawer phải có token hoặc dark:)
+grep -rnE "(bg|border)-(white|slate-[0-9]+)" src/v2/modules/[target-module]/ | grep -v "dark:"
+
 # 2. Quét vi phạm kích thước file (> 180 LoC)
 find src/v2/modules/[target-module]/ -name "*.tsx" -o -name "*.ts" | xargs wc -l | awk '$1 > 180 {print}'
 
@@ -543,10 +556,11 @@ Mỗi loại có một skill duy nhất (đã gồm V1, V2 và phần phụ) và
 | Drawer chi tiết hoặc form (V1) | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) (4 bước) | `references/drawer-rules.md` |
 | Drawer dưới `src/v2/` | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) | `references/v2-drawer.md` |
 | Tab chứng từ liên kết, cấn trừ, truy vết | `standardize-drawer` | [`/standardize-drawer`](./standardize-drawer.md) | `references/drawer-rules.md` mục 11 |
+| Module V2 đầy đủ, full-stack (API + bảng + drawer + QC) | `erp-v2-feature` | [`/erp-v2-feature`](./erp-v2-feature.md) | `skills/erp-v2-feature/references/checklist.md` |
 
 Đường dẫn reference đầy đủ: `.agents/skills/<skill>/references/<file>`.
 
-Quy tắc: làm theo workflow của loại tương ứng, sau đó chạy audit của Phần A (No Blue, i18n, giới hạn 180 dòng, import ngược). Với V2, chạy thêm audit ở Phần B mục "Zero-Miss Quality Gate".
+Quy tắc: làm theo workflow của loại tương ứng, sau đó chạy audit của Phần A (No Blue, i18n, giới hạn 180 dòng, import ngược, audit #9/#10 về field và focus ring). Field trong card/drawer và combobox theo `standardize-drawer/references/v2-drawer.md`, mục "Field trong card & focus ring". Với V2, chạy thêm audit ở Phần B mục "Zero-Miss Quality Gate".
 
 ---
 

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 import type {
   DrawerAction,
   V2DropdownEntry,
@@ -57,15 +58,56 @@ export function useProcurementDrawerActions(
     onTransition,
   } = input;
 
+  const currentUserId = useAuthStore((s) => s.profile?.id ?? null);
+  const currentUserEmail = useAuthStore(
+    (s) => s.profile?.email ?? s.employee?.email ?? null,
+  );
+
+  const isSubmitAllowed = React.useMemo(() => {
+    if (!detail) return true;
+    const hasCreatorInfo = Boolean(detail.createdBy || detail.createdByEmail);
+    if (!hasCreatorInfo) return true;
+    const idMatch = Boolean(
+      detail.createdBy && currentUserId && detail.createdBy === currentUserId,
+    );
+    const emailMatch = Boolean(
+      detail.createdByEmail &&
+      currentUserEmail &&
+      detail.createdByEmail.toLowerCase() === currentUserEmail.toLowerCase(),
+    );
+    return idMatch || emailMatch;
+  }, [detail, currentUserId, currentUserEmail]);
+
   const actionDropdownItems: V2DropdownEntry[] = React.useMemo(() => {
     if (!viewing || !canUpdate || !onTransition) return [];
-    return availableActions.map((action) => ({
-      id: action,
-      label: t(`v2.procurement.actions.${action}`, action),
-      onClick: () => onTransition(action, detail),
-      danger: action === "cancel" || action === "reject",
-    }));
-  }, [viewing, canUpdate, onTransition, availableActions, detail, t]);
+    return availableActions.map((action) => {
+      let disabled = false;
+      let disabledReason: string | undefined;
+      if (action === "submit" && !isSubmitAllowed) {
+        disabled = true;
+        disabledReason = t(
+          "v2.procurement.actions.submitNotCreatorReason",
+          "Chỉ người tạo mới được gửi duyệt",
+        );
+      }
+      return {
+        id: action,
+        label: t(`v2.procurement.actions.${action}`, action),
+        onClick: () => !disabled && onTransition(action, detail),
+        danger: action === "cancel" || action === "reject",
+        disabled,
+        disabledReason,
+      };
+    });
+  }, [
+    viewing,
+    canUpdate,
+    onTransition,
+    availableActions,
+    detail,
+    isSubmitAllowed,
+    t,
+  ]);
 
   const actions: DrawerAction[] = React.useMemo(() => {
     if (viewing) {
@@ -87,8 +129,15 @@ export function useProcurementDrawerActions(
         } else if (availableActions.includes("submit")) {
           list.push({
             label: t("v2.procurement.actions.submit", "Gửi duyệt"),
-            onClick: () => onTransition("submit", detail),
+            onClick: () => isSubmitAllowed && onTransition("submit", detail),
             primary: true,
+            disabled: !isSubmitAllowed,
+            disabledReason: !isSubmitAllowed
+              ? t(
+                  "v2.procurement.actions.submitNotCreatorReason",
+                  "Chỉ người tạo mới được gửi duyệt",
+                )
+              : undefined,
           });
         }
       }

@@ -6,11 +6,24 @@ registerV2ModuleLocale("procurement", {
     tabs: {
       list: "Danh sách",
     },
+    filters: {
+      title: "Bộ lọc có sẵn",
+      status: "Trạng thái",
+      all: "Tất cả",
+      deleted: "Đã xóa mềm",
+    },
+    views: {
+      title: "Chế độ xem",
+      overview: "Tổng quan",
+      all: "Tất cả cột",
+    },
     actions: {
       view: "Xem chi tiết",
       edit: "Chỉnh sửa",
       saveDraft: "Lưu nháp",
       editDisabledReason: "Chỉ sửa được khi còn nháp",
+      submitNotCreatorReason: "Chỉ người tạo mới được gửi duyệt",
+      viewDetailInDrawer: "Xem chi tiết phiếu trong Drawer",
       create: "Tạo mới",
       createOrder: "Tạo PO từ PR",
       submit: "Gửi duyệt",
@@ -35,6 +48,16 @@ registerV2ModuleLocale("procurement", {
       reasonLabel: "Lý do",
       reasonPlaceholder: "Nhập lý do",
       reasonRequired: "Vui lòng nhập lý do",
+    },
+    summaryCard: {
+      docNo: "Số phiếu",
+      copyDocNo: "Sao chép mã phiếu",
+      copiedDocNo: "Đã sao chép",
+    },
+    approveModal: {
+      title: "Duyệt đề nghị mua hàng",
+      message:
+        "Bạn có chắc chắn muốn duyệt phiếu này không? Sau khi duyệt, phiếu sẽ chuyển sang trạng thái Đã duyệt.",
     },
     status: {
       DRAFT: "Nháp",
@@ -69,6 +92,7 @@ registerV2ModuleLocale("procurement", {
       invoiceNo: "Số hóa đơn NCC",
       createdBy: "Người tạo",
       approver: "Người duyệt",
+      summaryTotal: "Tổng cộng:",
     },
     fields: {
       branch: "Chi nhánh",
@@ -152,6 +176,9 @@ registerV2ModuleLocale("procurement", {
       message: "Đơn nháp sẽ bị xóa. Bạn có chắc không?",
     },
     listLoadError: "Không thể tải danh sách",
+    deepLink: {
+      notFound: "Không tìm thấy chứng từ hoặc bạn không có quyền xem",
+    },
     actionError: "Không thực hiện được thao tác",
     actionDone: "Đã cập nhật chứng từ",
     empty: "Không có dữ liệu",
@@ -161,10 +188,23 @@ registerV2ModuleLocale("procurement", {
     tabs: {
       list: "List",
     },
+    filters: {
+      title: "Saved filters",
+      status: "Status",
+      all: "All",
+      deleted: "Soft-deleted",
+    },
+    views: {
+      title: "View mode",
+      overview: "Overview",
+      all: "All columns",
+    },
     actions: {
       view: "View details",
       edit: "Edit",
       editDisabledReason: "Only drafts can be edited",
+      submitNotCreatorReason: "Only the creator can submit for approval",
+      viewDetailInDrawer: "View details in Drawer",
       create: "Create",
       createOrder: "Create PO from request",
       submit: "Submit",
@@ -189,6 +229,16 @@ registerV2ModuleLocale("procurement", {
       reasonLabel: "Reason",
       reasonPlaceholder: "Enter a reason",
       reasonRequired: "Please enter a reason",
+    },
+    summaryCard: {
+      docNo: "Document No",
+      copyDocNo: "Copy document number",
+      copiedDocNo: "Copied",
+    },
+    approveModal: {
+      title: "Approve procurement request",
+      message:
+        "Are you sure you want to approve this request? Once approved, it will be marked as Approved.",
     },
     status: {
       DRAFT: "Draft",
@@ -223,6 +273,7 @@ registerV2ModuleLocale("procurement", {
       invoiceNo: "Supplier invoice no.",
       createdBy: "Created by",
       approver: "Approver",
+      summaryTotal: "Total:",
     },
     fields: {
       branch: "Branch",
@@ -306,6 +357,9 @@ registerV2ModuleLocale("procurement", {
       message: "The draft will be deleted. Are you sure?",
     },
     listLoadError: "Unable to load the list",
+    deepLink: {
+      notFound: "Document not found or you do not have permission to view it",
+    },
     actionError: "Action failed",
     actionDone: "Document updated",
     empty: "No data",

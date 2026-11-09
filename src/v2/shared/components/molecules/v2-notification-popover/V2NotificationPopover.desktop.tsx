@@ -27,6 +27,8 @@ export const V2NotificationPopoverDesktop: React.FC<
     markAllAsReadMutation,
     deleteAllMutation,
     handleNotificationItemClick,
+    desktopOpen,
+    setDesktopOpen,
   } = useV2NotificationPopover({
     notifications: externalNotifications,
     refetchInterval,
@@ -102,6 +104,8 @@ export const V2NotificationPopoverDesktop: React.FC<
 
   return (
     <V2Popover
+      open={desktopOpen}
+      onOpenChange={setDesktopOpen}
       side={side}
       align={align}
       sideOffset={sideOffset}

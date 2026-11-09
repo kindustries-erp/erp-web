@@ -12,7 +12,6 @@ import {
   ReceiptText,
   Wallet,
   Settings,
-  ShoppingCart,
   ClipboardList,
 } from "lucide-react";
 import type {
@@ -136,20 +135,12 @@ export const NAV_DEFS: RawNavDef[] = [
     href: "/garage-goods-receipts",
   },
   {
-    id: "garage-procurement-requests",
+    id: "garage-procurement",
     sectionId: "garage",
-    labelKey: "v2.nav.items.garageProcurementRequests",
-    fallback: "Đề nghị mua hàng Garage",
+    labelKey: "v2.nav.items.garageProcurement",
+    fallback: "Mua hàng Garage",
     icon: ClipboardList,
-    href: "/garage-procurement-requests",
-  },
-  {
-    id: "garage-procurement-orders",
-    sectionId: "garage",
-    labelKey: "v2.nav.items.garageProcurementOrders",
-    fallback: "Đơn mua hàng Garage",
-    icon: ShoppingCart,
-    href: "/garage-procurement-orders",
+    href: "/garage-procurement?tab=requests",
   },
   // v2-module:garage-goods-receipts:nav
   {

@@ -24,7 +24,16 @@ const detail = {
   createdBy: null,
   createdAt: "2026-11-05T08:00:00",
   createdByEmail: "nguoi.tao@x.vn",
-  approverEmail: "truong.garage@x.vn",
+  approval: {
+    approverId: null,
+    approverEmail: "truong.garage@x.vn",
+    submit: null,
+    approve: null,
+    reject: null,
+    cancel: null,
+    close: null,
+    issue: null,
+  },
 } as unknown as ProcurementRequestDetail;
 
 describe("ProcurementRequestSummarySection", () => {
@@ -38,7 +47,19 @@ describe("ProcurementRequestSummarySection", () => {
     render(
       <ProcurementRequestSummarySection
         form={form}
-        detail={{ ...detail, approverEmail: null }}
+        detail={{
+          ...detail,
+          approval: {
+            approverId: null,
+            approverEmail: null,
+            submit: null,
+            approve: null,
+            reject: null,
+            cancel: null,
+            close: null,
+            issue: null,
+          },
+        }}
       />,
     );
     expect(screen.getByText("Người duyệt")).toBeInTheDocument();

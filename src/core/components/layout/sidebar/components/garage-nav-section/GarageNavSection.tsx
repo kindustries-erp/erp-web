@@ -6,7 +6,6 @@ import {
   Users,
   ReceiptText,
   Package,
-  ShoppingCart,
   ClipboardList,
 } from "lucide-react";
 import { NavSection, NavItem } from "../SidebarPrimitives";
@@ -31,14 +30,12 @@ export function GarageNavSection({
     isCasesActive,
     isGoodsReceiptsActive,
     isProcurementRequestsActive,
-    isPurchaseOrdersActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
     handleNavGoodsReceipts,
     handleNavProcurementRequests,
-    handleNavPurchaseOrders,
     handleNavDebts,
     handleNavOpex,
   } = useGarageNavSection({
@@ -88,22 +85,12 @@ export function GarageNavSection({
           collapsed={collapsed}
           icon={<ClipboardList className="w-4 h-4 opacity-65 flex-shrink-0" />}
           label={t(
-            "nav.items.garageProcurementRequests",
-            "Đề nghị mua hàng Garage",
+            "nav.items.garageProcurement",
+            t("nav.items.garageProcurementRequests", "Mua hàng Garage"),
           )}
           active={isProcurementRequestsActive}
           onClick={handleNavProcurementRequests}
-          contextPage="garage-procurement-requests"
-        />
-      )}
-      {canReadGaragePurchaseOrders && (
-        <NavItem
-          collapsed={collapsed}
-          icon={<ShoppingCart className="w-4 h-4 opacity-65 flex-shrink-0" />}
-          label={t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage")}
-          active={isPurchaseOrdersActive}
-          onClick={handleNavPurchaseOrders}
-          contextPage="garage-procurement-orders"
+          contextPage="garage-procurement"
         />
       )}
       {canReadGarageCashflow && (
