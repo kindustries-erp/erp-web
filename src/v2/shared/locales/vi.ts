@@ -238,6 +238,9 @@ export const v2Vi = {
       expand: "Mở rộng",
       collapse: "Thu gọn",
     },
+    activityTimeline: {
+      empty: "Chưa có sự kiện nào",
+    },
     dropdown: {
       optionsTitle: "Tùy chọn thao tác",
     },

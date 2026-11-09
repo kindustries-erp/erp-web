@@ -13,7 +13,7 @@ import {
 import { ProcurementRequestMainSections } from "./ProcurementRequestMainSections";
 import { ProcurementRequestHeaderSection } from "./sections/ProcurementRequestHeaderSection";
 import { ProcurementRequestSummarySection } from "./sections/ProcurementRequestSummarySection";
-import { ProcurementRequestAuditSection } from "./sections/ProcurementRequestAuditSection";
+import { ProcurementAuditSection } from "../procurement-audit-section";
 import { ProcurementRequestRelatedTab } from "./tabs/ProcurementRequestRelatedTab";
 import { useProcurementDrawerActions } from "./ProcurementRequestDrawer.biz.hook";
 
@@ -129,7 +129,7 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
                 detail={state.detail}
               />
               {!state.creating && props.documentId && (
-                <ProcurementRequestAuditSection
+                <ProcurementAuditSection
                   documentId={props.documentId}
                   api={props.api}
                   queryKey={props.queryKey}

@@ -239,6 +239,9 @@ export const v2En: V2Dictionary = {
       expand: "Expand",
       collapse: "Collapse",
     },
+    activityTimeline: {
+      empty: "No activities recorded",
+    },
     dropdown: {
       optionsTitle: "Action options",
     },

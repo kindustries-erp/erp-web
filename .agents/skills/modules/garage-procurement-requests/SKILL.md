@@ -14,8 +14,8 @@ description: Module tri thức Frontend V2 cho Quản lý Đề nghị Mua hàng
 - **Core** `src/v2/core/procurement/` quản lý mọi thành phần tái sử dụng của họ mua hàng (PR và PO):
   - **Table Columns** (`columns/procurementRequestColumns.tsx`): 9 cột dữ liệu với `headerFilter`, `V2TableText` tương tác click xem chi tiết + copy, format tiền tệ VNĐ, badge trạng thái ngữ nghĩa (`ProcurementStatusBadge`). Cột "Người tạo" (`createdBy`) và "Người duyệt" (`approver`) hiển thị `createdByEmail` / `approverEmail` từ API; filter và options dùng email (không UUID). Người duyệt = người đã duyệt, chưa duyệt thì người được giao (`COALESCE(approvedBy, approverId)`).
   - **Table Query & Search Engine**: Hàm `toProcurementListParams` chuyển đổi đầy đủ `V2TableQuery` (gồm `column_filters`, `column_search`, `column_operators`, `date_ranges`, `sort`, `search`) sang query params JSON chuẩn V2, kết nối trực tiếp với Database QueryBuilder bên API backend (`TABLE_COLUMNS`).
-  - **Drawer Chuẩn V2** (`components/organisms/procurement-request-drawer/ProcurementRequestDrawer.tsx`): Tích hợp 3 Top Navigation Tabs (`general`: Chi tiết & Dòng hàng, `audit`: Nhật ký duyệt `DrawerAuditTimeline`, `traceability`: Chứng từ PO liên kết qua `DrawerRelatedDeck`). Mỗi drawer nằm trong folder riêng, có `index.ts`.
-  - **Atomic Sections (< 180 LoC)**: Tách biệt rõ `ProcurementRequestMainSections.tsx`, `sections/ProcurementRequestHeaderSection.tsx`, `sections/ProcurementRequestSummarySection.tsx`, `tabs/ProcurementRequestApprovalTab.tsx`, `tabs/ProcurementRequestRelatedTab.tsx`, `ProcurementRequestDrawer.biz.hook.ts` (nút duyệt footer). Dòng hàng dùng chung `components/organisms/procurement-lines-editor/`.
+  - **Drawer Chuẩn V2** (`components/organisms/procurement-request-drawer/ProcurementRequestDrawer.tsx` và `procurement-order-drawer/ProcurementOrderDrawer.tsx`): Tích hợp phân vùng "Nhật ký duyệt" dạng Activity Feed hiện đại (Hình 1) bằng Organism dùng chung `ProcurementAuditSection` (kết nối Molecule `V2ActivityTimeline` hỗ trợ 100% theme dark/light, bo góc Featured Card cho sự kiện duyệt mới nhất, và các dòng streamline rows nối bởi đường spine mảnh cho các sự kiện trước).
+  - **Atomic Sections (< 180 LoC)**: Tách biệt rõ `ProcurementRequestMainSections.tsx`, `sections/ProcurementRequestHeaderSection.tsx`, `sections/ProcurementRequestSummarySection.tsx`, `components/organisms/procurement-audit-section/` (dùng chung cho cả PR và PO), `tabs/ProcurementRequestRelatedTab.tsx`. Dòng hàng dùng chung `components/organisms/procurement-lines-editor/`.
   - **Hook danh sách (< 180 LoC)**: `useProcurementList` là orchestrator, ghép `useProcurementTransition` (mutation chuyển trạng thái/xóa nháp) và `useProcurementRowActions` (nhóm thao tác theo dòng). Modal lý do/xác nhận/xóa/purge nằm ở `components/ProcurementListModals.tsx`.
   - **Hành động trực tiếp**: Ở chế độ xem (View Mode), các thao tác duyệt (Gửi duyệt, Duyệt, Từ chối, Hủy...) được kích hoạt trực tiếp từ Drawer Footer hoặc menu dropdown `Thao tác`.
   - **View/Edit (PR và PO dùng chung quy ước)**: `open(id, "view" | "edit")` mở drawer; list remount theo `key={id-mode}`. Nút Chỉnh sửa hiện khi có quyền và chỉ bật khi đã tải xong và bản ghi là nháp (`editable = creating || (Boolean(detail.data) && status === "DRAFT")`), để tránh nút nhấp nháy khi đang tải. Lưu bản ghi cũ gọi `onSaved(id)` và về chế độ xem; tạo mới đóng drawer. Hủy khi đã đổi hỏi xác nhận (`ProcurementDiscardModal`, `confirmOnClose = dirty && !viewing`); chưa đổi thì về view ngay. Dirty so với `initial` bằng `form/procurementDirty.ts`.
@@ -43,15 +43,16 @@ src/v2/core/procurement/
 │   │   └── procurement-lines-editor/      # Bảng nhập dòng hàng hóa / dịch vụ
 │   │       ├── ProcurementLinesEditor.tsx # Khung bảng và nút thêm dòng (< 90 LoC)
 │   │       └── ProcurementLineRow.tsx     # Dòng chi tiết nhập liệu mobile-first (< 160 LoC)
+│   │   ├── procurement-audit-section/     # Organism nhật ký duyệt dùng chung PR & PO (< 70 LoC, V2ActivityTimeline)
 │   │   ├── procurement-request-drawer/    # Drawer đề nghị mua (folder-per-component)
-│   │   │   ├── ProcurementRequestDrawer.tsx        # V2StandardDrawer với 2 Top Tabs
+│   │   │   ├── ProcurementRequestDrawer.tsx        # V2StandardDrawer dùng trực tiếp ProcurementAuditSection
 │   │   │   ├── ProcurementRequestDrawer.hook.ts    # Hook form, mode, tabs
 │   │   │   ├── ProcurementRequestDrawer.biz.hook.ts # Nút footer + useProcurementRequestSave (lưu)
 │   │   │   ├── ProcurementRequestMainSections.tsx  # Phần trái: dòng hàng
-│   │   │   ├── sections/                           # HeaderSection (+ HeaderView), SummarySection, AuditSection (+ helper)
+│   │   │   ├── sections/                           # HeaderSection, SummarySection
 │   │   │   ├── tabs/                               # RelatedTab
 │   │   │   └── index.ts
-│   │   └── procurement-order-drawer/      # Drawer đơn mua (PO), cùng cấu trúc
+│   │   └── procurement-order-drawer/      # Drawer đơn mua (PO), tích hợp ProcurementAuditSection
 │   ├── ProcurementListPage.tsx            # Template bảng V2ModulePage (< 130 LoC)
 │   ├── ProcurementListModals.tsx          # 4 modal: lý do, xóa, purge, xác nhận
 │   └── ProcurementReasonModal.tsx         # Modal nhập lý do từ chối/hủy/đóng
