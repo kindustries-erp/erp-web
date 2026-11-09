@@ -124,3 +124,12 @@ src/v2/core/procurement/
 - **Chế độ đã xóa mềm**: không mở được drawer (click bị bỏ qua); menu dòng chỉ còn `Xóa vĩnh viễn` khi có quyền `purge` (`purgeActions` của `useProcurementList`).
 - **Tách file**: `GarageProcurementRequestsPage.hook.ts` (state hai tab, `resolveDrawerTarget`, tab đang mở) và `GarageProcurementRequestsPage.tabs.tsx` (dựng `V2ModuleTab`). Trang chính 244 dòng.
 - **Query**: `ProcurementTableQuery = V2TableQuery & { status?, deleted? }`; `toProcurementListParams` gửi `status` và `deleted`; `withProcurementFilter` gắn `deleted` vào gợi ý cột.
+
+## 10. Cập nhật 2026-11-09: thông báo duyệt và deep link từ chuông
+
+- Chuông V2 (`src/core/components/layout/V2ShellLayout.tsx`) truyền `onNotificationClick` → `resolveNotificationHref` (`src/v2/app/router/notificationTargetRoutes.ts`) → `navigateV2Url` (`src/v2/shared/utils/v2Url.ts`, pushState + popstate).
+- Đích `PROCUREMENT_REQUEST_GARAGE`: `action=APPROVE` → `/garage-procurement?tab=requests&open=<id>&action=APPROVE`; `VIEW` → `?tab=requests&open=<id>`. Giữ tiền tố `/v2` nếu đang ở `/v2/*`.
+- Hook `useProcurementDeepLink` (core `procurement/hooks/`) gọi trong `useGarageProcurementListStates`: đọc `open`/`action`, tải chi tiết qua `config.api.get`; mở `ProcurementApproveModal` nếu đúng người duyệt được chỉ định và phiếu `PENDING_APPROVAL` (qua `applyApprovalGate`), còn lại mở drawer xem. Lỗi tải báo toast. Luôn xóa `open`/`action` khỏi URL sau khi xử lý.
+- Tab `?tab=` được theo dõi theo URL (`useGarageProcurementActiveTab`), nên đổi tab khi đang mở trang vẫn đúng.
+- Response PR và PO trả `createdBy` (id) song song `createdByEmail` (đồng nhất, cập nhật 2026-11-09). Gate, deep link và nút gửi duyệt so sánh theo id; backend vẫn chặn duyệt phiếu của chính mình (400).
+- Modal duyệt từ thông báo nhận dữ liệu chi tiết; `branchName` không có trong response chi tiết nên modal không hiện chi nhánh.

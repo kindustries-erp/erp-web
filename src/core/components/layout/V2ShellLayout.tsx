@@ -23,7 +23,12 @@ import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
 import { useQuery } from "@tanstack/react-query";
-import { notificationsApi } from "@/core/api/notifications";
+import {
+  notificationsApi,
+  type CoreNotification,
+} from "@/core/api/notifications";
+import { resolveNotificationHref } from "@/v2/app/router/notificationTargetRoutes";
+import { navigateV2Url } from "@/v2/shared/utils/v2Url";
 
 interface V2ShellLayoutProps {
   children: React.ReactNode;
@@ -56,6 +61,15 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   });
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  /** Bấm thông báo có đích được hỗ trợ thì mở đúng chứng từ; không thì chỉ đánh dấu đã đọc. */
+  const handleNotificationClick = useCallback((notif: CoreNotification) => {
+    const href = resolveNotificationHref(
+      notif.target,
+      window.location.pathname,
+    );
+    if (href) navigateV2Url(href);
+  }, []);
 
   const sections = useV2AdaptedNavSections();
   const { tabs, activeTabId, handleTabSelect, handleTabClose } =
@@ -294,7 +308,10 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   );
 
   const notificationNode = (
-    <V2NotificationPopover notifications={notifications}>
+    <V2NotificationPopover
+      notifications={notifications}
+      onNotificationClick={handleNotificationClick}
+    >
       <V2Button
         type="button"
         variant="ghost"

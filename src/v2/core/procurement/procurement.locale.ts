@@ -176,6 +176,9 @@ registerV2ModuleLocale("procurement", {
       message: "Đơn nháp sẽ bị xóa. Bạn có chắc không?",
     },
     listLoadError: "Không thể tải danh sách",
+    deepLink: {
+      notFound: "Không tìm thấy chứng từ hoặc bạn không có quyền xem",
+    },
     actionError: "Không thực hiện được thao tác",
     actionDone: "Đã cập nhật chứng từ",
     empty: "Không có dữ liệu",
@@ -354,6 +357,9 @@ registerV2ModuleLocale("procurement", {
       message: "The draft will be deleted. Are you sure?",
     },
     listLoadError: "Unable to load the list",
+    deepLink: {
+      notFound: "Document not found or you do not have permission to view it",
+    },
     actionError: "Action failed",
     actionDone: "Document updated",
     empty: "No data",

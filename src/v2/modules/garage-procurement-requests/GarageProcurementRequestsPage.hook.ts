@@ -1,8 +1,10 @@
 import * as React from "react";
 import { updateV2SearchParams } from "@/v2/shared/utils/v2Url";
+import { useV2SearchParams } from "@/v2/shared/hooks/useV2SearchParams";
 import {
   getOrderStatusOptions,
   getRequestStatusOptions,
+  useProcurementDeepLink,
   useProcurementListTabState,
   type ProcurementDocumentRef,
   type ProcurementListState,
@@ -29,29 +31,32 @@ export function resolveDrawerTarget<T>(
   return target as T | null;
 }
 
-/** Tab đang mở: lấy từ `?tab=`, thiếu thì đặt về "requests" trên URL. */
+const isTabKey = (value: string | null): value is "requests" | "orders" =>
+  value === "orders" || value === "requests";
+
+/**
+ * Tab đang mở: lấy từ `?tab=`, thiếu thì đặt về "requests" trên URL.
+ * Theo dõi URL: khi `?tab=` đổi lúc đang mở trang (ví dụ bấm thông báo) thì chuyển tab theo.
+ */
 export function useGarageProcurementActiveTab(
   defaultTab: "requests" | "orders",
 ) {
-  const [activeTab, setActiveTab] = React.useState<string>(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab");
-      if (tab === "orders" || tab === "requests") return tab;
-    }
-    return defaultTab;
-  });
+  const urlTab = useV2SearchParams().get("tab");
+  const [activeTab, setActiveTab] = React.useState<string>(() =>
+    isTabKey(urlTab) ? urlTab : defaultTab,
+  );
 
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (!params.get("tab")) {
-        updateV2SearchParams((search) => {
-          search.set("tab", "requests");
-        }, "replace");
-      }
+    if (isTabKey(urlTab)) setActiveTab(urlTab);
+  }, [urlTab]);
+
+  React.useEffect(() => {
+    if (!urlTab) {
+      updateV2SearchParams((search) => {
+        search.set("tab", "requests");
+      }, "replace");
     }
-  }, []);
+  }, [urlTab]);
 
   return [activeTab, setActiveTab] as const;
 }
@@ -97,6 +102,9 @@ export function useGarageProcurementListStates(
     buildColumns: garageProcurementRequestsDisplay.buildColumns,
     statusItems: requestStatusItems,
   });
+
+  // Bấm thông báo mở đúng phiếu (?open=&action=) trên tab đề nghị
+  useProcurementDeepLink(garageProcurementRequestsConfig, requestsState);
 
   const orders = useProcurementListTabState<ProcurementOrderRow>({
     t,

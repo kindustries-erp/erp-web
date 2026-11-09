@@ -33,4 +33,5 @@ export * from "./procurement.intent";
 export * from "./hooks/useProcurementListFilter";
 export * from "./hooks/useProcurementListView";
 export * from "./hooks/useProcurementListTabState";
+export * from "./hooks/useProcurementDeepLink";
 export * from "./columns/procurementStatusOptions";
