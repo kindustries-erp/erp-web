@@ -34,10 +34,15 @@ function setup(opts: {
     if (opts.fail) throw new Error("404");
     return opts.row;
   });
-  const config = { queryKey: "garage-pr", api: { get } } as never;
+  const config = {
+    queryKey: "garage-pr",
+    api: { get },
+    rowLabel: (row: { id: string }) => `PR ${row.id}`,
+  } as never;
   const state = {
     start: vi.fn(),
     openView: vi.fn(),
+    showAlreadyDecided: vi.fn(),
     approval: {
       gate: { configured: true, enabled: true, currentUserId: ME },
     },
@@ -99,6 +104,22 @@ describe("useProcurementDeepLink", () => {
     });
 
     await waitFor(() => expect(state.openView).toHaveBeenCalledWith("req-1"));
+    expect(state.start).not.toHaveBeenCalled();
+  });
+
+  it("bấm thông báo duyệt nhưng phiếu đã duyệt: hiện modal đã xử lý, không mở drawer, không mở modal duyệt", async () => {
+    const { state } = setup({
+      search: "open=req-1&action=APPROVE",
+      row: { ...pending(ME), status: "APPROVED" },
+    });
+
+    await waitFor(() =>
+      expect(state.showAlreadyDecided).toHaveBeenCalledWith({
+        rowLabel: "PR req-1",
+        status: "APPROVED",
+      }),
+    );
+    expect(state.openView).not.toHaveBeenCalled();
     expect(state.start).not.toHaveBeenCalled();
   });
 

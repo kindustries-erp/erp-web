@@ -28,12 +28,16 @@ const subjectOf = (row: DeepLinkRow): ApprovalSubject => {
 /**
  * Mở chứng từ từ URL (`?open=<id>&action=APPROVE`), dùng khi bấm thông báo.
  * - Đúng người duyệt được chỉ định và phiếu đang chờ duyệt: mở modal duyệt.
+ * - Yêu cầu duyệt nhưng phiếu đã không còn chờ duyệt: hiện modal "đã xử lý" (không mở drawer im lặng).
  * - Còn lại: mở drawer xem phiếu. Backend vẫn kiểm quyền khi duyệt thật.
  * Sau khi xử lý, xóa `open` và `action` khỏi URL để tải lại không mở lại.
  */
 export function useProcurementDeepLink<T extends DeepLinkRow>(
   config: ProcurementListConfig<T>,
-  state: Pick<ProcurementListState<T>, "start" | "openView" | "approval">,
+  state: Pick<
+    ProcurementListState<T>,
+    "start" | "openView" | "approval" | "showAlreadyDecided"
+  >,
 ): void {
   const { t } = useV2Translation();
   const params = useV2SearchParams();
@@ -48,8 +52,9 @@ export function useProcurementDeepLink<T extends DeepLinkRow>(
     retry: false,
   });
 
-  const { start, openView } = state;
+  const { start, openView, showAlreadyDecided } = state;
   const gate: ApprovalGate = state.approval.gate;
+  const rowLabel = config.rowLabel;
 
   React.useEffect(() => {
     if (!openId) {
@@ -86,7 +91,12 @@ export function useProcurementDeepLink<T extends DeepLinkRow>(
       applyApprovalGate(["approve"], gate, subjectOf(row)).includes("approve");
 
     if (canApprove) start(row, "approve");
-    else openView(openId);
+    else if (action === "APPROVE" && row.status !== "PENDING_APPROVAL") {
+      showAlreadyDecided({
+        rowLabel: rowLabel(row),
+        status: row.status ?? null,
+      });
+    } else openView(openId);
     clearParams();
   }, [
     openId,
@@ -97,6 +107,8 @@ export function useProcurementDeepLink<T extends DeepLinkRow>(
     gate,
     start,
     openView,
+    showAlreadyDecided,
+    rowLabel,
     t,
   ]);
 }

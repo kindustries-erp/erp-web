@@ -1,7 +1,13 @@
 import * as React from "react";
 import { formatDistanceToNow } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
-import { AlertCircle, CheckCircle2, Info, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCheck,
+  CheckCircle2,
+  Info,
+  Trash2,
+} from "lucide-react";
 import { V2Button, V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
@@ -38,11 +44,14 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
   const { t, locale } = useV2Translation();
   const dateLocale = locale === "en" ? enUS : vi;
 
+  // Click vào nội dung chỉ điều hướng; đánh dấu đã đọc dùng icon riêng.
   const handleClick = () => {
-    if (!notification.isRead) {
-      onMarkAsRead(notification.id);
-    }
     onClick?.(notification);
+  };
+
+  const handleMarkAsRead = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onMarkAsRead(notification.id);
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -50,21 +59,28 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
     onDelete(notification.id);
   };
 
+  const markAsReadLabel = t("v2.notifications.markAsRead", "Đánh dấu đã đọc");
+
   return (
     <div
       onClick={handleClick}
       className={cn(
         "group flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors relative",
         notification.isRead
-          ? "opacity-60 hover:bg-surface-hover dark:hover:bg-white/[0.04]"
-          : "bg-primary/5 hover:bg-primary/10 dark:bg-teal-500/[0.08] dark:hover:bg-teal-500/[0.12] dark:border dark:border-teal-500/20",
+          ? "opacity-60 hover:bg-[color:var(--popup-bg-hover)]"
+          : "bg-primary/5 hover:bg-[color:var(--popup-bg-hover)] dark:border dark:border-primary/20",
       )}
     >
       <div className="shrink-0 mt-0.5">
         {renderNotificationIcon(notification.type)}
       </div>
 
-      <div className="flex-1 min-w-0 pr-6">
+      <div
+        className={cn(
+          "flex-1 min-w-0",
+          notification.isRead ? "pr-6" : "pr-20 md:pr-16",
+        )}
+      >
         <V2Text
           as="h4"
           variant="body-sm"
@@ -95,6 +111,21 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
           })}
         </V2Text>
       </div>
+
+      {!notification.isRead && (
+        <V2Button
+          type="button"
+          variant="ghost"
+          size="xs"
+          aria-label={markAsReadLabel}
+          title={markAsReadLabel}
+          onClick={handleMarkAsRead}
+          data-testid="mark-as-read-button"
+          className="absolute top-1 right-9 h-11 w-11 md:h-7 md:w-7 p-0 rounded-md text-primary hover:bg-primary/10 transition-colors border-none shadow-none flex items-center justify-center"
+        >
+          <CheckCheck className="w-4 h-4" />
+        </V2Button>
+      )}
 
       <V2Button
         type="button"

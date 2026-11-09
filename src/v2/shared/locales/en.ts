@@ -79,6 +79,7 @@ export const v2En: V2Dictionary = {
       empty: "No notifications yet",
       deleteAll: "Delete all",
       markAllAsRead: "Mark all as read",
+      markAsRead: "Mark as read",
       deleteItem: "Delete notification",
     },
     topbar: {

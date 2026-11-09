@@ -79,6 +79,7 @@ export const v2Vi = {
       empty: "Chưa có thông báo nào",
       deleteAll: "Xóa tất cả",
       markAllAsRead: "Đánh dấu đã đọc tất cả",
+      markAsRead: "Đánh dấu đã đọc",
       deleteItem: "Xóa thông báo",
     },
     topbar: {

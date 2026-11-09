@@ -133,3 +133,10 @@ src/v2/core/procurement/
 - Tab `?tab=` được theo dõi theo URL (`useGarageProcurementActiveTab`), nên đổi tab khi đang mở trang vẫn đúng.
 - Response PR và PO trả `createdBy` (id) song song `createdByEmail` (đồng nhất, cập nhật 2026-11-09). Gate, deep link và nút gửi duyệt so sánh theo id; backend vẫn chặn duyệt phiếu của chính mình (400).
 - Modal duyệt từ thông báo nhận dữ liệu chi tiết; `branchName` không có trong response chi tiết nên modal không hiện chi nhánh.
+
+## 11. Đã duyệt rồi (thông báo và nút Duyệt) (cập nhật 2026-11-09)
+
+- Bấm thông báo `action=APPROVE` mà phiếu không còn `PENDING_APPROVAL`: `useProcurementDeepLink` gọi `showAlreadyDecided` và mở `ProcurementAlreadyDecidedModal` (core `procurement/components/organisms/procurement-already-decided-modal/`), không mở drawer im lặng. Nhãn trạng thái lấy từ `v2.procurement.status.*`.
+- Bấm Duyệt mà server trả 409 `code: INVALID_STATUS_TRANSITION` (kèm `currentStatus`): `useProcurementTransition` đóng modal duyệt, làm mới danh sách và gọi `onAlreadyDecided` thay toast lỗi. Helper: `isStatusConflictError`, `readCurrentStatus` trong `shared/utils/v2ApiError.ts`.
+- State modal: `hooks/useProcurementAlreadyDecided.ts`. Locale: `procurement.alreadyDecided.locale.ts` (`v2.procurementAlreadyDecided.*`).
+- Tab `orders` chưa có deep link và chưa có thông báo PO, nên chưa áp dụng.

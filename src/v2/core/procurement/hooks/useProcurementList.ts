@@ -12,6 +12,7 @@ import { useProcurementPurge } from "./useProcurementPurge";
 import { useProcurementTransition } from "./useProcurementTransition";
 import { useProcurementRowActions } from "./useProcurementRowActions";
 import { useProcurementApprovalGate } from "./useProcurementApprovalGate";
+import { useProcurementAlreadyDecided } from "./useProcurementAlreadyDecided";
 import {
   consumeProcurementRequestIntent,
   useProcurementIntentStore,
@@ -82,6 +83,9 @@ export function useProcurementList<T extends { id: string }>(
     [t],
   );
 
+  const alreadyDecidedState = useProcurementAlreadyDecided();
+  const { showAlreadyDecided } = alreadyDecidedState;
+
   const { transition, remove } = useProcurementTransition(config, {
     onTransitioned: () => {
       setReasonTarget(null);
@@ -89,6 +93,20 @@ export function useProcurementList<T extends { id: string }>(
       approval.closeSubmit();
     },
     onRemoved: () => setDeleteTarget(null),
+    onAlreadyDecided: (status) => {
+      const row =
+        confirmTarget?.row ??
+        reasonTarget?.row ??
+        approval.submitTarget ??
+        null;
+      setReasonTarget(null);
+      setConfirmTarget(null);
+      approval.closeSubmit();
+      showAlreadyDecided({
+        rowLabel: row ? config.rowLabel(row) : "",
+        status,
+      });
+    },
   });
 
   const { requestSubmit } = approval;
@@ -180,6 +198,9 @@ export function useProcurementList<T extends { id: string }>(
     purgeTarget: purgeState.purgeTarget,
     closePurge: purgeState.closePurge,
     confirmPurge: purgeState.confirmPurge,
+    alreadyDecided: alreadyDecidedState.alreadyDecided,
+    showAlreadyDecided,
+    closeAlreadyDecided: alreadyDecidedState.closeAlreadyDecided,
     closeReason: () => setReasonTarget(null),
     closeConfirm: () => setConfirmTarget(null),
     closeDelete: () => setDeleteTarget(null),

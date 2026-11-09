@@ -1,5 +1,6 @@
 import "./procurement.locale";
 import "./procurement.approval.locale";
+import "./procurement.alreadyDecided.locale";
 
 export * from "./procurement.rules";
 export * from "./procurement.types";
