@@ -70,7 +70,7 @@ const ORDER_VIEW_VISIBILITY = {
 
 export const garageProcurementOrdersDisplay: ProcurementPageDisplay<ProcurementOrderRow> =
   {
-    tableId: "erp-garage-procurement-orders-table",
+    tableId: "procurement-orders-garage-table",
     viewVisibility: ORDER_VIEW_VISIBILITY,
     titleKey: "v2.garageProcurementOrders.title",
     descriptionKey: "v2.garageProcurementOrders.description",

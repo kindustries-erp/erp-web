@@ -62,7 +62,7 @@ const REQUEST_VIEW_VISIBILITY = {
 
 export const garageProcurementRequestsDisplay: ProcurementPageDisplay<ProcurementRequestRow> =
   {
-    tableId: "erp-garage-procurement-requests-table",
+    tableId: "procurement-requests-garage-table",
     viewVisibility: REQUEST_VIEW_VISIBILITY,
     titleKey: "v2.garageProcurementRequests.title",
     descriptionKey: "v2.garageProcurementRequests.description",
