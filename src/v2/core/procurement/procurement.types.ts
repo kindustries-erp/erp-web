@@ -40,8 +40,9 @@ export interface ProcurementOrderRow {
   branchName: string | null;
   paymentStatus: string;
   supplierInvoiceNo: string | null;
+  /** Id người tạo (API), dùng để nhận diện người tạo khi duyệt. */
   createdBy: string | null;
-  /** Email người tạo, chỉ có trong danh sách. */
+  /** Email người tạo (API), hiển thị ở cột và tóm tắt "Người tạo". */
   createdByEmail?: string | null;
   issuedAt: string | null;
 }
@@ -58,6 +59,7 @@ export interface ProcurementRequestRow {
   estimatedTotal?: string | number | null;
   branchId?: string | null;
   branchName: string | null;
+  /** Id người tạo (API), dùng để nhận diện người tạo khi duyệt. */
   createdBy: string | null;
   /** Email người tạo (API), hiển thị ở cột "Người tạo". */
   createdByEmail?: string | null;

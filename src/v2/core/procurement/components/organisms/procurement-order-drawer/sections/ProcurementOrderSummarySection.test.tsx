@@ -9,7 +9,8 @@ const detail = {
   status: "APPROVED",
   fulfillmentStatus: "NONE",
   paymentStatus: "UNPAID",
-  createdBy: "Thủ kho",
+  createdBy: "uuid-thu-kho",
+  createdByEmail: "thukho@x.vn",
   requestId: "pr-1",
 } as unknown as ProcurementOrderDetail;
 
@@ -24,6 +25,17 @@ describe("ProcurementOrderSummarySection", () => {
     expect(screen.getByText("Tổng tiền")).toBeDefined();
     expect(screen.getByText("Tổng đã duyệt")).toBeDefined();
     expect(screen.getByText("Tổng quan")).toBeDefined();
+  });
+
+  it("hiển thị email người tạo, không hiển thị id", () => {
+    render(
+      <ProcurementOrderSummarySection
+        form={{ lines: [], requestId: null }}
+        detail={detail}
+      />,
+    );
+    expect(screen.getByText("thukho@x.vn")).toBeDefined();
+    expect(screen.queryByText("uuid-thu-kho")).toBeNull();
   });
 
   it("không hiển thị dòng 'Từ đề nghị mua' khi đơn lập tay (không có requestId)", () => {
