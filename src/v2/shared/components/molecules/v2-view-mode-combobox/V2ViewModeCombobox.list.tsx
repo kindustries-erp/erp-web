@@ -13,6 +13,10 @@ type ListProps = Pick<V2ViewModeComboboxProps, "onEdit" | "onDelete"> & {
   activeKey: string;
   onSelect: (key: string) => void;
   close: () => void;
+  /** Nhãn nút sửa/xóa và tên danh sách; mặc định là nhãn chế độ xem */
+  listLabel?: string;
+  editLabel?: string;
+  deleteLabel?: string;
 };
 
 export const V2ViewModeList: React.FC<ListProps> = ({
@@ -22,10 +26,13 @@ export const V2ViewModeList: React.FC<ListProps> = ({
   onEdit,
   onDelete,
   close,
+  listLabel,
+  editLabel,
+  deleteLabel,
 }) => {
   const { t } = useV2Translation();
   return (
-    <ul role="listbox" className="flex flex-col gap-0.5">
+    <ul role="listbox" aria-label={listLabel} className="flex flex-col gap-0.5">
       {items.map((item) => {
         const active = item.key === activeKey;
         return (
@@ -53,7 +60,9 @@ export const V2ViewModeList: React.FC<ListProps> = ({
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                aria-label={t("v2.table.editView", "Sửa chế độ xem")}
+                aria-label={
+                  editLabel ?? t("v2.table.editView", "Sửa chế độ xem")
+                }
                 onClick={() => onEdit(item.key)}
                 className="opacity-0 group-hover:opacity-100"
               >
@@ -65,7 +74,9 @@ export const V2ViewModeList: React.FC<ListProps> = ({
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                aria-label={t("v2.table.deleteView", "Xóa chế độ xem")}
+                aria-label={
+                  deleteLabel ?? t("v2.table.deleteView", "Xóa chế độ xem")
+                }
                 onClick={() => onDelete(item.key)}
                 className="text-destructive opacity-0 group-hover:opacity-100"
               >

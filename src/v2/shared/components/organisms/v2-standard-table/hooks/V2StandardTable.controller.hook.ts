@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useV2RowSelection } from "./V2StandardTable.selection";
 import { useV2TableState } from "./V2StandardTable.state.hook";
 import { useV2TableView } from "./V2StandardTable.view.hook";
@@ -36,5 +36,14 @@ export function useV2TableController<T>(props: V2StandardTableProps<T>) {
     }
   }, [mode, state.query.page, totalPages, setPage]);
 
-  return { mode, state, columnsByKey, view, selection };
+  /** Nguồn options theo khóa cột, dùng cho popup lọc cột và editor bộ lọc */
+  const fetchOptionsForKey = useCallback(
+    (columnKey: string) => {
+      const column = columnsByKey.get(columnKey);
+      return column ? view.fetchOptionsFor(column) : undefined;
+    },
+    [columnsByKey, view.fetchOptionsFor],
+  );
+
+  return { mode, state, columnsByKey, fetchOptionsForKey, view, selection };
 }

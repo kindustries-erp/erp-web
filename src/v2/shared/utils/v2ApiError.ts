@@ -20,6 +20,10 @@ export function extractV2ApiError(error: unknown, fallback: string): string {
   return message || fallback;
 }
 
+/** 403: người dùng không có quyền với tài nguyên này; thử lại không giúp được gì. */
+export const isForbiddenError = (error: unknown): boolean =>
+  (error as { response?: { status?: number } })?.response?.status === 403;
+
 export const isDocumentInUseError = (error: unknown): boolean =>
   (error as { response?: { status?: number } })?.response?.status === 409 &&
   errorBody(error)?.code === "DOCUMENT_IN_USE";

@@ -1,9 +1,11 @@
 import * as React from "react";
-import { ChevronDown, Plus, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { Popover, PopoverContent, PopoverTrigger } from "@/v2/shared/ui";
 import { V2FilterGroupList } from "./V2ViewModeCombobox.filter";
+import { V2ViewModeCreateButton } from "./V2ViewModeCombobox.create";
+import { V2FilterPresetSection } from "./V2ViewModeCombobox.filterpresets";
 import { getTriggerLabel } from "./V2ViewModeCombobox.helper";
 import { V2ViewModeList } from "./V2ViewModeCombobox.list";
 import { cn } from "@/v2/shared/utils/cn";
@@ -20,12 +22,20 @@ export const V2ViewModeCombobox: React.FC<V2ViewModeComboboxProps> = ({
   onEdit,
   onDelete,
   filterGroup,
+  customFilters,
   className,
 }) => {
   const { t } = useV2Translation();
   const [open, setOpen] = React.useState(false);
   const active = items.find((i) => i.key === activeKey) ?? items[0];
-  const label = getTriggerLabel(active?.label, filterGroup);
+  const activePreset = customFilters?.items.find(
+    (i) => i.key === customFilters.activeKey,
+  );
+  const label = getTriggerLabel(
+    active?.label,
+    filterGroup,
+    activePreset?.label,
+  );
   const hasViews = items.length > 0;
 
   return (
@@ -56,6 +66,12 @@ export const V2ViewModeCombobox: React.FC<V2ViewModeComboboxProps> = ({
         {filterGroup && (
           <>
             <V2FilterGroupList {...filterGroup} close={() => setOpen(false)} />
+            {customFilters && (
+              <V2FilterPresetSection
+                {...customFilters}
+                close={() => setOpen(false)}
+              />
+            )}
             {hasViews && <div className="my-1 border-t border-border/60" />}
           </>
         )}
@@ -75,19 +91,13 @@ export const V2ViewModeCombobox: React.FC<V2ViewModeComboboxProps> = ({
           </>
         )}
         {onCreate && (
-          <V2Button
-            type="button"
-            variant="ghost"
-            size="sm"
+          <V2ViewModeCreateButton
+            label={t("v2.table.createView", "Tạo chế độ xem mới")}
             onClick={() => {
               onCreate();
               setOpen(false);
             }}
-            leftIcon={<Plus className="h-3.5 w-3.5" />}
-            className="mt-1 h-7 w-full justify-start border-t border-border/60 px-2 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary transition-colors"
-          >
-            {t("v2.table.createView", "Tạo chế độ xem mới")}
-          </V2Button>
+          />
         )}
       </PopoverContent>
     </Popover>

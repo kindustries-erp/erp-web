@@ -24,6 +24,47 @@ describe("parseViewPresetState", () => {
     expect(parseViewPresetState(STATE)).toEqual(STATE);
   });
 
+  it("giữ filterKey của custom view; view cũ không có thì không sinh khóa", () => {
+    const parsed = parseViewPresetState({
+      customViews: [
+        {
+          key: "custom_2",
+          label: "Chờ duyệt",
+          baseKey: "all",
+          visibility: { code: true },
+          order: ["code"],
+          filterKey: "pending",
+        },
+        {
+          key: "custom_3",
+          label: "Cũ",
+          baseKey: "all",
+          visibility: {},
+          order: [],
+        },
+        {
+          key: "custom_4",
+          label: "Sai kiểu",
+          baseKey: "all",
+          visibility: {},
+          order: [],
+          filterKey: 7,
+        },
+      ],
+    });
+
+    expect(parsed?.customViews[0]).toEqual({
+      key: "custom_2",
+      label: "Chờ duyệt",
+      baseKey: "all",
+      visibility: { code: true },
+      order: ["code"],
+      filterKey: "pending",
+    });
+    expect(parsed?.customViews[1]).not.toHaveProperty("filterKey");
+    expect(parsed?.customViews[2]).not.toHaveProperty("filterKey");
+  });
+
   it("bỏ qua view lỗi kiểu, không ném lỗi", () => {
     const parsed = parseViewPresetState({
       customViews: [
@@ -83,6 +124,36 @@ describe("localStorageViewPresets", () => {
 });
 
 describe("readV2ViewState", () => {
+  it("giữ customFilters hợp lệ và bỏ mục sai kiểu", () => {
+    const parsed = parseViewPresetState({
+      customViews: [],
+      customFilters: [
+        {
+          key: "cf_1",
+          label: "Chờ duyệt",
+          groupKey: "pending",
+          query: { q: "PO", evil: 1 },
+        },
+        { key: "cf_2", label: "Thiếu query" },
+        "rác",
+      ],
+    });
+
+    expect(parsed?.customFilters).toEqual([
+      {
+        key: "cf_1",
+        label: "Chờ duyệt",
+        groupKey: "pending",
+        query: { q: "PO" },
+      },
+    ]);
+  });
+
+  it("dữ liệu cũ không có customFilters thì để trống (undefined)", () => {
+    const parsed = parseViewPresetState({ customViews: [] });
+    expect(parsed?.customFilters).toBeUndefined();
+  });
+
   it("trả trạng thái rỗng khi chưa lưu gì", () => {
     const storage = { load: () => null, save: vi.fn(), clear: vi.fn() };
     expect(readV2ViewState("t", storage)).toEqual({ customViews: [] });

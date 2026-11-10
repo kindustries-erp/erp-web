@@ -7,7 +7,13 @@ import type {
   V2OperatorFilter,
 } from "@/v2/shared/types/v2-table";
 
-export type V2FilterOptionsStatus = "idle" | "loading" | "error" | "ready";
+/** `forbidden`: API trả 403 cho gợi ý giá trị cột; không retry, hiện thông báo quyền thay vì lỗi chung */
+export type V2FilterOptionsStatus =
+  | "idle"
+  | "loading"
+  | "error"
+  | "forbidden"
+  | "ready";
 
 /** Dữ liệu danh sách lựa chọn do organism truy vấn và truyền xuống (molecule không gọi API) */
 export interface V2FilterOptionsState {
@@ -16,6 +22,8 @@ export interface V2FilterOptionsState {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   onLoadMore: () => void;
+  /** Tải lại danh sách sau lỗi (không dùng cho 403) */
+  onRetry?: () => void;
 }
 
 export const V2_IDLE_OPTIONS_STATE: V2FilterOptionsState = {
