@@ -3,7 +3,7 @@ import React from "react";
 import { V2Stack } from "./V2Stack";
 
 const meta: Meta<typeof V2Stack> = {
-  title: "Components/Atoms/Display/V2Stack",
+  title: "Components/Atoms/V2Stack",
   component: V2Stack,
   tags: ["autodocs"],
 };

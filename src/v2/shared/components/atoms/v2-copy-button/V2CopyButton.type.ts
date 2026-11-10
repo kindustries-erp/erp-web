@@ -8,4 +8,6 @@ export interface V2CopyButtonProps {
   /** Thời gian hiện dấu tích trước khi trở lại biểu tượng sao chép (ms) */
   timeoutMs?: number;
   className?: string;
+  /** Hỗ trợ tabIndex cho accessibility / modal focus */
+  tabIndex?: number;
 }

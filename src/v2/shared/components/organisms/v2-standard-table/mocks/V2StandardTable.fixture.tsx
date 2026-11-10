@@ -83,6 +83,8 @@ type TableComponent = (props: V2StandardTableProps<DemoRow>) => JSX.Element;
 export const renderTable = (
   Component: TableComponent,
   overrides: Partial<V2StandardTableProps<DemoRow>> = {},
+  /** Số lần retry của QueryClient; mặc định 0 để test nhanh, app thật dùng 1 */
+  queryRetry = 0,
 ) => {
   useV2LocaleStore.setState({ locale: "vi" });
   const props: V2StandardTableProps<DemoRow> = {
@@ -97,7 +99,7 @@ export const renderTable = (
     ...overrides,
   };
   const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+    defaultOptions: { queries: { retry: queryRetry } },
   });
   const utils = render(
     <QueryClientProvider client={client}>

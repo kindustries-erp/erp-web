@@ -47,6 +47,8 @@ export const garageEn = {
       viewDetail: "View Details",
       edit: "Edit",
       deleteVoucher: "Delete Voucher",
+      printReceipt: "Print Receipt",
+      printPayment: "Print Payment",
       other: "Other",
       exportExcel: "Export Excel",
     },

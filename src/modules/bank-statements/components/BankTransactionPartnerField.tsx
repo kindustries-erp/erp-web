@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { BusinessPartnerPicker } from "@/v2/modules/business-partners/components/organisms/business-partner-picker";
-import type { PartnerSelectionDirection } from "@/v2/modules/business-partners/domain/rules/partnerSelection";
+import {
+  BusinessPartnerPicker,
+  type PartnerSelectionDirection,
+} from "@/v2/core/business-partners";
 
 export interface BankTransactionPartnerFieldProps {
   editMode: boolean;

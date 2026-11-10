@@ -12,6 +12,7 @@ import {
   ReceiptText,
   Wallet,
   Settings,
+  ClipboardList,
 } from "lucide-react";
 import type {
   RawNavDef,
@@ -127,13 +128,30 @@ export const NAV_DEFS: RawNavDef[] = [
   },
   {
     id: "garage-goods-receipts",
-    sectionId: "inventory",
+    sectionId: "garage",
     labelKey: "v2.nav.items.garageGoodsReceipts",
     fallback: "Nhập kho Garage",
     icon: Package,
     href: "/garage-goods-receipts",
   },
+  {
+    id: "garage-procurement",
+    sectionId: "garage",
+    labelKey: "v2.nav.items.garageProcurement",
+    fallback: "Mua hàng Garage",
+    icon: ClipboardList,
+    href: "/garage-procurement?tab=requests",
+  },
   // v2-module:garage-goods-receipts:nav
+  {
+    id: "permission",
+    sectionId: "settings",
+    labelKey: "v2.nav.items.permission",
+    fallback: "Phân quyền & Vai trò",
+    icon: FileText,
+    href: "/permission",
+  },
+  // v2-module:rbac-roles:nav
   // plop:v2-nav-items
 ];
 
@@ -154,6 +172,11 @@ export const SECTION_DEFS: RawSectionDef[] = [
     id: "manufacturing",
     labelKey: "v2.nav.sections.manufacturing",
     fallback: "SẢN XUẤT",
+  },
+  {
+    id: "garage",
+    labelKey: "v2.nav.sections.garage",
+    fallback: "GARAGE",
   },
   {
     id: "accounting",

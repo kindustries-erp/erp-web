@@ -32,6 +32,9 @@ export function V2ModulePage<T>({
   tabVariant = "page",
   overlays,
   className,
+  pageTabs,
+  activePageTab,
+  onPageTabSelect,
 }: V2ModulePageProps<T>) {
   const page = useV2ModulePage({
     tabs,
@@ -41,13 +44,19 @@ export function V2ModulePage<T>({
     syncUrl,
   });
 
+  const effectivePageTabs = pageTabs;
+  const effectiveActivePageTab = activePageTab;
+  const effectiveOnPageTabSelect = onPageTabSelect;
+
   return (
     <V2PageTabsContext.Provider value={page.context}>
       <V2Stack
         as="section"
         fill
-        gap="md"
-        className={cn("px-2 sm:px-5 pt-1.5 sm:pt-[18px] pb-2", className)}
+        className={cn(
+          "px-2 sm:px-5 pt-1.5 sm:pt-[18px] pb-2 gap-2 sm:gap-4",
+          className,
+        )}
       >
         <V2PageHeader
           title={title}
@@ -57,13 +66,35 @@ export function V2ModulePage<T>({
           tabKeys={page.tabKeys}
           activeKey={page.activeKey}
           register={page.register}
+          pageTabs={effectivePageTabs}
+          activePageTab={effectiveActivePageTab}
+          onPageTabSelect={effectiveOnPageTabSelect}
         />
         <V2TabBar
           variant={tabVariant}
-          tabs={tabs}
-          activeTabKey={page.activeKey}
-          onTabChange={page.handleTabChange}
-          className="shrink-0"
+          tabs={
+            pageTabs
+              ? pageTabs.map((pt) => ({
+                  id: pt.value ?? pt.key ?? "",
+                  key: pt.value ?? pt.key,
+                  label: pt.label,
+                  icon: pt.icon,
+                  badgeCount: pt.badgeCount,
+                  disabled: pt.disabled,
+                }))
+              : tabs
+          }
+          activeTabKey={pageTabs ? effectiveActivePageTab : page.activeKey}
+          onTabChange={
+            pageTabs ? effectiveOnPageTabSelect : page.handleTabChange
+          }
+          className={cn(
+            "shrink-0",
+            effectivePageTabs &&
+              effectivePageTabs.length > 1 &&
+              "hidden sm:flex",
+            !pageTabs && tabs.length <= 1 && "hidden",
+          )}
         />
         <V2Stack grow>
           {tabs.map((tab) => (

@@ -21,6 +21,7 @@ export interface V2NavItemProps extends V2ButtonBaseProps {
   icon: LucideIcon;
   href?: string;
   isActive?: boolean;
+  showLabel?: boolean;
   badgeCount?: number;
   variant?: V2NavItemVariantType;
   indicator?: V2NavIndicatorType;

@@ -16,25 +16,40 @@ export function V2ModuleListTab<T>({ tab }: V2ModuleListTabProps<T>) {
     base: createInitialQuery(tab.initialQuery),
     prefix: tab.key,
   });
-  const data = tab.useData(query);
-
-  const columns = React.useMemo(
+  /** Cột số cần tổng từ API: mọi cột có `summary` trừ nhãn "Tổng cộng" */
+  const summaryKeys = React.useMemo(
     () =>
-      data.summaries
-        ? tab.table.columns.map((column) =>
-            column.summary && data.summaries?.[column.key] !== undefined
-              ? {
-                  ...column,
-                  summary: {
-                    ...column.summary,
-                    total: data.summaries[column.key],
-                  },
-                }
-              : column,
-          )
-        : tab.table.columns,
-    [tab.table.columns, data.summaries],
+      tab.table.columns
+        .filter(
+          (column) => column.summary && column.summary.variant !== "label",
+        )
+        .map((column) => column.key),
+    [tab.table.columns],
   );
+  const queryWithSummaries = React.useMemo(
+    () => ({ ...query, summaryKeys }),
+    [query, summaryKeys],
+  );
+  const data = tab.useData(queryWithSummaries);
+
+  const columns = React.useMemo(() => {
+    const summaries = data.summaries;
+    if (!summaries) return tab.table.columns;
+    return tab.table.columns.map((column) => {
+      if (!column.summary || summaries[column.key] === undefined) return column;
+      const metric = summaries[column.key];
+      return {
+        ...column,
+        summary: {
+          ...column.summary,
+          // Không tính được (null): tổng và lũy kế hiện "—", subtotal trang để bảng tự cộng
+          total: metric?.total ?? null,
+          pageSubtotal: metric?.pageSubtotal,
+          cumulative: metric ? metric.cumulative : null,
+        },
+      };
+    });
+  }, [tab.table.columns, data.summaries]);
 
   const toolbar = React.useMemo(
     () =>

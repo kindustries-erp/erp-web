@@ -1,3 +1,5 @@
+import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
+
 /** Hình dạng bản ghi và payload của `/api/v1/garage-goods-receipts` (khớp backend, không phụ thuộc V1) */
 
 export interface GarageGoodsReceiptLineDto {
@@ -36,8 +38,8 @@ export interface GarageGoodsReceiptListResultDto {
   page: number;
   pageSize: number;
   totalPages: number;
-  /** Tổng toàn bộ dòng khớp bộ lọc, theo tên cột số (khớp `V2Column.key`) */
-  summaries?: Record<string, number>;
+  /** Số liệu tổng theo tên cột số (khớp `V2Column.key`); `null` = không tính được */
+  summaries?: Record<string, V2SummaryMetric | null>;
 }
 
 export interface ColumnOptionsResultDto {
@@ -61,8 +63,8 @@ export interface GarageGoodsReceiptPayloadDto {
   receiptDate: string;
   supplierId?: string;
   supplierName?: string;
-  branchId?: string;
-  branchName?: string;
+  branchId?: string | null;
+  branchName?: string | null;
   totalAmount?: number;
   status?: string;
   paymentStatus?: string;

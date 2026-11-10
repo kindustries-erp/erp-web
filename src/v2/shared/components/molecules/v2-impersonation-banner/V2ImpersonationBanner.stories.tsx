@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2ImpersonationBanner } from "./V2ImpersonationBanner";
 
 const meta: Meta<typeof V2ImpersonationBanner> = {
-  title: "Molecules/V2ImpersonationBanner",
+  title: "Components/Molecules/V2ImpersonationBanner",
   component: V2ImpersonationBanner,
 };
 

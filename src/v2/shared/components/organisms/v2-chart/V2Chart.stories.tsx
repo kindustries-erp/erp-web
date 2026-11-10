@@ -12,7 +12,7 @@ const series = [
 const money = (value: number) => `${value.toLocaleString("vi-VN")} tr`;
 
 const meta: Meta = {
-  title: "Components/Organisms/Chart/V2Chart",
+  title: "Components/Organisms/V2Chart",
   tags: ["autodocs"],
   decorators: [
     (Story) => (

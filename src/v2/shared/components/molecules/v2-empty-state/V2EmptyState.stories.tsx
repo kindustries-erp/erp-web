@@ -3,7 +3,7 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2EmptyState } from "./V2EmptyState";
 
 const meta: Meta<typeof V2EmptyState> = {
-  title: "Components/Molecules/Feedback/V2EmptyState",
+  title: "Components/Molecules/V2EmptyState",
   component: V2EmptyState,
   tags: ["autodocs"],
 };

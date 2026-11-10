@@ -17,8 +17,15 @@ Skill này là nguồn tri thức cho việc tạo và migrate module sang V2. C
 | 6 | **No Blue** | Dùng token ngữ cảnh (`bg-primary`, `text-muted-fg`...), không dùng `blue-*`. |
 | 7 | **Rolling migration** | Chỉ migrate module khi user ra lệnh. Mỗi module verify đủ audit trước khi báo xong. |
 | 8 | **Storybook** | Component trong `shared/` bắt buộc có `*.stories.tsx` (test `storyCoverage` kiểm). Module không bắt buộc. |
+| 9 | **Mobile-First** | CSS mặc định cho Mobile, touch target $\ge 44\text{px}$, input font $\ge 16\text{px}$ chống iOS zoom, bọc safe-area insets. |
 
-**Đã quyết định, chưa áp dụng:** tách `*.desktop.tsx` / `*.mobile.tsx` cho module. Hiện các template dùng chung (`V2ModulePage`, `V2StandardDrawer`) đã responsive nên module chưa tách. Chỉ tách khi UX thực sự khác, và cần chốt với user.
+**Chiến lược Mobile-First & Platform Split:**
+- **Mặc định module sử dụng Mobile-First Responsive**: 1 component tree duy nhất kết hợp `V2PageLayout`, `V2StandardTable`, `V2StandardDrawer` (với responsive Tailwind CSS, Safe Area insets, và touch ergonomics).
+- **Chỉ áp dụng Platform Split (`.desktop.tsx` / `.mobile.tsx`)** khi có sự khác biệt căn bản về DOM và hành vi UX:
+  - App Shell: `V2AppLayout.desktop.tsx` (Sidebar + Topbar) vs `V2AppLayout.mobile.tsx` (`V2Header` + `V2BottomNav` + `V2MobileCatalogDrawer`).
+  - Drawer phức hợp: Desktop trượt từ phải (65vw) vs Mobile Bottom Sheet (85vh kéo từ đáy kèm vuốt chạm và sticky bottom action bar).
+  - Bảng dữ liệu đặc biệt: Desktop Spreadsheet Data Table nhiều cột vs Mobile Infinite Card List vuốt chạm.
+  - Switcher pattern bắt buộc gọn nhẹ: `[Name].tsx` (< 15 LoC) dùng `useViewport()`.
 
 ---
 
@@ -72,6 +79,8 @@ src/v2/modules/<module>/
 | Textarea | `V2Textarea` | `atoms/v2-textarea/` |
 | Khung trang / drawer / xác nhận | `V2ModulePage`, `V2StandardDrawer`, `V2ConfirmModal` | `templates/`, `organisms/`, `molecules/` |
 | Bố cục trang chung & Mobile Tabs Dropdown | `V2PageLayout` (Template L4), `V2TabCombobox` (Molecule L2) | `templates/v2-page-layout/`, `molecules/v2-tab-combobox/` |
+| Nhận diện Viewport (mobile, tablet, desktop) | `useViewport` | `src/v2/shared/hooks/useViewport.ts` |
+| Thanh điều hướng di động (Bottom Nav + Catalog Drawer) | `V2BottomNav`, `V2MobileCatalogDrawer`, `useV2MobileNavStore` | `src/v2/shared/components/`, `src/v2/shared/stores/` |
 
 
 Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_table_preferences`, `migrationVersion` = 1). Lần đầu chép cấu hình từ `erp_preferences` của V1 (chỉ đọc localStorage).
@@ -153,6 +162,9 @@ grep -rnP "\bt\(\s*\"(?!v2\.)[a-zA-Z]+\.[A-Za-z.]+\"" src/v2 --include="*.ts" --
 # No Blue và textarea thô
 grep -rn "blue-" src/v2/modules/<module>
 grep -rn "<textarea" src/v2/modules/<module>
+# Mobile-First: input font nhỏ (< 16px) gây auto-zoom iOS và fixed width lớn
+grep -rnE "<(input|textarea|select)[^>]*className=[\"'][^\"']*text-xs" src/v2/modules/<module>
+grep -rnE "w-\[[4-9][0-9]{2,}px\]" src/v2/modules/<module>/components
 # Dưới 180 dòng
 find src/v2/modules/<module> -name "*.ts*" -exec wc -l {} + | awk '$1>180 && $2!="total"'
 # Chất lượng

@@ -67,13 +67,13 @@ git push github-industries [target-branch]
 
 ## 📋 Workflow Catalog (single source of truth)
 
-Each workflow is a slash command (e.g. `/plan-and-task`, `/erp-git-workflow`). Claude command stubs in `.claude/commands/` are generated from the canonical file; only edit the originals in `.agents/workflows/`. After changing anything in `.agents/`, run `/sync-agents`.
+Each workflow is a slash command (e.g. `/erp-plan`, `/erp-git-workflow`). Claude command stubs in `.claude/commands/` are generated from the canonical file; only edit the originals in `.agents/workflows/`. After changing anything in `.agents/`, run `/sync-agents`.
 
 Global workflows in `./.agents/workflows/`:
 
 - `sync-agents.md` — sync `.agents` sang `.claude` và `.trae` bằng `sync-agents.sh`.
 - `routing.md` — workspace routing.
-- `plan-and-task.md` — plan, approval, execution, and checkpoint workflow.
+- `erp-plan.md` — plan, approval, execution, and checkpoint workflow.
 - `erp-continue.md` — resume an in-progress task: read the checkpoint, verify git/Plane, wait for confirmation.
 - `clean-brain.md` — session and plan cleanup.
 - `erp-git-workflow.md` — ERP master-first Git workflow.
@@ -98,7 +98,7 @@ Repo-level workflows (e.g. `erp/erp-web/.agents/workflows/standardize-drawer.md`
 ## 🚀 Quick Reference: Common Scenarios
 
 ### Scenario 1: Starting a New Feature / Refactor / Bugfix
-1. Trình plan theo `/plan-and-task`, dùng cơ chế plan của agent (Claude Code: `/plan`; Antigravity: `implementation_plan.md`). Xem mục "Tầng Cơ Chế Plan Theo Agent" trong workflow.
+1. Trình plan theo `/erp-plan`, dùng cơ chế plan của agent (Claude Code: `/plan`; Antigravity: `implementation_plan.md`). Xem mục "Tầng Cơ Chế Plan Theo Agent" trong workflow.
 2. Execute **5 phases**: Discovery → Tech Plan → Task Breakdown (X.Y.Z) → Approval → Execution.
 3. Plan (DoD, lệnh verify) trình trong hội thoại; chỉ làm sau khi người dùng trả lời `OK`.
 4. Tạo Epic/Story/Task trên Plane (project KINDU) bằng skill `plane-work-items`.
@@ -147,7 +147,7 @@ Repo-level workflows (e.g. `erp/erp-web/.agents/workflows/standardize-drawer.md`
 
 ## 📋 Planning & Tracking (Plane)
 
-- Plan theo `/plan-and-task`; chỉ làm sau khi người dùng trả lời `OK`. Bản chốt lưu tại `.agents/plans/<task-slug>/implementation_plan.md`.
+- Plan theo `/erp-plan`; chỉ làm sau khi người dùng trả lời `OK`. Bản chốt lưu tại `.agents/plans/<task-slug>/implementation_plan.md`.
 - Task, story, epic theo dõi trên Plane (project KINDU) bằng skill `plane-work-items`. Không lưu plan/task trong Trilium.
 - Antigravity Brain (`implementation_plan.md` / `walkthrough.md`, `/clean-brain`) là bản phụ, chỉ dùng khi chạy trong Antigravity.
 - **Pause**: document current state in `## ⏸️ Session Checkpoint`.
@@ -211,7 +211,7 @@ Skills nằm ở `erp-api/.agents/skills/` và `erp-web/.agents/skills/`, đăng
 2. **NO ROOT PUSHING**: Cấm chạy `git add`, `git commit`, `git push` từ `./erp` hoặc workspace root. Luôn `cd` vào `./erp-api` hoặc `./erp-web`.
 3. **Delivery Sequence**: `DB -> API -> UI -> QC`.
 4. **Tooling**: Chỉ dùng `bun` / `bunx`. Không dùng `npm` hay `yarn`.
-5. **Local Dev Only**: Dev local chạy `bun run start:dev` / `bun run dev` (API port 10010). Không build container thủ công.
+5. **Local Dev Only**: Dev local chạy `bun run start:dev` / `bun run dev` (API chạy theo `PORT` trong `erp/erp-api/.env`). Không build container thủ công.
 6. **Isolation**: ERP dùng nhánh `erp-master`, Klotus dùng `master`. Không trộn database, `.env`, schema hay collection (`klotus_*`) giữa hai hệ.
 7. **Final Gate**: chạy `bun run verify:final` một lần trên commit cuối; push theo workflow bằng `--no-verify`.
 
@@ -222,7 +222,7 @@ Workflow ERP nằm ở `./.agents/workflows/`:
 - `erp-branch-sync-workflow.md` — sync `erp-master` sang nhánh downstream.
 - `routing.md`, `clean-brain.md`, `api-structure.md`, `ui-structure.md`.
 
-Workflow global (`plan-and-task.md`, `erp-continue.md`, `erp-git-workflow.md`, `standardize-table.md`, `api-structure.md`, `ui-structure.md`, ...) xem catalog ở `../AGENTS.md`.
+Workflow global (`erp-plan.md`, `erp-continue.md`, `erp-git-workflow.md`, `standardize-table.md`, `api-structure.md`, `ui-structure.md`, ...) xem catalog ở `../AGENTS.md`.
 
 Kế hoạch trình trong hội thoại và được `OK` trước khi làm; task theo dõi trên Plane (project KINDU) bằng skill `plane-work-items`. Antigravity Brain (`implementation_plan.md` -> `walkthrough.md`) là bản phụ khi chạy trong Antigravity.
 
@@ -252,8 +252,10 @@ Source of truth for this repo (`./erp-web`).
 
 ### 2. Atomic Design & Clean Code
 
-- **Max File Size:** Any React file exceeding 180 lines MUST be split (v1 legacy files over 180 lines are exempt unless touched by the task; see `ui-structure`).
+- **Max File Size:** Với `.tsx` và `.hook.ts`: cảnh báo ở 180 dòng, chặn ở 250 dòng (không merge). File dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`) không tính vào ngưỡng. V1 legacy vượt ngưỡng được miễn trừ trừ khi task chạm tới; see `ui-structure`.
+- **Core theo họ (áp dụng cho mọi họ, không ngoại lệ):** UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ>/`. Module của họ chỉ giữ API, cấu hình ghép core, page và locale riêng. Chiều phụ thuộc `modules → core → shared`; core không import module và không chứa tên module. Import qua barrel (`@/v2/core/<họ>`, `@/v2/shared/components`), không import sâu từ module hay core. Chi tiết: `ui-structure` Phần B.
 - Extract complex state/API logic into `hooks/` (e.g., `use[Feature]Logic.ts`).
+- **Tên hook**: hook gắn một component/drawer/page dùng `[Component].hook.ts` (export `use[Component]`); hook độc lập (query, mutation, hook dùng chung, store) dùng `use<Tên>.ts`. Hook không JSX đuôi `.ts`. Chi tiết: `ui-structure`.
 - Extract helper functions into `utils/`.
 - Extract sub-components into their own files. Do NOT group multiple large React components in a single file.
 
@@ -318,7 +320,7 @@ Source of truth for this repo (`./erp-web`).
 - before commit/push, `cd` into the repo root (`./erp-web`)
 - **Strict Git Workflow**: You MUST follow the exact commit/push sequence defined below (test -> commit -> pull --rebase -> check:ci -> push, theo `erp-git-workflow`).
 - push this repo with `github-industries`
-- when debugging and testing API locally, always start dev on port 10010
+- when debugging and testing API locally, always start dev on the port defined by `PORT` in `erp/erp-api/.env`
 - by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
 - before any DB scan or write, run `SELECT current_database();` to confirm the actual DB and report it before writing; never infer the DB from a file name
 - reuse existing components/hooks/utils/helpers/functions/page patterns first
@@ -357,7 +359,7 @@ Source of truth for this repo (`./erp-web`).
 - load `@.agents/skills/erp-web-truth/SKILL.md`
 - use repo-local context as default guidance
 - MUST use bun/bunx exclusively (do NOT use npm)
-- when debugging and testing API locally, always start dev on port 10010
+- when debugging and testing API locally, always start dev on the port defined by `PORT` in `erp/erp-api/.env`
 - by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
 - before any DB scan or write, run `SELECT current_database();` to confirm the actual DB and report it before writing; never infer the DB from a file name
 - follow DB -> API -> UI -> QC

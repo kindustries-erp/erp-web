@@ -15,6 +15,7 @@ export const V2TabCombobox: React.FC<V2TabComboboxProps> = ({
   labelPrefix,
   menuWidth = "w-60",
   align = "start",
+  triggerClassName,
   className,
   ...restProps
 }) => {
@@ -38,7 +39,10 @@ export const V2TabCombobox: React.FC<V2TabComboboxProps> = ({
             variant="outline"
             size="sm"
             aria-label={prefix}
-            className="h-8 max-w-[260px] gap-1.5 rounded-lg border-border/80 bg-surface px-2.5 text-xs font-medium text-foreground shadow-2xs hover:bg-surface-hover"
+            className={cn(
+              "h-8 max-w-[220px] sm:max-w-[260px] gap-1.5 rounded-lg border border-border/80 dark:border-white/[0.08] bg-surface dark:bg-card/60 px-2.5 text-xs font-medium text-foreground shadow-2xs hover:bg-surface-hover dark:hover:bg-white/[0.05]",
+              triggerClassName,
+            )}
             leftIcon={activeItem?.icon}
             rightIcon={<ChevronDown className="h-3.5 w-3.5 opacity-60" />}
           >
@@ -57,7 +61,13 @@ export const V2TabCombobox: React.FC<V2TabComboboxProps> = ({
           </V2Button>
         </PopoverTrigger>
 
-        <PopoverContent align={align} className={cn("p-1.5", menuWidth)}>
+        <PopoverContent
+          align={align}
+          className={cn(
+            "p-1.5 border border-border/80 dark:border-white/[0.08] dark:bg-[#181c26] dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)]",
+            menuWidth,
+          )}
+        >
           <V2TabComboboxList
             items={items}
             activeKey={activeKey}

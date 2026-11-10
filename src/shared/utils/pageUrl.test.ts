@@ -50,6 +50,38 @@ describe("pageUrl with report dashboards", () => {
   it("returns null (404) when accessing deprecated /budget path", () => {
     expect(pathToPage("/budget", "")).toBeNull();
   });
+
+  it("serializes and parses /permission correctly", () => {
+    expect(pageToPath("permission")).toBe("/permission");
+    expect(pageToPath("erp-permissions-core")).toBe("/permission");
+    expect(pathToPage("/permission", "")).toEqual({
+      page: "permission",
+      tab: undefined,
+      instanceIndex: 1,
+      searchParams: expect.any(URLSearchParams),
+    });
+    expect(pathToPage("/permissions", "")).toEqual({
+      page: "permission",
+      tab: undefined,
+      instanceIndex: 1,
+      searchParams: expect.any(URLSearchParams),
+    });
+    expect(pathToPage("/erp-permissions-core", "")).toEqual({
+      page: "permission",
+      tab: undefined,
+      instanceIndex: 1,
+      searchParams: expect.any(URLSearchParams),
+    });
+  });
+
+  it("serializes garage-procurement with default tab=requests", () => {
+    expect(pageToPath("garage-procurement")).toBe(
+      "/garage-procurement?tab=requests",
+    );
+    expect(pageToPath("garage-procurement", "orders")).toBe(
+      "/garage-procurement?tab=orders",
+    );
+  });
 });
 
 describe("encodeStateParam & decodeStateParam (Compact Human-Readable URL Format)", () => {

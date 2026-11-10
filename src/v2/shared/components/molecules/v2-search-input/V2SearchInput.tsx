@@ -23,7 +23,7 @@ export const V2SearchInput: React.FC<V2SearchInputProps> = ({
   const label = placeholder ?? t("v2.table.search", "Tìm kiếm...");
 
   return (
-    <div className={cn("relative w-56", className)}>
+    <div className={cn("relative w-full sm:w-56", className)}>
       <Search
         aria-hidden
         className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"

@@ -262,12 +262,42 @@ src/shared/components/
 
 ---
 
-## 📱 8. Tối Ưu Web Responsive Toàn Diện
+## 📱 8. Tiêu Chuẩn Toàn Diện Mobile-First & Web Responsive (Mobile 1st Ergonomics)
 
+> [!IMPORTANT]
+> **TRIẾT LÝ MOBILE-FIRST**: Mọi giao diện phải được thiết kế và viết CSS ưu tiên cho thiết bị di động trước (Mobile-First CSS), sau đó mới nâng cấp dần lên màn hình lớn bằng Tailwind breakpoints (`sm:`, `md:`, `lg:`).
+
+### A. Quy Tắc Mobile-First Styling & Breakpoints
+1. **Style Gốc Không Prefix Dành Cho Mobile (`< 768px`)**:
+   - Mặc định: `w-full flex-col p-3 gap-2.5 text-base`.
+   - Tiến dần lên Tablet/Desktop: `sm:p-4 md:flex-row md:text-sm lg:gap-4`.
+   - **TUYỆT ĐỐI TRÁNH**: Viết code kiểu Desktop-first rồi dùng `max-sm:`, `max-md:` để vá víu.
+
+### B. Chuẩn Công Thái Học Di Động (Mobile Ergonomics)
+1. **Touch Target Tối Thiểu $\ge 44 \times 44\text{px}$**:
+   - Tất cả các nút bấm, icon button, tab bar items, checkbox container phải đạt diện tích chạm ngón tay tối thiểu $44 \times 44\text{px}$.
+   - Với các icon trực quan kích thước nhỏ ($16 - 20\text{px}$), bắt buộc bọc trong container có kích thước chạm an toàn:
+     `min-h-[44px] min-w-[44px] flex items-center justify-center p-2` hoặc dùng class `touch-manipulation`.
+2. **Chống Auto-Zoom trên iOS Safari (Input Font Size $\ge 16\text{px}$)**:
+   - Trình duyệt iOS Safari sẽ tự động phóng to toàn bộ màn hình khi người dùng focus vào ô nhập có `font-size < 16px`, gây vỡ bố cục ứng dụng.
+   - **Quy tắc bắt buộc**: Mọi `<input>`, `<select>`, `<textarea>` trên mobile phải có font size $\ge 16\text{px}$.
+   - **Pattern chuẩn**: `text-base sm:text-sm` (Mobile hiển thị 16px chống zoom, Desktop co về 14px chuẩn nghiệp vụ).
+3. **Safe Area Insets (Xử lý Tai thỏ & Thanh Home Indicator iOS/Android)**:
+   - Header / Topbar: Bổ sung padding-top an toàn `pt-[env(safe-area-inset-top,0px)]`.
+   - Sticky Bottom Bars / Bottom Sheet Footer / Bottom Nav: Bổ sung padding-bottom an toàn:
+     `pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]`.
+4. **Vùng Thao Tác Ngón Cái (Thumb Zone)**:
+   - Trên mobile, người dùng chủ yếu thao tác bằng 1 tay (ngón cái).
+   - Nút hành động chính (Submit, Lưu, Tạo mới, Xác nhận) phải được ghim ở nửa dưới màn hình hoặc ghim cố định tại **Sticky Bottom Action Bar** (`fixed bottom-0 left-0 right-0`).
+5. **Touch Feedback Thay Thế Hover-Only**:
+   - Màn hình cảm ứng **không có trạng thái hover**. Tuyệt đối không giấu thông tin hoặc nút quan trọng chỉ hiển thị khi `group-hover:block`.
+   - Bổ sung hiệu ứng phản hồi xúc giác/thị giác khi chạm: `active:scale-[0.98] transition-transform` hoặc `active:bg-muted`.
+
+### C. Tránh Tràn Chiều Rộng & Tối Ưu Cuộn
 - **Thanh Tabs & Toolbars**: Luôn bọc trong container cuộn ngang cảm ứng:
-  `overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0`
-- **Lưới Thẻ Chỉ Số**: Áp dụng breakpoints `grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5`.
-- **Tránh Tràn Chiều Rộng**: Sử dụng `w-full min-w-0 max-w-full`, không dùng `w-[px]` cố định lớn.
+  `overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0 touch-pan-x`
+- **Lưới Thẻ Chỉ Số / Form Controls**: Áp dụng breakpoints `grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5`.
+- **Tránh Tràn Chiều Rộng**: Sử dụng `w-full min-w-0 max-w-full`, không dùng `w-[px]` cố định lớn (> 350px). Không dùng `overflow-x-hidden` ở cấp root để che giấu layout bị tràn.
 
 ---
 
@@ -317,7 +347,13 @@ Khi tạo mới một Component:
 - [ ] **Đa ngôn ngữ 100%**: Sử dụng `useTranslation` có fallback tiếng Việt và đồng bộ VI/EN?
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong giao diện?
 - [ ] **A11y cho primitive/control (`prefer`)**: control tương tác thấy được focus bàn phím (`focus-visible:ring-*`, không thêm `outline-none` mà thiếu thay thế); nút chỉ có icon có `aria-label` qua `t()`; overlay (Dialog/Sheet/Drawer) có Title (`sr-only` nếu ẩn); field lỗi có `aria-invalid` và `aria-describedby` trỏ tới text lỗi; animation có `motion-reduce:*` khi chuyển động lớn?
-- [ ] **Web Responsive**: Hỗ trợ đầy đủ mobile, tablet, laptop và màn hình lớn?
+- [ ] **Mobile-First & Công Thái Học Di Động**:
+  - [ ] Viết CSS Mobile-First: Style gốc cho Mobile, dùng `sm:`, `md:`, `lg:` để mở rộng lên Desktop.
+  - [ ] Touch target $\ge 44 \times 44\text{px}$ cho tất cả button, icon tap, interactive controls.
+  - [ ] Input font-size $\ge 16\text{px}$ (`text-base sm:text-sm`) chống iOS auto-zoom khi focus.
+  - [ ] Xử lý Safe Area insets (`env(safe-area-inset-top/bottom)`) tại Header, Bottom Nav, Sticky Footer.
+  - [ ] Không có overflow tràn ngang do hardcoded fixed width lớn.
+  - [ ] Nút hành động chính ưu tiên ghim ở nửa dưới màn hình (Thumb Zone).
 - [ ] **Type Check & Tests**: `bun run type:check` 0 lỗi, unit tests pass 100% và `bun run build-storybook` thành công?
 
 > [!NOTE]

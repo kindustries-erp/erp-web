@@ -12,7 +12,8 @@ export const V2_MODULE_PAGE_TAB_VARIANTS = [
 export type V2ModulePageTabVariant =
   (typeof V2_MODULE_PAGE_TAB_VARIANTS)[number];
 import type { V2StandardTableProps } from "@/v2/shared/components/organisms/v2-standard-table";
-import type { V2TableQuery } from "@/v2/shared/types/v2-table";
+import type { V2SummaryMetric, V2TableQuery } from "@/v2/shared/types/v2-table";
+import type { V2TabComboboxItem } from "@/v2/shared/components/molecules/v2-tab-combobox";
 
 type V2ModuleTabBase = Omit<V2TabItemData, "key" | "content">;
 
@@ -23,8 +24,11 @@ export interface V2ModuleListData<T> {
   loading: boolean;
   /** Có thì khung tự gắn vào nút Làm mới của toolbar (trừ khi toolbar đã có `onRefresh`) */
   refetch?: () => void;
-  /** Tổng toàn bộ (mọi trang) theo khóa cột, dùng cho hàng tổng khi bảng ở chế độ server */
-  summaries?: Record<string, number>;
+  /**
+   * Số liệu tổng theo khóa cột (theo `summary_keys` đã gửi). `null` = API không tính được key đó.
+   * Dùng cho hàng tổng khi bảng ở chế độ server.
+   */
+  summaries?: Record<string, V2SummaryMetric | null>;
 }
 
 /**
@@ -72,4 +76,10 @@ export interface V2ModulePageProps<T> {
   /** Drawer, modal do page quản lý */
   overlays?: React.ReactNode;
   className?: string;
+  /** Tab trang (ví dụ chuyển giữa các trang liên quan PR / PO) */
+  pageTabs?: V2TabComboboxItem[];
+  /** Khóa tab trang đang kích hoạt */
+  activePageTab?: string;
+  /** Callback chuyển tab trang */
+  onPageTabSelect?: (key: string) => void;
 }

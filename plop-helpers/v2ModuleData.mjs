@@ -20,7 +20,7 @@ export const kebabCase = (value) =>
     .join("-")
     .toLowerCase();
 
-const NAV_SECTIONS = ["overview", "sales", "purchasing", "inventory", "manufacturing", "accounting", "settings"];
+export const NAV_SECTIONS = ["overview", "sales", "purchasing", "inventory", "manufacturing", "accounting", "settings"];
 
 /** Gắn cờ hiển thị cho từng trường để template chỉ cần `{{#if isStatus}}` */
 export function decorateFields(fields) {

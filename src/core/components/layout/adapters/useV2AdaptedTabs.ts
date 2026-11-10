@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ClipboardList } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
@@ -47,6 +48,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-finished-goods": PackageCheck,
   "garage-dashboard": LayoutDashboard,
   "garage-cases": Car,
+  "garage-procurement": ClipboardList,
   "garage-goods-receipts": Package,
   "garage-opex": ReceiptText,
   "garage-cashflow": Wallet,
@@ -63,6 +65,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   attachments: Paperclip,
   "email-inbox": Mail,
   "erp-users": Users,
+  permission: Shield,
   "erp-permissions-core": Shield,
   "erp-activity-logs": FileText,
   "settings-branch": Building2,
@@ -112,6 +115,8 @@ export function useV2AdaptedTabs(): {
       case "garage-dashboard":
       case "garage-cases":
         return t("nav.items.garageCases", "Hoạt động garage");
+      case "garage-procurement":
+        return t("nav.items.garageProcurement", "Mua hàng Garage");
       case "garage-goods-receipts":
         return t("nav.items.garageGoodsReceipts", "Nhập kho Garage");
       case "garage-cashflow":
@@ -142,6 +147,7 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.emailInbox", "Hòm thư");
       case "erp-users":
         return t("nav.items.users", "Người dùng");
+      case "permission":
       case "erp-permissions-core":
         return t("nav.items.phanquyen", "Phân quyền");
       case "erp-activity-logs":

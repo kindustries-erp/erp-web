@@ -1,10 +1,8 @@
 import type { V2BaseProps } from "@/v2/shared/types";
 import type { V2UserMenuRenderProp } from "@/v2/shared/components/molecules/v2-sidebar-bottom";
+import type { V2BreadcrumbItem } from "@/v2/shared/components/molecules/v2-breadcrumb";
 
-export interface V2HeaderBreadcrumb {
-  label: string;
-  href?: string;
-}
+export type V2HeaderBreadcrumb = V2BreadcrumbItem;
 
 export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
   title?: string;

@@ -290,3 +290,13 @@ Resource RBAC: `garage`
   - Khi chọn case: Tự động bind `caseId`, cập nhật `licensePlate`, `partnerName`, và nếu `amount` chưa có thì gợi ý điền số tiền của vụ việc.
 - Tuân thủ `/ui-structure`: File helper `GarageCaseCombobox.helper.tsx` độc lập, hook $< 160\text{ LoC}$, 0 class `blue-*`, 100% i18n, co-located test.
 
+### D. In Phiếu Thu / Phiếu Chi (`garage-cashflow?tab=vouchers`)
+- **Context menu**: `GarageCashflowTable.actions.tsx` (`getGarageCashflowRowActions`) nhận thêm tham số `onPrint`; hiển thị 1 mục icon `Printer` trong nhóm "Thao tác chính" ngay sau "Xem chi tiết". Nhãn theo `row.voucherType`: `RECEIPT` → `garage.cashflow.actions.printReceipt` ("In phiếu thu"), `PAYMENT` → `garage.cashflow.actions.printPayment` ("In phiếu chi"). Ẩn khi không truyền `onPrint`.
+- **Print template dùng chung**: `src/shared/components/print-templates/garage-cashflow-print-template/` — `GarageCashflowPrintTemplate.tsx` (forwardRef, A4, Times New Roman) bám mẫu **01-TT (PHIẾU THU)** / **02-TT (PHIẾU CHI)**, QĐ 15/2006/QĐ-BTC. Nhãn hành chính cố định nằm trong `.data.ts`; map dữ liệu qua `GarageCashflowPrintTemplate.helper.ts` (`buildGarageCashflowPrintData`, dùng `readVietnameseCurrency`); type trong `.type.ts` (`GarageCashflowPrintSource` là cấu trúc con của `GarageCashflowVoucher`, không import module → tránh phụ thuộc shared→module).
+- **Hook**: `src/modules/garage/hooks/useGarageCashflowPrint.ts` — quản lý `printRef`/`printData`/`printVoucher` với `useReactToPrint` (pattern giống `useWarehousePrintExport`). Không gọi thêm API: dữ liệu lấy từ dòng list.
+- **Logo công ty**: header bản in render `companyProfile.logo` (`useCompanyProfile`) ở góc trên-trái, cạnh tên/địa chỉ công ty; ẩn khi không có logo.
+- **Wiring**: `GarageCashflowList` gọi `useGarageCashflowPrint()`, truyền `onPrint={printVoucher}` xuống `GarageCashflowTable`, render `<GarageCashflowPrintTemplate ref={printRef} …/>` trong `<div style={{ display: "none" }}>`.
+- **Không đổi contract**: không thay đổi DB/API; quyền dùng `GARAGE_CASHFLOW:READ` sẵn có.
+- "Quyển số" để trống (chấm dòng); chỉ in `Số: {voucherCode}`. Field "Địa chỉ" để trống vì voucher không có dữ liệu.
+
+

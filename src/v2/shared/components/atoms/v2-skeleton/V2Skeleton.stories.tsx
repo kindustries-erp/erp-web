@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2Skeleton } from "./V2Skeleton";
 
 const meta: Meta<typeof V2Skeleton> = {
-  title: "Components/Atoms/Display/V2Skeleton",
+  title: "Components/Atoms/V2Skeleton",
   component: V2Skeleton,
   tags: ["autodocs"],
   args: { className: "h-4 w-48" },

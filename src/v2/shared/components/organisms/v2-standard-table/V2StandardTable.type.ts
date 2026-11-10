@@ -24,7 +24,7 @@ export type {
 /** Danh sách chế độ bảng (runtime), dùng làm nguồn sự thật cho `V2TableMode` và options của Storybook */
 export const V2_TABLE_MODES = ["server", "client"] as const;
 export type V2TableMode = (typeof V2_TABLE_MODES)[number];
-export type V2MobileSlot = "title" | "subtitle" | "meta" | "hidden";
+export type V2MobileSlot = "title" | "subtitle" | "badge" | "meta" | "hidden";
 
 export interface V2ColumnFilterSpec {
   valueType: ColumnValueType;
@@ -41,8 +41,15 @@ export interface V2ColumnSummary<T> {
   label?: string;
   /** Lấy số để cộng; mặc định đọc theo `key` của cột (hỗ trợ "a.b") */
   accessor?: (row: T) => unknown;
-  /** Chế độ `server`: tổng toàn bộ do consumer truyền (từ API); `client` tự tính */
-  total?: number;
+  /**
+   * Chế độ `server`: tổng toàn bộ do API trả về; `null` = API không tính được (hiện "—").
+   * Không truyền thì bảng tự hiểu là chưa có số từ server.
+   */
+  total?: number | null;
+  /** Chế độ `server`: subtotal trang hiện tại từ API; không có thì bảng tự cộng theo dòng đang hiển thị */
+  pageSubtotal?: number | null;
+  /** Chế độ `server`: lũy kế đến trang hiện tại từ API; `null` = không tính được (hiện "—") */
+  cumulative?: number | null;
   /** Tiêu đề chỉ số trong popover, ví dụ "SL nhập kho" */
   metricTitle?: string;
   /** Đơn vị sau số, ví dụ "kg", "dòng" */

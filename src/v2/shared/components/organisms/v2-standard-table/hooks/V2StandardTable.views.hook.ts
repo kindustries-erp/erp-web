@@ -4,8 +4,8 @@ import type {
   V2ViewModeItem,
 } from "@/v2/shared/components/molecules/v2-view-mode-combobox";
 import type {
+  V2FilterPreset,
   V2TableToolbarConfig,
-  V2ViewPreset,
   V2ViewPresetState,
   V2ViewPresetStorage,
 } from "../toolbar/V2StandardTable.toolbar.type";
@@ -17,13 +17,14 @@ import {
   resolveActiveViewKey,
 } from "../utils/v2ViewPresets";
 import type { V2ColumnPreferencesApi } from "./V2StandardTable.preferences.hook";
+import type { V2FilterPresetsApi } from "./V2StandardTable.filterpresets.hook";
+import { createV2ViewActions } from "./V2StandardTable.views.actions.hook";
 import { useV2ViewDialogState } from "./V2StandardTable.views.dialog.hook";
 import { useV2ViewPresetSync } from "./V2StandardTable.views.sync.hook";
 
-export interface V2ViewSubmitInput {
-  name: string;
-  visibleKeys: string[];
-}
+export type { V2ViewSubmitInput } from "./V2StandardTable.views.actions.hook";
+
+const EMPTY_FILTERS: V2FilterPreset[] = [];
 
 export interface UseV2ViewPresetsOptions {
   tableId: string;
@@ -34,7 +35,7 @@ export interface UseV2ViewPresetsOptions {
   storage?: V2ViewPresetStorage;
 }
 
-/** Trạng thái chế độ xem của bảng: view hệ thống (từ consumer) + view tùy chỉnh (lưu qua storage) */
+/** Trạng thái chế độ xem của bảng: view hệ thống (từ consumer) + view tùy chỉnh và bộ lọc tùy chỉnh (lưu qua storage) */
 export function useV2ViewPresets({
   tableId,
   viewModes,
@@ -79,77 +80,35 @@ export function useV2ViewPresets({
     pendingDelete,
   } = useV2ViewDialogState(items);
 
-  const selectView = (key: string) => {
-    const custom = state.customViews.find((v) => v.key === key);
-    setState((s) => ({ ...s, activeKey: key }));
-    if (!viewModes) return;
-    if (custom) {
-      prefs?.applyView(custom);
-      viewModes.onSelect(custom.baseKey);
-      return;
-    }
-    viewModes.onSelect(key);
-  };
+  const { selectView, openEdit, submitDialog, confirmDelete } =
+    createV2ViewActions({
+      state,
+      setState,
+      dialog,
+      setDialog,
+      pendingDeleteKey,
+      clearDelete,
+      systemItems,
+      activeKey,
+      baseKey,
+      pageKey,
+      orderedKeys,
+      prefs,
+      viewModes,
+      filterGroup,
+    });
 
-  const openEdit = (key: string) => {
-    const view = state.customViews.find((v) => v.key === key);
-    if (view) setDialog({ mode: "edit", view });
-  };
-
-  const submitDialog = ({ name, visibleKeys }: V2ViewSubmitInput) => {
-    if (!dialog) return;
-    const visibility = Object.fromEntries(
-      orderedKeys.map((key) => [key, visibleKeys.includes(key)]),
-    );
-    const order = [...orderedKeys];
-    if (dialog.mode === "edit") {
-      const edited: V2ViewPreset = {
-        ...dialog.view,
-        label: name,
-        visibility,
-        order,
-      };
-      setState((s) => ({
-        ...s,
-        customViews: s.customViews.map((v) =>
-          v.key === edited.key ? edited : v,
-        ),
-      }));
-      if (activeKey === edited.key) prefs?.applyView(edited);
-    } else {
-      const view: V2ViewPreset = {
-        key: `custom_${Date.now()}`,
-        label: name,
-        baseKey,
-        visibility,
-        order,
-      };
-      setState((s) => ({
-        ...s,
-        customViews: [...s.customViews, view],
-        activeKey: view.key,
-      }));
-      prefs?.applyView(view);
-      if (baseKey !== pageKey) viewModes?.onSelect(baseKey);
-    }
-    setDialog(null);
-  };
-
-  const confirmDelete = () => {
-    const key = pendingDeleteKey;
-    clearDelete();
-    if (!key) return;
-    const fallback = systemItems[0]?.key;
-    const wasActive = activeKey === key;
-    setState((s) => ({
-      ...s,
-      customViews: s.customViews.filter((v) => v.key !== key),
-      activeKey: wasActive ? fallback : s.activeKey,
-    }));
-    if (wasActive && fallback !== undefined) viewModes?.onSelect(fallback);
-  };
+  /** Bộ lọc tùy chỉnh cùng state (cùng một lần lưu); cập nhật qua updater để không mất view */
+  const customFilters = state.customFilters ?? EMPTY_FILTERS;
+  const setCustomFilters = React.useCallback(
+    (update: (current: V2FilterPreset[]) => V2FilterPreset[]) =>
+      setState((s) => ({ ...s, customFilters: update(s.customFilters ?? []) })),
+    [],
+  );
 
   return {
+    customFilters,
+    setCustomFilters,
     viewModes: viewModes
       ? {
           items,
@@ -172,4 +131,7 @@ export function useV2ViewPresets({
   };
 }
 
-export type V2ViewPresetsApi = ReturnType<typeof useV2ViewPresets>;
+/** API chế độ xem; bản desktop gắn thêm bộ lọc tùy chỉnh (`filterPresets`) */
+export type V2ViewPresetsApi = ReturnType<typeof useV2ViewPresets> & {
+  filterPresets?: V2FilterPresetsApi;
+};

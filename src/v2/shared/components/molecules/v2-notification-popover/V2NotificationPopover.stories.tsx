@@ -14,38 +14,41 @@ const queryClient = new QueryClient({
 const sampleNotifications: CoreNotification[] = [
   {
     id: "notif-1",
-    userId: "user-1",
     title: "Đơn mua hàng PO-20261023-001 hoàn tất",
     message: "Toàn bộ vật tư đã được nhập kho thành công.",
     type: "SUCCESS",
     isRead: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    updatedAt: new Date().toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
   {
     id: "notif-2",
-    userId: "user-1",
     title: "Cảnh báo tồn kho dưới định mức",
     message: "Mặt hàng Má phanh trước chỉ còn 2 bộ trong kho.",
     type: "WARNING",
     isRead: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    updatedAt: new Date().toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
   {
     id: "notif-3",
-    userId: "user-1",
     title: "Lỗi đồng bộ hóa đơn GDT",
     message: "Hóa đơn số 0012345 bị từ chối do sai chữ ký số.",
     type: "ERROR",
     isRead: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    updatedAt: new Date().toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
 ];
 
 const meta: Meta<typeof V2NotificationPopover> = {
-  title: "Components/Molecules/Feedback & Overlay/V2NotificationPopover",
+  title: "Components/Molecules/V2NotificationPopover",
   component: V2NotificationPopover,
   tags: ["autodocs"],
   decorators: [

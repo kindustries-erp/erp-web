@@ -39,7 +39,7 @@ const mockItems: V2SearchItem[] = [
 ];
 
 const meta: Meta<typeof V2UniversalSearchModal> = {
-  title: "Components/Organisms/Navigation & Search/V2UniversalSearchModal",
+  title: "Components/Organisms/V2UniversalSearchModal",
   component: V2UniversalSearchModal,
   parameters: {
     layout: "centered",

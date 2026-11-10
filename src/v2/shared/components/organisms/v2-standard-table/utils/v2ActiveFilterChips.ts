@@ -5,7 +5,7 @@ import {
   type V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 import { formatCompositeFilterValue } from "@/v2/shared/utils/v2TableFormat";
-import type { V2Column } from "../V2StandardTable.type";
+import type { V2FilterColumn } from "../filterpanel/V2StandardTable.filtercards";
 
 export interface V2ActiveFilterChip {
   id: string;
@@ -31,9 +31,9 @@ const summarizeValues = (values: string[], t: Translate): string => {
 };
 
 /** Mỗi cột đang lọc là một chip; gỡ chip = `state.clearColumn(columnKey)` */
-export function buildActiveFilterChips<T>(
+export function buildActiveFilterChips(
   query: V2TableQuery,
-  columns: V2Column<T>[],
+  columns: V2FilterColumn[],
   t: Translate,
 ): V2ActiveFilterChip[] {
   return columns.flatMap((column) => {

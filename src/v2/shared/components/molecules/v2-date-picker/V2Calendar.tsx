@@ -5,10 +5,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { enUS, vi } from "date-fns/locale";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import { V2ChevronOrientation } from "./V2DatePicker.type";
 
-export const dateTriggerClass =
-  "flex h-8 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+export const dateTriggerClass = `flex h-8 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm ${V2_DRAWER_FOCUS_RING_CLASS} disabled:cursor-not-allowed disabled:opacity-50`;
 
 const dayButton =
   "h-8 w-8 rounded-md text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";

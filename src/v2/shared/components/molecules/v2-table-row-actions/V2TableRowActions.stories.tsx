@@ -7,7 +7,7 @@ import { V2TableContextMenu } from "./V2TableContextMenu";
 import { V2TableRowHoverActions } from "./V2TableRowHoverActions";
 
 const meta: Meta = {
-  title: "Components/Molecules/Table/V2TableRowActions",
+  title: "Components/Molecules/V2TableRowActions",
   tags: ["autodocs"],
   parameters: { layout: "centered" },
 };

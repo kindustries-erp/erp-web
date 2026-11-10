@@ -1,8 +1,10 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
+import { GOODS_RECEIPT_DEFAULT_UNIT } from "@/v2/core/goods-receipts";
 import type {
   V2FetchOptionsParams,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
+import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
 import type {
   GarageGoodsReceipt,
   GarageGoodsReceiptFormValue,
@@ -41,6 +43,7 @@ export const toGarageGoodsReceiptsListParams = (query: V2TableQuery) => ({
   date_ranges: Object.keys(query.dateRanges).length
     ? JSON.stringify(query.dateRanges)
     : undefined,
+  summary_keys: toSummaryKeysParam(query),
 });
 
 export const toGarageGoodsReceiptPayload = (
@@ -50,8 +53,9 @@ export const toGarageGoodsReceiptPayload = (
   receiptDate: form.receiptDate.trim(),
   supplierId: form.supplierId.trim() || undefined,
   supplierName: form.supplierName.trim() || undefined,
-  branchId: form.branchId.trim() || undefined,
-  branchName: form.branchName.trim() || undefined,
+  // Chi nhánh tùy chọn: rỗng gửi null để cập nhật xóa được chi nhánh cũ
+  branchId: form.branchId.trim() || null,
+  branchName: form.branchName.trim() || null,
   totalAmount: form.totalAmount.trim() ? Number(form.totalAmount) : undefined,
   status: form.status,
   paymentStatus: form.paymentStatus,
@@ -60,7 +64,7 @@ export const toGarageGoodsReceiptPayload = (
     id: l.id,
     itemCode: l.itemCode.trim() || undefined,
     itemName: l.itemName.trim(),
-    unit: l.unit.trim() || "Cái",
+    unit: l.unit.trim() || GOODS_RECEIPT_DEFAULT_UNIT,
     qtyReceived: Number(l.qtyReceived || 0),
     unitCost: Number(l.unitCost || 0),
     amount: Number(l.amount || 0),

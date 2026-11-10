@@ -14,22 +14,23 @@ interface PermissionLike {
 
 /** Không có `requirement` nghĩa là không đòi quyền: luôn được phép */
 export const hasV2Permission = (
-  permissions: PermissionLike[],
+  permissions: PermissionLike[] = [],
   requirement?: V2PermissionRequirement,
 ): boolean => {
   if (!requirement) return true;
+  if (!Array.isArray(permissions)) return false;
   const action = requirement.action ?? "read";
   return permissions.some(
     (p) =>
       (p.collection === requirement.collection || p.collection === "*") &&
-      (p.actions.includes(action) || p.actions.includes("*")),
+      (p.actions?.includes(action) || p.actions?.includes("*")),
   );
 };
 
 export function useV2HasPermission(
   requirement?: V2PermissionRequirement,
 ): boolean {
-  const permissions = useAuthStore((s) => s.effectivePermissions);
+  const permissions = useAuthStore((s) => s.effectivePermissions) ?? [];
   return hasV2Permission(permissions, requirement);
 }
 
@@ -37,7 +38,7 @@ export function useV2HasPermission(
 export function useV2PermissionChecker(): (
   requirement?: V2PermissionRequirement,
 ) => boolean {
-  const permissions = useAuthStore((s) => s.effectivePermissions);
+  const permissions = useAuthStore((s) => s.effectivePermissions) ?? [];
   return useCallback(
     (requirement?: V2PermissionRequirement) =>
       hasV2Permission(permissions, requirement),

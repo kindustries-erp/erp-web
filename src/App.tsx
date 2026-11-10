@@ -27,6 +27,21 @@ import { PageKey } from "@/shared/types";
 type PageLoader = () => Promise<unknown>;
 
 const V2App = lazy(() => import("@/v2/app/App"));
+const V2DeckViewerPage = lazy(() =>
+  import("@/v2/modules/deck-viewer").then((m) => ({
+    default: m.V2DeckViewerPage,
+  })),
+);
+
+const PUBLIC_DECK_ROUTES: Record<string, string> = {
+  "/imotorbike": "imotorbike",
+};
+
+function resolvePublicDeckKey(): string | null {
+  if (typeof window === "undefined") return null;
+  const normalized = location.pathname.replace(/\/+$/, "") || "/";
+  return PUBLIC_DECK_ROUTES[normalized] ?? null;
+}
 
 const loadDashboard = () =>
   import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard }));
@@ -138,8 +153,8 @@ const EmailInboxPage = lazy(() =>
   })),
 );
 const ErpPermissionsCorePage = lazy(() =>
-  import("@/pages/ErpPermissionsCorePage").then((m) => ({
-    default: m.ErpPermissionsCorePage,
+  import("@/v2/modules/rbac-roles").then((m) => ({
+    default: m.RolesPage,
   })),
 );
 const ErpInvoicesPage = lazy(() =>
@@ -210,6 +225,13 @@ const GarageGoodsReceiptsPage = lazy(() =>
     }),
   ),
 );
+const GarageProcurementRequestsPage = lazy(() =>
+  import("@/v2/modules/garage-procurement-requests/GarageProcurementRequestsPage").then(
+    (m) => ({
+      default: m.GarageProcurementRequestsPage,
+    }),
+  ),
+);
 const GarageOpex = lazy(() =>
   import("@/modules/garage/pages/GarageOpex").then((m) => ({
     default: m.GarageOpex,
@@ -275,6 +297,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-users": ErpUsersPage,
   "erp-activity-logs": ErpActivityLogsPage,
   "email-inbox": EmailInboxPage,
+  permission: ErpPermissionsCorePage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices": ErpInvoicesPage,
   "erp-invoices-in": () => <ErpInvoicesPage initialTab="in" />,
@@ -295,6 +318,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
   "garage-goods-receipts": GarageGoodsReceiptsPage,
+  "garage-procurement": GarageProcurementRequestsPage,
   "garage-opex": GarageOpex,
   "garage-cashflow": GarageCashflowPage,
   "garage-customers": GaragePartners,
@@ -372,17 +396,21 @@ export default function App() {
   const { bootstrapAction } = useAuthStore();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const openTabsKey = openTabs.map((t) => t.instanceId).join("|");
+  const publicDeckKey = resolvePublicDeckKey();
 
   useSerialGenerationProgress();
 
   useEffect(() => {
+    if (publicDeckKey) return;
     useEnvStore.getState().fetchAppConfig();
     bootstrapAction();
-  }, []);
+  }, [publicDeckKey]);
 
   useEffect(() => {
     const sync = () => {
-      if (location.pathname.startsWith("/v2")) return;
+      if (location.pathname.startsWith("/v2") || resolvePublicDeckKey()) {
+        return;
+      }
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
         if (
@@ -439,6 +467,14 @@ export default function App() {
   function keepContentXLocked() {
     const el = contentRef.current;
     if (el && el.scrollLeft !== 0) el.scrollLeft = 0;
+  }
+
+  if (publicDeckKey) {
+    return (
+      <Suspense fallback={PAGE_FALLBACK}>
+        <V2DeckViewerPage deckKey={publicDeckKey} />
+      </Suspense>
+    );
   }
 
   if (typeof window !== "undefined" && location.pathname.startsWith("/v2")) {

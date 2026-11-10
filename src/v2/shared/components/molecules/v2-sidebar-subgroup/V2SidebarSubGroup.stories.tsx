@@ -11,7 +11,7 @@ import {
 import { V2SidebarSubGroup } from "./V2SidebarSubGroup";
 
 const meta: Meta<typeof V2SidebarSubGroup> = {
-  title: "Components/Molecules/Navigation & Sidebar/V2SidebarSubGroup",
+  title: "Components/Molecules/V2SidebarSubGroup",
   component: V2SidebarSubGroup,
   tags: ["autodocs"],
   argTypes: {
@@ -41,10 +41,10 @@ export const ExpandedAccessControl: Story = {
           href: "/erp-users",
         },
         {
-          id: "erp-permissions-core",
+          id: "permission",
           label: "Phân quyền & Vai trò",
           icon: Shield,
-          href: "/erp-permissions-core",
+          href: "/permission",
         },
         {
           id: "erp-activity-logs",

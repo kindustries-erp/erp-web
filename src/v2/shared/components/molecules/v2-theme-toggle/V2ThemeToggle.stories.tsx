@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2ThemeToggle } from "./V2ThemeToggle";
 
 const meta: Meta<typeof V2ThemeToggle> = {
-  title: "V2/Molecules/V2ThemeToggle",
+  title: "Components/Molecules/V2ThemeToggle",
   component: V2ThemeToggle,
   tags: ["autodocs"],
   argTypes: {

@@ -1,6 +1,13 @@
 import React from "react";
 import { useT } from "@/core/i18n";
-import { Wallet, Car, Users, ReceiptText, Package } from "lucide-react";
+import {
+  Wallet,
+  Car,
+  Users,
+  ReceiptText,
+  Package,
+  ClipboardList,
+} from "lucide-react";
 import { NavSection, NavItem } from "../SidebarPrimitives";
 import type { GarageNavSectionProps } from "./GarageNavSection.type";
 import { useGarageNavSection } from "./GarageNavSection.hook";
@@ -15,16 +22,20 @@ export function GarageNavSection({
     canReadGarageCashflow,
     canReadGarageCases,
     canReadGarageGoodsReceipts,
+    canReadGarageProcurementRequests,
+    canReadGaragePurchaseOrders,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
     isGoodsReceiptsActive,
+    isProcurementRequestsActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
     handleNavGoodsReceipts,
+    handleNavProcurementRequests,
     handleNavDebts,
     handleNavOpex,
   } = useGarageNavSection({
@@ -36,6 +47,8 @@ export function GarageNavSection({
     !canReadGarageCashflow &&
     !canReadGarageCases &&
     !canReadGarageGoodsReceipts &&
+    !canReadGarageProcurementRequests &&
+    !canReadGaragePurchaseOrders &&
     !canReadGarageDebts &&
     !canReadGarageOpex
   ) {
@@ -65,6 +78,19 @@ export function GarageNavSection({
           active={isGoodsReceiptsActive}
           onClick={handleNavGoodsReceipts}
           contextPage="garage-goods-receipts"
+        />
+      )}
+      {canReadGarageProcurementRequests && (
+        <NavItem
+          collapsed={collapsed}
+          icon={<ClipboardList className="w-4 h-4 opacity-65 flex-shrink-0" />}
+          label={t(
+            "nav.items.garageProcurement",
+            t("nav.items.garageProcurementRequests", "Mua hàng Garage"),
+          )}
+          active={isProcurementRequestsActive}
+          onClick={handleNavProcurementRequests}
+          contextPage="garage-procurement"
         />
       )}
       {canReadGarageCashflow && (

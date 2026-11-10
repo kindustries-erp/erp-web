@@ -79,4 +79,18 @@ describe("V2NavItem Molecule", () => {
     expect(screen.getByText("Enum Nav")).toBeInTheDocument();
     expect(screen.getByTestId("bottom-nav-dot")).toBeInTheDocument();
   });
+
+  it("hỗ trợ ẩn nhãn hiển thị khi showLabel=false (thêm class sr-only)", () => {
+    render(
+      <V2NavItem
+        label="Trang chủ"
+        icon={Home}
+        variant="bottom-nav"
+        showLabel={false}
+      />,
+    );
+
+    const label = screen.getByText("Trang chủ");
+    expect(label.className).toContain("sr-only");
+  });
 });

@@ -10,6 +10,7 @@ export const v2En: V2Dictionary = {
         purchasing: "PURCHASING",
         inventory: "WAREHOUSE",
         manufacturing: "MANUFACTURING / WORKSHOP",
+        garage: "GARAGE",
         accounting: "ACCOUNTING",
         settings: "SYSTEM",
       },
@@ -36,7 +37,11 @@ export const v2En: V2Dictionary = {
         resetDefault: "Reset to default",
         inventoryGroup: "Inventory",
         garageGoodsReceipts: "Garage Goods Receipts",
+        garageProcurementRequests: "Garage Purchase Requests",
+        garageProcurementOrders: "Garage Purchase Orders",
         // v2-module:garage-goods-receipts:locale-en
+        erpPermissionsCore: "Roles & Permissions",
+        // v2-module:rbac-roles:locale-en
         // plop:v2-nav-items
       },
       searchPlaceholder: "Search modules...",
@@ -47,6 +52,7 @@ export const v2En: V2Dictionary = {
     common: {
       close: "Close",
       save: "Save",
+      saveDraft: "Save Draft",
       cancel: "Cancel",
       edit: "Edit",
       done: "Done",
@@ -73,6 +79,7 @@ export const v2En: V2Dictionary = {
       empty: "No notifications yet",
       deleteAll: "Delete all",
       markAllAsRead: "Mark all as read",
+      markAsRead: "Mark as read",
       deleteItem: "Delete notification",
     },
     topbar: {
@@ -232,6 +239,9 @@ export const v2En: V2Dictionary = {
       relatedInfo: "Related Information",
       expand: "Expand",
       collapse: "Collapse",
+    },
+    activityTimeline: {
+      empty: "No activities recorded",
     },
     dropdown: {
       optionsTitle: "Action options",

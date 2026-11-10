@@ -29,6 +29,7 @@ import {
   PackageCheck,
   Receipt,
   ReceiptText,
+  ClipboardList,
   Sliders,
 } from "lucide-react";
 
@@ -111,8 +112,18 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
   const canReadGarageGoodsReceipts =
     useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
     canReadGarageCases;
+  const canReadGaragePurchaseOrders = useHasPermission(
+    ErpResource.GARAGE_PROCUREMENT_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadGarageProcurementRequests = useHasPermission(
+    ErpResource.GARAGE_PROCUREMENT_REQUESTS,
+    ErpAction.READ,
+  );
   const showGarage =
     canReadGarageCases ||
+    canReadGarageProcurementRequests ||
+    canReadGaragePurchaseOrders ||
     canReadGarageGoodsReceipts ||
     canReadGarageCashflow ||
     canReadGarageDebts ||
@@ -375,6 +386,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/garage-cases",
         });
       }
+      if (canReadGarageProcurementRequests || canReadGaragePurchaseOrders) {
+        items.push({
+          id: "garage-procurement",
+          label: t("nav.items.garageProcurement", "Mua hàng Garage"),
+          icon: ClipboardList,
+          href: "/garage-procurement?tab=requests",
+        });
+      }
       if (canReadGarageGoodsReceipts) {
         items.push({
           id: "garage-goods-receipts",
@@ -541,10 +560,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/erp-users",
         });
         accessChildren.push({
-          id: "erp-permissions-core",
+          id: "permission",
           label: t("nav.items.phanquyen", "Phân quyền & Vai trò"),
           icon: Shield,
-          href: "/erp-permissions-core",
+          href: "/permission",
         });
       }
       if (canReadActivityLogs) {
@@ -644,6 +663,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     canReadBom,
     canReadProduction,
     showGarage,
+    canReadGaragePurchaseOrders,
     canReadGarageCases,
     canReadGarageCashflow,
     canReadGarageDebts,
