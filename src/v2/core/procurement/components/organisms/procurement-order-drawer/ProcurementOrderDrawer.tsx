@@ -72,6 +72,8 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
             form={state.form}
             errors={state.errors}
             viewing={state.viewing}
+            linesLocked={state.linesLocked}
+            itemCodeRequired={state.itemCodeRequired}
             setField={state.setField}
           />
         }
@@ -84,6 +86,10 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
               branchLocked={state.branchLocked}
               branchOptional={state.branchOptional}
               setField={state.setField}
+              canPickRequest={state.canPickRequest}
+              requestLabel={state.requestLabel}
+              requestApi={state.requestApi}
+              onPickRequest={state.pickRequest}
             />
             <ProcurementOrderSummarySection
               form={state.form}

@@ -104,7 +104,10 @@ export function buildProcurementRowActions<T extends { id: string }>(
       canCreate && config.poHref && config.canOrderFromRequest?.(row)
         ? [
             {
-              label: t("v2.procurement.actions.createOrder", "Tạo PO từ PR"),
+              label: t(
+                "v2.procurement.actions.createOrder",
+                "Lập đơn mua từ đề nghị này",
+              ),
               icon: <ShoppingCart className={ICON_CLASS} />,
               onClick: () => orderFromRequest(row),
             },

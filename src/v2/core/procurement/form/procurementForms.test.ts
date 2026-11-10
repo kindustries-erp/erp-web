@@ -56,6 +56,15 @@ describe("dòng chứng từ", () => {
     expect(validateProcurementLines([filledLine({ qty: "0" })])).toBe("qty");
     expect(validateProcurementLines([filledLine()])).toBeNull();
   });
+
+  it("mã hàng chỉ bắt buộc khi bật itemCodeRequired (đơn Garage)", () => {
+    const noCode = [filledLine({ itemCode: " " })];
+    expect(validateProcurementLines(noCode)).toBeNull();
+    expect(validateProcurementLines(noCode, true)).toBe("itemCode");
+    expect(
+      validateProcurementLines([filledLine({ itemCode: "M1" })], true),
+    ).toBeNull();
+  });
 });
 
 describe("dòng từ API (API trả số, không phải chuỗi)", () => {

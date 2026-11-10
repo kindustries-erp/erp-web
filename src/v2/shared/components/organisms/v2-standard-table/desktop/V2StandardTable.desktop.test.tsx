@@ -32,6 +32,21 @@ describe("V2StandardTableDesktop", () => {
     );
   });
 
+  it("resizes a column in real time while dragging, before mouse up", () => {
+    render();
+    const codeHeader = document.querySelector(
+      'th[data-column="code"]',
+    ) as HTMLElement;
+    const handle = codeHeader.querySelector('[role="separator"]')!;
+    const startWidth = parseFloat(codeHeader.style.width);
+
+    fireEvent.mouseDown(handle, { clientX: 100 });
+    fireEvent.mouseMove(document, { clientX: 160 });
+
+    expect(parseFloat(codeHeader.style.width)).toBe(startWidth + 60);
+    fireEvent.mouseUp(document, { clientX: 160 });
+  });
+
   it("continues the STT on later pages in server mode", () => {
     render({
       items: makeRows(20, 20),

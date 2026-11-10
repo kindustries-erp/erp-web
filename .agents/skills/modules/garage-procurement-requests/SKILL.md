@@ -140,3 +140,19 @@ src/v2/core/procurement/
 - Bấm Duyệt mà server trả 409 `code: INVALID_STATUS_TRANSITION` (kèm `currentStatus`): `useProcurementTransition` đóng modal duyệt, làm mới danh sách và gọi `onAlreadyDecided` thay toast lỗi. Helper: `isStatusConflictError`, `readCurrentStatus` trong `shared/utils/v2ApiError.ts`.
 - State modal: `hooks/useProcurementAlreadyDecided.ts`. Locale: `procurement.alreadyDecided.locale.ts` (`v2.procurementAlreadyDecided.*`).
 - Tab `orders` chưa có deep link và chưa có thông báo PO, nên chưa áp dụng.
+
+## 12. Cập nhật: lập đơn mua từ đề nghị (cập nhật 2026-11-10)
+
+- Nhãn menu và nút trên tab liên quan: "Lập đơn mua từ đề nghị này" (`v2.procurement.actions.createOrder`).
+- Luồng: bấm menu gọi `orderFromRequest` (`hooks/useProcurementList.ts`): đóng drawer đề nghị đang mở, đặt ý định (`procurement.intent.ts`), chuyển sang `?tab=orders`.
+- Chỉ danh sách có `requestApi` mới nhận ý định, qua `hooks/useProcurementOrderIntent.ts`. Trang Garage có hai danh sách cùng lúc, nên danh sách đề nghị không được nhận ý định (trước đây nó nuốt ý định và mở nhầm drawer đề nghị).
+- Điền sẵn từ đề nghị (`orderFormFromRequestDraft`): chi nhánh, dòng còn lại, ngày dự kiến nhận = ngày cần hàng.
+- Test: `hooks/useProcurementOrderIntent.test.tsx`, `procurement.intent.test.ts`.
+
+## 13. Cập nhật: bố cục đầu đơn mua và chi nhánh khóa (cập nhật 2026-11-10)
+
+- Đầu đơn mua (`procurement-order-drawer/sections/ProcurementOrderHeaderSection.tsx`) dùng lưới 2 cột: ô đề nghị (nếu có), Ngày đơn và Ngày dự kiến nhận cùng hàng, rồi chi nhánh. Garage đặt chi nhánh ngay dưới hai ô ngày (`placeBranchAfter`); luồng ERP giữ chi nhánh đầu.
+- `ProcurementBranchPicker` có prop `locked`: hiện combobox vô hiệu hóa (cùng kiểu với ô đề nghị), không hiện khung chỉ-đọc. Đơn gắn đề nghị luôn khóa chi nhánh vì API bắt cùng chi nhánh với đề nghị.
+- `V2Combobox` khi `clearable`: trigger `pl-3`, `pr-16` (có X) hoặc `pr-9`; nút X là `V2Button` ghost `icon-xs` trong cụm neo `right-3` cùng mũi tên, không đè nhau.
+- Cột dòng hàng (PR và PO): Mã `w-24 min-w-[88px]`, Tên `min-w-[160px] w-[26%]`, Ghi chú `min-w-[180px] w-[34%]`, Thành tiền `w-40 min-w-[160px] whitespace-nowrap` (đủ số 12 chữ số).
+- Đơn mua Garage bắt buộc mã hàng: `itemCodeRequired` (truyền từ `garageProcurementOrders.config.tsx`) → `validateProcurementLines(lines, true)` trả `"itemCode"`; cột Mã có dấu `*`. PR và ERP PO giữ mã tùy chọn.

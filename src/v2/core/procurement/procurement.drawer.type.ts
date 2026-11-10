@@ -37,4 +37,11 @@ export interface ProcurementDrawerProps {
    * và đặt dưới các trường chính. Mặc định false giữ hành vi luồng thường.
    */
   branchOptional?: boolean;
+  /** Mã hàng bắt buộc cho mọi dòng đơn mua (Garage). PR và ERP giữ mã tùy chọn. */
+  itemCodeRequired?: boolean;
+  /**
+   * Bật ô chọn đề nghị mua (chỉ khi tạo mới). Giá trị là mã quyền collection cần có quyền `read`
+   * để xem danh sách đề nghị; thiếu thì ô bị ẩn. PR không bắt buộc.
+   */
+  requestPickerCollection?: string;
 }

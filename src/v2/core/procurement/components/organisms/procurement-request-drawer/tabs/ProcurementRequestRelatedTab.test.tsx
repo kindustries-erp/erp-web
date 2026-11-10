@@ -44,7 +44,9 @@ describe("ProcurementRequestRelatedTab", () => {
       />,
     );
 
-    const button = screen.getByRole("button", { name: /Tạo PO từ PR/i });
+    const button = screen.getByRole("button", {
+      name: /Lập đơn mua từ đề nghị này/i,
+    });
     expect(button).toBeDefined();
     await userEvent.click(button);
     expect(handleOrder).toHaveBeenCalled();

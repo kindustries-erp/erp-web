@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { todayIsoDate } from "../../../procurement.rules";
 import {
@@ -36,6 +37,7 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const queryClient = useQueryClient();
   const creating = !props.documentId;
   const branchOptional = Boolean(props.branchOptional);
+  const itemCodeRequired = Boolean(props.itemCodeRequired);
   const [mode, setMode] = React.useState(props.mode);
   const [form, setForm] = React.useState<ProcurementOrderFormValue>(() =>
     emptyOrderForm(todayIsoDate()),
@@ -45,6 +47,17 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   );
   const [errors, setErrors] = React.useState<ProcurementOrderFormErrors>({});
   const [discardOpen, setDiscardOpen] = React.useState(false);
+  const [requestLabel, setRequestLabel] = React.useState("");
+  // Ô chọn đề nghị chỉ hiện khi tạo mới, có cấu hình collection và user được đọc đề nghị
+  const canReadRequests = useV2HasPermission({
+    collection: props.requestPickerCollection ?? "",
+    action: "read",
+  });
+  const canPickRequest =
+    creating &&
+    Boolean(props.requestPickerCollection) &&
+    Boolean(props.requestApi?.poDraft) &&
+    canReadRequests;
 
   const detail = useQuery({
     queryKey: [props.queryKey, "detail", props.documentId],
@@ -71,6 +84,46 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
       Boolean(props.requestApi?.poDraft),
   });
 
+  /** Điền form từ đề nghị và bản nháp PO (dùng cho cả mở từ PR lẫn chọn PR trong drawer) */
+  const applyRequest = (
+    request: ProcurementRequestDetail,
+    draft: ProcurementPoDraft,
+  ) => {
+    const next = orderFormFromRequestDraft(request, draft);
+    setForm(next);
+    setInitial(next);
+    setRequestLabel(request.requestNo);
+  };
+
+  /**
+   * Chọn đề nghị trong drawer PO (tạo mới). Bỏ chọn thì giữ dòng đã nạp nhưng gỡ liên kết PR,
+   * để dòng trở lại dạng lập tay.
+   */
+  const pickRequest = (requestId: string | null) => {
+    if (!requestId) {
+      setRequestLabel("");
+      setForm((current) => ({
+        ...current,
+        requestId: null,
+        lines: current.lines.map((l) => ({ ...l, requestLineId: null })),
+      }));
+      return;
+    }
+    const api = props.requestApi;
+    if (!api?.poDraft) return;
+    void Promise.all([
+      api.get(requestId) as Promise<ProcurementRequestDetail>,
+      api.poDraft(requestId) as Promise<ProcurementPoDraft>,
+    ])
+      .then(([request, draft]) => applyRequest(request, draft))
+      .catch((error) =>
+        showProcurementError(
+          error,
+          t("v2.procurement.errors.requestLoad", "Không tải được đề nghị mua"),
+        ),
+      );
+  };
+
   React.useEffect(() => {
     if (!props.open) return;
     setErrors({});
@@ -79,16 +132,12 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
       setForm(next);
       setInitial(next);
     } else if (creating && fromRequest.data) {
-      const next = orderFormFromRequestDraft(
-        fromRequest.data.request,
-        fromRequest.data.draft,
-      );
-      setForm(next);
-      setInitial(next);
+      applyRequest(fromRequest.data.request, fromRequest.data.draft);
     } else if (creating) {
       const empty = emptyOrderForm(todayIsoDate());
       setForm(empty);
       setInitial(empty);
+      setRequestLabel("");
     }
   }, [props.open, detail.data, creating, fromRequest.data]);
 
@@ -130,7 +179,7 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   ) => setForm((current) => ({ ...current, [key]: value }));
 
   const submit = () => {
-    const next = validateOrderForm(form, branchOptional);
+    const next = validateOrderForm(form, branchOptional, itemCodeRequired);
     setErrors(next);
     if (hasOrderFormErrors(next)) {
       showProcurementWarning(
@@ -169,6 +218,13 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     /** Chi nhánh tùy chọn được sửa khi nháp; PO lập từ PR vẫn khóa theo PR trong section */
     branchLocked: branchOptional ? false : !creating,
     branchOptional,
+    itemCodeRequired,
+    canPickRequest,
+    requestLabel,
+    requestApi: props.requestApi,
+    pickRequest,
+    /** Có PR thì dòng do PR điền sẵn: không thêm, không xóa dòng */
+    linesLocked: Boolean(form.requestId),
     editable,
     mode,
     setMode,

@@ -13,10 +13,8 @@ import { useProcurementTransition } from "./useProcurementTransition";
 import { useProcurementRowActions } from "./useProcurementRowActions";
 import { useProcurementApprovalGate } from "./useProcurementApprovalGate";
 import { useProcurementAlreadyDecided } from "./useProcurementAlreadyDecided";
-import {
-  consumeProcurementRequestIntent,
-  useProcurementIntentStore,
-} from "../procurement.intent";
+import { useProcurementOrderIntent } from "./useProcurementOrderIntent";
+import { useProcurementIntentStore } from "../procurement.intent";
 
 /** Cấu hình một màn danh sách procurement: module truyền vào, core xử lý phần còn lại. */
 export interface ProcurementActionTarget<T> {
@@ -63,16 +61,13 @@ export function useProcurementList<T extends { id: string }>(
   const [deleteTarget, setDeleteTarget] = React.useState<T | null>(null);
   const purgeState = useProcurementPurge(config);
   const approval = useProcurementApprovalGate(config);
-  const pendingRequestId = useProcurementIntentStore((s) => s.pendingRequestId);
-
-  // Mở sẵn drawer tạo PO nếu vừa được chuyển sang từ một PR
-  React.useEffect(() => {
-    if (!canCreate) return;
-    const fromRequestId = consumeProcurementRequestIntent();
-    if (fromRequestId) {
-      setDrawer({ id: null, mode: "edit", fromRequestId });
-    }
-  }, [canCreate, pendingRequestId]);
+  // Mở sẵn drawer tạo đơn mua nếu vừa được chuyển sang từ một đề nghị (chỉ danh sách đơn mua)
+  const openOrderDraft = React.useCallback(
+    (fromRequestId: string) =>
+      setDrawer({ id: null, mode: "edit", fromRequestId }),
+    [],
+  );
+  useProcurementOrderIntent(config, canCreate, openOrderDraft);
 
   const onListError = React.useCallback(
     (error: unknown) =>
@@ -127,6 +122,8 @@ export function useProcurementList<T extends { id: string }>(
   const orderFromRequest = React.useCallback(
     (row: T) => {
       if (!config.poHref) return;
+      // Đóng drawer đề nghị đang mở (nếu có) để chỉ còn drawer đơn mua
+      setDrawer(null);
       useProcurementIntentStore.getState().setPendingRequestId(row.id);
       window.history.pushState(null, "", config.poHref);
       window.dispatchEvent(new PopStateEvent("popstate"));

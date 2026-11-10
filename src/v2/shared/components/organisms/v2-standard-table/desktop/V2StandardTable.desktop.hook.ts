@@ -66,7 +66,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     getCoreRowModel: getCoreRowModel(),
     getRowId: getRowKey,
     enableRowSelection,
-    columnResizeMode: "onEnd",
+    columnResizeMode: "onChange",
     state: {
       columnOrder,
       columnVisibility,
