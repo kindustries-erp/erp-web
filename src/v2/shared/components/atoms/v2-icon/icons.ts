@@ -94,4 +94,6 @@ export {
   Info,
   CheckCircle2,
   XCircle,
+  PanelLeft,
+  PanelLeftClose,
 } from "lucide-react";
