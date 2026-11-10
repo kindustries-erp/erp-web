@@ -3,8 +3,13 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { Checkbox, Input } from "@/v2/shared/ui";
+import { Checkbox } from "@/v2/shared/ui";
 import type { V2ViewSubmitInput } from "../hooks/V2StandardTable.views.hook";
+import {
+  V2ViewFilterField,
+  type V2ViewFilterOption,
+} from "./V2StandardTable.viewdialog.filter-field";
+import { V2PresetNameField } from "./V2StandardTable.presetname";
 
 export interface V2ViewDialogColumn {
   key: string;
@@ -17,23 +22,29 @@ export interface V2ViewConfigDialogProps {
   initialName: string;
   columns: V2ViewDialogColumn[];
   initialVisibleKeys: string[];
+  /** Nhóm lọc có sẵn của trang; bỏ trống thì không hiện ô chọn bộ lọc */
+  filterOptions?: V2ViewFilterOption[];
+  initialFilterKey?: string;
   isNameTaken: (name: string) => boolean;
   onSubmit: (input: V2ViewSubmitInput) => void;
   onClose: () => void;
 }
 
-/** Tạo/sửa chế độ xem: tên (bắt buộc, không trùng) + cột hiển thị (ít nhất 1) */
+/** Tạo/sửa chế độ xem: tên (bắt buộc, không trùng), bộ lọc có sẵn, cột hiển thị (ít nhất 1) */
 export const V2ViewConfigDialog: React.FC<V2ViewConfigDialogProps> = ({
   mode,
   initialName,
   columns,
   initialVisibleKeys,
+  filterOptions,
+  initialFilterKey,
   isNameTaken,
   onSubmit,
   onClose,
 }) => {
   const { t } = useV2Translation();
   const [name, setName] = React.useState(initialName);
+  const [filterKey, setFilterKey] = React.useState(initialFilterKey ?? "");
   const [visible, setVisible] = React.useState(
     () => new Set(initialVisibleKeys),
   );
@@ -64,7 +75,12 @@ export const V2ViewConfigDialog: React.FC<V2ViewConfigDialogProps> = ({
   const submit = () => {
     setSubmitted(true);
     if (nameError || columnsError) return;
-    onSubmit({ name: trimmed, visibleKeys });
+    const hasFilter = (filterOptions?.length ?? 0) > 0 && filterKey !== "";
+    onSubmit({
+      name: trimmed,
+      visibleKeys,
+      ...(hasFilter && { filterKey }),
+    });
   };
 
   const title =
@@ -90,30 +106,23 @@ export const V2ViewConfigDialog: React.FC<V2ViewConfigDialogProps> = ({
       }
     >
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="v2-view-name">
-            <V2Text variant="label" required>
-              {t("v2.table.viewNameLabel", "Tên chế độ xem")}
-            </V2Text>
-          </label>
-          <Input
-            id="v2-view-name"
-            value={name}
-            placeholder={t(
-              "v2.table.viewNamePlaceholder",
-              "Nhập tên chế độ xem",
-            )}
-            aria-invalid={submitted && Boolean(nameError)}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
-            autoFocus
+        <V2PresetNameField
+          id="v2-view-name"
+          label={t("v2.table.viewNameLabel", "Tên chế độ xem")}
+          placeholder={t("v2.table.viewNamePlaceholder", "Nhập tên chế độ xem")}
+          value={name}
+          onChange={setName}
+          onSubmit={submit}
+          error={nameError}
+          submitted={submitted}
+        />
+        {filterOptions && filterOptions.length > 0 && (
+          <V2ViewFilterField
+            options={filterOptions}
+            value={filterKey}
+            onChange={setFilterKey}
           />
-          {submitted && nameError && (
-            <V2Text as="p" variant="helper" color="destructive" role="alert">
-              {nameError}
-            </V2Text>
-          )}
-        </div>
+        )}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <V2Text variant="label">

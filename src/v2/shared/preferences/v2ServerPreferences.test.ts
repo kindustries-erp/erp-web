@@ -54,6 +54,43 @@ describe("loadV2ServerPreferences", () => {
     ).toMatchObject({ columns: { visibility: { code: true } } });
   });
 
+  it("giữ filterKey của custom view khi nạp cấu hình v2 từ server", async () => {
+    mockResponses(
+      async () => ({ data: { data: {} } }),
+      async () => ({ data: { data: {} } }),
+      async () => ({
+        data: {
+          items: [
+            {
+              tableId: "procurement-requests-garage-table",
+              updatedAt: "2026-11-10T00:00:00Z",
+              views: {
+                customViews: [
+                  {
+                    key: "custom_1",
+                    label: "Chờ duyệt",
+                    baseKey: "all",
+                    visibility: { code: true },
+                    order: ["code"],
+                    filterKey: "pending",
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+    );
+
+    await loadV2ServerPreferences();
+
+    expect(
+      useV2TablePreferencesStore.getState().tables[
+        "procurement-requests-garage-table"
+      ]?.views?.customViews[0],
+    ).toMatchObject({ key: "custom_1", filterKey: "pending" });
+  });
+
   it("lets the v2 procurement config override the v1 copy of the same table", async () => {
     mockResponses(
       async () => ({

@@ -82,7 +82,8 @@ export function ProcurementListPage<T extends { id: string }>({
           preferencesStorage: v2ColumnPreferencesStorage,
           viewPresetStorage: v2ViewPresetStorage,
           emptyLabel: t("v2.procurement.empty", "Không có dữ liệu"),
-          toolbar: { search: {} },
+          // filterPanel: nút "Bộ lọc (n)" trên toolbar cần panel để mở được
+          toolbar: { search: {}, filterPanel: {} },
         },
         useData: (query) =>
           useProcurementQuery(config, query, state.onListError),

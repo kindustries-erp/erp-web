@@ -19,11 +19,12 @@ import type { V2StandardTableProps } from "../V2StandardTable.type";
 export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
   const { columns, getRowKey, rowActions, loading = false } = props;
   const { t } = useV2Translation();
-  const { state, view, selection, columnsByKey } = useV2TableController(props);
+  const { state, view, selection, columnsByKey, fetchOptionsForKey } =
+    useV2TableController(props);
   const filters = useV2HeaderFilters({
     tableId: props.tableId,
     columnsByKey,
-    fetchOptionsFor: view.fetchOptionsFor,
+    fetchOptionsForKey,
     filtersStrFor: view.filtersStrFor,
   });
   const { panel, toolbarConfig } = useV2FilterPanelToolbar({
