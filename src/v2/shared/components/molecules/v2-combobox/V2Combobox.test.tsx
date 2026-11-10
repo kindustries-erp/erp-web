@@ -125,6 +125,30 @@ describe("V2Combobox", () => {
     expect(onValueChange).toHaveBeenCalledWith(null);
   });
 
+  it("reserves room on the trigger for the clear button and chevron cluster", () => {
+    render(
+      <V2Combobox
+        options={options}
+        value="in"
+        onValueChange={vi.fn()}
+        clearable
+      />,
+    );
+    expect(screen.getByRole("combobox").className).toContain("pr-16");
+    const clear = screen.getByRole("button", { name: "Bỏ lựa chọn" });
+    // Nút X là V2Button ghost icon-xs, không phải <button> thuần
+    expect(clear.className).toContain("h-5 w-5");
+    expect(clear.className).toContain("pointer-events-auto");
+  });
+
+  it("does not reserve clear space when not clearable", () => {
+    render(<V2Combobox options={options} value="in" onValueChange={vi.fn()} />);
+    const trigger = screen.getByRole("combobox");
+    expect(trigger.className).toContain("pr-9");
+    expect(trigger.className).not.toContain("pr-16");
+    expect(screen.queryByRole("button", { name: "Bỏ lựa chọn" })).toBeNull();
+  });
+
   it("hides the search box when not searchable", () => {
     render(
       <V2Combobox

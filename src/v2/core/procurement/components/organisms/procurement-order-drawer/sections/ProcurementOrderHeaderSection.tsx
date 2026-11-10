@@ -10,10 +10,12 @@ import {
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
-import { placeBranchField } from "../../../../procurement.branch";
+import { placeBranchAfter } from "../../../../procurement.branch";
+import type { ProcurementApi } from "../../../../procurement.types";
 import {
   ProcurementBranchPicker,
   ProcurementDateField,
+  ProcurementRequestPicker,
   ProcurementSupplierPicker,
 } from "../../../molecules/procurement-pickers/ProcurementPickers";
 import type {
@@ -26,15 +28,24 @@ export interface ProcurementOrderHeaderSectionProps {
   errors: ProcurementOrderFormErrors;
   viewing: boolean;
   branchLocked: boolean;
-  /** Chi nhánh tùy chọn (Garage): không bắt buộc, bỏ trống được, đặt dưới các trường chính */
+  /** Chi nhánh tùy chọn (Garage): không bắt buộc, bỏ trống được, đặt ngay dưới hai ô ngày */
   branchOptional?: boolean;
   setField: <K extends keyof ProcurementOrderFormValue>(
     key: K,
     value: ProcurementOrderFormValue[K],
   ) => void;
+  /** Hiện ô chọn đề nghị mua (chỉ khi tạo mới và có quyền đọc đề nghị) */
+  canPickRequest?: boolean;
+  /** Tên đề nghị đã chọn, để hiện ở ô và chế độ xem */
+  requestLabel?: string;
+  requestApi?: ProcurementApi<unknown>;
+  onPickRequest?: (requestId: string | null) => void;
 }
 
-/** Section đầu đơn mua (cột phải): chi nhánh, ngày đơn, NCC, ngày dự kiến, số HĐ NCC, ghi chú. */
+/**
+ * Section đầu đơn mua (cột phải). Sửa: lưới 2 cột, Ngày đơn và Ngày dự kiến nhận cùng hàng,
+ * chi nhánh (Garage đặt dưới hai ô ngày). Chi nhánh khóa khi đơn gắn đề nghị.
+ */
 export function ProcurementOrderHeaderSection({
   form,
   errors,
@@ -42,6 +53,10 @@ export function ProcurementOrderHeaderSection({
   branchLocked,
   branchOptional = false,
   setField,
+  canPickRequest = false,
+  requestLabel = "",
+  requestApi,
+  onPickRequest,
 }: ProcurementOrderHeaderSectionProps) {
   const { t } = useV2Translation();
   const requiredError = t(
@@ -50,8 +65,17 @@ export function ProcurementOrderHeaderSection({
   );
 
   if (viewing) {
-    const rows: DrawerRowConfig[] = placeBranchField(
+    const rows: DrawerRowConfig[] = placeBranchAfter(
       [
+        ...(form.requestId
+          ? [
+              {
+                key: "request",
+                label: t("v2.procurement.fields.request", "Từ đề nghị mua"),
+                value: requestLabel || form.requestId,
+              },
+            ]
+          : []),
         {
           key: "branch",
           label: t("v2.procurement.fields.branch", "Chi nhánh"),
@@ -63,14 +87,14 @@ export function ProcurementOrderHeaderSection({
           value: form.orderDate || "—",
         },
         {
-          key: "supplier",
-          label: t("v2.procurement.fields.supplier", "Nhà cung cấp"),
-          value: form.supplierName || "—",
-        },
-        {
           key: "expectedDate",
           label: t("v2.procurement.fields.expectedDate", "Ngày dự kiến nhận"),
           value: form.expectedDate || "—",
+        },
+        {
+          key: "supplier",
+          label: t("v2.procurement.fields.supplier", "Nhà cung cấp"),
+          value: form.supplierName || "—",
         },
         {
           key: "supplierInvoiceNo",
@@ -86,6 +110,7 @@ export function ProcurementOrderHeaderSection({
         },
       ],
       ["branch"],
+      "expectedDate",
       branchOptional,
     );
 
@@ -98,18 +123,37 @@ export function ProcurementOrderHeaderSection({
     );
   }
 
-  const fields: V2DrawerFieldItem[] = placeBranchField(
+  const fields: V2DrawerFieldItem[] = placeBranchAfter(
     [
+      ...(canPickRequest && requestApi && onPickRequest
+        ? [
+            {
+              key: "requestId",
+              label: t("v2.procurement.fields.request", "Từ đề nghị mua"),
+              className: "sm:col-span-2",
+              render: () => (
+                <ProcurementRequestPicker
+                  value={form.requestId}
+                  label={requestLabel}
+                  requestApi={requestApi}
+                  onChange={onPickRequest}
+                />
+              ),
+            },
+          ]
+        : []),
       {
         key: "branchId",
         label: t("v2.procurement.fields.branch", "Chi nhánh"),
         required: !branchOptional,
         error: errors.branchId ? requiredError : undefined,
+        className: "sm:col-span-2",
         render: () => (
           <ProcurementBranchPicker
             value={form.branchId}
             label={form.branchName}
-            viewing={branchLocked || Boolean(form.requestId)}
+            viewing={false}
+            locked={branchLocked || Boolean(form.requestId)}
             clearable={branchOptional}
             onChange={(id, name) => {
               setField("branchId", id);
@@ -132,6 +176,18 @@ export function ProcurementOrderHeaderSection({
         ),
       },
       {
+        key: "expectedDate",
+        label: t("v2.procurement.fields.expectedDate", "Ngày dự kiến nhận"),
+        render: () => (
+          <ProcurementDateField
+            value={form.expectedDate}
+            viewing={false}
+            minDate={form.orderDate}
+            onChange={(v) => setField("expectedDate", v)}
+          />
+        ),
+      },
+      {
         key: "supplierId",
         label: t("v2.procurement.fields.supplier", "Nhà cung cấp"),
         render: () => (
@@ -143,18 +199,6 @@ export function ProcurementOrderHeaderSection({
               setField("supplierId", id);
               setField("supplierName", name);
             }}
-          />
-        ),
-      },
-      {
-        key: "expectedDate",
-        label: t("v2.procurement.fields.expectedDate", "Ngày dự kiến nhận"),
-        render: () => (
-          <ProcurementDateField
-            value={form.expectedDate}
-            viewing={false}
-            minDate={form.orderDate}
-            onChange={(v) => setField("expectedDate", v)}
           />
         ),
       },
@@ -185,12 +229,13 @@ export function ProcurementOrderHeaderSection({
       },
     ],
     ["branchId"],
+    "expectedDate",
     branchOptional,
   );
 
   return (
     <DrawerSection title={t("v2.procurement.sections.header", "Thông tin đơn")}>
-      <V2DrawerFieldGrid fields={fields} columns={1} />
+      <V2DrawerFieldGrid fields={fields} />
     </DrawerSection>
   );
 }

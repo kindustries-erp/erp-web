@@ -25,7 +25,7 @@ registerV2ModuleLocale("procurement", {
       submitNotCreatorReason: "Chỉ người tạo mới được gửi duyệt",
       viewDetailInDrawer: "Xem chi tiết phiếu trong Drawer",
       create: "Tạo mới",
-      createOrder: "Tạo PO từ PR",
+      createOrder: "Lập đơn mua từ đề nghị này",
       submit: "Gửi duyệt",
       recall: "Thu hồi",
       approve: "Duyệt",
@@ -97,6 +97,8 @@ registerV2ModuleLocale("procurement", {
     fields: {
       branch: "Chi nhánh",
       branchPlaceholder: "Chọn chi nhánh",
+      request: "Từ đề nghị mua",
+      requestPlaceholder: "Chọn đề nghị mua hàng",
       orderDate: "Ngày đơn",
       expectedDate: "Ngày dự kiến nhận",
       supplier: "Nhà cung cấp",
@@ -123,14 +125,15 @@ registerV2ModuleLocale("procurement", {
     related: {
       noLinks: "Chưa có chứng từ liên kết",
       noOrdersYet: "Chưa có đơn mua hàng nào",
-      createPoTitle: "Khởi tạo đơn mua hàng (PO)",
+      createPoTitle: "Lập đơn mua hàng",
       createPoDesc:
-        "Đề nghị đã được duyệt. Bạn có thể tạo đơn mua PO điền sẵn từ các dòng hàng của đề nghị này.",
+        "Đề nghị đã được duyệt. Bạn có thể lập đơn mua hàng điền sẵn từ các dòng hàng của đề nghị này.",
     },
     lines: {
       type: "Loại",
       code: "Mã",
       name: "Tên",
+      note: "Ghi chú",
       qty: "Số lượng",
       price: "Đơn giá",
       estPrice: "Đơn giá dự kiến",
@@ -143,7 +146,9 @@ registerV2ModuleLocale("procurement", {
     errors: {
       required: "Trường này bắt buộc",
       linesEmpty: "Cần ít nhất một dòng hàng",
+      requestLoad: "Không tải được đề nghị mua",
       itemName: "Dòng hàng thiếu tên",
+      itemCode: "Mã hàng bắt buộc",
       qty: "Số lượng phải lớn hơn 0",
     },
     drawer: {
@@ -206,7 +211,7 @@ registerV2ModuleLocale("procurement", {
       submitNotCreatorReason: "Only the creator can submit for approval",
       viewDetailInDrawer: "View details in Drawer",
       create: "Create",
-      createOrder: "Create PO from request",
+      createOrder: "Create purchase order from this request",
       submit: "Submit",
       recall: "Recall",
       approve: "Approve",
@@ -278,6 +283,8 @@ registerV2ModuleLocale("procurement", {
     fields: {
       branch: "Branch",
       branchPlaceholder: "Select a branch",
+      request: "From purchase request",
+      requestPlaceholder: "Select a purchase request",
       orderDate: "Order date",
       expectedDate: "Expected receipt date",
       supplier: "Supplier",
@@ -304,7 +311,7 @@ registerV2ModuleLocale("procurement", {
     related: {
       noLinks: "No related documents",
       noOrdersYet: "No purchase orders yet",
-      createPoTitle: "Create purchase order (PO)",
+      createPoTitle: "Create purchase order",
       createPoDesc:
         "The request has been approved. You can create a pre-filled PO from items in this request.",
     },
@@ -312,6 +319,7 @@ registerV2ModuleLocale("procurement", {
       type: "Type",
       code: "Code",
       name: "Name",
+      note: "Note",
       qty: "Quantity",
       price: "Unit price",
       estPrice: "Estimated unit price",
@@ -324,7 +332,9 @@ registerV2ModuleLocale("procurement", {
     errors: {
       required: "This field is required",
       linesEmpty: "At least one line is required",
+      requestLoad: "Could not load the purchase request",
       itemName: "A line is missing its name",
+      itemCode: "Item code is required",
       qty: "Quantity must be greater than 0",
     },
     drawer: {

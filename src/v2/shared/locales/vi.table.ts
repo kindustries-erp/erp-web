@@ -127,5 +127,15 @@ export const v2ViTable = {
   closePanel: "Đóng bộ lọc",
   removeFilter: "Gỡ bộ lọc",
   noMatchingColumns: "Không có cột phù hợp",
+  filterTabColumns: "Cột",
+  filterTabPresets: "Bộ lọc đã lưu",
+  filterGroupText: "Văn bản",
+  filterGroupSelect: "Chọn / Trạng thái",
+  filterGroupDate: "Ngày",
+  filterGroupNumber: "Số",
+  filterPresetsEmpty:
+    "Chưa có bộ lọc đã lưu. Tạo bộ lọc ở thanh công cụ của bảng.",
+  filterPresetClear: "Bỏ bộ lọc đang chọn",
+  filterDone: "Đóng",
   valuesCount: "{{count}} giá trị",
 };

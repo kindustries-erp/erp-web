@@ -77,6 +77,11 @@ export const garageProcurementOrdersDisplay: ProcurementPageDisplay<ProcurementO
     icon: <ShoppingCart className="h-4 w-4" />,
     buildColumns: buildProcurementOrderColumns,
     renderDrawer: (props) => (
-      <ProcurementOrderDrawer {...props} branchOptional />
+      <ProcurementOrderDrawer
+        {...props}
+        branchOptional
+        itemCodeRequired
+        requestPickerCollection="garage_procurement_requests"
+      />
     ),
   };

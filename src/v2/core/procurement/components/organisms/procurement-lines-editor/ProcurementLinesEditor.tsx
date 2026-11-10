@@ -30,6 +30,10 @@ export interface ProcurementLinesEditorProps {
   errorText?: string;
   title?: React.ReactNode;
   addButtonLabel?: string;
+  /** Khóa thêm/xóa dòng (dòng do đề nghị mua điền sẵn). Vẫn sửa được nội dung dòng. */
+  lockLines?: boolean;
+  /** Đánh dấu cột Mã là bắt buộc (đơn mua Garage) */
+  itemCodeRequired?: boolean;
 }
 
 /** Bảng dòng chứng từ PR/PO chuẩn V2: dùng Table và array config, đồng bộ kiến trúc với GoodsReceiptLinesTable. */
@@ -41,6 +45,8 @@ export function ProcurementLinesEditor({
   errorText,
   title,
   addButtonLabel,
+  lockLines = false,
+  itemCodeRequired = false,
 }: ProcurementLinesEditorProps) {
   const { t } = useV2Translation();
   const patch = (key: string, ch: Partial<ProcurementLineFormValue>) =>
@@ -57,9 +63,15 @@ export function ProcurementLinesEditor({
   );
 
   const visibleColumns = React.useMemo(
-    () => columns.filter((col) => !viewing || !col.hideWhenViewing),
-    [columns, viewing],
+    () =>
+      columns.filter(
+        (col) =>
+          (!viewing || !col.hideWhenViewing) &&
+          !(lockLines && col.id === "actions"),
+      ),
+    [columns, viewing, lockLines],
   );
+  const canEditLines = !viewing && !lockLines;
 
   const totalQty = React.useMemo(
     () => lines.reduce((sum, l) => sum + (Number(l.qty) || 0), 0),
@@ -82,7 +94,7 @@ export function ProcurementLinesEditor({
       title={title ?? t("v2.procurement.sections.lines", "Dòng hàng")}
       count={lines.length}
       titleExtra={
-        !viewing && (
+        canEditLines && (
           <V2Button
             variant="outline"
             size="sm"
@@ -103,6 +115,9 @@ export function ProcurementLinesEditor({
                   {col.headerKey
                     ? t(col.headerKey, col.defaultHeader)
                     : col.defaultHeader}
+                  {itemCodeRequired && !viewing && col.id === "itemCode" && (
+                    <span className="text-destructive"> *</span>
+                  )}
                 </TableHead>
               ))}
             </TableRow>

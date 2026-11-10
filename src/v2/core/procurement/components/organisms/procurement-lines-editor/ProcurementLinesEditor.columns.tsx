@@ -9,6 +9,7 @@ import {
 } from "@/v2/shared/components";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
+import { procurementLineNoteColumn } from "./ProcurementLinesEditor.columns.note";
 import {
   procurementLineAmount,
   toNumberOrNull,
@@ -88,8 +89,8 @@ export function getProcurementLineColumns(
       id: "itemCode",
       headerKey: "v2.procurement.lines.code",
       defaultHeader: "Mã",
-      headerClassName: "p-2 text-left min-w-[110px]",
-      cellClassName: "p-2 text-xs min-w-[110px]",
+      headerClassName: "p-2 text-left w-24 min-w-[88px]",
+      cellClassName: "p-2 text-xs w-24 min-w-[88px]",
       renderCell: ({ viewing, line, onPatch, t }) =>
         viewing ? (
           <V2Text className="font-mono text-xs">{line.itemCode || "—"}</V2Text>
@@ -108,8 +109,8 @@ export function getProcurementLineColumns(
       id: "itemName",
       headerKey: "v2.procurement.lines.name",
       defaultHeader: "Tên",
-      headerClassName: "p-2 text-left min-w-[180px]",
-      cellClassName: "p-2 text-xs min-w-[180px]",
+      headerClassName: "p-2 text-left min-w-[160px] w-[26%]",
+      cellClassName: "p-2 text-xs min-w-[160px] w-[26%]",
       renderCell: ({ viewing, line, onPatch, t }) =>
         viewing ? (
           <V2Text className="font-medium text-xs">
@@ -129,6 +130,7 @@ export function getProcurementLineColumns(
           />
         ),
     },
+    procurementLineNoteColumn,
     {
       id: "qty",
       headerKey: "v2.procurement.lines.qty",
@@ -195,10 +197,11 @@ export function getProcurementLineColumns(
       id: "amount",
       headerKey: "v2.procurement.lines.amount",
       defaultHeader: "Thành tiền",
-      headerClassName: "p-2 text-right w-32",
-      cellClassName: "p-2 text-right text-xs w-32",
+      headerClassName: "p-2 text-right w-40 min-w-[160px] whitespace-nowrap",
+      cellClassName:
+        "p-2 text-right text-xs w-40 min-w-[160px] whitespace-nowrap",
       renderCell: ({ line }) => (
-        <V2Text className="text-right font-semibold text-primary tabular-nums text-xs">
+        <V2Text className="text-right font-semibold text-primary tabular-nums text-xs whitespace-nowrap">
           {fmtAmount(procurementLineAmount(line))}
         </V2Text>
       ),

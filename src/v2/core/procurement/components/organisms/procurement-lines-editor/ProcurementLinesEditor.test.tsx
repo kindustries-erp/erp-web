@@ -27,6 +27,45 @@ describe("ProcurementLinesEditor", () => {
     ]);
   });
 
+  it("nhập ghi chú cho từng dòng và gửi vào trường description", () => {
+    const onChange = vi.fn();
+    const lines = [emptyProcurementLine()];
+    render(
+      <ProcurementLinesEditor
+        lines={lines}
+        onChange={onChange}
+        viewing={false}
+        priceLabel="Đơn giá"
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Ghi chú"), {
+      target: { value: "Giao trước 12h" },
+    });
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        key: lines[0].key,
+        description: "Giao trước 12h",
+      }),
+    ]);
+  });
+
+  it("chế độ xem hiện ghi chú dạng văn bản", () => {
+    const line = {
+      ...emptyProcurementLine(),
+      itemName: "Lọc dầu",
+      description: "Hàng hãng chính",
+    };
+    render(
+      <ProcurementLinesEditor
+        lines={[line]}
+        onChange={vi.fn()}
+        viewing
+        priceLabel="Đơn giá"
+      />,
+    );
+    expect(screen.getByText("Hàng hãng chính")).toBeInTheDocument();
+  });
+
   it("không cho xóa dòng cuối cùng", () => {
     render(
       <ProcurementLinesEditor

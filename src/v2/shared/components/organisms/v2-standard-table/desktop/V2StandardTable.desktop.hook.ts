@@ -66,7 +66,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     getCoreRowModel: getCoreRowModel(),
     getRowId: getRowKey,
     enableRowSelection,
-    columnResizeMode: "onEnd",
+    columnResizeMode: "onChange",
     state: {
       columnOrder,
       columnVisibility,
@@ -157,6 +157,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     hasSummary,
     totalPages,
     panel,
+    filterPresets,
     toolbarProps,
     isFullscreen,
     emptyLabel: props.emptyLabel ?? t("v2.table.empty", "Không có dữ liệu"),

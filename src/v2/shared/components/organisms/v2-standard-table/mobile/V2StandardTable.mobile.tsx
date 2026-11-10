@@ -9,11 +9,10 @@ import { resolveMobileSlots } from "./V2StandardTable.mobile-slots";
 import { V2StandardTableMobileCard } from "./V2StandardTable.mobile-card";
 import { V2TableSkeletonCards } from "../skeleton";
 import { V2TableToolbar } from "../toolbar/V2StandardTable.toolbar";
-import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
 import { useV2ToolbarPortal } from "@/v2/shared/components/molecules/v2-tab-panel";
 import { useV2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import { useV2FilterPanelToolbar } from "../filterpanel/V2StandardTable.filterpanel.hook";
-import { V2TableFilterPanel } from "../filterpanel/V2StandardTable.filterpanel";
+import { V2TableFilterDrawer } from "../filterpanel/filterdrawer";
 import type { V2StandardTableProps } from "../V2StandardTable.type";
 
 export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
@@ -111,21 +110,13 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         onPageSizeChange={state.setPageSize}
         className="mt-2 shrink-0 pb-12 sm:pb-0"
       />
-      <V2Modal
-        open={panel.open}
-        onOpenChange={panel.setOpen}
-        title={t("v2.table.filter", "Bộ lọc")}
-        size="full"
-        bodyClassName="p-0"
-      >
-        <V2TableFilterPanel
-          panel={panel}
-          columns={columns}
-          state={state}
-          filters={filters}
-          extraContent={props.toolbar?.filterPanel?.extraContent}
-        />
-      </V2Modal>
+      <V2TableFilterDrawer
+        panel={panel}
+        columns={columns}
+        state={state}
+        filters={filters}
+        extraContent={props.toolbar?.filterPanel?.extraContent}
+      />
     </div>
   );
 }

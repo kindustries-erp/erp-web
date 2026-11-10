@@ -10,6 +10,10 @@ export interface ProcurementOrderMainSectionsProps {
   form: ProcurementOrderFormValue;
   errors: ProcurementOrderFormErrors;
   viewing: boolean;
+  /** Dòng do đề nghị mua điền sẵn: không thêm/xóa dòng */
+  linesLocked?: boolean;
+  /** Mã hàng bắt buộc (đơn Garage) */
+  itemCodeRequired?: boolean;
   setField: <K extends keyof ProcurementOrderFormValue>(
     key: K,
     value: ProcurementOrderFormValue[K],
@@ -19,6 +23,7 @@ export interface ProcurementOrderMainSectionsProps {
 const LINES_ERROR_KEY = {
   empty: "v2.procurement.errors.linesEmpty",
   itemName: "v2.procurement.errors.itemName",
+  itemCode: "v2.procurement.errors.itemCode",
   qty: "v2.procurement.errors.qty",
 } as const;
 
@@ -27,6 +32,8 @@ export function ProcurementOrderMainSections({
   form,
   errors,
   viewing,
+  linesLocked = false,
+  itemCodeRequired = false,
   setField,
 }: ProcurementOrderMainSectionsProps) {
   const { t } = useV2Translation();
@@ -41,6 +48,8 @@ export function ProcurementOrderMainSections({
       viewing={viewing}
       priceLabel={t("v2.procurement.lines.price", "Đơn giá")}
       errorText={linesError}
+      lockLines={linesLocked}
+      itemCodeRequired={itemCodeRequired}
     />
   );
 }

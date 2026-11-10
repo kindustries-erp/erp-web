@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ChevronDown, X } from "lucide-react";
+import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Input } from "@/v2/shared/components/atoms/v2-input";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
@@ -62,20 +63,20 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
       aria-label={ariaLabel ?? hint}
       disabled={disabled}
       className={cn(
-        "flex h-8 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm",
+        "flex h-8 w-full items-center gap-2 rounded-md border border-input bg-background pl-3 text-sm",
+        // Chừa chỗ cho cụm bên phải (nút X + mũi tên) để chữ không chạm vào
+        canClear ? "pr-16" : "pr-9",
         V2_DRAWER_FOCUS_RING_CLASS,
         "disabled:cursor-not-allowed disabled:opacity-50",
-        canClear && "pr-8",
       )}
     >
       <V2Text
         asChild
         color={isPlaceholder ? "muted" : "default"}
-        className="truncate"
+        className="min-w-0 flex-1 truncate text-left"
       >
         <span>{displayLabel}</span>
       </V2Text>
-      <ChevronDown aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
     </button>
   );
 
@@ -131,16 +132,23 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
         className="w-64 p-1"
         triggerClassName="w-full"
       />
-      {canClear && (
-        <button
-          type="button"
-          aria-label={t("v2.form.clearSelection", "Bỏ lựa chọn")}
-          className="absolute right-7 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
-          onClick={() => onValueChange(null)}
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      )}
+      {/* Cụm bên phải neo cùng mép với padding trái (12px). Chỉ nút X và chevron nhận click. */}
+      <div className="pointer-events-none absolute right-3 top-1/2 flex h-4 -translate-y-1/2 items-center gap-1">
+        {canClear && (
+          <V2Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={t("v2.form.clearSelection", "Bỏ lựa chọn")}
+            title={t("v2.form.clearSelection", "Bỏ lựa chọn")}
+            className="pointer-events-auto h-5 w-5 p-0 text-muted-fg hover:text-foreground"
+            onClick={() => onValueChange(null)}
+          >
+            <X className="h-3.5 w-3.5" />
+          </V2Button>
+        )}
+        <ChevronDown aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
+      </div>
     </div>
   );
 };
