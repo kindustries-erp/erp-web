@@ -35,7 +35,7 @@ export * from "./v2-table-selection-chip";
 export * from "./v2-table-filter-chip";
 export * from "./v2-view-mode-combobox";
 export * from "./v2-filter-card";
-export * from "./v2-filter-panel";
+export * from "./v2-filter-column-search";
 export * from "./v2-page-toolbar-slot";
 export * from "./v2-page-header";
 export * from "./v2-table-select-checkbox";

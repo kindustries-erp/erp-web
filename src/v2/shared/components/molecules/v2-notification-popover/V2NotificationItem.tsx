@@ -68,7 +68,7 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
         "group flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors relative",
         notification.isRead
           ? "opacity-60 hover:bg-[color:var(--popup-bg-hover)]"
-          : "bg-primary/5 hover:bg-[color:var(--popup-bg-hover)] dark:border dark:border-primary/20",
+          : "border border-[color:color-mix(in_srgb,var(--primary)_20%,transparent)] bg-[color:color-mix(in_srgb,var(--primary)_5%,transparent)] hover:bg-[color:var(--popup-bg-hover)]",
       )}
     >
       <div className="shrink-0 mt-0.5">

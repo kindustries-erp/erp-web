@@ -130,5 +130,15 @@ export const v2EnTable: V2Dictionary["v2"]["table"] = {
   closePanel: "Close filters",
   removeFilter: "Remove filter",
   noMatchingColumns: "No matching columns",
+  filterTabColumns: "Columns",
+  filterTabPresets: "Saved filters",
+  filterGroupText: "Text",
+  filterGroupSelect: "Select / Status",
+  filterGroupDate: "Date",
+  filterGroupNumber: "Number",
+  filterPresetsEmpty:
+    "No saved filters yet. Create one from the table toolbar.",
+  filterPresetClear: "Clear selected filter",
+  filterDone: "Close",
   valuesCount: "{{count}} values",
 };

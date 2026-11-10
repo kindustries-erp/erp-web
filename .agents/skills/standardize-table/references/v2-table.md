@@ -28,7 +28,7 @@ src/v2/shared/
     │   ├── v2-table-selection-chip/      ☑ (N) ▾ ✕; menu bơm qua renderMenu
     │   ├── v2-view-mode-combobox/        Trigger + popover: nhóm lọc `filterGroup` (trên) và danh sách chế độ xem (dưới), chỉ UI, không lưu
     │   ├── v2-filter-card/               Card thu gọn/mở cho một cột (icon theo kiểu dữ liệu, chấm active); children chỉ render khi mở
-    │   └── v2-filter-panel/              Shell panel lọc: header, reset, đóng, ô tìm cột, chips, extraContent, empty state
+    │   └── v2-filter-column-search/      Ô tìm cột cần lọc (dùng chung panel lọc và editor trong hộp thoại)
     ├── organisms/v2-standard-table/
     │   V2StandardTable.tsx               Switcher theo useViewport
     │   .desktop.tsx / .mobile.tsx        Bảng spreadsheet / danh sách card
@@ -41,7 +41,7 @@ src/v2/shared/
     │   hooks/.views.hook.ts / .views.sync.hook.ts / .views.dialog.hook.ts   Trạng thái view tùy chỉnh, đồng bộ storage, trạng thái hộp thoại
     │   .fullscreen.hook.ts               Bật/tắt fullscreen (ESC thoát)
     │   .grid.tsx                         Phần <table> (colgroup + header + body)
-    │   .filterpanel.tsx / .filterpanel.hook.ts / v2ActiveFilterChips.ts   Panel lọc theo cột: card = V2ColumnHeaderFilterPanel, chips, mở card nào truy vấn options card đó
+    │   filterpanel/filterdrawer/ (V2TableFilterDrawer: switcher, .desktop, .mobile, .body, .actions, .groups, .ui.hook) / .filterpanel.hook.ts / v2ActiveFilterChips.ts   Drawer lọc theo cột: card = V2ColumnHeaderFilterPanel, chips, mở card nào truy vấn options card đó
     │   .hook.tsx                         useV2TableColumns (STT, cột chọn, cột dữ liệu TanStack)
     │   v2TableFilter / v2TableEvaluate / v2TableClient / v2TableData / v2TableQuery / v2ColumnPreferences
     │   v2HeaderFilterBuilder.ts          headerFilter(label), .date, .amount, .qty, .select
@@ -125,7 +125,7 @@ const columns = useMemo<V2Column<Order>[]>(() => [
   `[Chế độ xem / viewModes]` ➔ `[Chip chọn hàng loạt]` ➔ `[Xóa bộ lọc]` ➔ **`[Tùy chỉnh cột (V2ColumnToggle)]`** ➔ **`[Bộ lọc (V2TableFilterButton)]`** ➔ `[Toàn màn hình]` ➔ `[Làm mới (V2ToolbarIconButton)]` ➔ `[Hành động chính (V2SplitButton)]`.
   Quy chuẩn: **Nút Cột luôn đứng TRƯỚC nút Bộ lọc**.
 - **Nút icon toolbar luôn dùng `V2ToolbarIconButton`** (Lọc, Cột, Toàn màn hình, Làm mới); không tự viết `V2Button` icon mới cho cụm này.
-- **Panel lọc** (`toolbar.filterPanel`): cột bên phải `w-80`, co bảng lại, nằm trong vùng fullscreen. Mỗi cột có `filter` spec + nguồn options là một `V2FilterCard`, thân là `V2ColumnHeaderFilterPanel` (cùng mô hình chờ "Áp dụng" như popup header, một nguồn logic). Chip "Đang lọc" dựng bởi `v2ActiveFilterChips` (một chip/cột, gỡ = `clearColumn`). `extraContent` cho bộ lọc theo trang.
+- **Drawer lọc** (`toolbar.filterPanel`): Sheet nổi bên phải (desktop) hoặc bottom sheet 85dvh (mobile), chọn bản theo `useViewport`. Bảng phía sau vẫn thấy và cập nhật live khi lọc. Header có tab **Cột | Bộ lọc đã lưu** (tab thứ hai chỉ có trên desktop, chỉ chọn/bỏ chọn preset; tạo/sửa preset vẫn ở thanh công cụ). Thân tab Cột: ô tìm cột, chip "Đang lọc" (`v2ActiveFilterChips`, một chip/cột, gỡ = `clearColumn`), danh sách card gom theo loại giá trị (`groupFilterColumns`: văn bản, chọn/trạng thái, ngày, số), mỗi nhóm là một `DrawerSection`. Footer: "Xóa tất cả bộ lọc" (vô hiệu khi không có điều kiện) và "Đóng". Mỗi cột có `filter` spec + nguồn options là một `V2FilterCard`, thân là `V2ColumnHeaderFilterPanel` (cùng mô hình chờ "Áp dụng" như popup header). `extraContent` cho bộ lọc theo trang. Drawer dựng từ molecule drawer chuẩn (`V2DrawerSheet`, `DrawerHeader`, `V2TabBar`, `DrawerSection`, `DrawerFooter`, `V2BottomSheet`), không import `V2StandardDrawer` vì organism không import organism.
 
 ## 3. Quy tắc cố định (giữ khi sửa)
 
@@ -250,7 +250,7 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - **Dialog tạo/sửa** (`toolbar/V2StandardTable.filterdialog.tsx`, `V2FilterPresetDialog`): cùng bố cục với dialog chế độ xem. Thứ tự: tên (`V2PresetNameField`, tên bắt buộc và không trùng) → nền "Bộ lọc có sẵn" (`V2ViewFilterField`, chọn được) → editor điều kiện (`toolbar/V2StandardTable.filterdialog.editor.tsx`, `V2FilterPresetEditor`). Editor dùng `useV2TableState` làm bản nháp riêng (không đẩy lên bảng cho tới khi lưu) và `useV2HeaderFilters` cho nguồn options; hiển thị bằng `V2TableFilterCards`, cùng card với panel lọc bên phải. Nút "Dùng điều kiện đang áp dụng" lấy điều kiện của bảng vào nháp; "Xóa điều kiện" đặt lại nháp. Sửa: nháp khởi tạo từ snapshot đã lưu. Không còn checkbox "Cập nhật theo điều kiện hiện tại".
 - **Lưu**: `create` / `update` nhận `{ label, groupKey, query }` (`V2FilterPresetDraft`); `query` do `toPresetQuery(nháp)` sinh, không đọc điều kiện bảng ngầm.
 - **Nút tạo**: "Tạo bộ lọc mới" và "Tạo chế độ xem mới" đều dùng `V2ViewModeCreateButton` (molecule `v2-view-mode-combobox/V2ViewModeCombobox.create.tsx`). Nút hiển thị ngắn "Tạo mới" (`v2.table.createNew`), `aria-label` và `title` là nhãn đầy đủ. Nút nằm **cùng hàng tiêu đề nhóm, căn phải** qua `V2ViewModeSectionHeader` (`V2ViewModeCombobox.header.tsx`): "BỘ LỌC CÓ SẴN" (`V2FilterGroupList` nhận `action`) và "CHẾ ĐỘ XEM". Nút tạo bộ lọc bị khóa khi đủ giới hạn. Nhãn trigger dùng tên bộ lọc khi đang khớp.
-- **Chung card, chip, ô tìm cột**: `useV2FilterCardsState` (`filterpanel/V2StandardTable.filtercards.hook.ts`: một card mở một lúc, ô tìm cột, cột hiển thị) được cả `useV2FilterPanel` và editor dùng. `V2TableFilterChips` (`filterpanel/V2StandardTable.filterchips.tsx`) là hàng chip; `V2FilterColumnSearch` (molecule `v2-filter-panel/V2FilterPanel.search.tsx`) là ô tìm cột. Không viết lại các khối này trong màn khác.
+- **Chung card, chip, ô tìm cột**: `useV2FilterCardsState` (`filterpanel/V2StandardTable.filtercards.hook.ts`: một card mở một lúc vì mỗi lần mở card tải options của cột đó, ô tìm cột, cột hiển thị) được cả `useV2FilterPanel` và editor dùng. `V2TableFilterChips` (`filterpanel/V2StandardTable.filterchips.tsx`) là hàng chip; `V2FilterColumnSearch` (molecule `v2-filter-column-search/`) là ô tìm cột. Không viết lại các khối này trong màn khác.
 - **Editor trong dialog**: danh sách card đặt trong `grid` có `max-h-[min(22rem,50vh)]` và cuộn. Không để card nằm trong vùng flex có chiều cao cố định, vì flex sẽ co card và cắt nội dung.
 - **Hàng chọn dùng chung**: `V2ViewModeOption` (`V2ViewModeCombobox.option.tsx`) là dòng ✓ cho cả chế độ xem và bộ lọc; không viết lại `OptionButton`.
 - **Nút "Bộ lọc (n)" trên toolbar**: chỉ mở được panel khi toolbar có `filterPanel` (ví dụ `filterPanel: {}`). Bảng procurement đã bật; bảng mới có điều kiện lọc mà thiếu `filterPanel` thì nút không làm gì.
