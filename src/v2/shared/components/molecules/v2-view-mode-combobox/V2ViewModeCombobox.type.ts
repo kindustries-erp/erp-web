@@ -28,7 +28,7 @@ export interface V2CustomFilterItem {
   label: string;
 }
 
-/** Mục "Bộ lọc của tôi" trong nhóm Bộ lọc có sẵn: chọn, sửa, xóa, tạo mới */
+/** Bộ lọc custom: các mục nằm chung nhóm "Bộ lọc có sẵn", chỉ một mục được chọn cùng mục hệ thống */
 export interface V2CustomFilterSection {
   items: V2CustomFilterItem[];
   /** Bộ lọc tùy chỉnh đang khớp điều kiện hiện tại (nếu có) */
@@ -36,6 +36,8 @@ export interface V2CustomFilterSection {
   /** Còn trong giới hạn số bộ lọc tùy chỉnh */
   canCreate: boolean;
   onSelect: (key: string) => void;
+  /** Bỏ bộ lọc custom đang chọn; gọi trước khi chọn mục có sẵn */
+  onClear: () => void;
   onCreate: () => void;
   onEdit: (key: string) => void;
   onDelete: (key: string) => void;

@@ -47,6 +47,7 @@ export const V2TableViewModes: React.FC<V2TableViewModesProps> = ({
         activeKey: filters.activeKey,
         canCreate: filters.canCreate,
         onSelect: filters.select,
+        onClear: filters.clearActive,
         onCreate: () => setFilterDialog({ mode: "create" }),
         onEdit: (key: string) => {
           const preset = filters.presets.find((p) => p.key === key);
@@ -111,7 +112,6 @@ export const V2TableViewModes: React.FC<V2TableViewModesProps> = ({
             filterDialog.mode === "edit" ? filterDialog.preset.query : undefined
           }
           groupOptions={groupOptions}
-          allKey={allKey}
           source={filters.editorSource}
           isNameTaken={(name) => filters.isNameTaken(name, editingFilterKey)}
           onSubmit={(draft) => {

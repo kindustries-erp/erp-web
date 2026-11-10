@@ -28,13 +28,13 @@ describe("V2ViewModeCreateButton", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it("dùng cùng đường kẻ trên như nút tạo chế độ xem", () => {
+  it("hiển thị nhãn ngắn Tạo mới, tên truy cập là nhãn đầy đủ", () => {
     render(
       <V2ViewModeCreateButton label="Tạo chế độ xem mới" onClick={vi.fn()} />,
     );
 
     const button = screen.getByRole("button", { name: "Tạo chế độ xem mới" });
-    expect(button.className).toContain("border-t");
-    expect(button.className).toContain("text-primary");
+    expect(button).toHaveTextContent("Tạo mới");
+    expect(button).toHaveAttribute("title", "Tạo chế độ xem mới");
   });
 });

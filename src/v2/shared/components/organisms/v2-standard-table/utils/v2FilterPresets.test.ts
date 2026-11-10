@@ -72,4 +72,12 @@ describe("v2FilterPresets", () => {
     );
     expect(findMatchingPreset(presets, { q: "PO" }, "all")).toBeUndefined();
   });
+
+  it("bộ lọc chỉ có nền (không điều kiện) không bao giờ khớp", () => {
+    const presets: V2FilterPreset[] = [
+      { key: "p1", label: "Chỉ nền", groupKey: "pending", query: {} },
+    ];
+
+    expect(findMatchingPreset(presets, {}, "pending")).toBeUndefined();
+  });
 });

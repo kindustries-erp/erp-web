@@ -123,6 +123,20 @@ export function useV2FilterPresets({
   const remove = (key: string) =>
     setPresets((current) => current.filter((item) => item.key !== key));
 
+  /**
+   * Bỏ bộ lọc tùy chỉnh đang chọn: xóa toàn bộ điều kiện và sắp xếp của bảng.
+   * Đặt snapshot rỗng làm pending: nếu chọn bộ lọc gốc làm bảng dựng lại (đọc lại URL
+   * còn điều kiện cũ), bảng mới sẽ áp lại query rỗng ở effect mount.
+   * Nếu bảng không dựng lại, snapshot còn sót được dọn sau một tick.
+   */
+  const clearActive = () => {
+    setPendingFilterPreset(tableId, {});
+    applyQuery({});
+    setTimeout(() => {
+      consumePendingFilterPreset(tableId);
+    }, 0);
+  };
+
   return {
     presets,
     activeKey,
@@ -133,6 +147,7 @@ export function useV2FilterPresets({
     canCreate: presets.length < V2_FILTER_PRESETS_MAX,
     isNameTaken,
     select,
+    clearActive,
     create,
     update,
     remove,

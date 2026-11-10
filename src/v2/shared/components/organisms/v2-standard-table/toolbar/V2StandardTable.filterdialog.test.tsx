@@ -21,6 +21,8 @@ const source = (
   tableQuery,
 });
 
+const EMPTY_ERROR = "Thêm ít nhất một điều kiện lọc để lưu";
+
 const renderDialog = (
   overrides: Partial<Parameters<typeof V2FilterPresetDialog>[0]> = {},
 ) => {
@@ -29,7 +31,6 @@ const renderDialog = (
     initialLabel: "",
     initialGroupKey: "all",
     groupOptions,
-    allKey: "all",
     source: source(),
     isNameTaken: vi.fn(() => false),
     onSubmit: vi.fn(),
@@ -78,29 +79,24 @@ describe("V2FilterPresetDialog", () => {
     expect(props.onSubmit).not.toHaveBeenCalled();
   });
 
-  it("chặn lưu khi nền là Tất cả và không có điều kiện nào", () => {
+  it("chặn lưu khi chưa có điều kiện, dù nền khác Tất cả", () => {
+    const props = renderDialog({ initialGroupKey: "pending" });
+
+    fireEvent.change(nameInput(), { target: { value: "Chỉ nền" } });
+    fireEvent.click(saveButton());
+
+    expect(screen.getByText(EMPTY_ERROR)).toBeInTheDocument();
+    expect(props.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("chặn lưu khi nền là Tất cả và không có điều kiện", () => {
     const props = renderDialog({ initialGroupKey: "all" });
 
     fireEvent.change(nameInput(), { target: { value: "Trống" } });
     fireEvent.click(saveButton());
 
-    expect(
-      screen.getByText("Chưa có điều kiện nào để lưu"),
-    ).toBeInTheDocument();
+    expect(screen.getByText(EMPTY_ERROR)).toBeInTheDocument();
     expect(props.onSubmit).not.toHaveBeenCalled();
-  });
-
-  it("cho lưu khi chỉ chọn nền khác Tất cả, không cần điều kiện cột", () => {
-    const props = renderDialog({ initialGroupKey: "pending" });
-
-    fireEvent.change(nameInput(), { target: { value: "  Chờ duyệt  " } });
-    fireEvent.click(saveButton());
-
-    expect(props.onSubmit).toHaveBeenCalledWith({
-      label: "Chờ duyệt",
-      groupKey: "pending",
-      query: {},
-    });
   });
 
   it("tạo mới: lấy điều kiện đang áp dụng của bảng làm bản nháp", () => {
@@ -110,12 +106,29 @@ describe("V2FilterPresetDialog", () => {
       source: source(tableQuery),
     });
 
-    fireEvent.change(nameInput(), { target: { value: "Có PO" } });
+    fireEvent.change(nameInput(), { target: { value: "  Có PO  " } });
     fireEvent.click(saveButton());
 
     expect(props.onSubmit).toHaveBeenCalledWith({
       label: "Có PO",
       groupKey: "pending",
+      query: toPresetQuery(tableQuery),
+    });
+  });
+
+  it("có điều kiện thì lưu được dù nền là Tất cả", () => {
+    const tableQuery = createInitialQuery({ pageSize: 20, search: "PO" });
+    const props = renderDialog({
+      initialGroupKey: "all",
+      source: source(tableQuery),
+    });
+
+    fireEvent.change(nameInput(), { target: { value: "Có PO" } });
+    fireEvent.click(saveButton());
+
+    expect(props.onSubmit).toHaveBeenCalledWith({
+      label: "Có PO",
+      groupKey: "all",
       query: toPresetQuery(tableQuery),
     });
   });

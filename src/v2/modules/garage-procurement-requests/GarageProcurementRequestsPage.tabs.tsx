@@ -58,6 +58,8 @@ function buildListTab<R extends { id: string }>(
       emptyLabel: input.emptyLabel,
       toolbar: {
         search: {},
+        // Có panel để nút "Bộ lọc (n)" trên toolbar mở được panel cột
+        filterPanel: {},
         filterGroup: state.filterGroup,
         viewModes: state.viewModes,
       },

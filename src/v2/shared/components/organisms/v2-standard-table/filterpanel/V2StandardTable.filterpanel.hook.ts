@@ -5,6 +5,7 @@ import type {
   V2TableFilterPanelConfig,
   V2TableToolbarConfig,
 } from "../V2StandardTable.type";
+import { useV2FilterCardsState } from "./V2StandardTable.filtercards.hook";
 
 interface UseV2FilterPanelParams<T> {
   config?: V2TableFilterPanelConfig;
@@ -25,24 +26,13 @@ export function useV2FilterPanel<T>({
   const enabled = config !== undefined;
   const [innerOpen, setInnerOpen] = useState(config?.defaultOpen ?? false);
   const open = enabled && (config?.open ?? innerOpen);
-  const [expandedKey, setExpandedKeyState] = useState<string | null>(null);
-  const [colSearch, setColSearch] = useState("");
-
-  const setExpanded = useCallback(
-    (key: string, expanded: boolean) => {
-      if (expanded) {
-        if (expandedKey && expandedKey !== key) {
-          filters.onOpenChange(expandedKey, false, "");
-        }
-        filters.onOpenChange(key, true, committedSearchOf(key));
-        setExpandedKeyState(key);
-      } else {
-        filters.onOpenChange(key, false, "");
-        setExpandedKeyState((current) => (current === key ? null : current));
-      }
-    },
-    [expandedKey, filters, committedSearchOf],
-  );
+  const cards = useV2FilterCardsState({
+    columns,
+    filters,
+    canFilter,
+    committedSearchOf,
+  });
+  const { expandedKey, setExpanded } = cards;
 
   const setOpen = useCallback(
     (next: boolean) => {
@@ -66,29 +56,18 @@ export function useV2FilterPanel<T>({
     [open, setOpen, setExpanded],
   );
 
-  const visibleColumns = useMemo(() => {
-    const q = colSearch.trim().toLowerCase();
-    return columns.filter(
-      (c) =>
-        canFilter(c) &&
-        (q === "" ||
-          c.label.toLowerCase().includes(q) ||
-          c.key.toLowerCase().includes(q)),
-    );
-  }, [columns, canFilter, colSearch]);
-
   return {
     enabled,
     open,
     setOpen,
     toggle: () => setOpen(!open),
     close: () => setOpen(false),
-    expandedKey,
+    expandedKey: cards.expandedKey,
     setExpanded,
     reveal,
-    colSearch,
-    setColSearch,
-    visibleColumns,
+    colSearch: cards.colSearch,
+    setColSearch: cards.setColSearch,
+    visibleColumns: cards.visibleColumns,
   };
 }
 

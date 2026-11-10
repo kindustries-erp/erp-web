@@ -215,4 +215,46 @@ describe("useV2FilterPresets", () => {
       expect(result.current.create({ label: "Thêm", query: {} })).toBe(false);
     });
   });
+
+  it("clearActive xóa toàn bộ điều kiện và sắp xếp của bảng", () => {
+    const { result, applyQuery } = setup({ group: groupOf("all") });
+
+    act(() => result.current.clearActive());
+
+    expect(applyQuery).toHaveBeenCalledWith({});
+  });
+
+  it("clearActive rồi chọn bộ lọc gốc: bảng dựng lại áp query rỗng dù URL còn điều kiện", () => {
+    const onChange = vi.fn();
+    const { result, rerender, applyQuery } = setup({
+      query: createInitialQuery({ pageSize: 20, search: "Demo" }),
+      group: groupOf("all", onChange),
+    });
+
+    act(() => result.current.clearActive());
+    applyQuery.mockClear();
+
+    // Bảng dựng lại, đọc lại URL còn điều kiện cũ
+    rerender({
+      query: createInitialQuery({ pageSize: 20, search: "Demo" }),
+      group: groupOf("pending"),
+    });
+
+    expect(applyQuery).toHaveBeenCalledTimes(1);
+    expect(applyQuery).toHaveBeenCalledWith({});
+  });
+
+  it("clearActive không để snapshot rỗng sót khi bảng không dựng lại", () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = setup({ group: groupOf("all") });
+
+      act(() => result.current.clearActive());
+      vi.runAllTimers();
+
+      expect(consumePendingFilterPreset("t-1")).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

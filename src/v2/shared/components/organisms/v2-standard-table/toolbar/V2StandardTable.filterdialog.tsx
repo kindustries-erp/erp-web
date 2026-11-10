@@ -31,8 +31,6 @@ export interface V2FilterPresetDialogProps {
   initialQuery?: V2FilterPresetQuery;
   /** Nhóm bộ lọc có sẵn của trang */
   groupOptions: V2ViewFilterOption[];
-  /** Key của mục "Tất cả": nền khác key này mới được lưu khi không có điều kiện */
-  allKey: string;
   source: V2FilterPresetEditorSource;
   isNameTaken: (name: string) => boolean;
   onSubmit: (draft: V2FilterPresetDraft) => void;
@@ -46,7 +44,6 @@ export const V2FilterPresetDialog: React.FC<V2FilterPresetDialogProps> = ({
   initialGroupKey,
   initialQuery,
   groupOptions,
-  allKey,
   source,
   isNameTaken,
   onSubmit,
@@ -81,8 +78,8 @@ export const V2FilterPresetDialog: React.FC<V2FilterPresetDialogProps> = ({
     : isNameTaken(trimmed)
       ? t("v2.table.filterPresetNameDuplicate", "Tên bộ lọc đã tồn tại")
       : null;
-  // Không có điều kiện lọc và nền là "Tất cả": không có gì để lưu
-  const canSave = hasConditions(draftQuery) || groupKey !== allKey;
+  // Bộ lọc custom phải có ít nhất một điều kiện, để không trùng mục có sẵn
+  const canSave = hasConditions(draftQuery);
   const emptyError = canSave
     ? null
     : t("v2.table.filterPresetEmpty", "Chưa có điều kiện nào để lưu");

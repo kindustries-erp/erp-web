@@ -1,11 +1,11 @@
 import * as React from "react";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
-import { V2FilterChip } from "@/v2/shared/components/atoms/v2-filter-chip";
 import { V2FilterPanel } from "@/v2/shared/components/molecules/v2-filter-panel";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { buildActiveFilterChips } from "../utils/v2ActiveFilterChips";
 import type { V2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import { V2TableFilterCards } from "./V2StandardTable.filtercards";
+import { V2TableFilterChips } from "./V2StandardTable.filterchips";
 import type { V2FilterPanelController } from "./V2StandardTable.filterpanel.hook";
 import type { V2TableState } from "../hooks/V2StandardTable.state.hook";
 import type { V2Column } from "../V2StandardTable.type";
@@ -51,17 +51,11 @@ export function V2TableFilterPanel<T>({
             >
               {t("v2.table.activeFilters", { count: chips.length })}
             </V2Text>
-            <div className="flex flex-wrap gap-1.5">
-              {chips.map((chip) => (
-                <V2FilterChip
-                  key={chip.id}
-                  label={chip.label}
-                  summary={chip.summary}
-                  onClick={() => panel.reveal(chip.columnKey)}
-                  onRemove={() => state.clearColumn(chip.columnKey)}
-                />
-              ))}
-            </div>
+            <V2TableFilterChips
+              chips={chips}
+              onReveal={panel.reveal}
+              onRemove={state.clearColumn}
+            />
           </>
         ) : undefined
       }

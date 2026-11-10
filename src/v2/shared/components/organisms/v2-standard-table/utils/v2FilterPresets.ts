@@ -52,7 +52,10 @@ export const isSameConditions = (
 ): boolean =>
   QUERY_FIELDS.every((field) => (a[field] ?? "") === (b[field] ?? ""));
 
-/** Bộ lọc tùy chỉnh đang khớp với điều kiện hiện tại của bảng (cùng điều kiện và cùng nhóm) */
+/**
+ * Bộ lọc tùy chỉnh đang khớp với điều kiện hiện tại của bảng (cùng nhóm, cùng điều kiện).
+ * Bộ lọc không có điều kiện không bao giờ khớp, để không trùng mục có sẵn.
+ */
 export const findMatchingPreset = (
   presets: V2FilterPreset[],
   current: V2FilterPresetQuery,
@@ -60,6 +63,7 @@ export const findMatchingPreset = (
 ): V2FilterPreset | undefined =>
   presets.find(
     (preset) =>
+      hasConditions(preset.query) &&
       preset.groupKey === activeGroupKey &&
       isSameConditions(preset.query, current),
   );
