@@ -67,9 +67,11 @@ export interface PortfolioMonthlyPeriod {
   breakdown?: Array<{
     loanId: string;
     loanName: string;
+    dueDate: string;
     principalDue: number;
     interestDue: number;
     totalPayment: number;
+    endingBalance: number;
   }>;
 }
 

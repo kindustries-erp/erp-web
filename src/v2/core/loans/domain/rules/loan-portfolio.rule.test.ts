@@ -60,6 +60,8 @@ describe("generatePortfolioAmortizationSchedule", () => {
     expect(period1.loansCount).toBe(2);
     expect(period1.principalDue).toBe(20_000_000); // 10M + 10M
     expect(period1.breakdown).toHaveLength(2);
+    expect(period1.breakdown?.[0].dueDate).toBe("2026-02-01");
+    expect(period1.breakdown?.[0].endingBalance).toBe(110_000_000);
 
     // Kỳ 7 chỉ còn khoản 1
     const period7 = result.schedule[6];

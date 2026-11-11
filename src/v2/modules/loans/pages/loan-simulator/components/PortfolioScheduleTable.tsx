@@ -3,7 +3,11 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Badge, V2Button, V2Text } from "@/v2/shared/components";
 import { ChevronDown, ChevronRight, Download } from "lucide-react";
 import { PortfolioMonthlyPeriod } from "@/v2/core/loans";
-import { formatVndCurrency } from "@/v2/core/loans/domain/rules/loan-format.rule";
+import {
+  exportPortfolioScheduleCsv,
+  formatVndCurrency,
+} from "@/v2/core/loans/domain/rules/loan-format.rule";
+import { PortfolioBreakdownRow } from "./PortfolioBreakdownRow";
 
 export interface PortfolioScheduleTableProps {
   schedule: PortfolioMonthlyPeriod[];
@@ -24,7 +28,7 @@ export const PortfolioScheduleTable: React.FC<PortfolioScheduleTableProps> = ({
   };
 
   const handleExportCsv = () => {
-    const headers = [
+    exportPortfolioScheduleCsv(schedule, [
       t("v2.loans.table.month", "Tháng"),
       t("v2.loans.table.dueDate", "Ngày đến hạn"),
       t("v2.loans.table.principalDue", "Gốc phải trả"),
@@ -32,28 +36,7 @@ export const PortfolioScheduleTable: React.FC<PortfolioScheduleTableProps> = ({
       t("v2.loans.table.totalDue", "Tổng phải trả"),
       t("v2.loans.table.endingBalance", "Dư nợ còn lại"),
       t("v2.loans.table.activeLoans", "Số khoản"),
-    ];
-
-    const rows = schedule.map((p) => [
-      p.monthKey,
-      p.paymentDate,
-      Math.round(p.principalDue),
-      Math.round(p.interestDue),
-      Math.round(p.totalPayment),
-      Math.round(p.remainingPrincipal),
-      p.loansCount,
     ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8,\uFEFF" +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `lich-tra-no-danh-muc-${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const totalPrincipal = schedule.reduce((sum, p) => sum + p.principalDue, 0);
@@ -94,10 +77,10 @@ export const PortfolioScheduleTable: React.FC<PortfolioScheduleTableProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+      <div className="max-h-[560px] overflow-y-auto overflow-x-auto rounded-xl border border-border bg-card relative">
         <table className="w-full text-left text-sm border-collapse">
-          <thead>
-            <tr className="border-b border-border bg-muted/40 text-xs font-semibold uppercase text-muted-foreground">
+          <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm shadow-[0_1px_0_0_hsl(var(--border))]">
+            <tr className="text-xs font-semibold uppercase text-muted-foreground">
               <th className="py-3 px-3 w-10"></th>
               <th className="py-3 px-3">
                 {t("v2.loans.table.month", "Tháng")}
@@ -155,37 +138,14 @@ export const PortfolioScheduleTable: React.FC<PortfolioScheduleTableProps> = ({
                     </td>
                   </tr>
                   {isExpanded && p.breakdown && (
-                    <tr className="bg-muted/15">
-                      <td colSpan={7} className="py-2 px-6">
-                        <div className="space-y-1 text-xs">
-                          {p.breakdown.map((item, bIdx) => (
-                            <div
-                              key={bIdx}
-                              className="flex justify-between py-1 border-b border-border/30 last:border-0"
-                            >
-                              <span className="font-medium text-foreground">
-                                {item.loanName}:
-                              </span>
-                              <span className="text-muted-foreground">
-                                Gốc: {formatVndCurrency(item.principalDue)} |
-                                Lãi: {formatVndCurrency(item.interestDue)} |
-                                Tổng:{" "}
-                                <strong>
-                                  {formatVndCurrency(item.totalPayment)}
-                                </strong>
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
+                    <PortfolioBreakdownRow items={p.breakdown} />
                   )}
                 </React.Fragment>
               );
             })}
           </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-border bg-muted/50 font-bold text-xs uppercase">
+          <tfoot className="sticky bottom-0 z-10 bg-muted/95 backdrop-blur-sm shadow-[0_-1px_0_0_hsl(var(--border))]">
+            <tr className="font-bold text-xs uppercase">
               <td colSpan={3} className="py-3 px-4">
                 {t("v2.loans.table.totalSummary", "Tổng cộng")}
               </td>

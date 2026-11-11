@@ -36,9 +36,11 @@ export function generatePortfolioAmortizationSchedule(
       breakdown: Array<{
         loanId: string;
         loanName: string;
+        dueDate: string;
         principalDue: number;
         interestDue: number;
         totalPayment: number;
+        endingBalance: number;
       }>;
     }
   >();
@@ -74,9 +76,11 @@ export function generatePortfolioAmortizationSchedule(
         existing.breakdown.push({
           loanId: loan.id,
           loanName: loan.name,
+          dueDate: period.dueDate,
           principalDue: period.principalDue,
           interestDue: period.interestDue,
           totalPayment: period.totalPaymentDue,
+          endingBalance: period.endingBalance,
         });
       } else {
         monthMap.set(monthKey, {
@@ -90,9 +94,11 @@ export function generatePortfolioAmortizationSchedule(
             {
               loanId: loan.id,
               loanName: loan.name,
+              dueDate: period.dueDate,
               principalDue: period.principalDue,
               interestDue: period.interestDue,
               totalPayment: period.totalPaymentDue,
+              endingBalance: period.endingBalance,
             },
           ],
         });

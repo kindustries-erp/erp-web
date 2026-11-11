@@ -10,6 +10,7 @@ import {
   V2Text,
 } from "@/v2/shared/components";
 import { AmortizationMethod, PortfolioLoanItem } from "@/v2/core/loans";
+import { getAmortizationMethodOptions } from "@/v2/core/loans/domain/rules/loan-format.rule";
 import { Trash2 } from "lucide-react";
 
 export interface PortfolioLoanCardProps {
@@ -30,31 +31,7 @@ export const PortfolioLoanCard: React.FC<PortfolioLoanCardProps> = ({
   onToggle,
 }) => {
   const { t } = useV2Translation();
-
-  const methodOptions = [
-    {
-      value: AmortizationMethod.AMORTIZED,
-      label: t("v2.loans.method.amortized", "Niên kim (Gốc + Lãi đều)"),
-    },
-    {
-      value: AmortizationMethod.EQUAL_PRINCIPAL,
-      label: t("v2.loans.method.equalPrincipal", "Dư nợ giảm dần (Gốc đều)"),
-    },
-    {
-      value: AmortizationMethod.BULLET,
-      label: t(
-        "v2.loans.method.bullet",
-        "Cuối kỳ (Trả lãi định kỳ, gốc cuối kỳ)",
-      ),
-    },
-    {
-      value: AmortizationMethod.FLAT,
-      label: t(
-        "v2.loans.method.flat",
-        "Lãi phẳng (Tính theo dư nợ gốc ban đầu)",
-      ),
-    },
-  ];
+  const methodOptions = getAmortizationMethodOptions(t);
 
   return (
     <div

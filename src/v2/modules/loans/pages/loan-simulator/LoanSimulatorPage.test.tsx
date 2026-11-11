@@ -53,10 +53,22 @@ describe("LoanSimulatorPage Component", () => {
   it("adds a new loan to portfolio on add click", () => {
     renderWithProviders(<LoanSimulatorPage />);
 
-    const addButton = screen.getByText("+ Thêm khoản vay");
+    const addButton = screen.getByText("Thêm khoản vay");
     fireEvent.click(addButton);
 
     expect(screen.getByDisplayValue("Khoản vay 2")).toBeDefined();
+  });
+
+  it("expands monthly row to show constituent loan breakdown columns", () => {
+    renderWithProviders(<LoanSimulatorPage />);
+
+    // Click row đầu tiên trong bảng (theo tbody)
+    const rows = document.querySelectorAll("tbody tr");
+    expect(rows.length).toBeGreaterThan(0);
+    fireEvent.click(rows[0]);
+
+    // Sau khi expand, tên khoản vay mặc định xuất hiện trong dòng chi tiết
+    expect(screen.getByText("Khoản vay 1 (Dự án)")).toBeDefined();
   });
 
   it("saves portfolio draft to sessionStorage when unauthenticated", () => {

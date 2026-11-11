@@ -59,7 +59,7 @@ export const PortfolioLoanList: React.FC<PortfolioLoanListProps> = ({
 
           <V2Button size="sm" onClick={onAddLoan} className="gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" />
-            {t("v2.loans.action.addLoan", "+ Thêm khoản vay")}
+            {t("v2.loans.action.addLoan", "Thêm khoản vay")}
           </V2Button>
         </div>
       </div>

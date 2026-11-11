@@ -1,4 +1,7 @@
-import { AmortizationMethod } from "../types/loan.types";
+import {
+  AmortizationMethod,
+  PortfolioMonthlyPeriod,
+} from "../types/loan.types";
 
 export interface LoanMethodOption {
   value: AmortizationMethod;
@@ -64,4 +67,31 @@ export function getAmortizationMethodOptions(
       ),
     },
   ];
+}
+
+/**
+ * Xuất bảng lịch trả nợ danh mục gộp ra tệp CSV UTF-8 có BOM
+ */
+export function exportPortfolioScheduleCsv(
+  schedule: PortfolioMonthlyPeriod[],
+  headers: string[],
+): void {
+  const rows = schedule.map((p) => [
+    p.monthKey,
+    p.paymentDate,
+    Math.round(p.principalDue),
+    Math.round(p.interestDue),
+    Math.round(p.totalPayment),
+    Math.round(p.remainingPrincipal),
+    p.loansCount,
+  ]);
+  const csv =
+    "data:text/csv;charset=utf-8,\uFEFF" +
+    [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  const link = document.createElement("a");
+  link.setAttribute("href", encodeURI(csv));
+  link.setAttribute("download", `lich-tra-no-danh-muc-${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
