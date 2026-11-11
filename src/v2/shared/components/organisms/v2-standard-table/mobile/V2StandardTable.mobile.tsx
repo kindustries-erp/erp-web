@@ -7,6 +7,7 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2TableController } from "../hooks/V2StandardTable.controller.hook";
+import { useV2RowExpansion } from "../hooks/V2StandardTable.expand.hook";
 import { useV2ViewPresets } from "../hooks/V2StandardTable.views.hook";
 import { resolveMobileSlots } from "./V2StandardTable.mobile-slots";
 import { V2StandardTableMobileCard } from "./V2StandardTable.mobile-card";
@@ -24,6 +25,10 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const { state, view, selection, columnsByKey, fetchOptionsForKey } =
     useV2TableController(props);
+  const expansion = useV2RowExpansion({
+    expandedRowKeys: props.expandedRowKeys,
+    onExpandedRowsChange: props.onExpandedRowsChange,
+  });
   const filters = useV2HeaderFilters({
     tableId: props.tableId,
     columnsByKey,
@@ -93,6 +98,11 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
           <ul className={cn("flex flex-col gap-2", loading && "opacity-60")}>
             {view.rows.map((row, rowIndex) => {
               const key = getRowKey(row);
+              const index = view.startIndex + rowIndex + 1;
+              const canExpand = Boolean(
+                props.renderExpandedRow &&
+                (props.canExpandRow ? props.canExpandRow(row, index) : true),
+              );
               return (
                 <V2StandardTableMobileCard
                   key={key}
@@ -102,6 +112,10 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
                   startIndex={view.startIndex}
                   slots={slots}
                   isSelected={selected.has(key)}
+                  isExpanded={canExpand && expansion.isExpanded(key)}
+                  canExpand={canExpand}
+                  onToggleExpand={() => expansion.toggleExpand(key)}
+                  renderExpandedRow={props.renderExpandedRow}
                   enableRowSelection={props.enableRowSelection}
                   rowActions={rowActions}
                   getRowClassName={props.getRowClassName}

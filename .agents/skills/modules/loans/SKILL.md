@@ -19,27 +19,28 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
 ## 2. Cấu Trúc Mã Nguồn
 
 ### 2.1. Tầng Core (`src/v2/core/loans/`)
-- `domain/types/loan.types.ts`: TypeScript contracts (`LoanItem`, `LoanSchedulePeriod`, `LoanPaymentRecord`, `AmortizationMethod`, `LoanStatus`).
-- `domain/rules/loan-amortization.rule.ts`: Client-side pure calculation engine cho 4 phương thức khấu hao (`generateAmortizationSchedule`). Co-located unit test `loan-amortization.rule.test.ts`.
-- `domain/rules/loan-format.rule.ts`: Format tiền tệ VNĐ (`formatVndCurrency`, `formatVndHelper`) và options phương thức trả nợ (`getAmortizationMethodOptions`).
+- `domain/types/loan.types.ts`: TypeScript contracts (`LoanItem`, `LoanSchedulePeriod`, `LoanPaymentRecord`, `PortfolioLoanItem`, `PortfolioMonthlyPeriod`, `AmortizationMethod`, `LoanStatus`).
+- `domain/rules/loan-amortization.rule.ts` & `loan-portfolio.rule.ts`: Client-side pure calculation engine cho 4 phương thức khấu hao đơn lẻ (`generateAmortizationSchedule`) và gộp danh mục đa nguồn (`calculatePortfolioLoans`). Co-located unit tests.
+- `domain/rules/loan-format.rule.ts`: Format tiền tệ VNĐ (`formatVndCurrency`, `formatVndHelper`), options phương thức trả nợ (`getAmortizationMethodOptions`), và helper trạng thái (`getLoanStatusConfig`).
 - `components/molecules/loan-kpi-summary/`: Molecule hiển thị 4 KPI thẻ tài chính (Kỳ đầu, Trung bình tháng, Tổng lãi, Tổng nghĩa vụ).
-- `components/molecules/amortization-schedule-table/`: Bảng chi tiết từng kỳ khấu hao nợ (Kỳ, Ngày trả, Dư nợ đầu, Gốc, Lãi, Tổng trả, Dư nợ cuối).
-- `components/organisms/loan-cashflow-chart/`: Organism bọc `V2ComboChart` thể hiện trực quan dòng tiền (Gốc/Lãi stacked bars) và lộ trình giảm dần dư nợ (Line chart).
-- `loans.locale.ts`: Từ điển song ngữ VI/EN (`v2.loans.*`).
+- `components/molecules/amortization-schedule-table/`: Bảng chi tiết từng kỳ khấu hao nợ dùng UI `@/v2/shared/ui` (`Table`, `TableRow`, `TableCell`...), kèm nút Trả kỳ.
+- `components/organisms/loan-cashflow-chart/`: Organism bọc trực tiếp `V2ComboChart` thể hiện dòng tiền (Gốc/Lãi stacked bars) và lộ trình giảm dần dư nợ (Line chart).
+- `components/organisms/portfolio-schedule-table/`: Bảng lịch trả nợ tổng hợp theo tháng dùng `V2StandardTable` (`mode="client"`, `pageSize: 12`, `enableColumnVisibility={false}`, `max-h-[560px]`) hỗ trợ Expand Row hiển thị bảng con `PortfolioBreakdownRow` (`@/v2/shared/ui` `Table`).
+- `loans.locale.ts` & `locales/loans.{vi,en}.ts`: Từ điển song ngữ VI/EN (`v2.loans.*`).
 - `core.manifest.json`: Manifest định danh tầng core.
 
 ### 2.2. Tầng Module (`src/v2/modules/loans/`)
 - `api/`: `loansApi.ts`, `dtos/loan-api.types.ts`, `queries/useLoansQueries.ts`, `mutations/useLoansMutations.ts`, `queries/loansKeys.ts`.
 - `drawers/`:
-  - `loan-form-drawer/`: Form tạo mới và chỉnh sửa khoản vay (`.type.ts`, `.hook.ts`, `.desktop.tsx`, `.mobile.tsx`, `.tsx`, `LoanFormFields.tsx`).
-  - `loan-detail-drawer/`: Xem chi tiết khoản vay, tích hợp KPI, Biểu đồ dòng chảy và Lịch sử thanh toán.
+  - `loan-form-drawer/`: Form tạo mới và chỉnh sửa khoản vay 1-column layout (`V2DrawerSize.MD`, `V2DrawerMode.EDIT`, `V2DrawerLayout.ONE_COLUMN`), tách `LoanFormFields.tsx` & `LoanFormTermsSection.tsx`.
+  - `loan-detail-drawer/`: Xem chi tiết khoản vay (`V2DrawerSize`, `V2DrawerMode.VIEW`, `V2DrawerLayout.ONE_COLUMN`), tích hợp KPI, Biểu đồ dòng chảy và `LoanPaymentsTabTable`.
   - `record-payment-modal/`: Modal (`V2Modal`) ghi nhận trả nợ theo kỳ (`.type.ts`, `.hook.ts`, `.tsx`).
 - `components/organisms/`:
   - `loan-table/`: Định nghĩa cột bảng `LoansTable.columns.tsx` cho `V2StandardTable`.
-  - `consolidated-cashflow/`: View dự báo dòng tiền tương lai toàn công ty `ConsolidatedCashflowView.tsx`.
+  - `consolidated-cashflow/`: View dự báo dòng tiền tương lai `ConsolidatedCashflowView.tsx` & `ConsolidatedCashflowTable.tsx` (dùng chung `PortfolioScheduleTable` có expand row).
 - `pages/`:
-  - `loan-simulator/`: Trang máy tính mô phỏng (`LoanSimulatorPage.desktop.tsx`, `.mobile.tsx`, `.tsx`, `.test.tsx`).
-  - `loans-list/`: Trang danh sách và tổng quan V2 (`LoansListPage.desktop.tsx`, `.mobile.tsx`, `.tsx`).
+  - `loan-simulator/`: Trang máy tính mô phỏng đa nguồn (`LoanSimulatorPage.*`, `components/PortfolioLoanList.tsx`, `components/PortfolioLoanCard.tsx`).
+  - `loans-list/`: Trang danh sách và tổng quan V2 (`LoansListPage.desktop.tsx`, `.mobile.tsx`, `.mobile-card.tsx`, `.actions.tsx`).
 
 ---
 

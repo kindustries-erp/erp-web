@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { AmortizationMethod, LoanStatus } from "@/v2/core/loans";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useCreateLoanMutation, useUpdateLoanMutation } from "../../api";
 import { LoanFormDrawerProps, LoanFormValues } from "./LoanFormDrawer.type";
 
@@ -9,6 +10,7 @@ export function useLoanFormDrawer({
   onClose,
   onSuccess,
 }: LoanFormDrawerProps) {
+  const { t } = useV2Translation();
   const [values, setValues] = useState<LoanFormValues>({
     loanCode: "",
     title: "",
@@ -63,15 +65,42 @@ export function useLoanFormDrawer({
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!values.title.trim()) errs.title = "Vui lòng nhập tên khoản vay";
-    if (!values.lenderName.trim())
-      errs.lenderName = "Vui lòng nhập đơn vị cho vay";
-    if (values.principalAmount <= 0)
-      errs.principalAmount = "Số tiền vay phải > 0";
-    if (values.tenorMonths <= 0) errs.tenorMonths = "Kỳ hạn phải > 0";
-    if (values.annualInterestRate < 0)
-      errs.annualInterestRate = "Lãi suất không thể âm";
-    if (!values.startDate) errs.startDate = "Vui lòng chọn ngày giải ngân";
+    if (!values.title.trim()) {
+      errs.title = t(
+        "v2.loans.validation.titleRequired",
+        "Vui lòng nhập tên khoản vay",
+      );
+    }
+    if (!values.lenderName.trim()) {
+      errs.lenderName = t(
+        "v2.loans.validation.lenderRequired",
+        "Vui lòng nhập đơn vị cho vay",
+      );
+    }
+    if (values.principalAmount <= 0) {
+      errs.principalAmount = t(
+        "v2.loans.validation.principalPositive",
+        "Số tiền vay phải > 0",
+      );
+    }
+    if (values.tenorMonths <= 0) {
+      errs.tenorMonths = t(
+        "v2.loans.validation.tenorPositive",
+        "Kỳ hạn phải > 0",
+      );
+    }
+    if (values.annualInterestRate < 0) {
+      errs.annualInterestRate = t(
+        "v2.loans.validation.rateNonNegative",
+        "Lãi suất không thể âm",
+      );
+    }
+    if (!values.startDate) {
+      errs.startDate = t(
+        "v2.loans.validation.startDateRequired",
+        "Vui lòng chọn ngày giải ngân",
+      );
+    }
 
     setErrors(errs);
     return Object.keys(errs).length === 0;

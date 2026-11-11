@@ -11,7 +11,8 @@ vi.mock("@/modules/auth/domain/authStore", () => ({
 vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
   useV2Translation: () => ({
     locale: "vi",
-    t: (_k: string, fallback?: string) => fallback || _k,
+    t: (_k: string, fallback?: unknown) =>
+      typeof fallback === "string" ? fallback : _k,
   }),
 }));
 
@@ -62,10 +63,12 @@ describe("LoanSimulatorPage Component", () => {
   it("expands monthly row to show constituent loan breakdown columns", () => {
     renderWithProviders(<LoanSimulatorPage />);
 
-    // Click row đầu tiên trong bảng (theo tbody)
-    const rows = document.querySelectorAll("tbody tr");
-    expect(rows.length).toBeGreaterThan(0);
-    fireEvent.click(rows[0]);
+    // Click nút mở rộng trên dòng đầu tiên của V2StandardTable
+    const expandButtons = screen.getAllByRole("button", {
+      name: /Mở rộng dòng/i,
+    });
+    expect(expandButtons.length).toBeGreaterThan(0);
+    fireEvent.click(expandButtons[0]);
 
     // Sau khi expand, tên khoản vay mặc định xuất hiện trong dòng chi tiết
     expect(screen.getByText("Khoản vay 1 (Dự án)")).toBeDefined();

@@ -2,6 +2,9 @@ import React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   V2StandardDrawer,
+  V2DrawerSize,
+  V2DrawerMode,
+  V2DrawerLayout,
   type DrawerAction,
   type V2TabItemData,
 } from "@/v2/shared/components/organisms/v2-standard-drawer";
@@ -10,22 +13,12 @@ import {
   LoanKpiSummary,
   AmortizationScheduleTable,
   LoanCashflowChart,
-  LoanStatus,
+  getLoanStatusConfig,
 } from "@/v2/core/loans";
 import { RecordPaymentModal } from "../record-payment-modal";
 import { LoanPaymentsTabTable } from "./LoanPaymentsTabTable";
 import type { LoanDetailDrawerProps } from "./LoanDetailDrawer.type";
 import { useLoanDetailDrawer } from "./LoanDetailDrawer.hook";
-
-const STATUS_BADGE_MAP: Record<
-  LoanStatus,
-  { label: string; variant: "default" | "outline" | "destructive" }
-> = {
-  [LoanStatus.ACTIVE]: { label: "Đang vay", variant: "default" },
-  [LoanStatus.DRAFT]: { label: "Dự thảo", variant: "outline" },
-  [LoanStatus.COMPLETED]: { label: "Đã tất toán", variant: "outline" },
-  [LoanStatus.OVERDUE]: { label: "Quá hạn", variant: "destructive" },
-};
 
 export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
   props,
@@ -35,6 +28,9 @@ export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
     loan,
     isLoading,
     schedule,
+    kpiSummary,
+    paidPeriodNumbers,
+    selectedPeriod,
     activeTab,
     setActiveTab,
     isPaymentModalOpen,
@@ -57,7 +53,7 @@ export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
     {
       label: t("v2.loans.action.recordPayment", "Trả Nợ"),
       variant: "primary",
-      onClick: handleOpenPaymentModal,
+      onClick: () => handleOpenPaymentModal(),
     },
     {
       label: t("v2.common.close", "Đóng"),
@@ -66,16 +62,7 @@ export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
     },
   ];
 
-  const statusBadge = loan?.status ? STATUS_BADGE_MAP[loan.status] : null;
-
-  const totalInterest = schedule.reduce((sum, p) => sum + p.interestDue, 0);
-  const totalObligation = schedule.reduce(
-    (sum, p) => sum + p.totalPaymentDue,
-    0,
-  );
-  const firstMonthDue = schedule[0]?.totalPaymentDue || 0;
-  const monthlyAverage =
-    schedule.length > 0 ? totalObligation / schedule.length : 0;
+  const statusBadge = loan?.status ? getLoanStatusConfig(loan.status, t) : null;
 
   return (
     <>
@@ -85,9 +72,9 @@ export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
         onClose={props.onClose}
         title={
           <div className="flex items-center gap-2">
-            <span className="truncate">
+            <V2Text as="span" className="truncate">
               {loan?.title || t("v2.loans.drawer.detailTitle", "Chi Tiết")}
-            </span>
+            </V2Text>
             {statusBadge && (
               <V2Badge variant={statusBadge.variant}>
                 {statusBadge.label}
@@ -96,8 +83,9 @@ export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
           </div>
         }
         subtitle={loan ? `${loan.loanCode} • ${loan.lenderName}` : undefined}
-        size="full"
-        layout="1-column"
+        size={V2DrawerSize.FULL}
+        mode={V2DrawerMode.VIEW}
+        layout={V2DrawerLayout.ONE_COLUMN}
         tabs={tabs}
         activeTabKey={activeTab}
         onTabChange={setActiveTab}
@@ -107,12 +95,7 @@ export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
         <div className="p-3 space-y-4">
           {activeTab === "overview" && loan && (
             <>
-              <LoanKpiSummary
-                firstMonthDue={firstMonthDue}
-                monthlyAverage={monthlyAverage}
-                totalInterest={totalInterest}
-                totalObligation={totalObligation}
-              />
+              <LoanKpiSummary {...kpiSummary} />
 
               <div className="rounded-xl border border-border p-3 bg-card">
                 <V2Text variant="caption" className="font-semibold mb-2 block">
@@ -125,7 +108,11 @@ export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
                 <V2Text variant="caption" className="font-semibold mb-2 block">
                   {t("v2.loans.table.scheduleTitle", "Lịch Trả Nợ Chi Tiết")}
                 </V2Text>
-                <AmortizationScheduleTable schedule={schedule} />
+                <AmortizationScheduleTable
+                  schedule={schedule}
+                  paidPeriodNumbers={paidPeriodNumbers}
+                  onRecordPeriod={(period) => handleOpenPaymentModal(period)}
+                />
               </div>
             </>
           )}
@@ -142,7 +129,15 @@ export const LoanDetailDrawerMobile: React.FC<LoanDetailDrawerProps> = (
           onClose={handleClosePaymentModal}
           loanId={loan.id}
           loanTitle={loan.title}
-          suggestedPeriod={(loan.payments?.length ?? 0) + 1}
+          suggestedPeriod={
+            selectedPeriod?.periodNumber ?? (loan.payments?.length ?? 0) + 1
+          }
+          suggestedPrincipal={
+            selectedPeriod ? Math.round(selectedPeriod.principalDue) : 0
+          }
+          suggestedInterest={
+            selectedPeriod ? Math.round(selectedPeriod.interestDue) : 0
+          }
         />
       )}
     </>

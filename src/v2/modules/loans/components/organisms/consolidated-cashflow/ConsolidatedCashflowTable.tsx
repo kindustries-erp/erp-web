@@ -4,6 +4,7 @@ import {
   PortfolioMonthlyPeriod,
   PortfolioScheduleTable,
 } from "@/v2/core/loans";
+import type { CashflowLoanBreakdownItem } from "../../../api";
 
 export interface MonthlyProjectionRow {
   month: string;
@@ -12,6 +13,7 @@ export interface MonthlyProjectionRow {
   interestDue: number;
   totalPaymentDue: number;
   cumulativeRemainingPrincipal: number;
+  breakdown?: CashflowLoanBreakdownItem[];
 }
 
 export const ConsolidatedCashflowTable: React.FC<{
@@ -29,6 +31,7 @@ export const ConsolidatedCashflowTable: React.FC<{
         totalPayment: p.totalPaymentDue,
         remainingPrincipal: p.cumulativeRemainingPrincipal,
         loansCount: p.activeLoanCount,
+        breakdown: p.breakdown,
       })),
     [projections],
   );

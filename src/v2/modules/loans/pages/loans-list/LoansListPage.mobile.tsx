@@ -1,25 +1,15 @@
 import React from "react";
-import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Button, V2Badge, V2Text } from "@/v2/shared/components";
 import { Plus } from "lucide-react";
-import { LoanStatus } from "@/v2/core/loans";
+import { V2Button, V2Text } from "@/v2/shared/components";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { ConsolidatedCashflowView } from "../../components/organisms/consolidated-cashflow";
-import { LoanSimulatorPage } from "../loan-simulator";
 import { LoanDetailDrawer } from "../../drawers/loan-detail-drawer";
 import { LoanFormDrawer } from "../../drawers/loan-form-drawer";
-import type { LoansListPageProps } from "./LoansListPage.type";
+import { RecordPaymentModal } from "../../drawers/record-payment-modal";
+import { LoanSimulatorPage } from "../loan-simulator";
 import { useLoansListPage } from "./LoansListPage.hook";
-
-type StatusBadgeVariant = "default" | "outline" | "destructive";
-const STATUS_MAP: Record<
-  LoanStatus,
-  { label: string; variant: StatusBadgeVariant }
-> = {
-  [LoanStatus.ACTIVE]: { label: "Đang vay", variant: "default" },
-  [LoanStatus.DRAFT]: { label: "Dự thảo", variant: "outline" },
-  [LoanStatus.COMPLETED]: { label: "Đã tất toán", variant: "outline" },
-  [LoanStatus.OVERDUE]: { label: "Quá hạn", variant: "destructive" },
-};
+import { LoansListPageMobileCard } from "./LoansListPage.mobile-card";
+import type { LoansListPageProps } from "./LoansListPage.type";
 
 export const LoansListPageMobile: React.FC<LoansListPageProps> = (props) => {
   const { t } = useV2Translation();
@@ -33,11 +23,14 @@ export const LoansListPageMobile: React.FC<LoansListPageProps> = (props) => {
     editingLoan,
     detailLoanId,
     isDetailOpen,
+    paymentModalLoan,
     handleCreate,
     handleEdit,
     handleOpenDetail,
     handleCloseDetail,
     handleCloseForm,
+    handleOpenPaymentModal,
+    handleClosePaymentModal,
   } = useLoansListPage();
 
   return (
@@ -65,43 +58,39 @@ export const LoansListPageMobile: React.FC<LoansListPageProps> = (props) => {
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto pb-1">
-        <button
+        <V2Button
+          size="sm"
+          variant={activeTab === "simulator" ? "default" : "secondary"}
           onClick={() => setActiveTab("simulator")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-            activeTab === "simulator"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
-          }`}
+          className="whitespace-nowrap text-xs"
         >
           {t("v2.loans.tabs.simulator", "Mô phỏng")}
-        </button>
-        <button
+        </V2Button>
+        <V2Button
+          size="sm"
+          variant={activeTab === "projection" ? "default" : "secondary"}
           onClick={() => setActiveTab("projection")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-            activeTab === "projection"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
-          }`}
+          className="whitespace-nowrap text-xs"
         >
           {t("v2.loans.tabs.projection", "Dòng tiền tương lai")}
-        </button>
-        <button
+        </V2Button>
+        <V2Button
+          size="sm"
+          variant={activeTab === "list" ? "default" : "secondary"}
           onClick={() => setActiveTab("list")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-            activeTab === "list"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
-          }`}
+          className="whitespace-nowrap text-xs"
         >
           {t("v2.loans.tabs.list", "Danh sách")} ({total})
-        </button>
+        </V2Button>
       </div>
 
       {activeTab === "list" && (
         <div className="space-y-3">
           {isLoading && (
-            <div className="p-8 text-center text-muted-foreground animate-pulse text-sm">
-              {t("v2.common.loading", "Đang tải danh sách khoản vay...")}
+            <div className="p-8 text-center animate-pulse">
+              <V2Text variant="body-sm" color="muted">
+                {t("v2.common.loading", "Đang tải danh sách khoản vay...")}
+              </V2Text>
             </div>
           )}
 
@@ -113,48 +102,14 @@ export const LoansListPageMobile: React.FC<LoansListPageProps> = (props) => {
             </div>
           )}
 
-          {loans.map((loan) => {
-            const statusCfg = STATUS_MAP[loan.status] || {
-              label: loan.status,
-              variant: "outline",
-            };
-            return (
-              <div
-                key={loan.id}
-                onClick={() => handleOpenDetail(loan.id)}
-                className="bg-card p-4 rounded-xl border border-border space-y-2 active:bg-muted/50 transition-colors cursor-pointer"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="font-semibold text-sm line-clamp-1">
-                      {loan.title}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {loan.loanCode} • {loan.lenderName}
-                    </span>
-                  </div>
-                  <V2Badge variant={statusCfg.variant}>
-                    {statusCfg.label}
-                  </V2Badge>
-                </div>
-                <div className="flex justify-between text-xs pt-1 border-t border-border/50">
-                  <span className="text-muted-foreground">Số tiền vay:</span>
-                  <span className="font-semibold">
-                    {Number(loan.principalAmount).toLocaleString("vi-VN")} ₫
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Dư nợ còn lại:</span>
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">
-                    {Number(
-                      loan.remainingPrincipal ?? loan.principalAmount,
-                    ).toLocaleString("vi-VN")}{" "}
-                    ₫
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+          {loans.map((loan) => (
+            <LoansListPageMobileCard
+              key={loan.id}
+              loan={loan}
+              onOpenDetail={handleOpenDetail}
+              onRecordPayment={handleOpenPaymentModal}
+            />
+          ))}
         </div>
       )}
 
@@ -177,6 +132,16 @@ export const LoansListPageMobile: React.FC<LoansListPageProps> = (props) => {
         record={editingLoan}
         onSuccess={handleCloseForm}
       />
+
+      {paymentModalLoan && (
+        <RecordPaymentModal
+          open={Boolean(paymentModalLoan)}
+          onClose={handleClosePaymentModal}
+          loanId={paymentModalLoan.id}
+          loanTitle={paymentModalLoan.title}
+          suggestedPeriod={(paymentModalLoan.payments?.length ?? 0) + 1}
+        />
+      )}
     </div>
   );
 };

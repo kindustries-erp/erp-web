@@ -15,6 +15,7 @@ export function useV2DesktopToolbar<T>(
   config: V2TableToolbarConfig | undefined,
   clearSelection: () => void,
   viewPresets: V2ViewPresetsApi,
+  enableColumnVisibility = true,
 ) {
   const slot = useV2ToolbarPortal();
   const fullscreen = useV2TableFullscreen();
@@ -47,13 +48,15 @@ export function useV2DesktopToolbar<T>(
       isFullscreen: fullscreen.isFullscreen,
       onToggleFullscreen:
         config?.enableFullscreen === false ? undefined : fullscreen.toggle,
-      columnToggle: {
-        columns: toggleItems,
-        onToggle: prefs.toggleColumn,
-        onReorder: prefs.setOrder,
-        onReset: prefs.reset,
-        isCustomized: prefs.isCustomized,
-      },
+      columnToggle: enableColumnVisibility
+        ? {
+            columns: toggleItems,
+            onToggle: prefs.toggleColumn,
+            onReorder: prefs.setOrder,
+            onReset: prefs.reset,
+            isCustomized: prefs.isCustomized,
+          }
+        : undefined,
     },
   };
 }

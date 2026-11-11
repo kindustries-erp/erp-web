@@ -1,50 +1,87 @@
 import React from "react";
 import { CornerDownRight } from "lucide-react";
+import { V2Text } from "@/v2/shared/components";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/v2/shared/ui";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { formatVndCurrency } from "../../../domain/rules/loan-format.rule";
-import { PortfolioMonthlyPeriod } from "../../../domain/types/loan.types";
+import type { PortfolioMonthlyPeriod } from "../../../domain/types/loan.types";
 
 export interface PortfolioBreakdownRowProps {
   items: NonNullable<PortfolioMonthlyPeriod["breakdown"]>;
 }
 
 /**
- * Hiển thị từng khoản vay con bên dưới hàng tháng đã mở rộng.
- * Sử dụng nền tương phản, dải nhấn bên trái và số monospace chuẩn V2 Standard Table.
+ * Bảng chi tiết từng khoản vay cấu thành bên trong hàng mở rộng của V2StandardTable.
  */
 export const PortfolioBreakdownRow: React.FC<PortfolioBreakdownRowProps> = ({
   items,
 }) => {
+  const { t } = useV2Translation();
+
   return (
-    <>
-      {items.map((item) => (
-        <tr
-          key={item.loanId}
-          className="bg-muted/50 dark:bg-muted/30 hover:bg-muted/70 text-xs transition-colors border-b border-border/50"
-        >
-          <td className="py-2 px-3 text-center border-l-4 border-l-primary/80 text-primary">
-            <CornerDownRight className="h-3.5 w-3.5 inline" />
-          </td>
-          <td className="py-2 px-4 font-medium text-foreground">
-            {item.loanName}
-          </td>
-          <td className="py-2 px-4 text-muted-foreground font-mono tabular-nums">
-            {item.dueDate}
-          </td>
-          <td className="py-2 px-4 text-right text-muted-foreground font-mono tabular-nums">
-            {formatVndCurrency(item.principalDue)}
-          </td>
-          <td className="py-2 px-4 text-right text-amber-600 dark:text-amber-400 font-mono tabular-nums">
-            {formatVndCurrency(item.interestDue)}
-          </td>
-          <td className="py-2 px-4 text-right font-semibold text-foreground font-mono tabular-nums">
-            {formatVndCurrency(item.totalPayment)}
-          </td>
-          <td className="py-2 px-4 text-right text-muted-foreground font-mono tabular-nums">
-            {formatVndCurrency(item.endingBalance)}
-          </td>
-        </tr>
-      ))}
-    </>
+    <div className="overflow-hidden rounded-lg border border-border/60 bg-surface shadow-2xs">
+      <Table className="border-collapse text-xs">
+        <TableHeader>
+          <TableRow className="border-b border-border/60 bg-muted/50 text-[11px] font-semibold uppercase tracking-wide text-muted-fg hover:bg-muted/50">
+            <TableHead className="h-auto px-3 py-1.5 text-left">
+              {t("v2.loans.table.loanName", "Khoản vay cấu thành")}
+            </TableHead>
+            <TableHead className="h-auto px-3 py-1.5 text-left">
+              {t("v2.loans.table.dueDate", "Ngày thanh toán")}
+            </TableHead>
+            <TableHead className="h-auto px-3 py-1.5 text-right">
+              {t("v2.loans.table.principalDue", "Gốc phải trả")}
+            </TableHead>
+            <TableHead className="h-auto px-3 py-1.5 text-right">
+              {t("v2.loans.table.interestDue", "Lãi phải trả")}
+            </TableHead>
+            <TableHead className="h-auto px-3 py-1.5 text-right">
+              {t("v2.loans.table.totalDue", "Tổng phải trả")}
+            </TableHead>
+            <TableHead className="h-auto px-3 py-1.5 text-right">
+              {t("v2.loans.table.endingBalance", "Dư nợ còn lại")}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className="divide-y divide-border/40">
+          {items.map((item) => (
+            <TableRow
+              key={item.loanId}
+              className="transition-colors hover:bg-muted/30"
+            >
+              <TableCell className="px-3 py-2 font-medium text-foreground">
+                <V2Text as="span" className="inline-flex items-center gap-1.5">
+                  <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <V2Text as="span">{item.loanName}</V2Text>
+                </V2Text>
+              </TableCell>
+              <TableCell className="px-3 py-2 font-mono tabular-nums text-muted-foreground">
+                {item.dueDate}
+              </TableCell>
+              <TableCell className="px-3 py-2 text-right font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+                {formatVndCurrency(item.principalDue)}
+              </TableCell>
+              <TableCell className="px-3 py-2 text-right font-mono tabular-nums text-amber-600 dark:text-amber-400">
+                {formatVndCurrency(item.interestDue)}
+              </TableCell>
+              <TableCell className="px-3 py-2 text-right font-mono tabular-nums font-semibold text-foreground">
+                {formatVndCurrency(item.totalPayment)}
+              </TableCell>
+              <TableCell className="px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
+                {formatVndCurrency(item.endingBalance)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 PortfolioBreakdownRow.displayName = "PortfolioBreakdownRow";

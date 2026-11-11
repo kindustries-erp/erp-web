@@ -2,6 +2,9 @@ import React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   V2StandardDrawer,
+  V2DrawerSize,
+  V2DrawerMode,
+  V2DrawerLayout,
   type DrawerAction,
 } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { LoanFormDrawerProps } from "./LoanFormDrawer.type";
@@ -40,9 +43,9 @@ export const LoanFormDrawerDesktop: React.FC<LoanFormDrawerProps> = (props) => {
       open={props.open}
       onClose={props.onClose}
       title={title}
-      size="lg"
-      mode="edit"
-      layout="1-column"
+      size={V2DrawerSize.MD}
+      mode={V2DrawerMode.EDIT}
+      layout={V2DrawerLayout.ONE_COLUMN}
       actions={actions}
     >
       <LoanFormFields

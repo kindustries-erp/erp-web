@@ -37,6 +37,16 @@ export interface LoanListResponse {
   pageSize: number;
 }
 
+export interface CashflowLoanBreakdownItem {
+  loanId: string;
+  loanName: string;
+  dueDate: string;
+  principalDue: number;
+  interestDue: number;
+  totalPayment: number;
+  endingBalance: number;
+}
+
 export interface MonthlyCashflowProjection {
   month: string;
   principalDue: number;
@@ -44,6 +54,7 @@ export interface MonthlyCashflowProjection {
   totalPaymentDue: number;
   cumulativeRemainingPrincipal: number;
   activeLoanCount: number;
+  breakdown?: CashflowLoanBreakdownItem[];
 }
 
 export interface CashflowProjectionResponse {

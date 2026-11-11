@@ -116,6 +116,15 @@ export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
     );
   }
 
+  if (
+    !toolbarExtra &&
+    !columnToggle &&
+    selectedCount === 0 &&
+    activeFilterCount === 0
+  ) {
+    return null;
+  }
+
   return (
     <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
       <div className="flex flex-wrap items-center gap-2">

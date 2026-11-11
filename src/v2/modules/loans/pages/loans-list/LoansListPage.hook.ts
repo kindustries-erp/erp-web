@@ -16,6 +16,9 @@ export function useLoansListPage() {
   const [editingLoan, setEditingLoan] = useState<LoanItem | null>(null);
   const [detailLoanId, setDetailLoanId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [paymentModalLoan, setPaymentModalLoan] = useState<LoanItem | null>(
+    null,
+  );
 
   const listQuery = useLoansListQuery(queryParams);
 
@@ -47,6 +50,14 @@ export function useLoansListPage() {
     setEditingLoan(null);
   };
 
+  const handleOpenPaymentModal = (loan: LoanItem) => {
+    setPaymentModalLoan(loan);
+  };
+
+  const handleClosePaymentModal = () => {
+    setPaymentModalLoan(null);
+  };
+
   const handleSearchChange = (search: string) => {
     setQueryParams((prev) => ({ ...prev, search, page: 1 }));
   };
@@ -74,11 +85,14 @@ export function useLoansListPage() {
     editingLoan,
     detailLoanId,
     isDetailOpen,
+    paymentModalLoan,
     handleCreate,
     handleEdit,
     handleOpenDetail,
     handleCloseDetail,
     handleCloseForm,
+    handleOpenPaymentModal,
+    handleClosePaymentModal,
     handleSearchChange,
     handleStatusFilterChange,
     handlePageChange,

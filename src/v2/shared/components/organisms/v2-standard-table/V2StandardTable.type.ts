@@ -100,6 +100,16 @@ export interface V2StandardTableProps<T> {
   enableRowSelection?: boolean;
   selectedKeys?: string[];
   onSelectionChange?: (keys: string[]) => void;
+  /** Cho phép hiển thị nút ẩn/hiện cột trên toolbar (mặc định: true) */
+  enableColumnVisibility?: boolean;
+  /** Render nội dung mở rộng dưới một dòng (opt-in) */
+  renderExpandedRow?: (row: T, index: number) => ReactNode;
+  /** Kiểm tra dòng có thể mở rộng không (mặc định true nếu có renderExpandedRow) */
+  canExpandRow?: (row: T, index: number) => boolean;
+  /** Danh sách row key đang mở rộng (controlled) */
+  expandedRowKeys?: string[];
+  /** Callback khi trạng thái mở rộng dòng thay đổi */
+  onExpandedRowsChange?: (keys: string[]) => void;
   rowActions?: (row: T) => V2RowActionGroup[];
   getRowClassName?: (row: T, index: number) => string | undefined;
   preferencesStorage?: V2ColumnPreferencesStorage;

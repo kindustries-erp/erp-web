@@ -18,6 +18,7 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
     rowActions,
     state,
     selection,
+    expansion,
     view,
     scroll,
     table,
@@ -82,6 +83,8 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
               rowActions={rowActions}
               getRowClassName={props.getRowClassName}
               onRowContextMenu={menu.open}
+              expandedKeys={expansion.expandedSet}
+              renderExpandedRow={props.renderExpandedRow}
               summary={
                 hasSummary
                   ? {

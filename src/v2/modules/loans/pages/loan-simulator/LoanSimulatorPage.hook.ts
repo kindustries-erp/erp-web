@@ -33,9 +33,16 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
   const accessToken = useAuthStore((s) => s.accessToken);
   const isAuthenticated = Boolean(accessToken);
 
-  const [loans, setLoans] = useState<PortfolioLoanItem[]>(
-    DEFAULT_PORTFOLIO_LOANS,
-  );
+  const [loans, setLoans] = useState<PortfolioLoanItem[]>(() => [
+    {
+      ...DEFAULT_PORTFOLIO_LOANS[0],
+      name: t("v2.loans.simulator.defaultLoanName", "Khoản vay 1 (Dự án)"),
+      lenderName: t(
+        "v2.loans.simulator.defaultLenderName",
+        "Ngân hàng TMCP Ngoại thương (VCB)",
+      ),
+    },
+  ]);
   const batchCreateMutation = useCreateBatchLoansMutation();
 
   const portfolioResult: PortfolioSimulationResult = useMemo(() => {
@@ -44,9 +51,10 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
 
   const handleAddLoan = () => {
     const nextIdx = loans.length + 1;
+    const prefix = t("v2.loans.simulator.newLoanPrefix", "Khoản vay");
     const newLoan: PortfolioLoanItem = {
       id: `loan-${Date.now()}`,
-      name: `Khoản vay ${nextIdx}`,
+      name: `${prefix} ${nextIdx}`,
       enabled: true,
       principalAmount: 200_000_000,
       annualInterestRate: 9.0,
@@ -77,7 +85,16 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
   };
 
   const handleReset = () => {
-    setLoans(DEFAULT_PORTFOLIO_LOANS);
+    setLoans([
+      {
+        ...DEFAULT_PORTFOLIO_LOANS[0],
+        name: t("v2.loans.simulator.defaultLoanName", "Khoản vay 1 (Dự án)"),
+        lenderName: t(
+          "v2.loans.simulator.defaultLenderName",
+          "Ngân hàng TMCP Ngoại thương (VCB)",
+        ),
+      },
+    ]);
   };
 
   const handleSaveToErp = async () => {
@@ -103,7 +120,8 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
 
     const payload: CreateLoanPayload[] = activeLoans.map((l) => ({
       title: l.name,
-      lenderName: l.lenderName || "Chưa xác định",
+      lenderName:
+        l.lenderName || t("v2.loans.simulator.unknownLender", "Chưa xác định"),
       principalAmount: l.principalAmount,
       annualInterestRate: l.annualInterestRate,
       tenorMonths: l.tenorMonths,
@@ -114,10 +132,9 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
     try {
       await batchCreateMutation.mutateAsync({ loans: payload });
       showToast({
-        title: t(
-          "v2.loans.portfolio.saveSuccess",
-          `Đã lưu thành công ${payload.length} khoản vay vào hệ thống ERP!`,
-        ),
+        title: t("v2.loans.portfolio.saveSuccess", {
+          count: payload.length,
+        }),
         variant: "success",
       });
       props.onSaved?.();

@@ -38,9 +38,9 @@ export const PortfolioLoanList: React.FC<PortfolioLoanListProps> = ({
               "Nhập nhiều khoản vay với lãi suất và kỳ hạn khác nhau để mô phỏng dòng tiền gộp.",
             )}
             {" ("}
-            <span className="font-medium text-foreground">
+            <V2Text as="span" weight="medium" className="text-foreground">
               {activeCount}/{loans.length}
-            </span>{" "}
+            </V2Text>{" "}
             {t("v2.loans.portfolio.activeText", "khoản đang bật")}
             {")"}
           </V2Text>

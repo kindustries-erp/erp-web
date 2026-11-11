@@ -9,6 +9,8 @@ import { ConsolidatedCashflowView } from "../../components/organisms/consolidate
 import { LoanSimulatorPage } from "../loan-simulator";
 import { LoanDetailDrawer } from "../../drawers/loan-detail-drawer";
 import { LoanFormDrawer } from "../../drawers/loan-form-drawer";
+import { RecordPaymentModal } from "../../drawers/record-payment-modal";
+import { buildLoanRowActions } from "./LoansListPage.actions";
 import type { LoansListPageProps } from "./LoansListPage.type";
 import { useLoansListPage } from "./LoansListPage.hook";
 
@@ -24,17 +26,31 @@ export const LoansListPageDesktop: React.FC<LoansListPageProps> = (props) => {
     editingLoan,
     detailLoanId,
     isDetailOpen,
+    paymentModalLoan,
     handleCreate,
     handleEdit,
     handleOpenDetail,
     handleCloseDetail,
     handleCloseForm,
+    handleOpenPaymentModal,
+    handleClosePaymentModal,
     handlePageChange,
   } = useLoansListPage();
 
   const columns = useMemo(
     () => buildLoanColumns(t, handleOpenDetail),
     [t, handleOpenDetail],
+  );
+
+  const rowActions = useMemo(
+    () =>
+      buildLoanRowActions({
+        t,
+        onRecordPayment: handleOpenPaymentModal,
+        onViewDetail: handleOpenDetail,
+        onEdit: handleEdit,
+      }),
+    [t, handleOpenPaymentModal, handleOpenDetail, handleEdit],
   );
 
   return (
@@ -60,36 +76,24 @@ export const LoansListPageDesktop: React.FC<LoansListPageProps> = (props) => {
       </div>
 
       <div className="flex gap-2 border-b border-border pb-2">
-        <button
+        <V2Button
+          variant={activeTab === "simulator" ? "default" : "ghost"}
           onClick={() => setActiveTab("simulator")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "simulator"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted"
-          }`}
         >
           {t("v2.loans.tabs.simulator", "Mô Phỏng & Tính Nhanh")}
-        </button>
-        <button
+        </V2Button>
+        <V2Button
+          variant={activeTab === "projection" ? "default" : "ghost"}
           onClick={() => setActiveTab("projection")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "projection"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted"
-          }`}
         >
           {t("v2.loans.tabs.projection", "Dự Báo Dòng Tiền Tương Lai")}
-        </button>
-        <button
+        </V2Button>
+        <V2Button
+          variant={activeTab === "list" ? "default" : "ghost"}
           onClick={() => setActiveTab("list")}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            activeTab === "list"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted"
-          }`}
         >
           {t("v2.loans.tabs.list", "Danh Sách Hợp Đồng")} ({total})
-        </button>
+        </V2Button>
       </div>
 
       {activeTab === "list" && (
@@ -101,6 +105,7 @@ export const LoansListPageDesktop: React.FC<LoansListPageProps> = (props) => {
             getRowKey={(row) => row.id}
             loading={isLoading}
             total={total}
+            rowActions={rowActions}
             emptyLabel={t("v2.loans.emptyList", "Không có khoản vay nào.")}
             onQueryChange={(q) => {
               handlePageChange(q.page, q.pageSize);
@@ -128,6 +133,16 @@ export const LoansListPageDesktop: React.FC<LoansListPageProps> = (props) => {
         record={editingLoan}
         onSuccess={handleCloseForm}
       />
+
+      {paymentModalLoan && (
+        <RecordPaymentModal
+          open={Boolean(paymentModalLoan)}
+          onClose={handleClosePaymentModal}
+          loanId={paymentModalLoan.id}
+          loanTitle={paymentModalLoan.title}
+          suggestedPeriod={(paymentModalLoan.payments?.length ?? 0) + 1}
+        />
+      )}
     </div>
   );
 };

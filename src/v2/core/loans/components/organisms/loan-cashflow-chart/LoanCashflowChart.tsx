@@ -96,7 +96,10 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
         formatValue={formatCompact}
         secondaryFormatValue={formatCompact}
         height={height}
-        ariaLabel="Biểu đồ áp lực dòng tiền trả nợ hàng tháng"
+        ariaLabel={t(
+          "v2.loans.cashflow.chartAriaLabel",
+          "Biểu đồ áp lực dòng tiền trả nợ hàng tháng",
+        )}
       />
     </div>
   );

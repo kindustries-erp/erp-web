@@ -137,7 +137,10 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
             sizeVariant="md"
             value={paymentReference}
             onChange={(e) => setPaymentReference(e.target.value)}
-            placeholder="VD: FT2412345678"
+            placeholder={t(
+              "v2.loans.form.paymentReferencePlaceholder",
+              "VD: FT2412345678",
+            )}
           />
         </div>
 
@@ -149,7 +152,10 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
             sizeVariant="md"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="VD: Đã trừ tự động qua tài khoản VCB"
+            placeholder={t(
+              "v2.loans.form.paymentNotesPlaceholder",
+              "VD: Đã trừ tự động qua tài khoản VCB",
+            )}
           />
         </div>
       </form>

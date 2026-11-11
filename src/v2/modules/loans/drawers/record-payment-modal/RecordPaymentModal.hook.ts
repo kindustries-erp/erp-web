@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { useRecordPaymentMutation } from "../../api";
 import type { RecordPaymentModalProps } from "./RecordPaymentModal.type";
 
@@ -74,12 +75,26 @@ export function useRecordPaymentModal(props: RecordPaymentModalProps) {
           notes: notes.trim() || undefined,
         },
       });
+      useV2ToastStore.getState().showToast({
+        variant: "success",
+        title: t(
+          "v2.loans.toast.paymentRecordedTitle",
+          "Đã ghi nhận thanh toán",
+        ),
+        description: t(
+          "v2.loans.toast.paymentRecordedDesc",
+          "Dư nợ gốc và lịch dự báo dòng tiền đã được cập nhật.",
+        ),
+      });
       onClose();
     } catch (err: unknown) {
       const msg =
         err instanceof Error
           ? err.message
-          : "Có lỗi xảy ra khi ghi nhận thanh toán";
+          : t(
+              "v2.loans.validation.paymentError",
+              "Có lỗi xảy ra khi ghi nhận thanh toán",
+            );
       setError(msg);
     }
   };

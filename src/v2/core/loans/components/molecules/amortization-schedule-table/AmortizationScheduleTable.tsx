@@ -1,17 +1,34 @@
 import React from "react";
-import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Badge, V2Button, V2Text } from "@/v2/shared/components";
 import { Download } from "lucide-react";
+import { V2Badge, V2Button } from "@/v2/shared/components";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/v2/shared/ui";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { formatVndCurrency } from "../../../domain/rules/loan-format.rule";
-import { AmortizationScheduleTableProps } from "./AmortizationScheduleTable.type";
+import { exportAmortizationScheduleCsv } from "./AmortizationScheduleTable.helper";
+import { AmortizationScheduleRow } from "./AmortizationScheduleTable.row";
+import type { AmortizationScheduleTableProps } from "./AmortizationScheduleTable.type";
 
 export const AmortizationScheduleTable: React.FC<
   AmortizationScheduleTableProps
-> = ({ schedule, className = "", showExportButton = true }) => {
+> = ({
+  schedule,
+  className = "",
+  showExportButton = true,
+  paidPeriodNumbers,
+  onRecordPeriod,
+}) => {
   const { t } = useV2Translation();
 
   const handleExportCsv = () => {
-    const headers = [
+    exportAmortizationScheduleCsv(schedule, [
       t("v2.loans.table.period", "Kỳ"),
       t("v2.loans.table.dueDate", "Ngày đến hạn"),
       t("v2.loans.table.beginningBalance", "Dư nợ đầu kỳ"),
@@ -19,33 +36,13 @@ export const AmortizationScheduleTable: React.FC<
       t("v2.loans.table.interestDue", "Lãi phải trả"),
       t("v2.loans.table.totalDue", "Tổng phải trả"),
       t("v2.loans.table.endingBalance", "Dư nợ cuối kỳ"),
-    ];
-
-    const rows = schedule.map((p) => [
-      p.periodNumber,
-      p.dueDate,
-      Math.round(p.beginningBalance),
-      Math.round(p.principalDue),
-      Math.round(p.interestDue),
-      Math.round(p.totalPaymentDue),
-      Math.round(p.endingBalance),
     ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8,\uFEFF" +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `bang-tinh-khoan-vay-${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const totalPrincipal = schedule.reduce((sum, p) => sum + p.principalDue, 0);
   const totalInterest = schedule.reduce((sum, p) => sum + p.interestDue, 0);
   const totalPayment = schedule.reduce((sum, p) => sum + p.totalPaymentDue, 0);
+  const showActions = Boolean(onRecordPeriod || paidPeriodNumbers);
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -70,95 +67,74 @@ export const AmortizationScheduleTable: React.FC<
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
-        <table className="w-full text-left text-sm border-collapse">
-          <thead>
-            <tr className="border-b border-border bg-muted/40 text-xs font-semibold uppercase text-muted-foreground">
-              <th className="py-3 px-4 text-center">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <Table className="text-left text-sm border-collapse">
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/40 text-xs font-semibold uppercase text-muted-foreground hover:bg-muted/40">
+              <TableHead className="h-auto py-3 px-4 text-center">
                 {t("v2.loans.table.period", "Kỳ")}
-              </th>
-              <th className="py-3 px-4">
+              </TableHead>
+              <TableHead className="h-auto py-3 px-4">
                 {t("v2.loans.table.dueDate", "Ngày đến hạn")}
-              </th>
-              <th className="py-3 px-4 text-right">
+              </TableHead>
+              <TableHead className="h-auto py-3 px-4 text-right">
                 {t("v2.loans.table.beginningBalance", "Dư nợ đầu kỳ")}
-              </th>
-              <th className="py-3 px-4 text-right">
+              </TableHead>
+              <TableHead className="h-auto py-3 px-4 text-right">
                 {t("v2.loans.table.principalDue", "Gốc phải trả")}
-              </th>
-              <th className="py-3 px-4 text-right">
+              </TableHead>
+              <TableHead className="h-auto py-3 px-4 text-right">
                 {t("v2.loans.table.interestDue", "Lãi phải trả")}
-              </th>
-              <th className="py-3 px-4 text-right">
+              </TableHead>
+              <TableHead className="h-auto py-3 px-4 text-right">
                 {t("v2.loans.table.totalDue", "Tổng phải trả")}
-              </th>
-              <th className="py-3 px-4 text-right">
+              </TableHead>
+              <TableHead className="h-auto py-3 px-4 text-right">
                 {t("v2.loans.table.endingBalance", "Dư nợ cuối kỳ")}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+              </TableHead>
+              {showActions && (
+                <TableHead className="h-auto py-3 px-3 text-center">
+                  {t("v2.common.actions", "Trạng thái")}
+                </TableHead>
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border">
             {schedule.map((row, index) => (
-              <tr
+              <AmortizationScheduleRow
                 key={row.periodNumber}
-                className={`hover:bg-muted/30 transition-colors ${
-                  index % 2 === 1 ? "bg-muted/10" : ""
-                }`}
-              >
-                <td className="py-2.5 px-4 text-center">
-                  <V2Text variant="body" className="font-medium">
-                    {row.periodNumber}
-                  </V2Text>
-                </td>
-                <td className="py-2.5 px-4">
-                  <V2Text
-                    variant="caption"
-                    className="text-muted-foreground font-mono"
-                  >
-                    {row.dueDate}
-                  </V2Text>
-                </td>
-                <td className="py-2.5 px-4 text-right font-mono tabular-nums">
-                  {formatVndCurrency(row.beginningBalance)}
-                </td>
-                <td className="py-2.5 px-4 text-right font-mono tabular-nums font-medium text-primary">
-                  {formatVndCurrency(row.principalDue)}
-                </td>
-                <td className="py-2.5 px-4 text-right font-mono tabular-nums text-amber-600 dark:text-amber-400">
-                  {formatVndCurrency(row.interestDue)}
-                </td>
-                <td className="py-2.5 px-4 text-right font-mono tabular-nums font-semibold">
-                  {formatVndCurrency(row.totalPaymentDue)}
-                </td>
-                <td className="py-2.5 px-4 text-right font-mono tabular-nums text-muted-foreground">
-                  {formatVndCurrency(row.endingBalance)}
-                </td>
-              </tr>
+                row={row}
+                index={index}
+                showActions={showActions}
+                isPaid={Boolean(paidPeriodNumbers?.has(row.periodNumber))}
+                onRecordPeriod={onRecordPeriod}
+              />
             ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-border bg-muted/60 font-bold">
-              <td
+          </TableBody>
+          <TableFooter className="border-t-2 border-border bg-muted/60 font-bold">
+            <TableRow className="hover:bg-muted/60">
+              <TableCell
                 colSpan={3}
                 className="py-3 px-4 text-center uppercase tracking-wide text-xs"
               >
                 {t("v2.common.total", "Tổng cộng")}
-              </td>
-              <td className="py-3 px-4 text-right font-mono tabular-nums text-primary">
+              </TableCell>
+              <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-primary">
                 {formatVndCurrency(totalPrincipal)}
-              </td>
-              <td className="py-3 px-4 text-right font-mono tabular-nums text-amber-600 dark:text-amber-400">
+              </TableCell>
+              <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-amber-600 dark:text-amber-400">
                 {formatVndCurrency(totalInterest)}
-              </td>
-              <td className="py-3 px-4 text-right font-mono tabular-nums text-base font-bold">
+              </TableCell>
+              <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-base font-bold">
                 {formatVndCurrency(totalPayment)}
-              </td>
-              <td className="py-3 px-4 text-right font-mono tabular-nums text-muted-foreground">
+              </TableCell>
+              <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-muted-foreground">
                 0 ₫
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+              </TableCell>
+              {showActions && <TableCell className="py-3 px-3" />}
+            </TableRow>
+          </TableFooter>
+        </Table>
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
   V2NumberInput,
   V2Text,
 } from "@/v2/shared/components";
+import { Checkbox } from "@/v2/shared/ui";
 import { AmortizationMethod, PortfolioLoanItem } from "@/v2/core/loans";
 import { getAmortizationMethodOptions } from "@/v2/core/loans/domain/rules/loan-format.rule";
 import { Trash2 } from "lucide-react";
@@ -43,17 +44,12 @@ export const PortfolioLoanCard: React.FC<PortfolioLoanCardProps> = ({
     >
       <div className="flex items-center justify-between pb-3 border-b border-border mb-3">
         <div className="flex items-center gap-2 flex-1 mr-2">
-          <button
-            type="button"
-            onClick={() => onToggle(loan.id)}
-            className={`h-5 w-5 rounded-md border flex items-center justify-center transition-colors ${
-              loan.enabled
-                ? "bg-primary border-primary text-primary-foreground"
-                : "border-border bg-background"
-            }`}
-          >
-            {loan.enabled && <span className="text-xs font-bold">✓</span>}
-          </button>
+          <Checkbox
+            checked={loan.enabled}
+            onCheckedChange={() => onToggle(loan.id)}
+            aria-label={loan.name}
+            className="h-5 w-5 rounded-md"
+          />
           <V2Badge variant="outline" className="text-xs font-medium">
             #{index + 1}
           </V2Badge>

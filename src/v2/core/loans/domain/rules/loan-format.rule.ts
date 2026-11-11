@@ -1,11 +1,42 @@
 import {
   AmortizationMethod,
+  LoanStatus,
   PortfolioMonthlyPeriod,
 } from "../types/loan.types";
 
 export interface LoanMethodOption {
   value: AmortizationMethod;
   label: string;
+}
+
+export interface LoanStatusBadgeConfig {
+  label: string;
+  variant: "default" | "outline" | "destructive";
+}
+
+export function getLoanStatusConfig(
+  status: LoanStatus,
+  t: (key: string, fallback?: string) => string,
+): LoanStatusBadgeConfig {
+  const map: Record<LoanStatus, LoanStatusBadgeConfig> = {
+    [LoanStatus.ACTIVE]: {
+      label: t("v2.loans.status.ACTIVE", "Đang vay"),
+      variant: "default",
+    },
+    [LoanStatus.DRAFT]: {
+      label: t("v2.loans.status.DRAFT", "Dự thảo"),
+      variant: "outline",
+    },
+    [LoanStatus.COMPLETED]: {
+      label: t("v2.loans.status.COMPLETED", "Đã tất toán"),
+      variant: "outline",
+    },
+    [LoanStatus.OVERDUE]: {
+      label: t("v2.loans.status.OVERDUE", "Quá hạn"),
+      variant: "destructive",
+    },
+  };
+  return map[status] ?? { label: status, variant: "outline" };
 }
 
 /**
