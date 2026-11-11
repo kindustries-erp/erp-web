@@ -1,5 +1,8 @@
 import * as React from "react";
-import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
+import {
+  V2TablePagination,
+  V2TablePaginationVariant,
+} from "@/v2/shared/components/molecules/v2-table-pagination";
 import { V2TableContextMenu } from "@/v2/shared/components/molecules/v2-table-row-actions";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2TableGrid } from "../grid/V2StandardTable.grid";
@@ -98,6 +101,7 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
             total={view.total}
             onPageChange={state.setPage}
             onPageSizeChange={state.setPageSize}
+            variant={V2TablePaginationVariant.DESKTOP}
             className="mt-2 shrink-0"
           />
         </div>

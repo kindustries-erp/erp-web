@@ -1,3 +1,13 @@
+export enum V2TablePaginationVariant {
+  AUTO = "auto",
+  DESKTOP = "desktop",
+  MOBILE = "mobile",
+}
+
+export type V2TablePaginationVariantType =
+  | V2TablePaginationVariant
+  | `${V2TablePaginationVariant}`;
+
 export interface V2TablePaginationProps {
   /** Trang hiện tại (1-based) */
   page: number;
@@ -10,4 +20,6 @@ export interface V2TablePaginationProps {
   /** Các mốc số dòng/trang (mặc định 20, 50, 100, 200) */
   pageSizeOptions?: readonly number[];
   className?: string;
+  /** Biến thể hiển thị: AUTO (theo viewport), DESKTOP (thanh ngang), MOBILE (thanh compact + bottom sheet) */
+  variant?: V2TablePaginationVariantType;
 }

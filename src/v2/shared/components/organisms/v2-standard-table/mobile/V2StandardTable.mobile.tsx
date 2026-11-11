@@ -1,5 +1,8 @@
 import * as React from "react";
-import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
+import {
+  V2TablePagination,
+  V2TablePaginationVariant,
+} from "@/v2/shared/components/molecules/v2-table-pagination";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
@@ -108,6 +111,7 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         total={view.total}
         onPageChange={state.setPage}
         onPageSizeChange={state.setPageSize}
+        variant={V2TablePaginationVariant.MOBILE}
         className="mt-2 shrink-0 pb-12 sm:pb-0"
       />
       <V2TableFilterDrawer
