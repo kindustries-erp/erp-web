@@ -1,23 +1,9 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Text } from "@/v2/shared/components";
-import {
-  V2ComboChart,
-  type V2ComboSeries,
-} from "@/v2/shared/components/organisms/v2-chart";
-import { formatVndCurrency } from "@/v2/core/loans";
+import { formatVndCurrency, LoanCashflowChart } from "@/v2/core/loans";
 import { useCashflowProjectionQuery } from "../../../api";
 import { ConsolidatedCashflowTable } from "./ConsolidatedCashflowTable";
-
-function formatCompact(val: number): string {
-  if (Math.abs(val) >= 1_000_000_000) {
-    return `${(val / 1_000_000_000).toFixed(1)} tỷ`;
-  }
-  if (Math.abs(val) >= 1_000_000) {
-    return `${(val / 1_000_000).toFixed(0)} tr`;
-  }
-  return val.toLocaleString("vi-VN");
-}
 
 export const ConsolidatedCashflowView: React.FC<{ className?: string }> = ({
   className = "",
@@ -26,34 +12,6 @@ export const ConsolidatedCashflowView: React.FC<{ className?: string }> = ({
   const { data, isLoading } = useCashflowProjectionQuery();
 
   const projections = data?.monthlyProjections || [];
-
-  const labels = useMemo(() => projections.map((p) => p.month), [projections]);
-
-  const series: V2ComboSeries[] = useMemo(() => {
-    return [
-      {
-        key: "principal",
-        label: t("v2.loans.cashflow.chartPrincipal", "Tiền gốc"),
-        type: "bar",
-        data: projections.map((p) => Math.round(p.principalDue)),
-      },
-      {
-        key: "interest",
-        label: t("v2.loans.cashflow.chartInterest", "Tiền lãi"),
-        type: "bar",
-        data: projections.map((p) => Math.round(p.interestDue)),
-      },
-      {
-        key: "cumulative",
-        label: t("v2.loans.cashflow.chartRemaining", "Dư nợ tích lũy"),
-        type: "line",
-        data: projections.map((p) =>
-          Math.round(p.cumulativeRemainingPrincipal),
-        ),
-        secondaryAxis: true,
-      },
-    ];
-  }, [projections, t]);
 
   if (isLoading) {
     return (
@@ -129,33 +87,10 @@ export const ConsolidatedCashflowView: React.FC<{ className?: string }> = ({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
-        <div className="mb-4">
-          <V2Text variant="h3" className="font-semibold text-base">
-            {t(
-              "v2.loans.cashflow.chartTitle",
-              "Biểu Đồ Áp Lực Dòng Tiền Trả Nợ Hàng Tháng",
-            )}
-          </V2Text>
-          <V2Text variant="caption" className="text-muted-foreground">
-            {t(
-              "v2.loans.cashflow.chartSubtitle",
-              "So sánh gốc, lãi hàng tháng và lộ trình giảm dần dư nợ toàn doanh nghiệp",
-            )}
-          </V2Text>
-        </div>
-        <V2ComboChart
-          labels={labels}
-          series={series}
-          stacked={true}
-          formatValue={formatCompact}
-          secondaryFormatValue={formatCompact}
-          height={320}
-          ariaLabel="Biểu đồ dòng tiền trả nợ doanh nghiệp"
-        />
-      </div>
+      <LoanCashflowChart schedule={projections} height={320} />
 
       <ConsolidatedCashflowTable projections={projections} />
     </div>
   );
 };
+ConsolidatedCashflowView.displayName = "ConsolidatedCashflowView";

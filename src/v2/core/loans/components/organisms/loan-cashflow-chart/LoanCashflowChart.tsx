@@ -7,17 +7,18 @@ import { LoanCashflowChartProps } from "./LoanCashflowChart.type";
 
 function formatCompact(val: number): string {
   if (Math.abs(val) >= 1_000_000_000) {
-    return `${(val / 1_000_000_000).toFixed(1)}B`;
+    return `${(val / 1_000_000_000).toFixed(1)} tỷ`;
   }
   if (Math.abs(val) >= 1_000_000) {
-    return `${(val / 1_000_000).toFixed(1)}M`;
+    return `${(val / 1_000_000).toFixed(0)} tr`;
   }
-  return new Intl.NumberFormat("vi-VN").format(Math.round(val));
+  return val.toLocaleString("vi-VN");
 }
 
 export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
   schedule,
   title,
+  subtitle,
   className = "",
   height = 320,
 }) => {
@@ -26,6 +27,7 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
   const labels = useMemo(() => {
     return schedule.map((p, idx) => {
       if (p.monthKey) return p.monthKey;
+      if (p.month) return p.month;
       if (p.periodNumber) return `Kỳ ${p.periodNumber}`;
       return `T${idx + 1}`;
     });
@@ -50,7 +52,12 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
         label: t("v2.loans.cashflow.chartRemaining", "Dư nợ còn lại"),
         type: "line",
         data: schedule.map((p) =>
-          Math.round(p.endingBalance ?? p.remainingPrincipal ?? 0),
+          Math.round(
+            p.endingBalance ??
+              p.remainingPrincipal ??
+              p.cumulativeRemainingPrincipal ??
+              0,
+          ),
         ),
         secondaryAxis: true,
       },
@@ -63,21 +70,22 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
 
   return (
     <div
-      className={`rounded-xl border border-border bg-card p-4 shadow-xs ${className}`}
+      className={`rounded-2xl border border-border bg-card p-5 shadow-xs ${className}`}
     >
       <div className="mb-4">
-        <V2Text as="h3" variant="h4" weight="semibold">
+        <V2Text as="h3" variant="h3" className="font-semibold text-base">
           {title ||
             t(
-              "v2.loans.cashflow.heading",
-              "Dự Báo Áp Lực Dòng Tiền Trả Nợ Tương Lai",
+              "v2.loans.cashflow.chartTitle",
+              "Biểu Đồ Áp Lực Dòng Tiền Trả Nợ Hàng Tháng",
             )}
         </V2Text>
-        <V2Text variant="body-sm" color="muted">
-          {t(
-            "v2.loans.cashflow.description",
-            "Tổng hợp nghĩa vụ thanh toán gốc và lãi của tất cả khoản vay đang hoạt động",
-          )}
+        <V2Text variant="caption" className="text-muted-foreground">
+          {subtitle ||
+            t(
+              "v2.loans.cashflow.chartSubtitle",
+              "So sánh gốc, lãi hàng tháng và lộ trình giảm dần dư nợ toàn doanh nghiệp",
+            )}
         </V2Text>
       </div>
 
@@ -88,7 +96,7 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
         formatValue={formatCompact}
         secondaryFormatValue={formatCompact}
         height={height}
-        ariaLabel="Biểu đồ dòng tiền trả nợ"
+        ariaLabel="Biểu đồ áp lực dòng tiền trả nợ hàng tháng"
       />
     </div>
   );

@@ -1,11 +1,14 @@
 import React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Button, V2Text } from "@/v2/shared/components";
-import { LoanKpiSummary, LoanCashflowChart } from "@/v2/core/loans";
+import {
+  LoanKpiSummary,
+  LoanCashflowChart,
+  PortfolioScheduleTable,
+} from "@/v2/core/loans";
 import type { LoanSimulatorPageProps } from "./LoanSimulatorPage.type";
 import { useLoanSimulatorPage } from "./LoanSimulatorPage.hook";
 import { PortfolioLoanList } from "./components/PortfolioLoanList";
-import { PortfolioScheduleTable } from "./components/PortfolioScheduleTable";
 
 export const LoanSimulatorPageDesktop: React.FC<LoanSimulatorPageProps> = (
   props,
@@ -79,19 +82,9 @@ export const LoanSimulatorPageDesktop: React.FC<LoanSimulatorPageProps> = (
           totalObligation={portfolioResult.totalRepayment}
         />
 
-        <div className="bg-card p-5 rounded-2xl border border-border shadow-xs">
-          <V2Text variant="h3" className="font-semibold text-base mb-3">
-            {t(
-              "v2.loans.charts.cashflowStream",
-              "Dòng Chảy Tiền Vay & Dự Báo Dư Nợ Toàn Danh Mục",
-            )}
-          </V2Text>
-          <LoanCashflowChart schedule={portfolioResult.schedule} height={320} />
-        </div>
+        <LoanCashflowChart schedule={portfolioResult.schedule} height={320} />
 
-        <div className="bg-card p-5 rounded-2xl border border-border shadow-xs">
-          <PortfolioScheduleTable schedule={portfolioResult.schedule} />
-        </div>
+        <PortfolioScheduleTable schedule={portfolioResult.schedule} />
       </div>
     </div>
   );
