@@ -24,6 +24,9 @@ export interface ProcurementRowActionsInput<T extends { id: string }> {
   cloneRow?: (row: T) => void;
   /** Hành động xóa vĩnh viễn của hook purge */
   purgeActions: (row: T) => V2RowAction[];
+  /** Quyền nhập kho và hành động mở trang nhập kho từ đơn mua */
+  canReceive?: boolean;
+  receive?: (row: T) => void;
 }
 
 /** Trả về hàm dựng menu theo dòng (xem `buildProcurementRowActions`), được memo theo quyền và cấu hình. */
@@ -40,6 +43,8 @@ export function useProcurementRowActions<T extends { id: string }>({
   orderFromRequest,
   cloneRow,
   purgeActions,
+  canReceive,
+  receive,
 }: ProcurementRowActionsInput<T>) {
   const { t } = useV2Translation();
 
@@ -59,6 +64,8 @@ export function useProcurementRowActions<T extends { id: string }>({
         orderFromRequest,
         cloneRow,
         purgeActions,
+        canReceive,
+        receive,
       }),
     [
       canCreate,
@@ -74,6 +81,8 @@ export function useProcurementRowActions<T extends { id: string }>({
       purgeActions,
       start,
       t,
+      canReceive,
+      receive,
     ],
   );
 }

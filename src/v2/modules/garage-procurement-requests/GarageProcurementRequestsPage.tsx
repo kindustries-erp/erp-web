@@ -166,6 +166,21 @@ export function GarageProcurementRequestsPage({
                   if (target) ordersState.start(target, action);
                 },
                 onSaved: ordersState.openSaved,
+                receive: ordersState.canReceive
+                  ? {
+                      canReceive: (order) =>
+                        garageProcurementOrdersConfig.canReceive?.(
+                          order as unknown as ProcurementOrderRow,
+                        ) ?? false,
+                      onReceive: (row) => {
+                        const target = resolveDrawerTarget<ProcurementOrderRow>(
+                          row,
+                          ordersState.drawer?.id ?? null,
+                        );
+                        if (target) ordersState.receive(target);
+                      },
+                    }
+                  : undefined,
                 canCreateOrder: false,
               })}
             </React.Fragment>

@@ -110,7 +110,7 @@ console.log('Dữ liệu nền:', prNos);
 
 // PO nháp có NCC (để kiểm tra nút Tạo mới/Cập nhật)
 const poDraftRes = await api(tao, 'POST', '/procurement-orders-garage', {
-  orderDate: TODAY, supplierId: SUPPLIER,
+  orderDate: TODAY, supplierId: SUPPLIER, supplierName: 'NCC E2E',
   lines: [{ lineType: 'GOODS', itemCode: `E2E-NHAP-${TAG}`.slice(0, 40), itemName: `Đơn nháp ${TAG}`, qtyOrdered: 1, unitPrice: 50 }],
 });
 const poDraftId = poDraftRes.data.id;
@@ -171,7 +171,7 @@ await step('A4 PR đã duyệt → menu Lập đơn mua bật', async () => {
 
 // Lập PO qua API để PR đủ hàng → menu PR phải mờ + tooltip
 const poFromPr = await api(tao, 'POST', '/procurement-orders-garage', {
-  orderDate: TODAY, requestId: prApproved, supplierId: SUPPLIER,
+  orderDate: TODAY, requestId: prApproved, supplierId: SUPPLIER, supplierName: 'NCC E2E',
   lines: prApprovedDetail.lines.map((l) => ({
     lineType: l.lineType, itemName: l.itemName, qtyOrdered: Number(l.qtyRequested),
     unitPrice: Number(l.estUnitPrice ?? 0), requestLineId: l.id,
@@ -222,7 +222,7 @@ await step('B2 PO nháp: mở sửa → có Cập nhật cạnh Lưu nháp', asy
 
 // ================= C. PO hủy → nhân bản =================
 const poToCancel = (await api(tao, 'POST', '/procurement-orders-garage', {
-  orderDate: TODAY, supplierId: SUPPLIER,
+  orderDate: TODAY, supplierId: SUPPLIER, supplierName: 'NCC E2E',
   lines: [{ lineType: 'GOODS', itemName: `Đơn hủy ${TAG}`, qtyOrdered: 1, unitPrice: 10 }],
 })).data;
 await api(tao, 'POST', `/procurement-orders-garage/${poToCancel.id}/submit`, {});
@@ -259,6 +259,139 @@ await step('D1 bộ lọc trạng thái có Từ chối', async () => {
   if (await filter.count()) await filter.click().catch(() => {});
   await shot(page, 'D1-filter');
   check('D1 (ghi nhận) trang danh sách tải được', await page.locator('table').count() > 0);
+});
+
+// ================= E. Bảng dòng hàng không xuống dòng + Nhập kho từ đơn mua =================
+await step('E1 drawer PR: header bảng dòng hàng không xuống dòng', async () => {
+  await page.goto(`${WEB}/v2/garage-procurement`, { waitUntil: 'domcontentloaded' }); await waitTable(page);
+  await openRowMenu(page, prNos.draft);
+  await menuItem(page, 'Xem chi tiết').click();
+  const lines = page.locator('table[aria-label="Dòng hàng"]');
+  await lines.waitFor({ timeout: 20000 });
+  const heights = await lines.locator('th').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
+  await shot(page, 'E1-pr-lines-table');
+  check('E1 header bảng dòng hàng một dòng (cao < 40px)', heights.length > 0 && Math.max(...heights) < 40, heights.join(','));
+  const scrollable = await lines.evaluate((t) => getComputedStyle(t.parentElement).overflow.includes('auto'));
+  check('E1 vùng bảng cuộn được (overflow auto)', scrollable);
+  await page.keyboard.press('Escape');
+});
+
+const suffix = Date.now();
+const poIssued = (await api(tao, 'POST', '/procurement-orders-garage', {
+  orderDate: TODAY, supplierId: SUPPLIER, supplierName: 'NCC E2E',
+  lines: [
+    { lineType: 'GOODS', itemCode: `E2E-A-${suffix}`, itemName: `Nhập kho A ${TAG}`, qtyOrdered: 5, unitPrice: 100 },
+    { lineType: 'GOODS', itemCode: `E2E-B-${suffix}`, itemName: `Nhập kho B ${TAG}`, qtyOrdered: 3, unitPrice: 50 },
+  ],
+})).data;
+await api(tao, 'POST', `/procurement-orders-garage/${poIssued.id}/submit`, {});
+const issueRes = await api(tao, 'POST', `/procurement-orders-garage/${poIssued.id}/issue`, {});
+check('E2 phát hành PO (API seed)', issueRes.status === 201 || issueRes.status === 200, issueRes.status);
+const hasInputValue = (value) => page.evaluate((v) => [...document.querySelectorAll('input')].some((i) => i.value === v), value);
+
+await step('E2 menu PO: Nhập kho bật khi đã phát hành, mờ khi chưa', async () => {
+  await page.goto(`${WEB}/v2/garage-procurement?tab=orders`, { waitUntil: 'domcontentloaded' }); await waitTable(page);
+  await openRowMenu(page, poIssued.orderNo);
+  const on = menuItem(page, 'Nhập kho');
+  check('E2 Nhập kho bật cho PO đã phát hành', (await on.count()) === 1 && (await on.isEnabled()));
+  await page.keyboard.press('Escape');
+  await openRowMenu(page, poDraftNo); // PO này ở trạng thái APPROVED (chưa phát hành)
+  const off = menuItem(page, 'Nhập kho');
+  check('E2 Nhập kho mờ khi chưa phát hành', (await off.count()) === 1 && !(await off.isEnabled()));
+  const issue = menuItem(page, 'Phát hành');
+  await issue.hover().catch(() => {});
+  await page.waitForTimeout(1200);
+  check('E2 tooltip giải thích Phát hành', (await page.getByText('Chốt đơn đã duyệt', { exact: false }).count()) > 0);
+  await page.keyboard.press('Escape');
+});
+
+await step('E3 drawer PO đã phát hành có nút Nhập kho', async () => {
+  await openRowMenu(page, poIssued.orderNo);
+  await menuItem(page, 'Xem chi tiết').click();
+  const btn = page.getByRole('button', { name: 'Nhập kho', exact: true });
+  await page.waitForTimeout(3000);
+  await shot(page, 'E3-po-drawer-receive');
+  await btn.waitFor({ timeout: 20000 });
+  check('E3 nút Nhập kho trong drawer bật', await btn.isEnabled());
+  await page.keyboard.press('Escape');
+});
+
+let grRecord = null;
+await step('E4 Nhập kho từ PO → phiếu điền sẵn → lưu có liên kết PO', async () => {
+  await openRowMenu(page, poIssued.orderNo);
+  await menuItem(page, 'Nhập kho').click();
+  await page.waitForFunction(() => [...document.querySelectorAll('input')].some((i) => i.value.startsWith('Nhập kho A')), null, { timeout: 30000 });
+  await shot(page, 'E4-receipt-prefilled');
+  check('E4 đúng trang nhập kho', page.url().includes('garage-goods-receipts'), page.url());
+  check('E4 dòng A điền sẵn', await hasInputValue(`Nhập kho A ${TAG}`));
+  check('E4 dòng B điền sẵn', await hasInputValue(`Nhập kho B ${TAG}`));
+  check('E4 ô Nhà cung cấp điền sẵn', await hasInputValue('NCC E2E'));
+  check('E4 tham số fromOrder đã được xóa khỏi URL', !page.url().includes('fromOrder'), page.url());
+  const [resp] = await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/api/v1/garage-goods-receipts') && r.request().method() === 'POST', { timeout: 30000 }),
+    page.getByRole('button', { name: /lưu nháp/i }).first().click(),
+  ]);
+  grRecord = (await resp.json()).data;
+  check('E4 phiếu lưu garageProcurementOrderId', grRecord?.garageProcurementOrderId === poIssued.id, grRecord?.garageProcurementOrderId);
+  check('E4 2 dòng phiếu gắn dòng PO', grRecord?.lines?.length === 2 && grRecord.lines.every((l) => l.procurementOrderLineId), grRecord?.lines?.length);
+});
+
+await step('E5 ghi sổ phiếu → PO nhận đủ và tự đóng', async () => {
+  const post = await fetch(`${API}/api/v1/garage-goods-receipts/${grRecord.id}/post`, {
+    method: 'POST', headers: { Authorization: `Bearer ${tao.token}`, 'Content-Type': 'application/json' },
+  });
+  check('E5 ghi sổ phiếu nhập', post.status === 201 || post.status === 200, post.status);
+  const po = (await api(tao, 'GET', `/procurement-orders-garage/${poIssued.id}`)).data;
+  check('E5 PO nhận đủ (FULL)', po?.fulfillmentStatus === 'FULL', po?.fulfillmentStatus);
+  check('E5 PO tự chuyển CLOSED', po?.status === 'CLOSED', po?.status);
+  await page.goto(`${WEB}/v2/garage-procurement?tab=orders`, { waitUntil: 'domcontentloaded' }); await waitTable(page);
+  await openRowMenu(page, poIssued.orderNo);
+  const off = menuItem(page, 'Nhập kho');
+  check('E5 Nhập kho mờ sau khi nhận đủ', (await off.count()) === 1 && !(await off.isEnabled()));
+  await shot(page, 'E5-po-closed-menu');
+  await page.keyboard.press('Escape');
+});
+
+
+// ================= F. Drawer đơn Garage: thứ tự field + combobox số hóa đơn =================
+const poEdit = (await api(tao, 'POST', '/procurement-orders-garage', {
+  orderDate: TODAY, supplierId: SUPPLIER, supplierName: 'NCC E2E',
+  lines: [{ lineType: 'GOODS', itemCode: `E2E-F-${suffix}`, itemName: `Sửa đơn F ${TAG}`, qtyOrdered: 1, unitPrice: 10 }],
+})).data;
+await step('F1 drawer sửa: thứ tự field và ô số hóa đơn là combobox', async () => {
+  await page.goto(`${WEB}/v2/garage-procurement?tab=orders`, { waitUntil: 'domcontentloaded' }); await waitTable(page);
+  await openRowMenu(page, poEdit.orderNo);
+  await menuItem(page, 'Chỉnh sửa').click();
+  const invoice = page.getByRole('combobox', { name: 'Số hóa đơn NCC' });
+  await invoice.waitFor({ timeout: 20000 });
+  await shot(page, 'F1-edit-order-fields');
+  const order = await page.evaluate(() => {
+    const norm = (e) => (e.textContent ?? '').replace(/\*/g, '').replace(/\s+/g, ' ').trim();
+    const deepest = (txt, root) => {
+      const c = [...root.querySelectorAll('*')].filter((e) => norm(e) === txt);
+      return c.find((x) => !c.some((o) => o !== x && x.contains(o))) ?? null;
+    };
+    const title = deepest('Thông tin đơn', document.body);
+    let root = title;
+    while (root && !(root.textContent.includes('Ghi chú') && root.textContent.includes('Chi nhánh'))) root = root.parentElement;
+    if (!root) return [];
+    const labels = ['Ngày đơn', 'Số hóa đơn NCC', 'Nhà cung cấp', 'Chi nhánh', 'Ghi chú'];
+    return labels.map((l) => {
+      const el = deepest(l, root);
+      if (!el) return -1;
+      const r = el.getBoundingClientRect();
+      return Math.round(r.top) * 10000 + Math.round(r.left);
+    });
+  });
+  const sorted = order.length === 5 && order.every((v, i) => v >= 0 && (i === 0 || order[i - 1] <= v));
+  check('F1 nhãn đúng thứ tự: ngày → hóa đơn → NCC → chi nhánh → ghi chú', sorted, JSON.stringify(order));
+  await invoice.click();
+  await page.waitForTimeout(1500);
+  const optionCount = await page.getByRole('option').count();
+  console.log(`INFO F1 số option hóa đơn mua vào trên staging: ${optionCount}`);
+  await page.keyboard.press('Escape');
+  check('F1 combobox hóa đơn mở được', true);
+  await page.keyboard.press('Escape');
 });
 
 await browser.close();

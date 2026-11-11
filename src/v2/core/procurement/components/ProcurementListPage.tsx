@@ -131,6 +131,17 @@ export function ProcurementListPage<T extends { id: string }>({
                   if (target) state.start(target, action);
                 },
                 onSaved: state.openSaved,
+                receive:
+                  config.receiveHref && config.canReceive && state.canReceive
+                    ? {
+                        canReceive: (order) =>
+                          config.canReceive?.(order as unknown as T) ?? false,
+                        onReceive: (row) => {
+                          const target = resolveDrawerTarget<T>(row, drawer.id);
+                          if (target) state.receive(target);
+                        },
+                      }
+                    : undefined,
                 canCreateOrder: state.canCreate && Boolean(config.poHref),
                 onOrderFromRequest: (row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);

@@ -55,6 +55,11 @@ export function useProcurementList<T extends { id: string }>(
     collection: config.permissionCollection,
     action: "delete",
   });
+  const canReceive = useV2HasPermission({
+    collection:
+      config.receivePermissionCollection ?? config.permissionCollection,
+    action: "create",
+  });
   const [drawer, setDrawer] = React.useState<ProcurementDrawerTarget | null>(
     null,
   );
@@ -135,6 +140,27 @@ export function useProcurementList<T extends { id: string }>(
     [config.poHref],
   );
 
+  /**
+   * Sang trang nhập kho với đơn đã chọn (?fromOrder=<id>); trang nhập kho tự điền phiếu mới.
+   * Giữ tiền tố `/v2` khi người dùng đang ở shell V2.
+   */
+  const receive = React.useCallback(
+    (row: T) => {
+      if (!config.receiveHref) return;
+      setDrawer(null);
+      const base = window.location.pathname.startsWith("/v2/")
+        ? `/v2${config.receiveHref}`
+        : config.receiveHref;
+      window.history.pushState(
+        null,
+        "",
+        `${base}?fromOrder=${encodeURIComponent(row.id)}`,
+      );
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    },
+    [config.receiveHref],
+  );
+
   const openDrawer = React.useCallback(
     (id: string, mode: "view" | "edit") => setDrawer({ id, mode }),
     [],
@@ -183,6 +209,8 @@ export function useProcurementList<T extends { id: string }>(
     openDelete: (row) => setDeleteTarget(row),
     orderFromRequest,
     purgeActions: purgeState.purgeActions,
+    canReceive,
+    receive,
   });
 
   const submitReason = (reason: string) => {
@@ -197,6 +225,8 @@ export function useProcurementList<T extends { id: string }>(
   return {
     canCreate,
     canUpdate,
+    canReceive,
+    receive,
     drawer,
     openView: (id: string) => openDrawer(id, "view"),
     openCreate: () => setDrawer({ id: null, mode: "edit" }),

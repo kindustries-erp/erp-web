@@ -1,3 +1,4 @@
+import type { V2DrawerLinesLayout } from "@/v2/shared/components";
 import type { ReactNode } from "react";
 import type { GoodsReceiptFormLine } from "@/v2/core/goods-receipts";
 
@@ -20,8 +21,7 @@ export interface GoodsReceiptLineColumn {
   id: string;
   headerKey: string;
   defaultHeader: string;
-  headerClassName?: string;
-  cellClassName?: string;
+  layout: V2DrawerLinesLayout;
   hideWhenViewing?: boolean;
   renderCell: (ctx: LineColumnRenderContext) => ReactNode;
 }

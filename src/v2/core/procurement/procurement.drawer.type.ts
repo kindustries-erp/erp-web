@@ -3,6 +3,7 @@ import type { ApprovalGate } from "./approval/approval.gate";
 import type {
   ProcurementApi,
   ProcurementDocumentRef,
+  ProcurementOrderDetail,
 } from "./procurement.types";
 
 /** Props chung của drawer chứng từ procurement. `documentId` null nghĩa là tạo mới. */
@@ -41,9 +42,19 @@ export interface ProcurementDrawerProps {
   branchOptional?: boolean;
   /** Mã hàng bắt buộc cho mọi dòng đơn mua (Garage). PR và ERP giữ mã tùy chọn. */
   itemCodeRequired?: boolean;
+  /** Số hóa đơn là combobox hóa đơn mua vào (Garage); thiếu quyền đọc hóa đơn thì dùng ô text */
+  invoicePicker?: boolean;
   /**
    * Bật ô chọn đề nghị mua (chỉ khi tạo mới). Giá trị là mã quyền collection cần có quyền `read`
    * để xem danh sách đề nghị; thiếu thì ô bị ẩn. PR không bắt buộc.
    */
   requestPickerCollection?: string;
+  /**
+   * PO: nút "Nhập kho" trong drawer (chế độ xem). Trạng thái bật/mờ tính trên chi tiết đơn.
+   * Thiếu thì không hiện nút.
+   */
+  receive?: {
+    canReceive: (order: ProcurementOrderDetail) => boolean;
+    onReceive: (row: ProcurementDocumentRef) => void;
+  };
 }

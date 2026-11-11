@@ -16,6 +16,12 @@ registerV2ModuleLocale("goodsReceipts", {
     create: "Tạo phiếu nhập kho",
     empty: "Chưa có phiếu nhập kho nào",
     listLoadError: "Không thể tải danh sách phiếu nhập",
+    fromOrder: {
+      error: "Không thể lập phiếu nhập từ đơn mua",
+      notIssued: "Chỉ nhập kho khi đơn mua đã phát hành",
+      fullyReceived: "Đơn mua đã nhận đủ hàng",
+      noLines: "Đơn mua không còn dòng hàng nào để nhập",
+    },
     views: { overview: "Tổng quan", all: "Tất cả cột" },
     actions: {
       view: "Xem chi tiết",
@@ -88,6 +94,12 @@ registerV2ModuleLocale("goodsReceipts", {
     create: "Create Goods Receipt",
     empty: "No goods receipts found",
     listLoadError: "Unable to load receipts list",
+    fromOrder: {
+      error: "Could not create a receipt from this purchase order",
+      notIssued: "Goods can only be received after the order is issued",
+      fullyReceived: "This purchase order is already fully received",
+      noLines: "This purchase order has no lines left to receive",
+    },
     views: { overview: "Overview", all: "All columns" },
     actions: {
       view: "View details",

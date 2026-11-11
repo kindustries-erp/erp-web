@@ -28,6 +28,9 @@ registerV2ModuleLocale("procurement", {
       createOrder: "Lập đơn mua từ đề nghị này",
       orderFullyOrderedReason: "Đề nghị đã được lập đủ đơn mua",
       orderNotApprovedReason: "Chỉ lập đơn mua khi đề nghị đã duyệt",
+      receive: "Nhập kho",
+      receiveNotIssuedReason: "Chỉ nhập kho khi đơn mua đã phát hành",
+      receiveFullReason: "Đơn mua đã nhận đủ hàng",
       update: "Cập nhật",
       clone: "Nhân bản",
       submit: "Gửi duyệt",
@@ -35,6 +38,8 @@ registerV2ModuleLocale("procurement", {
       approve: "Duyệt",
       reject: "Từ chối",
       issue: "Phát hành",
+      issueHint:
+        "Chốt đơn đã duyệt và gửi cho nhà cung cấp. Sau khi phát hành mới nhập kho được.",
       cancel: "Hủy",
       close: "Đóng chứng từ",
       AUTO_APPROVED: "Tự động duyệt",
@@ -107,6 +112,11 @@ registerV2ModuleLocale("procurement", {
       expectedDate: "Ngày dự kiến nhận",
       supplier: "Nhà cung cấp",
       supplierInvoiceNo: "Số hóa đơn NCC",
+      invoicePlaceholder: "Chọn số hóa đơn mua vào",
+      invoiceNotSyncedHint:
+        "Chưa thấy hóa đơn? Ghi số hóa đơn và NCC vào Ghi chú.",
+      supplierNotFoundHint:
+        "NCC của hóa đơn chưa có trong danh mục: chọn tay hoặc ghi vào Ghi chú.",
       remarks: "Ghi chú",
       requestDate: "Ngày đề nghị",
       neededDate: "Ngày cần hàng",
@@ -223,6 +233,10 @@ registerV2ModuleLocale("procurement", {
       orderFullyOrderedReason: "This request is already fully ordered",
       orderNotApprovedReason:
         "Purchase orders can only be created from approved requests",
+      receive: "Receive goods",
+      receiveNotIssuedReason:
+        "Goods can only be received after the order is issued",
+      receiveFullReason: "This purchase order is already fully received",
       update: "Update",
       clone: "Clone",
       submit: "Submit",
@@ -230,6 +244,8 @@ registerV2ModuleLocale("procurement", {
       approve: "Approve",
       reject: "Reject",
       issue: "Issue",
+      issueHint:
+        "Finalize the approved order and send it to the supplier. Goods can be received only after issuing.",
       cancel: "Cancel",
       close: "Close document",
       AUTO_APPROVED: "Auto-approved",
@@ -302,6 +318,11 @@ registerV2ModuleLocale("procurement", {
       expectedDate: "Expected receipt date",
       supplier: "Supplier",
       supplierInvoiceNo: "Supplier invoice no.",
+      invoicePlaceholder: "Select a purchase invoice",
+      invoiceNotSyncedHint:
+        "Invoice not listed? Write the invoice no. and supplier in Notes.",
+      supplierNotFoundHint:
+        "The invoice's supplier is not in the master list: pick manually or write it in Notes.",
       remarks: "Remarks",
       requestDate: "Request date",
       neededDate: "Needed by",

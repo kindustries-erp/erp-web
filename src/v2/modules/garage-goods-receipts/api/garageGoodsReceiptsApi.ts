@@ -10,6 +10,7 @@ import type {
   GarageGoodsReceiptFormValue,
 } from "@/v2/modules/garage-goods-receipts/domain/entities/garageGoodsReceipt";
 import type {
+  GarageGoodsReceiptDto,
   GarageGoodsReceiptEnvelopeDto,
   GarageGoodsReceiptListResultDto,
   GarageGoodsReceiptPayloadDto,
@@ -46,9 +47,23 @@ export const toGarageGoodsReceiptsListParams = (query: V2TableQuery) => ({
   summary_keys: toSummaryKeysParam(query),
 });
 
+/** Đưa phiếu từ API về dạng form của core: đơn mua nguồn và dòng đơn mua được giữ lại để sửa tiếp */
+export const toGarageGoodsReceipt = (
+  dto: GarageGoodsReceiptDto,
+): GarageGoodsReceipt =>
+  ({
+    ...dto,
+    sourceOrderId: dto.garageProcurementOrderId ?? null,
+    lines: dto.lines?.map((l) => ({
+      ...l,
+      sourceLineId: l.procurementOrderLineId ?? null,
+    })),
+  }) as GarageGoodsReceipt;
+
 export const toGarageGoodsReceiptPayload = (
   form: GarageGoodsReceiptFormValue,
 ): GarageGoodsReceiptPayloadDto => ({
+  garageProcurementOrderId: form.sourceOrderId?.trim() || undefined,
   receiptNo: form.receiptNo.trim() || undefined,
   receiptDate: form.receiptDate.trim(),
   supplierId: form.supplierId.trim() || undefined,
@@ -69,6 +84,7 @@ export const toGarageGoodsReceiptPayload = (
     unitCost: Number(l.unitCost || 0),
     amount: Number(l.amount || 0),
     notes: l.notes.trim() || undefined,
+    procurementOrderLineId: l.sourceLineId?.trim() || undefined,
   })),
 });
 
@@ -101,7 +117,7 @@ export const garageGoodsReceiptsV2Api = {
     const { data } = await v2HttpClient.get<GarageGoodsReceiptEnvelopeDto>(
       `${BASE}/${id}`,
     );
-    return data.data as GarageGoodsReceipt;
+    return toGarageGoodsReceipt(data.data);
   },
   nextCode: async (date?: string) => {
     const { data } = await v2HttpClient.get<NextCodeDto>(`${BASE}/next-code`, {

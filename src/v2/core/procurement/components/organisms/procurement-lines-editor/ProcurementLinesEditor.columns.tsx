@@ -7,6 +7,7 @@ import {
   V2NumberInput,
   V2Text,
 } from "@/v2/shared/components";
+import type { V2DrawerLinesColumn } from "@/v2/shared/components";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import { procurementLineNoteColumn } from "./ProcurementLinesEditor.columns.note";
@@ -28,12 +29,17 @@ export interface ProcurementLineColumnContext {
   t: (key: string, fallback?: string) => string;
 }
 
+/** Kích thước và căn lề của cột, truyền thẳng cho V2DrawerLinesTable */
+export type ProcurementLineLayout = Pick<
+  V2DrawerLinesColumn,
+  "width" | "grow" | "minWidth" | "align" | "wrap"
+>;
+
 export interface ProcurementLineColumn {
   id: string;
   headerKey: string;
   defaultHeader: string;
-  headerClassName?: string;
-  cellClassName?: string;
+  layout: ProcurementLineLayout;
   hideWhenViewing?: boolean;
   renderCell: (ctx: ProcurementLineColumnContext) => React.ReactNode;
 }
@@ -50,8 +56,7 @@ export function getProcurementLineColumns(
       id: "index",
       headerKey: "v2.table.indexHeader",
       defaultHeader: "#",
-      headerClassName: "p-2 text-center w-10",
-      cellClassName: "p-2 text-center text-xs",
+      layout: { width: 40, align: "center" },
       renderCell: ({ index }) => (
         <V2Text className="font-mono text-muted-fg text-xs text-center">
           {index + 1}
@@ -62,8 +67,7 @@ export function getProcurementLineColumns(
       id: "lineType",
       headerKey: "v2.procurement.lines.type",
       defaultHeader: "Loại",
-      headerClassName: "p-2 text-left w-28",
-      cellClassName: "p-2 text-xs w-28",
+      layout: { width: 112, align: "left" },
       renderCell: ({ viewing, typeOptions, line, onPatch, t }) =>
         viewing ? (
           <V2Text className="text-xs">
@@ -89,8 +93,7 @@ export function getProcurementLineColumns(
       id: "itemCode",
       headerKey: "v2.procurement.lines.code",
       defaultHeader: "Mã",
-      headerClassName: "p-2 text-left w-24 min-w-[88px]",
-      cellClassName: "p-2 text-xs w-24 min-w-[88px]",
+      layout: { width: 112, align: "left" },
       renderCell: ({ viewing, line, onPatch, t }) =>
         viewing ? (
           <V2Text className="font-mono text-xs">{line.itemCode || "—"}</V2Text>
@@ -109,8 +112,7 @@ export function getProcurementLineColumns(
       id: "itemName",
       headerKey: "v2.procurement.lines.name",
       defaultHeader: "Tên",
-      headerClassName: "p-2 text-left min-w-[160px] w-[26%]",
-      cellClassName: "p-2 text-xs min-w-[160px] w-[26%]",
+      layout: { grow: true, minWidth: 180, align: "left", wrap: true },
       renderCell: ({ viewing, line, onPatch, t }) =>
         viewing ? (
           <V2Text className="font-medium text-xs">
@@ -135,8 +137,7 @@ export function getProcurementLineColumns(
       id: "qty",
       headerKey: "v2.procurement.lines.qty",
       defaultHeader: "Số lượng",
-      headerClassName: "p-2 text-right w-24",
-      cellClassName: "p-2 text-right text-xs w-24",
+      layout: { width: 96, align: "right" },
       renderCell: ({ viewing, line, onPatch, t }) =>
         viewing ? (
           <V2Text className="tabular-nums font-semibold text-xs text-right">
@@ -165,8 +166,7 @@ export function getProcurementLineColumns(
       id: "price",
       headerKey: "",
       defaultHeader: priceLabel,
-      headerClassName: "p-2 text-right w-32",
-      cellClassName: "p-2 text-right text-xs w-32",
+      layout: { width: 128, align: "right" },
       renderCell: ({ viewing, line, priceLabel: rowPriceLabel, onPatch }) =>
         viewing ? (
           <V2Text className="tabular-nums text-xs text-right">
@@ -197,9 +197,7 @@ export function getProcurementLineColumns(
       id: "amount",
       headerKey: "v2.procurement.lines.amount",
       defaultHeader: "Thành tiền",
-      headerClassName: "p-2 text-right w-40 min-w-[160px] whitespace-nowrap",
-      cellClassName:
-        "p-2 text-right text-xs w-40 min-w-[160px] whitespace-nowrap",
+      layout: { width: 150, align: "right" },
       renderCell: ({ line }) => (
         <V2Text className="text-right font-semibold text-primary tabular-nums text-xs whitespace-nowrap">
           {fmtAmount(procurementLineAmount(line))}
@@ -210,8 +208,7 @@ export function getProcurementLineColumns(
       id: "actions",
       headerKey: "",
       defaultHeader: "",
-      headerClassName: "p-2 text-center w-10",
-      cellClassName: "p-2 text-center text-xs w-10",
+      layout: { width: 40, align: "center" },
       hideWhenViewing: true,
       renderCell: ({ canRemove, onRemove, t }) => (
         <V2Button

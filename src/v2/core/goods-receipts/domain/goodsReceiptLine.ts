@@ -10,4 +10,6 @@ export interface GoodsReceiptFormLine {
   unitCost: string;
   amount: string;
   notes: string;
+  /** Id dòng đơn mua nguồn (nếu nhập từ đơn mua); không hiển thị, gửi lên API */
+  sourceLineId?: string;
 }

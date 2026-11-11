@@ -45,6 +45,17 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
         actions={
           state.viewing
             ? [
+                ...(props.receive && state.detail
+                  ? [
+                      {
+                        label: t("v2.procurement.actions.receive", "Nhập kho"),
+                        onClick: () =>
+                          props.receive?.onReceive({ id: state.detail!.id }),
+                        primary: true,
+                        disabled: !props.receive.canReceive(state.detail),
+                      },
+                    ]
+                  : []),
                 {
                   label: t("v2.common.close", "Đóng"),
                   onClick: props.onClose,
@@ -98,6 +109,7 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
               viewing={state.viewing}
               branchLocked={state.branchLocked}
               branchOptional={state.branchOptional}
+              invoicePicker={state.invoicePicker}
               setField={state.setField}
               canPickRequest={state.canPickRequest}
               requestLabel={state.requestLabel}

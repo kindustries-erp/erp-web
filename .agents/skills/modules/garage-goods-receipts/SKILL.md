@@ -84,3 +84,12 @@ Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự 
 - Test: `api/garageGoodsReceiptsPayload.test.ts`.
 
 - **Xem sơ đồ quy trình**: nút hành động của trang là `V2SplitButton` + `V2Dropdown`; mục "Xem sơ đồ quy trình" (hook `useProcurementWorkflowMenu` từ `@/v2/core/procurement`) luôn bật dù không có quyền tạo, mở sơ đồ Kỹ thuật (luồng A post, B hủy). Trang Mua hàng Garage dùng cùng hook, mở sơ đồ Người dùng cuối.
+
+## 5. Nhập kho từ đơn mua Garage (`?fromOrder=`)
+
+- Menu dòng và drawer của đơn mua Garage (`garageProcurementOrders.config.tsx`: `receiveHref`, `canReceive`) có hành động "Nhập kho" khi đơn đã phát hành (`ISSUED`) và chưa nhận đủ (`fulfillmentStatus !== "FULL"`). Hành động điều hướng `/garage-goods-receipts?fromOrder=<id>` (`useProcurementList.receive`).
+- `useGoodsReceiptListController` đọc `fromOrder` một lần, xóa khỏi URL, gọi `config.sourceOrder.load(id)` rồi mở drawer tạo mới với `prefill`.
+- `api/garageGoodsReceiptSourceOrder.ts` (`loadGarageReceiptPrefill`): lấy PO qua `/api/v2/procurement-orders-garage`, ném lỗi `notIssued` / `fullyReceived` / `noLines` (toast i18n `v2.goodsReceipts.fromOrder.*`), chỉ giữ dòng GOODS còn thiếu (`qtyOrdered - qtyFulfilled > 0`), `unitCost` = giá PO, `sourceLineId` = id dòng PO.
+- Form có `sourceOrderId` (gửi `garageProcurementOrderId`) và dòng có `sourceLineId` (gửi `procurementOrderLineId`). API đối chiếu chi nhánh và NCC với PO; dòng SERVICE không nhận được.
+- DTO phản hồi map ngược: `garageProcurementOrderId` → `sourceOrderId`, `procurementOrderLineId` → `sourceLineId` (`toGarageGoodsReceipt`).
+- Test: `api/garageGoodsReceiptSourceOrder.test.ts`. E2E: `e2e/garage-procurement.e2e.mjs` mục E (đã PASS trên staging).

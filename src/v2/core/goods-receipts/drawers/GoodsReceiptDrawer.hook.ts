@@ -36,6 +36,7 @@ export function useGoodsReceiptDrawer({
     config,
     open: state.open,
     recordId: state.recordId,
+    prefill: state.prefill,
   });
   const { form, initial, setField, creating } = data;
 

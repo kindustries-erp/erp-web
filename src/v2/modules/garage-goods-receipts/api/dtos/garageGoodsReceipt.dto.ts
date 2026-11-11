@@ -12,6 +12,8 @@ export interface GarageGoodsReceiptLineDto {
   unitCost?: number | null;
   amount?: number | null;
   notes?: string | null;
+  /** Id dòng đơn mua garage được nhận (API) */
+  procurementOrderLineId?: string | null;
   createdAt?: string | null;
 }
 
@@ -26,6 +28,8 @@ export interface GarageGoodsReceiptDto {
   totalAmount?: number | null;
   status?: string | null;
   paymentStatus?: string | null;
+  /** Đơn mua garage nguồn (API) */
+  garageProcurementOrderId?: string | null;
   remarks?: string | null;
   lines?: GarageGoodsReceiptLineDto[];
   createdAt?: string | null;
@@ -59,6 +63,7 @@ export interface NextCodeDto {
 }
 
 export interface GarageGoodsReceiptPayloadDto {
+  garageProcurementOrderId?: string;
   receiptNo?: string;
   receiptDate: string;
   supplierId?: string;

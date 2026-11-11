@@ -113,6 +113,7 @@ export function GarageGoodsReceiptsPage() {
               open
               recordId={state.drawer.id}
               mode={state.drawer.mode}
+              prefill={state.drawer.prefill}
               canUpdate={state.canUpdate}
               onClose={() => state.setDrawer(null)}
             />

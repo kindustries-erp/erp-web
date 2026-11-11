@@ -38,6 +38,7 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const creating = !props.documentId;
   const branchOptional = Boolean(props.branchOptional);
   const itemCodeRequired = Boolean(props.itemCodeRequired);
+  const invoicePicker = Boolean(props.invoicePicker);
   const [mode, setMode] = React.useState(props.mode);
   const [form, setForm] = React.useState<ProcurementOrderFormValue>(() =>
     emptyOrderForm(todayIsoDate()),
@@ -261,6 +262,7 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     branchLocked: branchOptional ? false : !creating,
     branchOptional,
     itemCodeRequired,
+    invoicePicker,
     canPickRequest,
     requestLabel,
     requestApi: props.requestApi,

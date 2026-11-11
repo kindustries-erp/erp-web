@@ -17,6 +17,7 @@ export interface GoodsReceiptRecordLine {
   unitCost?: number | null;
   amount?: number | null;
   notes?: string | null;
+  sourceLineId?: string | null;
 }
 
 /** Phiếu nhập như API trả về; mỗi họ phiếu dùng chung kiểu này */
@@ -32,6 +33,8 @@ export interface GoodsReceiptRecord {
   status?: string | null;
   paymentStatus?: string | null;
   remarks?: string | null;
+  /** Id đơn mua nguồn (nếu phiếu nhập từ đơn mua) */
+  sourceOrderId?: string | null;
   lines?: GoodsReceiptRecordLine[];
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -49,6 +52,8 @@ export interface GoodsReceiptFormValue {
   status: GoodsReceiptStatusType;
   paymentStatus: string;
   remarks: string;
+  /** Id đơn mua nguồn; rỗng nếu không nhập từ đơn mua */
+  sourceOrderId: string;
   lines: GoodsReceiptFormLine[];
 }
 
@@ -66,7 +71,32 @@ export const emptyGoodsReceiptForm = (): GoodsReceiptFormValue => ({
   status: GoodsReceiptStatus.DRAFT,
   paymentStatus: "UNPAID",
   remarks: "",
+  sourceOrderId: "",
   lines: [],
+});
+
+/** Đưa dữ liệu điền sẵn từ đơn mua vào form phiếu mới; tổng tiền tính theo các dòng */
+export const applyGoodsReceiptPrefill = (
+  form: GoodsReceiptFormValue,
+  prefill: {
+    sourceOrderId: string;
+    supplierId: string;
+    supplierName: string;
+    branchId: string;
+    branchName: string;
+    lines: GoodsReceiptFormLine[];
+  },
+): GoodsReceiptFormValue => ({
+  ...form,
+  sourceOrderId: prefill.sourceOrderId,
+  supplierId: prefill.supplierId,
+  supplierName: prefill.supplierName,
+  branchId: prefill.branchId,
+  branchName: prefill.branchName,
+  lines: prefill.lines,
+  totalAmount: String(
+    prefill.lines.reduce((sum, l) => sum + (Number(l.amount) || 0), 0),
+  ),
 });
 
 /** Chuyển phiếu từ API sang giá trị form; dòng thiếu đơn vị dùng đơn vị mặc định */
@@ -83,6 +113,7 @@ export const toGoodsReceiptForm = (
   status: (data.status as GoodsReceiptStatusType) || GoodsReceiptStatus.DRAFT,
   paymentStatus: data.paymentStatus || "UNPAID",
   remarks: data.remarks ?? "",
+  sourceOrderId: data.sourceOrderId ?? "",
   lines:
     data.lines?.map((l) => ({
       id: l.id,
@@ -93,5 +124,6 @@ export const toGoodsReceiptForm = (
       unitCost: String(l.unitCost ?? 0),
       amount: String(l.amount ?? 0),
       notes: l.notes ?? "",
+      sourceLineId: l.sourceLineId ?? "",
     })) || [],
 });

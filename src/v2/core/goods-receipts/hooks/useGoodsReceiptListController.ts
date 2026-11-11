@@ -6,15 +6,23 @@ import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { useV2TablePreferencesStore } from "@/v2/shared/preferences/useV2TablePreferencesStore";
 import { applyV2SystemView } from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
-import type { GoodsReceiptModuleConfig } from "../goodsReceipts.config.type";
+import type {
+  GoodsReceiptModuleConfig,
+  GoodsReceiptPrefill,
+} from "../goodsReceipts.config.type";
 import { useGoodsReceiptMutations } from "../api/mutations/useGoodsReceiptMutations";
 import { buildGoodsReceiptColumns } from "../components/organisms/goods-receipt-table/GoodsReceiptTable.columns";
 import { buildGoodsReceiptRowActions } from "../components/organisms/goods-receipt-table/GoodsReceiptTable.rowActions";
 import type { GoodsReceiptRecord } from "../domain/goodsReceipt";
 
+/** Khóa lỗi nghiệp vụ khi lập phiếu từ đơn mua; khớp `v2.goodsReceipts.fromOrder.*` */
+export const FROM_ORDER_CODES = ["notIssued", "fullyReceived", "noLines"];
+
 export interface GoodsReceiptDrawerTarget {
   id: string | null;
   mode: "view" | "edit";
+  /** Dữ liệu điền sẵn khi lập phiếu mới từ đơn mua */
+  prefill?: GoodsReceiptPrefill;
 }
 
 /**
@@ -99,6 +107,35 @@ export function useGoodsReceiptListController(
     t,
     onRemoved: () => setDeleteTarget(null),
   });
+
+  // Mở từ đơn mua: `?fromOrder=<id>` tải đơn rồi mở drawer tạo mới điền sẵn; xóa tham số để F5 không lập lại
+  React.useEffect(() => {
+    const loader = config.sourceOrder;
+    if (!canCreate || !loader) return;
+    const orderId = new URLSearchParams(window.location.search).get(
+      "fromOrder",
+    );
+    if (!orderId) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    loader
+      .load(orderId)
+      .then((prefill) => setDrawer({ id: null, mode: "edit", prefill }))
+      .catch((error: unknown) => {
+        // Lỗi nghiệp vụ của đơn mua mang khóa ngắn (notIssued, fullyReceived, noLines); lỗi API lấy từ server
+        const code = error instanceof Error ? error.message : "";
+        const fallback = t(
+          "v2.goodsReceipts.fromOrder.error",
+          "Không thể lập phiếu nhập từ đơn mua",
+        );
+        useV2ToastStore.getState().showToast({
+          variant: "destructive",
+          title: fallback,
+          description: FROM_ORDER_CODES.includes(code)
+            ? t(`v2.goodsReceipts.fromOrder.${code}`, code)
+            : extractV2ApiError(error, fallback),
+        });
+      });
+  }, [canCreate, config, t]);
 
   const selectView = (key: string) => {
     setView(key);

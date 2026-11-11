@@ -3,8 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
-import type { GoodsReceiptModuleConfig } from "../goodsReceipts.config.type";
+import type {
+  GoodsReceiptModuleConfig,
+  GoodsReceiptPrefill,
+} from "../goodsReceipts.config.type";
 import {
+  applyGoodsReceiptPrefill,
   emptyGoodsReceiptForm,
   toGoodsReceiptForm,
   type GoodsReceiptFormValue,
@@ -14,6 +18,8 @@ export interface GoodsReceiptDrawerDataParams {
   config: GoodsReceiptModuleConfig;
   open: boolean;
   recordId: string | null;
+  /** Dữ liệu điền sẵn khi lập phiếu từ đơn mua */
+  prefill?: GoodsReceiptPrefill;
 }
 
 /**
@@ -24,6 +30,7 @@ export function useGoodsReceiptDrawerData({
   config,
   open,
   recordId,
+  prefill,
 }: GoodsReceiptDrawerDataParams) {
   const { api, keys } = config;
   const { t } = useV2Translation();
@@ -58,13 +65,14 @@ export function useGoodsReceiptDrawerData({
     setInitial(loaded);
   }, [open, detail.data]);
 
-  // Phiếu mới bắt đầu từ form rỗng
+  // Phiếu mới bắt đầu từ form rỗng, hoặc từ dữ liệu điền sẵn của đơn mua
   React.useEffect(() => {
     if (!open || !creating) return;
     const fresh = emptyGoodsReceiptForm();
-    setForm(fresh);
-    setInitial(fresh);
-  }, [open, creating]);
+    const seeded = prefill ? applyGoodsReceiptPrefill(fresh, prefill) : fresh;
+    setForm(seeded);
+    setInitial(seeded);
+  }, [open, creating, prefill]);
 
   // Khi có mã phiếu tự sinh thì gán vào form
   React.useEffect(() => {
