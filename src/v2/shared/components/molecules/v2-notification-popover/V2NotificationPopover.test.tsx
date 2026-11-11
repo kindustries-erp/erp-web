@@ -276,4 +276,70 @@ describe("V2NotificationPopover Molecule", () => {
     });
     expect(notificationsApi.markAsRead).not.toHaveBeenCalled();
   });
+
+  it("applies high-contrast Light theme classes while preserving Dark variants and supports per-item delete", async () => {
+    (notificationsApi.delete as any).mockResolvedValue({});
+
+    const allTypeNotifications: CoreNotification[] = [
+      ...mockNotifications,
+      {
+        id: "notif-3",
+        title: "Nhập kho hoàn tất",
+        message: "Phiếu nhập #GR-01 đã xác nhận.",
+        type: "SUCCESS",
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        readAt: null,
+        extraData: {},
+        target: null,
+      },
+      {
+        id: "notif-4",
+        title: "Lỗi đồng bộ",
+        message: "Không thể kết nối máy chủ hóa đơn.",
+        type: "ERROR",
+        isRead: true,
+        createdAt: new Date().toISOString(),
+        readAt: null,
+        extraData: {},
+        target: null,
+      },
+    ];
+
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <V2NotificationPopover notifications={allTypeNotifications}>
+          <button>Open All Types</button>
+        </V2NotificationPopover>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open All Types" }));
+
+    expect(screen.getByText("Nhập kho hoàn tất")).toBeInTheDocument();
+    expect(screen.getByText("Lỗi đồng bộ")).toBeInTheDocument();
+
+    const unreadCard = screen
+      .getByText("Đơn hàng mới #1001")
+      .closest("div.group");
+    const readCard = screen.getByText("Cập nhật tồn kho").closest("div.group");
+
+    expect(unreadCard?.className).toContain("bg-teal-50/70");
+    expect(unreadCard?.className).toContain("border-teal-500/25");
+    expect(readCard?.className).toContain("bg-slate-50/75");
+    expect(readCard?.className).toContain("dark:opacity-60");
+    expect(readCard?.className).not.toMatch(/(?:^|\s)opacity-60(?:\s|$)/);
+
+    const unreadDots = screen.getAllByTestId("unread-indicator");
+    expect(unreadDots[0].className).toContain("bg-teal-600");
+    expect(unreadDots[0].className).toContain("dark:bg-teal-400");
+
+    const deleteButtons = screen.getAllByRole("button", {
+      name: "Xóa thông báo",
+    });
+    fireEvent.click(deleteButtons[0]);
+    await waitFor(() => {
+      expect(notificationsApi.delete).toHaveBeenCalledWith("notif-1");
+    });
+  });
 });
