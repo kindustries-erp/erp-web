@@ -33,7 +33,6 @@ const deps = () => ({
   start: vi.fn(),
   openDelete: vi.fn(),
   orderFromRequest: vi.fn(),
-  purgeActions: () => [],
 });
 
 const labelsOf = (

@@ -36,7 +36,6 @@ const build = (receive = vi.fn()) =>
     start: vi.fn(),
     openDelete: vi.fn(),
     orderFromRequest: vi.fn(),
-    purgeActions: () => [],
     canReceive: true,
     receive,
   });

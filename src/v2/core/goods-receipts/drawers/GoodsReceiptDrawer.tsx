@@ -27,7 +27,8 @@ export function GoodsReceiptDrawer({
 }: GoodsReceiptDrawerProps) {
   const { t } = useV2Translation();
   const state = useGoodsReceiptDrawer({ config, state: props });
-  const title = state.creating
+  // Mô tả chế độ nằm ở dòng phụ; tiêu đề là mã phiếu kèm Badge trạng thái ngay bên cạnh
+  const modeLabel = state.creating
     ? t("v2.goodsReceipts.form.create", "Thêm mới")
     : state.viewing
       ? t("v2.goodsReceipts.form.detail", "Chi tiết")
@@ -82,13 +83,9 @@ export function GoodsReceiptDrawer({
             ? () => state.setMode("edit")
             : undefined
         }
-        title={title}
-        subtitle={state.form.receiptNo || undefined}
-        titleExtra={
-          !state.creating ? (
-            <GoodsReceiptStatusBadge status={state.form.status} />
-          ) : undefined
-        }
+        title={state.form.receiptNo || modeLabel}
+        subtitle={state.form.receiptNo ? modeLabel : undefined}
+        titleExtra={<GoodsReceiptStatusBadge status={state.form.status} />}
         layout={V2DrawerLayout.TWO_COLUMNS}
         size={V2DrawerSize.XL}
         loading={state.loading}
@@ -122,6 +119,9 @@ export function GoodsReceiptDrawer({
             errorMessage={state.errorMessage}
             t={t}
             setField={state.setField}
+            sourceOrder={config.sourceOrder}
+            onPickOrder={state.pickOrder}
+            orderLocked={state.orderLocked}
             hideLines
             columns={1}
           />

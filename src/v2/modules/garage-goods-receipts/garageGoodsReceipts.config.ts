@@ -13,7 +13,7 @@ export const garageGoodsReceiptsConfig: GoodsReceiptModuleConfig = {
   keys: createGoodsReceiptKeys(["v2-garage-goods-receipts"]),
   tableId: "erp-garage-goods-receipts-table",
   permissionCollection: "garage_goods_receipts",
-  requiredFields: ["receiptDate"],
+  requiredFields: ["receiptDate", "sourceOrderId"],
   viewVisibility: goodsReceiptViewVisibility,
   // Lập phiếu nhập từ đơn mua garage đã phát hành (?fromOrder=<id>)
   sourceOrder: garageSourceOrderLoader,

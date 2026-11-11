@@ -74,6 +74,7 @@ export const renderQtyCell = (ctx: LineColumnRenderContext) =>
     <V2NumberInput
       sizeVariant="xs"
       min={0}
+      max={ctx.line.maxQty}
       decimals={0}
       value={Number(ctx.line.qtyReceived) || 0}
       onValueChange={(val) =>

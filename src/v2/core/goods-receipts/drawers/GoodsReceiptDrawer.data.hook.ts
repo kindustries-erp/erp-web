@@ -3,12 +3,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
+import { describeSourceOrderError } from "../hooks/goodsReceiptSourceOrderError";
 import type {
   GoodsReceiptModuleConfig,
   GoodsReceiptPrefill,
 } from "../goodsReceipts.config.type";
 import {
   applyGoodsReceiptPrefill,
+  clearGoodsReceiptSourceOrder,
   emptyGoodsReceiptForm,
   toGoodsReceiptForm,
   type GoodsReceiptFormValue,
@@ -112,6 +114,28 @@ export function useGoodsReceiptDrawerData({
       .then(({ nextCode: code }) => setField("receiptNo", code));
   };
 
+  /**
+   * Chọn hoặc bỏ đơn mua nguồn: chọn thì tải đơn và điền NCC, chi nhánh, tổng, dòng còn lại
+   * (người dùng không nhập tay); bỏ chọn thì xóa các phần đó.
+   */
+  const pickOrder = (orderId: string | null) => {
+    if (!orderId) {
+      setForm(clearGoodsReceiptSourceOrder);
+      return;
+    }
+    void config.sourceOrder
+      ?.load(orderId)
+      .then((loaded) =>
+        setForm((current) => applyGoodsReceiptPrefill(current, loaded)),
+      )
+      .catch((error: unknown) =>
+        useV2ToastStore.getState().showToast({
+          variant: "destructive",
+          ...describeSourceOrderError(error, t),
+        }),
+      );
+  };
+
   /** Bỏ thay đổi chưa lưu: đưa form về bản gốc */
   const resetForm = () => setForm(initial);
 
@@ -120,6 +144,7 @@ export function useGoodsReceiptDrawerData({
     initial,
     setField,
     resetForm,
+    pickOrder,
     regenerateCode,
     creating,
     loading: detail.isFetching,

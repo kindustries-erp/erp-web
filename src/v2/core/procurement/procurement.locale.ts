@@ -103,6 +103,12 @@ registerV2ModuleLocale("procurement", {
       approver: "Người duyệt",
       summaryTotal: "Tổng cộng:",
     },
+    receipts: {
+      title: "Lịch sử nhập kho",
+      empty: "Chưa có phiếu nhập kho nào",
+      error: "Không tải được lịch sử nhập kho",
+      status: { DRAFT: "Nháp", POSTED: "Đã ghi sổ", CANCELLED: "Đã hủy" },
+    },
     fields: {
       branch: "Chi nhánh",
       branchPlaceholder: "Chọn chi nhánh",
@@ -113,10 +119,11 @@ registerV2ModuleLocale("procurement", {
       supplier: "Nhà cung cấp",
       supplierInvoiceNo: "Số hóa đơn NCC",
       invoicePlaceholder: "Chọn số hóa đơn mua vào",
+      supplierAutoFill: "Tự điền theo hóa đơn",
       invoiceNotSyncedHint:
         "Chưa thấy hóa đơn? Ghi số hóa đơn và NCC vào Ghi chú.",
       supplierNotFoundHint:
-        "NCC của hóa đơn chưa có trong danh mục: chọn tay hoặc ghi vào Ghi chú.",
+        "NCC của hóa đơn chưa có trong danh mục: đơn lưu theo tên người bán trên hóa đơn.",
       remarks: "Ghi chú",
       requestDate: "Ngày đề nghị",
       neededDate: "Ngày cần hàng",
@@ -149,6 +156,8 @@ registerV2ModuleLocale("procurement", {
       name: "Tên",
       note: "Ghi chú",
       qty: "Số lượng",
+      received: "Đã nhận",
+      remaining: "Còn lại",
       price: "Đơn giá",
       estPrice: "Đơn giá dự kiến",
       amount: "Thành tiền",
@@ -309,6 +318,12 @@ registerV2ModuleLocale("procurement", {
       approver: "Approver",
       summaryTotal: "Total:",
     },
+    receipts: {
+      title: "Receipt history",
+      empty: "No goods receipts yet",
+      error: "Could not load the receipt history",
+      status: { DRAFT: "Draft", POSTED: "Posted", CANCELLED: "Cancelled" },
+    },
     fields: {
       branch: "Branch",
       branchPlaceholder: "Select a branch",
@@ -319,10 +334,11 @@ registerV2ModuleLocale("procurement", {
       supplier: "Supplier",
       supplierInvoiceNo: "Supplier invoice no.",
       invoicePlaceholder: "Select a purchase invoice",
+      supplierAutoFill: "Filled from the invoice",
       invoiceNotSyncedHint:
         "Invoice not listed? Write the invoice no. and supplier in Notes.",
       supplierNotFoundHint:
-        "The invoice's supplier is not in the master list: pick manually or write it in Notes.",
+        "The invoice supplier is not in the master list: the order keeps the seller name on the invoice.",
       remarks: "Remarks",
       requestDate: "Request date",
       neededDate: "Needed by",
@@ -355,6 +371,8 @@ registerV2ModuleLocale("procurement", {
       name: "Name",
       note: "Note",
       qty: "Quantity",
+      received: "Received",
+      remaining: "Remaining",
       price: "Unit price",
       estPrice: "Estimated unit price",
       amount: "Amount",

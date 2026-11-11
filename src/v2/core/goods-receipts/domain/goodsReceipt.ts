@@ -35,6 +35,10 @@ export interface GoodsReceiptRecord {
   remarks?: string | null;
   /** Id đơn mua nguồn (nếu phiếu nhập từ đơn mua) */
   sourceOrderId?: string | null;
+  /** Số đơn mua nguồn (chỉ đọc) */
+  sourceOrderNo?: string | null;
+  /** Tổng tiền đơn mua nguồn (chỉ đọc) */
+  sourceOrderTotal?: number | null;
   lines?: GoodsReceiptRecordLine[];
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -54,6 +58,9 @@ export interface GoodsReceiptFormValue {
   remarks: string;
   /** Id đơn mua nguồn; rỗng nếu không nhập từ đơn mua */
   sourceOrderId: string;
+  /** Số và tổng tiền đơn mua nguồn: chỉ để hiển thị, không gửi API */
+  sourceOrderNo: string;
+  sourceOrderTotal: string;
   lines: GoodsReceiptFormLine[];
 }
 
@@ -72,6 +79,8 @@ export const emptyGoodsReceiptForm = (): GoodsReceiptFormValue => ({
   paymentStatus: "UNPAID",
   remarks: "",
   sourceOrderId: "",
+  sourceOrderNo: "",
+  sourceOrderTotal: "",
   lines: [],
 });
 
@@ -80,6 +89,8 @@ export const applyGoodsReceiptPrefill = (
   form: GoodsReceiptFormValue,
   prefill: {
     sourceOrderId: string;
+    sourceOrderNo?: string;
+    sourceOrderTotal?: number;
     supplierId: string;
     supplierName: string;
     branchId: string;
@@ -89,6 +100,9 @@ export const applyGoodsReceiptPrefill = (
 ): GoodsReceiptFormValue => ({
   ...form,
   sourceOrderId: prefill.sourceOrderId,
+  sourceOrderNo: prefill.sourceOrderNo ?? "",
+  sourceOrderTotal:
+    prefill.sourceOrderTotal == null ? "" : String(prefill.sourceOrderTotal),
   supplierId: prefill.supplierId,
   supplierName: prefill.supplierName,
   branchId: prefill.branchId,
@@ -114,6 +128,9 @@ export const toGoodsReceiptForm = (
   paymentStatus: data.paymentStatus || "UNPAID",
   remarks: data.remarks ?? "",
   sourceOrderId: data.sourceOrderId ?? "",
+  sourceOrderNo: data.sourceOrderNo ?? "",
+  sourceOrderTotal:
+    data.sourceOrderTotal == null ? "" : String(data.sourceOrderTotal),
   lines:
     data.lines?.map((l) => ({
       id: l.id,
@@ -126,4 +143,20 @@ export const toGoodsReceiptForm = (
       notes: l.notes ?? "",
       sourceLineId: l.sourceLineId ?? "",
     })) || [],
+});
+
+/** Bỏ đơn mua đã chọn: xóa NCC, chi nhánh, tổng và dòng lấy từ đơn đó */
+export const clearGoodsReceiptSourceOrder = (
+  form: GoodsReceiptFormValue,
+): GoodsReceiptFormValue => ({
+  ...form,
+  sourceOrderId: "",
+  sourceOrderNo: "",
+  sourceOrderTotal: "",
+  supplierId: "",
+  supplierName: "",
+  branchId: "",
+  branchName: "",
+  totalAmount: "0",
+  lines: [],
 });

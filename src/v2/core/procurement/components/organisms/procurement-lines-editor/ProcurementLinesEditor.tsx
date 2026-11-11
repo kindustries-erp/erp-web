@@ -2,6 +2,7 @@ import * as React from "react";
 import { Plus } from "lucide-react";
 import {
   V2Button,
+  V2Text,
   DrawerSection,
   V2DrawerLinesTable,
   type V2DrawerLinesColumn,
@@ -9,7 +10,6 @@ import {
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   emptyProcurementLine,
-  procurementLineAmount,
   type ProcurementLineFormValue,
 } from "../../../form/procurementLine.form";
 import {
@@ -17,6 +17,10 @@ import {
   type ProcurementLineColumn,
   type ProcurementLineColumnContext,
 } from "./ProcurementLinesEditor.columns";
+import {
+  buildFooterCells,
+  withReceivedColumns,
+} from "./ProcurementLinesEditor.helper";
 
 export interface ProcurementLinesEditorProps {
   lines: ProcurementLineFormValue[];
@@ -30,6 +34,8 @@ export interface ProcurementLinesEditorProps {
   lockLines?: boolean;
   /** Đánh dấu cột Mã là bắt buộc (đơn mua Garage) */
   itemCodeRequired?: boolean;
+  /** Thêm cột Đã nhận / Còn lại (đơn đã phát hành, chỉ xem) để theo dõi nhập nhiều đợt */
+  showReceived?: boolean;
 }
 
 /** Bảng dòng chứng từ PR/PO chuẩn V2: dùng V2DrawerLinesTable (table-fixed, cuộn, header không xuống dòng). */
@@ -43,6 +49,7 @@ export function ProcurementLinesEditor({
   addButtonLabel,
   lockLines = false,
   itemCodeRequired = false,
+  showReceived = false,
 }: ProcurementLinesEditorProps) {
   const { t } = useV2Translation();
   const patch = (key: string, ch: Partial<ProcurementLineFormValue>) =>
@@ -60,12 +67,15 @@ export function ProcurementLinesEditor({
 
   const visibleColumns = React.useMemo(
     () =>
-      columns.filter(
-        (col) =>
-          (!viewing || !col.hideWhenViewing) &&
-          !(lockLines && col.id === "actions"),
+      withReceivedColumns(
+        columns.filter(
+          (col) =>
+            (!viewing || !col.hideWhenViewing) &&
+            !(lockLines && col.id === "actions"),
+        ),
+        showReceived,
       ),
-    [columns, viewing, lockLines],
+    [columns, viewing, lockLines, showReceived],
   );
   const canEditLines = !viewing && !lockLines;
 
@@ -81,14 +91,9 @@ export function ProcurementLinesEditor({
     [visibleColumns, t],
   );
 
-  const totalQty = React.useMemo(
-    () => lines.reduce((sum, l) => sum + (Number(l.qty) || 0), 0),
-    [lines],
-  );
-
-  const totalAmount = React.useMemo(
-    () => lines.reduce((sum, l) => sum + (procurementLineAmount(l) ?? 0), 0),
-    [lines],
+  const footerCells = React.useMemo(
+    () => buildFooterCells(lines, showReceived),
+    [lines, showReceived],
   );
 
   const renderCell = (
@@ -138,7 +143,10 @@ export function ProcurementLinesEditor({
                 header: (
                   <>
                     {col.header}
-                    <span className="text-destructive"> *</span>
+                    <V2Text as="span" className="text-destructive">
+                      {" "}
+                      *
+                    </V2Text>
                   </>
                 ),
               }
@@ -148,13 +156,7 @@ export function ProcurementLinesEditor({
         getRowKey={(line) => line.key}
         renderCell={renderCell}
         footerLabel={t("v2.common.total", "Tổng cộng") + ":"}
-        footerCells={{
-          qty: totalQty.toLocaleString("vi-VN", { maximumFractionDigits: 3 }),
-          price: "—",
-          amount: totalAmount.toLocaleString("vi-VN", {
-            maximumFractionDigits: 3,
-          }),
-        }}
+        footerCells={footerCells}
         emptyLabel={t(
           "v2.procurement.lines.empty",
           "Chưa có dòng hàng nào trong chứng từ",
@@ -162,7 +164,9 @@ export function ProcurementLinesEditor({
       />
 
       {errorText && (
-        <p className="mt-2 text-sm text-destructive">{errorText}</p>
+        <V2Text as="p" variant="body-sm" className="mt-2 text-destructive">
+          {errorText}
+        </V2Text>
       )}
     </DrawerSection>
   );

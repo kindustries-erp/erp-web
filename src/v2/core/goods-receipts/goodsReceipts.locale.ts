@@ -39,6 +39,8 @@ registerV2ModuleLocale("goodsReceipts", {
     columns: {
       receiptNo: "Số phiếu",
       receiptDate: "Ngày nhập",
+      sourceOrderId: "Đơn mua",
+      sourceOrderTotal: "Tổng tiền đơn mua",
       supplierName: "Nhà cung cấp",
       branchName: "Chi nhánh",
       totalAmount: "Tổng tiền",
@@ -62,6 +64,8 @@ registerV2ModuleLocale("goodsReceipts", {
       saveError: "Không thể lưu dữ liệu",
       loadError: "Không thể tải dữ liệu",
       generateCode: "Sinh mã mới",
+      orderPlaceholder: "Chọn đơn mua đã phát hành",
+      supplierFromOrder: "Tự điền theo đơn mua",
     },
     delete: {
       title: "Xác nhận xóa phiếu",
@@ -116,6 +120,8 @@ registerV2ModuleLocale("goodsReceipts", {
     columns: {
       receiptNo: "Receipt No",
       receiptDate: "Receipt Date",
+      sourceOrderId: "Purchase Order",
+      sourceOrderTotal: "PO Total Amount",
       supplierName: "Supplier",
       branchName: "Branch",
       totalAmount: "Total Amount",
@@ -139,6 +145,8 @@ registerV2ModuleLocale("goodsReceipts", {
       saveError: "Unable to save",
       loadError: "Unable to load data",
       generateCode: "Generate code",
+      orderPlaceholder: "Select an issued purchase order",
+      supplierFromOrder: "Filled from the purchase order",
     },
     delete: {
       title: "Confirm Delete",

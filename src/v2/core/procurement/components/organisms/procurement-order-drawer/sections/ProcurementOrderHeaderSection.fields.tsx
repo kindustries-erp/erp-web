@@ -1,16 +1,14 @@
 import {
+  V2ReadValue,
   V2Textarea,
   V2TextField,
-  type DrawerRowConfig,
   type V2DrawerFieldItem,
 } from "@/v2/shared/components";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import {
   GARAGE_ORDER_EDIT_KEYS,
-  GARAGE_ORDER_VIEW_KEYS,
   orderByKeys,
-  placeBranchAfter,
 } from "../../../../procurement.branch";
 import type { ProcurementOrderFormValue } from "../../../../form/procurementOrder.form";
 import {
@@ -23,61 +21,6 @@ import { ProcurementInvoicePicker } from "../../../molecules/procurement-pickers
 import type { ProcurementApi } from "../../../../procurement.types";
 
 type Translate = (key: string, fallback: string) => string;
-
-/** Hàng đọc của đầu đơn (chế độ xem). Đơn Garage sắp theo `GARAGE_ORDER_VIEW_KEYS`. */
-export function buildOrderViewRows(
-  form: ProcurementOrderFormValue,
-  t: Translate,
-  requestLabel: string,
-  branchOptional: boolean,
-): DrawerRowConfig[] {
-  const rows: DrawerRowConfig[] = [
-    ...(form.requestId
-      ? [
-          {
-            key: "request",
-            label: t("v2.procurement.fields.request", "Từ đề nghị mua"),
-            value: requestLabel || form.requestId,
-          },
-        ]
-      : []),
-    {
-      key: "branch",
-      label: t("v2.procurement.fields.branch", "Chi nhánh"),
-      value: form.branchName || "—",
-    },
-    {
-      key: "orderDate",
-      label: t("v2.procurement.fields.orderDate", "Ngày đơn"),
-      value: form.orderDate || "—",
-    },
-    {
-      key: "expectedDate",
-      label: t("v2.procurement.fields.expectedDate", "Ngày dự kiến nhận"),
-      value: form.expectedDate || "—",
-    },
-    {
-      key: "supplier",
-      label: t("v2.procurement.fields.supplier", "Nhà cung cấp"),
-      value: form.supplierName || "—",
-    },
-    {
-      key: "supplierInvoiceNo",
-      label: t("v2.procurement.fields.supplierInvoiceNo", "Số hóa đơn NCC"),
-      value: form.supplierInvoiceNo || "—",
-      copyable: Boolean(form.supplierInvoiceNo),
-    },
-    {
-      key: "remarks",
-      label: t("v2.procurement.fields.remarks", "Ghi chú"),
-      value: form.remarks || "—",
-      multiline: true,
-    },
-  ];
-  return branchOptional
-    ? orderByKeys(rows, GARAGE_ORDER_VIEW_KEYS)
-    : placeBranchAfter(rows, ["branch"], "expectedDate", false);
-}
 
 export interface OrderEditFieldsInput {
   form: ProcurementOrderFormValue;
@@ -185,31 +128,53 @@ export function buildOrderEditFields(
     {
       key: "supplierId",
       label: t("v2.procurement.fields.supplier", "Nhà cung cấp"),
-      render: () => (
-        <ProcurementSupplierPicker
-          value={form.supplierId}
-          label={form.supplierName}
-          viewing={false}
-          onChange={(id, name) => {
-            setField("supplierId", id);
-            setField("supplierName", name);
-          }}
-        />
-      ),
+      className: branchOptional ? "sm:col-span-2" : undefined,
+      render: () =>
+        invoicePicker ? (
+          <V2ReadValue
+            value={
+              form.supplierName ||
+              t(
+                "v2.procurement.fields.supplierAutoFill",
+                "Tự điền theo hóa đơn",
+              )
+            }
+          />
+        ) : (
+          <ProcurementSupplierPicker
+            value={form.supplierId}
+            label={form.supplierName}
+            viewing={false}
+            onChange={(id, name) => {
+              setField("supplierId", id);
+              setField("supplierName", name);
+            }}
+          />
+        ),
     },
     {
       key: "supplierInvoiceNo",
       label: t("v2.procurement.fields.supplierInvoiceNo", "Số hóa đơn NCC"),
+      className: branchOptional ? "sm:col-span-2" : undefined,
       render: () =>
         invoicePicker ? (
           <ProcurementInvoicePicker
             value={form.supplierInvoiceNo}
             viewing={false}
-            onChange={(invoiceNo) => setField("supplierInvoiceNo", invoiceNo)}
-            onSupplierMatch={(supplier) => {
+            onSelect={({ invoiceNo, sellerName }) => {
+              setField("supplierInvoiceNo", invoiceNo);
+              setField("supplierId", null);
+              setField("supplierName", sellerName);
+            }}
+            onSupplierResolved={(supplier) => {
               if (!supplier) return;
               setField("supplierId", supplier.id);
               setField("supplierName", supplier.name);
+            }}
+            onClear={() => {
+              setField("supplierInvoiceNo", "");
+              setField("supplierId", null);
+              setField("supplierName", "");
             }}
           />
         ) : (

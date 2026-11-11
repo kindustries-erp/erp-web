@@ -142,6 +142,12 @@ export function ProcurementListPage<T extends { id: string }>({
                         },
                       }
                     : undefined,
+                receiptHistory: config.loadReceipts
+                  ? {
+                      load: config.loadReceipts,
+                      onOpen: state.openReceipt,
+                    }
+                  : undefined,
                 canCreateOrder: state.canCreate && Boolean(config.poHref),
                 onOrderFromRequest: (row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);

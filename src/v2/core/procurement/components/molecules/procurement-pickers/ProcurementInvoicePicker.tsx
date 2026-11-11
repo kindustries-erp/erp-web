@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { V2Combobox, V2ReadValue } from "@/v2/shared/components";
+import { V2Combobox, V2ReadValue, V2Text } from "@/v2/shared/components";
 import type { V2ComboboxOption } from "@/v2/shared/components/molecules/v2-combobox";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
@@ -22,20 +22,25 @@ const toOption = (row: PurchaseInvoiceRow): V2ComboboxOption => ({
 
 /**
  * Chọn số hóa đơn mua vào (combobox có tìm kiếm, cuộn tải thêm). Chọn hóa đơn thì
- * tự tìm NCC có cùng MST người bán và báo qua `onSupplierMatch` (null nếu không khớp).
+ * tự tìm NCC có cùng MST người bán và báo qua `onSupplierResolved` (null nếu không khớp).
  * Hóa đơn chưa đồng bộ thì không có trong danh sách: ghi vào Ghi chú.
  */
 export function ProcurementInvoicePicker({
   value,
   viewing,
-  onChange,
-  onSupplierMatch,
+  onSelect,
+  onSupplierResolved,
+  onClear,
 }: {
   /** Số hóa đơn đang lưu (chuỗi rỗng khi chưa có) */
   value: string;
   viewing: boolean;
-  onChange: (invoiceNo: string) => void;
-  onSupplierMatch: (supplier: { id: string; name: string } | null) => void;
+  /** Ngay khi chọn: số hóa đơn và tên người bán (NCC hiển thị theo hóa đơn) */
+  onSelect: (invoice: { invoiceNo: string; sellerName: string }) => void;
+  /** Sau khi tra MST: NCC trong danh mục khớp hóa đơn, null nếu không có */
+  onSupplierResolved: (supplier: { id: string; name: string } | null) => void;
+  /** Bỏ chọn hóa đơn: NCC phụ thuộc nên cũng phải xóa */
+  onClear: () => void;
 }) {
   const { t } = useV2Translation();
   const queryClient = useQueryClient();
@@ -75,19 +80,22 @@ export function ProcurementInvoicePicker({
     return [...unique.values()];
   }, [invoices.data]);
 
+  /** Chống chọn nhanh liên tiếp: chỉ lần chọn mới nhất được áp NCC tra được */
+  const latestRef = React.useRef(0);
+
   if (viewing) return <V2ReadValue value={value || "—"} />;
 
   const handleSelect = async (invoiceNo: string | null) => {
+    const ticket = ++latestRef.current;
     if (invoiceNo === null) {
       setNoSupplierMatch(false);
-      onChange("");
+      onClear();
       return;
     }
-    onChange(invoiceNo);
     const row = seenRef.current.get(invoiceNo);
+    onSelect({ invoiceNo, sellerName: row?.sellerName ?? "" });
     if (!row?.sellerTaxCode) {
       setNoSupplierMatch(true);
-      onSupplierMatch(null);
       return;
     }
     const supplier = await queryClient.fetchQuery({
@@ -95,8 +103,9 @@ export function ProcurementInvoicePicker({
       queryFn: () => findSupplierByTaxCode(row.sellerTaxCode),
       staleTime: 30_000,
     });
+    if (ticket !== latestRef.current) return;
     setNoSupplierMatch(!supplier);
-    onSupplierMatch(supplier);
+    onSupplierResolved(supplier);
   };
 
   return (
@@ -123,19 +132,19 @@ export function ProcurementInvoicePicker({
         clearable
         onValueChange={(v) => void handleSelect(v)}
       />
-      <p className="text-[11px] text-muted-fg">
+      <V2Text as="p" variant="body-sm" className="text-[11px] text-muted-fg">
         {t(
           "v2.procurement.fields.invoiceNotSyncedHint",
           "Chưa thấy hóa đơn? Ghi số hóa đơn và NCC vào Ghi chú.",
         )}
-      </p>
+      </V2Text>
       {noSupplierMatch && value ? (
-        <p className="text-[11px] text-warning">
+        <V2Text as="p" variant="body-sm" className="text-[11px] text-warning">
           {t(
             "v2.procurement.fields.supplierNotFoundHint",
             "NCC của hóa đơn chưa có trong danh mục: chọn tay hoặc ghi vào Ghi chú.",
           )}
-        </p>
+        </V2Text>
       ) : null}
     </div>
   );

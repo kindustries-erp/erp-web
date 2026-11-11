@@ -30,6 +30,9 @@ export interface GarageGoodsReceiptDto {
   paymentStatus?: string | null;
   /** Đơn mua garage nguồn (API) */
   garageProcurementOrderId?: string | null;
+  /** Số đơn mua nguồn và tổng tiền đơn (API, chỉ đọc) */
+  garageProcurementOrderNo?: string | null;
+  orderTotalAmount?: number | null;
   remarks?: string | null;
   lines?: GarageGoodsReceiptLineDto[];
   createdAt?: string | null;

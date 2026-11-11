@@ -1,15 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getOrder } = vi.hoisted(() => ({ getOrder: vi.fn() }));
-
-vi.mock("@/v2/core/procurement", () => ({
-  createProcurementApi: () => ({ get: getOrder }),
+const { getOrder, listOrders } = vi.hoisted(() => ({
+  getOrder: vi.fn(),
+  listOrders: vi.fn(),
 }));
 
-import { loadGarageReceiptPrefill } from "./garageGoodsReceiptSourceOrder";
+vi.mock("@/v2/core/procurement", () => ({
+  createProcurementApi: () => ({ get: getOrder, list: listOrders }),
+}));
+
+import {
+  loadGarageReceiptPrefill,
+  searchGarageReceiptOrders,
+} from "./garageGoodsReceiptSourceOrder";
 
 const baseOrder = {
   id: "po-1",
+  orderNo: "GDMH-1",
+  totalAmount: "950",
   status: "ISSUED",
   fulfillmentStatus: "PARTIAL",
   supplierId: "sup-1",
@@ -57,6 +65,8 @@ describe("loadGarageReceiptPrefill", () => {
     const prefill = await loadGarageReceiptPrefill("po-1");
 
     expect(prefill.sourceOrderId).toBe("po-1");
+    expect(prefill.sourceOrderNo).toBe("GDMH-1");
+    expect(prefill.sourceOrderTotal).toBe(950);
     expect(prefill.supplierId).toBe("sup-1");
     expect(prefill.branchName).toBe("Chi nhánh 1");
     expect(prefill.lines).toHaveLength(1);
@@ -64,6 +74,7 @@ describe("loadGarageReceiptPrefill", () => {
       sourceLineId: "line-1",
       itemName: "Lọc dầu",
       qtyReceived: "3",
+      maxQty: 3,
       unitCost: "100",
       amount: "300",
       unit: "Cái",
@@ -88,5 +99,46 @@ describe("loadGarageReceiptPrefill", () => {
       lines: [baseOrder.lines[1]],
     });
     await expect(loadGarageReceiptPrefill("po-1")).rejects.toThrow("noLines");
+  });
+});
+
+describe("searchGarageReceiptOrders", () => {
+  beforeEach(() => {
+    listOrders.mockReset();
+  });
+
+  it("chỉ tìm đơn đã phát hành và bỏ đơn đã nhận đủ", async () => {
+    listOrders.mockResolvedValue({
+      items: [
+        {
+          id: "po-1",
+          orderNo: "GDMH-1",
+          supplierName: "NCC A",
+          totalAmount: "100",
+          fulfillmentStatus: "PARTIAL",
+        },
+        {
+          id: "po-2",
+          orderNo: "GDMH-2",
+          supplierName: null,
+          totalAmount: "50",
+          fulfillmentStatus: "FULL",
+        },
+      ],
+    });
+
+    const options = await searchGarageReceiptOrders("GDMH");
+
+    expect(listOrders).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "ISSUED", search: "GDMH" }),
+    );
+    expect(options).toEqual([
+      {
+        id: "po-1",
+        orderNo: "GDMH-1",
+        supplierName: "NCC A",
+        totalAmount: 100,
+      },
+    ]);
   });
 });

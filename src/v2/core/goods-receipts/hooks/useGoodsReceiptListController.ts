@@ -10,13 +10,13 @@ import type {
   GoodsReceiptModuleConfig,
   GoodsReceiptPrefill,
 } from "../goodsReceipts.config.type";
+import { describeSourceOrderError } from "./goodsReceiptSourceOrderError";
 import { useGoodsReceiptMutations } from "../api/mutations/useGoodsReceiptMutations";
 import { buildGoodsReceiptColumns } from "../components/organisms/goods-receipt-table/GoodsReceiptTable.columns";
 import { buildGoodsReceiptRowActions } from "../components/organisms/goods-receipt-table/GoodsReceiptTable.rowActions";
 import type { GoodsReceiptRecord } from "../domain/goodsReceipt";
 
-/** Khóa lỗi nghiệp vụ khi lập phiếu từ đơn mua; khớp `v2.goodsReceipts.fromOrder.*` */
-export const FROM_ORDER_CODES = ["notIssued", "fullyReceived", "noLines"];
+export { FROM_ORDER_CODES } from "./goodsReceiptSourceOrderError";
 
 export interface GoodsReceiptDrawerTarget {
   id: string | null;
@@ -121,21 +121,22 @@ export function useGoodsReceiptListController(
       .load(orderId)
       .then((prefill) => setDrawer({ id: null, mode: "edit", prefill }))
       .catch((error: unknown) => {
-        // Lỗi nghiệp vụ của đơn mua mang khóa ngắn (notIssued, fullyReceived, noLines); lỗi API lấy từ server
-        const code = error instanceof Error ? error.message : "";
-        const fallback = t(
-          "v2.goodsReceipts.fromOrder.error",
-          "Không thể lập phiếu nhập từ đơn mua",
-        );
         useV2ToastStore.getState().showToast({
           variant: "destructive",
-          title: fallback,
-          description: FROM_ORDER_CODES.includes(code)
-            ? t(`v2.goodsReceipts.fromOrder.${code}`, code)
-            : extractV2ApiError(error, fallback),
+          ...describeSourceOrderError(error, t),
         });
       });
   }, [canCreate, config, t]);
+
+  // Mở một phiếu có sẵn từ lịch sử nhập kho của đơn mua: `?receipt=<id>` mở drawer xem; xóa tham số để F5 không mở lại
+  React.useEffect(() => {
+    const receiptId = new URLSearchParams(window.location.search).get(
+      "receipt",
+    );
+    if (!receiptId) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    setDrawer({ id: receiptId, mode: "view" });
+  }, []);
 
   const selectView = (key: string) => {
     setView(key);

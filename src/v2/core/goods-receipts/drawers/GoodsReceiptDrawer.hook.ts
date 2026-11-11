@@ -151,5 +151,8 @@ export function useGoodsReceiptDrawer({
     canPost,
     canCancel,
     regenerateCode: data.regenerateCode,
+    pickOrder: data.pickOrder,
+    /** Phiếu đã lưu kèm đơn mua thì không đổi đơn */
+    orderLocked: !creating && Boolean(initial.sourceOrderId),
   };
 }

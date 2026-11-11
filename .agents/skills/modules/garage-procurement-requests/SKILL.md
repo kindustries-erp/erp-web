@@ -164,3 +164,10 @@ src/v2/core/procurement/
 - PO garage (`directConfirmWhenApprovalOff: true`): menu bỏ "Gửi duyệt" khi khóa tắt (`applyApprovalGate`, tham số `directConfirmWhenOff`). Drawer có nút "Tạo mới" (phiếu mới) hoặc "Cập nhật" (phiếu nháp) cạnh "Lưu nháp". Bấm là lưu rồi gửi, PO chuyển APPROVED.
 - Bắt buộc truyền `directConfirm` cho mọi nơi render `ProcurementOrderDrawer`. Có hai nơi: `ProcurementListPage.tsx` và `GarageProcurementRequestsPage.tsx`. Thiếu prop ở một nơi thì nút không hiện (đã gặp và sửa 2026-11-11).
 - Có E2E Playwright cho luồng này: xem `erp-web/e2e/` và skill `erp-e2e-playwright`.
+
+## 14. Cập nhật 2026-11-11: hóa đơn/NCC, nhập nhiều đợt, xóa vĩnh viễn
+
+- **Hóa đơn → NCC (đơn Garage)**: `ProcurementInvoicePicker` (combobox hóa đơn mua vào, tìm kiếm + cuộn tải thêm) ở hàng riêng; NCC ở hàng dưới, chỉ đọc "Tự điền theo hóa đơn". Chọn hóa đơn điền `supplierName` theo người bán và tìm NCC cùng MST (`findSupplierByTaxCode`); bỏ hóa đơn thì xóa NCC. Thiếu quyền đọc `invoices` thì lùi về ô text + chọn NCC. Số hóa đơn được gửi lúc tạo (`toOrderCreatePayload`).
+- **Nhập nhiều đợt**: bảng dòng PO đã phát hành có cột Đã nhận / Còn lại (`showReceived`, `ProcurementLinesEditor.columns.received.tsx`); mục "Lịch sử nhập kho" (`ProcurementReceiptsSection`, nhận `receiptHistory` qua props, Garage tải bằng `listGarageOrderReceipts` lọc `garageProcurementOrderId`); bấm số phiếu mở `/garage-goods-receipts?receipt=<id>`. Form phiếu giới hạn số nhận theo `maxQty`.
+- **Xóa vĩnh viễn chỉ ở bộ lọc "Đã xóa mềm"**: `buildProcurementRowActions` không còn nhận `purgeActions`; `useProcurementListTabState` chỉ trả nhóm "Xóa vĩnh viễn" khi bộ lọc có sẵn là "Đã xóa mềm" (cần quyền `purge`, chỉ phiếu nháp). Test: `useProcurementListTabState.test.tsx`.
+- **V2 component**: `ProcurementReceiptsSection`, `ProcurementInvoicePicker`, `ProcurementLinesEditor` dùng `V2Text`/`V2Button` (không còn `<p>/<span>/<button>` thô). `ProcurementLinesEditor.helper.ts` giữ phần chèn cột và tổng chân bảng để file < 180 dòng.

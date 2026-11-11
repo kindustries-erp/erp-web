@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import type { V2RowAction } from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "../procurement.rules";
 import type { ProcurementListConfig } from "./procurementListConfig.type";
 import { buildProcurementRowActions } from "./procurementRowActions.builder";
@@ -22,8 +21,6 @@ export interface ProcurementRowActionsInput<T extends { id: string }> {
   orderFromRequest: (row: T) => void;
   /** Nhân bản phiếu đã từ chối/hủy */
   cloneRow?: (row: T) => void;
-  /** Hành động xóa vĩnh viễn của hook purge */
-  purgeActions: (row: T) => V2RowAction[];
   /** Quyền nhập kho và hành động mở trang nhập kho từ đơn mua */
   canReceive?: boolean;
   receive?: (row: T) => void;
@@ -42,7 +39,6 @@ export function useProcurementRowActions<T extends { id: string }>({
   openDelete,
   orderFromRequest,
   cloneRow,
-  purgeActions,
   canReceive,
   receive,
 }: ProcurementRowActionsInput<T>) {
@@ -63,7 +59,6 @@ export function useProcurementRowActions<T extends { id: string }>({
         openDelete,
         orderFromRequest,
         cloneRow,
-        purgeActions,
         canReceive,
         receive,
       }),
@@ -78,7 +73,6 @@ export function useProcurementRowActions<T extends { id: string }>({
       openDrawer,
       orderFromRequest,
       cloneRow,
-      purgeActions,
       start,
       t,
       canReceive,

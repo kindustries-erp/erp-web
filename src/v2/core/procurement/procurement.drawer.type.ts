@@ -6,6 +6,22 @@ import type {
   ProcurementOrderDetail,
 } from "./procurement.types";
 
+/** Một phiếu nhập kho của đơn mua (lịch sử nhập nhiều đợt). */
+export interface ProcurementReceiptHistoryRow {
+  id: string;
+  receiptNo: string;
+  receiptDate: string | null;
+  /** DRAFT | POSTED | CANCELLED */
+  status: string;
+  totalAmount: number | string | null;
+}
+
+/** Lịch sử nhập kho của đơn mua, do module cấp (core không biết API phiếu nhập). */
+export interface ProcurementReceiptHistory {
+  load: (orderId: string) => Promise<ProcurementReceiptHistoryRow[]>;
+  onOpen: (receiptId: string) => void;
+}
+
 /** Props chung của drawer chứng từ procurement. `documentId` null nghĩa là tạo mới. */
 export interface ProcurementDrawerProps {
   open: boolean;
@@ -57,4 +73,6 @@ export interface ProcurementDrawerProps {
     canReceive: (order: ProcurementOrderDetail) => boolean;
     onReceive: (row: ProcurementDocumentRef) => void;
   };
+  /** PO: mục "Lịch sử nhập kho" (đơn đã phát hành, chế độ xem). Thiếu thì không hiện. */
+  receiptHistory?: ProcurementReceiptHistory;
 }

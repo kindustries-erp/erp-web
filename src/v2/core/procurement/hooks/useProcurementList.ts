@@ -141,24 +141,33 @@ export function useProcurementList<T extends { id: string }>(
   );
 
   /**
-   * Sang trang nhập kho với đơn đã chọn (?fromOrder=<id>); trang nhập kho tự điền phiếu mới.
+   * Sang trang nhập kho kèm tham số (?fromOrder=<id> hoặc ?receipt=<id>); trang nhập kho tự xử lý.
    * Giữ tiền tố `/v2` khi người dùng đang ở shell V2.
    */
-  const receive = React.useCallback(
-    (row: T) => {
+  const goToReceipts = React.useCallback(
+    (search: string) => {
       if (!config.receiveHref) return;
       setDrawer(null);
       const base = window.location.pathname.startsWith("/v2/")
         ? `/v2${config.receiveHref}`
         : config.receiveHref;
-      window.history.pushState(
-        null,
-        "",
-        `${base}?fromOrder=${encodeURIComponent(row.id)}`,
-      );
+      window.history.pushState(null, "", `${base}?${search}`);
       window.dispatchEvent(new PopStateEvent("popstate"));
     },
     [config.receiveHref],
+  );
+
+  /** Nhập kho từ đơn: trang nhập kho điền sẵn phiếu mới theo đơn. */
+  const receive = React.useCallback(
+    (row: T) => goToReceipts(`fromOrder=${encodeURIComponent(row.id)}`),
+    [goToReceipts],
+  );
+
+  /** Mở một phiếu nhập đã tạo cho đơn (lịch sử nhập kho). */
+  const openReceipt = React.useCallback(
+    (receiptId: string) =>
+      goToReceipts(`receipt=${encodeURIComponent(receiptId)}`),
+    [goToReceipts],
   );
 
   const openDrawer = React.useCallback(
@@ -208,7 +217,6 @@ export function useProcurementList<T extends { id: string }>(
     start,
     openDelete: (row) => setDeleteTarget(row),
     orderFromRequest,
-    purgeActions: purgeState.purgeActions,
     canReceive,
     receive,
   });
@@ -227,6 +235,7 @@ export function useProcurementList<T extends { id: string }>(
     canUpdate,
     canReceive,
     receive,
+    openReceipt,
     drawer,
     openView: (id: string) => openDrawer(id, "view"),
     openCreate: () => setDrawer({ id: null, mode: "edit" }),

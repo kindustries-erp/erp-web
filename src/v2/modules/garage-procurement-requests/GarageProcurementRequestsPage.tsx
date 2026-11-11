@@ -181,6 +181,12 @@ export function GarageProcurementRequestsPage({
                       },
                     }
                   : undefined,
+                receiptHistory: garageProcurementOrdersConfig.loadReceipts
+                  ? {
+                      load: garageProcurementOrdersConfig.loadReceipts,
+                      onOpen: ordersState.openReceipt,
+                    }
+                  : undefined,
                 canCreateOrder: false,
               })}
             </React.Fragment>

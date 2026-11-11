@@ -1,5 +1,6 @@
 import type { ProcurementActionKey } from "../procurement.rules";
 import type { ProcurementApi } from "../procurement.types";
+import type { ProcurementReceiptHistoryRow } from "../procurement.drawer.type";
 
 /** Cấu hình một màn danh sách procurement: module truyền vào, core xử lý phần còn lại. */
 export interface ProcurementListConfig<T extends { id: string }> {
@@ -47,4 +48,6 @@ export interface ProcurementListConfig<T extends { id: string }> {
   canReceive?: (row: T) => boolean;
   /** PO: khóa lý do "Nhập kho" bị mờ; null thì không cần tooltip */
   receiveBlockedKey?: (row: T) => "notIssued" | "fullyReceived" | null;
+  /** PO: tải các phiếu nhập kho của đơn (lịch sử nhập nhiều đợt) */
+  loadReceipts?: (orderId: string) => Promise<ProcurementReceiptHistoryRow[]>;
 }

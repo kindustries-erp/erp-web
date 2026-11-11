@@ -52,7 +52,7 @@ src/v2/core/goods-receipts/
 - `keys`: `createGoodsReceiptKeys(["v2-garage-goods-receipts"])` (giữ nguyên khóa cache cũ).
 - `tableId`: `erp-garage-goods-receipts-table`.
 - `permissionCollection`: `garage_goods_receipts`.
-- `requiredFields`: `["receiptDate"]`.
+- `requiredFields`: `["receiptDate", "sourceOrderId"]` (phiếu nhập Garage bắt buộc có đơn mua).
 - `viewVisibility`: `goodsReceiptViewVisibility` (core).
 
 Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự và một API client đúng `GoodsReceiptApi`.
@@ -78,7 +78,7 @@ Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự 
 
 - Ô `branchName` trên phiếu nhập Garage đổi từ ô text sang `ProcurementBranchPicker` (import từ `@/v2/core/procurement` barrel), `clearable`. Form lưu cả `branchId` và `branchName`.
 - Tối đa 1 chi nhánh; để trống = nhóm tồn kho không chi nhánh.
-- Vị trí: row chi nhánh nằm **sau `status`, trước `remarks`** (`GoodsReceiptFormSections.fields.config.ts`, `GoodsReceiptFormSections.tsx`).
+- Vị trí: row chi nhánh nằm **sau NCC, trước tổng tiền** (thứ tự hiện tại: Số phiếu, Ngày nhập, Đơn mua, NCC, Chi nhánh, Tổng tiền, Tổng tiền đơn mua, Ghi chú) (`GoodsReceiptFormSections.fields.config.ts`, `GoodsReceiptFormSections.tsx`).
 - Payload (`toGarageGoodsReceiptPayload`): gửi `branchId` và `branchName` là `null` khi rỗng để xóa chi nhánh cũ khi sửa.
 - Picker dùng react-query: test render form phải bọc `QueryClientProvider` (`GoodsReceiptFormSections.test.tsx`).
 - Test: `api/garageGoodsReceiptsPayload.test.ts`.
@@ -93,3 +93,12 @@ Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự 
 - Form có `sourceOrderId` (gửi `garageProcurementOrderId`) và dòng có `sourceLineId` (gửi `procurementOrderLineId`). API đối chiếu chi nhánh và NCC với PO; dòng SERVICE không nhận được.
 - DTO phản hồi map ngược: `garageProcurementOrderId` → `sourceOrderId`, `procurementOrderLineId` → `sourceLineId` (`toGarageGoodsReceipt`).
 - Test: `api/garageGoodsReceiptSourceOrder.test.ts`. E2E: `e2e/garage-procurement.e2e.mjs` mục E (đã PASS trên staging).
+
+## 6. Cập nhật 2026-11-11: phiếu gắn đơn mua, NCC/tổng theo PO, Badge cạnh mã phiếu
+
+- **Bắt buộc đơn mua**: field "Đơn mua" (`sourceOrderId`) là combobox `GoodsReceiptOrderPicker` (molecule trong core, có tìm kiếm trên server). Core không import core procurement: danh sách đơn đi qua `config.sourceOrder.search(term)` (Garage cấp `searchGarageReceiptOrders`: PO `ISSUED` chưa `FULL`).
+- Chọn đơn: `useGoodsReceiptDrawerData.pickOrder` gọi `config.sourceOrder.load(id)` rồi `applyGoodsReceiptPrefill` (điền NCC, chi nhánh, dòng còn lại, `maxQty`, số đơn, tổng đơn). Bỏ chọn: `clearGoodsReceiptSourceOrder`. Lỗi đơn (`notIssued`/`fullyReceived`/`noLines`) qua `describeSourceOrderError` (dùng chung với `?fromOrder=`).
+- **NCC, chi nhánh chỉ đọc** khi module cấu hình `sourceOrder` (không còn nhập tay); "Tổng tiền" = tổng dòng nhận (chỉ đọc) và thêm "Tổng tiền đơn mua" chỉ đọc (`sourceOrderTotal`, từ response `orderTotalAmount`). `sourceOrderNo`/`sourceOrderTotal` chỉ để hiển thị, không gửi API.
+- Phiếu đã lưu có đơn thì khóa không đổi đơn (`orderLocked`). Phiếu cũ không có đơn vẫn mở được; khi sửa phải gắn đơn vì `sourceOrderId` bắt buộc.
+- **Title drawer**: `title` = mã phiếu (hoặc "Thêm mới" khi chưa có mã), `titleExtra` = `GoodsReceiptStatusBadge` ngay cạnh (hiện cả khi tạo mới), `subtitle` = chế độ (Chi tiết/Chỉnh sửa). Đã bỏ dòng "Trạng thái" trong thông tin phiếu.
+- Test: `GoodsReceiptOrderPicker.test.tsx`, `goodsReceipt.test.ts`, `GoodsReceiptFormSections.test.tsx`, `garageGoodsReceiptSourceOrder.test.ts`; E2E mục I trong `e2e/garage-procurement.e2e.mjs`.

@@ -73,6 +73,7 @@ export const toOrderCreatePayload = (form: ProcurementOrderFormValue) => ({
   expectedDate: form.expectedDate || undefined,
   supplierId: form.supplierId ?? undefined,
   supplierName: form.supplierName.trim() || undefined,
+  supplierInvoiceNo: form.supplierInvoiceNo.trim() || undefined,
   requestId: form.requestId ?? undefined,
   remarks: form.remarks.trim() || undefined,
   lines: form.lines.map(toOrderLinePayload),

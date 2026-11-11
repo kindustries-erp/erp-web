@@ -9,7 +9,7 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 
 ## 1. Vị trí và cấu hình
 
-- Script: `erp/erp-web/e2e/*.e2e.mjs`. Hiện có `garage-procurement.e2e.mjs` (PR/PO garage, 24 kiểm tra).
+- Script: `erp/erp-web/e2e/*.e2e.mjs`. Hiện có `garage-procurement.e2e.mjs` (PR/PO garage và phiếu nhập garage, 86 kiểm tra; mục A–D PR/PO, E nhập kho từ PO, F–G hóa đơn/NCC và nhập nhiều đợt, H xóa vĩnh viễn, I phiếu nhập gắn PO).
 - Chạy: `bun run e2e:garage-procurement` (thêm script mới trong `package.json` theo cùng mẫu).
 - Biến môi trường (không hardcode mật khẩu hay URL trong repo):
   - `E2E_PASSWORD`: BẮT BUỘC, mật khẩu tài khoản test. Script thoát mã 2 nếu thiếu.
@@ -54,3 +54,7 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 - Drawer PO thiếu `directConfirm` ở một nơi render thì nút "Cập nhật" không hiện. Mọi nơi render `ProcurementOrderDrawer` phải truyền prop này.
 - Dòng PO garage bắt buộc mã hàng (`itemCode`). Dữ liệu seed thiếu mã sẽ bị chặn bởi validation và trông như lỗi UI.
 - Tooltip cần chờ độ trễ của Radix (khoảng 700ms trở lên).
+- **Quyền của tài khoản test**: `ai-test-tao` và `ai-test-duyet` không có quyền xóa/purge PO và PR (API trả 403). Mục H chỉ kiểm nhánh âm (menu thường không có "Xóa vĩnh viễn") và ghi INFO; nhánh dương (bộ lọc "Đã xóa mềm" có "Xóa vĩnh viễn") được unit test `useProcurementListTabState.test.tsx` bao phủ. Cần tài khoản có quyền delete + purge để chạy nhánh dương.
+- **Selector trong drawer**: bảng dòng của drawer cùng tồn tại với bảng danh sách phía sau, nên scope bằng `[role="dialog"]` trước khi tìm `table tbody tr` hoặc nhãn trùng tên cột (ví dụ "Nhà cung cấp").
+- Nút tạo đơn mua tên "Tạo đơn mua" (không phải "Tạo mới"); nút tạo phiếu nhập tên "Tạo phiếu nhập kho".
+

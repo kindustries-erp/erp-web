@@ -14,6 +14,7 @@ export * from "./procurement.drawer.type";
 export * from "./components/organisms/procurement-order-drawer";
 export * from "./components/organisms/procurement-request-drawer";
 export * from "./components/organisms/procurement-audit-section";
+export * from "./components/organisms/procurement-receipts-section";
 export * from "./form/procurementLine.form";
 export * from "./form/procurementOrder.form";
 export * from "./form/procurementRequest.form";

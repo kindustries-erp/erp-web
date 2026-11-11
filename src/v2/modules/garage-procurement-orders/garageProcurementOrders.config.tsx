@@ -13,6 +13,7 @@ import type {
   ProcurementRequestRow,
 } from "@/v2/core/procurement";
 import { ProcurementOrderDrawer } from "@/v2/core/procurement";
+import { listGarageOrderReceipts } from "./api/garageOrderReceipts";
 
 /** Đơn mua hàng garage (lõi procurement-orders, API v2). */
 export const garageProcurementOrdersApi =
@@ -42,6 +43,7 @@ export const garageProcurementOrdersConfig: ProcurementListConfig<ProcurementOrd
     receivePermissionCollection: "garage_goods_receipts",
     canReceive: (row) =>
       row.status === "ISSUED" && row.fulfillmentStatus !== "FULL",
+    loadReceipts: listGarageOrderReceipts,
     receiveBlockedKey: (row) => {
       if (row.status !== "ISSUED") return "notIssued";
       if (row.fulfillmentStatus === "FULL") return "fullyReceived";

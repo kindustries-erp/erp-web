@@ -8,6 +8,7 @@ import { ProcurementOrderMainSections } from "./ProcurementOrderMainSections";
 import { ProcurementOrderHeaderSection } from "./sections/ProcurementOrderHeaderSection";
 import { ProcurementOrderSummarySection } from "./sections/ProcurementOrderSummarySection";
 import { ProcurementAuditSection } from "../procurement-audit-section";
+import { ProcurementReceiptsSection } from "../procurement-receipts-section";
 
 /** Drawer đơn mua hàng 2 cột: trái là dòng hàng, phải là đầu đơn và tổng quan. */
 export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
@@ -98,6 +99,10 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
             viewing={state.viewing}
             linesLocked={state.linesLocked}
             itemCodeRequired={state.itemCodeRequired}
+            showReceived={
+              state.viewing &&
+              (state.status === "ISSUED" || state.status === "CLOSED")
+            }
             setField={state.setField}
           />
         }
@@ -120,6 +125,15 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
               form={state.form}
               detail={state.detail}
             />
+            {props.receiptHistory &&
+              props.documentId &&
+              state.viewing &&
+              (state.status === "ISSUED" || state.status === "CLOSED") && (
+                <ProcurementReceiptsSection
+                  orderId={props.documentId}
+                  history={props.receiptHistory}
+                />
+              )}
             {!state.creating && props.documentId && (
               <ProcurementAuditSection
                 documentId={props.documentId}

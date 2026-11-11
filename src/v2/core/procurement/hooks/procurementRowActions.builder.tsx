@@ -58,8 +58,6 @@ export interface BuildProcurementRowActionsInput<T extends { id: string }> {
   /** Quyền nhập kho (tạo phiếu nhập) và hành động mở trang nhập kho từ đơn mua */
   canReceive?: boolean;
   receive?: (row: T) => void;
-  /** Hành động xóa vĩnh viễn của hook purge */
-  purgeActions: (row: T) => V2RowAction[];
 }
 
 /**
@@ -84,7 +82,6 @@ export function buildProcurementRowActions<T extends { id: string }>(
     openDelete,
     orderFromRequest,
     cloneRow,
-    purgeActions,
     canReceive: canReceiveGoods = false,
     receive,
   } = input;
@@ -232,11 +229,6 @@ export function buildProcurementRowActions<T extends { id: string }>(
           ]
         : [];
 
-    const purgeable = purgeActions(row).map((action) => ({
-      ...action,
-      icon: <Trash2 className={ICON_CLASS} />,
-    }));
-
     // Nhân bản: chỉ phiếu đã từ chối/hủy, cần quyền tạo
     const rowStatus = (row as unknown as { status?: string }).status ?? "";
     const clonable: V2RowAction[] =
@@ -261,7 +253,6 @@ export function buildProcurementRowActions<T extends { id: string }>(
       ...normalTransitions,
       ...dangerTransitions,
       ...deletable,
-      ...purgeable,
     ];
 
     return [

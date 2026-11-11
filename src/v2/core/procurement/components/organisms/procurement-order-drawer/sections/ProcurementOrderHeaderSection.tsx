@@ -11,10 +11,8 @@ import type {
   ProcurementOrderFormErrors,
   ProcurementOrderFormValue,
 } from "../../../../form/procurementOrder.form";
-import {
-  buildOrderEditFields,
-  buildOrderViewRows,
-} from "./ProcurementOrderHeaderSection.fields";
+import { buildOrderEditFields } from "./ProcurementOrderHeaderSection.fields";
+import { buildOrderViewRows } from "./ProcurementOrderHeaderSection.rows";
 
 export interface ProcurementOrderHeaderSectionProps {
   form: ProcurementOrderFormValue;

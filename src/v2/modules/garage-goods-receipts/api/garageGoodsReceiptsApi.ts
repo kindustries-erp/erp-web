@@ -54,6 +54,8 @@ export const toGarageGoodsReceipt = (
   ({
     ...dto,
     sourceOrderId: dto.garageProcurementOrderId ?? null,
+    sourceOrderNo: dto.garageProcurementOrderNo ?? null,
+    sourceOrderTotal: dto.orderTotalAmount ?? null,
     lines: dto.lines?.map((l) => ({
       ...l,
       sourceLineId: l.procurementOrderLineId ?? null,
