@@ -1,6 +1,12 @@
 import * as React from "react";
-import { FileText } from "lucide-react";
-import { V2Button, V2ConfirmModal, V2ModulePage } from "@/v2/shared/components";
+import { FileText, Plus } from "lucide-react";
+import {
+  V2ConfirmModal,
+  V2Dropdown,
+  V2ModulePage,
+  V2SplitButton,
+} from "@/v2/shared/components";
+import { useProcurementWorkflowMenu } from "@/v2/core/procurement";
 import type { V2ModuleTab } from "@/v2/shared/components";
 import {
   useGoodsReceiptsQuery,
@@ -18,6 +24,7 @@ import "../garageGoodsReceipts.locale";
 export function GarageGoodsReceiptsPage() {
   const state = useGarageGoodsReceiptsPage();
   const { t } = state;
+  const workflow = useProcurementWorkflowMenu("dev");
 
   const tabs = React.useMemo<V2ModuleTab<GarageGoodsReceipt>[]>(
     () => [
@@ -79,14 +86,26 @@ export function GarageGoodsReceiptsPage() {
       icon={<FileText className="h-4 w-4" />}
       tabs={tabs}
       actions={
-        state.canCreate ? (
-          <V2Button size="sm" onClick={() => state.open(null, "edit")}>
-            {t("v2.garageGoodsReceipts.create", "Thêm Nhập kho Garage")}
-          </V2Button>
-        ) : undefined
+        <V2SplitButton
+          label={
+            state.canCreate
+              ? t("v2.garageGoodsReceipts.create", "Thêm Nhập kho Garage")
+              : workflow.actionsLabel
+          }
+          icon={state.canCreate ? <Plus className="h-4 w-4" /> : undefined}
+          onClick={state.canCreate ? () => state.open(null, "edit") : undefined}
+          renderMenu={(trigger) => (
+            <V2Dropdown
+              groups={[{ items: [workflow.item] }]}
+              trigger={trigger}
+              align="end"
+            />
+          )}
+        />
       }
       overlays={
         <>
+          {workflow.drawer}
           {state.drawer && (
             <GoodsReceiptDrawer
               key={`${state.drawer.id ?? "new"}-${state.drawer.mode}`}

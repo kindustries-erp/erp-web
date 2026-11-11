@@ -36,3 +36,4 @@ export * from "./hooks/useProcurementListView";
 export * from "./hooks/useProcurementListTabState";
 export * from "./hooks/useProcurementDeepLink";
 export * from "./columns/procurementStatusOptions";
+export * from "./workflow";

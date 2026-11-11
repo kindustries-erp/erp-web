@@ -28,6 +28,7 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
   "aria-label": ariaLabel,
   onScrollBottom,
   fallbackLabel,
+  portalContainer,
 }) => {
   const { t } = useV2Translation();
   const c = useV2Combobox({ options, value, searchable, onValueChange });
@@ -128,6 +129,7 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
         arrow={false}
         glass={false}
         hideCloseButton
+        portalContainer={portalContainer}
         title={hint}
         className="w-64 p-1"
         triggerClassName="w-full"

@@ -27,6 +27,8 @@ export interface V2ComboboxProps {
   "aria-label"?: string;
   /** Callback khi người dùng cuộn tới đáy danh sách (hỗ trợ phân trang / infinite scroll) */
   onScrollBottom?: () => void;
+  /** Phần tử chứa danh sách (mặc định <body>); truyền khung fullscreen để danh sách không bị ẩn. */
+  portalContainer?: HTMLElement | null;
   /** Nhãn hiển thị dự phòng khi `value` chưa có trong mảng `options` ban đầu */
   fallbackLabel?: string;
 }

@@ -82,3 +82,5 @@ Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự 
 - Payload (`toGarageGoodsReceiptPayload`): gửi `branchId` và `branchName` là `null` khi rỗng để xóa chi nhánh cũ khi sửa.
 - Picker dùng react-query: test render form phải bọc `QueryClientProvider` (`GoodsReceiptFormSections.test.tsx`).
 - Test: `api/garageGoodsReceiptsPayload.test.ts`.
+
+- **Xem sơ đồ quy trình**: nút hành động của trang là `V2SplitButton` + `V2Dropdown`; mục "Xem sơ đồ quy trình" (hook `useProcurementWorkflowMenu` từ `@/v2/core/procurement`) luôn bật dù không có quyền tạo, mở sơ đồ Kỹ thuật (luồng A post, B hủy). Trang Mua hàng Garage dùng cùng hook, mở sơ đồ Người dùng cuối.

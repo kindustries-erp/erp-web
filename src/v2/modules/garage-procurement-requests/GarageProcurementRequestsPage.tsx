@@ -1,18 +1,12 @@
 import * as React from "react";
-import { ClipboardList, ShoppingCart } from "lucide-react";
 import {
   useProcurementList,
   ProcurementListModals,
   type ProcurementRequestRow,
   type ProcurementOrderRow,
+  useProcurementWorkflowMenu,
 } from "@/v2/core/procurement";
 import { V2ModulePage, type V2ModuleTab } from "@/v2/shared/components";
-import { V2Icon } from "@/v2/shared/components/atoms";
-import { V2SplitButton } from "@/v2/shared/components/molecules/v2-split-button";
-import {
-  V2Dropdown,
-  type V2DropdownGroup,
-} from "@/v2/shared/components/molecules/v2-dropdown";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   garageProcurementRequestsConfig,
@@ -27,6 +21,7 @@ import {
   useGarageProcurementActiveTab,
   useGarageProcurementListStates,
 } from "./GarageProcurementRequestsPage.hook";
+import { useGarageProcurementPageActions } from "./GarageProcurementRequestsPage.actions";
 import { buildGarageProcurementTabs } from "./GarageProcurementRequestsPage.tabs";
 import "./garageProcurementRequests.locale";
 import "../garage-procurement-orders/garageProcurementOrders.locale";
@@ -67,60 +62,15 @@ export function GarageProcurementRequestsPage({
   );
 
   const isOrders = activeTab === "orders";
+  const workflow = useProcurementWorkflowMenu("end-user");
 
-  const actionDropdownGroups = React.useMemo<V2DropdownGroup[]>(
-    () => [
-      {
-        items: [
-          {
-            id: "create-request",
-            label: t(
-              "v2.garageProcurementRequests.actionCreate",
-              "Tạo đề nghị mua hàng",
-            ),
-            icon: <V2Icon icon={ClipboardList} size={15} />,
-            onClick: requestsState.openCreate,
-            disabled: !requestsState.canCreate,
-          },
-          {
-            id: "create-order",
-            label: t(
-              "v2.garageProcurementOrders.actionCreate",
-              "Tạo đơn mua hàng",
-            ),
-            icon: <V2Icon icon={ShoppingCart} size={15} />,
-            onClick: ordersState.openCreate,
-            disabled: !ordersState.canCreate,
-          },
-        ],
-      },
-    ],
-    [
-      ordersState.canCreate,
-      ordersState.openCreate,
-      requestsState.canCreate,
-      requestsState.openCreate,
-      t,
-    ],
-  );
-
-  const canCreateCurrent = isOrders
-    ? ordersState.canCreate
-    : requestsState.canCreate;
-
-  const currentCreateAction = isOrders
-    ? ordersState.openCreate
-    : requestsState.openCreate;
-
-  const currentActionLabel = isOrders
-    ? t("v2.garageProcurementOrders.create", "Tạo đơn mua")
-    : t("v2.garageProcurementRequests.create", "Tạo đề nghị");
-
-  const currentIcon = isOrders ? (
-    <V2Icon icon={ShoppingCart} size={16} />
-  ) : (
-    <V2Icon icon={ClipboardList} size={16} />
-  );
+  const { actions, icon: currentIcon } = useGarageProcurementPageActions({
+    t,
+    isOrders,
+    requestsState,
+    ordersState,
+    workflow,
+  });
 
   return (
     <V2ModulePage<any>
@@ -145,24 +95,10 @@ export function GarageProcurementRequestsPage({
       defaultTab={defaultTab}
       onTabChange={setActiveTab}
       syncUrl={true}
-      actions={
-        canCreateCurrent ? (
-          <V2SplitButton
-            label={currentActionLabel}
-            icon={currentIcon}
-            onClick={currentCreateAction}
-            renderMenu={(trigger) => (
-              <V2Dropdown
-                groups={actionDropdownGroups}
-                trigger={trigger}
-                align="end"
-              />
-            )}
-          />
-        ) : undefined
-      }
+      actions={actions}
       overlays={
         <>
+          {workflow.drawer}
           {requestsState.drawer && (
             <React.Fragment
               key={`pr-${requestsState.drawer.id ?? "new"}-${requestsState.drawer.mode}`}
