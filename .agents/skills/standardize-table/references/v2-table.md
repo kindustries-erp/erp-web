@@ -141,7 +141,7 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 **Phân trang (khớp `TablePagination` V1 trên desktop; Bottom Sheet trên mobile):**
 - Nằm **ngoài khung bảng**, `mt-2 shrink-0`. Hỗ trợ enum `V2TablePaginationVariant` (`AUTO` / `DESKTOP` / `MOBILE`).
 - **Desktop**: Trái: "Hiển thị [20▾] hàng/trang" (chọn số dòng bằng `ui/popover`, dấu check ở giá trị hiện tại, mốc `[20,50,100,200]`). Giữa: `a–b / total` (ẩn dưới 480px). Phải: `‹ 1 … 4 [5] 6 … N ›` bằng `V2PageButton`.
-- **Mobile**: Thanh compact 1 dòng gồm Prev / Trigger Pill (`Trang X / Y • a–b / total`) / Next (`V2Button` cao `h-11`); chạm Trigger mở `V2BottomSheet` chọn số dòng/trang, nhảy Trang đầu/Trang cuối, lưới chọn trang (hoặc `V2Input` `V2Size.LG` khi > 20 trang).
+- **Mobile**: Thanh compact 1 dòng gồm Prev / Trigger Pill (`Trang X / Y • a–b / total`) / Next (`V2Button` cao `h-11`); chạm Trigger mở `V2BottomSheet` chọn số dòng/trang, nhảy Trang đầu/Trang cuối, lưới chọn trang (khi `totalPages > 20`, tự chia cụm **Range Chips** `1–20`, `21–40`… kèm ô nhập `V2Input` `V2Size.LG` nhảy thẳng tới trang). Thanh tìm kiếm và bộ lọc mobile (`V2StandardTableMobileToolbar`) gom chung vào `V2TableSearchFilterSheet` (`V2BottomSheet`); thanh tab trang (`TabBarPageView` của `V2TabBar`) trên mobile mở `TabBarPageViewSheet`.
 - Cửa sổ trang do `getPageWindow(page, totalPages, 5)` (thuật toán V1: trang đầu/cuối kèm `…`).
 - Mặc định page size theo `innerHeight` (< 900 → 20, ≥ 900 → 50).
 

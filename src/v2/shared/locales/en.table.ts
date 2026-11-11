@@ -155,4 +155,12 @@ export const v2EnTable: V2Dictionary["v2"]["table"] = {
   totalPagesLabel: "Total pages",
   currentRange: "Showing range",
   done: "Done",
+  searchAndFilter: "Search & Filters",
+  searchSectionTitle: "Search",
+  filterGroupSectionTitle: "Filter group",
+  columnFiltersSectionTitle: "Column filters",
+  openColumnFilters: "Filter by columns",
+  clearAll: "Clear all",
+  selectTabTitle: "Switch tab",
+  selectTabSubtitle: "Select a tab to view",
 };

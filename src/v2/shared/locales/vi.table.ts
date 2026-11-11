@@ -153,4 +153,12 @@ export const v2ViTable = {
   totalPagesLabel: "Tổng số trang",
   currentRange: "Phạm vi hiển thị",
   done: "Xong",
+  searchAndFilter: "Tìm kiếm & Bộ lọc",
+  searchSectionTitle: "Tìm kiếm",
+  filterGroupSectionTitle: "Nhóm lọc",
+  columnFiltersSectionTitle: "Bộ lọc theo cột",
+  openColumnFilters: "Lọc theo cột",
+  clearAll: "Xóa tất cả",
+  selectTabTitle: "Chuyển danh mục",
+  selectTabSubtitle: "Chọn mục bạn muốn xem",
 };

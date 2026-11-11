@@ -113,6 +113,39 @@ describe("V2TablePagination (Mobile)", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("renders range chips for 100 pages, selects active chunk, and navigates via chunk switch", () => {
+    const props = renderMobilePagination({
+      page: 50,
+      pageSize: 20,
+      total: 2000,
+    });
+    fireEvent.click(screen.getByTestId("v2-table-pagination-trigger"));
+
+    const chips = screen.getByTestId("v2-table-pagination-range-chips");
+    expect(within(chips).getAllByRole("button")).toHaveLength(5);
+    expect(
+      within(chips).getByRole("button", { name: "41–60" }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    const grid = screen.getByTestId("v2-table-pagination-page-grid");
+    expect(within(grid).getAllByRole("button")).toHaveLength(20);
+    expect(within(grid).getByRole("button", { name: "50" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    fireEvent.click(within(chips).getByRole("button", { name: "81–100" }));
+    expect(
+      within(grid).getByRole("button", { name: "85" }),
+    ).toBeInTheDocument();
+    fireEvent.click(within(grid).getByRole("button", { name: "85" }));
+
+    expect(props.onPageChange).toHaveBeenCalledWith(85);
+    expect(
+      screen.queryByTestId("v2-bottom-sheet-content"),
+    ).not.toBeInTheDocument();
+  });
+
   it("auto-selects mobile variant when useViewport reports isMobile", () => {
     vi.spyOn(viewportHook, "useViewport").mockReturnValue({
       width: 375,

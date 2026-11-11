@@ -3,11 +3,12 @@ import { V2Button, V2Icon, V2Text } from "@/v2/shared/components/atoms";
 import { SlidersHorizontal } from "@/v2/shared/components/atoms/v2-icon/icons";
 import { V2BottomSheet } from "@/v2/shared/components/molecules/v2-bottom-sheet";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { getPageWindow } from "./V2TablePagination.helper";
 import {
-  PagePickerSection,
-  PageSizeSection,
-} from "./V2TablePagination.sheet-sections";
+  buildPageChunks,
+  findChunkIndexForPage,
+} from "./V2TablePagination.helper";
+import { PagePickerSection } from "./V2TablePagination.sheet-sections";
+import { PageSizeSection } from "./V2TablePagination.size-section";
 
 export interface V2TablePaginationSheetProps {
   open: boolean;
@@ -38,10 +39,17 @@ export const V2TablePaginationSheet: React.FC<V2TablePaginationSheetProps> = ({
 }) => {
   const { t } = useV2Translation();
   const [jumpInput, setJumpInput] = React.useState(String(current));
+  const chunks = React.useMemo(() => buildPageChunks(totalPages), [totalPages]);
+  const [activeChunkIndex, setActiveChunkIndex] = React.useState(() =>
+    findChunkIndexForPage(chunks, current),
+  );
 
   React.useEffect(() => {
-    if (open) setJumpInput(String(current));
-  }, [open, current]);
+    if (open) {
+      setJumpInput(String(current));
+      setActiveChunkIndex(findChunkIndexForPage(chunks, current));
+    }
+  }, [open, current, chunks]);
 
   const handleSelectPage = (target: number) => {
     const clamped = Math.min(Math.max(1, target), totalPages);
@@ -57,14 +65,17 @@ export const V2TablePaginationSheet: React.FC<V2TablePaginationSheetProps> = ({
     }
   };
 
-  const pageWindow = getPageWindow(current, totalPages);
-  const pageList =
-    totalPages <= 20
-      ? Array.from({ length: totalPages }, (_, i) => i + 1)
-      : Array.from(
-          { length: pageWindow.end - pageWindow.start + 1 },
-          (_, i) => pageWindow.start + i,
-        );
+  const pageList = React.useMemo(() => {
+    if (totalPages <= 20) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const chunk = chunks[activeChunkIndex] ?? chunks[0];
+    if (!chunk) return [];
+    return Array.from(
+      { length: chunk.end - chunk.start + 1 },
+      (_, i) => chunk.start + i,
+    );
+  }, [totalPages, chunks, activeChunkIndex]);
 
   return (
     <V2BottomSheet
@@ -96,9 +107,13 @@ export const V2TablePaginationSheet: React.FC<V2TablePaginationSheetProps> = ({
       />
 
       <PagePickerSection
+        open={open}
         current={current}
         totalPages={totalPages}
         pageList={pageList}
+        chunks={totalPages > 20 ? chunks : undefined}
+        activeChunkIndex={activeChunkIndex}
+        onChunkChange={setActiveChunkIndex}
         jumpInput={jumpInput}
         onJumpInputChange={setJumpInput}
         onSelectPage={handleSelectPage}
