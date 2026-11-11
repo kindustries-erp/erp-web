@@ -120,6 +120,7 @@ registerV2ModuleLocale("procurement", {
       supplierInvoiceNo: "Số hóa đơn NCC",
       invoicePlaceholder: "Chọn số hóa đơn mua vào",
       supplierAutoFill: "Tự điền theo hóa đơn",
+      supplierFreeTextPlaceholder: "Nhập tên NCC hoặc chọn hóa đơn",
       invoiceNotSyncedHint:
         "Chưa thấy hóa đơn? Ghi số hóa đơn và NCC vào Ghi chú.",
       supplierNotFoundHint:
@@ -191,6 +192,8 @@ registerV2ModuleLocale("procurement", {
       saveError: "Không lưu được chứng từ",
       confirmed: "Đã ghi nhận đơn mua",
       confirmError: "Không ghi nhận được đơn mua",
+      savedNotConfirmed: "Đã lưu nháp, chưa ghi nhận đơn mua",
+      supplierRequired: "Cần nhập hoặc chọn nhà cung cấp trước khi gửi duyệt",
       cloned: "Đã nhân bản thành phiếu nháp mới",
       cloneError: "Không nhân bản được phiếu",
       missingInfo: "Thiếu thông tin",
@@ -335,6 +338,7 @@ registerV2ModuleLocale("procurement", {
       supplierInvoiceNo: "Supplier invoice no.",
       invoicePlaceholder: "Select a purchase invoice",
       supplierAutoFill: "Filled from the invoice",
+      supplierFreeTextPlaceholder: "Type supplier name or pick an invoice",
       invoiceNotSyncedHint:
         "Invoice not listed? Write the invoice no. and supplier in Notes.",
       supplierNotFoundHint:
@@ -406,6 +410,8 @@ registerV2ModuleLocale("procurement", {
       saveError: "Unable to save the document",
       confirmed: "Purchase order recorded",
       confirmError: "Unable to record the purchase order",
+      savedNotConfirmed: "Saved as draft, purchase order not recorded",
+      supplierRequired: "Enter or select a supplier before submitting",
       cloned: "Cloned into a new draft",
       cloneError: "Unable to clone the document",
       missingInfo: "Missing information",

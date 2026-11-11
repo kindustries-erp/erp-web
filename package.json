@@ -17,6 +17,7 @@
     "preview": "vite preview",
     "test": "vitest --run",
     "e2e:garage-procurement": "node e2e/garage-procurement.e2e.mjs",
+    "e2e:garage-save-and-act": "node e2e/garage-save-and-act.e2e.mjs",
     "format": "prettier --write .",
     "lint": "NODE_OPTIONS=\"--max-old-space-size=1536\" eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
     "lint:check": "NODE_OPTIONS=\"--max-old-space-size=1536\" eslint \"src/**/*.{ts,tsx,js,jsx}\" --max-warnings=0",

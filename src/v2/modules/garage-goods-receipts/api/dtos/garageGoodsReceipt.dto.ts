@@ -28,6 +28,9 @@ export interface GarageGoodsReceiptDto {
   totalAmount?: number | null;
   status?: string | null;
   paymentStatus?: string | null;
+  /** Hoàn nhập được khi hàng chưa xuất/điều chỉnh (chỉ phiếu đã nhập kho) */
+  reversible?: boolean;
+  reverseBlockedReason?: string | null;
   /** Đơn mua garage nguồn (API) */
   garageProcurementOrderId?: string | null;
   /** Số đơn mua nguồn và tổng tiền đơn (API, chỉ đọc) */

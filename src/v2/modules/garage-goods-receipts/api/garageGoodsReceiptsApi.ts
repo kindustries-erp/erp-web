@@ -141,6 +141,20 @@ export const garageGoodsReceiptsV2Api = {
     );
     return data.data as GarageGoodsReceipt;
   },
+  /** Một request, một transaction: lưu phiếu rồi nhập kho, lỗi thì không để phiếu nháp mồ côi */
+  saveAndPost: async (id: string | null, form: GarageGoodsReceiptFormValue) => {
+    const payload = toGarageGoodsReceiptPayload(form);
+    const { data } = id
+      ? await v2HttpClient.patch<GarageGoodsReceiptEnvelopeDto>(
+          `${BASE}/${id}/save-and-post`,
+          payload,
+        )
+      : await v2HttpClient.post<GarageGoodsReceiptEnvelopeDto>(
+          `${BASE}/save-and-post`,
+          payload,
+        );
+    return toGarageGoodsReceipt(data.data);
+  },
   post: async (id: string) => {
     const { data } = await v2HttpClient.post<GarageGoodsReceiptEnvelopeDto>(
       `${BASE}/${id}/post`,

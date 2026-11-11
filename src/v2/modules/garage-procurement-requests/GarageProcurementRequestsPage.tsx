@@ -113,6 +113,8 @@ export function GarageProcurementRequestsPage({
                 api: garageProcurementRequestsConfig.api,
                 fromRequestId: requestsState.drawer.fromRequestId ?? null,
                 approval: requestsState.approval.gate,
+                approvalConfigPath:
+                  garageProcurementRequestsConfig.approvalConfigPath,
                 requestApi: garageProcurementRequestsConfig.requestApi,
                 onTransition: (action, row) => {
                   const target = resolveDrawerTarget<ProcurementRequestRow>(
@@ -154,6 +156,8 @@ export function GarageProcurementRequestsPage({
                 api: garageProcurementOrdersConfig.api,
                 fromRequestId: ordersState.drawer.fromRequestId ?? null,
                 approval: ordersState.approval.gate,
+                approvalConfigPath:
+                  garageProcurementOrdersConfig.approvalConfigPath,
                 directConfirm: Boolean(
                   garageProcurementOrdersConfig.directConfirmWhenApprovalOff,
                 ),

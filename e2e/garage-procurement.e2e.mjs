@@ -234,9 +234,10 @@ await step("A2 menu PR nháp", async () => {
     "A2 PR nháp có Chỉnh sửa (bật)",
     await menuItem(page, "Chỉnh sửa").isEnabled(),
   );
+  // PR nháp gửi duyệt qua "Tạo mới / Cập nhật" trong drawer, không còn "Gửi duyệt" riêng ở menu dòng
   check(
-    "A2 PR nháp có Gửi duyệt",
-    (await menuItem(page, "Gửi duyệt").count()) === 1,
+    "A2 PR nháp không còn Gửi duyệt riêng",
+    (await menuItem(page, "Gửi duyệt").count()) === 0,
   );
   check(
     "A2 PR nháp không có Nhân bản",
@@ -775,10 +776,10 @@ await step(
       .click();
     const invoice = page.getByRole("combobox", { name: "Số hóa đơn NCC" });
     await invoice.waitFor({ timeout: 20000 });
-    const hint = page.getByText("Tự điền theo hóa đơn");
+    const supplierBox = page.getByPlaceholder("Nhập tên NCC hoặc chọn hóa đơn");
     check(
-      "G1 NCC chỉ đọc, gợi ý tự điền khi chưa chọn hóa đơn",
-      (await hint.count()) === 1,
+      "G1 NCC gõ tự do được (ô văn bản, có gợi ý nhập tên hoặc chọn hóa đơn)",
+      (await supplierBox.count()) === 1,
     );
     check(
       "G1 không còn ô chọn NCC riêng",
@@ -811,15 +812,27 @@ await step(
     await options.first().click();
     await page.waitForTimeout(1500);
     check(
-      "G1 chọn hóa đơn thì NCC tự điền (hết gợi ý)",
-      (await hint.count()) === 0,
+      "G1 chọn hóa đơn thì NCC tự điền theo hóa đơn",
+      (await supplierBox.inputValue()).trim().length > 0,
     );
+    const filledSupplier = await supplierBox.inputValue();
     await shot(page, "G1-invoice-picked");
     await page.getByRole("button", { name: "Bỏ lựa chọn" }).first().click();
     await page.waitForTimeout(500);
     check(
-      "G1 bỏ hóa đơn thì NCC bị xóa (gợi ý quay lại)",
-      (await hint.count()) === 1,
+      "G1 bỏ hóa đơn thì NCC giữ nguyên (chỉ xóa số hóa đơn)",
+      (await supplierBox.inputValue()) === filledSupplier,
+    );
+    await supplierBox.fill(`${filledSupplier} đổi`);
+    await invoice.click();
+    await options.first().waitFor({ timeout: 20000 });
+    await options.first().click();
+    await page.waitForTimeout(1500);
+    await supplierBox.fill(`NCC gõ tay ${TAG}`);
+    await page.waitForTimeout(500);
+    check(
+      "G1 đổi NCC thì hóa đơn tự reset",
+      !(await invoice.innerText()).includes(pickedInvoice),
     );
     await invoice.click();
     await options.first().waitFor({ timeout: 20000 });

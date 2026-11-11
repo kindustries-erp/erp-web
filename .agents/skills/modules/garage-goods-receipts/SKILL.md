@@ -102,3 +102,10 @@ Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự 
 - Phiếu đã lưu có đơn thì khóa không đổi đơn (`orderLocked`). Phiếu cũ không có đơn vẫn mở được; khi sửa phải gắn đơn vì `sourceOrderId` bắt buộc.
 - **Title drawer**: `title` = mã phiếu (hoặc "Thêm mới" khi chưa có mã), `titleExtra` = `GoodsReceiptStatusBadge` ngay cạnh (hiện cả khi tạo mới), `subtitle` = chế độ (Chi tiết/Chỉnh sửa). Đã bỏ dòng "Trạng thái" trong thông tin phiếu.
 - Test: `GoodsReceiptOrderPicker.test.tsx`, `goodsReceipt.test.ts`, `GoodsReceiptFormSections.test.tsx`, `garageGoodsReceiptSourceOrder.test.ts`; E2E mục I trong `e2e/garage-procurement.e2e.mjs`.
+
+## 7. Cập nhật 2026-11-12: Nhập kho / Hoàn nhập trên drawer
+
+- Drawer tạo/sửa: Hủy | Lưu nháp | Nhập kho (primary). Nhập kho gọi `api.saveAndPost` (một request, `POST`/`PATCH .../save-and-post`).
+- Phiếu đã nhập kho (POSTED): chỉ còn "Hoàn nhập", mở `V2ConfirmModal`. Nút mờ kèm lý do khi `reversible === false`. Không còn "Hủy phiếu" cho phiếu đã nhập.
+- Code: `core/goods-receipts/drawers/GoodsReceiptDrawer.actions.ts` (dựng nút, có test), `GoodsReceiptDrawer.hook.ts`, `api/mutations/useGoodsReceiptMutations.ts` (`saveAndPost`, `cancel` đổi thông báo thành Hoàn nhập).
+- Type `GoodsReceiptRecord` có `reversible` và `reverseBlockedReason`.

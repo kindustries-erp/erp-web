@@ -92,15 +92,28 @@ describe("ProcurementOrderHeaderSection — NCC phụ thuộc số hóa đơn", 
     } as never);
   });
 
-  it("NCC chỉ đọc: không có ô chọn NCC, hiện gợi ý tự điền khi chưa có", () => {
+  it("NCC là ô gõ tự do khi có quyền hóa đơn, không có ô chọn danh mục", () => {
     renderSection();
     expect(screen.queryByText("supplier-picker")).toBeNull();
-    expect(screen.getByText("Tự điền theo hóa đơn")).toBeDefined();
+    expect(
+      screen.getByPlaceholderText("Nhập tên NCC hoặc chọn hóa đơn"),
+    ).toBeDefined();
   });
 
-  it("hiện tên NCC của đơn ở ô chỉ đọc", () => {
+  it("hiện tên NCC của đơn trong ô nhập", () => {
     renderSection(vi.fn(), { supplierName: "NCC Lốp Việt" });
-    expect(screen.getByText("NCC Lốp Việt")).toBeDefined();
+    expect(screen.getByDisplayValue("NCC Lốp Việt")).toBeDefined();
+  });
+
+  it("gõ NCC khác thì xóa số hóa đơn và mã NCC cũ", async () => {
+    const setField = renderSection(vi.fn(), {
+      supplierInvoiceNo: "HD-9",
+      supplierId: "s-9",
+      supplierName: "NCC A",
+    });
+    await userEvent.type(screen.getByDisplayValue("NCC A"), "x");
+    expect(setField).toHaveBeenCalledWith("supplierId", null);
+    expect(setField).toHaveBeenCalledWith("supplierInvoiceNo", "");
   });
 
   it("chọn hóa đơn: đặt số hóa đơn, xóa mã NCC cũ và hiện tên người bán", async () => {
@@ -118,7 +131,7 @@ describe("ProcurementOrderHeaderSection — NCC phụ thuộc số hóa đơn", 
     expect(setField).toHaveBeenCalledWith("supplierName", "NCC Lốp Việt");
   });
 
-  it("bỏ chọn hóa đơn thì xóa luôn NCC", async () => {
+  it("bỏ chọn hóa đơn chỉ xóa số hóa đơn, giữ NCC", async () => {
     const setField = renderSection(vi.fn(), {
       supplierInvoiceNo: "HD-9",
       supplierId: "s-9",
@@ -126,8 +139,8 @@ describe("ProcurementOrderHeaderSection — NCC phụ thuộc số hóa đơn", 
     });
     await userEvent.click(screen.getByText("clear"));
     expect(setField).toHaveBeenCalledWith("supplierInvoiceNo", "");
-    expect(setField).toHaveBeenCalledWith("supplierId", null);
-    expect(setField).toHaveBeenCalledWith("supplierName", "");
+    expect(setField).not.toHaveBeenCalledWith("supplierId", null);
+    expect(setField).not.toHaveBeenCalledWith("supplierName", "");
   });
 
   it("thiếu quyền đọc hóa đơn: lùi về ô chọn NCC như cũ", () => {

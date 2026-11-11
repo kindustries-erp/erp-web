@@ -68,6 +68,8 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
     supportsPoDraft?: boolean;
     supportsPurge?: boolean;
     supportsClone?: boolean;
+    /** Đường dẫn lưu-và-hành-động một bước: PR `save-and-submit`, PO `save-and-confirm` */
+    saveAndAct?: "save-and-submit" | "save-and-confirm";
   } = {},
 ): ProcurementApi<T, D, C, H> {
   return {
@@ -115,6 +117,17 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
       const { data } = await v2HttpClient.patch(`${basePath}/${id}`, payload);
       return data;
     },
+    saveAndSubmit: options.saveAndAct
+      ? async (id, body) => {
+          const url = id
+            ? `${basePath}/${id}/${options.saveAndAct}`
+            : `${basePath}/${options.saveAndAct}`;
+          const { data } = id
+            ? await v2HttpClient.patch<{ id: string }>(url, body)
+            : await v2HttpClient.post<{ id: string }>(url, body);
+          return data;
+        }
+      : undefined,
     replaceLines: async (id, lines: ProcurementLinePayload[]) => {
       const { data } = await v2HttpClient.patch(`${basePath}/${id}/lines`, {
         lines,

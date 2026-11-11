@@ -147,6 +147,8 @@ export function useGoodsReceiptDrawerData({
     pickOrder,
     regenerateCode,
     creating,
+    /** Bản ghi server (có `reversible`/`reverseBlockedReason` của phiếu đã nhập kho) */
+    record: detail.data ?? null,
     loading: detail.isFetching,
     /** Đã có dữ liệu server; trước đó form mang status DRAFT mặc định, không được dùng để quyết định quyền sửa */
     loaded: Boolean(detail.data),

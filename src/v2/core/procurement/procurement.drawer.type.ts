@@ -41,6 +41,14 @@ export interface ProcurementDrawerProps {
     action: ProcurementActionKey,
     row?: ProcurementDocumentRef,
   ) => void;
+  /**
+   * PR: nút "Tạo mới" (tạo) / "Cập nhật" (sửa nháp) lưu và gửi duyệt trong một request (`api.saveAndSubmit`),
+   * cạnh "Lưu nháp"; ẩn "Gửi duyệt" riêng của PR nháp. Khóa duyệt bật thì chọn người duyệt trước khi gọi.
+   * Mặc định false giữ hành vi luồng thường.
+   */
+  submitFromDrawer?: boolean;
+  /** Đường dẫn cấu hình duyệt, để drawer tải danh sách người duyệt khi cần chọn trước khi gửi */
+  approvalConfigPath?: string;
   /** Có quyền tạo PO từ PR không */
   canCreateOrder?: boolean;
   /** Điều hướng sang lập PO từ PR */

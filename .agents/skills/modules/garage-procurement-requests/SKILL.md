@@ -171,3 +171,10 @@ src/v2/core/procurement/
 - **Nhập nhiều đợt**: bảng dòng PO đã phát hành có cột Đã nhận / Còn lại (`showReceived`, `ProcurementLinesEditor.columns.received.tsx`); mục "Lịch sử nhập kho" (`ProcurementReceiptsSection`, nhận `receiptHistory` qua props, Garage tải bằng `listGarageOrderReceipts` lọc `garageProcurementOrderId`); bấm số phiếu mở `/garage-goods-receipts?receipt=<id>`. Form phiếu giới hạn số nhận theo `maxQty`.
 - **Xóa vĩnh viễn chỉ ở bộ lọc "Đã xóa mềm"**: `buildProcurementRowActions` không còn nhận `purgeActions`; `useProcurementListTabState` chỉ trả nhóm "Xóa vĩnh viễn" khi bộ lọc có sẵn là "Đã xóa mềm" (cần quyền `purge`, chỉ phiếu nháp). Test: `useProcurementListTabState.test.tsx`.
 - **V2 component**: `ProcurementReceiptsSection`, `ProcurementInvoicePicker`, `ProcurementLinesEditor` dùng `V2Text`/`V2Button` (không còn `<p>/<span>/<button>` thô). `ProcurementLinesEditor.helper.ts` giữ phần chèn cột và tổng chân bảng để file < 180 dòng.
+
+## 7. Cập nhật 2026-11-12: Tạo mới / Cập nhật và bỏ Gửi duyệt riêng
+
+- Drawer PR Garage: Hủy | Lưu nháp | Tạo mới (khi tạo) hoặc Cập nhật (khi sửa nháp). Chỉ nút Tạo mới/Cập nhật gửi duyệt, qua `api.saveAndSubmit` (`POST` / `PATCH .../save-and-submit`, một request).
+- Khóa duyệt bật: modal chọn người duyệt (`SubmitApprovalModal`) mở trước khi gọi. `ProcurementListPage` và `GarageProcurementRequestsPage` truyền `approvalConfigPath` cho drawer để tải danh sách người duyệt.
+- PR nháp không còn "Gửi duyệt" ở menu dòng (`availableActions` lọc `submit`) và trong drawer xem.
+- Code: `ProcurementRequestDrawer.save.hook.ts` (tách khỏi `biz.hook`), `ProcurementRequestDrawer.hook.ts`.

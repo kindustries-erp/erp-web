@@ -194,6 +194,15 @@ export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   get: (id: string) => Promise<D>;
   create: (payload: C) => Promise<{ id: string }>;
   updateHeader?: (id: string, payload: H) => Promise<unknown>;
+  /**
+   * Lưu rồi gửi duyệt/ghi nhận trong MỘT request (một transaction ở server). `id` null = tạo mới.
+   * `body` là payload tạo (kèm dòng) hoặc đầu đề + dòng khi sửa nháp, kèm `approverId` nếu khóa duyệt bật.
+   * Họ không hỗ trợ thì bỏ trống và drawer giữ luồng cũ.
+   */
+  saveAndSubmit?: (
+    id: string | null,
+    body: Record<string, unknown>,
+  ) => Promise<{ id: string }>;
   replaceLines: (
     id: string,
     lines: ProcurementLinePayload[],

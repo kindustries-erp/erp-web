@@ -39,6 +39,10 @@ export interface GoodsReceiptRecord {
   sourceOrderNo?: string | null;
   /** Tổng tiền đơn mua nguồn (chỉ đọc) */
   sourceOrderTotal?: number | null;
+  /** Phiếu đã nhập kho còn hoàn nhập được (hàng chưa xuất/điều chỉnh); chỉ họ có kiểm tra này mới trả */
+  reversible?: boolean;
+  /** Lý do chưa hoàn nhập được */
+  reverseBlockedReason?: string | null;
   lines?: GoodsReceiptRecordLine[];
   createdAt?: string | null;
   updatedAt?: string | null;

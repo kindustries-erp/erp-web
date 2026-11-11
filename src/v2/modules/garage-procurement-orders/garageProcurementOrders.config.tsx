@@ -23,6 +23,7 @@ export const garageProcurementOrdersApi =
       supportsDelete: true,
       supportsPurge: true,
       supportsClone: true,
+      saveAndAct: "save-and-confirm",
     },
   );
 

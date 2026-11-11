@@ -31,6 +31,7 @@ export function useGoodsReceiptDrawer({
   const [errorField, setErrorField] =
     React.useState<GoodsReceiptFormField | null>(null);
   const [discardOpen, setDiscardOpen] = React.useState(false);
+  const [reverseOpen, setReverseOpen] = React.useState(false);
 
   const data = useGoodsReceiptDrawerData({
     config,
@@ -54,12 +55,19 @@ export function useGoodsReceiptDrawer({
     else setMode("view");
   };
 
-  const { save, post, cancel } = useGoodsReceiptMutations({
+  /** Nhập kho xong: phiếu mới đóng drawer; phiếu cũ làm mới chi tiết rồi về chế độ xem */
+  const handlePosted = async () => {
+    await onRefreshDetail();
+    if (creating) state.onClose();
+    else setMode("view");
+  };
+
+  const { save, saveAndPost, post, cancel } = useGoodsReceiptMutations({
     api: config.api,
     keys: config.keys,
     t,
     onSaved: handleSaved,
-    onPosted: onRefreshDetail,
+    onPosted: handlePosted,
     onCancelled: onRefreshDetail,
   });
 
@@ -72,7 +80,8 @@ export function useGoodsReceiptDrawer({
     : "";
   const errorMessage = errorField ? `${fieldLabel}: ${required}` : required;
 
-  const submit = () => {
+  /** Kiểm tra trường bắt buộc; thiếu thì báo lỗi và trả false */
+  const validate = (): boolean => {
     const missing = validateGoodsReceiptForm(form, config.requiredFields);
     if (missing) {
       setErrorField(missing);
@@ -82,10 +91,24 @@ export function useGoodsReceiptDrawer({
         title: t("v2.goodsReceipts.form.missingInfo", "Thiếu thông tin"),
         description: `${label}: ${required}`,
       });
-      return;
+      return false;
     }
     setErrorField(null);
+    return true;
+  };
+
+  const submit = () => {
+    if (!validate()) return;
     save.mutate({
+      id: state.recordId,
+      form: { ...form, status: GoodsReceiptStatus.DRAFT },
+    });
+  };
+
+  /** Nhập kho trực tiếp: lưu và ghi sổ trong một request (một transaction) */
+  const submitAndPost = () => {
+    if (!validate()) return;
+    saveAndPost.mutate({
       id: state.recordId,
       form: { ...form, status: GoodsReceiptStatus.DRAFT },
     });
@@ -95,8 +118,11 @@ export function useGoodsReceiptDrawer({
     if (state.recordId) post.mutate(state.recordId);
   };
 
-  const cancelRecord = () => {
-    if (state.recordId) cancel.mutate(state.recordId);
+  /** Hoàn nhập: chỉ sau khi người dùng xác nhận trong modal */
+  const reverseRecord = () => {
+    if (!state.recordId) return;
+    setReverseOpen(false);
+    cancel.mutate(state.recordId);
   };
 
   /** Hủy sửa: tạo mới thì đóng; phiếu cũ có thay đổi thì hỏi trước, rồi về chế độ xem */
@@ -124,6 +150,14 @@ export function useGoodsReceiptDrawer({
     state.canUpdate &&
     isLoadedRecord &&
     form.status === GoodsReceiptStatus.POSTED;
+  // Họ có kiểm tra hàng chưa dùng thì `reversible=false` làm mờ nút kèm lý do
+  const reverseBlocked = data.record?.reversible === false;
+  const reverseBlockedReason =
+    data.record?.reverseBlockedReason ??
+    t(
+      "v2.goodsReceipts.actions.reverseBlockedHint",
+      "Hàng đã xuất/điều chỉnh sau khi nhập kho",
+    );
 
   return {
     form,
@@ -135,7 +169,8 @@ export function useGoodsReceiptDrawer({
     viewing: mode === "view" && !creating,
     loading: data.loading,
     saving: save.isPending,
-    posting: post.isPending,
+    posting: post.isPending || saveAndPost.isPending,
+    canSaveAndPost: Boolean(config.api.saveAndPost),
     cancelling: cancel.isPending,
     dirty: isGoodsReceiptFormDirty(form, initial),
     errorField,
@@ -145,8 +180,14 @@ export function useGoodsReceiptDrawer({
     discardOpen,
     closeDiscard: () => setDiscardOpen(false),
     confirmDiscard,
+    submitAndPost,
     post: postRecord,
-    cancel: cancelRecord,
+    reverse: reverseRecord,
+    reverseOpen,
+    openReverse: () => setReverseOpen(true),
+    closeReverse: () => setReverseOpen(false),
+    reverseBlocked,
+    reverseBlockedReason,
     canEdit,
     canPost,
     canCancel,

@@ -1,5 +1,4 @@
 import {
-  V2ReadValue,
   V2Textarea,
   V2TextField,
   type V2DrawerFieldItem,
@@ -11,6 +10,11 @@ import {
   orderByKeys,
 } from "../../../../procurement.branch";
 import type { ProcurementOrderFormValue } from "../../../../form/procurementOrder.form";
+import {
+  applyInvoiceCleared,
+  applyInvoiceSelection,
+  applyTypedSupplier,
+} from "../../../../form/procurementOrder.supplier";
 import {
   ProcurementBranchPicker,
   ProcurementDateField,
@@ -131,14 +135,20 @@ export function buildOrderEditFields(
       className: branchOptional ? "sm:col-span-2" : undefined,
       render: () =>
         invoicePicker ? (
-          <V2ReadValue
-            value={
-              form.supplierName ||
-              t(
-                "v2.procurement.fields.supplierAutoFill",
-                "Tự điền theo hóa đơn",
-              )
-            }
+          <V2TextField
+            viewing={false}
+            value={form.supplierName}
+            placeholder={t(
+              "v2.procurement.fields.supplierFreeTextPlaceholder",
+              "Nhập tên NCC hoặc chọn hóa đơn",
+            )}
+            className={V2_DRAWER_FOCUS_RING_CLASS}
+            onChange={(v) => {
+              // Đổi NCC thì hóa đơn thuộc NCC cũ, nên reset hóa đơn
+              Object.entries(applyTypedSupplier(form, v)).forEach(([k, val]) =>
+                setField(k as keyof ProcurementOrderFormValue, val as never),
+              );
+            }}
           />
         ) : (
           <ProcurementSupplierPicker
@@ -162,9 +172,10 @@ export function buildOrderEditFields(
             value={form.supplierInvoiceNo}
             viewing={false}
             onSelect={({ invoiceNo, sellerName }) => {
-              setField("supplierInvoiceNo", invoiceNo);
-              setField("supplierId", null);
-              setField("supplierName", sellerName);
+              const patch = applyInvoiceSelection(invoiceNo, sellerName);
+              Object.entries(patch).forEach(([k, val]) =>
+                setField(k as keyof ProcurementOrderFormValue, val as never),
+              );
             }}
             onSupplierResolved={(supplier) => {
               if (!supplier) return;
@@ -172,9 +183,9 @@ export function buildOrderEditFields(
               setField("supplierName", supplier.name);
             }}
             onClear={() => {
-              setField("supplierInvoiceNo", "");
-              setField("supplierId", null);
-              setField("supplierName", "");
+              Object.entries(applyInvoiceCleared()).forEach(([k, val]) =>
+                setField(k as keyof ProcurementOrderFormValue, val as never),
+              );
             }}
           />
         ) : (
