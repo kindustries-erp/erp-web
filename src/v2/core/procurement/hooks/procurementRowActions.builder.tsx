@@ -2,6 +2,7 @@ import * as React from "react";
 import {
   Ban,
   CheckCheck,
+  Copy,
   Eye,
   FileCheck,
   Lock,
@@ -18,6 +19,9 @@ import type { ProcurementListConfig } from "./procurementListConfig.type";
 type TFn = (key: string, fallback: string) => string;
 
 const ICON_CLASS = "h-3.5 w-3.5";
+
+/** Trạng thái được phép nhân bản (khớp API: từ chối hoặc hủy) */
+const CLONABLE_STATUSES = ["REJECTED", "CANCELLED"];
 
 const ACTION_ICONS: Record<ProcurementActionKey, React.ReactNode> = {
   submit: <Send className={ICON_CLASS} />,
@@ -48,6 +52,8 @@ export interface BuildProcurementRowActionsInput<T extends { id: string }> {
   openDelete: (row: T) => void;
   /** Chuyển sang lập PO từ PR */
   orderFromRequest: (row: T) => void;
+  /** Nhân bản phiếu đã từ chối/hủy thành nháp mới */
+  cloneRow?: (row: T) => void;
   /** Hành động xóa vĩnh viễn của hook purge */
   purgeActions: (row: T) => V2RowAction[];
 }
@@ -73,6 +79,7 @@ export function buildProcurementRowActions<T extends { id: string }>(
     start,
     openDelete,
     orderFromRequest,
+    cloneRow,
     purgeActions,
   } = input;
 
@@ -100,8 +107,11 @@ export function buildProcurementRowActions<T extends { id: string }>(
         ]
       : [];
 
+    // Luôn hiện khi là PR có quyền tạo; không lập được thì mờ kèm lý do (tooltip)
+    const orderBlockedKey = config.orderFromRequestBlockedKey?.(row) ?? null;
+    const orderAllowed = config.canOrderFromRequest?.(row) ?? false;
     const fromRequest: V2RowAction[] =
-      canCreate && config.poHref && config.canOrderFromRequest?.(row)
+      canCreate && config.poHref && config.canOrderFromRequest
         ? [
             {
               label: t(
@@ -109,6 +119,18 @@ export function buildProcurementRowActions<T extends { id: string }>(
                 "Lập đơn mua từ đề nghị này",
               ),
               icon: <ShoppingCart className={ICON_CLASS} />,
+              disabled: !orderAllowed,
+              disabledReason: orderAllowed
+                ? undefined
+                : orderBlockedKey === "fullyOrdered"
+                  ? t(
+                      "v2.procurement.actions.orderFullyOrderedReason",
+                      "Đề nghị đã được lập đủ đơn mua",
+                    )
+                  : t(
+                      "v2.procurement.actions.orderNotApprovedReason",
+                      "Chỉ lập đơn mua khi đề nghị đã duyệt",
+                    ),
               onClick: () => orderFromRequest(row),
             },
           ]
@@ -176,8 +198,25 @@ export function buildProcurementRowActions<T extends { id: string }>(
       icon: <Trash2 className={ICON_CLASS} />,
     }));
 
+    // Nhân bản: chỉ phiếu đã từ chối/hủy, cần quyền tạo
+    const rowStatus = (row as unknown as { status?: string }).status ?? "";
+    const clonable: V2RowAction[] =
+      canCreate &&
+      config.cloneable &&
+      cloneRow &&
+      CLONABLE_STATUSES.includes(rowStatus)
+        ? [
+            {
+              label: t("v2.procurement.actions.clone", "Nhân bản"),
+              icon: <Copy className={ICON_CLASS} />,
+              onClick: () => cloneRow(row),
+            },
+          ]
+        : [];
+
     const operate: V2RowAction[] = [
       ...edit,
+      ...clonable,
       ...fromRequest,
       ...normalTransitions,
       ...dangerTransitions,

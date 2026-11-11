@@ -124,6 +124,7 @@ export function ProcurementListPage<T extends { id: string }>({
                 api: config.api,
                 fromRequestId: drawer.fromRequestId ?? null,
                 approval: state.approval.gate,
+                directConfirm: Boolean(config.directConfirmWhenApprovalOff),
                 requestApi: config.requestApi,
                 onTransition: (action, row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);

@@ -90,3 +90,28 @@ describe("requiresApproverPick", () => {
     expect(requiresApproverPick(NO_APPROVAL_GATE, "submit")).toBe(false);
   });
 });
+
+describe("applyApprovalGate — PO khóa duyệt tắt (ghi nhận trực tiếp)", () => {
+  const subject = { approverId: null, createdBy: "other" };
+
+  it("khóa tắt + directConfirm: ẩn Gửi duyệt, giữ thao tác khác", () => {
+    expect(
+      applyApprovalGate(
+        ["submit", "recall", "issue"] as never,
+        OFF,
+        subject,
+        true,
+      ),
+    ).toEqual(["recall", "issue"]);
+  });
+
+  it("khóa bật + directConfirm: vẫn giữ Gửi duyệt (mở modal chọn người)", () => {
+    expect(applyApprovalGate(["submit"], ON, subject, true)).toEqual([
+      "submit",
+    ]);
+  });
+
+  it("khóa tắt nhưng không directConfirm (PR): giữ Gửi duyệt như cũ", () => {
+    expect(applyApprovalGate(["submit"], OFF, subject)).toEqual(["submit"]);
+  });
+});

@@ -32,6 +32,8 @@ export interface ProcurementDrawerProps {
   onSaved?: (id: string) => void;
   /** Khóa duyệt của màn: lọc duyệt/từ chối trong drawer theo người được chọn */
   approval?: ApprovalGate;
+  /** PO: khóa duyệt tắt thì thay "Gửi duyệt" bằng nút Tạo mới / Cập nhật (lưu + ghi nhận) */
+  directConfirm?: boolean;
   /**
    * Chi nhánh tùy chọn (Garage): được để trống, chọn 1 hoặc bỏ trống khi còn nháp,
    * và đặt dưới các trường chính. Mặc định false giữ hành vi luồng thường.

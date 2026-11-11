@@ -21,6 +21,7 @@ export const garageProcurementOrdersApi =
     {
       supportsDelete: true,
       supportsPurge: true,
+      supportsClone: true,
     },
   );
 
@@ -33,6 +34,9 @@ export const garageProcurementOrdersConfig: ProcurementListConfig<ProcurementOrd
     availableActions: (row) =>
       availableProcurementActions(PROCUREMENT_ORDER_FROM, row.status),
     isEditable: (row) => row.status === "DRAFT",
+    cloneable: true,
+    // Khóa duyệt PO garage đang tắt: gửi duyệt = ghi nhận luôn, xử lý ở drawer
+    directConfirmWhenApprovalOff: true,
     rowLabel: (row) => row.orderNo,
     requestApi: createProcurementApi<
       ProcurementRequestRow,

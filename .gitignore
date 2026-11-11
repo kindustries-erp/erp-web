@@ -42,3 +42,6 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# E2E artifacts (ảnh chụp, báo cáo)
+e2e/.artifacts/

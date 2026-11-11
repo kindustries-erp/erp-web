@@ -61,10 +61,23 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
                 {
                   label: t("v2.procurement.actions.saveDraft", "Lưu nháp"),
                   onClick: state.submit,
-                  primary: true,
+                  primary: !state.directConfirm,
                   loading: state.saving,
                   disabled: state.saving || state.loading,
                 },
+                ...(state.directConfirm
+                  ? [
+                      {
+                        label: state.creating
+                          ? t("v2.procurement.actions.create", "Tạo mới")
+                          : t("v2.procurement.actions.update", "Cập nhật"),
+                        onClick: state.confirmSubmit,
+                        primary: true,
+                        loading: state.saving,
+                        disabled: state.saving || state.loading,
+                      },
+                    ]
+                  : []),
               ]
         }
         leftPanel={

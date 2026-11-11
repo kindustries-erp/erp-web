@@ -147,17 +147,20 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const viewing = !editable || mode === "view";
   const dirty = isProcurementFormDirty(form, initial);
 
+  /** Ghi nháp (tạo mới hoặc cập nhật header + dòng), trả về id đơn. */
+  const persist = async (): Promise<{ id: string }> => {
+    if (creating) return props.api.create(toOrderCreatePayload(form));
+    const id = props.documentId!;
+    await props.api.updateHeader?.(
+      id,
+      toOrderHeaderPayload(form, branchOptional),
+    );
+    await props.api.replaceLines(id, form.lines.map(toOrderLinePayload));
+    return { id };
+  };
+
   const save = useMutation({
-    mutationFn: async () => {
-      if (creating) return props.api.create(toOrderCreatePayload(form));
-      const id = props.documentId!;
-      await props.api.updateHeader?.(
-        id,
-        toOrderHeaderPayload(form, branchOptional),
-      );
-      await props.api.replaceLines(id, form.lines.map(toOrderLinePayload));
-      return { id };
-    },
+    mutationFn: persist,
     onSuccess: ({ id }) => {
       showProcurementSuccess(
         t("v2.procurement.drawer.saved", "Đã lưu đơn mua"),
@@ -178,21 +181,60 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     value: ProcurementOrderFormValue[K],
   ) => setForm((current) => ({ ...current, [key]: value }));
 
-  const submit = () => {
+  /** Kiểm tra trường bắt buộc; trả về false và báo lỗi nếu còn thiếu. */
+  const validateForm = (): boolean => {
     const next = validateOrderForm(form, branchOptional, itemCodeRequired);
     setErrors(next);
-    if (hasOrderFormErrors(next)) {
-      showProcurementWarning(
-        t("v2.procurement.drawer.missingInfo", "Thiếu thông tin"),
-        t(
-          "v2.procurement.drawer.fillRequired",
-          "Vui lòng điền các trường bắt buộc",
-        ),
-      );
-      return;
-    }
-    save.mutate();
+    if (!hasOrderFormErrors(next)) return true;
+    showProcurementWarning(
+      t("v2.procurement.drawer.missingInfo", "Thiếu thông tin"),
+      t(
+        "v2.procurement.drawer.fillRequired",
+        "Vui lòng điền các trường bắt buộc",
+      ),
+    );
+    return false;
   };
+
+  const submit = () => {
+    if (validateForm()) save.mutate();
+  };
+
+  /**
+   * Khóa duyệt tắt: lưu rồi ghi nhận luôn (chuyển APPROVED, không qua duyệt).
+   * Dùng cho nút Tạo mới / Cập nhật khi `props.directConfirm` và khóa tắt.
+   */
+  const confirm = useMutation({
+    mutationFn: async () => {
+      const { id } = await persist();
+      await props.api.transition(id, "submit");
+      return { id };
+    },
+    onSuccess: ({ id }) => {
+      showProcurementSuccess(
+        t("v2.procurement.drawer.confirmed", "Đã ghi nhận đơn mua"),
+      );
+      void queryClient.invalidateQueries({ queryKey: [props.queryKey] });
+      if (props.onSaved) props.onSaved(id);
+      else props.onClose();
+    },
+    onError: (error) =>
+      showProcurementError(
+        error,
+        t("v2.procurement.drawer.confirmError", "Không ghi nhận được đơn mua"),
+      ),
+  });
+
+  const confirmSubmit = () => {
+    if (validateForm()) confirm.mutate();
+  };
+
+  /** Hiện nút Tạo mới / Cập nhật thay cho gửi duyệt khi khóa duyệt PO đang tắt. */
+  const directConfirm = Boolean(
+    props.directConfirm &&
+    props.approval?.configured &&
+    !props.approval.enabled,
+  );
 
   /** Hủy sửa: tạo mới thì đóng; đơn cũ có thay đổi thì hỏi trước, rồi về chế độ xem. */
   const cancelEdit = () => {
@@ -231,8 +273,10 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     status,
     detail: detail.data,
     loading: detail.isFetching || fromRequest.isFetching,
-    saving: save.isPending,
+    saving: save.isPending || confirm.isPending,
     submit,
+    directConfirm,
+    confirmSubmit,
     cancelEdit,
     discardOpen,
     closeDiscard: () => setDiscardOpen(false),

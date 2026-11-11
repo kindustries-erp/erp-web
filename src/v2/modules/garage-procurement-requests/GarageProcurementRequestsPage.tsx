@@ -218,6 +218,9 @@ export function GarageProcurementRequestsPage({
                 api: garageProcurementOrdersConfig.api,
                 fromRequestId: ordersState.drawer.fromRequestId ?? null,
                 approval: ordersState.approval.gate,
+                directConfirm: Boolean(
+                  garageProcurementOrdersConfig.directConfirmWhenApprovalOff,
+                ),
                 requestApi: garageProcurementOrdersConfig.requestApi,
                 onTransition: (action, row) => {
                   const target = resolveDrawerTarget<ProcurementOrderRow>(

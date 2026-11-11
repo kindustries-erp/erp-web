@@ -67,6 +67,7 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
     supportsDelete?: boolean;
     supportsPoDraft?: boolean;
     supportsPurge?: boolean;
+    supportsClone?: boolean;
   } = {},
 ): ProcurementApi<T, D, C, H> {
   return {
@@ -137,6 +138,14 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
     remove: options.supportsDelete
       ? async (id) => {
           const { data } = await v2HttpClient.delete(`${basePath}/${id}`);
+          return data;
+        }
+      : undefined,
+    clone: options.supportsClone
+      ? async (id) => {
+          const { data } = await v2HttpClient.post<{ id: string }>(
+            `${basePath}/${id}/clone`,
+          );
           return data;
         }
       : undefined,

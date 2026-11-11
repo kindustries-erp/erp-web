@@ -49,6 +49,7 @@ export function useProcurementApprovalGate<T extends { id: string }>(
           config.availableActions(row),
           gate,
           approvalSubjectOf(row),
+          Boolean(config.directConfirmWhenApprovalOff),
         ),
     }),
     [config, gate],
