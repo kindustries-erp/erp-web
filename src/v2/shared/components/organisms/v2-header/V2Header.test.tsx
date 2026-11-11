@@ -43,7 +43,7 @@ describe("V2Header Organism", () => {
     expect(handleBranch).toHaveBeenCalledTimes(1);
   });
 
-  it("render userMenuNode và notificationNode khi được truyền vào", () => {
+  it("render userMenuNode, notificationNode và appearanceNode khi được truyền vào", () => {
     render(
       <V2Header
         userMenuNode={
@@ -52,11 +52,15 @@ describe("V2Header Organism", () => {
         notificationNode={
           <V2Button data-testid="custom-notification">Bell</V2Button>
         }
+        appearanceNode={
+          <V2Button data-testid="custom-appearance">Palette</V2Button>
+        }
       />,
     );
 
     expect(screen.getByTestId("custom-user-menu")).toBeInTheDocument();
     expect(screen.getByTestId("custom-notification")).toBeInTheDocument();
+    expect(screen.getByTestId("custom-appearance")).toBeInTheDocument();
   });
 
   it("áp dụng class responsive: giảm height mobile h-11 sm:h-14, hiện item cuối breadcrumb trên mobile, avatar order-1, breadcrumb order-2, notification order-3", () => {

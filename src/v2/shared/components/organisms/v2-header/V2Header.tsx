@@ -21,6 +21,7 @@ export const V2Header: React.FC<V2HeaderProps> = ({
   showLanguageSwitcher = false,
   userMenuNode,
   notificationNode,
+  appearanceNode,
   className,
   ...props
 }) => {
@@ -90,6 +91,7 @@ export const V2Header: React.FC<V2HeaderProps> = ({
       {/* ── Right Actions: Notification bell, Impersonation banner, Language Switcher (order-3 on mobile, order-2 on desktop) ── */}
       <div className="order-3 sm:order-2 flex items-center gap-1.5 shrink-0 justify-end">
         <V2ImpersonationBanner compact />
+        {appearanceNode}
         {notificationNode}
         {showLanguageSwitcher && (
           <div className="hidden sm:block">

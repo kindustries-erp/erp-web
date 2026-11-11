@@ -174,7 +174,7 @@ describe("V2AppLayout Switcher", () => {
     expect(screen.getByTestId("mobile-notification")).toBeInTheDocument();
   });
 
-  it("hiển thị bộ chọn theme và ngôn ngữ trong mobile catalog modal và gọi onThemeChange", () => {
+  it("hiển thị bộ chọn theme và ngôn ngữ qua nút trigger trên mobile header và gọi onThemeChange", () => {
     Object.defineProperty(window, "innerWidth", {
       writable: true,
       configurable: true,
@@ -191,8 +191,12 @@ describe("V2AppLayout Switcher", () => {
       </V2AppLayout>,
     );
 
-    const catalogBtn = screen.getByText("Tất cả");
-    fireEvent.click(catalogBtn);
+    // Click nút trigger Palette trên mobile top bar
+    const appearanceTrigger = screen.getByTestId(
+      "mobile-appearance-trigger-btn",
+    );
+    expect(appearanceTrigger).toBeInTheDocument();
+    fireEvent.click(appearanceTrigger);
 
     // Kiểm tra card cài đặt giao diện & ngôn ngữ
     expect(

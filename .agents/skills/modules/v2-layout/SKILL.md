@@ -88,7 +88,10 @@ src/v2/
             ├── v2-sidebar/             # Card 1: Sidebar hoàn chỉnh (210px / 58px) bo góc 16px
             ├── v2-right-panel/         # Card 2: Right Panel hoàn chỉnh bo góc 16px
             ├── v2-tab-bar/             # Thanh TabBar đa dạng: App tabs ('app'), Sub-navigation pill tabs ('sub'), Button group ('button-group'), Header tabs ('header'), Page tabs ('page')
-            ├── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động
+            ├── v2-bottom-nav/          # Thanh BottomNav cho màn hình di động (h-12 compact, bottom-2, inset-x-3, Hero Button h-11 nhô -y-3)
+            ├── v2-header/              # Top Bar di động/desktop (h-11 sm:h-14, slot appearanceNode kế bên notificationNode)
+            ├── v2-mobile-appearance-drawer/ # Bottom Sheet riêng cho Giao diện & Ngôn ngữ (max-h-[70vh], Palette icon)
+            ├── v2-mobile-catalog-drawer/ # Bottom Sheet toàn bộ danh mục phân hệ ERP và tùy chỉnh lối tắt
             └── v2-universal-search-modal/ # Modal tìm kiếm toàn cục Spotlight (Desktop) & Bottom Sheet (Mobile) thay thế hoàn toàn V1
         │
         └── index.ts                    # Master Barrel Export toàn bộ components V2 (@/v2/shared/components)

@@ -38,8 +38,8 @@ describe("V2BottomNav Organism", () => {
 
     const nav = screen.getByTestId("v2-bottom-nav");
     expect(nav.className).toContain("rounded-2xl");
-    expect(nav.className).toContain("shadow-2xl");
-    expect(nav.className).toContain("h-14");
+    expect(nav.className).toContain("shadow-xl");
+    expect(nav.className).toContain("h-12");
 
     const homeLabel = screen.getByText("Trang chủ");
     expect(homeLabel.className).toContain("sr-only");
@@ -99,6 +99,6 @@ describe("V2BottomNav Organism", () => {
     );
 
     const heroBtn = screen.getByTestId("bottom-nav-hero-button");
-    expect(heroBtn.className).toContain("h-16 w-16");
+    expect(heroBtn.className).toContain("h-[52px] w-[52px]");
   });
 });

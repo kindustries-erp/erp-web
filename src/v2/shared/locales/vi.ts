@@ -49,6 +49,10 @@ export const v2Vi = {
       clearSearch: "Xóa tìm kiếm",
       modulesCountBadge: "{{count}} phân hệ",
     },
+    appearance: {
+      title: "Giao diện & Ngôn ngữ",
+      subtitle: "Tùy chỉnh chủ đề màu sắc và ngôn ngữ hiển thị",
+    },
     common: {
       close: "Đóng",
       save: "Lưu",

@@ -12,6 +12,7 @@ export * from "./v2-posting-lines-editor";
 export * from "./v2-drawer-lines-table";
 export * from "./v2-admin-bottom-nav";
 export * from "./v2-mobile-catalog-drawer";
+export * from "./v2-mobile-appearance-drawer";
 export * from "./v2-mobile-catalog-section-list";
 export * from "./v2-export-excel-drawer";
 export * from "./v2-document-traceability";

@@ -49,6 +49,10 @@ export const v2En: V2Dictionary = {
       clearSearch: "Clear search",
       modulesCountBadge: "{{count}} modules",
     },
+    appearance: {
+      title: "Appearance & Language",
+      subtitle: "Customize color theme and display language",
+    },
     common: {
       close: "Close",
       save: "Save",
