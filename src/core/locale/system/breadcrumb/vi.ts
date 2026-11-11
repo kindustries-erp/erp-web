@@ -1,5 +1,6 @@
 export const breadcrumbVi = {
   accounting: "Kế toán",
+  tools: "Công cụ",
   dashboard: "Tổng quan",
   cashflow: "Dòng tiền",
   cashflowOverview: "Tổng hợp",

@@ -64,6 +64,7 @@ export enum ErpResource {
   VEHICLES = "vehicles",
   VINFAST = "vinfast",
   PAYMENT_VOUCHERS = "payment_vouchers",
+  LOANS = "loans",
   CASHFLOW_VOUCHERS = "erp_cashflow_vouchers",
   DASHBOARD = "dashboard",
   ATTACHMENTS = "attachments",

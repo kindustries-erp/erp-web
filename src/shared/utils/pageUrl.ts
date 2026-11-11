@@ -4,6 +4,7 @@ import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
   "opex",
+  "loans",
   "cashflow",
   "purchasing",
   "erp-inventory-stock",

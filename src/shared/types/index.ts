@@ -1,6 +1,7 @@
 export type PageKey =
   | "opex"
   | "dashboard"
+  | "loans"
   | "cashflow"
   | "cashflow-vouchers"
   | "cash-fund"

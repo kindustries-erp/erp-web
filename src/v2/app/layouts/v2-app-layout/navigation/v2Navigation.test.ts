@@ -21,7 +21,7 @@ describe("v2Navigation", () => {
     expect(items[0].href).toBe("/v2");
   });
 
-  it("generates 8 sections with translated labels in English", () => {
+  it("generates 9 sections with translated labels in English", () => {
     const mockEnT = (key: string, fallback?: string) => {
       const enDict: Record<string, string> = {
         "v2.nav.sections.admin": "OVERVIEW",
@@ -31,6 +31,7 @@ describe("v2Navigation", () => {
         "v2.nav.sections.manufacturing": "MANUFACTURING",
         "v2.nav.sections.garage": "GARAGE",
         "v2.nav.sections.accounting": "ACCOUNTING & CASHFLOW",
+        "v2.nav.sections.tools": "TOOLS",
         "v2.nav.sections.settings": "SETTINGS",
         "v2.nav.items.dashboard": "Dashboard",
         "v2.nav.items.erpSalesOrders": "Sales Orders",
@@ -40,7 +41,7 @@ describe("v2Navigation", () => {
     };
 
     const sections = getV2NavigationSections(mockEnT);
-    expect(sections).toHaveLength(8);
+    expect(sections).toHaveLength(9);
     expect(sections[0].label).toBe("OVERVIEW");
     expect(sections[1].label).toBe("SALES");
     expect(sections[1].items[0].label).toBe("Sales Orders");
@@ -63,7 +64,7 @@ describe("v2Navigation", () => {
 
   it("exports valid DEFAULT_V2_NAV_ITEMS and DEFAULT_V2_SECTIONS fallbacks", () => {
     expect(DEFAULT_V2_NAV_ITEMS.length).toBeGreaterThan(0);
-    expect(DEFAULT_V2_SECTIONS.length).toBe(8);
+    expect(DEFAULT_V2_SECTIONS.length).toBe(9);
     expect(DEFAULT_V2_SECTIONS[0].items[0].id).toBe("dashboard");
   });
 });

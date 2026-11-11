@@ -47,6 +47,12 @@ export const V2_ROUTES: V2RouteDef[] = [
     title: "Hóa đơn điện tử",
     permission: { collection: "invoices", action: "read" },
   },
+  {
+    id: "loans",
+    path: "/v2/loans",
+    title: "Khoản vay & Dòng tiền",
+    permission: { collection: "loans", action: "read" },
+  },
   { id: "inventory", path: "/v2/inventory", title: "Kho vận (Inventory)" },
   {
     id: "settings",

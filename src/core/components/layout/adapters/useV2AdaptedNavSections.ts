@@ -31,6 +31,7 @@ import {
   ReceiptText,
   ClipboardList,
   Sliders,
+  Calculator,
 } from "lucide-react";
 
 export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
@@ -535,6 +536,20 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
         });
       }
     }
+
+    // 9.5 Công cụ
+    sections.push({
+      id: "sec-tools",
+      label: t("nav.sections.tools", "CÔNG CỤ"),
+      items: [
+        {
+          id: "loans",
+          label: t("nav.items.loans", "Khoản vay & Lãi suất"),
+          icon: Calculator,
+          href: "/loans",
+        },
+      ],
+    });
 
     // 10. Thiết lập
     if (showSettings) {

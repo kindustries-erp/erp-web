@@ -11,6 +11,7 @@ import {
   Factory,
   ReceiptText,
   Wallet,
+  Calculator,
   Settings,
   ClipboardList,
 } from "lucide-react";
@@ -119,6 +120,14 @@ export const NAV_DEFS: RawNavDef[] = [
     href: "/v2/cashflow",
   },
   {
+    id: "loans",
+    sectionId: "tools",
+    labelKey: "v2.nav.items.loans",
+    fallback: "Khoản vay & Dòng tiền",
+    icon: Calculator,
+    href: "/v2/loans",
+  },
+  {
     id: "settings-app",
     sectionId: "settings",
     labelKey: "v2.nav.items.catalog",
@@ -182,6 +191,11 @@ export const SECTION_DEFS: RawSectionDef[] = [
     id: "accounting",
     labelKey: "v2.nav.sections.accounting",
     fallback: "KẾ TOÁN & DÒNG TIỀN",
+  },
+  {
+    id: "tools",
+    labelKey: "v2.nav.sections.tools",
+    fallback: "CÔNG CỤ",
   },
   { id: "settings", labelKey: "v2.nav.sections.settings", fallback: "CÀI ĐẶT" },
 ];

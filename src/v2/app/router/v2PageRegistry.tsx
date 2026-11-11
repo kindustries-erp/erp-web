@@ -6,6 +6,7 @@ import { InvoiceShapePage } from "@/v2/modules/finance-invoice";
 import { BusinessPartnersCustomersPage } from "@/v2/modules/business-partners-customers"; // v2-module:business-partners-customers:imports
 import { BusinessPartnersSuppliersPage } from "@/v2/modules/business-partners-suppliers"; // v2-module:business-partners-suppliers:imports
 import { RolesPage } from "@/v2/modules/rbac-roles"; // v2-module:rbac-roles:imports
+import { LoansListPage } from "@/v2/modules/loans";
 // plop:v2-page-imports
 import { V2AdminDashboardPage } from "@/v2/modules/admin-dashboard";
 
@@ -29,6 +30,7 @@ export const V2_PAGE_REGISTRY: Record<string, () => ReactNode> = {
   "erp-permissions-core-v2": () => <RolesPage />,
   // v2-module:rbac-roles:pages
   // plop:v2-pages
+  loans: () => <LoansListPage />,
   [V2AdminRouteId.DASHBOARD]: () => <V2AdminDashboardPage />,
   invoices: () => <InvoiceShapePage />,
 };

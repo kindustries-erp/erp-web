@@ -32,6 +32,16 @@ const V2DeckViewerPage = lazy(() =>
     default: m.V2DeckViewerPage,
   })),
 );
+const LoanSimulatorPage = lazy(() =>
+  import("@/v2/modules/loans/pages/loan-simulator").then((m) => ({
+    default: m.LoanSimulatorPage,
+  })),
+);
+const LoansListPage = lazy(() =>
+  import("@/v2/modules/loans/pages/loans-list").then((m) => ({
+    default: m.LoansListPage,
+  })),
+);
 
 const PUBLIC_DECK_ROUTES: Record<string, string> = {
   "/imotorbike": "imotorbike",
@@ -41,6 +51,14 @@ function resolvePublicDeckKey(): string | null {
   if (typeof window === "undefined") return null;
   const normalized = location.pathname.replace(/\/+$/, "") || "/";
   return PUBLIC_DECK_ROUTES[normalized] ?? null;
+}
+
+function isPublicLoansRoute(isLoggedIn: boolean): boolean {
+  if (typeof window === "undefined") return false;
+  const normalized = location.pathname.replace(/\/+$/, "") || "/";
+  if (normalized === "/public/loans") return true;
+  if (normalized === "/loans" && !isLoggedIn) return true;
+  return false;
 }
 
 const loadDashboard = () =>
@@ -272,6 +290,7 @@ const InvoiceDebtsPage = lazy(() =>
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   opex: OpexPage,
+  loans: LoansListPage,
   "inventory-dashboard": InventoryDashboard,
   cashflow: () => <BankStatementPage initialTab="dashboard" />,
   purchasing: MuaHang,
@@ -401,14 +420,18 @@ export default function App() {
   useSerialGenerationProgress();
 
   useEffect(() => {
-    if (publicDeckKey) return;
+    if (publicDeckKey || isPublicLoansRoute(isLoggedIn)) return;
     useEnvStore.getState().fetchAppConfig();
     bootstrapAction();
-  }, [publicDeckKey]);
+  }, [publicDeckKey, isLoggedIn]);
 
   useEffect(() => {
     const sync = () => {
-      if (location.pathname.startsWith("/v2") || resolvePublicDeckKey()) {
+      if (
+        location.pathname.startsWith("/v2") ||
+        resolvePublicDeckKey() ||
+        isPublicLoansRoute(isLoggedIn)
+      ) {
         return;
       }
       const parsed = pathToPage(location.pathname, location.search);
@@ -473,6 +496,18 @@ export default function App() {
     return (
       <Suspense fallback={PAGE_FALLBACK}>
         <V2DeckViewerPage deckKey={publicDeckKey} />
+      </Suspense>
+    );
+  }
+
+  if (isPublicLoansRoute(isLoggedIn)) {
+    return (
+      <Suspense fallback={PAGE_FALLBACK}>
+        <div className="h-screen w-full overflow-y-auto overflow-x-hidden bg-background">
+          <div className="min-h-full p-4 md:p-8 max-w-7xl mx-auto">
+            <LoanSimulatorPage />
+          </div>
+        </div>
       </Suspense>
     );
   }

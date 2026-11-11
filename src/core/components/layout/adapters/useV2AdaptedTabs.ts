@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Calculator } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
@@ -58,6 +58,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "invoice-debts": ReceiptText,
   "vinfast-parts-stock": Package,
   cashflow: Wallet,
+  loans: Calculator,
   "erp-invoices": ReceiptText,
   "journal-entry": FileText,
   "settings-accounts": Layers,
@@ -129,6 +130,8 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.vinfastPartsGroup", "Phụ tùng Vinfast");
       case "cashflow":
         return t("nav.items.cashflow", "Dòng tiền");
+      case "loans":
+        return t("nav.items.loans", "Khoản vay & Lãi suất");
       case "erp-invoices":
         return t("nav.items.invoices", "Hóa đơn");
       case "invoice-debts":
