@@ -330,4 +330,22 @@ describe("V2AppLayout Switcher", () => {
     expect(withinSheet.getByText("Đơn bán hàng")).toBeInTheDocument();
     expect(withinSheet.getByText("Đơn mua hàng")).toBeInTheDocument();
   });
+
+  it("ẩn V2BottomNav trên Mobile khi truyền hideBottomNav=true", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 390,
+    });
+
+    render(
+      <V2AppLayout hideBottomNav>
+        <div>Public Content</div>
+      </V2AppLayout>,
+    );
+
+    expect(screen.getByTestId("v2-app-layout-mobile")).toBeInTheDocument();
+    expect(screen.queryByTestId("v2-bottom-nav")).not.toBeInTheDocument();
+    expect(screen.getByText("Public Content")).toBeInTheDocument();
+  });
 });

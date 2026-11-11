@@ -33,6 +33,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   onThemeChange,
   bottomNavVariant = "floating",
   bottomNavIndicator = "pill",
+  hideBottomNav = false,
 }) => {
   const {
     t,
@@ -116,55 +117,60 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
       <main
         tabIndex={-1}
         className={cn(
-          "flex-1 overflow-y-auto px-2 py-2.5 pb-16 focus:outline-none sm:px-4 sm:py-4",
+          "flex-1 overflow-y-auto px-2 py-2.5 focus:outline-none sm:px-4 sm:py-4",
+          hideBottomNav ? "pb-4" : "pb-16",
           contentClassName,
         )}
       >
         {children}
       </main>
-      <V2BottomNav
-        items={navItems ?? quick4Items}
-        centerHeroItem={allMenuItem}
-        activeId={bottomActiveId}
-        variant={bottomNavVariant}
-        indicator={bottomNavIndicator}
-        onNavigate={handleMobileNavigate}
-        onHeroClick={() => setCatalogOpen(true)}
-      />
-      <V2MobileCatalogDrawer
-        open={catalogOpen}
-        onOpenChange={(open) => {
-          setCatalogOpen(open);
-          if (!open) closeCatalog();
-        }}
-        totalModulesCount={allAvailableItems.length}
-        filteredSectionsCount={filteredSectionsCount}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        isCustomizing={isCustomizing}
-        limitWarning={limitWarning}
-        currentCount={currentSelectedIds.length}
-        maxCount={MAX_PINNED_MOBILE_NAV}
-        onStartCustomize={() => {
-          if (pinnedIds.length === 0) {
-            setPinnedIds(default4Items.map((it) => it.id));
-          }
-          setIsCustomizing(true);
-        }}
-        onFinishCustomize={() => setIsCustomizing(false)}
-        onResetDefault={() => resetToDefault()}
-        sections={filteredSections}
-        selectedIds={currentSelectedIds}
-        activeNavId={activeNavId}
-        onItemClick={(item) => {
-          if (isCustomizing) {
-            handleToggleItem(item.id);
-          } else {
-            setCatalogOpen(false);
-            onNavigate?.(item);
-          }
-        }}
-      />
+      {!hideBottomNav && (
+        <>
+          <V2BottomNav
+            items={navItems ?? quick4Items}
+            centerHeroItem={allMenuItem}
+            activeId={bottomActiveId}
+            variant={bottomNavVariant}
+            indicator={bottomNavIndicator}
+            onNavigate={handleMobileNavigate}
+            onHeroClick={() => setCatalogOpen(true)}
+          />
+          <V2MobileCatalogDrawer
+            open={catalogOpen}
+            onOpenChange={(open) => {
+              setCatalogOpen(open);
+              if (!open) closeCatalog();
+            }}
+            totalModulesCount={allAvailableItems.length}
+            filteredSectionsCount={filteredSectionsCount}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            isCustomizing={isCustomizing}
+            limitWarning={limitWarning}
+            currentCount={currentSelectedIds.length}
+            maxCount={MAX_PINNED_MOBILE_NAV}
+            onStartCustomize={() => {
+              if (pinnedIds.length === 0) {
+                setPinnedIds(default4Items.map((it) => it.id));
+              }
+              setIsCustomizing(true);
+            }}
+            onFinishCustomize={() => setIsCustomizing(false)}
+            onResetDefault={() => resetToDefault()}
+            sections={filteredSections}
+            selectedIds={currentSelectedIds}
+            activeNavId={activeNavId}
+            onItemClick={(item) => {
+              if (isCustomizing) {
+                handleToggleItem(item.id);
+              } else {
+                setCatalogOpen(false);
+                onNavigate?.(item);
+              }
+            }}
+          />
+        </>
+      )}
       <V2MobileAppearanceDrawer
         open={appearanceOpen}
         onOpenChange={setAppearanceOpen}

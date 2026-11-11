@@ -1,56 +1,63 @@
 import { useState, useEffect } from "react";
 import { AmortizationMethod, LoanStatus } from "@/v2/core/loans";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { useCreateLoanMutation, useUpdateLoanMutation } from "../../api";
 import { LoanFormDrawerProps, LoanFormValues } from "./LoanFormDrawer.type";
 
+const createDefaultValues = (): LoanFormValues => ({
+  loanCode: "",
+  title: "",
+  lenderName: "",
+  principalAmount: 100000000,
+  annualInterestRate: 10.5,
+  tenorMonths: 12,
+  amortizationMethod: AmortizationMethod.AMORTIZED,
+  startDate: new Date().toISOString().split("T")[0],
+  firstPaymentDate: "",
+  status: LoanStatus.ACTIVE,
+  notes: "",
+});
+
 export function useLoanFormDrawer({
+  open,
   record,
   initialValues,
   onClose,
   onSuccess,
 }: LoanFormDrawerProps) {
   const { t } = useV2Translation();
-  const [values, setValues] = useState<LoanFormValues>({
-    loanCode: "",
-    title: "",
-    lenderName: "",
-    principalAmount: 100000000,
-    annualInterestRate: 10.5,
-    tenorMonths: 12,
-    amortizationMethod: AmortizationMethod.AMORTIZED,
-    startDate: new Date().toISOString().split("T")[0],
-    firstPaymentDate: "",
-    status: LoanStatus.ACTIVE,
-    notes: "",
-  });
+  const showToast = useV2ToastStore((s) => s.showToast);
+  const [values, setValues] = useState<LoanFormValues>(createDefaultValues);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const createMutation = useCreateLoanMutation();
   const updateMutation = useUpdateLoanMutation();
 
   useEffect(() => {
+    if (!open) return;
+    setErrors({});
     if (record) {
       setValues({
-        loanCode: record.loanCode,
+        loanCode: record.loanCode || "",
         title: record.title,
         lenderName: record.lenderName,
-        principalAmount: record.principalAmount,
-        annualInterestRate: record.annualInterestRate,
-        tenorMonths: record.tenorMonths,
+        principalAmount: Number(record.principalAmount || 0),
+        annualInterestRate: Number(record.annualInterestRate ?? 0),
+        tenorMonths: Number(record.tenorMonths || 12),
         amortizationMethod: record.amortizationMethod,
         startDate: record.startDate,
-        firstPaymentDate: record.firstPaymentDate,
+        firstPaymentDate: record.firstPaymentDate || record.startDate || "",
         status: record.status,
         notes: record.notes || "",
       });
-    } else if (initialValues) {
-      setValues((prev) => ({
-        ...prev,
+    } else {
+      setValues({
+        ...createDefaultValues(),
         ...initialValues,
-      }));
+      });
     }
-  }, [record, initialValues]);
+  }, [open, record, initialValues]);
 
   const handleChange = (field: keyof LoanFormValues, val: unknown) => {
     setValues((prev) => ({ ...prev, [field]: val }));
@@ -109,17 +116,48 @@ export function useLoanFormDrawer({
   const handleSubmit = async () => {
     if (!validate()) return;
 
-    if (record) {
-      const res = await updateMutation.mutateAsync({
-        id: record.id,
-        payload: values,
+    const sanitizedPayload = {
+      ...values,
+      loanCode: values.loanCode?.trim() || undefined,
+      firstPaymentDate: values.firstPaymentDate || values.startDate,
+      notes: values.notes?.trim() || "",
+    };
+
+    try {
+      if (record) {
+        const res = await updateMutation.mutateAsync({
+          id: record.id,
+          payload: sanitizedPayload,
+        });
+        showToast({
+          title: t(
+            "v2.loans.toast.updateSuccess",
+            "Đã cập nhật hợp đồng vay thành công",
+          ),
+          variant: "success",
+        });
+        onSuccess?.(res);
+      } else {
+        const res = await createMutation.mutateAsync(sanitizedPayload);
+        showToast({
+          title: t(
+            "v2.loans.toast.createSuccess",
+            "Đã tạo hợp đồng vay mới thành công",
+          ),
+          variant: "success",
+        });
+        onSuccess?.(res);
+      }
+      onClose();
+    } catch {
+      showToast({
+        title: t(
+          "v2.loans.toast.saveError",
+          "Không thể lưu thông tin khoản vay, vui lòng thử lại",
+        ),
+        variant: "destructive",
       });
-      onSuccess?.(res);
-    } else {
-      const res = await createMutation.mutateAsync(values);
-      onSuccess?.(res);
     }
-    onClose();
   };
 
   return {

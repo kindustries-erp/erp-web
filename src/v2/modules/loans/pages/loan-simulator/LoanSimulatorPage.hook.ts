@@ -113,7 +113,7 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
     if (!isAuthenticated) {
       if (typeof window !== "undefined") {
         sessionStorage.setItem(DRAFT_SIMULATION_KEY, JSON.stringify(loans));
-        window.location.href = "/login?redirect=/loans";
+        window.location.href = "/login?redirect=/tools/loans";
       }
       return;
     }

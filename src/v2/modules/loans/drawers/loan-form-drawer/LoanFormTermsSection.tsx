@@ -40,6 +40,20 @@ export const LoanFormTermsSection: React.FC<LoanFormTermsSectionProps> = ({
     >
       <div className="space-y-3.5">
         <DrawerField
+          label={t("v2.loans.form.startDate", "Ngày giải ngân")}
+          required
+          error={errors.startDate}
+        >
+          <V2DatePicker
+            value={values.startDate || null}
+            onValueChange={(val) => handleChange("startDate", val || "")}
+            placeholder={t("v2.loans.form.selectDate", "Chọn ngày giải ngân")}
+            clearable={false}
+            className="w-full"
+          />
+        </DrawerField>
+
+        <DrawerField
           label={t("v2.loans.form.principalAmount", "Số tiền vay (VNĐ)")}
           required
           error={errors.principalAmount}
@@ -59,39 +73,44 @@ export const LoanFormTermsSection: React.FC<LoanFormTermsSectionProps> = ({
             min={0}
             value={values.principalAmount || null}
             onValueChange={(val) => handleChange("principalAmount", val ?? 0)}
+            className="w-full"
           />
         </DrawerField>
 
-        <DrawerField
-          label={t("v2.loans.form.annualInterestRate", "Lãi suất (% / năm)")}
-          required
-          error={errors.annualInterestRate}
-        >
-          <V2NumberInput
-            sizeVariant={inputSize}
-            decimals={2}
-            min={0}
-            max={100}
-            value={values.annualInterestRate ?? null}
-            onValueChange={(val) =>
-              handleChange("annualInterestRate", val ?? 0)
-            }
-          />
-        </DrawerField>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <DrawerField
+            label={t("v2.loans.form.annualInterestRate", "Lãi suất (% / năm)")}
+            required
+            error={errors.annualInterestRate}
+          >
+            <V2NumberInput
+              sizeVariant={inputSize}
+              decimals={2}
+              min={0}
+              max={100}
+              value={values.annualInterestRate ?? null}
+              onValueChange={(val) =>
+                handleChange("annualInterestRate", val ?? 0)
+              }
+              className="w-full"
+            />
+          </DrawerField>
 
-        <DrawerField
-          label={t("v2.loans.form.tenorMonths", "Thời hạn (tháng)")}
-          required
-          error={errors.tenorMonths}
-        >
-          <V2NumberInput
-            sizeVariant={inputSize}
-            min={1}
-            max={360}
-            value={values.tenorMonths || null}
-            onValueChange={(val) => handleChange("tenorMonths", val ?? 1)}
-          />
-        </DrawerField>
+          <DrawerField
+            label={t("v2.loans.form.tenorMonths", "Thời hạn (tháng)")}
+            required
+            error={errors.tenorMonths}
+          >
+            <V2NumberInput
+              sizeVariant={inputSize}
+              min={1}
+              max={360}
+              value={values.tenorMonths || null}
+              onValueChange={(val) => handleChange("tenorMonths", val ?? 1)}
+              className="w-full"
+            />
+          </DrawerField>
+        </div>
 
         <DrawerField
           label={t("v2.loans.form.amortizationMethod", "Phương thức trả nợ")}
@@ -104,20 +123,6 @@ export const LoanFormTermsSection: React.FC<LoanFormTermsSectionProps> = ({
               handleChange("amortizationMethod", val as AmortizationMethod)
             }
             searchable={false}
-            clearable={false}
-            className="w-full"
-          />
-        </DrawerField>
-
-        <DrawerField
-          label={t("v2.loans.form.startDate", "Ngày giải ngân")}
-          required
-          error={errors.startDate}
-        >
-          <V2DatePicker
-            value={values.startDate || null}
-            onValueChange={(val) => handleChange("startDate", val || "")}
-            placeholder={t("v2.loans.form.selectDate", "Chọn ngày giải ngân")}
             clearable={false}
             className="w-full"
           />

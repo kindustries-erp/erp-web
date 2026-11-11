@@ -265,6 +265,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.activitylog", "Nhật ký hoạt động") },
         ];
+      case "loans":
+        return [
+          { label: t("breadcrumb.tools", "Công cụ") },
+          { label: t("nav.items.loans", "Khoản vay & Lãi suất") },
+        ];
       default:
         return [
           { label: t("nav.items.dashboard", "Tổng quan") },

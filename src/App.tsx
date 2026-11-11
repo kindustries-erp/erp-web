@@ -23,6 +23,8 @@ import { VinfastPartsOtoStockPage } from "@/pages/VinfastPartsOtoStockPage";
 import { VinfastPartsMotoStockPage } from "@/pages/VinfastPartsMotoStockPage";
 
 import { PageKey } from "@/shared/types";
+import { AppProviders } from "@/v2/app/providers";
+import { resolvePublicTool } from "@/v2/app/router/publicTools.config";
 
 type PageLoader = () => Promise<unknown>;
 
@@ -32,9 +34,9 @@ const V2DeckViewerPage = lazy(() =>
     default: m.V2DeckViewerPage,
   })),
 );
-const LoanSimulatorPage = lazy(() =>
-  import("@/v2/modules/loans/pages/loan-simulator").then((m) => ({
-    default: m.LoanSimulatorPage,
+const V2PublicToolView = lazy(() =>
+  import("@/v2/app/pages/v2-public-tool-view").then((m) => ({
+    default: m.V2PublicToolView,
   })),
 );
 const LoansListPage = lazy(() =>
@@ -51,14 +53,6 @@ function resolvePublicDeckKey(): string | null {
   if (typeof window === "undefined") return null;
   const normalized = location.pathname.replace(/\/+$/, "") || "/";
   return PUBLIC_DECK_ROUTES[normalized] ?? null;
-}
-
-function isPublicLoansRoute(isLoggedIn: boolean): boolean {
-  if (typeof window === "undefined") return false;
-  const normalized = location.pathname.replace(/\/+$/, "") || "/";
-  if (normalized === "/public/loans") return true;
-  if (normalized === "/loans" && !isLoggedIn) return true;
-  return false;
 }
 
 const loadDashboard = () =>
@@ -420,23 +414,49 @@ export default function App() {
   useSerialGenerationProgress();
 
   useEffect(() => {
-    if (publicDeckKey || isPublicLoansRoute(isLoggedIn)) return;
+    if (publicDeckKey || resolvePublicTool(location.pathname, isLoggedIn))
+      return;
     useEnvStore.getState().fetchAppConfig();
     bootstrapAction();
   }, [publicDeckKey, isLoggedIn]);
 
   useEffect(() => {
     const sync = () => {
+      const loggedIn =
+        typeof useAppStore.getState === "function"
+          ? useAppStore.getState().isLoggedIn
+          : isLoggedIn;
+      const matchedPublicTool = resolvePublicTool(location.pathname, loggedIn);
+      if (matchedPublicTool) {
+        if (location.pathname !== matchedPublicTool.path) {
+          window.history.replaceState(
+            null,
+            "",
+            matchedPublicTool.path + location.search,
+          );
+        }
+        return;
+      }
       if (
         location.pathname.startsWith("/v2") ||
         resolvePublicDeckKey() ||
-        isPublicLoansRoute(isLoggedIn)
+        (!loggedIn && location.pathname === "/login")
       ) {
         return;
       }
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
         if (
+          parsed.page === "loans" &&
+          location.pathname.replace(/\/+$/, "") !== "/tools/loans"
+        ) {
+          window.history.replaceState(
+            null,
+            "",
+            pageToPath("loans", parsed.tab) +
+              (location.search && !parsed.tab ? location.search : ""),
+          );
+        } else if (
           parsed.page === "erp-invoices" &&
           !location.search.includes("tab=")
         ) {
@@ -500,14 +520,13 @@ export default function App() {
     );
   }
 
-  if (isPublicLoansRoute(isLoggedIn)) {
+  const publicTool = resolvePublicTool(location.pathname, isLoggedIn);
+  if (publicTool) {
     return (
       <Suspense fallback={PAGE_FALLBACK}>
-        <div className="h-screen w-full overflow-y-auto overflow-x-hidden bg-background">
-          <div className="min-h-full p-4 md:p-8 max-w-7xl mx-auto">
-            <LoanSimulatorPage />
-          </div>
-        </div>
+        <AppProviders allowAnonymous>
+          <V2PublicToolView tool={publicTool} isLoggedIn={isLoggedIn} />
+        </AppProviders>
       </Suspense>
     );
   }
@@ -520,7 +539,28 @@ export default function App() {
     );
   }
 
-  if (!isLoggedIn) return <V2LoginPage />;
+  if (!isLoggedIn) {
+    return (
+      <V2LoginPage
+        onSuccess={() => {
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get("redirect");
+          if (
+            redirect &&
+            redirect.startsWith("/") &&
+            !redirect.startsWith("//")
+          ) {
+            const url = new URL(redirect, window.location.origin);
+            window.history.replaceState(null, "", redirect);
+            const parsed = pathToPage(url.pathname, url.search);
+            if (parsed) {
+              syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
+            }
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <TooltipProvider>

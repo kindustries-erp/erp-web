@@ -11,6 +11,7 @@ export const v2Vi = {
         manufacturing: "SẢN XUẤT / XƯỞNG",
         garage: "GARAGE",
         accounting: "KẾ TOÁN",
+        tools: "CÔNG CỤ",
         settings: "HỆ THỐNG",
       },
       items: {
@@ -26,6 +27,7 @@ export const v2Vi = {
         erpProduction: "Sản xuất",
         erpInvoices: "Hóa đơn",
         cashflow: "Dòng tiền",
+        loans: "Khoản vay & Dòng tiền",
         catalog: "Thiết lập chung",
         allModules: "Tất cả",
         catalogTitle: "Danh mục phân hệ",
@@ -357,6 +359,7 @@ export const v2Vi = {
     table: v2ViTable,
     auth: {
       title: "Đăng nhập",
+      loginAction: "Đăng nhập",
       subtitle: "Đăng nhập vào hệ thống ERP",
       emailLabel: "Email",
       emailPlaceholder: "Nhập email của bạn",

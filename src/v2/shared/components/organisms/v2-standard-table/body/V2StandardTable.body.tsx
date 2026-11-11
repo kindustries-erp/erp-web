@@ -56,18 +56,21 @@ function V2TableRowInner<T>({
         hasActions ? (event) => onRowContextMenu(event, row.id) : undefined
       }
       className={cn(
-        "group h-[38px] border-b border-[color:var(--border-light)] hover:bg-surface-hover data-[state=selected]:bg-muted data-[expanded=true]:bg-primary/[0.04] data-[context-menu-active=true]:bg-primary/[0.04]",
+        "group h-[38px] border-b border-[color:var(--border-light)] hover:bg-surface-hover data-[state=selected]:bg-muted data-[expanded=true]:bg-[color:color-mix(in_srgb,var(--primary)_5%,transparent)] data-[context-menu-active=true]:bg-[color:color-mix(in_srgb,var(--primary)_5%,transparent)]",
         rowClassName,
       )}
     >
       {row.getVisibleCells().map((cell) => {
         const column = columnsByKey.get(cell.column.id);
+        const isUtilityCell =
+          cell.column.id === "__expand" || cell.column.id === "__selection";
         return (
           <TableCell
             key={cell.id}
             style={{ width: cell.column.getSize() }}
             className={cn(
-              "truncate border-r border-border px-2 py-1 text-xs",
+              "border-r border-border py-1 text-xs",
+              isUtilityCell ? "px-1 text-center" : "truncate px-2",
               column?.align && ALIGN_CLASS[column.align],
               column?.className,
             )}

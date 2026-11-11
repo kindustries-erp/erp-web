@@ -12,6 +12,7 @@ export const v2En: V2Dictionary = {
         manufacturing: "MANUFACTURING / WORKSHOP",
         garage: "GARAGE",
         accounting: "ACCOUNTING",
+        tools: "TOOLS",
         settings: "SYSTEM",
       },
       items: {
@@ -27,6 +28,7 @@ export const v2En: V2Dictionary = {
         erpProduction: "Production",
         erpInvoices: "Invoices",
         cashflow: "Cash Flow",
+        loans: "Loans & Cashflow",
         catalog: "General Settings",
         allModules: "All",
         catalogTitle: "All Modules",
@@ -357,6 +359,7 @@ export const v2En: V2Dictionary = {
     table: v2EnTable,
     auth: {
       title: "Sign In",
+      loginAction: "Sign In",
       subtitle: "Sign in to ERP system",
       emailLabel: "Email",
       emailPlaceholder: "Enter your email",

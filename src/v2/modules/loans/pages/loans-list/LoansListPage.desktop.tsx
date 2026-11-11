@@ -97,21 +97,20 @@ export const LoansListPageDesktop: React.FC<LoansListPageProps> = (props) => {
       </div>
 
       {activeTab === "list" && (
-        <div className="bg-card rounded-2xl border border-border shadow-xs overflow-hidden">
-          <V2StandardTable<LoanItem>
-            tableId="loans-master-table"
-            columns={columns}
-            items={loans}
-            getRowKey={(row) => row.id}
-            loading={isLoading}
-            total={total}
-            rowActions={rowActions}
-            emptyLabel={t("v2.loans.emptyList", "Không có khoản vay nào.")}
-            onQueryChange={(q) => {
-              handlePageChange(q.page, q.pageSize);
-            }}
-          />
-        </div>
+        <V2StandardTable<LoanItem>
+          tableId="loans-master-table"
+          columns={columns}
+          items={loans}
+          getRowKey={(row) => row.id}
+          loading={isLoading}
+          total={total}
+          rowActions={rowActions}
+          enableColumnVisibility={false}
+          emptyLabel={t("v2.loans.emptyList", "Không có khoản vay nào.")}
+          onQueryChange={(q) => {
+            handlePageChange(q.page, q.pageSize);
+          }}
+        />
       )}
 
       {activeTab === "projection" && <ConsolidatedCashflowView />}

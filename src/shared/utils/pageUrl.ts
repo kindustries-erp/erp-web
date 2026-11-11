@@ -230,6 +230,8 @@ export function pageToPath(
   let slug: string = page === "dashboard" ? "" : page;
   if (page === "permission" || page === "erp-permissions-core") {
     slug = "permission";
+  } else if (page === "loans") {
+    slug = "tools/loans";
   }
   const base = slug ? `/${slug}` : "/";
   const searchParams = new URLSearchParams();
@@ -293,6 +295,8 @@ export function pathToPage(
     page = "garage-cases";
   } else if (slug === "garage-cashflow") {
     page = "garage-cashflow";
+  } else if (slug === "tools/loans") {
+    page = "loans";
   } else if (
     slug === "permission" ||
     slug === "permissions" ||

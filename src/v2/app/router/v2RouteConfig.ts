@@ -49,6 +49,12 @@ export const V2_ROUTES: V2RouteDef[] = [
   },
   {
     id: "loans",
+    path: "/tools/loans",
+    title: "Khoản vay & Dòng tiền",
+    permission: { collection: "loans", action: "read" },
+  },
+  {
+    id: "loans",
     path: "/v2/loans",
     title: "Khoản vay & Dòng tiền",
     permission: { collection: "loans", action: "read" },

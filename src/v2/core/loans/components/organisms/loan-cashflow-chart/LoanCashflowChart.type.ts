@@ -1,3 +1,11 @@
+export interface LoanChartBreakdownItem {
+  loanId: string;
+  loanName: string;
+  principalDue: number;
+  interestDue: number;
+  totalPayment: number;
+}
+
 export interface LoanChartItem {
   periodNumber?: number;
   monthKey?: string;
@@ -8,6 +16,7 @@ export interface LoanChartItem {
   endingBalance?: number;
   remainingPrincipal?: number;
   cumulativeRemainingPrincipal?: number;
+  breakdown?: LoanChartBreakdownItem[];
 }
 
 export interface LoanCashflowChartProps {

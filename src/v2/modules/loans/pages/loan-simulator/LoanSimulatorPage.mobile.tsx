@@ -68,10 +68,16 @@ export const LoanSimulatorPageMobile: React.FC<LoanSimulatorPageProps> = (
 
       <PortfolioScheduleTable schedule={portfolioResult.schedule} />
 
-      <div className="fixed bottom-0 left-0 right-0 p-3 bg-card border-t border-border z-40">
+      <div
+        className={
+          isAuthenticated
+            ? "bg-card p-4 rounded-xl border border-border"
+            : "fixed bottom-0 left-0 right-0 p-3 bg-card border-t border-border z-40"
+        }
+      >
         <V2Button
           variant="primary"
-          className="w-full h-11 text-base font-medium"
+          className="w-full min-h-[44px] h-11 text-base font-medium"
           onClick={handleSaveToErp}
           isLoading={isSaving}
         >

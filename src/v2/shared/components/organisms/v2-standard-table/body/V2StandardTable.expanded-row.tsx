@@ -55,9 +55,9 @@ interface ExpandedRowProps {
  */
 export function V2TableExpandedRow({ colSpan, children }: ExpandedRowProps) {
   return (
-    <TableRow className="bg-muted/35 hover:bg-muted/45 dark:bg-muted/20 border-b border-[color:var(--border-light)] transition-colors">
+    <TableRow className="bg-[color:color-mix(in_srgb,var(--muted)_65%,transparent)] hover:bg-[color:color-mix(in_srgb,var(--muted)_80%,transparent)] border-b border-[color:var(--border-light)] transition-colors">
       <TableCell colSpan={colSpan} className="p-0 align-top">
-        <div className="border-l-4 border-l-primary/70 px-3 py-2.5">
+        <div className="border-l-2 border-l-[color:color-mix(in_srgb,var(--primary)_35%,var(--border))] px-3 py-2.5">
           {children}
         </div>
       </TableCell>

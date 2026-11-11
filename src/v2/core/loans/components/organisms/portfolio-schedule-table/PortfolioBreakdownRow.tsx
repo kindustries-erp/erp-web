@@ -26,10 +26,10 @@ export const PortfolioBreakdownRow: React.FC<PortfolioBreakdownRowProps> = ({
   const { t } = useV2Translation();
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60 bg-surface shadow-2xs">
+    <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-2xs">
       <Table className="border-collapse text-xs">
         <TableHeader>
-          <TableRow className="border-b border-border/60 bg-muted/50 text-[11px] font-semibold uppercase tracking-wide text-muted-fg hover:bg-muted/50">
+          <TableRow className="border-b border-border bg-muted text-[11px] font-semibold uppercase tracking-wide text-muted-fg hover:bg-muted">
             <TableHead className="h-auto px-3 py-1.5 text-left">
               {t("v2.loans.table.loanName", "Khoản vay cấu thành")}
             </TableHead>
@@ -50,11 +50,11 @@ export const PortfolioBreakdownRow: React.FC<PortfolioBreakdownRowProps> = ({
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="divide-y divide-border/40">
+        <TableBody className="[&_tr]:border-b [&_tr]:border-[color:var(--border-light)] [&_tr:last-child]:border-b-0">
           {items.map((item) => (
             <TableRow
               key={item.loanId}
-              className="transition-colors hover:bg-muted/30"
+              className="transition-colors hover:bg-surface-hover"
             >
               <TableCell className="px-3 py-2 font-medium text-foreground">
                 <V2Text as="span" className="inline-flex items-center gap-1.5">

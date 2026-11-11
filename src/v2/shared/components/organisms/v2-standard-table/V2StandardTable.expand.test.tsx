@@ -92,4 +92,37 @@ describe("V2StandardTable Expand Row", () => {
       screen.queryByRole("button", { name: /Cột/i }),
     ).not.toBeInTheDocument();
   });
+
+  it("không gắn class truncate vào ô expand (tránh dấu ...) và dùng viền mảnh dịu cho hàng mở rộng", async () => {
+    mockViewport(false);
+    const user = userEvent.setup();
+    const queryClient = new QueryClient();
+    const items: Item[] = [{ id: "1", name: "Tháng 1", children: ["Khoản A"] }];
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <V2StandardTable<Item>
+          tableId="test-expand-style"
+          mode="client"
+          columns={columns}
+          items={items}
+          getRowKey={(r) => r.id}
+          canExpandRow={(r) => Boolean(r.children && r.children.length > 0)}
+          renderExpandedRow={(r) => <div>Sub: {r.children?.join(",")}</div>}
+        />
+      </QueryClientProvider>,
+    );
+
+    const expandBtn = screen.getByRole("button", { name: /Mở rộng dòng/i });
+    const expandCell = expandBtn.closest("td");
+    expect(expandCell).not.toBeNull();
+    expect(expandCell?.className).not.toContain("truncate");
+    expect(expandCell?.className).toContain("px-1");
+
+    await user.click(expandBtn);
+    const subContent = screen.getByText("Sub: Khoản A");
+    const expandedWrapper = subContent.parentElement;
+    expect(expandedWrapper?.className).toContain("border-l-2");
+    expect(expandedWrapper?.className).not.toContain("border-l-4");
+  });
 });

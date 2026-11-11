@@ -7,12 +7,12 @@ description: Module tri thức Frontend Quản lý Khoản Vay & Mô Phỏng Dò
 
 ## 1. Tổng quan Nghiệp vụ
 
-Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn chỉnh theo chuẩn V2 Architecture:
-- **Trang Mô Phỏng Công Khai (`/loans`)**: Bất kỳ ai cũng có thể truy cập ngay lập tức từ trình duyệt không cần đăng nhập để mô phỏng tính toán khoản vay ngân hàng (lãi suất, kỳ hạn, phương thức trả nợ, dòng chảy tiền và bảng khấu hao). Nếu chưa đăng nhập, nút "Lưu vào ERP" sẽ lưu bản nháp vào `sessionStorage` và điều hướng về trang `/login?redirect=/v2/loans`.
-- **Trang Quản Lý Khoản Vay V2 (`/v2/loans`)**: Dành cho người dùng nội bộ có quyền `loans:read`. Gồm 3 tab:
-  1. *Danh Sách Khoản Vay*: Bảng `V2StandardTable` quản lý các hợp đồng nợ vay, tìm kiếm, lọc theo trạng thái, mở Drawer xem chi tiết và tạo mới.
-  2. *Dự Báo Dòng Tiền Tương Lai*: Gọi API `/api/v2/loans/cashflow-projection` để vẽ biểu đồ `V2ComboChart` (cột chồng Gốc + Lãi, đường Dư nợ tích lũy) và bảng chi tiết dòng tiền theo tháng của toàn doanh nghiệp.
-  3. *Mô Phỏng & Tính Nhanh*: Nhúng trực tiếp `LoanSimulatorPage` để tính toán nhanh ngay trong phiên làm việc.
+Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn chỉnh theo chuẩn V2 Architecture với **URL thống nhất `/tools/loans`** cho cả khách chưa đăng nhập và người dùng ERP:
+- **Chế độ Khách (Chưa đăng nhập - `/tools/loans`)**: Truy cập ngay lập tức không cần đăng nhập thông qua `V2PublicToolView` (`V2AppLayout`, `hideBottomNav={!isLoggedIn}` ẩn Bottom Nav trên Mobile, Sidebar Desktop hiển thị nhóm **CÔNG CỤ** và nút **Đăng nhập**). Khi chưa đăng nhập, nút "Đăng nhập để lưu vào ERP" lưu bản nháp vào `sessionStorage` và chuyển hướng sang `/login?redirect=/tools/loans` (tự động quay lại `/tools/loans` sau khi đăng nhập thành công).
+- **Chế độ ERP (Đã đăng nhập - `/tools/loans` hoặc `/v2/loans`)**: Dành cho người dùng nội bộ có quyền `loans:read`. Render `LoansListPage` gồm 3 tab:
+  1. *Mô Phỏng & Tính Nhanh*: Nhúng trực tiếp `LoanSimulatorPage` để tính toán nhanh ngay trong phiên làm việc.
+  2. *Dự Báo Dòng Tiền Tương Lai*: Gọi API `/api/v2/loans/cashflow-projection` để vẽ biểu đồ `V2ComboChart` (mỗi khoản vay 1 scheme màu phân biệt khi có $\ge 2$ khoản vay + đường Dư nợ tích lũy) và bảng chi tiết dòng tiền theo tháng của toàn doanh nghiệp.
+  3. *Danh Sách Hợp Đồng*: Bảng `V2StandardTable` phẳng không wrapper, `enableColumnVisibility={false}`, quản lý các hợp đồng nợ vay, mở Drawer xem chi tiết và tạo/cập nhật hợp đồng.
 
 ---
 
@@ -24,8 +24,8 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
 - `domain/rules/loan-format.rule.ts`: Format tiền tệ VNĐ (`formatVndCurrency`, `formatVndHelper`), options phương thức trả nợ (`getAmortizationMethodOptions`), và helper trạng thái (`getLoanStatusConfig`).
 - `components/molecules/loan-kpi-summary/`: Molecule hiển thị 4 KPI thẻ tài chính (Kỳ đầu, Trung bình tháng, Tổng lãi, Tổng nghĩa vụ).
 - `components/molecules/amortization-schedule-table/`: Bảng chi tiết từng kỳ khấu hao nợ dùng UI `@/v2/shared/ui` (`Table`, `TableRow`, `TableCell`...), kèm nút Trả kỳ.
-- `components/organisms/loan-cashflow-chart/`: Organism bọc trực tiếp `V2ComboChart` thể hiện dòng tiền (Gốc/Lãi stacked bars) và lộ trình giảm dần dư nợ (Line chart).
-- `components/organisms/portfolio-schedule-table/`: Bảng lịch trả nợ tổng hợp theo tháng dùng `V2StandardTable` (`mode="client"`, `pageSize: 12`, `enableColumnVisibility={false}`, `max-h-[560px]`) hỗ trợ Expand Row hiển thị bảng con `PortfolioBreakdownRow` (`@/v2/shared/ui` `Table`).
+- `components/organisms/loan-cashflow-chart/`: Organism bọc trực tiếp `V2ComboChart` thể hiện dòng tiền theo từng khoản vay với bảng màu riêng No Blue (`V2_CHART_SERIES`) khi có $\ge 2$ khoản vay (hoặc Gốc/Lãi khi 1 khoản) và lộ trình giảm dần dư nợ (Line chart).
+- `components/organisms/portfolio-schedule-table/`: Bảng lịch trả nợ tổng hợp theo tháng dùng `V2StandardTable` (`mode="client"`, `pageSize: 12`, `enableColumnVisibility={false}`, `max-h-[560px]`) hỗ trợ Expand Row hiển thị bảng con `PortfolioBreakdownRow` (`@/v2/shared/ui` `Table` dùng token `border-border` / `var(--border-light)`).
 - `loans.locale.ts` & `locales/loans.{vi,en}.ts`: Từ điển song ngữ VI/EN (`v2.loans.*`).
 - `core.manifest.json`: Manifest định danh tầng core.
 
@@ -46,24 +46,15 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
 
 ## 3. Điều Hướng & Routing
 
-1. **Public Route**:
-   - Khai báo trong `src/App.tsx` qua hàm `isPublicLoansRoute()` khớp đường dẫn `/loans` hoặc `/public/loans`.
-   - Render `<LoanSimulatorPage />` trong scroll container `h-screen w-full overflow-y-auto overflow-x-hidden bg-background` (vì `#root` đang khóa `overflow: hidden`).
+1. **Public Tool Route (Guest Mode)**:
+   - Đăng ký trong `src/v2/app/router/publicTools.config.ts` (`PUBLIC_TOOLS` với `path: "/tools/loans"`, `aliasPaths: ["/loans"]`).
+   - `src/App.tsx` dùng `resolvePublicTool(location.pathname, isLoggedIn)` render `<AppProviders allowAnonymous><V2PublicToolView tool={publicTool} isLoggedIn={false} /></AppProviders>` và chuẩn hóa alias `/loans` về `/tools/loans`.
 2. **V2 Route**:
-   - `src/v2/app/router/v2RouteConfig.ts`:
-     ```ts
-     {
-       id: "loans",
-       path: "/v2/loans",
-       title: "Khoản vay & Dòng tiền",
-       permission: { collection: "loans", action: "read" },
-     }
-     ```
+   - `src/v2/app/router/v2RouteConfig.ts`: đăng ký `/tools/loans` và `/v2/loans` (`permission: { collection: "loans", action: "read" }`).
    - `src/v2/app/router/v2PageRegistry.tsx`: ánh xạ `"loans": () => <LoansListPage />`.
-   - `src/v2/app/layouts/v2-app-layout/navigation/v2Navigation.config.ts`: mục menu sidebar thuộc nhóm `tools` (icon `Calculator`).
+   - `src/v2/app/layouts/v2-app-layout/navigation/v2Navigation.config.ts`: mục menu sidebar thuộc nhóm `tools` (`href: "/tools/loans"`, icon `Calculator`).
 3. **V1 Shell Navigation**:
-   - Đăng ký `"loans"` trong `PageKey` (`src/shared/types/index.ts`), `ALL_PAGE_KEYS` (`src/shared/utils/pageUrl.ts`), `ErpResource.LOANS` (`src/modules/system/types/rbac.ts`), `PAGE_COMPONENTS` (`src/App.tsx`), `SECTION_ROOTS` & `BREADCRUMBS` (`src/core/config/appStore/constants.ts`).
-   - Mục **"Khoản vay & Lãi suất"** hiển thị trong nhóm **CÔNG CỤ** (component `ToolsNavSection`) đặt dưới nhóm **QUẢN TRỊ** tại `SidebarNav.tsx`.
+   - Đăng ký `"loans"` trong `PageKey`, `ALL_PAGE_KEYS`, `pageToPath` / `pathToPage` (`"tools/loans"`), `ErpResource.LOANS`, `PAGE_COMPONENTS`, `V2ShellLayout` breadcrumb (`case "loans":` -> `Công cụ > Khoản vay & Lãi suất`), và `useV2AdaptedNavSections` (`href: "/tools/loans"`).
 
 ---
 
