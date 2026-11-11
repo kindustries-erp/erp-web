@@ -34,6 +34,7 @@ export const getOrderStatusOptions = (t: T): V2FilterOption[] => [
     label: t("v2.procurement.status.PENDING_APPROVAL", "Chờ duyệt"),
   },
   { value: "APPROVED", label: t("v2.procurement.status.APPROVED", "Đã duyệt") },
+  { value: "REJECTED", label: t("v2.procurement.status.REJECTED", "Từ chối") },
   { value: "ISSUED", label: t("v2.procurement.status.ISSUED", "Đã phát hành") },
   { value: "CLOSED", label: t("v2.procurement.status.CLOSED", "Đã đóng") },
   { value: "CANCELLED", label: t("v2.procurement.status.CANCELLED", "Đã hủy") },

@@ -62,11 +62,17 @@ export function useGarageProcurementActiveTab(
 }
 
 /** Trạng thái đưa vào nhóm lọc có sẵn của từng tab (khớp vòng đời PR và PO) */
-const REQUEST_FILTER_STATUSES = ["DRAFT", "PENDING_APPROVAL", "APPROVED"];
+const REQUEST_FILTER_STATUSES = [
+  "DRAFT",
+  "PENDING_APPROVAL",
+  "APPROVED",
+  "REJECTED",
+];
 const ORDER_FILTER_STATUSES = [
   "DRAFT",
   "PENDING_APPROVAL",
   "APPROVED",
+  "REJECTED",
   "ISSUED",
 ];
 

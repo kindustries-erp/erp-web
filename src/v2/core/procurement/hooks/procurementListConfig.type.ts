@@ -19,10 +19,24 @@ export interface ProcurementListConfig<T extends { id: string }> {
   /** PR: dòng có còn phần chưa đặt để tạo PO không */
   canOrderFromRequest?: (row: T) => boolean;
   /**
+   * PR: lý do mục "Lập đơn mua" bị mờ (khi canOrderFromRequest = false).
+   * Trả về khóa locale; null thì không cần tooltip.
+   */
+  orderFromRequestBlockedKey?: (
+    row: T,
+  ) => "notApproved" | "fullyOrdered" | null;
+  /**
    * Đường dẫn API cấu hình duyệt (`{path}/setting`, `{path}/approvers`).
    * Thiếu thì màn không có khóa duyệt và hành vi như cũ.
    */
   approvalConfigPath?: string;
+  /** Cho phép nhân bản phiếu đã từ chối/hủy (cần `api.clone`) */
+  cloneable?: boolean;
+  /**
+   * PO: khi khóa duyệt của họ đang TẮT, gửi duyệt đi thẳng sang APPROVED nên ẩn
+   * "Gửi duyệt" trong menu; drawer thay bằng nút Tạo mới / Cập nhật (lưu + ghi nhận).
+   */
+  directConfirmWhenApprovalOff?: boolean;
   /** PO: API của đề nghị mua, để điền sẵn khi tạo PO từ PR */
   requestApi?: ProcurementApi<unknown>;
 }

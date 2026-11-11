@@ -1,8 +1,12 @@
 import * as React from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { showProcurementError } from "../procurement.toast";
+import {
+  showProcurementError,
+  showProcurementSuccess,
+} from "../procurement.toast";
 import {
   PROCUREMENT_REASON_ACTIONS,
   type ProcurementActionKey,
@@ -141,7 +145,33 @@ export function useProcurementList<T extends { id: string }>(
     (s) => s.profile?.email ?? s.employee?.email ?? null,
   );
 
+  // Nhân bản phiếu đã từ chối/hủy: tạo nháp mới rồi mở ngay ở chế độ sửa
+  const queryClient = useQueryClient();
+  const { mutate: cloneMutate } = useMutation({
+    mutationFn: (id: string) => {
+      if (!config.api.clone) throw new Error("Chưa hỗ trợ nhân bản");
+      return config.api.clone(id);
+    },
+    onSuccess: ({ id }) => {
+      void queryClient.invalidateQueries({ queryKey: [config.queryKey] });
+      showProcurementSuccess(
+        t("v2.procurement.drawer.cloned", "Đã nhân bản thành phiếu nháp mới"),
+      );
+      setDrawer({ id, mode: "edit" });
+    },
+    onError: (error) =>
+      showProcurementError(
+        error,
+        t("v2.procurement.drawer.cloneError", "Không nhân bản được phiếu"),
+      ),
+  });
+  const cloneRow = React.useCallback(
+    (row: T) => cloneMutate(row.id),
+    [cloneMutate],
+  );
+
   const rowActions = useProcurementRowActions<T>({
+    cloneRow,
     config: approval.approvalConfig,
     canCreate,
     canUpdate,

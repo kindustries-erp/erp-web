@@ -49,6 +49,12 @@ Source of truth for this repo (`./erp-web`).
 - When pushing code and encountering a conflict, your **first priority** is to use `git pull --rebase github-industries erp-master`.
 - Only if the rebase presents overly complex conflicts, you may `git rebase --abort` and resolve using a standard merge (`git pull origin erp-master`).
 
+### 8. E2E Mandate
+
+- Luồng nhiều bước trên trình duyệt (tạo, duyệt, từ chối, nhân bản, menu, drawer) phải có kiểm tra E2E Playwright trong `e2e/` và được ghi vào skill `erp-e2e-playwright`.
+- E2E không thay unit test. Không commit mật khẩu hay URL cứng; đọc qua biến môi trường (`E2E_PASSWORD` bắt buộc).
+- Trước khi báo hoàn tất, chạy E2E trên môi trường đang chạy và báo PASS/FAIL theo lần chạy hiện tại.
+
 ---
 
 ## Current Truth

@@ -201,6 +201,8 @@ export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   remove?: (id: string) => Promise<unknown>;
   /** Xóa cứng nháp; chỉ người có quyền purge mới thấy nút */
   purge?: (id: string) => Promise<unknown>;
+  /** Nhân bản phiếu đã từ chối/hủy thành nháp mới (trả về id nháp) */
+  clone?: (id: string) => Promise<{ id: string }>;
   /** Chỉ PR có: bản nháp PO điền sẵn (chỉ đọc) */
   poDraft?: (id: string) => Promise<ProcurementPoDraft>;
   /** Nhật ký các bước duyệt của đề nghị mua hàng */

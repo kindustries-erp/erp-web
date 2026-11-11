@@ -16,7 +16,7 @@ import { ProcurementRequestDrawer } from "@/v2/core/procurement";
 export const garageProcurementRequestsApi =
   createProcurementApi<ProcurementRequestRow>(
     "/api/v2/procurement-requests-garage",
-    { supportsDelete: true, supportsPurge: true },
+    { supportsDelete: true, supportsPurge: true, supportsClone: true },
   );
 
 export const garageProcurementRequestsConfig: ProcurementListConfig<ProcurementRequestRow> =
@@ -28,10 +28,16 @@ export const garageProcurementRequestsConfig: ProcurementListConfig<ProcurementR
     availableActions: (row) =>
       availableProcurementActions(PROCUREMENT_REQUEST_FROM, row.status),
     isEditable: (row) => row.status === "DRAFT",
+    cloneable: true,
     rowLabel: (row) => row.requestNo,
     poHref: "/garage-procurement?tab=orders",
     canOrderFromRequest: (row) =>
       row.status === "APPROVED" && row.orderingStatus !== "FULL",
+    orderFromRequestBlockedKey: (row) => {
+      if (row.status !== "APPROVED") return "notApproved";
+      if (row.orderingStatus === "FULL") return "fullyOrdered";
+      return null;
+    },
   };
 
 /** Cột theo view: "overview" ẩn cột phụ, "all" hiện đủ cột. Giữ hằng số để không đổi identity. */

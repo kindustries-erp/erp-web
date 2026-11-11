@@ -211,3 +211,36 @@ describe("ProcurementOrderDrawer — đề nghị mua tùy chọn (Garage)", () 
     expect(screen.queryByRole("button", { name: /xóa dòng/i })).toBeNull();
   });
 });
+
+describe("ProcurementOrderDrawer — khóa duyệt PO tắt (ghi nhận trực tiếp)", () => {
+  const OFF = { configured: true, enabled: false, currentUserId: "me" };
+  const ON = { ...OFF, enabled: true };
+
+  it("khóa tắt + directConfirm, đang sửa nháp: hiện Cập nhật cạnh Lưu nháp", async () => {
+    renderDrawer({ mode: "edit", directConfirm: true, approval: OFF });
+    expect(
+      await screen.findByRole("button", { name: "Cập nhật" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /lưu nháp/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("khóa tắt + directConfirm, tạo mới: hiện Tạo mới", async () => {
+    renderDrawer({
+      mode: "edit",
+      documentId: null,
+      directConfirm: true,
+      approval: OFF,
+    });
+    expect(
+      await screen.findByRole("button", { name: "Tạo mới" }),
+    ).toBeInTheDocument();
+  });
+
+  it("khóa bật: không hiện Cập nhật/Tạo mới", async () => {
+    renderDrawer({ mode: "edit", directConfirm: true, approval: ON });
+    await screen.findByRole("button", { name: /lưu nháp/i });
+    expect(screen.queryByRole("button", { name: "Cập nhật" })).toBeNull();
+  });
+});

@@ -20,6 +20,8 @@ export interface ProcurementRowActionsInput<T extends { id: string }> {
   openDelete: (row: T) => void;
   /** Chuyển sang lập PO từ PR */
   orderFromRequest: (row: T) => void;
+  /** Nhân bản phiếu đã từ chối/hủy */
+  cloneRow?: (row: T) => void;
   /** Hành động xóa vĩnh viễn của hook purge */
   purgeActions: (row: T) => V2RowAction[];
 }
@@ -36,6 +38,7 @@ export function useProcurementRowActions<T extends { id: string }>({
   start,
   openDelete,
   orderFromRequest,
+  cloneRow,
   purgeActions,
 }: ProcurementRowActionsInput<T>) {
   const { t } = useV2Translation();
@@ -54,6 +57,7 @@ export function useProcurementRowActions<T extends { id: string }>({
         start,
         openDelete,
         orderFromRequest,
+        cloneRow,
         purgeActions,
       }),
     [
@@ -66,6 +70,7 @@ export function useProcurementRowActions<T extends { id: string }>({
       openDelete,
       openDrawer,
       orderFromRequest,
+      cloneRow,
       purgeActions,
       start,
       t,

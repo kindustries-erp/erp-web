@@ -156,3 +156,11 @@ src/v2/core/procurement/
 - `V2Combobox` khi `clearable`: trigger `pl-3`, `pr-16` (có X) hoặc `pr-9`; nút X là `V2Button` ghost `icon-xs` trong cụm neo `right-3` cùng mũi tên, không đè nhau.
 - Cột dòng hàng (PR và PO): Mã `w-24 min-w-[88px]`, Tên `min-w-[160px] w-[26%]`, Ghi chú `min-w-[180px] w-[34%]`, Thành tiền `w-40 min-w-[160px] whitespace-nowrap` (đủ số 12 chữ số).
 - Đơn mua Garage bắt buộc mã hàng: `itemCodeRequired` (truyền từ `garageProcurementOrders.config.tsx`) → `validateProcurementLines(lines, true)` trả `"itemCode"`; cột Mã có dấu `*`. PR và ERP PO giữ mã tùy chọn.
+
+## 9. Cập nhật 2026-11-11: REJECTED, Nhân bản, PO duyệt tắt
+
+- Trạng thái REJECTED hiển thị nhãn "Đã từ chối". Bộ lọc trạng thái PR và PO có REJECTED (`GarageProcurementRequestsPage.hook.ts`, `procurementStatusOptions.ts`).
+- Nhân bản: mục "Nhân bản" trong menu dòng, chỉ khi config có `cloneable` và trạng thái là REJECTED hoặc CANCELLED (`procurementRowActions.builder.tsx`). Gọi `api.clone` (`procurement.api.ts`, bật bằng `supportsClone`). Thành công thì mở drawer sửa của bản nháp mới.
+- PO garage (`directConfirmWhenApprovalOff: true`): menu bỏ "Gửi duyệt" khi khóa tắt (`applyApprovalGate`, tham số `directConfirmWhenOff`). Drawer có nút "Tạo mới" (phiếu mới) hoặc "Cập nhật" (phiếu nháp) cạnh "Lưu nháp". Bấm là lưu rồi gửi, PO chuyển APPROVED.
+- Bắt buộc truyền `directConfirm` cho mọi nơi render `ProcurementOrderDrawer`. Có hai nơi: `ProcurementListPage.tsx` và `GarageProcurementRequestsPage.tsx`. Thiếu prop ở một nơi thì nút không hiện (đã gặp và sửa 2026-11-11).
+- Có E2E Playwright cho luồng này: xem `erp-web/e2e/` và skill `erp-e2e-playwright`.
