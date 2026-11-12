@@ -8,6 +8,7 @@ import {
   V2Text,
 } from "@/v2/shared/components";
 import type { V2DrawerLinesColumn } from "@/v2/shared/components";
+import { LineItemCodeInput } from "@/v2/shared/context/LineItemCodeFieldContext";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import { procurementLineNoteColumn } from "./ProcurementLinesEditor.columns.note";
@@ -98,13 +99,18 @@ export function getProcurementLineColumns(
         viewing ? (
           <V2Text className="font-mono text-xs">{line.itemCode || "—"}</V2Text>
         ) : (
-          <V2Input
-            sizeVariant="xs"
-            aria-label={t("v2.procurement.lines.code", "Mã")}
+          <LineItemCodeInput
+            ariaLabel={t("v2.procurement.lines.code", "Mã")}
             className={cn("font-mono", V2_DRAWER_FOCUS_RING_CLASS)}
             value={line.itemCode}
             placeholder={t("v2.procurement.lines.codePlaceholder", "Mã...")}
-            onChange={(e) => onPatch({ itemCode: e.target.value })}
+            onPick={({ itemCode, itemName }) =>
+              onPatch(
+                itemName && !line.itemName.trim()
+                  ? { itemCode, itemName }
+                  : { itemCode },
+              )
+            }
           />
         ),
     },

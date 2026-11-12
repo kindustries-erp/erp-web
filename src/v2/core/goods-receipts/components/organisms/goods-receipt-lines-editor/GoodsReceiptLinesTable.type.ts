@@ -14,6 +14,8 @@ export interface LineColumnRenderContext {
     field: keyof GoodsReceiptFormLine,
     val: string,
   ) => void;
+  /** Cập nhật nhiều trường của một dòng trong một lần ghi */
+  onPatch: (index: number, patch: Partial<GoodsReceiptFormLine>) => void;
   onRemove: (index: number) => void;
 }
 

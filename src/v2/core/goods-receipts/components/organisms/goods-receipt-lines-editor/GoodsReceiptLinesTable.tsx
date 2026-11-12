@@ -67,6 +67,15 @@ export function GoodsReceiptLinesTable({
     onChangeLines(next);
   };
 
+  const handlePatchLine = (
+    index: number,
+    patch: Partial<GoodsReceiptFormLine>,
+  ) => {
+    const next = [...lines];
+    next[index] = { ...next[index], ...patch };
+    onChangeLines(next);
+  };
+
   const handleRemoveLine = (index: number) => {
     onChangeLines(lines.filter((_, i) => i !== index));
   };
@@ -99,6 +108,7 @@ export function GoodsReceiptLinesTable({
       viewing,
       t,
       onUpdate: handleUpdateLine,
+      onPatch: handlePatchLine,
       onRemove: handleRemoveLine,
     });
   };

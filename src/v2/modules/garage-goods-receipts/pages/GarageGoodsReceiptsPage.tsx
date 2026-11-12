@@ -1,3 +1,5 @@
+import { LineItemCodeFieldProvider } from "@/v2/shared/context/LineItemCodeFieldContext";
+import { GarageItemCodeField } from "@/v2/modules/items-garage";
 import * as React from "react";
 import { FileText, Plus } from "lucide-react";
 import {
@@ -104,7 +106,7 @@ export function GarageGoodsReceiptsPage() {
         />
       }
       overlays={
-        <>
+        <LineItemCodeFieldProvider value={GarageItemCodeField}>
           {workflow.drawer}
           {state.drawer && (
             <GoodsReceiptDrawer
@@ -137,7 +139,7 @@ export function GarageGoodsReceiptsPage() {
             onCancel={() => state.setDeleteTarget(null)}
             onOpenChange={(open) => !open && state.setDeleteTarget(null)}
           />
-        </>
+        </LineItemCodeFieldProvider>
       }
     />
   );
