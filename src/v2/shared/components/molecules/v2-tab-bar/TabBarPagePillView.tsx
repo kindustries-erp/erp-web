@@ -6,7 +6,9 @@ import {
   V2Button,
 } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { useViewport } from "@/v2/shared/hooks/useViewport";
 import { cn } from "@/v2/shared/utils/cn";
+import { TabBarPageViewMobile } from "./TabBarPageView.mobile";
 import type { V2TabItemData } from "./V2TabBar.type";
 
 export interface TabBarPagePillViewProps {
@@ -44,6 +46,20 @@ export const TabBarPagePillView: React.FC<TabBarPagePillViewProps> = ({
   ariaLabel,
 }) => {
   const { t } = useV2Translation();
+  const { isMobile } = useViewport();
+
+  if (isMobile) {
+    return (
+      <TabBarPageViewMobile
+        tabs={tabs}
+        activeKey={activeKey}
+        onSelect={onSelect}
+        extra={extra}
+        className={className}
+        ariaLabel={ariaLabel}
+      />
+    );
+  }
 
   return (
     <div

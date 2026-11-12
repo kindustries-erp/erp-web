@@ -86,11 +86,19 @@ describe("V2PageHeader", () => {
     );
 
     const header = container.querySelector("header");
-    expect(header).toHaveClass("bg-card", "rounded-2xl", "border");
+    expect(header).toHaveClass(
+      "bg-card",
+      "rounded-2xl",
+      "border",
+      "p-3",
+      "sm:p-6",
+    );
     expect(
       screen.getByRole("heading", { level: 1, name: "Quản Lý Khoản Vay" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Theo dõi nghĩa vụ nợ")).toBeInTheDocument();
+    const desc = screen.getByText("Theo dõi nghĩa vụ nợ");
+    expect(desc).toBeInTheDocument();
+    expect(desc).toHaveClass("hidden", "sm:line-clamp-2");
     expect(screen.getByTestId("card-icon")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Thêm mới" }),

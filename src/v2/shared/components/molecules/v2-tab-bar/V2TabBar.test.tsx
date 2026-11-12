@@ -234,4 +234,43 @@ describe("V2TabBar Molecule", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Chứng từ" }));
     expect(handleChange).not.toHaveBeenCalledWith("tab3");
   });
+
+  it("renders variant=V2TabBarVariant.PILL as bottom sheet trigger on mobile (< 768px)", () => {
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 375,
+    });
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    const handleChange = vi.fn();
+    render(
+      <V2TabBar
+        variant={V2TabBarVariant.PILL}
+        tabs={mockTabs}
+        activeTabKey="tab1"
+        onTabChange={handleChange}
+      />,
+    );
+
+    const trigger = screen.getByTestId("v2-tab-bar-mobile-trigger");
+    expect(trigger).toHaveTextContent("Chi tiết");
+    fireEvent.click(trigger);
+
+    expect(screen.getByTestId("v2-bottom-sheet-content")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: /Tài chính/ }));
+    expect(handleChange).toHaveBeenCalledWith("tab2");
+
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: originalInnerWidth,
+    });
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+  });
 });
