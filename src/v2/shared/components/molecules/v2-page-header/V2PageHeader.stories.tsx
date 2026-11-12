@@ -3,6 +3,7 @@ import React from "react";
 import { ClipboardList, Plus, RefreshCw } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2PageHeader } from "./V2PageHeader";
+import { V2PageHeaderVariant } from "./V2PageHeader.type";
 
 const meta: Meta<typeof V2PageHeader> = {
   title: "Components/Molecules/V2PageHeader",
@@ -51,5 +52,19 @@ export const WithTabToolbars = () => (
     tabKeys={["overview", "in", "out"]}
     activeKey="in"
     register={() => {}}
+  />
+);
+
+export const CardVariant = () => (
+  <V2PageHeader
+    variant={V2PageHeaderVariant.CARD}
+    title="Quản Lý Khoản Vay & Dòng Tiền"
+    description="Theo dõi nghĩa vụ nợ, lập kế hoạch dòng tiền và mô phỏng tài chính."
+    icon={icon}
+    actions={
+      <V2Button size="default" leftIcon={<Plus className="h-4 w-4" />}>
+        Thêm khoản vay mới
+      </V2Button>
+    }
   />
 );

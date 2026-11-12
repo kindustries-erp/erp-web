@@ -1,12 +1,16 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Button, V2Text } from "@/v2/shared/components/atoms";
-import type { V2TabItemData } from "./V2TabBar.type";
+import {
+  V2TabBarVariant,
+  type V2TabBarPillVariant,
+  type V2TabItemData,
+} from "./V2TabBar.type";
 
 interface TabBarPillItemProps {
   tab: V2TabItemData;
   isActive: boolean;
-  variant: "header" | "sub" | "button-group";
+  variant: V2TabBarPillVariant;
   onSelect: (key: string) => void;
   stretch?: boolean;
 }
@@ -26,9 +30,9 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
   stretch = false,
 }) => {
   const tabKey = (tab.key ?? tab.id) || "";
-  const isHeader = variant === "header";
-  const isSub = variant === "sub";
-  const isBtnGroup = variant === "button-group";
+  const isHeader = variant === V2TabBarVariant.HEADER;
+  const isSub = variant === V2TabBarVariant.SUB;
+  const isBtnGroup = variant === V2TabBarVariant.BUTTON_GROUP;
 
   const renderIcon = () => {
     if (!tab.icon) return null;

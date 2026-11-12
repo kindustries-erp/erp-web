@@ -3,8 +3,9 @@ import { cn } from "@/v2/shared/utils/cn";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2TabItem } from "../v2-tab-item";
 import { TabBarPageView } from "./TabBarPageView";
+import { TabBarPagePillView } from "./TabBarPagePillView";
 import { TabBarPillView } from "./TabBarPillView";
-import type { V2TabBarProps } from "./V2TabBar.type";
+import { V2TabBarVariant, type V2TabBarProps } from "./V2TabBar.type";
 
 export const V2TabBar: React.FC<V2TabBarProps> = ({
   tabs,
@@ -13,7 +14,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
   onTabSelect,
   onTabChange,
   onTabClose,
-  variant = "app",
+  variant = V2TabBarVariant.APP,
   extra,
   className,
   ariaLabel,
@@ -39,7 +40,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
     }
   }, []);
 
-  if (variant === "page") {
+  if (variant === V2TabBarVariant.PAGE) {
     return (
       <TabBarPageView
         tabs={tabs}
@@ -52,7 +53,24 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
     );
   }
 
-  if (variant === "header" || variant === "button-group" || variant === "sub") {
+  if (variant === V2TabBarVariant.PILL) {
+    return (
+      <TabBarPagePillView
+        tabs={tabs}
+        activeKey={activeKey}
+        onSelect={handleSelect}
+        extra={extra}
+        className={className}
+        ariaLabel={ariaLabel}
+      />
+    );
+  }
+
+  if (
+    variant === V2TabBarVariant.HEADER ||
+    variant === V2TabBarVariant.BUTTON_GROUP ||
+    variant === V2TabBarVariant.SUB
+  ) {
     return (
       <TabBarPillView
         tabs={tabs}

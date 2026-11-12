@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { V2PageHeader } from "./V2PageHeader";
+import { V2PageHeaderVariant } from "./V2PageHeader.type";
 
 describe("V2PageHeader", () => {
   it("renders title as h1, description, icon and actions", () => {
@@ -71,5 +72,28 @@ describe("V2PageHeader", () => {
 
     expect(screen.getByTestId("v2-tab-combobox")).toBeInTheDocument();
     expect(screen.getByText("Đề nghị mua hàng")).toBeInTheDocument();
+  });
+
+  it("renders variant=V2PageHeaderVariant.CARD with card surface, icon and actions", () => {
+    const { container } = render(
+      <V2PageHeader
+        variant={V2PageHeaderVariant.CARD}
+        title="Quản Lý Khoản Vay"
+        description="Theo dõi nghĩa vụ nợ"
+        icon={<svg data-testid="card-icon" />}
+        actions={<button type="button">Thêm mới</button>}
+      />,
+    );
+
+    const header = container.querySelector("header");
+    expect(header).toHaveClass("bg-card", "rounded-2xl", "border");
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Quản Lý Khoản Vay" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Theo dõi nghĩa vụ nợ")).toBeInTheDocument();
+    expect(screen.getByTestId("card-icon")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Thêm mới" }),
+    ).toBeInTheDocument();
   });
 });

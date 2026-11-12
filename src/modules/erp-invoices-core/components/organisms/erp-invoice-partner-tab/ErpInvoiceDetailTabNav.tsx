@@ -1,7 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { FileText, BookOpen, Link2, Paperclip } from "lucide-react";
-import { V2TabBar, type V2TabItemData } from "@/v2/shared/components";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+  type V2TabItemData,
+} from "@/v2/shared/components";
 import type { InvoiceDetailViewMode } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
 
 export type InvoiceDetailSubTabKey = "details" | "accounting" | "linked_docs";
@@ -89,7 +93,7 @@ export const ErpInvoiceDetailTabNav = React.memo(
         {/* Bên trái: 3 sub pill tabs (Chi tiết hóa đơn | Hạch toán kế toán | Chứng từ liên kết) */}
         <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1">
           <V2TabBar
-            variant="sub"
+            variant={V2TabBarVariant.SUB}
             activeTabKey={subTab}
             onTabChange={(val) =>
               onSubTabChange?.(val as InvoiceDetailSubTabKey)
@@ -103,7 +107,7 @@ export const ErpInvoiceDetailTabNav = React.memo(
         {subTab === "details" && (
           <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
             <V2TabBar
-              variant="button-group"
+              variant={V2TabBarVariant.BUTTON_GROUP}
               activeTabKey={activeViewModeKey}
               onTabChange={handleViewModeChange}
               tabs={rightTabs}

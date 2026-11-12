@@ -1,6 +1,6 @@
 import * as React from "react";
 import { V2Text } from "@/v2/shared/components/atoms";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import { V2TabBar, V2TabBarVariant } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type {
   InvoiceSyncDirection,
@@ -39,7 +39,7 @@ export const InvoiceSyncSourceFields: React.FC<
           {t("v2.financeInvoiceSync.source.label", "Nguồn")}
         </V2Text>
         <V2TabBar
-          variant="sub"
+          variant={V2TabBarVariant.SUB}
           stretch
           tabs={methodTabs}
           activeTabKey={method}
@@ -52,7 +52,7 @@ export const InvoiceSyncSourceFields: React.FC<
           {t("v2.financeInvoiceSync.direction.label", "Chiều hóa đơn")}
         </V2Text>
         <V2TabBar
-          variant="sub"
+          variant={V2TabBarVariant.SUB}
           stretch
           tabs={directionTabs}
           activeTabKey={direction}
