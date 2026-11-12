@@ -259,3 +259,11 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - **Hằng số**: nhóm "Tất cả" là `V2_FILTER_GROUP_ALL_KEY` (`V2ViewModeCombobox.helper.ts`), không viết chuỗi `"all"` trần.
 - **Tách action**: `createV2ViewActions` (`hooks/V2StandardTable.views.actions.hook.ts`) giữ logic chọn/sửa/lưu/xóa chế độ xem, để `views.hook.ts` dưới 180 dòng.
 - i18n: `v2.table.createFilterPreset`, `filterPresetsSection`, `editFilterPreset`, `deleteFilterPreset`, `filterPresetCreateTitle` / `filterPresetEditTitle`, `filterPresetName*`, `filterPresetBase` đã xóa (nền dùng `viewFilterLabel`), `filterPresetConditions`, `filterPresetUseCurrent`, `filterPresetClearConditions`, `filterPresetEmpty`, `filterPresetDeleteTitle` / `filterPresetDeleteConfirm` (vi + en).
+
+## 14. Hợp đồng response API v2 (list và column-options)
+
+- List: `{ items, pagination: { page, pageSize, total, totalPages, next, previous }, summaries?, extraData? }`. Web đọc `res.pagination.total`, không đọc `total`/`totalPages` ở gốc. Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`).
+- Column-options: `{ items, pagination }`. API client đổi sang kiểu bảng `V2FetchOptionsResult` (`items`, `total`, `next`) bằng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`); `V2StandardTable` không đổi.
+- Dữ liệu phụ chung của list (ví dụ `unreadCount`) nằm trong `extraData`, đọc `res.extraData.<key>`; không chờ key phẳng ở gốc.
+- Route API v2 là `/api/v2/<tên module>`; API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`).
+

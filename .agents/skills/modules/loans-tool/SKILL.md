@@ -1,5 +1,5 @@
 ---
-name: loans-web
+name: loans-tool-web
 description: Module tri thức Frontend Quản lý Khoản Vay & Mô Phỏng Dòng Tiền (Loans & Cashflow Simulator V2) trong erp-web (v2/core/loans và v2/modules/loans). Chứa cấu trúc components Atomic 5 tầng, TanStack Query hooks, drawers, pages (public & authenticated), routing và quy chuẩn Mobile-First, No Blue.
 ---
 
@@ -11,7 +11,7 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
 - **Chế độ Khách (Chưa đăng nhập - `/tools/loans`)**: Truy cập ngay lập tức không cần đăng nhập thông qua `V2PublicToolView` (`V2AppLayout`, `hideBottomNav={!isLoggedIn}` ẩn Bottom Nav trên Mobile, Sidebar Desktop hiển thị nhóm **CÔNG CỤ** và nút **Đăng nhập**). Khi chưa đăng nhập, nút "Đăng nhập để lưu vào ERP" lưu bản nháp vào `sessionStorage` và chuyển hướng sang `/login?redirect=/tools/loans` (tự động quay lại `/tools/loans` sau khi đăng nhập thành công).
 - **Chế độ ERP (Đã đăng nhập - `/tools/loans` hoặc `/v2/loans`)**: Dành cho người dùng nội bộ có quyền `loans:read`. Render `LoansListPage` gồm 3 tab:
   1. *Mô Phỏng & Tính Nhanh*: Nhúng trực tiếp `LoanSimulatorPage` để tính toán nhanh ngay trong phiên làm việc.
-  2. *Dự Báo Dòng Tiền Tương Lai*: Gọi API `/api/v2/loans/cashflow-projection` để vẽ biểu đồ `V2ComboChart` (mỗi khoản vay 1 scheme màu phân biệt khi có $\ge 2$ khoản vay + đường Dư nợ tích lũy) và bảng chi tiết dòng tiền theo tháng của toàn doanh nghiệp.
+  2. *Dự Báo Dòng Tiền Tương Lai*: Gọi API `/api/v2/loans-tool/cashflow-projection` để vẽ biểu đồ `V2ComboChart` (mỗi khoản vay 1 scheme màu phân biệt khi có $\ge 2$ khoản vay + đường Dư nợ tích lũy) và bảng chi tiết dòng tiền theo tháng của toàn doanh nghiệp.
   3. *Danh Sách Hợp Đồng*: Bảng `V2StandardTable` phẳng không wrapper, `enableColumnVisibility={false}`, quản lý các hợp đồng nợ vay, mở Drawer xem chi tiết và tạo/cập nhật hợp đồng.
 
 ---
@@ -29,7 +29,7 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
 - `loans.locale.ts` & `locales/loans.{vi,en}.ts`: Từ điển song ngữ VI/EN (`v2.loans.*`).
 - `core.manifest.json`: Manifest định danh tầng core.
 
-### 2.2. Tầng Module (`src/v2/modules/loans/`)
+### 2.2. Tầng Module (`src/v2/modules/loans-tool/`)
 - `api/`: `loansApi.ts`, `dtos/loan-api.types.ts`, `queries/useLoansQueries.ts`, `mutations/useLoansMutations.ts`, `queries/loansKeys.ts`.
 - `drawers/`:
   - `loan-form-drawer/`: Form tạo mới và chỉnh sửa khoản vay 1-column layout (`V2DrawerSize.MD`, `V2DrawerMode.EDIT`, `V2DrawerLayout.ONE_COLUMN`), tách `LoanFormFields.tsx` & `LoanFormTermsSection.tsx`.
@@ -74,10 +74,10 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
 cd erp/erp-web && bunx tsc --noEmit
 
 # Chạy test Vitest cho module loans
-cd erp/erp-web && bun run test src/v2/core/loans src/v2/modules/loans
+cd erp/erp-web && bun run test src/v2/core/loans src/v2/modules/loans-tool
 
 # Kiểm tra cấm class màu xanh
-grep -rn "blue-" erp/erp-web/src/v2/modules/loans erp/erp-web/src/v2/core/loans || echo "NO_BLUE_MATCH"
+grep -rn "blue-" erp/erp-web/src/v2/modules/loans-tool erp/erp-web/src/v2/core/loans || echo "NO_BLUE_MATCH"
 ```
 
 ## Hợp đồng phân trang chuẩn v2 (pagination)

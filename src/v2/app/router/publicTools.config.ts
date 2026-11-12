@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { Calculator } from "lucide-react";
 
 const LoanSimulatorPage = React.lazy(() =>
-  import("@/v2/modules/loans/pages/loan-simulator").then((m) => ({
+  import("@/v2/modules/loans-tool/pages/loan-simulator").then((m) => ({
     default: m.LoanSimulatorPage,
   })),
 );

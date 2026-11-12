@@ -31,10 +31,11 @@ interface NotificationListResponse {
     next: number | null;
     previous: number | null;
   };
-  unreadCount: number;
+  /** Dữ liệu phụ của danh sách (không thuộc từng dòng). */
+  extraData: { unreadCount: number };
 }
 
-const BASE_URL = "/api/v2/notifications";
+const BASE_URL = "/api/v2/notifications-inbox";
 const LIST_PAGE_SIZE = 50;
 
 export const notificationsApi = {

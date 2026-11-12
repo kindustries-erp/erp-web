@@ -40,7 +40,7 @@ const V2PublicToolView = lazy(() =>
   })),
 );
 const LoansListPage = lazy(() =>
-  import("@/v2/modules/loans/pages/loans-list").then((m) => ({
+  import("@/v2/modules/loans-tool/pages/loans-list").then((m) => ({
     default: m.LoansListPage,
   })),
 );

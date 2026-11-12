@@ -16,7 +16,7 @@ import type {
   ColumnOptionsResultDto,
 } from "./dtos/role.dto";
 
-const BASE = "/api/v2/rbac-core/roles";
+const BASE = "/api/v2/rbac-roles";
 const OPTIONS_PAGE_SIZE = 20;
 
 export const toRolesListParams = (query: V2TableQuery) => ({
@@ -122,7 +122,7 @@ export const rolesV2Api = {
     try {
       const { data } = await v2HttpClient.get<{
         resources: ResourceItem[];
-      }>("/api/v2/rbac-core/collections");
+      }>("/api/v2/rbac-roles/collections");
       const list: ResourceItem[] =
         data?.resources ?? (Array.isArray(data) ? data : []);
       const filtered = list.filter(

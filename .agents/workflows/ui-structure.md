@@ -502,6 +502,8 @@ src/v2/
 4. **Co-located Testing**:
    - Viết unit test cho component Desktop và Mobile tương ứng.
 
+> **Hợp đồng API v2**: route `/api/v2/<tên module>`; list trả `{ items, pagination, summaries?, extraData? }`, column-options trả `{ items, pagination }`; dữ liệu phụ chung của list nằm trong `extraData`. Chi tiết: skill `standardize-table`, `references/v2-table.md` mục 14.
+
 #### 🔹 GIAI ĐOẠN 5: Zero-Miss Quality Gate & Grep Audit Suite
 Trước khi hoàn tất bất kỳ module nào, chạy toàn bộ bộ lệnh kiểm toán tự động:
 

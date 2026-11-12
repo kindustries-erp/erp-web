@@ -6,7 +6,7 @@ import { InvoiceShapePage } from "@/v2/modules/finance-invoice";
 import { BusinessPartnersCustomersPage } from "@/v2/modules/business-partners-customers"; // v2-module:business-partners-customers:imports
 import { BusinessPartnersSuppliersPage } from "@/v2/modules/business-partners-suppliers"; // v2-module:business-partners-suppliers:imports
 import { RolesPage } from "@/v2/modules/rbac-roles"; // v2-module:rbac-roles:imports
-import { LoansListPage } from "@/v2/modules/loans";
+import { LoansListPage } from "@/v2/modules/loans-tool";
 // plop:v2-page-imports
 import { V2AdminDashboardPage } from "@/v2/modules/admin-dashboard";
 

@@ -13,8 +13,8 @@ import {
   LoanSimulationResult,
 } from "@/v2/core/loans";
 
-const BASE_URL = "/api/v2/loans";
-const PUBLIC_SIMULATE_URL = "/api/v2/public/loans/simulate";
+const BASE_URL = "/api/v2/loans-tool";
+const PUBLIC_SIMULATE_URL = "/api/v2/public/loans-tool/simulate";
 
 export interface LoansQueryParams {
   page?: number;

@@ -48,7 +48,7 @@ export async function getCoreRolesApi(
   }
 
   const { data } = await axiosInstance.get<PaginatedWireResponse<Role>>(
-    `/api/v2/rbac-core/roles?${queryParams.toString()}`,
+    `/api/v2/rbac-roles?${queryParams.toString()}`,
   );
   return fromPaginatedWire(data);
 }
@@ -73,12 +73,12 @@ export async function getCoreRolesColumnOptionsApi(
 
   const { data } = await axiosInstance.get<
     PaginatedWireResponse<{ label: string; value: string }>
-  >(`/api/v2/rbac-core/roles/column-options?${params.toString()}`);
+  >(`/api/v2/rbac-roles/column-options?${params.toString()}`);
   return fromColumnOptionsWire(data);
 }
 
 export async function createCoreRoleApi(dto: CreateRoleDto): Promise<Role> {
-  const { data } = await axiosInstance.post("/api/v2/rbac-core/roles", dto);
+  const { data } = await axiosInstance.post("/api/v2/rbac-roles", dto);
   return data;
 }
 
@@ -86,22 +86,19 @@ export async function updateCoreRoleApi(
   id: string,
   dto: UpdateRoleDto,
 ): Promise<Role> {
-  const { data } = await axiosInstance.patch(
-    `/api/v2/rbac-core/roles/${id}`,
-    dto,
-  );
+  const { data } = await axiosInstance.patch(`/api/v2/rbac-roles/${id}`, dto);
   return data;
 }
 
 export async function deleteCoreRoleApi(id: string): Promise<void> {
-  await axiosInstance.delete(`/api/v2/rbac-core/roles/${id}`);
+  await axiosInstance.delete(`/api/v2/rbac-roles/${id}`);
 }
 
 export async function getCoreRolePermissionsApi(
   roleId: string,
 ): Promise<CorePermission[]> {
   const { data } = await axiosInstance.get<{ permissions: CorePermission[] }>(
-    `/api/v2/rbac-core/roles/${roleId}/permissions`,
+    `/api/v2/rbac-roles/${roleId}/permissions`,
   );
   return data.permissions ?? [];
 }
@@ -111,7 +108,7 @@ export async function saveCoreRolePermissionsApi(
 
   permissions: { resource: string; action: string; conditions?: any }[],
 ): Promise<void> {
-  await axiosInstance.patch(`/api/v2/rbac-core/roles/${roleId}/permissions`, {
+  await axiosInstance.patch(`/api/v2/rbac-roles/${roleId}/permissions`, {
     permissions,
   });
 }
@@ -125,7 +122,7 @@ export async function getCoreRoleUsersApi(
   roleId: string,
 ): Promise<CoreRoleUser[]> {
   const { data } = await axiosInstance.get<{ users: CoreRoleUser[] }>(
-    `/api/v2/rbac-core/roles/${roleId}/users`,
+    `/api/v2/rbac-roles/${roleId}/users`,
   );
   return data.users ?? [];
 }
@@ -134,7 +131,7 @@ export async function updateCoreRoleUsersApi(
   roleId: string,
   userIds: string[],
 ): Promise<void> {
-  await axiosInstance.patch(`/api/v2/rbac-core/roles/${roleId}/users`, {
+  await axiosInstance.patch(`/api/v2/rbac-roles/${roleId}/users`, {
     userIds,
   });
 }
@@ -144,6 +141,6 @@ export async function getCoreAvailableResourcesApi(): Promise<
 > {
   const { data } = await axiosInstance.get<{
     resources: { resource: string; label: string }[];
-  }>("/api/v2/rbac-core/collections");
+  }>("/api/v2/rbac-roles/collections");
   return data.resources ?? [];
 }
