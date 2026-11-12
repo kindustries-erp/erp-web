@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
 import { V2TabBar } from "./V2TabBar";
-import type { V2TabItemData } from "./V2TabBar.type";
+import { V2TabBarVariant, type V2TabItemData } from "./V2TabBar.type";
 
 vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
   useV2Translation: () => ({
@@ -20,7 +20,7 @@ describe("V2TabBar variant=sub stretch", () => {
   it("không truyền stretch thì tab giữ kích thước theo nội dung", () => {
     render(
       <V2TabBar
-        variant="sub"
+        variant={V2TabBarVariant.SUB}
         tabs={tabs}
         activeTabKey="month"
         onTabChange={vi.fn()}
@@ -35,7 +35,7 @@ describe("V2TabBar variant=sub stretch", () => {
   it("stretch chia đều các tab trên toàn chiều ngang", () => {
     render(
       <V2TabBar
-        variant="sub"
+        variant={V2TabBarVariant.SUB}
         stretch
         tabs={tabs}
         activeTabKey="month"
@@ -52,7 +52,7 @@ describe("V2TabBar variant=sub stretch", () => {
   it("stretch không ảnh hưởng variant button-group", () => {
     render(
       <V2TabBar
-        variant="button-group"
+        variant={V2TabBarVariant.BUTTON_GROUP}
         stretch
         tabs={tabs}
         activeTabKey="month"

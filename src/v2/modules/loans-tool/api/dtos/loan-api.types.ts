@@ -1,5 +1,6 @@
+import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
 import { AmortizationMethod, LoanItem, LoanStatus } from "@/v2/core/loans";
-import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
+import type { V2PaginatedResponseWithSummaries } from "@/v2/shared/types/v2-pagination";
 
 export interface CreateLoanPayload {
   loanCode?: string;
@@ -31,8 +32,11 @@ export interface RecordPaymentPayload {
   notes?: string;
 }
 
-/** Response danh sách chuẩn v2: `items` và `pagination` */
-export type LoanListResponse = V2PaginatedResponse<LoanItem>;
+/** Response danh sách chuẩn v2: `items`, `pagination` và `summaries`. */
+export type LoanListResponse = V2PaginatedResponseWithSummaries<
+  LoanItem,
+  Record<string, V2SummaryMetric | null>
+>;
 
 export interface CashflowLoanBreakdownItem {
   loanId: string;

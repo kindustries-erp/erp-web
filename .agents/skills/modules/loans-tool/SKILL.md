@@ -9,10 +9,10 @@ description: Module tri thức Frontend Quản lý Khoản Vay & Mô Phỏng Dò
 
 Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn chỉnh theo chuẩn V2 Architecture với **URL thống nhất `/tools/loans`** cho cả khách chưa đăng nhập và người dùng ERP:
 - **Chế độ Khách (Chưa đăng nhập - `/tools/loans`)**: Truy cập ngay lập tức không cần đăng nhập thông qua `V2PublicToolView` (`V2AppLayout`, `hideBottomNav={!isLoggedIn}` ẩn Bottom Nav trên Mobile, Sidebar Desktop hiển thị nhóm **CÔNG CỤ** và nút **Đăng nhập**). Khi chưa đăng nhập, nút "Đăng nhập để lưu vào ERP" lưu bản nháp vào `sessionStorage` và chuyển hướng sang `/login?redirect=/tools/loans` (tự động quay lại `/tools/loans` sau khi đăng nhập thành công).
-- **Chế độ ERP (Đã đăng nhập - `/tools/loans` hoặc `/v2/loans`)**: Dành cho người dùng nội bộ có quyền `loans:read`. Render `LoansListPage` gồm 3 tab:
-  1. *Mô Phỏng & Tính Nhanh*: Nhúng trực tiếp `LoanSimulatorPage` để tính toán nhanh ngay trong phiên làm việc.
-  2. *Dự Báo Dòng Tiền Tương Lai*: Gọi API `/api/v2/loans-tool/cashflow-projection` để vẽ biểu đồ `V2ComboChart` (mỗi khoản vay 1 scheme màu phân biệt khi có $\ge 2$ khoản vay + đường Dư nợ tích lũy) và bảng chi tiết dòng tiền theo tháng của toàn doanh nghiệp.
-  3. *Danh Sách Hợp Đồng*: Bảng `V2StandardTable` phẳng không wrapper, `enableColumnVisibility={false}`, quản lý các hợp đồng nợ vay, mở Drawer xem chi tiết và tạo/cập nhật hợp đồng.
+- **Chế độ ERP (Đã đăng nhập - `/tools/loans` hoặc `/v2/loans`)**: Dành cho người dùng nội bộ có quyền `loans:read`. Render `LoansListPage` theo khung `V2ModulePage` với `variant={V2ModulePageVariant.CARD}` (Header Card có `Calculator` icon + thanh tab pill kèm `border-b`), `defaultTab={LoansTabKey.SIMULATOR}`, `syncUrl=true` đồng bộ `?tab=simulator|projection|list` (giữ lazy-load cho tab `list`) gồm 3 tab:
+  1. *Mô Phỏng & Tính Nhanh* (`simulator`, `kind="dashboard"`): Nhúng trực tiếp `LoanSimulatorPage` để tính toán nhanh ngay trong phiên làm việc; khi lưu thành công chuyển sang `?tab=list`.
+  2. *Dự Báo Dòng Tiền Tương Lai* (`projection`, `kind="dashboard"`): Gọi API `/api/v2/loans-tool/cashflow/projection` để vẽ biểu đồ `V2ComboChart` (mỗi khoản vay 1 scheme màu phân biệt khi có $\ge 2$ khoản vay + đường Dư nợ tích lũy) và bảng chi tiết dòng tiền theo tháng của toàn doanh nghiệp.
+  3. *Danh Sách Hợp Đồng* (`list`, `kind="list"`): `V2ModuleListTab` + `V2StandardTable` (`mode="server"`, `tableId="loans-master-table"`, `v2ColumnPreferencesStorage`, `v2ViewPresetStorage`), nhận response `{ items, pagination: { page, pageSize, total, totalPages }, summaries }`, gửi `summary_keys` và hiển thị hàng tổng (`principalAmount`, `totalPaidPrincipal`, `remainingPrincipal`), `headerFilter` + `fetchOptions` (`/api/v2/loans-tool/column-options`), `viewModes` (`overview` / `all`), `filterGroup` (`Tất cả`, 4 trạng thái, `Đã xóa mềm`), Xóa mềm (`loans:delete`) & Xóa vĩnh viễn (`loans:purge`, ở mode `Đã xóa mềm`) kèm `V2ConfirmModal`.
 
 ---
 
@@ -30,17 +30,17 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
 - `core.manifest.json`: Manifest định danh tầng core.
 
 ### 2.2. Tầng Module (`src/v2/modules/loans-tool/`)
-- `api/`: `loansApi.ts`, `dtos/loan-api.types.ts`, `queries/useLoansQueries.ts`, `mutations/useLoansMutations.ts`, `queries/loansKeys.ts`.
+- `api/`: `loansApi.ts` (`toLoansListParams`, `list`, `options`, `purge`), `dtos/loan-api.types.ts` (`LoanListResponse` với `pagination` + `summaries`), `queries/useLoansQueries.ts` (`useLoansTableData`), `mutations/useLoansMutations.ts` (`usePurgeLoanMutation`), `queries/loansKeys.ts`.
 - `drawers/`:
   - `loan-form-drawer/`: Form tạo mới và chỉnh sửa khoản vay 1-column layout (`V2DrawerSize.MD`, `V2DrawerMode.EDIT`, `V2DrawerLayout.ONE_COLUMN`), tách `LoanFormFields.tsx` & `LoanFormTermsSection.tsx`.
   - `loan-detail-drawer/`: Xem chi tiết khoản vay (`V2DrawerSize`, `V2DrawerMode.VIEW`, `V2DrawerLayout.ONE_COLUMN`), tích hợp KPI, Biểu đồ dòng chảy và `LoanPaymentsTabTable`.
   - `record-payment-modal/`: Modal (`V2Modal`) ghi nhận trả nợ theo kỳ (`.type.ts`, `.hook.ts`, `.tsx`).
 - `components/organisms/`:
-  - `loan-table/`: Định nghĩa cột bảng `LoansTable.columns.tsx` cho `V2StandardTable`.
+  - `loan-table/`: `LoansTable.columns.tsx` + `LoansTable.columns.amounts.tsx` (12 cột `headerFilter`, `V2TableText` click+copy, `summary` row, `mobileSlot`).
   - `consolidated-cashflow/`: View dự báo dòng tiền tương lai `ConsolidatedCashflowView.tsx` & `ConsolidatedCashflowTable.tsx` (dùng chung `PortfolioScheduleTable` có expand row).
 - `pages/`:
-  - `loan-simulator/`: Trang máy tính mô phỏng đa nguồn (`LoanSimulatorPage.*`, `components/PortfolioLoanList.tsx`, `components/PortfolioLoanCard.tsx`).
-  - `loans-list/`: Trang danh sách và tổng quan V2 (`LoansListPage.desktop.tsx`, `.mobile.tsx`, `.mobile-card.tsx`, `.actions.tsx`).
+  - `loan-simulator/`: Trang máy tính mô phỏng đa nguồn (`LoanSimulatorPage.*`, `components/PortfolioLoanList.tsx`, `components/PortfolioLoanCard.tsx`, `components/PortfolioLoanCardFields.tsx`, `components/LoanSimulatorActionsSheet.tsx`). Trên desktop, các nút `Mặc định`, `Thêm khoản vay`, `Lưu danh mục vào hệ thống ERP` gộp chung ở header trên cùng; không còn wrapper `Danh Mục Khoản Vay` bên ngoài; 6 field input trong card xếp trên 1 hàng ngang ở desktop (`lg+`). Trên mobile, ẩn card header và gom 3 nút (`Lưu danh mục vào hệ thống ERP`, `Thêm khoản vay`, `Mặc định`) vào `V2BottomSheet` (`LoanSimulatorActionsSheet`).
+  - `loans-list/`: `LoansListPage.tsx` (`V2ModulePage` preset `V2ModulePageVariant.CARD`), `LoansListPage.tabs.tsx`, `LoansListPage.hook.ts`, `LoansListPage.filter.hook.ts`, `LoansListPage.delete.hook.ts`, `LoansListPage.actions.tsx`, `loansList.enum.ts` (`LoansTabKey`, `LoansFilterKey`, `LoansViewKey`), `loansList.config.ts`. Trên mobile, `V2PageHeaderVariant.CARD` thu gọn (ẩn description dài, giữ tiêu đề + nút `+ Thêm khoản vay mới`), `TabBarPagePillView` dùng `V2BottomSheet` (`TabBarPageViewMobile`) chọn tab, và bảng danh sách dùng `V2StandardTableMobile`.
 
 ---
 

@@ -426,6 +426,12 @@ cd erp/erp-web && bun run storybook
 - **Cấm hoàn toàn Deep Imports**: Không được import phân mảnh dạng `@/v2/shared/components/atoms/...`, `@/v2/shared/components/molecules/...`, `@/v2/shared/components/organisms/...`.
 - **Đảm bảo Sub-Barrels**: `src/v2/shared/components/organisms/index.ts` và `src/v2/shared/components/molecules/index.ts` phải luôn luôn re-export đầy đủ 100% các component con để phục vụ Master Barrel.
 
+### 4.10. Pure Enums & Preset Layout cho `V2ModulePage`, `V2PageHeader`, `V2TabBar`
+- Không dùng chuỗi cứng cho prop `variant`/`headerVariant`/`tabVariant`; mọi biến thể đều đi qua Pure TypeScript Enums export tại `@/v2/shared/components`:
+  - `V2PageHeaderVariant`: `FLAT` (`"flat"`, mặc định) | `CARD` (`"card"`, bọc thẻ `bg-card rounded-2xl border shadow-xs p-3 sm:p-6`, trên mobile `< sm` ẩn mô tả `description` bằng `hidden sm:line-clamp-2` để thu gọn chiều cao và vẫn giữ tiêu đề + `actions`, Desktop giữ nguyên `icon`, `description`, `actions`, `tabKeys`).
+  - `V2TabBarVariant`: `APP` | `HEADER` | `SUB` | `BUTTON_GROUP` | `PAGE` | `PILL` (`"pill"`, render qua `TabBarPagePillView`: Desktop hiển thị pill active `bg-primary text-primary-fg` + inactive ghost kèm viền `border-b`; Mobile dùng `TabBarPageViewMobile` mở `V2BottomSheet` chọn tab).
+  - `V2ModulePageVariant`: `DEFAULT` (`FLAT` + `PAGE`) | `CARD` (`CARD` + `PILL`). Có thể ghi đè từng phần qua `headerVariant={V2PageHeaderVariant.*}` hoặc `tabVariant={V2ModulePageTabVariant.*}`.
+
 ---
 
 ## 8. Quy Chuẩn Kiểm Thử & Quality Gate

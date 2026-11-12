@@ -3,8 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
 import type { V2TableToolbarConfig } from "@/v2/shared/components/organisms/v2-standard-table";
 import type { V2TableQuery } from "@/v2/shared/types/v2-table";
+import { V2PageHeaderVariant } from "@/v2/shared/components/molecules/v2-page-header";
 import { V2ModulePage } from "./V2ModulePage";
-import type { V2ModuleTab } from "./V2ModulePage.type";
+import {
+  V2ModulePageTabVariant,
+  V2ModulePageVariant,
+  type V2ModuleTab,
+} from "./V2ModulePage.type";
 
 const captured = vi.hoisted(() => ({
   props: null as null | Record<string, any>,
@@ -146,5 +151,27 @@ describe("V2ModulePage", () => {
   it("renders overlays", () => {
     renderPage({ overlays: <div>Drawer chi tiết</div> });
     expect(screen.getByText("Drawer chi tiết")).toBeInTheDocument();
+  });
+
+  it("renders V2ModulePageVariant.CARD with header card and pill tabs", () => {
+    const { container } = renderPage({ variant: V2ModulePageVariant.CARD });
+    const header = container.querySelector("header");
+    expect(header).toHaveClass("bg-card", "rounded-2xl", "border");
+    const activeTab = screen.getByRole("tab", { name: "Tổng quan" });
+    expect(activeTab).toHaveClass("bg-primary", "text-primary-fg");
+    expect(screen.getByRole("tablist")).toHaveClass("border-b");
+  });
+
+  it("allows overriding headerVariant and tabVariant independently", () => {
+    const { container } = renderPage({
+      variant: V2ModulePageVariant.CARD,
+      headerVariant: V2PageHeaderVariant.FLAT,
+      tabVariant: V2ModulePageTabVariant.PILL,
+    });
+    const header = container.querySelector("header");
+    expect(header).not.toHaveClass("bg-card");
+    expect(screen.getByRole("tab", { name: "Tổng quan" })).toHaveClass(
+      "bg-primary",
+    );
   });
 });

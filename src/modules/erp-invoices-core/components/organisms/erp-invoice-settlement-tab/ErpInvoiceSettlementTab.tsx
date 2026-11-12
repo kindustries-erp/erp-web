@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Landmark, Receipt, Sparkles, CheckCircle2 } from "lucide-react";
-import { V2TabBar, V2Text } from "@/v2/shared/components";
+import { V2TabBar, V2TabBarVariant, V2Text } from "@/v2/shared/components";
 import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
@@ -58,7 +58,7 @@ export function ErpInvoiceSettlementTab(props?: ErpInvoiceSettlementTabProps) {
         {/* Bên trái: Sub-Tabs 1. Sao kê / 2. Sổ quỹ */}
         <div className="flex items-center gap-2">
           <V2TabBar
-            variant="sub"
+            variant={V2TabBarVariant.SUB}
             activeTabKey={ctx.activeSubTab}
             onTabChange={(val: string) =>
               ctx.setActiveSubTab(val as SettlementSubTabKey)

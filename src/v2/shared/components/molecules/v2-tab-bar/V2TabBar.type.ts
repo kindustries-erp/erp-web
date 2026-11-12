@@ -2,12 +2,20 @@ import type * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import type { V2BaseProps } from "@/v2/shared/types";
 
-export type V2TabBarVariant =
-  | "app"
-  | "header"
-  | "sub"
-  | "button-group"
-  | "page";
+/** Biến thể thanh tab chuẩn V2 */
+export enum V2TabBarVariant {
+  APP = "app",
+  HEADER = "header",
+  SUB = "sub",
+  BUTTON_GROUP = "button-group",
+  PAGE = "page",
+  PILL = "pill",
+}
+
+export type V2TabBarPillVariant =
+  | V2TabBarVariant.HEADER
+  | V2TabBarVariant.BUTTON_GROUP
+  | V2TabBarVariant.SUB;
 
 export interface V2TabItemData {
   /** Định danh của tab (hỗ trợ cả id và key) */
@@ -21,7 +29,7 @@ export interface V2TabItemData {
   badgeCount?: number;
   /** Trạng thái vô hiệu hóa tab */
   disabled?: boolean;
-  /** Cho phép đóng tab (chỉ dùng cho variant="app") */
+  /** Cho phép đóng tab (chỉ dùng cho V2TabBarVariant.APP) */
   isClosable?: boolean;
   /** Nội dung panel tương ứng của tab */
   content?: React.ReactNode;
@@ -35,7 +43,7 @@ export interface V2TabItemData {
   dot?: boolean;
   /** Màu sắc chấm tròn trạng thái */
   dotColor?: "emerald" | "amber" | "rose" | "primary";
-  /** Luôn hiển thị icon ngay cả khi tab không active (dành cho variant="sub") */
+  /** Luôn hiển thị icon ngay cả khi tab không active (dành cho V2TabBarVariant.SUB) */
   alwaysShowIcon?: boolean;
 }
 
@@ -52,9 +60,9 @@ export interface V2TabBarProps extends V2BaseProps<HTMLElement> {
   onTabSelect?: (id: string) => void;
   /** Callback khi chọn tab (tương đương onTabSelect) */
   onTabChange?: (key: string) => void;
-  /** Callback khi đóng tab (variant="app") */
+  /** Callback khi đóng tab (V2TabBarVariant.APP) */
   onTabClose?: (id: string) => void;
-  /** Biến thể giao diện của tab bar: "app" | "header" | "sub" | "button-group" | "page" */
+  /** Biến thể giao diện của tab bar theo enum V2TabBarVariant */
   variant?: V2TabBarVariant;
   /** Cụm nút tiện ích hoặc actions hiển thị bên phải thanh tab */
   extra?: React.ReactNode;
@@ -62,13 +70,13 @@ export interface V2TabBarProps extends V2BaseProps<HTMLElement> {
   containerClassName?: string;
   /** Nhãn aria-label hỗ trợ accessibility */
   ariaLabel?: string;
-  /** Chỉ với variant="sub": các tab chia đều toàn bộ chiều ngang (mặc định giữ kích thước theo nội dung) */
+  /** Chỉ với V2TabBarVariant.SUB: các tab chia đều toàn bộ chiều ngang */
   stretch?: boolean;
 }
 
 export interface TabBarPillViewProps {
   tabs: V2TabItemData[];
-  variant: "header" | "button-group" | "sub";
+  variant: V2TabBarPillVariant;
   activeKey: string;
   onSelect: (key: string) => void;
   extra?: React.ReactNode;

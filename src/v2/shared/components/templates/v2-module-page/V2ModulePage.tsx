@@ -7,9 +7,14 @@ import {
   V2PageTabsContext,
   V2TabPanel,
 } from "@/v2/shared/components/molecules/v2-tab-panel";
+import { resolveV2ModulePageAppearance } from "./V2ModulePage.helper";
 import { useV2ModulePage } from "./V2ModulePage.hook";
 import { V2ModuleListTab } from "./V2ModuleListTab";
-import type { V2ModulePageProps, V2ModuleTab } from "./V2ModulePage.type";
+import {
+  V2ModulePageVariant,
+  type V2ModulePageProps,
+  type V2ModuleTab,
+} from "./V2ModulePage.type";
 
 function renderTabContent<T>(tab: V2ModuleTab<T>) {
   return tab.kind === "dashboard" ? (
@@ -23,13 +28,15 @@ export function V2ModulePage<T>({
   title,
   description,
   icon,
+  variant = V2ModulePageVariant.DEFAULT,
+  headerVariant,
+  tabVariant,
   actions,
   tabs,
   activeTab,
   defaultTab,
   onTabChange,
   syncUrl,
-  tabVariant = "page",
   overlays,
   className,
   pageTabs,
@@ -44,34 +51,34 @@ export function V2ModulePage<T>({
     syncUrl,
   });
 
-  const effectivePageTabs = pageTabs;
-  const effectiveActivePageTab = activePageTab;
-  const effectiveOnPageTabSelect = onPageTabSelect;
+  const appearance = resolveV2ModulePageAppearance({
+    variant,
+    headerVariant,
+    tabVariant,
+  });
 
   return (
     <V2PageTabsContext.Provider value={page.context}>
       <V2Stack
         as="section"
         fill
-        className={cn(
-          "px-2 sm:px-5 pt-1.5 sm:pt-[18px] pb-2 gap-2 sm:gap-4",
-          className,
-        )}
+        className={cn(appearance.containerClass, className)}
       >
         <V2PageHeader
           title={title}
           description={description}
           icon={icon}
+          variant={appearance.headerVariant}
           actions={actions}
           tabKeys={page.tabKeys}
           activeKey={page.activeKey}
           register={page.register}
-          pageTabs={effectivePageTabs}
-          activePageTab={effectiveActivePageTab}
-          onPageTabSelect={effectiveOnPageTabSelect}
+          pageTabs={pageTabs}
+          activePageTab={activePageTab}
+          onPageTabSelect={onPageTabSelect}
         />
         <V2TabBar
-          variant={tabVariant}
+          variant={appearance.barTabVariant}
           tabs={
             pageTabs
               ? pageTabs.map((pt) => ({
@@ -84,15 +91,11 @@ export function V2ModulePage<T>({
                 }))
               : tabs
           }
-          activeTabKey={pageTabs ? effectiveActivePageTab : page.activeKey}
-          onTabChange={
-            pageTabs ? effectiveOnPageTabSelect : page.handleTabChange
-          }
+          activeTabKey={pageTabs ? activePageTab : page.activeKey}
+          onTabChange={pageTabs ? onPageTabSelect : page.handleTabChange}
           className={cn(
             "shrink-0",
-            effectivePageTabs &&
-              effectivePageTabs.length > 1 &&
-              "hidden sm:flex",
+            pageTabs && pageTabs.length > 1 && "hidden sm:flex",
             !pageTabs && tabs.length <= 1 && "hidden",
           )}
         />

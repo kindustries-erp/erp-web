@@ -2,7 +2,10 @@ import * as React from "react";
 import { Filter } from "lucide-react";
 import { DrawerFooter } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import { V2BottomSheet } from "@/v2/shared/components/molecules/v2-bottom-sheet";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+} from "@/v2/shared/components/molecules/v2-tab-bar";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   buildFilterDrawerActions,
@@ -51,7 +54,7 @@ export function V2TableFilterDrawerMobile<T>(
     >
       {tabs && (
         <V2TabBar
-          variant="header"
+          variant={V2TabBarVariant.HEADER}
           tabs={tabs}
           activeTabKey={activeTab}
           onTabChange={(key) => setTab(key as V2FilterDrawerTab)}

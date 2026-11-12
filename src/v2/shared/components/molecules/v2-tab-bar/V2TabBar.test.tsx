@@ -2,7 +2,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 import { V2TabBar } from "./V2TabBar";
-import type { V2TabItemData } from "./V2TabBar.type";
+import { V2TabBarVariant, type V2TabItemData } from "./V2TabBar.type";
 
 describe("V2TabBar Molecule", () => {
   const mockTabs: V2TabItemData[] = [
@@ -15,7 +15,7 @@ describe("V2TabBar Molecule", () => {
     const handleSelect = vi.fn();
     render(
       <V2TabBar
-        variant="header"
+        variant={V2TabBarVariant.HEADER}
         tabs={mockTabs}
         activeTabKey="tab1"
         onTabSelect={handleSelect}
@@ -42,7 +42,7 @@ describe("V2TabBar Molecule", () => {
     const handleChange = vi.fn();
     render(
       <V2TabBar
-        variant="sub"
+        variant={V2TabBarVariant.SUB}
         tabs={mockTabs}
         activeTabKey="tab2"
         onTabChange={handleChange}
@@ -59,7 +59,7 @@ describe("V2TabBar Molecule", () => {
     const handleChange = vi.fn();
     render(
       <V2TabBar
-        variant="button-group"
+        variant={V2TabBarVariant.BUTTON_GROUP}
         tabs={[
           {
             key: "preview",
@@ -91,7 +91,7 @@ describe("V2TabBar Molecule", () => {
     const handleClose = vi.fn();
     render(
       <V2TabBar
-        variant="app"
+        variant={V2TabBarVariant.APP}
         tabs={[
           { id: "app1", label: "Tab App 1", isClosable: true },
           { id: "app2", label: "Tab App 2", isClosable: false },
@@ -124,7 +124,7 @@ describe("V2TabBar Molecule", () => {
 
     render(
       <V2TabBar
-        variant="sub"
+        variant={V2TabBarVariant.SUB}
         tabs={mockTabs}
         activeTabKey="tab1"
         extra={<button type="button">MobileExtra</button>}
@@ -149,7 +149,7 @@ describe("V2TabBar Molecule", () => {
     const handleChange = vi.fn();
     render(
       <V2TabBar
-        variant="page"
+        variant={V2TabBarVariant.PAGE}
         tabs={mockTabs}
         activeTabKey="tab1"
         onTabChange={handleChange}
@@ -179,7 +179,7 @@ describe("V2TabBar Molecule", () => {
     const handleChange = vi.fn();
     render(
       <V2TabBar
-        variant="page"
+        variant={V2TabBarVariant.PAGE}
         tabs={mockTabs}
         activeTabKey="tab1"
         onTabChange={handleChange}
@@ -196,6 +196,73 @@ describe("V2TabBar Molecule", () => {
     expect(
       screen.queryByTestId("v2-bottom-sheet-content"),
     ).not.toBeInTheDocument();
+
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: originalInnerWidth,
+    });
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+  });
+
+  it("renders variant=V2TabBarVariant.PILL with primary active pill, border-b and disabled guard", () => {
+    const handleChange = vi.fn();
+    render(
+      <V2TabBar
+        variant={V2TabBarVariant.PILL}
+        tabs={mockTabs}
+        activeTabKey="tab1"
+        onTabChange={handleChange}
+      />,
+    );
+
+    const tablist = screen.getByRole("tablist");
+    expect(tablist).toHaveClass("border-b");
+
+    const active = screen.getByRole("tab", { name: /Chi tiết/ });
+    expect(active).toHaveAttribute("aria-selected", "true");
+    expect(active).toHaveClass("bg-primary", "text-primary-fg");
+    expect(screen.getByText("5")).toBeInTheDocument();
+
+    const tab2 = screen.getByRole("tab", { name: "Tài chính" });
+    expect(tab2).toHaveClass("bg-transparent");
+    fireEvent.click(tab2);
+    expect(handleChange).toHaveBeenCalledWith("tab2");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Chứng từ" }));
+    expect(handleChange).not.toHaveBeenCalledWith("tab3");
+  });
+
+  it("renders variant=V2TabBarVariant.PILL as bottom sheet trigger on mobile (< 768px)", () => {
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 375,
+    });
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    const handleChange = vi.fn();
+    render(
+      <V2TabBar
+        variant={V2TabBarVariant.PILL}
+        tabs={mockTabs}
+        activeTabKey="tab1"
+        onTabChange={handleChange}
+      />,
+    );
+
+    const trigger = screen.getByTestId("v2-tab-bar-mobile-trigger");
+    expect(trigger).toHaveTextContent("Chi tiết");
+    fireEvent.click(trigger);
+
+    expect(screen.getByTestId("v2-bottom-sheet-content")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: /Tài chính/ }));
+    expect(handleChange).toHaveBeenCalledWith("tab2");
 
     Object.defineProperty(window, "innerWidth", {
       writable: true,

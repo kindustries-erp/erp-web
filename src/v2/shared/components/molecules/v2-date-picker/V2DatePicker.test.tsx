@@ -89,6 +89,41 @@ describe("V2DatePicker", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xóa ngày" }));
     expect(onValueChange).toHaveBeenCalledWith(null);
   });
+
+  it("renders centered V2Calendar inside V2BottomSheet on mobile", () => {
+    vi.spyOn(viewportHook, "useViewport").mockReturnValue({
+      width: 375,
+      height: 812,
+      isMobile: true,
+      isTablet: false,
+      isDesktop: false,
+    });
+    const onValueChange = vi.fn();
+
+    render(
+      <V2DatePicker
+        value="2026-01-15"
+        onValueChange={onValueChange}
+        placeholder="Ngày giải ngân"
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Ngày giải ngân" });
+    expect(trigger.className).toContain("justify-start");
+    fireEvent.click(trigger);
+
+    expect(screen.getByTestId("v2-bottom-sheet-content")).toBeInTheDocument();
+    const panel = document.querySelector("[data-v2-date-panel]");
+    expect(panel?.className).toContain("justify-center");
+    expect(panel?.innerHTML).toContain("grid-cols-7");
+    expect(panel?.innerHTML).toContain("mx-auto");
+
+    fireEvent.click(day("20"));
+    expect(onValueChange).toHaveBeenCalledWith("2026-01-20");
+    expect(
+      screen.queryByTestId("v2-bottom-sheet-content"),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe("V2DateRangePicker", () => {
@@ -163,5 +198,28 @@ describe("V2DateRangePicker", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Xóa ngày" }));
     expect(onValueChange).toHaveBeenCalledWith({});
+  });
+
+  it("renders V2BottomSheet with single-month centered calendar on mobile", () => {
+    vi.spyOn(viewportHook, "useViewport").mockReturnValue({
+      width: 375,
+      height: 812,
+      isMobile: true,
+      isTablet: false,
+      isDesktop: false,
+    });
+
+    render(
+      <V2DateRangePicker
+        value={{ from: "2026-01-10" }}
+        onValueChange={vi.fn()}
+        aria-label="Kỳ mobile"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Kỳ mobile" }));
+    expect(screen.getByTestId("v2-bottom-sheet-content")).toBeInTheDocument();
+    const panel = document.querySelector("[data-v2-date-panel]");
+    expect(panel?.className).toContain("items-center");
   });
 });
