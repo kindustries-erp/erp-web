@@ -29,6 +29,7 @@ Mandatory reading order when working on a specific family:
 ## 🛡️ Critical Guardrails (MUST FOLLOW)
 
 ### No Root Pushing
+
 - **FORBIDDEN**: Running `git add`, `git commit`, or `git push` from workspace root or intermediate directories (`./erp`, `./klotus`).
 - **REQUIRED**: `cd` into the concrete child repository before any git operation:
   - `./erp/erp-api` (API changes)
@@ -37,26 +38,31 @@ Mandatory reading order when working on a specific family:
   - `./klotus/landing-page-web` (Klotus web)
 
 ### Tool Standards
+
 - **BUN ONLY**: Use `bun` / `bunx` exclusively. NEVER use `npm` or `yarn`.
 - **No Manual Containers**: Do NOT build or start production deployment containers on the local machine.
 - **Local Dev Only**: Use `bun run start:dev` / `bun run dev` for local testing.
 
 ### Branch & Deployment Strategy
+
 - **ERP**: Work on `erp-master` FIRST, then sync downstream to `erp-greenway-*`, `erp-klotus-*`.
 - **Klotus**: Work on `master` branch.
 - **Delivery Sequence**: `Database (Phase 1)` → `API Backend (Phase 2)` → `Web Frontend (Phase 3)` → `QC (Phase 4)`.
 - **Remote**: Always push to `github-industries`.
 
 ### Database & Environment
+
 - **By Default**: Dùng `DATABASE_URL` trong `.env` làm DB master (luôn đọc `.env` để xác nhận DB thực tế). Tenant khác dùng file `.env.<tenant>-<stage>` tương ứng với nhánh deploy (`greenway-production`, `greenway-staging`, `klotus-production`, `klotus-staging`). Không có biến `ERP_MASTER_DATABASE_URL`; `.env` trần có thể đang trỏ DB production nên luôn kiểm tra `DATABASE_URL` trước khi chạy script, và script phải nhận file env tường minh.
 - **Xác nhận DB**: trước khi quét hoặc ghi DB, chạy `SELECT current_database();` để biết DB thực tế, báo anh tên DB trước khi ghi; không suy ra DB từ tên file.
 - **Context Isolation**: Do NOT mix databases, `.env`, or schema between ERP and Klotus.
 - **Verify Runtime**: Read the actual `.env` before making changes (no outdated assumptions).
 
 ### Pre-Commit/Push Checklist
+
 - **Commit** (`pre-commit`, lint-staged): eslint --fix + prettier trên file staged, cộng test liên quan (`jest --findRelatedTests` / `vitest related`). Bypass khẩn cấp: `git commit --no-verify`.
 - **Push** (`pre-push`): chỉ `bun run type:check`. Bypass: `SKIP_TESTS=1`.
 - **Full test / build / check:ci**: chạy ở GitHub CI (pipeline từng repo), không chạy tự động ở local. Chạy tay khi cần: `bun run verify:final` (ERP) hoặc `bun run check:ci`.
+
 ```bash
 git commit
 git pull --rebase github-industries [target-branch]
@@ -98,6 +104,7 @@ Repo-level workflows (e.g. `erp/erp-web/.agents/workflows/standardize-drawer.md`
 ## 🚀 Quick Reference: Common Scenarios
 
 ### Scenario 1: Starting a New Feature / Refactor / Bugfix
+
 1. Trình plan theo `/erp-plan`, dùng cơ chế plan của agent (Claude Code: `/plan`; Antigravity: `implementation_plan.md`). Xem mục "Tầng Cơ Chế Plan Theo Agent" trong workflow.
 2. Execute **5 phases**: Discovery → Tech Plan → Task Breakdown (X.Y.Z) → Approval → Execution.
 3. Plan (DoD, lệnh verify) trình trong hội thoại; chỉ làm sau khi người dùng trả lời `OK`.
@@ -107,23 +114,27 @@ Repo-level workflows (e.g. `erp/erp-web/.agents/workflows/standardize-drawer.md`
 7. When done: update the Module Skill (`erp/erp-api/.agents/skills/modules/<module>/SKILL.md` or `erp/erp-web/.agents/skills/modules/<module>/SKILL.md`).
 
 ### Scenario 2: Committing & Pushing Code (ERP)
+
 1. Load `/erp-git-workflow` workflow.
 2. Ensure you're on `erp-master`.
 3. Commit (pre-commit lint + test liên quan), then `git pull --rebase github-industries erp-master`.
 4. Push (pre-push type-check). Full test/build chạy trên GitHub CI sau khi push.
 
 ### Scenario 3: Building a Data Table (ERP Web)
+
 1. Load `/standardize-table` workflow.
 2. Follow 4 steps: Table component, Header Filters, Server-side API call, STT 1-based, QC.
 3. Use existing `SpreadsheetPageTemplate` and `DataTable` components.
 4. Verify filter, sort, pagination work end-to-end.
 
 ### Scenario 4: Building a Form Drawer (ERP Web)
+
 1. Load `/standardize-drawer` workflow.
 2. Follow 4 steps: StandardFormDrawer, Responsive sizing (`vw`), Collapsible sections, Top tabs.
 3. Ensure form fields use proper validation and translation keys.
 
 ### Scenario 5: Refactoring Large Service (ERP API)
+
 1. Load `/api-structure` workflow.
 2. Scan file sizes: Controller >300 LoC, Service >500 LoC.
 3. Choose a pattern: Sub-Controllers, Sub-Services Facade, Pure Engine.
@@ -198,10 +209,10 @@ Entry point for AI agents working in the ERP family (thư mục `erp/` trong wor
 
 ## Child Repositories
 
-| Việc | Vào repo | Rule chi tiết |
-|------|----------|---------------|
+| Việc                                  | Vào repo                                                      | Rule chi tiết                                                |
+| ------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
 | Backend (NestJS, TypeORM, PostgreSQL) | `./erp-api` (Remote `github-industries`, branch `erp-master`) | [`./erp-api/.agents/AGENTS.md`](./erp-api/.agents/AGENTS.md) |
-| Frontend (React, Vite, React Query) | `./erp-web` (Remote `github-industries`, branch `erp-master`) | [`./erp-web/.agents/AGENTS.md`](./erp-web/.agents/AGENTS.md) |
+| Frontend (React, Vite, React Query)   | `./erp-web` (Remote `github-industries`, branch `erp-master`) | [`./erp-web/.agents/AGENTS.md`](./erp-web/.agents/AGENTS.md) |
 
 Skills nằm ở `erp-api/.agents/skills/` và `erp-web/.agents/skills/`, đăng ký trong `./.agents/skills.json`. Đọc `erp-*-current-truth/SKILL.md` của repo trước khi sửa code.
 

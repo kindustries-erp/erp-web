@@ -11,9 +11,18 @@ export function v2ThinFileMap(data) {
     { template: "api.ts.hbs", path: `${base}/api/${c}Api.ts` },
     { template: "locale.ts.hbs", path: `${base}/${c}.locale.ts` },
     { template: "page.tsx.hbs", path: `${base}/pages/${data.pageName}.tsx` },
-    { template: "page.hook.ts.hbs", path: `${base}/pages/${data.pageName}.hook.ts` },
+    {
+      template: "page.hook.ts.hbs",
+      path: `${base}/pages/${data.pageName}.hook.ts`,
+    },
     { template: "index.ts.hbs", path: `${base}/index.ts` },
-    { template: "config.test.ts.hbs", path: `${base}/tests/${c}.config.test.ts` },
-    { template: "integration.test.tsx.hbs", path: `${base}/tests/integration/${data.pageName}.test.tsx` },
+    {
+      template: "config.test.ts.hbs",
+      path: `${base}/tests/${c}.config.test.ts`,
+    },
+    {
+      template: "integration.test.tsx.hbs",
+      path: `${base}/tests/integration/${data.pageName}.test.tsx`,
+    },
   ];
 }

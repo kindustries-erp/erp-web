@@ -9,32 +9,86 @@ export function moduleFileMap(data) {
   const files = [
     ["api/dtos/dto.ts.hbs", `${base}/api/dtos/${data.entity}.dto.ts`],
     ["api/api.ts.hbs", `${base}/api/${data.entityPlural}Api.ts`],
-    ["api/queries/keys.ts.hbs", `${base}/api/queries/${data.entityPlural}Keys.ts`],
-    ["api/queries/query.ts.hbs", `${base}/api/queries/use${data.EntityPlural}Query.ts`],
-    ["api/mutations/mutations.ts.hbs", `${base}/api/mutations/use${data.Entity}Mutations.ts`],
-    ["domain/entities/entity.ts.hbs", `${base}/domain/entities/${data.entity}.ts`],
-    ["domain/rules/rules.ts.hbs", `${base}/domain/rules/${data.entity}Rules.ts`],
-    ["domain/rules/rules.test.ts.hbs", `${base}/domain/rules/${data.entity}Rules.test.ts`],
-    ["components/organisms/table/columns.tsx.hbs", `${org}/${data.entityKebab}-table/${data.Entity}Table.columns.tsx`],
-    ["components/organisms/table/columns.test.tsx.hbs", `${org}/${data.entityKebab}-table/${data.Entity}Table.columns.test.tsx`],
-    ["components/organisms/table/views.ts.hbs", `${org}/${data.entityKebab}-table/${data.Entity}Table.views.ts`],
-    ["components/organisms/table/index.ts.hbs", `${org}/${data.entityKebab}-table/index.ts`],
-    ["components/organisms/form/sections.tsx.hbs", `${org}/${data.entityKebab}-form/${data.Entity}FormSections.tsx`],
-    ["components/organisms/form/sections.test.tsx.hbs", `${org}/${data.entityKebab}-form/${data.Entity}FormSections.test.tsx`],
-    ["components/organisms/form/index.ts.hbs", `${org}/${data.entityKebab}-form/index.ts`],
-    ["drawers/Drawer.hook.ts.hbs", `${base}/drawers/${data.Entity}Drawer.hook.ts`],
+    [
+      "api/queries/keys.ts.hbs",
+      `${base}/api/queries/${data.entityPlural}Keys.ts`,
+    ],
+    [
+      "api/queries/query.ts.hbs",
+      `${base}/api/queries/use${data.EntityPlural}Query.ts`,
+    ],
+    [
+      "api/mutations/mutations.ts.hbs",
+      `${base}/api/mutations/use${data.Entity}Mutations.ts`,
+    ],
+    [
+      "domain/entities/entity.ts.hbs",
+      `${base}/domain/entities/${data.entity}.ts`,
+    ],
+    [
+      "domain/rules/rules.ts.hbs",
+      `${base}/domain/rules/${data.entity}Rules.ts`,
+    ],
+    [
+      "domain/rules/rules.test.ts.hbs",
+      `${base}/domain/rules/${data.entity}Rules.test.ts`,
+    ],
+    [
+      "components/organisms/table/columns.tsx.hbs",
+      `${org}/${data.entityKebab}-table/${data.Entity}Table.columns.tsx`,
+    ],
+    [
+      "components/organisms/table/columns.test.tsx.hbs",
+      `${org}/${data.entityKebab}-table/${data.Entity}Table.columns.test.tsx`,
+    ],
+    [
+      "components/organisms/table/views.ts.hbs",
+      `${org}/${data.entityKebab}-table/${data.Entity}Table.views.ts`,
+    ],
+    [
+      "components/organisms/table/index.ts.hbs",
+      `${org}/${data.entityKebab}-table/index.ts`,
+    ],
+    [
+      "components/organisms/form/sections.tsx.hbs",
+      `${org}/${data.entityKebab}-form/${data.Entity}FormSections.tsx`,
+    ],
+    [
+      "components/organisms/form/sections.test.tsx.hbs",
+      `${org}/${data.entityKebab}-form/${data.Entity}FormSections.test.tsx`,
+    ],
+    [
+      "components/organisms/form/index.ts.hbs",
+      `${org}/${data.entityKebab}-form/index.ts`,
+    ],
+    [
+      "drawers/Drawer.hook.ts.hbs",
+      `${base}/drawers/${data.Entity}Drawer.hook.ts`,
+    ],
     ["drawers/Drawer.tsx.hbs", `${base}/drawers/${data.Entity}Drawer.tsx`],
-    ["pages/usePage.hook.tsx.hbs", `${base}/pages/use${data.EntityPlural}Page.tsx`],
+    [
+      "pages/usePage.hook.tsx.hbs",
+      `${base}/pages/use${data.EntityPlural}Page.tsx`,
+    ],
     ["pages/Page.tsx.hbs", `${base}/pages/${data.EntityPlural}Page.tsx`],
-    ["tests/integration/Page.test.tsx.hbs", `${base}/tests/integration/${data.EntityPlural}Page.test.tsx`],
+    [
+      "tests/integration/Page.test.tsx.hbs",
+      `${base}/tests/integration/${data.EntityPlural}Page.test.tsx`,
+    ],
     ["locale.ts.hbs", `${base}/${data.namespace}.locale.ts`],
     ["index.ts.hbs", `${base}/index.ts`],
   ];
   if (data.hasStatus) {
     const badge = `${base}/components/molecules/${data.entityKebab}-status-badge`;
     files.push(
-      ["components/molecules/status-badge.tsx.hbs", `${badge}/${data.Entity}StatusBadge.tsx`],
-      ["components/molecules/status-badge.test.tsx.hbs", `${badge}/${data.Entity}StatusBadge.test.tsx`],
+      [
+        "components/molecules/status-badge.tsx.hbs",
+        `${badge}/${data.Entity}StatusBadge.tsx`,
+      ],
+      [
+        "components/molecules/status-badge.test.tsx.hbs",
+        `${badge}/${data.Entity}StatusBadge.test.tsx`,
+      ],
       ["components/molecules/index.ts.hbs", `${badge}/index.ts`],
     );
   }
