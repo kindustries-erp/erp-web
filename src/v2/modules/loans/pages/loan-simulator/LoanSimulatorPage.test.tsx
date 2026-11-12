@@ -41,23 +41,38 @@ describe("LoanSimulatorPage Component", () => {
     );
   };
 
-  it("renders portfolio simulator heading and default loan item", () => {
+  it("renders consolidated header actions without outer portfolio wrapper", () => {
     renderWithProviders(<LoanSimulatorPage />);
 
     expect(
       screen.getByText("Mô Phỏng & Tính Toán Khoản Vay Đa Nguồn"),
     ).toBeDefined();
-    expect(screen.getByText("Danh Mục Khoản Vay")).toBeDefined();
+    expect(screen.queryByText("Danh Mục Khoản Vay")).toBeNull();
+    expect(screen.getAllByText("Mặc định")).toHaveLength(1);
+    expect(screen.getAllByText("Thêm khoản vay")).toHaveLength(1);
+    expect(screen.getByText(/khoản đang bật/)).toBeDefined();
+    expect(screen.getByText("Số tiền vay (VND)")).toBeDefined();
+    expect(screen.getByText("Lãi suất (%/năm)")).toBeDefined();
+    expect(screen.getByText("Thời hạn (Số tháng)")).toBeDefined();
+    expect(screen.getByText("Phương thức trả nợ")).toBeDefined();
+    expect(screen.getByText("Ngày giải ngân")).toBeDefined();
+    expect(screen.getByText("Ngân hàng / Đơn vị cho vay")).toBeDefined();
     expect(screen.getByText("Lịch Trả Nợ Danh Mục Theo Tháng")).toBeDefined();
   });
 
-  it("adds a new loan to portfolio on add click", () => {
+  it("adds a new loan to portfolio on add click and resets via top reset button", () => {
     renderWithProviders(<LoanSimulatorPage />);
 
     const addButton = screen.getByText("Thêm khoản vay");
     fireEvent.click(addButton);
 
     expect(screen.getByDisplayValue("Khoản vay 2")).toBeDefined();
+
+    const resetButton = screen.getByText("Mặc định");
+    fireEvent.click(resetButton);
+
+    expect(screen.queryByDisplayValue("Khoản vay 2")).toBeNull();
+    expect(screen.getByDisplayValue("Khoản vay 1 (Dự án)")).toBeDefined();
   });
 
   it("expands monthly row to show constituent loan breakdown columns", () => {

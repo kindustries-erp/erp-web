@@ -1,4 +1,5 @@
 import React from "react";
+import { Plus, RotateCcw } from "lucide-react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Button, V2Text } from "@/v2/shared/components";
 import {
@@ -27,10 +28,12 @@ export const LoanSimulatorPageDesktop: React.FC<LoanSimulatorPageProps> = (
     handleSaveToErp,
   } = useLoanSimulatorPage(props);
 
+  const activeCount = loans.filter((l) => l.enabled).length;
+
   return (
     <div className={`w-full min-h-full space-y-6 ${props.className ?? ""}`}>
-      <div className="flex justify-between items-center bg-card p-6 rounded-2xl border border-border shadow-xs">
-        <div>
+      <div className="flex flex-wrap justify-between items-center gap-4 bg-card p-5 rounded-2xl border border-border shadow-xs">
+        <div className="min-w-0">
           <V2Text variant="h2" className="text-xl font-bold">
             {t(
               "v2.loans.simulator.title",
@@ -41,12 +44,29 @@ export const LoanSimulatorPageDesktop: React.FC<LoanSimulatorPageProps> = (
             {t(
               "v2.loans.simulator.subtitle",
               "Nhập nhiều khoản vay ngân hàng, mô phỏng áp lực dòng tiền và dự báo dư nợ tổng hợp.",
-            )}
+            )}{" "}
+            (
+            <V2Text as="span" weight="medium" className="text-foreground">
+              {activeCount}/{loans.length}
+            </V2Text>{" "}
+            {t("v2.loans.portfolio.activeText", "khoản đang bật")})
           </V2Text>
         </div>
-        <div className="flex gap-3">
-          <V2Button variant="outline" onClick={handleReset}>
-            {t("v2.common.reset", "Đặt lại")}
+
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <V2Button
+            variant="outline"
+            onClick={handleReset}
+            leftIcon={<RotateCcw className="h-4 w-4" />}
+          >
+            {t("v2.loans.action.reset", "Mặc định")}
+          </V2Button>
+          <V2Button
+            variant="outline"
+            onClick={handleAddLoan}
+            leftIcon={<Plus className="h-4 w-4" />}
+          >
+            {t("v2.loans.action.addLoan", "Thêm khoản vay")}
           </V2Button>
           <V2Button
             variant="primary"
@@ -64,16 +84,12 @@ export const LoanSimulatorPageDesktop: React.FC<LoanSimulatorPageProps> = (
       </div>
 
       <div className="space-y-6">
-        <div className="bg-card p-6 rounded-2xl border border-border shadow-xs">
-          <PortfolioLoanList
-            loans={loans}
-            onAddLoan={handleAddLoan}
-            onUpdateLoan={handleUpdateLoan}
-            onRemoveLoan={handleRemoveLoan}
-            onToggleLoan={handleToggleLoan}
-            onReset={handleReset}
-          />
-        </div>
+        <PortfolioLoanList
+          loans={loans}
+          onUpdateLoan={handleUpdateLoan}
+          onRemoveLoan={handleRemoveLoan}
+          onToggleLoan={handleToggleLoan}
+        />
 
         <LoanKpiSummary
           firstMonthDue={portfolioResult.firstMonthPayment}

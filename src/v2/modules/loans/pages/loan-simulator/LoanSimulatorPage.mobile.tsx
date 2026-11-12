@@ -1,4 +1,5 @@
 import React from "react";
+import { Plus, RotateCcw } from "lucide-react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Button, V2Text } from "@/v2/shared/components";
 import {
@@ -27,6 +28,8 @@ export const LoanSimulatorPageMobile: React.FC<LoanSimulatorPageProps> = (
     handleSaveToErp,
   } = useLoanSimulatorPage(props);
 
+  const activeCount = loans.filter((l) => l.enabled).length;
+
   return (
     <div
       className={`w-full min-h-full space-y-4 pb-24 ${props.className ?? ""}`}
@@ -42,20 +45,40 @@ export const LoanSimulatorPageMobile: React.FC<LoanSimulatorPageProps> = (
           {t(
             "v2.loans.simulator.subtitleMobile",
             "Mô phỏng áp lực dòng tiền danh mục nhiều khoản vay",
-          )}
+          )}{" "}
+          (
+          <V2Text as="span" weight="medium" className="text-foreground">
+            {activeCount}/{loans.length}
+          </V2Text>{" "}
+          {t("v2.loans.portfolio.activeText", "khoản đang bật")})
         </V2Text>
+
+        <div className="mt-3 flex items-center gap-2">
+          <V2Button
+            variant="outline"
+            onClick={handleReset}
+            leftIcon={<RotateCcw className="h-4 w-4" />}
+            className="flex-1 min-h-[44px]"
+          >
+            {t("v2.loans.action.reset", "Mặc định")}
+          </V2Button>
+          <V2Button
+            variant="outline"
+            onClick={handleAddLoan}
+            leftIcon={<Plus className="h-4 w-4" />}
+            className="flex-1 min-h-[44px]"
+          >
+            {t("v2.loans.action.addLoan", "Thêm khoản vay")}
+          </V2Button>
+        </div>
       </div>
 
-      <div className="bg-card p-4 rounded-xl border border-border">
-        <PortfolioLoanList
-          loans={loans}
-          onAddLoan={handleAddLoan}
-          onUpdateLoan={handleUpdateLoan}
-          onRemoveLoan={handleRemoveLoan}
-          onToggleLoan={handleToggleLoan}
-          onReset={handleReset}
-        />
-      </div>
+      <PortfolioLoanList
+        loans={loans}
+        onUpdateLoan={handleUpdateLoan}
+        onRemoveLoan={handleRemoveLoan}
+        onToggleLoan={handleToggleLoan}
+      />
 
       <LoanKpiSummary
         firstMonthDue={portfolioResult.firstMonthPayment}

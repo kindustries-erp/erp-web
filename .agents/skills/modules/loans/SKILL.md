@@ -39,7 +39,7 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
   - `loan-table/`: Định nghĩa cột bảng `LoansTable.columns.tsx` cho `V2StandardTable`.
   - `consolidated-cashflow/`: View dự báo dòng tiền tương lai `ConsolidatedCashflowView.tsx` & `ConsolidatedCashflowTable.tsx` (dùng chung `PortfolioScheduleTable` có expand row).
 - `pages/`:
-  - `loan-simulator/`: Trang máy tính mô phỏng đa nguồn (`LoanSimulatorPage.*`, `components/PortfolioLoanList.tsx`, `components/PortfolioLoanCard.tsx`).
+  - `loan-simulator/`: Trang máy tính mô phỏng đa nguồn (`LoanSimulatorPage.*`, `components/PortfolioLoanList.tsx`, `components/PortfolioLoanCard.tsx`, `components/PortfolioLoanCardFields.tsx`). Các nút `Mặc định`, `Thêm khoản vay`, `Lưu danh mục vào hệ thống ERP` gộp chung ở header trên cùng (desktop) / top header + thumb-zone (mobile); không còn wrapper `Danh Mục Khoản Vay` bên ngoài; 6 field input trong card xếp trên 1 hàng ngang ở desktop (`lg+`).
   - `loans-list/`: Trang danh sách và tổng quan V2 (`LoansListPage.desktop.tsx`, `.mobile.tsx`, `.mobile-card.tsx`, `.actions.tsx`).
 
 ---
