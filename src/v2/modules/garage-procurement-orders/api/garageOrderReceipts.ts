@@ -9,7 +9,7 @@ interface ReceiptRowDto {
   totalAmount?: number | string | null;
 }
 
-const RECEIPTS_URL = "/api/v1/garage-goods-receipts";
+const RECEIPTS_URL = "/api/v2/garage-goods-receipts";
 const MAX_RECEIPTS = 100;
 
 /**

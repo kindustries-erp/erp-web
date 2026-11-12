@@ -1,7 +1,7 @@
 import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
 import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
 
-/** Hình dạng bản ghi và payload của `/api/v1/garage-goods-receipts` (khớp backend, không phụ thuộc V1) */
+/** Hình dạng bản ghi và payload của `/api/v2/garage-goods-receipts` (khớp backend, không phụ thuộc V1) */
 
 export interface GarageGoodsReceiptLineDto {
   id?: string;

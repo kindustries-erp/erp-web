@@ -50,7 +50,7 @@ export interface BusinessPartnerCoreListResult {
   totalPages: number;
 }
 
-/** Wire chuẩn v2 của `/api/v1/business-partners`: `items` + `pagination` */
+/** Wire chuẩn v2 của `/api/v2/business-partners`: `items` + `pagination` */
 type BusinessPartnerCoreListWire = PaginatedWireResponse<ErpBusinessPartner>;
 
 export interface ColumnOptionItem {
@@ -81,7 +81,7 @@ export interface ListBusinessPartnersParams {
   status?: string;
 }
 
-const BASE = "/api/v1/business-partners";
+const BASE = "/api/v2/business-partners";
 
 export const businessPartnersCoreApi = {
   list: async (

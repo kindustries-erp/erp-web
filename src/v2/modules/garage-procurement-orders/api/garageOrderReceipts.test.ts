@@ -24,7 +24,7 @@ describe("listGarageOrderReceipts", () => {
     });
     const rows = await listGarageOrderReceipts("po-1");
     const params = get.mock.calls[0][1].params;
-    expect(get.mock.calls[0][0]).toBe("/api/v1/garage-goods-receipts");
+    expect(get.mock.calls[0][0]).toBe("/api/v2/garage-goods-receipts");
     expect(JSON.parse(params.column_filters)).toEqual({
       garageProcurementOrderId: ["po-1"],
     });

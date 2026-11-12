@@ -478,7 +478,7 @@ await step(
       .getByRole("button", { name: "Hoàn nhập", exact: true })
       .click();
     const after = await poll(
-      () => api(tao, "GET", `/api/v1/garage-goods-receipts/${rec.id}`),
+      () => api(tao, "GET", `/api/v2/garage-goods-receipts/${rec.id}`),
       (v) => (v.data?.data ?? v.data)?.status === "CANCELLED",
     );
     check(

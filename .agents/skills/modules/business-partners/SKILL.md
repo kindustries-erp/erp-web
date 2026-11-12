@@ -9,7 +9,7 @@ description: Module tri thức Đối tác (Khách hàng & Nhà cung cấp) bả
 
 - Route: `/v2/customers` (`partnerType = CUSTOMER`) và `/v2/suppliers` (`partnerType = VENDOR`).
 - Quyền: `business_partners` với action `read` (route guard), `create` / `update` / `delete` (nút và row action).
-- Backend: `/api/v2/business-partners` và `/api/v1/business-partners`, xóa là xóa mềm.
+- Backend: `/api/v2/business-partners` và `/api/v2/business-partners`, xóa là xóa mềm.
 - Kiến trúc họ nghiệp vụ: Tách lõi dùng chung tại `src/v2/core/business-partners/` và 2 thin module mỏng tại `src/v2/modules/business-partners-customers/` và `src/v2/modules/business-partners-suppliers/`.
 - Module V2 **không import** code V1 (`@/core/*`, `@/shared/*`, `@/modules/*` ngoại trừ `authStore`).
 

@@ -56,7 +56,7 @@ export async function getBusinessPartnersApi(): Promise<BusinessPartner[]> {
   return dedupeRequest("business-partners:list", async () => {
     const { data } = await axiosInstance.get<
       PaginatedWireResponse<BusinessPartner>
-    >("/api/v1/business-partners", {
+    >("/api/v2/business-partners", {
       params: { page: 1, pageSize: 500, sort: "name" },
     });
     return data.items;
@@ -68,7 +68,7 @@ export async function getBusinessPartnersPagedApi(
 ): Promise<PaginatedResponse<BusinessPartner>> {
   const { data } = await axiosInstance.get<
     PaginatedWireResponse<BusinessPartner>
-  >("/api/v1/business-partners", {
+  >("/api/v2/business-partners", {
     params: {
       page: params.page ?? 1,
       pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
@@ -86,7 +86,7 @@ export async function createBusinessPartnerApi(
   const { data } = await axiosInstance.post<{
     message: string;
     data: BusinessPartner;
-  }>("/api/v1/business-partners", dto);
+  }>("/api/v2/business-partners", dto);
   return data.data;
 }
 
@@ -97,12 +97,12 @@ export async function updateBusinessPartnerApi(
   const { data } = await axiosInstance.patch<{
     message: string;
     data: BusinessPartner;
-  }>(`/api/v1/business-partners/${id}`, dto);
+  }>(`/api/v2/business-partners/${id}`, dto);
   return data.data;
 }
 
 export async function deleteBusinessPartnerApi(id: string): Promise<void> {
-  await axiosInstance.delete(`/api/v1/business-partners/${id}`);
+  await axiosInstance.delete(`/api/v2/business-partners/${id}`);
 }
 
 // ─── BusinessPartnerContact ───────────────────────────────────────────────────

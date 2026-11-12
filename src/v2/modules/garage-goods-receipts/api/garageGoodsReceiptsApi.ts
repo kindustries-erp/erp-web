@@ -20,7 +20,7 @@ import type {
   NextCodeDto,
 } from "./dtos/garageGoodsReceipt.dto";
 
-const BASE = "/api/v1/garage-goods-receipts";
+const BASE = "/api/v2/garage-goods-receipts";
 const OPTIONS_PAGE_SIZE = 20;
 
 export const toGarageGoodsReceiptsListParams = (query: V2TableQuery) => ({

@@ -7,7 +7,7 @@ description: Module tri thức Frontend V2 cho Quản lý Nhập kho Garage (Gar
 
 ## 1. Ranh giới Module và Core
 
-- **Module** `src/v2/modules/garage-goods-receipts/` chỉ giữ phần riêng của garage: API client và DTO (endpoint `/api/v1/garage-goods-receipts`), cấu hình ghép core, page, locale tiêu đề và nút tạo.
+- **Module** `src/v2/modules/garage-goods-receipts/` chỉ giữ phần riêng của garage: API client và DTO (endpoint `/api/v2/garage-goods-receipts`), cấu hình ghép core, page, locale tiêu đề và nút tạo.
 - **Core** `src/v2/core/goods-receipts/` giữ mọi phần chung của họ phiếu nhập: domain (form value, rule validate/dirty, tính tiền), api (keys, interface `GoodsReceiptApi`, query và mutation), component (badge, form, bảng cột, row actions, lines editor), drawer, hook controller màn danh sách và locale `v2.goodsReceipts.*`.
 - Chiều phụ thuộc: `modules → core → shared`. Core không import module và không chứa chữ "garage".
 

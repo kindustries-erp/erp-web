@@ -595,7 +595,7 @@ await step(
     const [resp] = await Promise.all([
       page.waitForResponse(
         (r) =>
-          r.url().includes("/api/v1/garage-goods-receipts") &&
+          r.url().includes("/api/v2/garage-goods-receipts") &&
           r.request().method() === "POST",
         { timeout: 30000 },
       ),
@@ -621,7 +621,7 @@ await step(
 
 await step("E5 ghi sổ phiếu → PO nhận đủ và tự đóng", async () => {
   const post = await fetch(
-    `${API}/api/v1/garage-goods-receipts/${grRecord.id}/post`,
+    `${API}/api/v2/garage-goods-receipts/${grRecord.id}/post`,
     {
       method: "POST",
       headers: {
@@ -904,7 +904,7 @@ const saveReceipt = async () => {
   const [resp] = await Promise.all([
     page.waitForResponse(
       (r) =>
-        r.url().includes("/api/v1/garage-goods-receipts") &&
+        r.url().includes("/api/v2/garage-goods-receipts") &&
         r.request().method() === "POST",
       { timeout: 30000 },
     ),
@@ -916,7 +916,7 @@ const saveReceipt = async () => {
   return (await resp.json()).data;
 };
 const postReceipt = (id) =>
-  fetch(`${API}/api/v1/garage-goods-receipts/${id}/post`, {
+  fetch(`${API}/api/v2/garage-goods-receipts/${id}/post`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${tao.token}`,
@@ -1231,8 +1231,8 @@ const poRecvDetail = (
   await api(tao, "GET", `/procurement-orders-garage/${poRecv.id}`)
 ).data;
 
-const apiV1 = (s, method, path, body) =>
-  fetch(`${API}/api/v1${path}`, {
+const apiV2 = (s, method, path, body) =>
+  fetch(`${API}/api/v2${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${s.token}`,
@@ -1247,7 +1247,7 @@ const apiV1 = (s, method, path, body) =>
 await step(
   "I1 API: phiếu nhập bắt buộc có đơn mua; NCC/tổng theo đơn",
   async () => {
-    const noPo = await apiV1(tao, "POST", "/garage-goods-receipts", {
+    const noPo = await apiV2(tao, "POST", "/garage-goods-receipts", {
       receiptDate: TODAY,
       lines: [{ itemName: "X", qtyReceived: 1, unitCost: 1 }],
     });
@@ -1256,7 +1256,7 @@ await step(
       noPo.status === 400,
       noPo.status,
     );
-    const created = await apiV1(tao, "POST", "/garage-goods-receipts", {
+    const created = await apiV2(tao, "POST", "/garage-goods-receipts", {
       receiptDate: TODAY,
       garageProcurementOrderId: poRecv.id,
       supplierName: "NCC tự gõ",
@@ -1292,7 +1292,7 @@ await step(
         Number(gr?.orderTotalAmount) === 100,
       `${gr?.garageProcurementOrderNo} ${gr?.orderTotalAmount}`,
     );
-    const swap = await apiV1(tao, "PATCH", `/garage-goods-receipts/${gr?.id}`, {
+    const swap = await apiV2(tao, "PATCH", `/garage-goods-receipts/${gr?.id}`, {
       garageProcurementOrderId: poBatch.id,
     });
     check(

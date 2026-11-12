@@ -35,7 +35,7 @@ describe("garageGoodsReceiptsV2Api.saveAndPost", () => {
       emptyGoodsReceiptForm(),
     );
     expect(post).toHaveBeenCalledWith(
-      "/api/v1/garage-goods-receipts/save-and-post",
+      "/api/v2/garage-goods-receipts/save-and-post",
       expect.any(Object),
     );
     expect(patch).not.toHaveBeenCalled();
@@ -45,7 +45,7 @@ describe("garageGoodsReceiptsV2Api.saveAndPost", () => {
   it("sửa nháp: PATCH :id/save-and-post", async () => {
     await garageGoodsReceiptsV2Api.saveAndPost("r1", emptyGoodsReceiptForm());
     expect(patch).toHaveBeenCalledWith(
-      "/api/v1/garage-goods-receipts/r1/save-and-post",
+      "/api/v2/garage-goods-receipts/r1/save-and-post",
       expect.any(Object),
     );
   });
