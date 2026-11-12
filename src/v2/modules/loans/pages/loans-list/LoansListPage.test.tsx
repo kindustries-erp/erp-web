@@ -1,52 +1,107 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { LoansListPage } from "./LoansListPage";
+import { AmortizationMethod, LoanStatus } from "@/v2/core/loans";
 
-const mockViewport = vi.fn(() => ({ isMobile: true }));
+const { listMock, removeMock, purgeMock } = vi.hoisted(() => ({
+  listMock: vi.fn(),
+  removeMock: vi.fn(),
+  purgeMock: vi.fn(),
+}));
+
+vi.mock("@/modules/auth/domain/authStore", () => ({
+  useAuthStore: (
+    selector?: (s: { effectivePermissions: unknown[] }) => unknown,
+  ) => {
+    const state = {
+      effectivePermissions: [
+        {
+          collection: "loans",
+          actions: ["read", "create", "update", "delete", "purge"],
+        },
+      ],
+      accessToken: "token",
+    };
+    return selector ? selector(state) : state;
+  },
+}));
 
 vi.mock("@/v2/shared/hooks/useViewport", () => ({
-  useViewport: () => mockViewport(),
+  useViewport: () => ({ isMobile: false }),
 }));
 
-vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
-  useV2Translation: () => ({
-    locale: "vi",
-    t: (_k: string, fallback?: unknown) =>
-      typeof fallback === "string" ? fallback : _k,
-  }),
+vi.mock("@/v2/shared/components/organisms/v2-chart", () => ({
+  V2ComboChart: () => <div data-testid="mock-combo-chart">Chart</div>,
 }));
 
-vi.mock("../../api", async () => {
-  const actual = await vi.importActual<typeof import("../../api")>("../../api");
+vi.mock("../../api/loansApi", async () => {
+  const actual =
+    await vi.importActual<typeof import("../../api/loansApi")>(
+      "../../api/loansApi",
+    );
   return {
     ...actual,
-    useLoansListQuery: () => ({
-      data: { items: [], total: 2 },
-      isLoading: false,
-    }),
+    loansApi: {
+      ...actual.loansApi,
+      list: listMock,
+      remove: removeMock,
+      purge: purgeMock,
+      options: vi.fn().mockResolvedValue({ items: [], total: 0, next: null }),
+    },
   };
 });
 
-vi.mock("../loan-simulator", () => ({
-  LoanSimulatorPage: () => <div data-testid="mock-simulator">Simulator</div>,
-}));
+import { LoansListPage } from "./LoansListPage";
 
-vi.mock("../../components/organisms/consolidated-cashflow", () => ({
-  ConsolidatedCashflowView: () => (
-    <div data-testid="mock-projection">Projection</div>
-  ),
-}));
-
-describe("LoansListPage Mobile", () => {
+describe("LoansListPage", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockViewport.mockReturnValue({ isMobile: true });
     window.history.replaceState(null, "", "/tools/loans");
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
+    });
+    listMock.mockResolvedValue({
+      items: [
+        {
+          id: "loan-1",
+          loanCode: "LOAN-001",
+          title: "Vay mở rộng xưởng",
+          lenderName: "VCB",
+          principalAmount: 300_000_000,
+          annualInterestRate: 9.5,
+          tenorMonths: 24,
+          amortizationMethod: AmortizationMethod.AMORTIZED,
+          startDate: "2026-01-15",
+          firstPaymentDate: "2026-02-15",
+          totalPaidPrincipal: 50_000_000,
+          totalPaidInterest: 10_000_000,
+          remainingPrincipal: 250_000_000,
+          status: LoanStatus.ACTIVE,
+          createdAt: "2026-01-15T00:00:00Z",
+          updatedAt: "2026-01-15T00:00:00Z",
+        },
+      ],
+      pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+      summaries: {
+        principalAmount: {
+          total: 300_000_000,
+          pageSubtotal: 300_000_000,
+          cumulative: 300_000_000,
+        },
+        totalPaidPrincipal: {
+          total: 50_000_000,
+          pageSubtotal: 50_000_000,
+          cumulative: 50_000_000,
+        },
+        remainingPrincipal: {
+          total: 250_000_000,
+          pageSubtotal: 250_000_000,
+          cumulative: 250_000_000,
+        },
+      },
     });
   });
 
@@ -57,24 +112,104 @@ describe("LoansListPage Mobile", () => {
       </QueryClientProvider>,
     );
 
-  it("hides header card and Thêm button on mobile and renders V2TabBar trigger", () => {
-    renderPage();
+  it("hiển thị đủ 3 tab với mặc định tab simulator và đồng bộ ?tab=list khi chuyển tab", async () => {
+    const { container } = renderPage();
 
-    expect(screen.queryByText("Quản Lý Khoản Vay")).toBeNull();
-    expect(screen.queryByText("Thêm")).toBeNull();
-    expect(screen.getByTestId("v2-tab-bar-mobile-trigger")).toBeDefined();
-    expect(screen.getByTestId("mock-simulator")).toBeDefined();
+    const header = container.querySelector("header");
+    expect(header).toHaveClass("bg-card", "rounded-2xl");
+    expect(
+      screen.getByRole("tab", { name: "Mô Phỏng & Tính Nhanh" }),
+    ).toHaveClass("bg-primary", "text-primary-fg");
+    expect(screen.getByText("Dự Báo Dòng Tiền Tương Lai")).toBeDefined();
+    const listTab = screen.getByText("Danh Sách Hợp Đồng");
+    expect(listTab).toBeDefined();
+
+    fireEvent.click(listTab);
+
+    await waitFor(() => {
+      expect(listMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          page: 1,
+          summaryKeys: expect.arrayContaining([
+            "principalAmount",
+            "totalPaidPrincipal",
+            "remainingPrincipal",
+          ]),
+        }),
+      );
+    });
+
+    expect(window.location.search).toContain("tab=list");
+    expect(await screen.findByText("LOAN-001")).toBeDefined();
+    expect(screen.getByText("Vay mở rộng xưởng")).toBeDefined();
   });
 
-  it("opens V2BottomSheet tab picker and switches to projection tab on mobile", () => {
+  it("tải thẳng tab list khi URL có ?tab=list", async () => {
+    window.history.replaceState(null, "", "/tools/loans?tab=list");
     renderPage();
 
-    fireEvent.click(screen.getByTestId("v2-tab-bar-mobile-trigger"));
+    expect(await screen.findByText("LOAN-001")).toBeDefined();
+    expect(screen.getByText("Tổng cộng:")).toBeDefined();
+  });
 
-    expect(screen.getByText("Chuyển danh mục")).toBeDefined();
-    fireEvent.click(screen.getByText("Dự Báo Dòng Tiền Tương Lai"));
+  it("hỗ trợ xóa mềm khoản vay qua V2ConfirmModal", async () => {
+    window.history.replaceState(null, "", "/tools/loans?tab=list");
+    removeMock.mockResolvedValueOnce(undefined);
+    renderPage();
 
-    expect(screen.getByTestId("mock-projection")).toBeDefined();
-    expect(window.location.search).toContain("tab=projection");
+    expect(await screen.findByText("LOAN-001")).toBeDefined();
+
+    const moreBtn = screen.getByRole("button", { name: "Thao tác khác" });
+    fireEvent.click(moreBtn);
+    const deleteItem = await screen.findByText("Xóa khoản vay");
+    fireEvent.click(deleteItem);
+
+    expect(
+      await screen.findByText(/Khoản vay sẽ bị xóa mềm khỏi danh sách/i),
+    ).toBeDefined();
+
+    const confirmBtns = screen.getAllByRole("button", {
+      name: "Xóa khoản vay",
+    });
+    fireEvent.click(confirmBtns[confirmBtns.length - 1]);
+
+    await waitFor(() => {
+      expect(removeMock).toHaveBeenCalledWith("loan-1");
+    });
+  });
+
+  it("lọc Đã xóa mềm gửi deleted=only và cho phép xóa vĩnh viễn", async () => {
+    window.history.replaceState(null, "", "/tools/loans?tab=list");
+    purgeMock.mockResolvedValueOnce({ id: "loan-1" });
+    renderPage();
+
+    expect(await screen.findByText("LOAN-001")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Chế độ xem" }));
+    fireEvent.click(await screen.findByText("Đã xóa mềm"));
+
+    await waitFor(() => {
+      expect(listMock).toHaveBeenCalledWith(
+        expect.objectContaining({ deleted: "only" }),
+      );
+    });
+
+    const purgeActionBtn = await screen.findByRole("button", {
+      name: "Xóa vĩnh viễn",
+    });
+    fireEvent.click(purgeActionBtn);
+
+    expect(
+      await screen.findByText(/Khoản vay sẽ bị xóa khỏi hệ thống/i),
+    ).toBeDefined();
+
+    const confirmBtns = screen.getAllByRole("button", {
+      name: "Xóa vĩnh viễn",
+    });
+    fireEvent.click(confirmBtns[confirmBtns.length - 1]);
+
+    await waitFor(() => {
+      expect(purgeMock).toHaveBeenCalledWith("loan-1");
+    });
   });
 });

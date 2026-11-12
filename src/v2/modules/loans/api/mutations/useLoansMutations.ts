@@ -52,6 +52,16 @@ export function useDeleteLoanMutation() {
   });
 }
 
+export function usePurgeLoanMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => loansApi.purge(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: loansKeys.all });
+    },
+  });
+}
+
 export function useRecordPaymentMutation() {
   const queryClient = useQueryClient();
   return useMutation({

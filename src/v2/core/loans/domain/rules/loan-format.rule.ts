@@ -39,6 +39,27 @@ export function getLoanStatusConfig(
   return map[status] ?? { label: status, variant: "outline" };
 }
 
+/** Danh sách tùy chọn trạng thái khoản vay dùng cho filter bảng và filterGroup. */
+export function getLoanStatusOptions(
+  t: (key: string, fallback?: string) => string,
+): Array<{ value: LoanStatus; label: string }> {
+  return [
+    {
+      value: LoanStatus.ACTIVE,
+      label: t("v2.loans.status.ACTIVE", "Đang vay"),
+    },
+    { value: LoanStatus.DRAFT, label: t("v2.loans.status.DRAFT", "Dự thảo") },
+    {
+      value: LoanStatus.COMPLETED,
+      label: t("v2.loans.status.COMPLETED", "Đã tất toán"),
+    },
+    {
+      value: LoanStatus.OVERDUE,
+      label: t("v2.loans.status.OVERDUE", "Quá hạn"),
+    },
+  ];
+}
+
 /**
  * Định dạng số tiền sang chuẩn VNĐ (ví dụ: 500.000.000 ₫)
  */

@@ -23,10 +23,38 @@ export const loansEn = {
     addLoan: "Add Loan",
     create: "New Loan Contract",
     deleteLoan: "Delete loan",
+    purgeLoan: "Delete permanently",
     pay: "Pay period",
     recordPayment: "Record Payment",
     reset: "Reset",
   },
+  actionGroups: {
+    lookup: "View",
+    operate: "Actions",
+  },
+  filters: {
+    title: "Preset filters",
+    all: "All",
+    deleted: "Soft deleted",
+  },
+  views: {
+    overview: "Overview",
+    all: "All columns",
+  },
+  delete: {
+    title: "Delete loan contract",
+    message: "This loan contract will be soft-deleted. Are you sure?",
+    success: "Loan contract deleted",
+    error: "Failed to delete loan contract",
+  },
+  purge: {
+    title: "Permanently delete loan",
+    message:
+      "This loan contract will be permanently removed and cannot be recovered. Are you sure?",
+    success: "Loan contract permanently deleted",
+    error: "Failed to permanently delete loan contract",
+  },
+  listLoadError: "Failed to load loans list",
   methods: {
     AMORTIZED: "Amortized (Fixed Monthly Payment)",
     EQUAL_PRINCIPAL: "Equal Principal (Declining Balance)",
@@ -53,6 +81,10 @@ export const loansEn = {
     status: "Status",
     ratePerYearSuffix: "%/yr",
     monthsSuffix: "months",
+    startDate: "Disbursement Date",
+    firstPaymentDate: "First Payment",
+    amortizationMethod: "Method",
+    summaryTotal: "Total:",
   },
   kpi: {
     firstMonthDue: "First Month Payment",

@@ -1,3 +1,4 @@
+import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
 import { AmortizationMethod, LoanItem, LoanStatus } from "@/v2/core/loans";
 
 export interface CreateLoanPayload {
@@ -30,11 +31,17 @@ export interface RecordPaymentPayload {
   notes?: string;
 }
 
-export interface LoanListResponse {
-  items: LoanItem[];
-  total: number;
+export interface LoanPagination {
   page: number;
   pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface LoanListResponse {
+  items: LoanItem[];
+  pagination: LoanPagination;
+  summaries: Record<string, V2SummaryMetric | null>;
 }
 
 export interface CashflowLoanBreakdownItem {
