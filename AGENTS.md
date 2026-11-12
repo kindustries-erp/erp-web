@@ -300,6 +300,7 @@ Source of truth for this repo (`./erp-web`).
 
 - Luồng nhiều bước trên trình duyệt (tạo, duyệt, từ chối, nhân bản, menu, drawer) phải có kiểm tra E2E Playwright trong `e2e/` và được ghi vào skill `erp-e2e-playwright`.
 - E2E không thay unit test. Không commit mật khẩu hay URL cứng; đọc qua biến môi trường (`E2E_PASSWORD` bắt buộc).
+- Mỗi lần chạy E2E: nếu shell chưa có `E2E_PASSWORD`, đọc dòng `E2E_PASSWORD=` trong `erp-api/.env` (nguồn chuẩn, từ workspace root: `erp/erp-api/.env`) và nạp vào tiến trình chạy script (xem skill `erp-e2e-playwright`). Không in giá trị ra log, không ghi vào repo, không hỏi lại người dùng nếu `.env` đã có.
 - Trước khi báo hoàn tất, chạy E2E trên môi trường đang chạy và báo PASS/FAIL theo lần chạy hiện tại.
 
 ---

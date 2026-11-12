@@ -14,10 +14,12 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 - Chạy: `bun run e2e:garage-procurement` (thêm script mới trong `package.json` theo cùng mẫu).
 - Biến môi trường (không hardcode mật khẩu hay URL trong repo):
   - `E2E_PASSWORD`: BẮT BUỘC, mật khẩu tài khoản test. Script thoát mã 2 nếu thiếu.
+    - Nguồn: dòng `E2E_PASSWORD=` trong `erp/erp-api/.env`. Mỗi lần chạy, nếu shell chưa có biến này thì tự đọc từ file đó, không hỏi người dùng. Không in giá trị, không ghi vào repo hay log.
   - `E2E_WEB_URL` (mặc định `http://127.0.0.1:5173`), `E2E_API_URL` (mặc định `http://localhost:10003`).
   - `E2E_TAO_EMAIL`, `E2E_DUYET_EMAIL`: tài khoản người tạo và người duyệt.
   - `E2E_CHROME_PATH` (mặc định `/usr/bin/google-chrome`).
-- Ví dụ: `E2E_PASSWORD='...' bun run e2e:garage-procurement`.
+- Ví dụ (từ `erp-web/`, lấy mật khẩu từ API `.env`, không in ra):
+  `E2E_PASSWORD="$(sed -n 's/^E2E_PASSWORD=//p' ../erp-api/.env | head -1 | tr -d "\"'")" bun run e2e:garage-procurement`.
 - Ảnh chụp và báo cáo ghi vào `e2e/.artifacts/` (đã gitignore).
 
 ## 2. Điều kiện trước khi chạy
