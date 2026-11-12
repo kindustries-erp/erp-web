@@ -1,7 +1,7 @@
 import React from "react";
 import { Trash2 } from "lucide-react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Badge, V2Button, V2Input } from "@/v2/shared/components";
+import { V2Badge, V2Button, V2Icon, V2Input } from "@/v2/shared/components";
 import { Checkbox } from "@/v2/shared/ui";
 import { PortfolioLoanItem } from "@/v2/core/loans";
 import { PortfolioLoanCardFields } from "./PortfolioLoanCardFields";
@@ -64,7 +64,7 @@ export const PortfolioLoanCard: React.FC<PortfolioLoanCardProps> = ({
             aria-label={t("v2.loans.action.deleteLoan", "Xóa khoản vay")}
             title={t("v2.loans.action.deleteLoan", "Xóa khoản vay")}
           >
-            <Trash2 className="h-4 w-4" />
+            <V2Icon icon={Trash2} size={16} />
           </V2Button>
         )}
       </div>

@@ -9,8 +9,10 @@ import {
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { useViewport } from "@/v2/shared/hooks/useViewport";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Calendar, dateTriggerClass } from "./V2Calendar";
+import { V2DateSheet } from "./V2DateSheet";
 import {
   buildDisabledMatchers,
   formatDisplayDate,
@@ -34,17 +36,15 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
   onOpenChange,
 }) => {
   const { t } = useV2Translation();
+  const { isMobile } = useViewport();
   const [internalOpen, setInternalOpen] = React.useState(false);
   const open = controlledOpen ?? internalOpen;
-  const setOpen = (next: boolean) => {
-    if (onOpenChange) onOpenChange(next);
-    else setInternalOpen(next);
-  };
+  const setOpen = (next: boolean) =>
+    onOpenChange ? onOpenChange(next) : setInternalOpen(next);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // Click ra ngoài thì đóng lịch; mở lịch này sẽ đóng popover đang mở khác
   useV2PopoverDismiss({
-    open,
+    open: !isMobile && open,
     onClose: () => setOpen(false),
     containerRef,
     panelSelector: "[data-v2-date-panel]",
@@ -58,7 +58,9 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
       type="button"
       variant="outline"
       aria-label={ariaLabel ?? hint}
+      {...(isMobile ? { "aria-expanded": open } : {})}
       disabled={disabled}
+      onClick={isMobile ? () => !disabled && setOpen(true) : undefined}
       className={cn(dateTriggerClass, canClear && "pr-8", triggerClassName)}
     >
       <V2Icon icon={CalendarDays} size={16} className="shrink-0 opacity-60" />
@@ -68,34 +70,48 @@ export const V2DatePicker: React.FC<V2DatePickerProps> = ({
     </V2Button>
   );
 
+  const calendarNode = (
+    <div
+      data-v2-date-panel=""
+      className={cn(isMobile && "flex w-full justify-center")}
+    >
+      <V2Calendar
+        mode="single"
+        selected={selected}
+        defaultMonth={selected}
+        disabled={buildDisabledMatchers(minDate, maxDate)}
+        onSelect={(date) => {
+          onValueChange(date ? toIsoDate(date) : null);
+          setOpen(false);
+        }}
+      />
+    </div>
+  );
+
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
-      <V2Popover
-        trigger={trigger}
-        open={open}
-        onOpenChange={setOpen}
-        align="start"
-        arrow={false}
-        glass={false}
-        hideCloseButton
-        title={hint}
-        className="w-auto p-2"
-        triggerClassName="w-full"
-        content={
-          <div data-v2-date-panel="">
-            <V2Calendar
-              mode="single"
-              selected={selected}
-              defaultMonth={selected}
-              disabled={buildDisabledMatchers(minDate, maxDate)}
-              onSelect={(date) => {
-                onValueChange(date ? toIsoDate(date) : null);
-                setOpen(false);
-              }}
-            />
-          </div>
-        }
-      />
+      {isMobile ? (
+        <>
+          {trigger}
+          <V2DateSheet open={open} onOpenChange={setOpen} title={hint}>
+            {calendarNode}
+          </V2DateSheet>
+        </>
+      ) : (
+        <V2Popover
+          trigger={trigger}
+          open={open}
+          onOpenChange={setOpen}
+          align="start"
+          arrow={false}
+          glass={false}
+          hideCloseButton
+          title={hint}
+          className="w-auto p-2"
+          triggerClassName="w-full"
+          content={calendarNode}
+        />
+      )}
       {canClear && (
         <V2Button
           variant="ghost"

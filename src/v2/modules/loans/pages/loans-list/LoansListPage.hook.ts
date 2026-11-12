@@ -1,11 +1,15 @@
 import { useState } from "react";
+import { useV2ModuleTabState } from "@/v2/shared/hooks/useV2ModuleTabState";
 import { useLoansListQuery, type LoansQueryParams } from "../../api";
 import { LoanItem, LoanStatus } from "@/v2/core/loans";
 
+const LOAN_TAB_KEYS = ["simulator", "projection", "list"];
+
 export function useLoansListPage() {
-  const [activeTab, setActiveTab] = useState<
-    "simulator" | "projection" | "list"
-  >("simulator");
+  const { activeTab, setActiveTab } = useV2ModuleTabState({
+    tabKeys: LOAN_TAB_KEYS,
+    defaultTab: "simulator",
+  });
   const [queryParams, setQueryParams] = useState<LoansQueryParams>({
     page: 1,
     pageSize: 20,

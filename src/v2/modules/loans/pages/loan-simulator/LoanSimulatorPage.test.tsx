@@ -3,6 +3,8 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LoanSimulatorPage } from "./LoanSimulatorPage";
 
+const mockViewport = vi.fn(() => ({ isMobile: false }));
+
 vi.mock("@/modules/auth/domain/authStore", () => ({
   useAuthStore: (selector?: (s: { accessToken: string | null }) => unknown) =>
     selector ? selector({ accessToken: null }) : { accessToken: null },
@@ -17,7 +19,7 @@ vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
 }));
 
 vi.mock("@/v2/shared/hooks/useViewport", () => ({
-  useViewport: () => ({ isMobile: false }),
+  useViewport: () => mockViewport(),
 }));
 
 vi.mock("@/v2/shared/components/organisms/v2-chart", () => ({
@@ -29,6 +31,7 @@ describe("LoanSimulatorPage Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockViewport.mockReturnValue({ isMobile: false });
     sessionStorage.clear();
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
@@ -41,7 +44,7 @@ describe("LoanSimulatorPage Component", () => {
     );
   };
 
-  it("renders consolidated header actions without outer portfolio wrapper", () => {
+  it("renders consolidated header actions without outer portfolio wrapper on desktop", () => {
     renderWithProviders(<LoanSimulatorPage />);
 
     expect(
@@ -63,14 +66,10 @@ describe("LoanSimulatorPage Component", () => {
   it("adds a new loan to portfolio on add click and resets via top reset button", () => {
     renderWithProviders(<LoanSimulatorPage />);
 
-    const addButton = screen.getByText("Thêm khoản vay");
-    fireEvent.click(addButton);
-
+    fireEvent.click(screen.getByText("Thêm khoản vay"));
     expect(screen.getByDisplayValue("Khoản vay 2")).toBeDefined();
 
-    const resetButton = screen.getByText("Mặc định");
-    fireEvent.click(resetButton);
-
+    fireEvent.click(screen.getByText("Mặc định"));
     expect(screen.queryByDisplayValue("Khoản vay 2")).toBeNull();
     expect(screen.getByDisplayValue("Khoản vay 1 (Dự án)")).toBeDefined();
   });
@@ -78,22 +77,19 @@ describe("LoanSimulatorPage Component", () => {
   it("expands monthly row to show constituent loan breakdown columns", () => {
     renderWithProviders(<LoanSimulatorPage />);
 
-    // Click nút mở rộng trên dòng đầu tiên của V2StandardTable
     const expandButtons = screen.getAllByRole("button", {
       name: /Mở rộng dòng/i,
     });
     expect(expandButtons.length).toBeGreaterThan(0);
     fireEvent.click(expandButtons[0]);
 
-    // Sau khi expand, tên khoản vay mặc định xuất hiện trong dòng chi tiết
     expect(screen.getByText("Khoản vay 1 (Dự án)")).toBeDefined();
   });
 
   it("saves portfolio draft to sessionStorage when unauthenticated", () => {
     renderWithProviders(<LoanSimulatorPage />);
 
-    const saveButton = screen.getByText("Đăng nhập để lưu vào ERP");
-    fireEvent.click(saveButton);
+    fireEvent.click(screen.getByText("Đăng nhập để lưu vào ERP"));
 
     const savedDraft = sessionStorage.getItem(
       "loan_draft_simulation_portfolio",
@@ -102,5 +98,27 @@ describe("LoanSimulatorPage Component", () => {
     const parsed = JSON.parse(savedDraft!);
     expect(Array.isArray(parsed)).toBe(true);
     expect(parsed.length).toBeGreaterThan(0);
+  });
+
+  it("hides header card on mobile and exposes Save, Add, Reset inside V2BottomSheet", () => {
+    mockViewport.mockReturnValue({ isMobile: true });
+    renderWithProviders(<LoanSimulatorPage />);
+
+    expect(
+      screen.queryByText("Mô Phỏng & Tính Toán Khoản Vay Đa Nguồn"),
+    ).toBeNull();
+    expect(screen.queryByText("Đăng nhập để lưu vào ERP")).toBeNull();
+
+    fireEvent.click(
+      screen.getByTestId("loan-simulator-mobile-actions-trigger"),
+    );
+
+    expect(screen.getByText("Thao tác mô phỏng")).toBeDefined();
+    expect(screen.getByText("Đăng nhập để lưu vào ERP")).toBeDefined();
+    expect(screen.getByText("Thêm khoản vay")).toBeDefined();
+    expect(screen.getByText("Mặc định")).toBeDefined();
+
+    fireEvent.click(screen.getByText("Thêm khoản vay"));
+    expect(screen.getByDisplayValue("Khoản vay 2")).toBeDefined();
   });
 });

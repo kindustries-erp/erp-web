@@ -1,7 +1,7 @@
 import React from "react";
 import { Plus, RotateCcw } from "lucide-react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Button, V2Text } from "@/v2/shared/components";
+import { V2Button, V2Icon, V2Text } from "@/v2/shared/components";
 import {
   LoanKpiSummary,
   LoanCashflowChart,
@@ -57,14 +57,14 @@ export const LoanSimulatorPageDesktop: React.FC<LoanSimulatorPageProps> = (
           <V2Button
             variant="outline"
             onClick={handleReset}
-            leftIcon={<RotateCcw className="h-4 w-4" />}
+            leftIcon={<V2Icon icon={RotateCcw} size={16} />}
           >
             {t("v2.loans.action.reset", "Mặc định")}
           </V2Button>
           <V2Button
             variant="outline"
             onClick={handleAddLoan}
-            leftIcon={<Plus className="h-4 w-4" />}
+            leftIcon={<V2Icon icon={Plus} size={16} />}
           >
             {t("v2.loans.action.addLoan", "Thêm khoản vay")}
           </V2Button>

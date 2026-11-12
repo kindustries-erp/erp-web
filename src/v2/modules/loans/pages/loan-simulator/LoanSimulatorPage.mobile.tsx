@@ -1,7 +1,7 @@
-import React from "react";
-import { Plus, RotateCcw } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Button, V2Text } from "@/v2/shared/components";
+import { V2Button, V2Icon, V2Stack, V2Text } from "@/v2/shared/components";
 import {
   LoanKpiSummary,
   LoanCashflowChart,
@@ -10,11 +10,13 @@ import {
 import type { LoanSimulatorPageProps } from "./LoanSimulatorPage.type";
 import { useLoanSimulatorPage } from "./LoanSimulatorPage.hook";
 import { PortfolioLoanList } from "./components/PortfolioLoanList";
+import { LoanSimulatorActionsSheet } from "./components/LoanSimulatorActionsSheet";
 
 export const LoanSimulatorPageMobile: React.FC<LoanSimulatorPageProps> = (
   props,
 ) => {
   const { t } = useV2Translation();
+  const [actionsOpen, setActionsOpen] = useState(false);
   const {
     loans,
     portfolioResult,
@@ -28,50 +30,31 @@ export const LoanSimulatorPageMobile: React.FC<LoanSimulatorPageProps> = (
     handleSaveToErp,
   } = useLoanSimulatorPage(props);
 
-  const activeCount = loans.filter((l) => l.enabled).length;
-
   return (
-    <div
-      className={`w-full min-h-full space-y-4 pb-24 ${props.className ?? ""}`}
+    <V2Stack
+      gap="md"
+      className={`w-full min-h-full pb-[calc(env(safe-area-inset-bottom)+1rem)] ${props.className ?? ""}`}
     >
-      <div className="bg-card p-4 rounded-xl border border-border">
-        <V2Text variant="h2" className="text-lg font-bold">
-          {t("v2.loans.simulator.title", "Mô Phỏng Khoản Vay")}
-        </V2Text>
-        <V2Text
-          variant="caption"
-          className="text-muted-foreground mt-0.5 block"
-        >
-          {t(
-            "v2.loans.simulator.subtitleMobile",
-            "Mô phỏng áp lực dòng tiền danh mục nhiều khoản vay",
-          )}{" "}
-          (
-          <V2Text as="span" weight="medium" className="text-foreground">
-            {activeCount}/{loans.length}
-          </V2Text>{" "}
-          {t("v2.loans.portfolio.activeText", "khoản đang bật")})
-        </V2Text>
-
-        <div className="mt-3 flex items-center gap-2">
-          <V2Button
-            variant="outline"
-            onClick={handleReset}
-            leftIcon={<RotateCcw className="h-4 w-4" />}
-            className="flex-1 min-h-[44px]"
-          >
-            {t("v2.loans.action.reset", "Mặc định")}
-          </V2Button>
-          <V2Button
-            variant="outline"
-            onClick={handleAddLoan}
-            leftIcon={<Plus className="h-4 w-4" />}
-            className="flex-1 min-h-[44px]"
-          >
-            {t("v2.loans.action.addLoan", "Thêm khoản vay")}
-          </V2Button>
+      <V2Button
+        type="button"
+        variant="outline"
+        fullWidth
+        data-testid="loan-simulator-mobile-actions-trigger"
+        onClick={() => setActionsOpen(true)}
+        className="h-11 justify-between gap-2 rounded-xl border-border/70 bg-card px-3 text-foreground shadow-xs hover:bg-surface/80 active:scale-[0.98]"
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <V2Icon icon={SlidersHorizontal} size={15} className="text-primary" />
+          <V2Text as="span" variant="body-sm" weight="semibold" truncate>
+            {t("v2.loans.simulator.actionsTrigger", "Thao tác danh mục")}
+          </V2Text>
         </div>
-      </div>
+        <V2Icon
+          icon={ChevronDown}
+          size={15}
+          className="shrink-0 text-muted-fg"
+        />
+      </V2Button>
 
       <PortfolioLoanList
         loans={loans}
@@ -91,25 +74,16 @@ export const LoanSimulatorPageMobile: React.FC<LoanSimulatorPageProps> = (
 
       <PortfolioScheduleTable schedule={portfolioResult.schedule} />
 
-      <div
-        className={
-          isAuthenticated
-            ? "bg-card p-4 rounded-xl border border-border"
-            : "fixed bottom-0 left-0 right-0 p-3 bg-card border-t border-border z-40"
-        }
-      >
-        <V2Button
-          variant="primary"
-          className="w-full min-h-[44px] h-11 text-base font-medium"
-          onClick={handleSaveToErp}
-          isLoading={isSaving}
-        >
-          {isAuthenticated
-            ? t("v2.loans.simulator.saveToErp", "Lưu danh mục vào hệ thống ERP")
-            : t("v2.loans.simulator.loginToSave", "Đăng nhập để lưu vào ERP")}
-        </V2Button>
-      </div>
-    </div>
+      <LoanSimulatorActionsSheet
+        open={actionsOpen}
+        onOpenChange={setActionsOpen}
+        isAuthenticated={isAuthenticated}
+        isSaving={isSaving}
+        onReset={handleReset}
+        onAddLoan={handleAddLoan}
+        onSaveToErp={handleSaveToErp}
+      />
+    </V2Stack>
   );
 };
 LoanSimulatorPageMobile.displayName = "LoanSimulatorPageMobile";

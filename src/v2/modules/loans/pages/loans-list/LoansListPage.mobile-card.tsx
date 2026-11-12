@@ -1,7 +1,7 @@
 import React from "react";
 import { CreditCard } from "lucide-react";
 import { getLoanStatusConfig, LoanItem, LoanStatus } from "@/v2/core/loans";
-import { V2Badge, V2Button, V2Text } from "@/v2/shared/components";
+import { V2Badge, V2Button, V2Icon, V2Text } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 
 interface LoansListPageMobileCardProps {
@@ -82,7 +82,7 @@ export const LoansListPageMobileCard: React.FC<
               onRecordPayment(loan);
             }}
           >
-            <CreditCard className="h-3.5 w-3.5" />
+            <V2Icon icon={CreditCard} size={14} />
             {t("v2.loans.action.recordPayment", "Ghi nhận thanh toán")}
           </V2Button>
         </div>

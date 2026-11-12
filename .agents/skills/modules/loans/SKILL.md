@@ -39,8 +39,8 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
   - `loan-table/`: Định nghĩa cột bảng `LoansTable.columns.tsx` cho `V2StandardTable`.
   - `consolidated-cashflow/`: View dự báo dòng tiền tương lai `ConsolidatedCashflowView.tsx` & `ConsolidatedCashflowTable.tsx` (dùng chung `PortfolioScheduleTable` có expand row).
 - `pages/`:
-  - `loan-simulator/`: Trang máy tính mô phỏng đa nguồn (`LoanSimulatorPage.*`, `components/PortfolioLoanList.tsx`, `components/PortfolioLoanCard.tsx`, `components/PortfolioLoanCardFields.tsx`). Các nút `Mặc định`, `Thêm khoản vay`, `Lưu danh mục vào hệ thống ERP` gộp chung ở header trên cùng (desktop) / top header + thumb-zone (mobile); không còn wrapper `Danh Mục Khoản Vay` bên ngoài; 6 field input trong card xếp trên 1 hàng ngang ở desktop (`lg+`).
-  - `loans-list/`: Trang danh sách và tổng quan V2 (`LoansListPage.desktop.tsx`, `.mobile.tsx`, `.mobile-card.tsx`, `.actions.tsx`).
+  - `loan-simulator/`: Trang máy tính mô phỏng đa nguồn (`LoanSimulatorPage.*`, `components/PortfolioLoanList.tsx`, `components/PortfolioLoanCard.tsx`, `components/PortfolioLoanCardFields.tsx`, `components/LoanSimulatorActionsSheet.tsx`). Trên desktop, các nút `Mặc định`, `Thêm khoản vay`, `Lưu danh mục vào hệ thống ERP` gộp chung ở header trên cùng; không còn wrapper `Danh Mục Khoản Vay` bên ngoài; 6 field input trong card xếp trên 1 hàng ngang ở desktop (`lg+`). Trên mobile, ẩn card header và gom 3 nút (`Lưu danh mục vào hệ thống ERP`, `Thêm khoản vay`, `Mặc định`) vào `V2BottomSheet` (`LoanSimulatorActionsSheet`).
+  - `loans-list/`: Trang danh sách và tổng quan V2 (`LoansListPage.desktop.tsx`, `.mobile.tsx`, `.mobile-card.tsx`, `.actions.tsx`, `.hook.ts`). Đồng bộ `?tab=simulator|projection|list` qua `useV2ModuleTabState`; trên mobile dùng `V2TabBar` (`variant="page"`) mở `V2BottomSheet` chọn tab giống `garage-procurement?tab`, ẩn card header và nút `Thêm`.
 
 ---
 
