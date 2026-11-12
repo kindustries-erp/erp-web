@@ -1,4 +1,5 @@
 import { AmortizationMethod, LoanItem, LoanStatus } from "@/v2/core/loans";
+import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
 
 export interface CreateLoanPayload {
   loanCode?: string;
@@ -30,12 +31,8 @@ export interface RecordPaymentPayload {
   notes?: string;
 }
 
-export interface LoanListResponse {
-  items: LoanItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
+/** Response danh sách chuẩn v2: `items` và `pagination` */
+export type LoanListResponse = V2PaginatedResponse<LoanItem>;
 
 export interface CashflowLoanBreakdownItem {
   loanId: string;

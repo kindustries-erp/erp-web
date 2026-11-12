@@ -34,10 +34,14 @@ describe("useBusinessPartnersQuery summaries", () => {
   it("sets summaries.code to the total row count so the summary row shows the total", async () => {
     vi.spyOn(businessPartnersV2Api, "list").mockResolvedValue({
       items: [],
-      total: 42,
-      page: 1,
-      pageSize: 20,
-      totalPages: 3,
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: 42,
+        totalPages: 3,
+        next: 2,
+        previous: null,
+      },
     });
 
     const { result } = renderWith();
@@ -51,10 +55,14 @@ describe("useBusinessPartnersQuery summaries", () => {
   it("merges API summaries for numeric columns, if the API returns any", async () => {
     vi.spyOn(businessPartnersV2Api, "list").mockResolvedValue({
       items: [],
-      total: 5,
-      page: 1,
-      pageSize: 20,
-      totalPages: 1,
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: 5,
+        totalPages: 1,
+        next: null,
+        previous: null,
+      },
       summaries: { amount: { total: 1500, pageSubtotal: 0, cumulative: 0 } },
     });
 

@@ -166,7 +166,17 @@ describe("createProcurementApi: xóa mềm và xóa cứng", () => {
 
   it("options gọi GET {base}/column-options với tham số cột", async () => {
     get.mockResolvedValueOnce({
-      data: { items: [{ label: "HN", value: "b-1" }], total: 1, next: null },
+      data: {
+        items: [{ label: "HN", value: "b-1" }],
+        pagination: {
+          page: 1,
+          pageSize: 20,
+          total: 1,
+          totalPages: 1,
+          next: null,
+          previous: null,
+        },
+      },
     });
     const api = createProcurementApi("/api/v2/procurement-requests-garage");
 

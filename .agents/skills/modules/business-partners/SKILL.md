@@ -64,3 +64,10 @@ Dùng ngoài module:
 - API: `GET /api/v2/business-partners/options` (`listSelectOptions(direction, search, page)`), `POST /api/v2/business-partners/sync-from-invoices` (`syncFromInvoices(dryRun)`).
 - Mọi request đi qua `src/v2/shared/api/v2HttpClient.ts`: gắn Bearer token, refresh 401 (single-flight), retry GET khi 502/503/504 hoặc lỗi mạng, mở modal khi 409 `DOCUMENT_IN_USE`.
 - Lỗi và thành công của mutation hiện toast qua `useV2ToastStore` (`V2Toaster` mount ở `AppProviders`).
+
+## Hợp đồng phân trang chuẩn v2 (pagination)
+
+- API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.
+- Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
+- Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
+- Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.

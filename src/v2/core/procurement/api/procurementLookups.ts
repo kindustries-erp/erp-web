@@ -1,3 +1,4 @@
+import type { V2PaginationMeta } from "@/v2/shared/types/v2-pagination";
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import type { V2ComboboxOption } from "@/v2/shared/components/molecules/v2-combobox";
 
@@ -79,8 +80,7 @@ export async function listPurchaseInvoicePage(params: {
 }): Promise<{ rows: PurchaseInvoiceRow[]; next: number | null }> {
   const { data } = await v2HttpClient.get<{
     items: PurchaseInvoiceRowDto[];
-    page: number;
-    totalPages: number;
+    pagination: V2PaginationMeta;
   }>("/api/v2/invoices", {
     params: {
       direction: "IN",
@@ -101,7 +101,7 @@ export async function listPurchaseInvoicePage(params: {
     }));
   return {
     rows,
-    next: data.page < data.totalPages ? data.page + 1 : null,
+    next: data.pagination.next,
   };
 }
 

@@ -1,8 +1,10 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import type {
   V2FetchOptionsParams,
+  V2FetchOptionsResult,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
+import { toFetchOptionsResult } from "@/v2/shared/utils/v2FetchOptionsAdapter";
 import type { Role, RoleFormValue } from "../domain/entities/role";
 import {
   FALLBACK_RESOURCES,
@@ -43,7 +45,9 @@ export const rolesV2Api = {
     });
     return data;
   },
-  options: async (params: V2FetchOptionsParams) => {
+  options: async (
+    params: V2FetchOptionsParams,
+  ): Promise<V2FetchOptionsResult> => {
     const { data } = await v2HttpClient.get<ColumnOptionsResultDto>(
       `${BASE}/column-options`,
       {
@@ -56,7 +60,7 @@ export const rolesV2Api = {
         },
       },
     );
-    return data;
+    return toFetchOptionsResult(data);
   },
   get: async (id: string): Promise<Role> => {
     try {

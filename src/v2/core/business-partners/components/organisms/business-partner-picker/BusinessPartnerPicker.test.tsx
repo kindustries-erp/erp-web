@@ -31,10 +31,14 @@ describe("BusinessPartnerPicker", () => {
       .spyOn(businessPartnersV2Api, "listSelectOptions")
       .mockResolvedValue({
         items: [],
-        total: 0,
-        page: 1,
-        pageSize: 20,
-        totalPages: 0,
+        pagination: {
+          page: 1,
+          pageSize: 20,
+          total: 0,
+          totalPages: 1,
+          next: null,
+          previous: null,
+        },
       });
 
     renderPicker({ direction: "IN" });
@@ -45,10 +49,14 @@ describe("BusinessPartnerPicker", () => {
   it("shows the selected partner label when the value is set", async () => {
     vi.spyOn(businessPartnersV2Api, "listSelectOptions").mockResolvedValue({
       items: [],
-      total: 0,
-      page: 1,
-      pageSize: 20,
-      totalPages: 0,
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: 0,
+        totalPages: 1,
+        next: null,
+        previous: null,
+      },
     });
 
     renderPicker({ value: "master:p-1", selectedLabel: "Công ty ABC" });
@@ -59,10 +67,14 @@ describe("BusinessPartnerPicker", () => {
   it("opens the create drawer from the picker", async () => {
     vi.spyOn(businessPartnersV2Api, "listSelectOptions").mockResolvedValue({
       items: [],
-      total: 0,
-      page: 1,
-      pageSize: 20,
-      totalPages: 0,
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: 0,
+        totalPages: 1,
+        next: null,
+        previous: null,
+      },
     });
     vi.spyOn(businessPartnersV2Api, "nextCode").mockResolvedValue({
       nextCode: "KH-0001",

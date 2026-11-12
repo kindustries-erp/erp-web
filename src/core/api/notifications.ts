@@ -28,6 +28,8 @@ interface NotificationListResponse {
     pageSize: number;
     total: number;
     totalPages: number;
+    next: number | null;
+    previous: number | null;
   };
   unreadCount: number;
 }

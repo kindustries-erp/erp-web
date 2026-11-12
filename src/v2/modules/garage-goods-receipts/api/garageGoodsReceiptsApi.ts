@@ -2,9 +2,11 @@ import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import { GOODS_RECEIPT_DEFAULT_UNIT } from "@/v2/core/goods-receipts";
 import type {
   V2FetchOptionsParams,
+  V2FetchOptionsResult,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
+import { toFetchOptionsResult } from "@/v2/shared/utils/v2FetchOptionsAdapter";
 import type {
   GarageGoodsReceipt,
   GarageGoodsReceiptFormValue,
@@ -98,9 +100,15 @@ export const garageGoodsReceiptsV2Api = {
         params: toGarageGoodsReceiptsListParams(query),
       },
     );
-    return data;
+    return {
+      items: data.items,
+      total: data.pagination.total,
+      summaries: data.summaries,
+    };
   },
-  options: async (params: V2FetchOptionsParams) => {
+  options: async (
+    params: V2FetchOptionsParams,
+  ): Promise<V2FetchOptionsResult> => {
     const { data } = await v2HttpClient.get<ColumnOptionsResultDto>(
       `${BASE}/column-options`,
       {
@@ -113,7 +121,7 @@ export const garageGoodsReceiptsV2Api = {
         },
       },
     );
-    return data;
+    return toFetchOptionsResult(data);
   },
   get: async (id: string): Promise<GarageGoodsReceipt> => {
     const { data } = await v2HttpClient.get<GarageGoodsReceiptEnvelopeDto>(

@@ -109,3 +109,10 @@ Module khác muốn dùng core chỉ cần tạo một cấu hình tương tự 
 - Phiếu đã nhập kho (POSTED): chỉ còn "Hoàn nhập", mở `V2ConfirmModal`. Nút mờ kèm lý do khi `reversible === false`. Không còn "Hủy phiếu" cho phiếu đã nhập.
 - Code: `core/goods-receipts/drawers/GoodsReceiptDrawer.actions.ts` (dựng nút, có test), `GoodsReceiptDrawer.hook.ts`, `api/mutations/useGoodsReceiptMutations.ts` (`saveAndPost`, `cancel` đổi thông báo thành Hoàn nhập).
 - Type `GoodsReceiptRecord` có `reversible` và `reverseBlockedReason`.
+
+## Hợp đồng phân trang chuẩn v2 (pagination)
+
+- API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.
+- Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
+- Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
+- Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.

@@ -194,3 +194,10 @@ src/v2/core/procurement/
 - Cột **Đơn mua liên quan** (tab đề nghị) và **Đề nghị mua** (tab đơn mua) dùng `headerFilter(label)`, nên có popover lọc và gợi ý giá trị từ server qua `fetchOptions` (key cột là `relatedOrders` hoặc `requestNo`). Không thêm API client.
 - Cột **Đề nghị mua** đã dời xuống cuối bảng tab đơn mua và đứng cuối trong view visibility (`garageProcurementOrders.config.tsx`). Không có skill web riêng cho đơn mua, nên mục này ghi tại đây.
 - Test: `core/procurement/columns/procurementColumns.test.tsx` (có filter, thứ tự cuối).
+
+## Hợp đồng phân trang chuẩn v2 (pagination)
+
+- API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.
+- Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
+- Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
+- Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.

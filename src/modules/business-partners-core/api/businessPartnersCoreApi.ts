@@ -1,4 +1,9 @@
 import axiosInstance from "@/core/api/axiosInstance";
+import {
+  fromColumnOptionsWire,
+  fromPaginatedWire,
+  type PaginatedWireResponse,
+} from "@/shared/types/pagination";
 
 // ─── Types (khớp với erp_business_partners trên Neon) ─────────────────────────
 
@@ -45,6 +50,9 @@ export interface BusinessPartnerCoreListResult {
   totalPages: number;
 }
 
+/** Wire chuẩn v2 của `/api/v1/business-partners`: `items` + `pagination` */
+type BusinessPartnerCoreListWire = PaginatedWireResponse<ErpBusinessPartner>;
+
 export interface ColumnOptionItem {
   label: string;
   value: string;
@@ -79,7 +87,7 @@ export const businessPartnersCoreApi = {
   list: async (
     params?: ListBusinessPartnersParams,
   ): Promise<BusinessPartnerCoreListResult> => {
-    const { data } = await axiosInstance.get<BusinessPartnerCoreListResult>(
+    const { data } = await axiosInstance.get<BusinessPartnerCoreListWire>(
       BASE,
       {
         params: {
@@ -106,7 +114,7 @@ export const businessPartnersCoreApi = {
         },
       },
     );
-    return data;
+    return fromPaginatedWire(data);
   },
 
   getColumnOptions: async (params: {
@@ -117,20 +125,19 @@ export const businessPartnersCoreApi = {
     filters?: string;
     partnerType?: string;
   }): Promise<ColumnOptionsResult> => {
-    const { data } = await axiosInstance.get<ColumnOptionsResult>(
-      `${BASE}/column-options`,
-      {
-        params: {
-          column: params.column,
-          ...(params.search ? { search: params.search } : {}),
-          page: params.page ?? 1,
-          pageSize: params.pageSize ?? 20,
-          ...(params.filters ? { filters: params.filters } : {}),
-          ...(params.partnerType ? { partnerType: params.partnerType } : {}),
-        },
+    const { data } = await axiosInstance.get<
+      PaginatedWireResponse<ColumnOptionItem>
+    >(`${BASE}/column-options`, {
+      params: {
+        column: params.column,
+        ...(params.search ? { search: params.search } : {}),
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? 20,
+        ...(params.filters ? { filters: params.filters } : {}),
+        ...(params.partnerType ? { partnerType: params.partnerType } : {}),
       },
-    );
-    return data;
+    });
+    return fromColumnOptionsWire(data);
   },
 
   get: async (id: string): Promise<ErpBusinessPartner> => {

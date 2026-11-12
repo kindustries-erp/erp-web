@@ -148,6 +148,8 @@ export interface ProcurementPagination {
   pageSize: number;
   total: number;
   totalPages: number;
+  next: number | null;
+  previous: number | null;
 }
 
 /** Kết quả danh sách chuẩn của API: `items`, `pagination`, `summaries` (tổng cột số trên toàn bộ dòng khớp). */

@@ -79,3 +79,10 @@ cd erp/erp-web && bun run test src/v2/core/loans src/v2/modules/loans
 # Kiểm tra cấm class màu xanh
 grep -rn "blue-" erp/erp-web/src/v2/modules/loans erp/erp-web/src/v2/core/loans || echo "NO_BLUE_MATCH"
 ```
+
+## Hợp đồng phân trang chuẩn v2 (pagination)
+
+- API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.
+- Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
+- Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
+- Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.

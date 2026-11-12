@@ -1,4 +1,5 @@
 import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
+import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
 
 /** Hình dạng bản ghi và payload của `/api/v1/garage-goods-receipts` (khớp backend, không phụ thuộc V1) */
 
@@ -42,21 +43,17 @@ export interface GarageGoodsReceiptDto {
   updatedAt?: string | null;
 }
 
-export interface GarageGoodsReceiptListResultDto {
-  items: GarageGoodsReceiptDto[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  /** Số liệu tổng theo tên cột số (khớp `V2Column.key`); `null` = không tính được */
-  summaries?: Record<string, V2SummaryMetric | null>;
-}
+/** Response danh sách: `items`, `pagination`, `summaries` (tổng theo tên cột số, khớp `V2Column.key`; `null` = không tính được) */
+export type GarageGoodsReceiptListResultDto =
+  V2PaginatedResponse<GarageGoodsReceiptDto> & {
+    summaries?: Record<string, V2SummaryMetric | null>;
+  };
 
-export interface ColumnOptionsResultDto {
-  items: { label: string; value: string }[];
-  total: number;
-  next: number | null;
-}
+/** Response column-options chuẩn v2: `items` và `pagination` (có next/previous) */
+export type ColumnOptionsResultDto = V2PaginatedResponse<{
+  label: string;
+  value: string;
+}>;
 
 /** Backend bọc bản ghi đơn trong `{ message, data }` */
 export interface GarageGoodsReceiptEnvelopeDto {

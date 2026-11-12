@@ -23,7 +23,7 @@ export function useLoansListPage() {
   const listQuery = useLoansListQuery(queryParams);
 
   const loans = listQuery.data?.items ?? [];
-  const total = listQuery.data?.total ?? 0;
+  const total = listQuery.data?.pagination.total ?? 0;
 
   const handleCreate = () => {
     setEditingLoan(null);

@@ -1,5 +1,11 @@
 import axiosInstance from "@/core/api/axiosInstance";
-import type { ListParams, PaginatedResponse } from "@/shared/types/pagination";
+import {
+  fromColumnOptionsWire,
+  fromPaginatedWire,
+  type ListParams,
+  type PaginatedResponse,
+  type PaginatedWireResponse,
+} from "@/shared/types/pagination";
 import type {
   Role,
   CreateRoleDto,
@@ -41,10 +47,10 @@ export async function getCoreRolesApi(
     params.sorts.forEach((s) => queryParams.append("sorts", s));
   }
 
-  const { data } = await axiosInstance.get(
+  const { data } = await axiosInstance.get<PaginatedWireResponse<Role>>(
     `/api/v1/rbac-core/roles?${queryParams.toString()}`,
   );
-  return data;
+  return fromPaginatedWire(data);
 }
 
 export async function getCoreRolesColumnOptionsApi(
@@ -65,10 +71,10 @@ export async function getCoreRolesColumnOptionsApi(
   params.set("pageSize", String(pageSize));
   if (filtersStr) params.set("filters", filtersStr);
 
-  const { data } = await axiosInstance.get(
-    `/api/v1/rbac-core/roles/column-options?${params.toString()}`,
-  );
-  return data;
+  const { data } = await axiosInstance.get<
+    PaginatedWireResponse<{ label: string; value: string }>
+  >(`/api/v1/rbac-core/roles/column-options?${params.toString()}`);
+  return fromColumnOptionsWire(data);
 }
 
 export async function createCoreRoleApi(dto: CreateRoleDto): Promise<Role> {
