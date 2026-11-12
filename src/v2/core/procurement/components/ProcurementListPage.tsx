@@ -25,6 +25,7 @@ export interface ProcurementPageDisplay<T> {
   buildColumns: (
     t: (key: string, fallback: string) => string,
     openDetail?: (id: string) => void,
+    openLinked?: (id: string) => void,
   ) => V2Column<T>[];
   /** Drawer chi tiết/sửa của họ chứng từ, dựng bởi module */
   renderDrawer: (props: ProcurementDrawerProps) => React.ReactNode;

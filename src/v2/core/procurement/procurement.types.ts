@@ -44,6 +44,8 @@ export interface ProcurementOrderRow {
   createdBy: string | null;
   /** Email người tạo (API), hiển thị ở cột và tóm tắt "Người tạo". */
   createdByEmail?: string | null;
+  /** Số đề nghị nguồn (API, chỉ garage); null khi đơn lập trực tiếp. */
+  requestNo?: string | null;
   issuedAt: string | null;
 }
 
@@ -65,7 +67,16 @@ export interface ProcurementRequestRow {
   createdByEmail?: string | null;
   /** Khối vòng đời duyệt dùng chung PR/PO (API). */
   approval?: ProcurementApprovalSummary;
+  /** PO đã sinh từ đề nghị (API chỉ trả ở danh sách; không có thì coi như rỗng). */
+  relatedOrders?: ProcurementRelatedOrder[];
   createdAt: string;
+}
+
+/** PO liên quan của một đề nghị, dùng cho cột "Đơn mua liên quan". */
+export interface ProcurementRelatedOrder {
+  id: string;
+  orderNo: string;
+  status: string;
 }
 
 /** Một bước duyệt: người thực hiện, email, thời điểm, lý do (reject/cancel/close). */

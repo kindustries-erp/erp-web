@@ -87,6 +87,10 @@ registerV2ModuleLocale("procurement", {
     columns: {
       orderNo: "Số đơn",
       requestNo: "Số đề nghị",
+      linkedOrders: "Đơn mua liên quan",
+      linkedRequest: "Đề nghị mua",
+      linkedMore: "Chứng từ liên quan",
+      linkedMoreAria: "Xem thêm chứng từ liên quan",
       title: "Nội dung",
       supplier: "Nhà cung cấp",
       branch: "Chi nhánh",
@@ -305,6 +309,10 @@ registerV2ModuleLocale("procurement", {
     columns: {
       orderNo: "Order no.",
       requestNo: "Request no.",
+      linkedOrders: "Related orders",
+      linkedRequest: "Purchase request",
+      linkedMore: "Related documents",
+      linkedMoreAria: "Show more related documents",
       title: "Title",
       supplier: "Supplier",
       branch: "Branch",

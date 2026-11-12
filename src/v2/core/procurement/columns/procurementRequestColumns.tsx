@@ -5,6 +5,7 @@ import { headerFilter } from "@/v2/shared/components/organisms/v2-standard-table
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.type";
 import { ProcurementStatusBadge } from "../components/molecules/procurement-status-badge";
+import { ProcurementLinkedDocCell } from "../components/molecules/procurement-linked-doc-cell";
 import type { ProcurementRequestRow } from "../procurement.types";
 import {
   getOrderingStatusOptions,
@@ -21,10 +22,14 @@ const formatMoney = (value: string | number | null | undefined) =>
 const formatDate = (value: string | null | undefined) =>
   value ? value.slice(0, 10) : "—";
 
-/** Cột bảng đề nghị mua hàng (PR) garage chuẩn V2 table. */
+/**
+ * Cột bảng đề nghị mua hàng (PR) garage chuẩn V2 table.
+ * `openLinked` mở đơn mua liên quan (drawer PO) ngay trên trang.
+ */
 export function buildProcurementRequestColumns(
   t: T,
   openDetail?: (id: string) => void,
+  openLinked?: (id: string) => void,
 ): V2Column<ProcurementRequestRow>[] {
   return [
     {
@@ -106,6 +111,24 @@ export function buildProcurementRequestColumns(
       mobileSlot: "badge",
       cell: (row) => (
         <ProcurementStatusBadge value={row.orderingStatus} t={t} />
+      ),
+    },
+    {
+      key: "relatedOrders",
+      ...headerFilter(
+        t("v2.procurement.columns.linkedOrders", "Đơn mua liên quan"),
+      ),
+      size: 200,
+      mobileSlot: "meta",
+      cell: (row) => (
+        <ProcurementLinkedDocCell
+          docs={(row.relatedOrders ?? []).map((o) => ({
+            id: o.id,
+            label: o.orderNo,
+          }))}
+          t={t}
+          onOpen={openLinked}
+        />
       ),
     },
     {

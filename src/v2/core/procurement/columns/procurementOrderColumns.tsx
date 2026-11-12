@@ -4,6 +4,7 @@ import { headerFilter } from "@/v2/shared/components/organisms/v2-standard-table
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.type";
 import { ProcurementStatusBadge } from "../components/molecules/procurement-status-badge";
+import { ProcurementLinkedDocCell } from "../components/molecules/procurement-linked-doc-cell";
 import type { ProcurementOrderRow } from "../procurement.types";
 import {
   getOrderFulfillmentOptions,
@@ -21,10 +22,14 @@ const formatMoney = (value: string | number | null | undefined) =>
 const formatDate = (value: string | null | undefined) =>
   value ? value.slice(0, 10) : "—";
 
-/** Cột bảng đơn mua hàng (PO) garage chuẩn V2 table. */
+/**
+ * Cột bảng đơn mua hàng (PO) garage chuẩn V2 table.
+ * `openLinked` mở đề nghị nguồn (drawer PR) ngay trên trang.
+ */
 export function buildProcurementOrderColumns(
   t: T,
   openDetail?: (id: string) => void,
+  openLinked?: (id: string) => void,
 ): V2Column<ProcurementOrderRow>[] {
   return [
     {
@@ -121,6 +126,23 @@ export function buildProcurementOrderColumns(
       ...headerFilter(t("v2.procurement.columns.createdBy", "Người tạo")),
       size: 200,
       cell: (row) => row.createdByEmail ?? "—",
+    },
+    {
+      key: "requestNo",
+      ...headerFilter(t("v2.procurement.columns.linkedRequest", "Đề nghị mua")),
+      size: 160,
+      mobileSlot: "meta",
+      cell: (row) => (
+        <ProcurementLinkedDocCell
+          docs={
+            row.requestId && row.requestNo
+              ? [{ id: row.requestId, label: row.requestNo }]
+              : []
+          }
+          t={t}
+          onOpen={openLinked}
+        />
+      ),
     },
   ];
 }

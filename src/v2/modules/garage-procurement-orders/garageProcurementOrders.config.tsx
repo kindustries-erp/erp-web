@@ -69,6 +69,7 @@ const ORDER_VIEW_VISIBILITY = {
     paymentStatus: true,
     supplierInvoiceNo: false,
     createdBy: false,
+    requestNo: true,
   },
   all: {
     orderNo: true,
@@ -81,6 +82,7 @@ const ORDER_VIEW_VISIBILITY = {
     paymentStatus: true,
     supplierInvoiceNo: true,
     createdBy: true,
+    requestNo: true,
   },
 };
 

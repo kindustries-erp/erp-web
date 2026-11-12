@@ -230,6 +230,12 @@ export function useProcurementList<T extends { id: string }>(
     });
   };
 
+  // Ổn định identity: cột bảng dựng bằng useMemo phụ thuộc hàm này
+  const openView = React.useCallback(
+    (id: string) => openDrawer(id, "view"),
+    [openDrawer],
+  );
+
   return {
     canCreate,
     canUpdate,
@@ -237,7 +243,7 @@ export function useProcurementList<T extends { id: string }>(
     receive,
     openReceipt,
     drawer,
-    openView: (id: string) => openDrawer(id, "view"),
+    openView,
     openCreate: () => setDrawer({ id: null, mode: "edit" }),
     /** Sau khi lưu (tạo hoặc sửa): mở lại chứng từ ở chế độ xem */
     openSaved: (id: string) => setDrawer({ id, mode: "view" }),

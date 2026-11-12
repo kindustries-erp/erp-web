@@ -22,6 +22,7 @@ export * from "./procurement.toast";
 export * from "./components/organisms/procurement-lines-editor/ProcurementLinesEditor";
 export * from "./components/molecules/procurement-pickers/ProcurementPickers";
 export * from "./components/molecules/procurement-status-badge";
+export * from "./components/molecules/procurement-linked-doc-cell";
 export * from "./api/procurementLookups";
 export * from "./hooks/useProcurementQuery";
 export * from "./hooks/procurementListConfig.type";

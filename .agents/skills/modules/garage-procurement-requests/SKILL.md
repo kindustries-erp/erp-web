@@ -178,3 +178,19 @@ src/v2/core/procurement/
 - Khóa duyệt bật: modal chọn người duyệt (`SubmitApprovalModal`) mở trước khi gọi. `ProcurementListPage` và `GarageProcurementRequestsPage` truyền `approvalConfigPath` cho drawer để tải danh sách người duyệt.
 - PR nháp không còn "Gửi duyệt" ở menu dòng (`availableActions` lọc `submit`) và trong drawer xem.
 - Code: `ProcurementRequestDrawer.save.hook.ts` (tách khỏi `biz.hook`), `ProcurementRequestDrawer.hook.ts`.
+
+## 15. Cập nhật 2026-11-12: cột chứng từ liên quan (PR ↔ PO)
+
+- Tab Đề nghị có cột **Đơn mua liên quan** (`relatedOrders`): PO đầu hiện kèm copy và icon ngăn kéo mở drawer PO; từ PO thứ hai hiện chip `+N` (Popover liệt kê, bấm để mở). Không có PO thì hiện "—".
+- Tab Đơn mua có cột **Đề nghị mua** (`requestNo`): mở drawer PR ngay trên trang.
+- Molecule dùng chung: `core/procurement/components/molecules/procurement-linked-doc-cell/` (`ProcurementLinkedDocCell`, bọc `V2TableText`).
+- Nối mở chéo ở `GarageProcurementRequestsPage.hook.ts`: tab đề nghị truyền `ordersState.openView`, tab đơn mua truyền `requestsState.openView` qua input `openLinked` của `useProcurementListTabState`. `buildColumns(t, openDetail, openLinked)`.
+- `useProcurementList.openView` đã bọc `useCallback` để cột không dựng lại mỗi render.
+- Cột không có `headerFilter`: không lọc, không sắp xếp theo cột liên kết. Cả hai cột có trong view `overview` và `all`, `mobileSlot: "meta"`.
+- Drawer PO mục "Từ đề nghị mua" hiển thị `requestNo` thay vì UUID.
+
+## 16. Cập nhật 2026-11-12: header filter cho cột liên kết
+
+- Cột **Đơn mua liên quan** (tab đề nghị) và **Đề nghị mua** (tab đơn mua) dùng `headerFilter(label)`, nên có popover lọc và gợi ý giá trị từ server qua `fetchOptions` (key cột là `relatedOrders` hoặc `requestNo`). Không thêm API client.
+- Cột **Đề nghị mua** đã dời xuống cuối bảng tab đơn mua và đứng cuối trong view visibility (`garageProcurementOrders.config.tsx`). Không có skill web riêng cho đơn mua, nên mục này ghi tại đây.
+- Test: `core/procurement/columns/procurementColumns.test.tsx` (có filter, thứ tự cuối).
