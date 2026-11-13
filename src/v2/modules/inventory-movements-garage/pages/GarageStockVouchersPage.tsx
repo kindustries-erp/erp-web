@@ -46,7 +46,7 @@ export function GarageStockVouchersPage() {
       )}
       icon={<Boxes className="h-4 w-4" />}
       tabs={tabs}
-      tabVariant={V2ModulePageTabVariant.SEGMENTED}
+      tabVariant={V2ModulePageTabVariant.STATUS_CHIP}
       tabBarClassName="pb-0"
       actions={
         <V2SplitButton

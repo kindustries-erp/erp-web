@@ -60,6 +60,7 @@ export const ButtonGroup = () => (
 );
 export const Page = () => <Demo variant={V2TabBarVariant.PAGE} />;
 export const Pill = () => <Demo variant={V2TabBarVariant.PILL} />;
+export const StatusChip = () => <Demo variant={V2TabBarVariant.STATUS_CHIP} />;
 export const PageManyTabs = () => {
   const [active, setActive] = useState("t0");
   const tabs = Array.from({ length: 14 }, (_, i) => ({

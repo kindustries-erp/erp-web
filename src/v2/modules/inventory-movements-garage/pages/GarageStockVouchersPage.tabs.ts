@@ -1,5 +1,6 @@
 import { LayoutGrid } from "lucide-react";
 import type { V2ModuleTab } from "@/v2/shared/components";
+import type { V2StatusChipTone } from "@/v2/shared/components/molecules/v2-tab-bar";
 import {
   v2ColumnPreferencesStorage,
   v2ViewPresetStorage,
@@ -12,6 +13,14 @@ import { inventoryMovementsGarageConfig as config } from "../inventoryMovementsG
 import type { useGarageStockVouchersPage } from "./GarageStockVouchersPage.hook";
 
 export const ALL_TAB = "all";
+
+/** Chấm màu chip theo loại phiếu: nhập = xanh, xuất = cảnh báo, điều chỉnh = nhạt */
+const VOUCHER_TONE: Record<string, V2StatusChipTone> = {
+  PURCHASE_RECEIPT: "success",
+  OTHER_RECEIPT: "success",
+  ISSUE: "warning",
+  ADJUSTMENT: "muted",
+};
 
 type PageState = ReturnType<typeof useGarageStockVouchersPage>;
 
@@ -27,6 +36,7 @@ export function buildGarageVoucherTabs(
       label: t("v2.inventoryMovements.allTypes", "Tất cả"),
       type: undefined,
       icon: LayoutGrid,
+      tone: "neutral" as V2StatusChipTone,
       badgeCount: Object.values(typeCounts).reduce((a, b) => a + b, 0),
     },
     ...config.voucherTypes.map((item) => ({
@@ -34,12 +44,14 @@ export function buildGarageVoucherTabs(
       label: t(item.labelKey, item.labelFallback),
       type: item.code as string | undefined,
       icon: item.icon,
+      tone: VOUCHER_TONE[item.code] ?? ("neutral" as V2StatusChipTone),
       badgeCount: typeCounts[item.code],
     })),
   ];
-  return tabDefs.map(({ key, label, type, icon, badgeCount }) => ({
+  return tabDefs.map(({ key, label, type, icon, tone, badgeCount }) => ({
     key,
     icon,
+    tone,
     badgeCount,
     label,
     kind: "list" as const,

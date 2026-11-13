@@ -115,6 +115,7 @@ export const v2Vi = {
       closeTabShort: "Đóng tab",
       headerAriaLabel: "Thanh điều hướng tiêu đề",
       subAriaLabel: "Thanh điều hướng phụ",
+      statusChipAriaLabel: "Lọc theo trạng thái",
       buttonGroupAriaLabel: "Nhóm nút chuyển đổi tab",
     },
     welcome: {

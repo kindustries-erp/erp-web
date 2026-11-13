@@ -115,6 +115,7 @@ export const v2En: V2Dictionary = {
       closeTabShort: "Close tab",
       headerAriaLabel: "Drawer top navigation tabs",
       subAriaLabel: "Drawer sub navigation tabs",
+      statusChipAriaLabel: "Filter by status",
       buttonGroupAriaLabel: "Button group tabs",
     },
     welcome: {

@@ -21,6 +21,8 @@ export enum V2ModulePageTabVariant {
   PILL = "pill",
   /** Segmented control: track xám, tab chọn là thẻ trắng trượt (V2TabBarVariant.SUB) */
   SEGMENTED = "segmented",
+  /** Chip trạng thái có chấm màu (V2TabBarVariant.STATUS_CHIP) */
+  STATUS_CHIP = "status-chip",
 }
 
 export const V2_MODULE_PAGE_HEADER_VARIANTS = [
@@ -33,6 +35,7 @@ export const V2_MODULE_PAGE_TAB_VARIANTS = [
   V2ModulePageTabVariant.PAGE,
   V2ModulePageTabVariant.PILL,
   V2ModulePageTabVariant.SEGMENTED,
+  V2ModulePageTabVariant.STATUS_CHIP,
 ] as const;
 
 export const V2_MODULE_PAGE_TAB_TO_BAR_VARIANT: Record<
@@ -43,6 +46,7 @@ export const V2_MODULE_PAGE_TAB_TO_BAR_VARIANT: Record<
   [V2ModulePageTabVariant.PAGE]: V2TabBarVariant.PAGE,
   [V2ModulePageTabVariant.PILL]: V2TabBarVariant.PILL,
   [V2ModulePageTabVariant.SEGMENTED]: V2TabBarVariant.SUB,
+  [V2ModulePageTabVariant.STATUS_CHIP]: V2TabBarVariant.STATUS_CHIP,
 };
 
 type V2ModuleTabBase = Omit<V2TabItemData, "key" | "content">;

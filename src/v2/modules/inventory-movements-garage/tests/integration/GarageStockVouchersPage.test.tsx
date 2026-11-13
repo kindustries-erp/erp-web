@@ -106,7 +106,7 @@ describe("GarageStockVouchersPage", () => {
     );
   });
 
-  it("gắn số phiếu theo loại vào tab; Tất cả là tổng, loại 0 không có badge", async () => {
+  it("gắn số phiếu theo loại vào tab; Tất cả là tổng, loại 0 hiện số 0", async () => {
     stockApi.listVouchers.mockResolvedValue({
       items: [row({})],
       total: 1,
@@ -125,7 +125,8 @@ describe("GarageStockVouchersPage", () => {
     await waitFor(() => expect(tabsWithBadge("8")).toHaveLength(1));
     expect(tabsWithBadge("5")).toHaveLength(1);
     expect(tabsWithBadge("3")).toHaveLength(1);
-    expect(tabsWithBadge("0")).toHaveLength(0);
+    // Số 0 hiện trên thẻ KPI (OTHER_RECEIPT, ADJUSTMENT)
+    expect(tabsWithBadge("0")).toHaveLength(2);
   });
 
   it("mở phiếu nhập mua hàng bằng ?receipt= (drawer đầy đủ của core)", async () => {

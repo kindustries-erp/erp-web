@@ -27,10 +27,11 @@ export function GarageStockBalancesPage() {
 
   const tabs = React.useMemo<V2ModuleTab<StockBalanceRow>[]>(
     () =>
-      GARAGE_STOCK_BALANCE_TABS.map(({ tab, key, label, icon }) => ({
+      GARAGE_STOCK_BALANCE_TABS.map(({ tab, key, label, icon, tone }) => ({
         key: tab,
         label: t(`v2.inventoryMovements.balance.tabs.${key}`, label),
         icon,
+        tone,
         badgeCount: counts[tab],
         kind: "list" as const,
         resetKey: `${state.tableId}-${tab}-${state.tableKey}`,
@@ -85,7 +86,7 @@ export function GarageStockBalancesPage() {
       )}
       icon={<Warehouse className="h-4 w-4" />}
       tabs={tabs}
-      tabVariant={V2ModulePageTabVariant.SEGMENTED}
+      tabVariant={V2ModulePageTabVariant.STATUS_CHIP}
       tabBarClassName="pb-0"
       overlays={
         state.ledger && (

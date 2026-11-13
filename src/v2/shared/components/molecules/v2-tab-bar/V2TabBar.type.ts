@@ -10,12 +10,17 @@ export enum V2TabBarVariant {
   BUTTON_GROUP = "button-group",
   PAGE = "page",
   PILL = "pill",
+  /** Chip bo tròn có chấm màu theo `tone`, không có track bao quanh */
+  STATUS_CHIP = "status-chip",
 }
 
 export type V2TabBarPillVariant =
   | V2TabBarVariant.HEADER
   | V2TabBarVariant.BUTTON_GROUP
   | V2TabBarVariant.SUB;
+
+/** Tông màu chấm của chip trạng thái (chỉ dùng cho V2TabBarVariant.STATUS_CHIP) */
+export type V2StatusChipTone = "neutral" | "success" | "muted" | "warning";
 
 export interface V2TabItemData {
   /** Định danh của tab (hỗ trợ cả id và key) */
@@ -45,6 +50,8 @@ export interface V2TabItemData {
   dotColor?: "emerald" | "amber" | "rose" | "primary";
   /** Luôn hiển thị icon ngay cả khi tab không active (dành cho V2TabBarVariant.SUB) */
   alwaysShowIcon?: boolean;
+  /** Tông màu chấm chip (chỉ dành cho V2TabBarVariant.STATUS_CHIP); mặc định neutral */
+  tone?: V2StatusChipTone;
 }
 
 export type V2TabEntry = V2TabItemData;

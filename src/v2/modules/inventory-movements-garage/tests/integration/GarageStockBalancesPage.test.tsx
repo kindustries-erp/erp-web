@@ -76,7 +76,7 @@ describe("GarageStockBalancesPage", () => {
     );
   });
 
-  it("gắn số đếm vào từng tab, bỏ badge khi bằng 0", async () => {
+  it("gắn số đếm vào từng tab, số 0 vẫn hiện trên thẻ KPI", async () => {
     api.listBalances.mockResolvedValue({
       items: [],
       total: 0,
@@ -101,6 +101,6 @@ describe("GarageStockBalancesPage", () => {
     );
     expect(within(tab("Còn hàng")).getByText("4")).toBeTruthy();
     expect(within(tab("Hết hàng")).getByText("2")).toBeTruthy();
-    expect(within(tab("Tồn âm")).queryByText("0")).toBeNull();
+    expect(within(tab("Tồn âm")).getByText("0")).toBeTruthy();
   });
 });

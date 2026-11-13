@@ -5,6 +5,7 @@ import { V2TabItem } from "../v2-tab-item";
 import { TabBarPageView } from "./TabBarPageView";
 import { TabBarPagePillView } from "./TabBarPagePillView";
 import { TabBarPillView } from "./TabBarPillView";
+import { TabBarChipView } from "./TabBarChipView";
 import { V2TabBarVariant, type V2TabBarProps } from "./V2TabBar.type";
 
 export const V2TabBar: React.FC<V2TabBarProps> = ({
@@ -56,6 +57,19 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
   if (variant === V2TabBarVariant.PILL) {
     return (
       <TabBarPagePillView
+        tabs={tabs}
+        activeKey={activeKey}
+        onSelect={handleSelect}
+        extra={extra}
+        className={className}
+        ariaLabel={ariaLabel}
+      />
+    );
+  }
+
+  if (variant === V2TabBarVariant.STATUS_CHIP) {
+    return (
+      <TabBarChipView
         tabs={tabs}
         activeKey={activeKey}
         onSelect={handleSelect}
