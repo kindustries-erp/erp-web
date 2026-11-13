@@ -278,7 +278,7 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - [x] Floating Card: 4 góc bo cong `rounded-2xl`, viền 4 cạnh `border border-border/80`, cách mép màn hình `top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5`.
 - [x] Slide animation êm mượt: Sử dụng `cubic-bezier(0.16, 1, 0.3, 1)` với Tailwind keyframes `slide-in-from-right` và `slide-in-from-bottom`.
 - [x] 2 Khối Card Kính Độc Lập: Cột trái và cột phải nằm trên canvas với `gap-4 lg:gap-6`, không dùng đường kẻ dọc `border-l` cứng nhắc.
-- [x] Khống chế kích thước file: 100% file thành phần đều `< 178 LoC` (tuân thủ /ui-structure < 180 LoC).
+- [x] Khống chế kích thước file: 100% file thành phần đều `< 178 LoC` (tuân thủ /erp-ui-structure < 180 LoC).
 - [x] Tuân thủ No Blue Mandate: Không dùng class màu `blue-*`.
 - [x] Phím tắt `Esc` 2 tầng: Esc lần 1 thu nhỏ toàn màn hình, Esc lần 2 đóng drawer (hỏi confirm nếu đang edit).
 - [x] Multi-Drawer Stacking Store: `utils/v2DrawerStack.ts` quản lý active stack cross-tree qua `useSyncExternalStore`, tự động cấp phát `zIndex = 50 + depth * 10`, `depth`, `isTopmost`, `isUnderlying`.

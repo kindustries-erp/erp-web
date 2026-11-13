@@ -1,6 +1,6 @@
 ---
 name: erp-web-truth
-description: Ngữ cảnh hiện hành của erp-web (frontend React/Vite của ERP) - lane giao hàng, hợp đồng với API, cấu trúc V1/V2, tooling, quy trình git/CI và bản đồ module. Load đầu tiên trước mọi task trong erp-web. Với việc tổ chức lại component hoặc migrate V2, dùng skill erp-web-structure.
+description: Ngữ cảnh hiện hành của erp-web (frontend React/Vite của ERP) - lane giao hàng, hợp đồng với API, cấu trúc V1/V2, tooling, quy trình git/CI và bản đồ module. Load đầu tiên trước mọi task trong erp-web. Với việc tổ chức lại component hoặc migrate V2, dùng skill erp-ui-structure.
 ---
 
 # ERP Web — Current Truth
@@ -33,7 +33,7 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 - Alias `@/v2/*` → `src/v2/*`, `@/*` → `src/*`.
 - Module V2 và shared V2 không import V1, ngoại trừ auth store dùng chung (`@/modules/auth/domain/authStore`).
 - Key i18n trong V2 phải có prefix `v2.`.
-- Migrate V1 → V2 chỉ làm khi user ra lệnh (rolling migration). Chi tiết: skill `erp-web-structure`.
+- Migrate V1 → V2 chỉ làm khi user ra lệnh (rolling migration). Chi tiết: skill `erp-ui-structure`.
 
 ## 5. Tooling
 

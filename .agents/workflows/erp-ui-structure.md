@@ -2,9 +2,9 @@
 description: Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (< 180 LoC, co-located testing, No Blue, i18n VI/EN, Mobile-First chuẩn công thái học). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate). Phần C là cửa vào cho Table và Drawer (chọn skill và workflow chi tiết)
 ---
 
-# 🏗️ ERP Web Structure Workflow (`/ui-structure`)
+# 🏗️ ERP Web Structure Workflow (`/erp-ui-structure`)
 
-Workflow gộp ba phần cấu trúc frontend. **Phần A** dùng khi tạo mới hoặc tách component UI theo Atomic 5 tầng. **Phần B** dùng khi migrate module V1 sang V2 (`src/v2/`). **Phần C** dùng khi làm bảng hoặc drawer. Playbook, quy ước và checklist nằm ở skill `erp-web-structure`.
+Workflow gộp ba phần cấu trúc frontend. **Phần A** dùng khi tạo mới hoặc tách component UI theo Atomic 5 tầng. **Phần B** dùng khi migrate module V1 sang V2 (`src/v2/`). **Phần C** dùng khi làm bảng hoặc drawer. Playbook, quy ước và checklist nằm ở skill `erp-ui-structure`.
 
 Chọn phần: tạo mới hoặc tách component trong V1/shared thì làm Phần A. Migrate module sang `/v2/` thì làm Phần B, và chỉ khi user ra lệnh. Làm bảng hoặc drawer thì làm Phần C. Cả ba phần đều phải qua audit của Phần A.
 
@@ -226,7 +226,7 @@ grep -rnE "(bg|border)-(white|slate-[0-9]+)" src/modules/[target-module]/compone
 Quy tắc:
 - **Không** làm platform split `.desktop/.mobile` ở v1; đó là bước của v2.
 - Lập **danh sách tính năng màn hình** ngay trong plan (tính năng, file v1, trạng thái). Đây là bảng parity khi migrate.
-- Module đã migrate sang v2: không refactor v1 nữa, chuyển sang `/ui-structure`.
+- Module đã migrate sang v2: không refactor v1 nữa, chuyển sang `/erp-ui-structure`.
 - v1 chưa đụng tới và > 180 dòng là **legacy**, không bắt buộc refactor. Ngưỡng 180 bắt buộc với code mới và code được refactor.
 
 Đường dẫn v1 và v2:
@@ -309,9 +309,9 @@ graph TD
    - Agent **TUYỆT ĐỐI KHÔNG** tự ý bắt đầu migrate bất kỳ module nào nếu chưa có lệnh rõ ràng từ User.
    - Mỗi module migrate độc lập, verify 100% Quality Gate trước khi báo cáo kết quả và dừng lại chờ lệnh tiếp theo.
 
-### 🧱 Kỷ Luật Atomic (tham chiếu `/ui-structure`)
+### 🧱 Kỷ Luật Atomic (tham chiếu `/erp-ui-structure`)
 
-Áp dụng cho mọi file UI trong `src/v2/` và cho các file V1 được chạm trong task. Chi tiết và lệnh audit nằm ở `ui-structure.md`; mục này là bộ tối thiểu bắt buộc khi làm việc với `src/v2/`:
+Áp dụng cho mọi file UI trong `src/v2/` và cho các file V1 được chạm trong task. Chi tiết và lệnh audit nằm ở `erp-ui-structure.md`; mục này là bộ tối thiểu bắt buộc khi làm việc với `src/v2/`:
 
 - **Phân tầng**: mỗi component thuộc đúng một tầng (Atoms, Molecules, Organisms, Templates, Pages).
 - **Import một chiều**: `Templates > Organisms > Molecules > Atoms`. Cấm import ngược tầng và import ngang hàng cùng tầng. Khi hai organism cần chung một phần, đưa phần đó xuống molecule hoặc truyền qua props/slot từ tầng cha.
@@ -326,7 +326,7 @@ graph TD
   - **Generic UI không thuộc họ nào** (ví dụ button, modal, bảng generic) vẫn ở `shared/`, không đưa vào core.
 - **Ngưỡng kích thước**: cảnh báo ở 180 dòng cho `[Name].tsx` và `.hook.ts`, chặn ở 250 dòng. `.type.ts` < 80, `.helper.ts` < 100. Loại trừ file dữ liệu/cấu hình thuần (xem mục 6 Core Mandates). Vượt ngưỡng thì tách theo thứ tự type → hook → helper → sub-component.
 - **Cấm hardcode**: chuỗi hiển thị đi qua `t()`; cấm màu `blue-*`.
-- **Trước khi báo xong**: chạy audit ở Giai đoạn 5 của `ui-structure.md`, type-check, và test của thư mục đã chạm.
+- **Trước khi báo xong**: chạy audit ở Giai đoạn 5 của `erp-ui-structure.md`, type-check, và test của thư mục đã chạm.
 
 ---
 
@@ -458,7 +458,7 @@ src/v2/
    - Tuân thủ chiều import đơn hướng: `Templates (L4) > Organisms (L3) > Molecules (L2) > Atoms (L1)`.
 
 #### 🔹 GIAI ĐOẠN 3: Triển Khai Module Scaffolding & Pure Domain Rules
-0. **Sinh khung bằng plop (ưu tiên)**: chọn generator theo bảng dưới (đồng bộ với `api-structure` Phần B). Sau đó chạy `bunx prettier --write src/v2/modules/<module>` hoặc `src/v2/core/<họ>`. Chi tiết tham số: skill `plop-generate`.
+0. **Sinh khung bằng plop (ưu tiên)**: chọn generator theo bảng dưới (đồng bộ với `erp-api-structure` Phần B). Sau đó chạy `bunx prettier --write src/v2/modules/<module>` hoặc `src/v2/core/<họ>`. Chi tiết tham số: skill `plop-generate`.
 
    | Tình huống | Generator | Kết quả |
    | :--- | :--- | :--- |
@@ -477,8 +477,8 @@ src/v2/
 3. **Tách riêng Data Access Layer**:
    - Đặt queries tại `api/queries/use[Module]Query.ts`.
    - Đặt mutations tại `api/mutations/use[Module]Mutation.ts`.
-4. **Đối chiếu V1 trước khi viết** (bắt buộc khi migrate): liệt kê feature trong module V1 và lập bảng parity theo playbook mục 5 của skill `erp-web-structure`.
-5. **Module V1 đã refactor v2-ready** (logic thuần và hook query/mutation tách riêng, xem `ui-structure`): bước 2–3 chỉ còn đối chiếu và chuyển sang `src/v2/modules/<m>/`. Cập nhật mục "Trạng thái migrate" của skill sau khi xong.
+4. **Đối chiếu V1 trước khi viết** (bắt buộc khi migrate): liệt kê feature trong module V1 và lập bảng parity theo playbook mục 5 của skill `erp-ui-structure`.
+5. **Module V1 đã refactor v2-ready** (logic thuần và hook query/mutation tách riêng, xem `erp-ui-structure`): bước 2–3 chỉ còn đối chiếu và chuyển sang `src/v2/modules/<m>/`. Cập nhật mục "Trạng thái migrate" của skill sau khi xong.
 
 #### 🔹 GIAI ĐOẠN 4: Platform Split & UI Assembly
 1. **Áp dụng Switcher Pattern cho Layouts, Drawers, Modals, Pages**:
@@ -549,7 +549,7 @@ cd erp/erp-web && bun run storybook
 
 ## 🅲 Phần C: Table & Drawer
 
-Mỗi loại có một skill duy nhất (đã gồm V1, V2 và phần phụ) và một workflow chi tiết. Bảng chọn đầy đủ nằm ở mục 3 của skill `erp-web-structure`.
+Mỗi loại có một skill duy nhất (đã gồm V1, V2 và phần phụ) và một workflow chi tiết. Bảng chọn đầy đủ nằm ở mục 3 của skill `erp-ui-structure`.
 
 | Việc | Skill (đọc trước) | Workflow chạy | Reference |
 | :--- | :--- | :--- | :--- |

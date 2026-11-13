@@ -283,7 +283,7 @@ Resource RBAC: `garage`
   - Tự động query các phiếu dịch vụ của đối tượng (`getCasesByCustomer`, `getCasesBySupplier`, hoặc query theo `licensePlate`).
   - Đưa danh sách lên đầu combobox dưới nhóm ưu tiên: **"⭐ Phiếu dịch vụ của [Khách hàng/BKS]"** kèm tooltip chi tiết (Số chứng từ, BKS, Doanh thu, Chi phí, Dư nợ).
   - Khi chọn case: Tự động bind `caseId`, cập nhật `licensePlate`, `partnerName`, và nếu `amount` chưa có thì gợi ý điền số tiền của vụ việc.
-- Tuân thủ `/ui-structure`: File helper `GarageCaseCombobox.helper.tsx` độc lập, hook $< 160\text{ LoC}$, 0 class `blue-*`, 100% i18n, co-located test.
+- Tuân thủ `/erp-ui-structure`: File helper `GarageCaseCombobox.helper.tsx` độc lập, hook $< 160\text{ LoC}$, 0 class `blue-*`, 100% i18n, co-located test.
 
 ### D. In Phiếu Thu / Phiếu Chi (`garage-cashflow?tab=vouchers`)
 - **Context menu**: `GarageCashflowTable.actions.tsx` (`getGarageCashflowRowActions`) nhận thêm tham số `onPrint`; hiển thị 1 mục icon `Printer` trong nhóm "Thao tác chính" ngay sau "Xem chi tiết". Nhãn theo `row.voucherType`: `RECEIPT` → `garage.cashflow.actions.printReceipt` ("In phiếu thu"), `PAYMENT` → `garage.cashflow.actions.printPayment` ("In phiếu chi"). Ẩn khi không truyền `onPrint`.

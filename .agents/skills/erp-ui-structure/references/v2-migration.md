@@ -1,7 +1,7 @@
 
 # 🚀 Kỹ Thuật Tái Cấu Trúc ERP Web v2 (`src/v2/`)
 
-Skill này là nguồn tri thức cho việc tạo và migrate module sang V2. Chạy theo workflow `/ui-structure`. Module mẫu đã hoàn chỉnh: `src/v2/modules/business-partners/`.
+Skill này là nguồn tri thức cho việc tạo và migrate module sang V2. Chạy theo workflow `/erp-ui-structure`. Module mẫu đã hoàn chỉnh: `src/v2/modules/business-partners/`.
 
 ---
 

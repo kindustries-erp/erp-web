@@ -1,8 +1,8 @@
 
-# ⚛️ UI Atomic Component & Architectural Standards (`/ui-structure`)
+# ⚛️ UI Atomic Component & Architectural Standards (`/erp-ui-structure`)
 
 > 📋 **EXECUTION WORKFLOW**: Để thực thi chuẩn hóa UI từng bước chuẩn xác, không bỏ sót tiêu chí và chạy bộ lệnh Grep Audit tự động, hãy tuân thủ workflow:
-> 👉 [`.agents/workflows/ui-structure.md`](../../../workflows/ui-structure.md)
+> 👉 [`.agents/workflows/erp-ui-structure.md`](../../../workflows/erp-ui-structure.md)
 
 > ⚡ **Mục tiêu cốt lõi**: Đảm bảo toàn bộ mã nguồn giao diện trong `erp-web` được tổ chức mạch lạc, phân lớp rõ ràng theo đúng chuẩn **5 Tầng Atomic Design (Brad Frost) kết hợp Domain-Driven Design (DDD)**. Tuyệt đối không để xảy ra tình trạng các file Component phình to thành hàng ngàn dòng code (God Components / Monolithic Files) hoặc thư mục `shared` biến thành bãi rác không kiểm soát.
 

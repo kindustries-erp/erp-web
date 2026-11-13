@@ -49,7 +49,7 @@ src/v2/shared/
     └── templates/v2-module-page/               Khung trang `V2ModulePage`: `V2PageHeader` (icon, tiêu đề, mô tả, slot toolbar theo tab, actions) + tab (`kind`: `list` dựng `V2StandardTable`, `dashboard` render nội dung) + vùng nội dung full-height (`V2Stack`)
 ```
 
-Quy tắc tầng đã áp dụng (theo `ui-structure`):
+Quy tắc tầng đã áp dụng (theo `erp-ui-structure`):
 - Molecule **không import molecule khác**: popup dùng primitive `shared/ui` (`Popover`) và `V2Button` (atom) thay vì `V2Popover`/`V2Dropdown`.
 - Molecule **0% API**: `V2ColumnHeaderFilter` nhận `optionsState` qua props; hook React Query nằm ở organism (`hooks/V2StandardTable.options.hook.ts`) và chỉ truy vấn cột đang mở popup.
 - Không dùng `<button>` thuần trong code bảng: dùng `V2Button`.

@@ -77,8 +77,8 @@ Global workflows in `./.agents/workflows/`:
 - `erp-continue.md` — resume an in-progress task: read the checkpoint, verify git/Plane, wait for confirmation.
 - `clean-brain.md` — session and plan cleanup.
 - `erp-git-workflow.md` — ERP master-first Git workflow.
-- `ui-structure.md` — ERP Web structure: Atomic 5 tầng (Phần A) và migrate V1 → V2 (Phần B).
-- `api-structure.md` — ERP API structure: tách Controller/Service lớn (Phần A) và module v2 (Phần B).
+- `erp-ui-structure.md` — ERP Web structure: Atomic 5 tầng (Phần A) và migrate V1 → V2 (Phần B).
+- `erp-api-structure.md` — ERP API structure: tách Controller/Service lớn (Phần A) và module v2 (Phần B).
 - `standardize-table.md` — ERP table standardization.
 
 ERP workflows in `./erp/.agents/workflows/`:
@@ -124,7 +124,7 @@ Repo-level workflows (e.g. `erp/erp-web/.agents/workflows/standardize-drawer.md`
 3. Ensure form fields use proper validation and translation keys.
 
 ### Scenario 5: Refactoring Large Service (ERP API)
-1. Load `/api-structure` workflow.
+1. Load `/erp-api-structure` workflow.
 2. Scan file sizes: Controller >300 LoC, Service >500 LoC.
 3. Choose a pattern: Sub-Controllers, Sub-Services Facade, Pure Engine.
 4. Maintain 100% backward compatibility via the Facade pattern.
@@ -220,9 +220,9 @@ Skills nằm ở `erp-api/.agents/skills/` và `erp-web/.agents/skills/`, đăng
 Workflow ERP nằm ở `./.agents/workflows/`:
 
 - `erp-branch-sync-workflow.md` — sync `erp-master` sang nhánh downstream.
-- `routing.md`, `clean-brain.md`, `api-structure.md`, `ui-structure.md`.
+- `routing.md`, `clean-brain.md`, `erp-api-structure.md`, `erp-ui-structure.md`.
 
-Workflow global (`erp-plan.md`, `erp-continue.md`, `erp-git-workflow.md`, `standardize-table.md`, `api-structure.md`, `ui-structure.md`, ...) xem catalog ở `../AGENTS.md`.
+Workflow global (`erp-plan.md`, `erp-continue.md`, `erp-git-workflow.md`, `standardize-table.md`, `erp-api-structure.md`, `erp-ui-structure.md`, ...) xem catalog ở `../AGENTS.md`.
 
 Kế hoạch trình trong hội thoại và được `OK` trước khi làm; task theo dõi trên Plane (project KINDU) bằng skill `plane-work-items`. Antigravity Brain (`implementation_plan.md` -> `walkthrough.md`) là bản phụ khi chạy trong Antigravity.
 
@@ -252,10 +252,10 @@ Source of truth for this repo (`./erp-web`).
 
 ### 2. Atomic Design & Clean Code
 
-- **Max File Size:** Với `.tsx` và `.hook.ts`: cảnh báo ở 180 dòng, chặn ở 250 dòng (không merge). File dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`) không tính vào ngưỡng. V1 legacy vượt ngưỡng được miễn trừ trừ khi task chạm tới; see `ui-structure`.
-- **Core theo họ (áp dụng cho mọi họ, không ngoại lệ):** UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ>/`. Module của họ chỉ giữ API, cấu hình ghép core, page và locale riêng. Chiều phụ thuộc `modules → core → shared`; core không import module và không chứa tên module. Import qua barrel (`@/v2/core/<họ>`, `@/v2/shared/components`), không import sâu từ module hay core. Chi tiết: `ui-structure` Phần B.
+- **Max File Size:** Với `.tsx` và `.hook.ts`: cảnh báo ở 180 dòng, chặn ở 250 dòng (không merge). File dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`) không tính vào ngưỡng. V1 legacy vượt ngưỡng được miễn trừ trừ khi task chạm tới; see `erp-ui-structure`.
+- **Core theo họ (áp dụng cho mọi họ, không ngoại lệ):** UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ>/`. Module của họ chỉ giữ API, cấu hình ghép core, page và locale riêng. Chiều phụ thuộc `modules → core → shared`; core không import module và không chứa tên module. Import qua barrel (`@/v2/core/<họ>`, `@/v2/shared/components`), không import sâu từ module hay core. Chi tiết: `erp-ui-structure` Phần B.
 - Extract complex state/API logic into `hooks/` (e.g., `use[Feature]Logic.ts`).
-- **Tên hook**: hook gắn một component/drawer/page dùng `[Component].hook.ts` (export `use[Component]`); hook độc lập (query, mutation, hook dùng chung, store) dùng `use<Tên>.ts`. Hook không JSX đuôi `.ts`. Chi tiết: `ui-structure`.
+- **Tên hook**: hook gắn một component/drawer/page dùng `[Component].hook.ts` (export `use[Component]`); hook độc lập (query, mutation, hook dùng chung, store) dùng `use<Tên>.ts`. Hook không JSX đuôi `.ts`. Chi tiết: `erp-ui-structure`.
 - Extract helper functions into `utils/`.
 - Extract sub-components into their own files. Do NOT group multiple large React components in a single file.
 
