@@ -6,6 +6,7 @@ import {
   Users,
   ReceiptText,
   Package,
+  Warehouse,
   ClipboardList,
 } from "lucide-react";
 import { NavSection, NavItem } from "../SidebarPrimitives";
@@ -21,20 +22,23 @@ export function GarageNavSection({
   const {
     canReadGarageCashflow,
     canReadGarageCases,
-    canReadGarageGoodsReceipts,
+    canReadGarageStockVouchers,
+    canReadGarageStockLedger,
     canReadGarageProcurementRequests,
     canReadGaragePurchaseOrders,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
-    isGoodsReceiptsActive,
+    isStockVouchersActive,
+    isStockBalancesActive,
     isProcurementRequestsActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
-    handleNavGoodsReceipts,
+    handleNavStockVouchers,
+    handleNavStockBalances,
     handleNavProcurementRequests,
     handleNavDebts,
     handleNavOpex,
@@ -46,7 +50,8 @@ export function GarageNavSection({
   if (
     !canReadGarageCashflow &&
     !canReadGarageCases &&
-    !canReadGarageGoodsReceipts &&
+    !canReadGarageStockVouchers &&
+    !canReadGarageStockLedger &&
     !canReadGarageProcurementRequests &&
     !canReadGaragePurchaseOrders &&
     !canReadGarageDebts &&
@@ -70,14 +75,24 @@ export function GarageNavSection({
           contextPage="garage-cases"
         />
       )}
-      {canReadGarageGoodsReceipts && (
+      {canReadGarageStockVouchers && (
         <NavItem
           collapsed={collapsed}
           icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
-          label={t("nav.items.garageGoodsReceipts", "Nhập kho Garage")}
-          active={isGoodsReceiptsActive}
-          onClick={handleNavGoodsReceipts}
-          contextPage="garage-goods-receipts"
+          label={t("nav.items.garageStockVouchers", "Chứng từ kho Garage")}
+          active={isStockVouchersActive}
+          onClick={handleNavStockVouchers}
+          contextPage="garage-stock-vouchers"
+        />
+      )}
+      {canReadGarageStockLedger && (
+        <NavItem
+          collapsed={collapsed}
+          icon={<Warehouse className="w-4 h-4 opacity-65 flex-shrink-0" />}
+          label={t("nav.items.garageStockBalances", "Tồn kho Garage")}
+          active={isStockBalancesActive}
+          onClick={handleNavStockBalances}
+          contextPage="garage-stock-balances"
         />
       )}
       {canReadGarageProcurementRequests && (

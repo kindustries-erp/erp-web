@@ -230,12 +230,15 @@ const GarageCasesPage = lazy(() =>
     default: m.GarageCasesPage,
   })),
 );
-const GarageGoodsReceiptsPage = lazy(() =>
-  import("@/v2/modules/garage-goods-receipts/pages/GarageGoodsReceiptsPage").then(
-    (m) => ({
-      default: m.GarageGoodsReceiptsPage,
-    }),
-  ),
+const GarageStockVouchersPage = lazy(() =>
+  import("@/v2/modules/inventory-movements-garage").then((m) => ({
+    default: m.GarageStockVouchersPage,
+  })),
+);
+const GarageStockBalancesPage = lazy(() =>
+  import("@/v2/modules/inventory-movements-garage").then((m) => ({
+    default: m.GarageStockBalancesPage,
+  })),
 );
 const GarageProcurementRequestsPage = lazy(() =>
   import("@/v2/modules/garage-procurement-requests/GarageProcurementRequestsPage").then(
@@ -330,7 +333,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "invoice-debts": InvoiceDebtsPage,
   "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
-  "garage-goods-receipts": GarageGoodsReceiptsPage,
+  "garage-stock-vouchers": GarageStockVouchersPage,
+  "garage-stock-balances": GarageStockBalancesPage,
   "garage-procurement": GarageProcurementRequestsPage,
   "garage-opex": GarageOpex,
   "garage-cashflow": GarageCashflowPage,

@@ -38,10 +38,11 @@ export const v2En: V2Dictionary = {
         pinnedShortcutsCount: "Pinned {{count}} shortcuts on Bottom Nav",
         resetDefault: "Reset to default",
         inventoryGroup: "Inventory",
-        garageGoodsReceipts: "Garage Goods Receipts",
+        garageStockVouchers: "Garage Stock Vouchers",
+        garageStockBalances: "Garage Stock",
         garageProcurementRequests: "Garage Purchase Requests",
         garageProcurementOrders: "Garage Purchase Orders",
-        // v2-module:garage-goods-receipts:locale-en
+        // v2-module:inventory-movements-garage:locale-en
         erpPermissionsCore: "Roles & Permissions",
         // v2-module:rbac-roles:locale-en
         // plop:v2-nav-items

@@ -133,7 +133,8 @@ export const TabBarPillViewDesktop: React.FC<TabBarPillViewProps> = ({
       <div
         ref={subContainerRef}
         className={cn(
-          "relative flex items-center gap-1 p-[3px] rounded-lg bg-slate-100/90 dark:bg-[#161a22]/90 border border-slate-200/70 dark:border-white/[0.06] shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] overflow-x-auto overflow-y-hidden touch-pan-x scrollbar-none h-8 max-w-full",
+          "relative flex items-center gap-1 p-[3px] rounded-lg border border-slate-200 dark:border-white/[0.09] shadow-[inset_0_1px_1px_rgba(15,23,42,.04)] dark:shadow-none overflow-x-auto overflow-y-hidden touch-pan-x scrollbar-none h-8 max-w-full",
+          GLASS_BAR_CLASS,
           stretch && "w-full",
         )}
       >
@@ -142,7 +143,7 @@ export const TabBarPillViewDesktop: React.FC<TabBarPillViewProps> = ({
           role="presentation"
           aria-hidden="true"
           data-tabs-indicator
-          className="pointer-events-none absolute rounded-md bg-white dark:bg-[#1e2430] border border-transparent dark:border-teal-500/30 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4)] will-change-[left,width] transition-all duration-180 ease-out z-0"
+          className="pointer-events-none absolute rounded-md bg-white dark:bg-[#2a3445] border border-slate-200/80 dark:border-teal-400/35 shadow-[0_1px_2px_rgba(15,23,42,.06),0_2px_6px_-2px_rgba(15,23,42,.12)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] will-change-[left,width] transition-all duration-180 ease-out z-0"
           style={{ width: 0, opacity: 0 }}
         />
         {renderPillItems(V2TabBarVariant.SUB)}

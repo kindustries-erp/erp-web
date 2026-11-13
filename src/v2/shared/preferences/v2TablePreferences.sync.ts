@@ -11,6 +11,7 @@ export const V2_TABLE_PREFERENCES_V2_PATH = "/api/v2/table-preferences";
  */
 export const V2_TABLE_PREFERENCES_V2_PREFIXES: readonly string[] = [
   "procurement-",
+  "inventory-movements-",
 ];
 const SYNC_DEBOUNCE_MS = 500;
 

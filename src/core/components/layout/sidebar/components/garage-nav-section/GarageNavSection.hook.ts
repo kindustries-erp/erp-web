@@ -18,8 +18,11 @@ export function useGarageNavSection({
     ErpResource.GARAGE_DEBTS,
     ErpAction.READ,
   );
-  const canReadGarageGoodsReceipts =
-    useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
+  const canReadGarageStockVouchers =
+    useHasPermission(ErpResource.GARAGE_STOCK_VOUCHERS, ErpAction.READ) ||
+    canReadGarageCases;
+  const canReadGarageStockLedger =
+    useHasPermission(ErpResource.GARAGE_STOCK_LEDGER, ErpAction.READ) ||
     canReadGarageCases;
   const canReadGarageOpex = canReadGarageCases;
   // Quyền truy cập trang mua hàng garage (gồm cả đề nghị và đơn mua)
@@ -36,7 +39,8 @@ export function useGarageNavSection({
   const isCasesActive =
     currentPage === "garage-cases" || currentPage === "garage-dashboard";
 
-  const isGoodsReceiptsActive = currentPage === "garage-goods-receipts";
+  const isStockVouchersActive = currentPage === "garage-stock-vouchers";
+  const isStockBalancesActive = currentPage === "garage-stock-balances";
 
   const isProcurementRequestsActive =
     currentPage === "garage-procurement" ||
@@ -53,7 +57,8 @@ export function useGarageNavSection({
 
   const handleNavCashflow = () => navTo("garage-cashflow");
   const handleNavCases = () => navTo("garage-cases");
-  const handleNavGoodsReceipts = () => navTo("garage-goods-receipts");
+  const handleNavStockVouchers = () => navTo("garage-stock-vouchers");
+  const handleNavStockBalances = () => navTo("garage-stock-balances");
   const handleNavProcurementRequests = () => navTo("garage-procurement");
   const handleNavPurchaseOrders = () => navTo("garage-procurement");
   const handleNavDebts = () => navTo("garage-debts");
@@ -62,21 +67,24 @@ export function useGarageNavSection({
   return {
     canReadGarageCashflow,
     canReadGarageCases,
-    canReadGarageGoodsReceipts,
+    canReadGarageStockVouchers,
+    canReadGarageStockLedger,
     canReadGarageProcurementRequests,
     canReadGaragePurchaseOrders,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
-    isGoodsReceiptsActive,
+    isStockVouchersActive,
+    isStockBalancesActive,
     isProcurementRequestsActive,
     isPurchaseOrdersActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
-    handleNavGoodsReceipts,
+    handleNavStockVouchers,
+    handleNavStockBalances,
     handleNavProcurementRequests,
     handleNavPurchaseOrders,
     handleNavDebts,

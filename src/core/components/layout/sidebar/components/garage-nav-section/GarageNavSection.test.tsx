@@ -17,7 +17,8 @@ vi.mock("@/core/i18n", () => ({
       "nav.sections.garage": "GARAGE",
       "nav.items.garageCashflow": "Thu chi garage",
       "nav.items.garageCases": "Hoạt động garage",
-      "nav.items.garageGoodsReceipts": "Nhập kho Garage",
+      "nav.items.garageStockVouchers": "Chứng từ kho Garage",
+      "nav.items.garageStockBalances": "Tồn kho Garage",
       "nav.items.garageProcurement": "Mua hàng Garage",
       "nav.items.garageProcurementRequests": "Đề nghị mua hàng Garage",
       "nav.items.garagePurchaseOrders": "Đơn mua hàng Garage",
@@ -224,7 +225,7 @@ describe("GarageNavSection component", () => {
     expect(mockNavTo).toHaveBeenCalledWith("garage-procurement");
   });
 
-  it("renders 4 flat nav items with Thu chi garage positioned below Hoạt động garage", () => {
+  it("renders 5 flat nav items with Thu chi garage positioned below Hoạt động garage", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       return (
         resource === ErpResource.GARAGE ||
@@ -243,7 +244,8 @@ describe("GarageNavSection component", () => {
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
     expect(screen.getByText("Hoạt động garage")).toBeInTheDocument();
-    expect(screen.getByText("Nhập kho Garage")).toBeInTheDocument();
+    expect(screen.getByText("Chứng từ kho Garage")).toBeInTheDocument();
+    expect(screen.getByText("Tồn kho Garage")).toBeInTheDocument();
     expect(screen.getByText("Thu chi garage")).toBeInTheDocument();
     expect(screen.getByText("Công nợ garage")).toBeInTheDocument();
     expect(screen.getByText("Chi phí vận hành Garage")).toBeInTheDocument();
@@ -253,14 +255,15 @@ describe("GarageNavSection component", () => {
     const labels = Array.from(items).map((el) => el.textContent?.trim());
     expect(labels).toEqual([
       "Hoạt động garage",
-      "Nhập kho Garage",
+      "Chứng từ kho Garage",
+      "Tồn kho Garage",
       "Thu chi garage",
       "Công nợ garage",
       "Chi phí vận hành Garage",
     ]);
 
     // Verify click triggers navigation
-    fireEvent.click(screen.getByText("Nhập kho Garage"));
-    expect(mockNavTo).toHaveBeenCalledWith("garage-goods-receipts");
+    fireEvent.click(screen.getByText("Chứng từ kho Garage"));
+    expect(mockNavTo).toHaveBeenCalledWith("garage-stock-vouchers");
   });
 });

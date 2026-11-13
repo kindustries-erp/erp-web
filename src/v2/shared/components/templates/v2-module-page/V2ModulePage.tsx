@@ -42,6 +42,7 @@ export function V2ModulePage<T>({
   pageTabs,
   activePageTab,
   onPageTabSelect,
+  tabBarClassName,
 }: V2ModulePageProps<T>) {
   const page = useV2ModulePage({
     tabs,
@@ -95,6 +96,7 @@ export function V2ModulePage<T>({
           onTabChange={pageTabs ? onPageTabSelect : page.handleTabChange}
           className={cn(
             "shrink-0",
+            tabBarClassName,
             pageTabs && pageTabs.length > 1 && "hidden sm:flex",
             !pageTabs && tabs.length <= 1 && "hidden",
           )}

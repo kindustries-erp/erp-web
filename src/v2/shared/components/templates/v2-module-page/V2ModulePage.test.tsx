@@ -153,6 +153,18 @@ describe("V2ModulePage", () => {
     expect(screen.getByText("Drawer chi tiết")).toBeInTheDocument();
   });
 
+  it("applies tabBarClassName to the tab bar", () => {
+    renderPage({
+      tabVariant: V2ModulePageTabVariant.PILL,
+      tabBarClassName: "border-b-0 pb-0",
+    });
+    const tablist = screen
+      .getAllByRole("tablist")
+      .find((el) => el.className.includes("border-b-0"));
+    expect(tablist).toBeDefined();
+    expect(tablist).toHaveClass("pb-0");
+  });
+
   it("renders V2ModulePageVariant.CARD with header card and pill tabs", () => {
     const { container } = renderPage({ variant: V2ModulePageVariant.CARD });
     const header = container.querySelector("header");

@@ -40,7 +40,7 @@ export const garageProcurementOrdersConfig: ProcurementListConfig<ProcurementOrd
     // Khóa duyệt PO garage đang tắt: gửi duyệt = ghi nhận luôn, xử lý ở drawer
     directConfirmWhenApprovalOff: true,
     rowLabel: (row) => row.orderNo,
-    receiveHref: "/garage-goods-receipts",
+    receiveHref: "/garage-stock-vouchers",
     receivePermissionCollection: "garage_goods_receipts",
     canReceive: (row) =>
       row.status === "ISSUED" && row.fulfillmentStatus !== "FULL",

@@ -6,6 +6,7 @@ import {
   FileText,
   Building2,
   Package,
+  Warehouse,
   PackageCheck,
   Layers,
   Factory,
@@ -136,12 +137,20 @@ export const NAV_DEFS: RawNavDef[] = [
     href: "/v2/settings",
   },
   {
-    id: "garage-goods-receipts",
+    id: "garage-stock-vouchers",
     sectionId: "garage",
-    labelKey: "v2.nav.items.garageGoodsReceipts",
-    fallback: "Nhập kho Garage",
+    labelKey: "v2.nav.items.garageStockVouchers",
+    fallback: "Chứng từ kho Garage",
     icon: Package,
-    href: "/garage-goods-receipts",
+    href: "/garage-stock-vouchers",
+  },
+  {
+    id: "garage-stock-balances",
+    sectionId: "garage",
+    labelKey: "v2.nav.items.garageStockBalances",
+    fallback: "Tồn kho Garage",
+    icon: Warehouse,
+    href: "/garage-stock-balances",
   },
   {
     id: "garage-procurement",
@@ -151,7 +160,7 @@ export const NAV_DEFS: RawNavDef[] = [
     icon: ClipboardList,
     href: "/garage-procurement?tab=requests",
   },
-  // v2-module:garage-goods-receipts:nav
+  // v2-module:inventory-movements-garage:nav
   {
     id: "permission",
     sectionId: "settings",

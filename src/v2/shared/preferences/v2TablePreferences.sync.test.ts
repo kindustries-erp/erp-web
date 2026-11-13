@@ -12,6 +12,14 @@ describe("v2TablePreferencePath", () => {
     );
   });
 
+  it("routes inventory-movements tables to the v2 endpoint", () => {
+    expect(
+      v2TablePreferencePath("inventory-movements-vouchers-garage-table"),
+    ).toBe(
+      "/api/v2/table-preferences/inventory-movements-vouchers-garage-table",
+    );
+  });
+
   it("keeps other tables on the v1 endpoint", () => {
     expect(v2TablePreferencePath("erp-customers-table")).toBe(
       "/api/v1/app/table-preferences/erp-customers-table",

@@ -15,7 +15,7 @@ const config: ProcurementListConfig<Row> = {
   availableActions: () => [],
   isEditable: () => false,
   rowLabel: (row) => row.id,
-  receiveHref: "/garage-goods-receipts",
+  receiveHref: "/garage-stock-vouchers",
   canReceive: (row) =>
     row.status === "ISSUED" && row.fulfillmentStatus !== "FULL",
   receiveBlockedKey: (row) => {

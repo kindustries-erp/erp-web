@@ -40,8 +40,8 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
     if (isSub) {
       const showAlways = tab.alwaysShowIcon;
       const colorCls = isActive
-        ? "text-slate-900 dark:text-zinc-100"
-        : "text-slate-400 dark:text-zinc-500";
+        ? "text-teal-600 dark:text-teal-300"
+        : "text-slate-500 dark:text-zinc-500";
 
       const iconCls = cn(
         "shrink-0 transition-all duration-150 ease-out",
@@ -92,8 +92,8 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
     }
     // isSub:
     return isActive
-      ? "text-slate-900 font-semibold dark:text-teal-300"
-      : "text-slate-600 font-medium hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200";
+      ? "text-slate-950 font-semibold dark:text-teal-200"
+      : "text-slate-700 font-medium hover:text-slate-950 dark:text-slate-300 dark:hover:text-slate-100";
   };
 
   const getBadgeCls = () => {
@@ -109,8 +109,8 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
     }
     // isSub:
     return isActive
-      ? "bg-slate-900/10 text-slate-900 dark:bg-teal-500/25 dark:text-teal-200 font-bold"
-      : "bg-slate-200/70 text-slate-600 dark:bg-white/[0.06] dark:text-slate-400 font-medium";
+      ? "bg-teal-600 text-white font-bold dark:bg-teal-500/25 dark:text-teal-200"
+      : "bg-slate-300/60 text-slate-700 font-medium dark:bg-white/[0.08] dark:text-slate-300";
   };
 
   const buttonVariant = isSub ? "pill-tab" : "ghost";

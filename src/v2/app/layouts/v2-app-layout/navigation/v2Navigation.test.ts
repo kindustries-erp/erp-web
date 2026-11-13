@@ -54,7 +54,8 @@ describe("v2Navigation", () => {
     const inventory = sections.find((section) => section.id === "inventory");
 
     expect(garage?.items.map((item) => item.id)).toEqual([
-      "garage-goods-receipts",
+      "garage-stock-vouchers",
+      "garage-stock-balances",
       "garage-procurement",
     ]);
     expect(inventory?.items.some((item) => item.id.startsWith("garage-"))).toBe(

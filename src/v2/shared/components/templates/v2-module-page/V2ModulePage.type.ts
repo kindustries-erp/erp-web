@@ -19,6 +19,8 @@ export enum V2ModulePageTabVariant {
   HEADER = "header",
   PAGE = "page",
   PILL = "pill",
+  /** Segmented control: track xám, tab chọn là thẻ trắng trượt (V2TabBarVariant.SUB) */
+  SEGMENTED = "segmented",
 }
 
 export const V2_MODULE_PAGE_HEADER_VARIANTS = [
@@ -30,6 +32,7 @@ export const V2_MODULE_PAGE_TAB_VARIANTS = [
   V2ModulePageTabVariant.HEADER,
   V2ModulePageTabVariant.PAGE,
   V2ModulePageTabVariant.PILL,
+  V2ModulePageTabVariant.SEGMENTED,
 ] as const;
 
 export const V2_MODULE_PAGE_TAB_TO_BAR_VARIANT: Record<
@@ -39,6 +42,7 @@ export const V2_MODULE_PAGE_TAB_TO_BAR_VARIANT: Record<
   [V2ModulePageTabVariant.HEADER]: V2TabBarVariant.HEADER,
   [V2ModulePageTabVariant.PAGE]: V2TabBarVariant.PAGE,
   [V2ModulePageTabVariant.PILL]: V2TabBarVariant.PILL,
+  [V2ModulePageTabVariant.SEGMENTED]: V2TabBarVariant.SUB,
 };
 
 type V2ModuleTabBase = Omit<V2TabItemData, "key" | "content">;
@@ -107,6 +111,8 @@ export interface V2ModulePageProps<T> {
   /** Drawer, modal do page quản lý */
   overlays?: React.ReactNode;
   className?: string;
+  /** Class thêm cho thanh tab (ví dụ bỏ đường kẻ dưới của pill) */
+  tabBarClassName?: string;
   /** Tab trang (ví dụ chuyển giữa các trang liên quan PR / PO) */
   pageTabs?: V2TabComboboxItem[];
   /** Khóa tab trang đang kích hoạt */

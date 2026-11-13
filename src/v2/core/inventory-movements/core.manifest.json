@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "inventory-movements",
+  "entity": "StockVoucher",
+  "barrel": "src/v2/core/inventory-movements/index.ts",
+  "localeNamespace": "inventoryMovements",
+  "exports": {
+    "configType": "InventoryMovementsModuleConfig",
+    "apiType": "InventoryMovementsApi",
+    "keysFactory": "createInventoryMovementsKeys",
+    "recordType": "StockVoucherRow",
+    "listController": "useStockVoucherListController",
+    "query": "useStockVouchersQuery",
+    "drawer": "StockVoucherDetailDrawer",
+    "viewVisibility": "stockVoucherViewVisibility"
+  }
+}

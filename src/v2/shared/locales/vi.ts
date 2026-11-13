@@ -38,10 +38,11 @@ export const v2Vi = {
         pinnedShortcutsCount: "Đang ghim {{count}} mục lối tắt ở Bottom Nav",
         resetDefault: "Khôi phục mặc định",
         inventoryGroup: "Kho",
-        garageGoodsReceipts: "Nhập kho Garage",
+        garageStockVouchers: "Chứng từ kho Garage",
+        garageStockBalances: "Tồn kho Garage",
         garageProcurementRequests: "Đề nghị mua hàng Garage",
         garageProcurementOrders: "Đơn mua hàng Garage",
-        // v2-module:garage-goods-receipts:locale-vi
+        // v2-module:inventory-movements-garage:locale-vi
         erpPermissionsCore: "Phân quyền & Vai trò",
         // v2-module:rbac-roles:locale-vi
         // plop:v2-nav-items

@@ -50,6 +50,8 @@ export enum ErpResource {
   GARAGE_DEBTS = "garage_debts",
   GARAGE_CASHFLOW = "garage_cashflow",
   GARAGE_GOODS_RECEIPTS = "garage_goods_receipts",
+  GARAGE_STOCK_VOUCHERS = "garage_stock_vouchers",
+  GARAGE_STOCK_LEDGER = "garage_stock_ledger",
   GARAGE_PROCUREMENT_ORDERS = "garage_procurement_orders",
   GARAGE_PROCUREMENT_REQUESTS = "garage_procurement_requests",
   ACCOUNTING_CONFIGS = "accounting_configs",
@@ -260,6 +262,16 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
   {
     collection: "garage_goods_receipts",
     label: "Phiếu nhập kho Garage",
+    group: "Garage & Xưởng dịch vụ",
+  },
+  {
+    collection: "garage_stock_vouchers",
+    label: "Chứng từ kho Garage",
+    group: "Garage & Xưởng dịch vụ",
+  },
+  {
+    collection: "garage_stock_ledger",
+    label: "Tồn kho Garage",
     group: "Garage & Xưởng dịch vụ",
   },
   {
