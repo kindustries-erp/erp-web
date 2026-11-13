@@ -79,17 +79,17 @@ describe("LoansListPage Mobile", () => {
       </QueryClientProvider>,
     );
 
-  it("giữ Header Card thu gọn (ẩn description trên mobile) kèm nút + Thêm khoản vay mới và mở V2BottomSheet chọn tab", () => {
+  it("giữ Header thu gọn (ẩn description trên mobile) kèm nút + Thêm khoản vay mới và mở V2BottomSheet chọn tab", () => {
     const { container } = renderPage();
 
     const header = container.querySelector("header");
-    expect(header).toHaveClass("p-3", "sm:p-6");
+    expect(header).toHaveClass("flex", "justify-between");
     expect(screen.getByText("Quản Lý Khoản Vay & Dòng Tiền")).toBeDefined();
     expect(
       screen.getByText(
         "Theo dõi nghĩa vụ nợ, lập kế hoạch dòng tiền và mô phỏng tài chính.",
       ),
-    ).toHaveClass("hidden", "sm:line-clamp-2");
+    ).toHaveClass("hidden", "sm:block");
     expect(
       screen.getByRole("button", { name: "Thêm khoản vay mới" }),
     ).toBeDefined();

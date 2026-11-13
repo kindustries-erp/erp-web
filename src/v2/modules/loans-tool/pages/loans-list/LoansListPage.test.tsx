@@ -116,10 +116,10 @@ describe("LoansListPage", () => {
     const { container } = renderPage();
 
     const header = container.querySelector("header");
-    expect(header).toHaveClass("bg-card", "rounded-2xl");
+    expect(header).not.toHaveClass("bg-card", "rounded-2xl");
     expect(
       screen.getByRole("tab", { name: "Mô Phỏng & Tính Nhanh" }),
-    ).toHaveClass("bg-primary", "text-primary-fg");
+    ).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("Dự Báo Dòng Tiền Tương Lai")).toBeDefined();
     const listTab = screen.getByText("Danh Sách Hợp Đồng");
     expect(listTab).toBeDefined();

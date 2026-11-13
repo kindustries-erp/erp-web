@@ -151,6 +151,20 @@
   border-radius: 0 !important;
 }
 
+/* Pill tab bar (V2TabBar PILL): bo góc và tab active theo token primary, giống classic-dark */
+.theme-midnight [data-variant="pill"] [role="tab"] {
+  border-radius: 8px !important;
+}
+.theme-midnight [data-variant="pill"] [role="tab"][aria-selected="true"] {
+  background-color: color-mix(
+    in srgb,
+    var(--primary) 20%,
+    transparent
+  ) !important;
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent) !important;
+  color: var(--primary-accent) !important;
+}
+
 /* ── Midnight: neutralize hardcoded skeleton/progress classes (too bright in dark) ── */
 .theme-midnight .bg-slate-400,
 .theme-midnight .bg-zinc-400,

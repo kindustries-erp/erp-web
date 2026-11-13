@@ -5,7 +5,7 @@ import {
   V2Button,
   V2ConfirmModal,
   V2ModulePage,
-  V2ModulePageVariant,
+  V2ModulePageTabVariant,
 } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { LoanDetailDrawer } from "../../drawers/loan-detail-drawer";
@@ -24,7 +24,7 @@ export const LoansListPage: React.FC<LoansListPageProps> = ({ className }) => {
   return (
     <V2ModulePage<LoanItem>
       className={className}
-      variant={V2ModulePageVariant.CARD}
+      tabVariant={V2ModulePageTabVariant.PILL}
       title={t("v2.loans.page.title", "Quản Lý Khoản Vay & Dòng Tiền")}
       description={t(
         "v2.loans.page.subtitle",

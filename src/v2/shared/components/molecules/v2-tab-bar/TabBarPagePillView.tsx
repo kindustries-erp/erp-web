@@ -64,6 +64,7 @@ export const TabBarPagePillView: React.FC<TabBarPagePillViewProps> = ({
   return (
     <div
       role="tablist"
+      data-variant="pill"
       aria-label={ariaLabel || t("v2.tabBar.pageAriaLabel", "Tab trang")}
       className={cn(
         "flex w-full items-center justify-between gap-2 border-b border-border/60 dark:border-white/[0.06] pb-2.5",
@@ -93,7 +94,7 @@ export const TabBarPagePillView: React.FC<TabBarPagePillViewProps> = ({
                 tab.disabled && "opacity-50 cursor-not-allowed",
               )}
             >
-              {renderTabIcon(tab.icon)}
+              {(active || tab.alwaysShowIcon) && renderTabIcon(tab.icon)}
               <span>{tab.label}</span>
               {tab.dot && (
                 <span
