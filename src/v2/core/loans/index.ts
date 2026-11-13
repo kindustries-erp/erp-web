@@ -2,6 +2,7 @@ import "./loans.locale";
 
 export * from "./domain/types/loan.types";
 export * from "./domain/rules/loan-amortization.rule";
+export * from "./domain/rules/loan-recalculate.rule";
 export * from "./domain/rules/loan-portfolio.rule";
 export * from "./domain/rules/loan-format.rule";
 export * from "./components/molecules/loan-kpi-summary";

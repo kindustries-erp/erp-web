@@ -40,7 +40,10 @@ export function generateAmortizationSchedule(
     amortizationMethod: method,
     startDate,
   } = input;
-  const firstDate = input.firstPaymentDate || addMonths(startDate, 1);
+  let firstDate = input.firstPaymentDate;
+  if (!firstDate || firstDate < startDate) {
+    firstDate = addMonths(startDate, 1);
+  }
   const monthlyRate = rate / 100 / 12;
 
   const schedule: LoanSchedulePeriod[] = [];
@@ -50,6 +53,11 @@ export function generateAmortizationSchedule(
   const flatTotalInterest = round2(P * (rate / 100) * (n / 12));
   const flatMonthlyInterest = round2(flatTotalInterest / n);
   const equalPrincipal = round2(P / n);
+
+  // Tính thời gian ân hạn cho phương thức GRACE_PERIOD
+  const graceMonths = Math.min(Math.max(1, Math.floor(n / 3)), 6);
+  const postGraceTenor = Math.max(1, n - graceMonths);
+  const graceEqualPrincipal = round2(P / postGraceTenor);
 
   for (let k = 1; k <= n; k++) {
     const dueDate = addMonths(firstDate, k - 1);
@@ -72,6 +80,21 @@ export function generateAmortizationSchedule(
         k === n
           ? flatTotalInterest - (k - 1) * flatMonthlyInterest
           : flatMonthlyInterest;
+    } else if (method === AmortizationMethod.GRACE_PERIOD) {
+      iDue = round2(begBal * monthlyRate);
+      if (k <= graceMonths) {
+        pDue = 0;
+      } else {
+        pDue = k === n ? begBal : graceEqualPrincipal;
+      }
+    } else if (method === AmortizationMethod.MATURITY_LUMP_SUM) {
+      if (k === n) {
+        pDue = begBal;
+        iDue = flatTotalInterest;
+      } else {
+        pDue = 0;
+        iDue = 0;
+      }
     }
 
     const totalDue = round2(pDue + iDue);

@@ -47,6 +47,13 @@ export const loansVi = {
     success: "Đã xóa khoản vay",
     error: "Không thể xóa khoản vay",
   },
+  deletePayment: {
+    title: "Xóa bản ghi thanh toán",
+    message:
+      "Bạn có chắc chắn muốn xóa bản ghi thanh toán này? Dư nợ khoản vay sẽ được tính toán lại.",
+    success: "Đã xóa bản ghi thanh toán",
+    error: "Không thể xóa bản ghi thanh toán",
+  },
   purge: {
     title: "Xóa vĩnh viễn khoản vay",
     message:
@@ -56,10 +63,12 @@ export const loansVi = {
   },
   listLoadError: "Không thể tải danh sách khoản vay",
   methods: {
-    AMORTIZED: "Niên kim (Gốc + Lãi đều)",
-    EQUAL_PRINCIPAL: "Gốc đều, lãi giảm dần",
-    BULLET: "Cuối kỳ (Trả lãi định kỳ, gốc cuối kỳ)",
-    FLAT: "Lãi phẳng (Tính theo gốc ban đầu)",
+    EQUAL_PRINCIPAL: "Dư nợ giảm dần (Gốc chia đều, lãi giảm dần)",
+    AMORTIZED: "Trả góp đều cố định (Gốc + Lãi bằng nhau mỗi tháng)",
+    BULLET: "Trả lãi hàng tháng, gốc trả cuối kỳ",
+    FLAT: "Lãi cố định trên gốc ban đầu (Lãi phẳng)",
+    GRACE_PERIOD: "Ân hạn gốc (Chỉ trả lãi giai đoạn đầu, gốc trả sau)",
+    MATURITY_LUMP_SUM: "Thanh toán 1 lần khi đáo hạn (Gốc + Lãi cuối kỳ)",
   },
   status: {
     DRAFT: "Dự thảo",

@@ -36,7 +36,7 @@ export function buildLoansTabs(
     },
     {
       key: LoansTabKey.PROJECTION,
-      label: t("v2.loans.tabs.projection", "Dự Báo Dòng Tiền Tương Lai"),
+      label: t("v2.loans.tabs.projection", "Dòng Tiền"),
       icon: <V2Icon icon={TrendingUp} size={15} />,
       kind: "dashboard",
       content: (

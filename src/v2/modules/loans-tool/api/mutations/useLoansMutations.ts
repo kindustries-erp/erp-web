@@ -5,6 +5,7 @@ import {
   CreateLoanPayload,
   RecordPaymentPayload,
   UpdateLoanPayload,
+  UpdatePaymentPayload,
 } from "../dtos/loan-api.types";
 
 export function useCreateLoanMutation() {
@@ -72,6 +73,46 @@ export function useRecordPaymentMutation() {
       loanId: string;
       payload: RecordPaymentPayload;
     }) => loansApi.recordPayment(loanId, payload),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: loansKeys.all });
+      void queryClient.invalidateQueries({
+        queryKey: loansKeys.detail(variables.loanId),
+      });
+    },
+  });
+}
+
+export function useUpdatePaymentMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      loanId,
+      paymentId,
+      payload,
+    }: {
+      loanId: string;
+      paymentId: string;
+      payload: UpdatePaymentPayload;
+    }) => loansApi.updatePayment(loanId, paymentId, payload),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: loansKeys.all });
+      void queryClient.invalidateQueries({
+        queryKey: loansKeys.detail(variables.loanId),
+      });
+    },
+  });
+}
+
+export function useDeletePaymentMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      loanId,
+      paymentId,
+    }: {
+      loanId: string;
+      paymentId: string;
+    }) => loansApi.deletePayment(loanId, paymentId),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: loansKeys.all });
       void queryClient.invalidateQueries({

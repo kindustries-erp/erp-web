@@ -13,6 +13,13 @@ export interface MonthlyProjectionRow {
   interestDue: number;
   totalPaymentDue: number;
   cumulativeRemainingPrincipal: number;
+  scheduledPrincipalDue?: number;
+  scheduledInterestDue?: number;
+  scheduledTotalDue?: number;
+  actualPrincipalPaid?: number;
+  actualInterestPaid?: number;
+  actualTotalPaid?: number;
+  isPaid?: boolean;
   breakdown?: CashflowLoanBreakdownItem[];
 }
 

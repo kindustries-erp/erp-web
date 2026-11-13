@@ -8,15 +8,11 @@ import {
   type DrawerAction,
   type V2TabItemData,
 } from "@/v2/shared/components/organisms/v2-standard-drawer";
-import { V2Badge, V2Text } from "@/v2/shared/components";
-import {
-  LoanKpiSummary,
-  AmortizationScheduleTable,
-  LoanCashflowChart,
-  getLoanStatusConfig,
-} from "@/v2/core/loans";
+import { V2Badge, V2ConfirmModal, V2Text } from "@/v2/shared/components";
+import { getLoanStatusConfig } from "@/v2/core/loans";
 import { RecordPaymentModal } from "../record-payment-modal";
 import { LoanPaymentsTabTable } from "./LoanPaymentsTabTable";
+import { LoanDetailOverviewTab } from "./LoanDetailOverviewTab";
 import type { LoanDetailDrawerProps } from "./LoanDetailDrawer.type";
 import { useLoanDetailDrawer } from "./LoanDetailDrawer.hook";
 
@@ -28,13 +24,22 @@ export const LoanDetailDrawerDesktop: React.FC<LoanDetailDrawerProps> = (
     loan,
     isLoading,
     schedule,
+    contractSchedule,
     kpiSummary,
     paidPeriodNumbers,
     selectedPeriod,
     activeTab,
     setActiveTab,
     isPaymentModalOpen,
+    paymentModalMode,
+    editingPayment,
+    deletePaymentTarget,
+    isDeletingPayment,
     handleOpenPaymentModal,
+    handleEditPayment,
+    handleRequestDeletePayment,
+    handleConfirmDeletePayment,
+    handleCancelDeletePayment,
     handleClosePaymentModal,
   } = useLoanDetailDrawer(props);
 
@@ -110,37 +115,21 @@ export const LoanDetailDrawerDesktop: React.FC<LoanDetailDrawerProps> = (
       >
         <div className="p-4 space-y-6">
           {activeTab === "overview" && loan && (
-            <>
-              <LoanKpiSummary {...kpiSummary} />
-
-              <div className="rounded-xl border border-border p-4 bg-card">
-                <V2Text variant="h3" className="text-base font-semibold mb-3">
-                  {t(
-                    "v2.loans.charts.cashflowTitle",
-                    "Dòng Chảy Tiền Vay & Dư Nợ Theo Kỳ",
-                  )}
-                </V2Text>
-                <LoanCashflowChart schedule={schedule} height={280} />
-              </div>
-
-              <div>
-                <V2Text variant="h3" className="text-base font-semibold mb-3">
-                  {t(
-                    "v2.loans.table.scheduleTitle",
-                    "Bảng Tính Lịch Trả Nợ Chi Tiết",
-                  )}
-                </V2Text>
-                <AmortizationScheduleTable
-                  schedule={schedule}
-                  paidPeriodNumbers={paidPeriodNumbers}
-                  onRecordPeriod={(period) => handleOpenPaymentModal(period)}
-                />
-              </div>
-            </>
+            <LoanDetailOverviewTab
+              schedule={schedule}
+              contractSchedule={contractSchedule}
+              kpiSummary={kpiSummary}
+              paidPeriodNumbers={paidPeriodNumbers}
+              onRecordPeriod={(period) => handleOpenPaymentModal(period)}
+            />
           )}
 
           {activeTab === "payments" && loan && (
-            <LoanPaymentsTabTable payments={loan.payments} />
+            <LoanPaymentsTabTable
+              payments={loan.payments}
+              onEdit={handleEditPayment}
+              onDelete={handleRequestDeletePayment}
+            />
           )}
         </div>
       </V2StandardDrawer>
@@ -151,6 +140,12 @@ export const LoanDetailDrawerDesktop: React.FC<LoanDetailDrawerProps> = (
           onClose={handleClosePaymentModal}
           loanId={loan.id}
           loanTitle={loan.title}
+          loanCode={loan.loanCode}
+          remainingPrincipal={Number(loan.remainingPrincipal || 0)}
+          schedule={schedule}
+          paidPeriodNumbers={Array.from(paidPeriodNumbers)}
+          mode={paymentModalMode}
+          editPayment={editingPayment}
           suggestedPeriod={
             selectedPeriod?.periodNumber ?? (loan.payments?.length ?? 0) + 1
           }
@@ -162,6 +157,23 @@ export const LoanDetailDrawerDesktop: React.FC<LoanDetailDrawerProps> = (
           }
         />
       )}
+
+      <V2ConfirmModal
+        open={Boolean(deletePaymentTarget)}
+        title={t("v2.loans.deletePayment.title", "Xóa bản ghi thanh toán")}
+        message={t(
+          "v2.loans.deletePayment.message",
+          "Bạn có chắc chắn muốn xóa bản ghi thanh toán này? Dư nợ khoản vay sẽ được tính toán lại.",
+        )}
+        confirmLabel={t("v2.common.delete", "Xóa")}
+        cancelLabel={t("v2.common.cancel", "Hủy")}
+        variant="danger"
+        isLoading={isDeletingPayment}
+        overlayClassName="z-[699]"
+        onConfirm={handleConfirmDeletePayment}
+        onCancel={handleCancelDeletePayment}
+      />
     </>
   );
 };
+LoanDetailDrawerDesktop.displayName = "LoanDetailDrawerDesktop";

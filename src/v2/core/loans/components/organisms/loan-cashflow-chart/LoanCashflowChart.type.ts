@@ -16,6 +16,7 @@ export interface LoanChartItem {
   endingBalance?: number;
   remainingPrincipal?: number;
   cumulativeRemainingPrincipal?: number;
+  isPaid?: boolean;
   breakdown?: LoanChartBreakdownItem[];
 }
 

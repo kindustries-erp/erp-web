@@ -31,9 +31,21 @@ export const AmortizationScheduleRow: React.FC<
         </V2Text>
       </TableCell>
       <TableCell className="py-2.5 px-4">
-        <V2Text variant="caption" className="text-muted-foreground font-mono">
+        <V2Text
+          variant="caption"
+          className="text-muted-foreground font-mono block"
+        >
           {row.dueDate}
         </V2Text>
+        {isPaid && row.actualPaymentDate && (
+          <V2Text
+            as="span"
+            variant="caption"
+            className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-mono mt-0.5"
+          >
+            {t("v2.loans.table.paidOn", "Trả")}: {row.actualPaymentDate}
+          </V2Text>
+        )}
       </TableCell>
       <TableCell className="py-2.5 px-4 text-right font-mono tabular-nums">
         {formatVndCurrency(row.beginningBalance)}

@@ -2,21 +2,24 @@ import React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   V2Button,
+  V2Combobox,
   V2DatePicker,
-  V2Input,
   V2Modal,
-  V2NumberInput,
   V2Text,
 } from "@/v2/shared/components";
 import type { RecordPaymentModalProps } from "./RecordPaymentModal.type";
 import { useRecordPaymentModal } from "./RecordPaymentModal.hook";
+import { RecordPaymentSummaryCard } from "./components/RecordPaymentSummaryCard";
+import { RecordPaymentFooter } from "./components/RecordPaymentFooter";
+import { RecordPaymentAmountsFields } from "./components/RecordPaymentAmountsFields";
 
 export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
   props,
 ) => {
-  const { open, onClose, loanTitle } = props;
+  const { open, onClose, loanTitle, loanCode, remainingPrincipal } = props;
   const { t } = useV2Translation();
   const {
+    isEdit,
     periodNumber,
     setPeriodNumber,
     paymentDate,
@@ -32,42 +35,36 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
     error,
     isSubmitting,
     handleSubmit,
+    periodOptions,
+    currentScheduledPeriod,
+    handleFillFromSchedule,
+    handleSettleAll,
+    totalPaid,
   } = useRecordPaymentModal(props);
 
-  const footerContent = (
-    <div className="flex justify-end gap-2">
-      <V2Button
-        type="button"
-        variant="outline"
-        onClick={onClose}
-        disabled={isSubmitting}
-      >
-        {t("v2.common.cancel", "Hủy")}
-      </V2Button>
-      <V2Button
-        type="submit"
-        form="record-payment-form"
-        variant="primary"
-        isLoading={isSubmitting}
-      >
-        {t("v2.loans.modal.confirmPayment", "Xác nhận thanh toán")}
-      </V2Button>
-    </div>
-  );
+  const modalTitle = isEdit
+    ? t("v2.loans.modal.editPaymentTitle", "Chỉnh Sửa Thanh Toán")
+    : t("v2.loans.modal.recordPaymentTitle", "Ghi Nhận Thanh Toán Khoản Vay");
 
   return (
     <V2Modal
       open={open}
       onOpenChange={(isOpen) => !isOpen && onClose()}
-      title={t("v2.loans.modal.recordPaymentTitle", "Ghi Nhận Thanh Toán Kỳ")}
-      description={loanTitle}
-      size="md"
-      footer={footerContent}
+      title={modalTitle}
+      description={loanCode ? `${loanCode} — ${loanTitle}` : loanTitle}
+      size="lg"
+      footer={
+        <RecordPaymentFooter
+          totalPaid={totalPaid}
+          isSubmitting={isSubmitting}
+          onClose={onClose}
+        />
+      }
     >
       <form
         id="record-payment-form"
         onSubmit={handleSubmit}
-        className="space-y-3.5 py-2"
+        className="space-y-4 py-2"
       >
         {error && (
           <div className="p-2.5 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">
@@ -75,90 +72,77 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <RecordPaymentSummaryCard
+          remainingPrincipal={remainingPrincipal}
+          scheduledDue={currentScheduledPeriod?.totalPaymentDue}
+          periodNumber={periodNumber}
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <V2Text variant="caption" className="font-medium mb-1 block">
-              {t("v2.loans.table.period", "Kỳ thứ")} *
+              {t("v2.loans.modal.selectPeriod", "Kỳ thanh toán")} *
             </V2Text>
-            <V2NumberInput
-              sizeVariant="md"
-              min={1}
-              value={periodNumber}
-              onValueChange={(val) => setPeriodNumber(Math.max(1, val ?? 1))}
+            <V2Combobox
+              options={periodOptions}
+              value={String(periodNumber)}
+              onValueChange={(val) => val && setPeriodNumber(Number(val))}
+              clearable={false}
+              searchable={periodOptions.length > 8}
+              className="w-full"
             />
           </div>
           <div>
             <V2Text variant="caption" className="font-medium mb-1 block">
-              {t("v2.loans.form.paymentDate", "Ngày trả")} *
+              {t("v2.loans.form.paymentDate", "Ngày thanh toán thực tế")} *
             </V2Text>
             <V2DatePicker
               value={paymentDate || null}
               onValueChange={(val) => setPaymentDate(val || "")}
-              placeholder={t("v2.loans.form.selectDate", "Chọn ngày trả")}
+              placeholder={t(
+                "v2.loans.form.selectDate",
+                "Chọn ngày thanh toán",
+              )}
               clearable={false}
               className="w-full"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <V2Text variant="caption" className="font-medium mb-1 block">
-              {t("v2.loans.table.principalPaid", "Tiền gốc trả (VND)")} *
-            </V2Text>
-            <V2NumberInput
-              sizeVariant="md"
-              min={0}
-              value={principalPaid}
-              onValueChange={(val) => setPrincipalPaid(Math.max(0, val ?? 0))}
-            />
-          </div>
-          <div>
-            <V2Text variant="caption" className="font-medium mb-1 block">
-              {t("v2.loans.table.interestPaid", "Tiền lãi trả (VND)")} *
-            </V2Text>
-            <V2NumberInput
-              sizeVariant="md"
-              min={0}
-              value={interestPaid}
-              onValueChange={(val) => setInterestPaid(Math.max(0, val ?? 0))}
-            />
-          </div>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <V2Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleFillFromSchedule}
+            className="text-xs h-7 px-2.5"
+          >
+            {t("v2.loans.modal.quickFillSchedule", "Điền theo lịch")}
+          </V2Button>
+          <V2Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSettleAll}
+            className="text-xs h-7 px-2.5"
+          >
+            {t("v2.loans.modal.quickPayAll", "Tất toán toàn bộ")}
+          </V2Button>
         </div>
 
-        <div>
-          <V2Text variant="caption" className="font-medium mb-1 block">
-            {t(
-              "v2.loans.form.paymentReference",
-              "Mã giao dịch / UNC ngân hàng",
-            )}
-          </V2Text>
-          <V2Input
-            sizeVariant="md"
-            value={paymentReference}
-            onChange={(e) => setPaymentReference(e.target.value)}
-            placeholder={t(
-              "v2.loans.form.paymentReferencePlaceholder",
-              "VD: FT2412345678",
-            )}
-          />
-        </div>
-
-        <div>
-          <V2Text variant="caption" className="font-medium mb-1 block">
-            {t("v2.loans.form.notes", "Ghi chú")}
-          </V2Text>
-          <V2Input
-            sizeVariant="md"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder={t(
-              "v2.loans.form.paymentNotesPlaceholder",
-              "VD: Đã trừ tự động qua tài khoản VCB",
-            )}
-          />
-        </div>
+        <RecordPaymentAmountsFields
+          principalPaid={principalPaid}
+          setPrincipalPaid={setPrincipalPaid}
+          interestPaid={interestPaid}
+          setInterestPaid={setInterestPaid}
+          paymentReference={paymentReference}
+          setPaymentReference={setPaymentReference}
+          notes={notes}
+          setNotes={setNotes}
+        />
       </form>
     </V2Modal>
   );
 };
+
+RecordPaymentModal.displayName = "RecordPaymentModal";

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import {
+  addMonths,
   AmortizationMethod,
   generatePortfolioAmortizationSchedule,
   type PortfolioLoanItem,
@@ -127,6 +128,7 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
       tenorMonths: l.tenorMonths,
       amortizationMethod: l.amortizationMethod,
       startDate: l.startDate,
+      firstPaymentDate: addMonths(l.startDate, 1),
     }));
 
     try {

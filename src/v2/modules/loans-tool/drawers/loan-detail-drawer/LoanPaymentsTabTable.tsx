@@ -1,6 +1,6 @@
 import React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Text } from "@/v2/shared/components";
+import { V2Button, V2Text } from "@/v2/shared/components";
 import {
   Table,
   TableBody,
@@ -10,15 +10,20 @@ import {
   TableRow,
 } from "@/v2/shared/ui";
 import { formatVndCurrency, type LoanPaymentRecord } from "@/v2/core/loans";
+import { LoanPaymentMobileCard } from "./LoanPaymentMobileCard";
 
 interface LoanPaymentsTabTableProps {
   payments?: LoanPaymentRecord[];
   isMobile?: boolean;
+  onEdit?: (p: LoanPaymentRecord) => void;
+  onDelete?: (p: LoanPaymentRecord) => void;
 }
 
 export const LoanPaymentsTabTable: React.FC<LoanPaymentsTabTableProps> = ({
   payments = [],
   isMobile = false,
+  onEdit,
+  onDelete,
 }) => {
   const { t } = useV2Translation();
 
@@ -39,41 +44,12 @@ export const LoanPaymentsTabTable: React.FC<LoanPaymentsTabTableProps> = ({
     return (
       <div className="space-y-3">
         {payments.map((p) => (
-          <div
+          <LoanPaymentMobileCard
             key={p.id}
-            className="rounded-xl border border-border p-3 bg-card space-y-1.5 text-sm"
-          >
-            <div className="flex justify-between items-center font-medium">
-              <V2Text as="span">
-                {t("v2.loans.table.period", "Kỳ")} {p.periodNumber} •{" "}
-                {p.paymentDate}
-              </V2Text>
-              <V2Text
-                as="span"
-                className="text-primary font-semibold font-mono"
-              >
-                {formatVndCurrency(p.totalPaid)}
-              </V2Text>
-            </div>
-            <div className="text-xs text-muted-foreground flex justify-between font-mono">
-              <V2Text as="span" variant="caption">
-                {t("v2.loans.table.principalPaid", "Gốc đã trả")}:{" "}
-                {formatVndCurrency(p.principalPaid)}
-              </V2Text>
-              <V2Text as="span" variant="caption">
-                {t("v2.loans.table.interestPaid", "Lãi đã trả")}:{" "}
-                {formatVndCurrency(p.interestPaid)}
-              </V2Text>
-            </div>
-            {p.paymentRef && (
-              <V2Text
-                variant="caption"
-                className="text-muted-foreground pt-1 border-t border-border/50 block"
-              >
-                {t("v2.loans.table.ref", "Mã GD")}: {p.paymentRef}
-              </V2Text>
-            )}
-          </div>
+            payment={p}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </div>
     );
@@ -102,6 +78,11 @@ export const LoanPaymentsTabTable: React.FC<LoanPaymentsTabTableProps> = ({
             <TableHead className="h-auto px-4 py-3">
               {t("v2.loans.table.ref", "Mã GD")}
             </TableHead>
+            {(onEdit || onDelete) && (
+              <TableHead className="h-auto px-4 py-3 text-right">
+                {t("v2.common.actions", "Thao tác")}
+              </TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y divide-border">
@@ -128,6 +109,31 @@ export const LoanPaymentsTabTable: React.FC<LoanPaymentsTabTableProps> = ({
               <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
                 {p.paymentRef || "—"}
               </TableCell>
+              {(onEdit || onDelete) && (
+                <TableCell className="px-4 py-2.5 text-right">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {onEdit && (
+                      <V2Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => onEdit(p)}
+                      >
+                        {t("v2.common.edit", "Sửa")}
+                      </V2Button>
+                    )}
+                    {onDelete && (
+                      <V2Button
+                        variant="ghost"
+                        size="xs"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => onDelete(p)}
+                      >
+                        {t("v2.common.delete", "Xóa")}
+                      </V2Button>
+                    )}
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>
@@ -135,3 +141,4 @@ export const LoanPaymentsTabTable: React.FC<LoanPaymentsTabTableProps> = ({
     </div>
   );
 };
+LoanPaymentsTabTable.displayName = "LoanPaymentsTabTable";

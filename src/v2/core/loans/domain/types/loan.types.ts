@@ -3,6 +3,8 @@ export enum AmortizationMethod {
   EQUAL_PRINCIPAL = "EQUAL_PRINCIPAL",
   BULLET = "BULLET",
   FLAT = "FLAT",
+  GRACE_PERIOD = "GRACE_PERIOD",
+  MATURITY_LUMP_SUM = "MATURITY_LUMP_SUM",
 }
 
 export enum LoanStatus {
@@ -29,6 +31,26 @@ export interface LoanSchedulePeriod {
   interestDue: number;
   totalPaymentDue: number;
   endingBalance: number;
+  isPaid?: boolean;
+  actualPaymentDate?: string | null;
+  actualPrincipalPaid?: number | null;
+  actualInterestPaid?: number | null;
+  actualTotalPaid?: number | null;
+  paymentRef?: string | null;
+}
+
+export interface LoanPaymentInput {
+  periodNumber: number;
+  paymentDate: string;
+  principalPaid: number;
+  interestPaid: number;
+  totalPaid?: number;
+  paymentRef?: string | null;
+}
+
+export interface LoanRecalculateInput extends LoanSimulationInput {
+  payments?: LoanPaymentInput[];
+  remainingPrincipal?: number;
 }
 
 export interface LoanSimulationResult {

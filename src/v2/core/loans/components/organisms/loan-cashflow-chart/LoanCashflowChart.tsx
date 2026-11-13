@@ -37,8 +37,11 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
   const { t } = useV2Translation();
   const chartTheme = useV2ChartTheme();
 
+  const hasPaid = useMemo(() => schedule.some((p) => p.isPaid), [schedule]);
+
   const labels = useMemo(() => {
     return schedule.map((p, idx) => {
+      if (p.isPaid && p.periodNumber) return `Kỳ ${p.periodNumber} ✓`;
       if (p.monthKey) return p.monthKey;
       if (p.month) return p.month;
       if (p.periodNumber) return `Kỳ ${p.periodNumber}`;
@@ -129,10 +132,15 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
         </V2Text>
         <V2Text variant="caption" className="text-muted-foreground">
           {subtitle ||
-            t(
-              "v2.loans.cashflow.chartSubtitle",
-              "So sánh gốc, lãi hàng tháng và lộ trình giảm dần dư nợ toàn doanh nghiệp",
-            )}
+            (hasPaid
+              ? t(
+                  "v2.loans.cashflow.chartSubtitlePaid",
+                  "Số tiền thực tế đã trả và lịch tính toán lại trên dư nợ còn lại",
+                )
+              : t(
+                  "v2.loans.cashflow.chartSubtitle",
+                  "So sánh gốc, lãi hàng tháng và lộ trình giảm dần dư nợ toàn doanh nghiệp",
+                ))}
         </V2Text>
       </div>
 

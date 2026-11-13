@@ -97,25 +97,45 @@ export function getAmortizationMethodOptions(
 ): LoanMethodOption[] {
   return [
     {
-      value: AmortizationMethod.AMORTIZED,
-      label: t("v2.loans.methods.AMORTIZED", "Niên kim (Gốc + Lãi đều)"),
+      value: AmortizationMethod.EQUAL_PRINCIPAL,
+      label: t(
+        "v2.loans.methods.EQUAL_PRINCIPAL",
+        "Dư nợ giảm dần (Gốc chia đều, lãi giảm dần)",
+      ),
     },
     {
-      value: AmortizationMethod.EQUAL_PRINCIPAL,
-      label: t("v2.loans.methods.EQUAL_PRINCIPAL", "Dư nợ giảm dần (Gốc đều)"),
+      value: AmortizationMethod.AMORTIZED,
+      label: t(
+        "v2.loans.methods.AMORTIZED",
+        "Trả góp đều cố định (Gốc + Lãi bằng nhau mỗi tháng)",
+      ),
     },
     {
       value: AmortizationMethod.BULLET,
       label: t(
         "v2.loans.methods.BULLET",
-        "Cuối kỳ (Trả lãi định kỳ, gốc cuối kỳ)",
+        "Trả lãi hàng tháng, gốc trả cuối kỳ",
       ),
     },
     {
       value: AmortizationMethod.FLAT,
       label: t(
         "v2.loans.methods.FLAT",
-        "Lãi phẳng (Tính theo dư nợ gốc ban đầu)",
+        "Lãi cố định trên gốc ban đầu (Lãi phẳng)",
+      ),
+    },
+    {
+      value: AmortizationMethod.GRACE_PERIOD,
+      label: t(
+        "v2.loans.methods.GRACE_PERIOD",
+        "Ân hạn gốc (Chỉ trả lãi giai đoạn đầu, gốc trả sau)",
+      ),
+    },
+    {
+      value: AmortizationMethod.MATURITY_LUMP_SUM,
+      label: t(
+        "v2.loans.methods.MATURITY_LUMP_SUM",
+        "Thanh toán 1 lần khi đáo hạn (Gốc + Lãi cuối kỳ)",
       ),
     },
   ];

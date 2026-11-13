@@ -32,6 +32,8 @@ export interface RecordPaymentPayload {
   notes?: string;
 }
 
+export type UpdatePaymentPayload = Partial<RecordPaymentPayload>;
+
 /** Response danh sách chuẩn v2: `items`, `pagination` và `summaries`. */
 export type LoanListResponse = V2PaginatedResponseWithSummaries<
   LoanItem,
@@ -46,6 +48,13 @@ export interface CashflowLoanBreakdownItem {
   interestDue: number;
   totalPayment: number;
   endingBalance: number;
+  scheduledPrincipal?: number;
+  scheduledInterest?: number;
+  scheduledTotal?: number;
+  actualPrincipalPaid?: number;
+  actualInterestPaid?: number;
+  actualTotalPaid?: number;
+  isPaid?: boolean;
 }
 
 export interface MonthlyCashflowProjection {
@@ -55,6 +64,13 @@ export interface MonthlyCashflowProjection {
   totalPaymentDue: number;
   cumulativeRemainingPrincipal: number;
   activeLoanCount: number;
+  scheduledPrincipalDue?: number;
+  scheduledInterestDue?: number;
+  scheduledTotalDue?: number;
+  actualPrincipalPaid?: number;
+  actualInterestPaid?: number;
+  actualTotalPaid?: number;
+  isPaid?: boolean;
   breakdown?: CashflowLoanBreakdownItem[];
 }
 
@@ -63,4 +79,10 @@ export interface CashflowProjectionResponse {
   totalPrincipalDue: number;
   totalInterestDue: number;
   totalObligationDue: number;
+  totalScheduledPrincipal?: number;
+  totalScheduledInterest?: number;
+  totalScheduledObligation?: number;
+  totalActualPrincipalPaid?: number;
+  totalActualInterestPaid?: number;
+  totalActualPaid?: number;
 }

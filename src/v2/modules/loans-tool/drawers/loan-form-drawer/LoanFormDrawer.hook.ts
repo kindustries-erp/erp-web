@@ -1,23 +1,13 @@
 import { useState, useEffect } from "react";
-import { AmortizationMethod, LoanStatus } from "@/v2/core/loans";
+import { addMonths } from "@/v2/core/loans";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { useCreateLoanMutation, useUpdateLoanMutation } from "../../api";
-import { LoanFormDrawerProps, LoanFormValues } from "./LoanFormDrawer.type";
-
-const createDefaultValues = (): LoanFormValues => ({
-  loanCode: "",
-  title: "",
-  lenderName: "",
-  principalAmount: 100000000,
-  annualInterestRate: 10.5,
-  tenorMonths: 12,
-  amortizationMethod: AmortizationMethod.AMORTIZED,
-  startDate: new Date().toISOString().split("T")[0],
-  firstPaymentDate: "",
-  status: LoanStatus.ACTIVE,
-  notes: "",
-});
+import type {
+  LoanFormDrawerProps,
+  LoanFormValues,
+} from "./LoanFormDrawer.type";
+import { createDefaultValues, validateLoanForm } from "./LoanFormDrawer.helper";
 
 export function useLoanFormDrawer({
   open,
@@ -29,8 +19,8 @@ export function useLoanFormDrawer({
   const { t } = useV2Translation();
   const showToast = useV2ToastStore((s) => s.showToast);
   const [values, setValues] = useState<LoanFormValues>(createDefaultValues);
-
   const [errors, setErrors] = useState<Record<string, string>>({});
+
   const createMutation = useCreateLoanMutation();
   const updateMutation = useUpdateLoanMutation();
 
@@ -60,7 +50,15 @@ export function useLoanFormDrawer({
   }, [open, record, initialValues]);
 
   const handleChange = (field: keyof LoanFormValues, val: unknown) => {
-    setValues((prev) => ({ ...prev, [field]: val }));
+    setValues((prev) => {
+      const next = { ...prev, [field]: val };
+      if (field === "startDate" && typeof val === "string" && val) {
+        if (!prev.firstPaymentDate || prev.firstPaymentDate < val) {
+          next.firstPaymentDate = addMonths(val, 1);
+        }
+      }
+      return next;
+    });
     if (errors[field]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -71,44 +69,7 @@ export function useLoanFormDrawer({
   };
 
   const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-    if (!values.title.trim()) {
-      errs.title = t(
-        "v2.loans.validation.titleRequired",
-        "Vui lòng nhập tên khoản vay",
-      );
-    }
-    if (!values.lenderName.trim()) {
-      errs.lenderName = t(
-        "v2.loans.validation.lenderRequired",
-        "Vui lòng nhập đơn vị cho vay",
-      );
-    }
-    if (values.principalAmount <= 0) {
-      errs.principalAmount = t(
-        "v2.loans.validation.principalPositive",
-        "Số tiền vay phải > 0",
-      );
-    }
-    if (values.tenorMonths <= 0) {
-      errs.tenorMonths = t(
-        "v2.loans.validation.tenorPositive",
-        "Kỳ hạn phải > 0",
-      );
-    }
-    if (values.annualInterestRate < 0) {
-      errs.annualInterestRate = t(
-        "v2.loans.validation.rateNonNegative",
-        "Lãi suất không thể âm",
-      );
-    }
-    if (!values.startDate) {
-      errs.startDate = t(
-        "v2.loans.validation.startDateRequired",
-        "Vui lòng chọn ngày giải ngân",
-      );
-    }
-
+    const errs = validateLoanForm(values, t);
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -119,7 +80,10 @@ export function useLoanFormDrawer({
     const sanitizedPayload = {
       ...values,
       loanCode: values.loanCode?.trim() || undefined,
-      firstPaymentDate: values.firstPaymentDate || values.startDate,
+      firstPaymentDate:
+        values.firstPaymentDate && values.firstPaymentDate >= values.startDate
+          ? values.firstPaymentDate
+          : addMonths(values.startDate, 1),
       notes: values.notes?.trim() || "",
     };
 
@@ -142,19 +106,20 @@ export function useLoanFormDrawer({
         showToast({
           title: t(
             "v2.loans.toast.createSuccess",
-            "Đã tạo hợp đồng vay mới thành công",
+            "Đã tạo hợp đồng vay thành công",
           ),
           variant: "success",
         });
         onSuccess?.(res);
       }
       onClose();
-    } catch {
+    } catch (err: unknown) {
+      const errMsg =
+        err instanceof Error
+          ? err.message
+          : t("v2.loans.toast.saveError", "Có lỗi xảy ra khi lưu hợp đồng vay");
       showToast({
-        title: t(
-          "v2.loans.toast.saveError",
-          "Không thể lưu thông tin khoản vay, vui lòng thử lại",
-        ),
+        title: errMsg,
         variant: "destructive",
       });
     }
@@ -163,9 +128,9 @@ export function useLoanFormDrawer({
   return {
     values,
     errors,
-    handleChange,
-    handleSubmit,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
     isEdit: Boolean(record),
+    handleChange,
+    handleSubmit,
   };
 }

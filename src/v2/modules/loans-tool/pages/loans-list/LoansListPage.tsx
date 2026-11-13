@@ -69,7 +69,16 @@ export const LoansListPage: React.FC<LoansListPageProps> = ({ className }) => {
               open={Boolean(state.paymentModalLoan)}
               onClose={state.handleClosePaymentModal}
               loanId={state.paymentModalLoan.id}
+              loan={state.paymentModalLoan}
               loanTitle={state.paymentModalLoan.title}
+              loanCode={state.paymentModalLoan.loanCode}
+              remainingPrincipal={Number(
+                state.paymentModalLoan.remainingPrincipal || 0,
+              )}
+              schedule={state.paymentModalLoan.schedule}
+              paidPeriodNumbers={state.paymentModalLoan.payments?.map((p) =>
+                Number(p.periodNumber),
+              )}
               suggestedPeriod={
                 (state.paymentModalLoan.payments?.length ?? 0) + 1
               }

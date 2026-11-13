@@ -39,19 +39,42 @@ export const LoanFormTermsSection: React.FC<LoanFormTermsSectionProps> = ({
       title={t("v2.loans.drawer.termsSection", "Thông số vay & Lãi suất")}
     >
       <div className="space-y-3.5">
-        <DrawerField
-          label={t("v2.loans.form.startDate", "Ngày giải ngân")}
-          required
-          error={errors.startDate}
-        >
-          <V2DatePicker
-            value={values.startDate || null}
-            onValueChange={(val) => handleChange("startDate", val || "")}
-            placeholder={t("v2.loans.form.selectDate", "Chọn ngày giải ngân")}
-            clearable={false}
-            className="w-full"
-          />
-        </DrawerField>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <DrawerField
+            label={t("v2.loans.form.startDate", "Ngày giải ngân")}
+            required
+            error={errors.startDate}
+          >
+            <V2DatePicker
+              value={values.startDate || null}
+              onValueChange={(val) => handleChange("startDate", val || "")}
+              placeholder={t("v2.loans.form.selectDate", "Chọn ngày giải ngân")}
+              clearable={false}
+              className="w-full"
+            />
+          </DrawerField>
+
+          <DrawerField
+            label={t(
+              "v2.loans.form.firstPaymentDate",
+              "Kỳ thanh toán đầu tiên",
+            )}
+            error={errors.firstPaymentDate}
+          >
+            <V2DatePicker
+              value={values.firstPaymentDate || null}
+              onValueChange={(val) =>
+                handleChange("firstPaymentDate", val || "")
+              }
+              placeholder={t(
+                "v2.loans.form.selectFirstPaymentDate",
+                "Chọn ngày kỳ đầu",
+              )}
+              clearable={false}
+              className="w-full"
+            />
+          </DrawerField>
+        </div>
 
         <DrawerField
           label={t("v2.loans.form.principalAmount", "Số tiền vay (VNĐ)")}

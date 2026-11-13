@@ -47,6 +47,13 @@ export const loansEn = {
     success: "Loan contract deleted",
     error: "Failed to delete loan contract",
   },
+  deletePayment: {
+    title: "Delete Payment Record",
+    message:
+      "Are you sure you want to delete this payment record? The remaining principal will be recalculated.",
+    success: "Payment record deleted",
+    error: "Failed to delete payment record",
+  },
   purge: {
     title: "Permanently delete loan",
     message:
@@ -56,10 +63,12 @@ export const loansEn = {
   },
   listLoadError: "Failed to load loans list",
   methods: {
-    AMORTIZED: "Amortized (Fixed Monthly Payment)",
-    EQUAL_PRINCIPAL: "Equal Principal (Declining Balance)",
-    BULLET: "Bullet (Interest Only, Balloon Principal)",
-    FLAT: "Flat Interest (Initial Principal)",
+    EQUAL_PRINCIPAL: "Declining Balance (Equal Principal, Reducing Interest)",
+    AMORTIZED: "Fixed Installment (Equal Principal + Interest)",
+    BULLET: "Monthly Interest, Principal at Maturity",
+    FLAT: "Flat Interest (Calculated on Initial Principal)",
+    GRACE_PERIOD: "Grace Period (Interest Only Initially, Deferred Principal)",
+    MATURITY_LUMP_SUM: "Lump Sum at Maturity (Principal + Interest at End)",
   },
   status: {
     DRAFT: "Draft",

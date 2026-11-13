@@ -1,34 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import { Download } from "lucide-react";
 import { V2Badge, V2Button } from "@/v2/shared/components";
 import {
   Table,
   TableBody,
-  TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/v2/shared/ui";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { formatVndCurrency } from "../../../domain/rules/loan-format.rule";
 import { exportAmortizationScheduleCsv } from "./AmortizationScheduleTable.helper";
 import { AmortizationScheduleRow } from "./AmortizationScheduleTable.row";
+import { AmortizationScheduleFooter } from "./AmortizationScheduleTable.footer";
 import type { AmortizationScheduleTableProps } from "./AmortizationScheduleTable.type";
 
 export const AmortizationScheduleTable: React.FC<
   AmortizationScheduleTableProps
 > = ({
   schedule,
+  contractSchedule,
   className = "",
   showExportButton = true,
   paidPeriodNumbers,
   onRecordPeriod,
 }) => {
   const { t } = useV2Translation();
+  const [viewMode, setViewMode] = useState<"effective" | "contract">(
+    "effective",
+  );
+
+  const activeSchedule =
+    viewMode === "contract" && contractSchedule && contractSchedule.length > 0
+      ? contractSchedule
+      : schedule;
 
   const handleExportCsv = () => {
-    exportAmortizationScheduleCsv(schedule, [
+    exportAmortizationScheduleCsv(activeSchedule, [
       t("v2.loans.table.period", "Kỳ"),
       t("v2.loans.table.dueDate", "Ngày đến hạn"),
       t("v2.loans.table.beginningBalance", "Dư nợ đầu kỳ"),
@@ -39,22 +46,46 @@ export const AmortizationScheduleTable: React.FC<
     ]);
   };
 
-  const totalPrincipal = schedule.reduce((sum, p) => sum + p.principalDue, 0);
-  const totalInterest = schedule.reduce((sum, p) => sum + p.interestDue, 0);
-  const totalPayment = schedule.reduce((sum, p) => sum + p.totalPaymentDue, 0);
   const showActions = Boolean(onRecordPeriod || paidPeriodNumbers);
+  const hasContractSchedule = Boolean(
+    contractSchedule && contractSchedule.length > 0,
+  );
 
   return (
     <div className={`space-y-3 ${className}`}>
-      {showExportButton && (
-        <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-2">
+        <div className="flex items-center gap-2">
           <V2Badge
             variant="outline"
             className="text-xs font-normal text-muted-foreground"
           >
-            {schedule.length}{" "}
-            {t("v2.loans.table.periodsCount", "kỳ thanh toán")}
+            {activeSchedule.length} {t("v2.loans.table.periodsCount", "kỳ")}
           </V2Badge>
+          {hasContractSchedule && (
+            <div className="inline-flex rounded-lg border border-border bg-muted/30 p-0.5 gap-1">
+              <V2Button
+                type="button"
+                size="xs"
+                variant={viewMode === "effective" ? "secondary" : "ghost"}
+                onClick={() => setViewMode("effective")}
+                className="h-6 px-2 text-xs font-medium"
+              >
+                {t("v2.loans.table.effectiveView", "Lịch thực tế & tính lại")}
+              </V2Button>
+              <V2Button
+                type="button"
+                size="xs"
+                variant={viewMode === "contract" ? "secondary" : "ghost"}
+                onClick={() => setViewMode("contract")}
+                className="h-6 px-2 text-xs font-medium"
+              >
+                {t("v2.loans.table.contractView", "Lịch theo hợp đồng")}
+              </V2Button>
+            </div>
+          )}
+        </div>
+
+        {showExportButton && (
           <V2Button
             variant="outline"
             size="sm"
@@ -62,10 +93,10 @@ export const AmortizationScheduleTable: React.FC<
             className="gap-2"
           >
             <Download className="h-4 w-4" />
-            {t("v2.loans.table.exportExcel", "Xuất bảng tính CSV")}
+            {t("v2.loans.table.exportExcel", "Xuất CSV")}
           </V2Button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <Table className="text-left text-sm border-collapse">
@@ -100,40 +131,23 @@ export const AmortizationScheduleTable: React.FC<
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border">
-            {schedule.map((row, index) => (
+            {activeSchedule.map((row, index) => (
               <AmortizationScheduleRow
                 key={row.periodNumber}
                 row={row}
                 index={index}
                 showActions={showActions}
-                isPaid={Boolean(paidPeriodNumbers?.has(row.periodNumber))}
+                isPaid={Boolean(
+                  row.isPaid || paidPeriodNumbers?.has(row.periodNumber),
+                )}
                 onRecordPeriod={onRecordPeriod}
               />
             ))}
           </TableBody>
-          <TableFooter className="border-t-2 border-border bg-muted/60 font-bold">
-            <TableRow className="hover:bg-muted/60">
-              <TableCell
-                colSpan={3}
-                className="py-3 px-4 text-center uppercase tracking-wide text-xs"
-              >
-                {t("v2.common.total", "Tổng cộng")}
-              </TableCell>
-              <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-primary">
-                {formatVndCurrency(totalPrincipal)}
-              </TableCell>
-              <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-amber-600 dark:text-amber-400">
-                {formatVndCurrency(totalInterest)}
-              </TableCell>
-              <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-base font-bold">
-                {formatVndCurrency(totalPayment)}
-              </TableCell>
-              <TableCell className="py-3 px-4 text-right font-mono tabular-nums text-muted-foreground">
-                0 ₫
-              </TableCell>
-              {showActions && <TableCell className="py-3 px-3" />}
-            </TableRow>
-          </TableFooter>
+          <AmortizationScheduleFooter
+            schedule={activeSchedule}
+            showActions={showActions}
+          />
         </Table>
       </div>
     </div>

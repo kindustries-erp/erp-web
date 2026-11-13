@@ -15,6 +15,7 @@ import {
   LoanListResponse,
   RecordPaymentPayload,
   UpdateLoanPayload,
+  UpdatePaymentPayload,
 } from "./dtos/loan-api.types";
 import {
   LoanItem,
@@ -99,9 +100,14 @@ export const loansApi = {
     return data;
   },
 
-  getCashflow: async (): Promise<CashflowProjectionResponse> => {
+  getCashflow: async (
+    includeAllPeriods = false,
+  ): Promise<CashflowProjectionResponse> => {
     const { data } = await v2HttpClient.get<CashflowProjectionResponse>(
       `${BASE_URL}/cashflow/projection`,
+      {
+        params: includeAllPeriods ? { includeAllPeriods: "true" } : undefined,
+      },
     );
     return data;
   },
@@ -147,6 +153,28 @@ export const loansApi = {
     const { data } = await v2HttpClient.post<LoanItem>(
       `${BASE_URL}/${loanId}/payments`,
       payload,
+    );
+    return data;
+  },
+
+  updatePayment: async (
+    loanId: string,
+    paymentId: string,
+    payload: UpdatePaymentPayload,
+  ): Promise<LoanItem> => {
+    const { data } = await v2HttpClient.patch<LoanItem>(
+      `${BASE_URL}/${loanId}/payments/${paymentId}`,
+      payload,
+    );
+    return data;
+  },
+
+  deletePayment: async (
+    loanId: string,
+    paymentId: string,
+  ): Promise<LoanItem> => {
+    const { data } = await v2HttpClient.delete<LoanItem>(
+      `${BASE_URL}/${loanId}/payments/${paymentId}`,
     );
     return data;
   },

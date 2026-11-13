@@ -50,7 +50,7 @@ export const buildLoanColumns = (
     {
       key: "title",
       ...headerFilter(t("v2.loans.columns.title", "Tên khoản vay")),
-      size: 210,
+      size: 220,
       mobileSlot: "meta",
       cell: (row) => (
         <V2Text as="span" weight="medium" className="truncate block">
@@ -60,8 +60,10 @@ export const buildLoanColumns = (
     },
     {
       key: "lenderName",
-      ...headerFilter(t("v2.loans.columns.lender", "Ngân hàng / Đơn vị vay")),
-      size: 180,
+      ...headerFilter(
+        t("v2.loans.columns.lender", "Ngân hàng / Đơn vị cho vay"),
+      ),
+      size: 240,
       mobileSlot: "meta",
       cell: (row) => (
         <V2Text as="span" color="muted" className="truncate block">
@@ -72,7 +74,7 @@ export const buildLoanColumns = (
     {
       key: "startDate",
       ...headerFilter.date(t("v2.loans.columns.startDate", "Ngày giải ngân")),
-      size: 130,
+      size: 145,
       align: TableColumnAlign.RIGHT,
       mobileSlot: "subtitle",
       cell: (row) => formatDate(row.startDate),

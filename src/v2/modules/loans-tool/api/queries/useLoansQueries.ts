@@ -47,10 +47,10 @@ export function useLoanDetailQuery(id: string | null) {
   });
 }
 
-export function useCashflowProjectionQuery() {
+export function useCashflowProjectionQuery(includeAllPeriods = false) {
   return useQuery<CashflowProjectionResponse>({
-    queryKey: loansKeys.cashflow(),
-    queryFn: () => loansApi.getCashflow(),
+    queryKey: [...loansKeys.cashflow(), { includeAllPeriods }],
+    queryFn: () => loansApi.getCashflow(includeAllPeriods),
     staleTime: 60_000,
   });
 }
