@@ -111,4 +111,5 @@ export const FALLBACK_RESOURCES: ResourceItem[] = [
   { resource: "email_ingest", label: "Hộp thư hệ thống" },
   { resource: "sys_tags", label: "Thẻ hệ thống" },
   { resource: "attachments", label: "Tệp đính kèm" },
+  { resource: "loans", label: "Khoản vay & Lãi suất" },
 ];

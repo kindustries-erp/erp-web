@@ -21,6 +21,7 @@ export const LoanSimulatorPageMobile: React.FC<LoanSimulatorPageProps> = (
     loans,
     portfolioResult,
     isAuthenticated,
+    canCreate,
     isSaving,
     handleAddLoan,
     handleUpdateLoan,
@@ -78,6 +79,7 @@ export const LoanSimulatorPageMobile: React.FC<LoanSimulatorPageProps> = (
         open={actionsOpen}
         onOpenChange={setActionsOpen}
         isAuthenticated={isAuthenticated}
+        canCreate={canCreate}
         isSaving={isSaving}
         onReset={handleReset}
         onAddLoan={handleAddLoan}

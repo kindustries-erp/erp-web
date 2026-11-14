@@ -208,6 +208,8 @@ export const loansVi = {
       "Nhập nhiều khoản vay với lãi suất và kỳ hạn khác nhau để mô phỏng dòng tiền gộp.",
     activeText: "khoản đang bật",
     noActiveLoans: "Vui lòng bật ít nhất 1 khoản vay hợp lệ để lưu.",
+    noPermissionCreate:
+      "Bạn không có quyền lưu hoặc tạo khoản vay mới vào hệ thống.",
     saveSuccess: "Đã lưu thành công {{count}} khoản vay vào hệ thống ERP!",
     saveError: "Có lỗi xảy ra khi lưu khoản vay vào ERP.",
   },
