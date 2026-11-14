@@ -24,7 +24,7 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 
 ## 2. Điều kiện trước khi chạy
 
-1. Vite dev server đang chạy ở `E2E_WEB_URL` (`bun run dev`, đọc `PORT` nếu có). Không tự kill server đang có sẵn của phiên khác.
+1. Vite dev server đang chạy ở `E2E_WEB_URL` (`bun run dev`, đọc `PORT` trong `erp-web/.env`). `PORT` của web phải khớp web port suy ra từ API. Không tự kill server đang có sẵn của phiên khác.
 2. API đang chạy ở `E2E_API_URL` với DB đúng. Trước khi ghi DB phải xác nhận DB bằng `SELECT current_database();` và báo cho người dùng (quy tắc chung của ERP).
 3. Tài khoản test có quyền cần thiết. Nếu thiếu quyền thì kiểm tra fail là đúng, không phải lỗi UI.
 4. Không chạy E2E trên DB production. Chỉ dùng staging hoặc dev.

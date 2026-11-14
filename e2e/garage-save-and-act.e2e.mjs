@@ -3,9 +3,10 @@
 // Chạy: bun run e2e:garage-save-and-act
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
+import { resolveApiUrl, resolveWebUrl } from "./e2e-ports.mjs";
 
-const API = process.env.E2E_API_URL ?? "http://localhost:10003";
-const WEB = process.env.E2E_WEB_URL ?? "http://127.0.0.1:5173";
+const API = resolveApiUrl();
+const WEB = resolveWebUrl();
 const PASSWORD = process.env.E2E_PASSWORD;
 const TAO_EMAIL = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const DUYET_EMAIL = process.env.E2E_DUYET_EMAIL ?? "ai-test-duyet@example.com";

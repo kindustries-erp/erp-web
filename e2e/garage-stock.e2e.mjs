@@ -1,15 +1,16 @@
 // E2E Kho Garage v2 (chỉ đọc): cột/badge/tab trang Tồn kho và Chứng từ kho, thẻ kho, hợp đồng API.
 // Cấu hình qua biến môi trường (xem erp-web/.agents/skills/erp-e2e-playwright/SKILL.md):
-//   E2E_WEB_URL      (mặc định http://127.0.0.1:5173)
-//   E2E_API_URL      (mặc định http://localhost:10003)
+//   E2E_WEB_URL      (mặc định suy từ PORT API trong erp-api/.env theo bảng, xem e2e-ports.mjs)
+//   E2E_API_URL      (mặc định suy từ PORT API trong erp-api/.env, xem e2e-ports.mjs)
 //   E2E_PASSWORD     (BẮT BUỘC, mật khẩu tài khoản test; không hardcode)
 //   E2E_TAO_EMAIL    (mặc định ai-test-tao@example.com)
 //   E2E_CHROME_PATH  (mặc định /usr/bin/google-chrome)
 // Chạy (E2E_PASSWORD lấy từ erp-api/.env, không in ra): bun e2e/garage-stock.e2e.mjs
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
+import { resolveWebUrl } from "./e2e-ports.mjs";
 
-const WEB = process.env.E2E_WEB_URL ?? "http://127.0.0.1:5173";
+const WEB = resolveWebUrl();
 const PASSWORD = process.env.E2E_PASSWORD;
 const EMAIL = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";

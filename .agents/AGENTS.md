@@ -55,6 +55,7 @@ Source of truth for this repo (`./erp-web`).
 - E2E không thay unit test. Không commit mật khẩu hay URL cứng; đọc qua biến môi trường (`E2E_PASSWORD` bắt buộc).
 - Mỗi lần chạy E2E: nếu shell chưa có `E2E_PASSWORD`, đọc dòng `E2E_PASSWORD=` trong `erp-api/.env` (nguồn chuẩn, từ workspace root: `erp/erp-api/.env`) và nạp vào tiến trình chạy script (xem skill `erp-e2e-playwright`). Không in giá trị ra log, không ghi vào repo, không hỏi lại người dùng nếu `.env` đã có.
 - Trước khi báo hoàn tất, chạy E2E trên môi trường đang chạy và báo PASS/FAIL theo lần chạy hiện tại.
+- Port E2E: lấy `PORT` API từ `erp/erp-api/.env`, web đi kèm theo API 10001→5171, 10002→5172, 10003→5173 (chi tiết trong skill `erp-e2e-playwright`). Không dùng port mặc định cố định.
 
 ---
 

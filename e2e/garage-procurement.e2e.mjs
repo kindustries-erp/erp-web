@@ -1,7 +1,7 @@
 // E2E Garage Procurement (PR/PO): tạo, duyệt, từ chối, nhân bản, UI menu & drawer.
 // Cấu hình qua biến môi trường (xem erp-web/.agents/skills/erp-e2e-playwright/SKILL.md):
-//   E2E_WEB_URL      (mặc định http://127.0.0.1:5173)
-//   E2E_API_URL      (mặc định http://localhost:10003)
+//   E2E_WEB_URL      (mặc định suy từ PORT API trong erp-api/.env theo bảng, xem e2e-ports.mjs)
+//   E2E_API_URL      (mặc định suy từ PORT API trong erp-api/.env, xem e2e-ports.mjs)
 //   E2E_PASSWORD     (BẮT BUỘC, mật khẩu tài khoản test; không hardcode)
 //   E2E_TAO_EMAIL    (mặc định ai-test-tao@example.com, người tạo)
 //   E2E_DUYET_EMAIL  (mặc định ai-test-duyet@example.com, người duyệt)
@@ -9,9 +9,10 @@
 // Chạy: bun run e2e:garage-procurement
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
+import { resolveApiUrl, resolveWebUrl } from "./e2e-ports.mjs";
 
-const API = process.env.E2E_API_URL ?? "http://localhost:10003";
-const WEB = process.env.E2E_WEB_URL ?? "http://127.0.0.1:5173";
+const API = resolveApiUrl();
+const WEB = resolveWebUrl();
 const PASSWORD = process.env.E2E_PASSWORD;
 const TAO_EMAIL = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const DUYET_EMAIL = process.env.E2E_DUYET_EMAIL ?? "ai-test-duyet@example.com";
