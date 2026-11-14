@@ -93,4 +93,33 @@ describe("RoleDrawer.helper — quyền approve/reject", () => {
       { resource: "garage", action: "read" },
     ]);
   });
+
+  it("(e) loại bỏ hoàn toàn các trường DB entity (id, roleId, createdAt, updatedAt) khỏi payload serialize", () => {
+    const rawPermsWithDbMetadata = [
+      {
+        id: "perm-uuid-1",
+        roleId: "role-uuid-1",
+        resource: "special_custom_resource",
+        action: "custom_action",
+        conditions: null,
+        createdAt: "2026-11-14T00:00:00Z",
+        updatedAt: "2026-11-14T00:00:00Z",
+      },
+    ] as any;
+
+    const map = buildInitialPermissionMap(RESOURCES, rawPermsWithDbMetadata);
+    const meta = extractRolePermissionMeta(RESOURCES, rawPermsWithDbMetadata);
+    const serialized = serializePermissionsMap(map, meta);
+
+    expect(serialized).toEqual([
+      {
+        resource: "special_custom_resource",
+        action: "custom_action",
+      },
+    ]);
+    expect((serialized[0] as any).id).toBeUndefined();
+    expect((serialized[0] as any).roleId).toBeUndefined();
+    expect((serialized[0] as any).createdAt).toBeUndefined();
+    expect((serialized[0] as any).updatedAt).toBeUndefined();
+  });
 });
