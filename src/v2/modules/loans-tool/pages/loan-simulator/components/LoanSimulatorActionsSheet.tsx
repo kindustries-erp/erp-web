@@ -7,6 +7,7 @@ export interface LoanSimulatorActionsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isAuthenticated: boolean;
+  canCreate?: boolean;
   isSaving: boolean;
   onReset: () => void;
   onAddLoan: () => void;
@@ -19,6 +20,7 @@ export const LoanSimulatorActionsSheet: React.FC<
   open,
   onOpenChange,
   isAuthenticated,
+  canCreate,
   isSaving,
   onReset,
   onAddLoan,
@@ -62,6 +64,7 @@ export const LoanSimulatorActionsSheet: React.FC<
         variant="primary"
         fullWidth
         isLoading={isSaving}
+        disabled={isAuthenticated && canCreate === false}
         leftIcon={<V2Icon icon={isAuthenticated ? Save : LogIn} size={16} />}
         className="h-12 rounded-xl justify-start px-4"
         onClick={handleSave}

@@ -19,6 +19,7 @@ export const LoanSimulatorPageDesktop: React.FC<LoanSimulatorPageProps> = (
     loans,
     portfolioResult,
     isAuthenticated,
+    canCreate,
     isSaving,
     handleAddLoan,
     handleUpdateLoan,
@@ -72,6 +73,15 @@ export const LoanSimulatorPageDesktop: React.FC<LoanSimulatorPageProps> = (
             variant="primary"
             onClick={handleSaveToErp}
             isLoading={isSaving}
+            disabled={isAuthenticated && !canCreate}
+            title={
+              isAuthenticated && !canCreate
+                ? t(
+                    "v2.loans.portfolio.noPermissionCreate",
+                    "Bạn không có quyền lưu hoặc tạo khoản vay mới vào hệ thống.",
+                  )
+                : undefined
+            }
           >
             {isAuthenticated
               ? t(

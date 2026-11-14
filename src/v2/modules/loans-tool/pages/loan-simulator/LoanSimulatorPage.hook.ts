@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import {
   addMonths,
   AmortizationMethod,
@@ -7,32 +8,26 @@ import {
   type PortfolioLoanItem,
   type PortfolioSimulationResult,
 } from "@/v2/core/loans";
-import type { LoanSimulatorPageProps } from "./LoanSimulatorPage.type";
+import {
+  DEFAULT_PORTFOLIO_LOANS,
+  DRAFT_SIMULATION_KEY,
+  type LoanSimulatorPageProps,
+} from "./LoanSimulatorPage.type";
 import { useCreateBatchLoansMutation, type CreateLoanPayload } from "../../api";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 
-export const DEFAULT_PORTFOLIO_LOANS: PortfolioLoanItem[] = [
-  {
-    id: "loan-1",
-    name: "Khoản vay 1 (Dự án)",
-    enabled: true,
-    principalAmount: 500_000_000,
-    annualInterestRate: 8.5,
-    tenorMonths: 24,
-    amortizationMethod: AmortizationMethod.AMORTIZED,
-    startDate: new Date().toISOString().split("T")[0],
-    lenderName: "Ngân hàng TMCP Ngoại thương (VCB)",
-  },
-];
-
-export const DRAFT_SIMULATION_KEY = "loan_draft_simulation_portfolio";
+export { DEFAULT_PORTFOLIO_LOANS, DRAFT_SIMULATION_KEY };
 
 export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
   const { t } = useV2Translation();
   const showToast = useV2ToastStore((s) => s.showToast);
   const accessToken = useAuthStore((s) => s.accessToken);
   const isAuthenticated = Boolean(accessToken);
+  const canCreate = useV2HasPermission({
+    collection: "loans",
+    action: "create",
+  });
 
   const [loans, setLoans] = useState<PortfolioLoanItem[]>(() => [
     {
@@ -119,6 +114,17 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
       return;
     }
 
+    if (!canCreate) {
+      showToast({
+        title: t(
+          "v2.loans.portfolio.noPermissionCreate",
+          "Bạn không có quyền lưu hoặc tạo khoản vay mới vào hệ thống.",
+        ),
+        variant: "warning",
+      });
+      return;
+    }
+
     const payload: CreateLoanPayload[] = activeLoans.map((l) => ({
       title: l.name,
       lenderName:
@@ -155,6 +161,7 @@ export function useLoanSimulatorPage(props: LoanSimulatorPageProps) {
     loans,
     portfolioResult,
     isAuthenticated,
+    canCreate,
     isSaving: batchCreateMutation.isPending,
     handleAddLoan,
     handleUpdateLoan,

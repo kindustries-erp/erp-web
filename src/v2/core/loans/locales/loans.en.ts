@@ -208,6 +208,8 @@ export const loansEn = {
       "Add multiple loans with custom rates and tenors to simulate combined cashflow.",
     activeText: "active loans",
     noActiveLoans: "Please enable at least 1 valid loan to save.",
+    noPermissionCreate:
+      "You do not have permission to create or save loans to the system.",
     saveSuccess: "Successfully saved {{count}} loans to ERP!",
     saveError: "Failed to save loans to ERP.",
   },

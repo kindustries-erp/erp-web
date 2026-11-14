@@ -391,4 +391,10 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
       ErpResource.ATTACHMENTS,
     ],
   },
+  {
+    groupKey: "tools",
+    labelKey: "rbac.groups.tools",
+    defaultLabel: "Công cụ & Tiện ích",
+    resources: [ErpResource.LOANS],
+  },
 ];
