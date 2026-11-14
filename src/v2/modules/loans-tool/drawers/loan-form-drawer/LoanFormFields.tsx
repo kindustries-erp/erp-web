@@ -3,9 +3,11 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   DrawerField,
   DrawerSection,
+  V2Combobox,
   V2Input,
   V2Textarea,
 } from "@/v2/shared/components";
+import { findLoanPresetById, getLoanPresetOptions } from "@/v2/core/loans";
 import type { LoanFormValues } from "./LoanFormDrawer.type";
 import { LoanFormTermsSection } from "./LoanFormTermsSection";
 
@@ -27,6 +29,7 @@ export const LoanFormFields: React.FC<LoanFormFieldsProps> = ({
 }) => {
   const { t } = useV2Translation();
   const inputSize = isMobile ? "lg" : "md";
+  const presetOptions = getLoanPresetOptions(t);
 
   return (
     <div className="space-y-4">
@@ -34,6 +37,32 @@ export const LoanFormFields: React.FC<LoanFormFieldsProps> = ({
         title={t("v2.loans.drawer.generalSection", "Thông tin cơ bản")}
       >
         <div className="space-y-3.5">
+          <DrawerField
+            label={t("v2.loans.presets.label", "Gói vay mẫu (Chọn nhanh)")}
+          >
+            <V2Combobox
+              placeholder={t(
+                "v2.loans.presets.placeholder",
+                "⚡ Chọn gói vay mẫu để điền nhanh...",
+              )}
+              options={presetOptions}
+              value=""
+              onValueChange={(val) => {
+                if (!val) return;
+                const preset = findLoanPresetById(val);
+                if (preset) {
+                  handleChange("title", preset.name);
+                  handleChange("principalAmount", preset.principalAmount);
+                  handleChange("annualInterestRate", preset.annualInterestRate);
+                  handleChange("tenorMonths", preset.tenorMonths);
+                  handleChange("amortizationMethod", preset.amortizationMethod);
+                  handleChange("lenderName", preset.lenderName);
+                }
+              }}
+              className="w-full"
+            />
+          </DrawerField>
+
           <DrawerField
             label={t("v2.loans.form.title", "Tên khoản vay")}
             required

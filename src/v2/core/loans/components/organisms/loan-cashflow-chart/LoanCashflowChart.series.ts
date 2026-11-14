@@ -184,3 +184,115 @@ export const buildLoanCashflowSeries = ({
     remaining,
   ];
 };
+
+/**
+ * Gom nhóm lịch trả nợ theo từng năm (Yearly Aggregation)
+ * Giúp biểu đồ các khoản vay dài hạn (15-30 năm) hiển thị thanh thoát, không bị nén hẹp.
+ */
+export function aggregateScheduleByYear(
+  schedule: LoanChartItem[],
+): LoanChartItem[] {
+  const yearMap = new Map<string, LoanChartItem>();
+
+  for (let i = 0; i < schedule.length; i++) {
+    const item = schedule[i];
+    const rawDate = item.monthKey || item.dueDate || item.month || "";
+    let yearKey = rawDate.slice(0, 4);
+    if (!yearKey || isNaN(Number(yearKey))) {
+      const yearIndex = Math.floor(i / 12) + 1;
+      yearKey = `Năm ${yearIndex}`;
+    }
+
+    const existing = yearMap.get(yearKey);
+
+    if (!existing) {
+      yearMap.set(yearKey, {
+        monthKey: yearKey.startsWith("Năm") ? yearKey : `Năm ${yearKey}`,
+        month: yearKey.startsWith("Năm") ? yearKey : `Năm ${yearKey}`,
+        dueDate: item.dueDate,
+        principalDue: item.principalDue || 0,
+        interestDue: item.interestDue || 0,
+        totalPaymentDue:
+          item.totalPaymentDue ||
+          (item.principalDue || 0) + (item.interestDue || 0),
+        endingBalance: item.endingBalance,
+        remainingPrincipal: item.remainingPrincipal ?? item.endingBalance,
+        cumulativeRemainingPrincipal:
+          item.cumulativeRemainingPrincipal ?? item.endingBalance,
+        scheduledPrincipalDue: item.scheduledPrincipalDue ?? item.principalDue,
+        scheduledInterestDue: item.scheduledInterestDue ?? item.interestDue,
+        scheduledTotalDue:
+          item.scheduledTotalDue ??
+          (item.principalDue || 0) + (item.interestDue || 0),
+        actualPrincipalPaid: item.actualPrincipalPaid || 0,
+        actualInterestPaid: item.actualInterestPaid || 0,
+        actualTotalPaid: item.actualTotalPaid || 0,
+        isPaid: Boolean(item.isPaid),
+        breakdown: item.breakdown
+          ? JSON.parse(JSON.stringify(item.breakdown))
+          : undefined,
+      });
+    } else {
+      existing.principalDue += item.principalDue || 0;
+      existing.interestDue += item.interestDue || 0;
+      existing.totalPaymentDue =
+        (existing.totalPaymentDue || 0) +
+        (item.totalPaymentDue ||
+          (item.principalDue || 0) + (item.interestDue || 0));
+      existing.endingBalance = item.endingBalance;
+      existing.remainingPrincipal =
+        item.remainingPrincipal ?? item.endingBalance;
+      existing.cumulativeRemainingPrincipal =
+        item.cumulativeRemainingPrincipal ?? item.endingBalance;
+      if (item.scheduledPrincipalDue) {
+        existing.scheduledPrincipalDue =
+          (existing.scheduledPrincipalDue || 0) + item.scheduledPrincipalDue;
+      }
+      if (item.scheduledInterestDue) {
+        existing.scheduledInterestDue =
+          (existing.scheduledInterestDue || 0) + item.scheduledInterestDue;
+      }
+      if (item.actualPrincipalPaid) {
+        existing.actualPrincipalPaid =
+          (existing.actualPrincipalPaid || 0) + item.actualPrincipalPaid;
+      }
+      if (item.actualInterestPaid) {
+        existing.actualInterestPaid =
+          (existing.actualInterestPaid || 0) + item.actualInterestPaid;
+      }
+      if (item.actualTotalPaid) {
+        existing.actualTotalPaid =
+          (existing.actualTotalPaid || 0) + item.actualTotalPaid;
+      }
+      existing.isPaid = existing.isPaid && Boolean(item.isPaid);
+
+      if (item.breakdown && existing.breakdown) {
+        for (const b of item.breakdown) {
+          const exB = existing.breakdown.find((x) => x.loanId === b.loanId);
+          if (exB) {
+            exB.principalDue += b.principalDue || 0;
+            exB.interestDue += b.interestDue || 0;
+            exB.totalPayment += b.totalPayment || 0;
+            exB.endingBalance = b.endingBalance;
+            if (b.scheduledPrincipal) {
+              exB.scheduledPrincipal =
+                (exB.scheduledPrincipal || 0) + b.scheduledPrincipal;
+            }
+            if (b.actualTotalPaid) {
+              exB.actualTotalPaid =
+                (exB.actualTotalPaid || 0) + b.actualTotalPaid;
+            }
+            if (b.actualPrincipalPaid) {
+              exB.actualPrincipalPaid =
+                (exB.actualPrincipalPaid || 0) + b.actualPrincipalPaid;
+            }
+          } else {
+            existing.breakdown.push({ ...b });
+          }
+        }
+      }
+    }
+  }
+
+  return Array.from(yearMap.values());
+}

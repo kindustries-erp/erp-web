@@ -63,12 +63,29 @@ export const loansEn = {
   },
   listLoadError: "Failed to load loans list",
   methods: {
-    EQUAL_PRINCIPAL: "Declining Balance (Equal Principal, Reducing Interest)",
-    AMORTIZED: "Fixed Installment (Equal Principal + Interest)",
-    BULLET: "Monthly Interest, Principal at Maturity",
-    FLAT: "Flat Interest (Calculated on Initial Principal)",
-    GRACE_PERIOD: "Grace Period (Interest Only Initially, Deferred Principal)",
-    MATURITY_LUMP_SUM: "Lump Sum at Maturity (Principal + Interest at End)",
+    AMORTIZED:
+      "Fixed Installment (Equal Principal + Interest) - Unsecured, Home, Auto",
+    EQUAL_PRINCIPAL:
+      "Declining Balance (Equal Principal, Reducing Interest) - Mortgage, Auto",
+    BULLET:
+      "Monthly Interest, Principal at Maturity - Working Capital, Business",
+    GRACE_PERIOD:
+      "Grace Period (Interest Only Initially, Deferred Principal) - RE Projects",
+    FLAT: "Flat Interest (Calculated on Initial Principal) - Consumer Finance",
+    MATURITY_LUMP_SUM:
+      "Lump Sum at Maturity (Principal + Interest at End) - Short-term",
+  },
+  presets: {
+    label: "Loan Presets (Quick select)",
+    placeholder: "⚡ Select preset to autofill...",
+    custom: "Custom",
+    mortgageAmortized: "🏢 Apartment / Home Loan (Fixed Installment)",
+    mortgageDeclining: "🏠 Home Mortgage Loan (Declining Balance)",
+    carLoan: "🚗 Auto / Car Loan (Vehicle Collateral)",
+    personalUnsecured: "💳 Personal Unsecured Loan (Salary-based)",
+    workingCapital: "🏭 Working Capital / Business Loan",
+    projectGrace: "🏗️ Project Loan (Grace Period)",
+    otherCustom: "✨ Other / Custom Loan",
   },
   status: {
     DRAFT: "Draft",
@@ -159,6 +176,12 @@ export const loansEn = {
     chartPrincipalDue: "Principal",
     chartInterestDue: "Interest",
     chartActualPaid: "Paid",
+    viewMonthly: "Monthly",
+    viewYearly: "Yearly",
+    viewAllYears: "All {{years}} years",
+    scrollHint: "Scroll horizontally to view all {{count}} periods",
+    scrollStart: "Start",
+    scrollEnd: "End",
     tableTitle: "Monthly Cashflow Breakdown",
     tableSubtitle:
       "Consolidated monthly principal, interest and remaining balance",

@@ -1,15 +1,9 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Text } from "@/v2/shared/components";
+import { V2Button, V2Text } from "@/v2/shared/components";
 import { V2ComboChart } from "@/v2/shared/components/organisms/v2-chart";
-import type { V2ComboSeries } from "@/v2/shared/components/organisms/v2-chart/V2Chart.type";
-import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
-import { V2_CHART_SERIES } from "@/v2/shared/utils/v2ChartPalette";
-import type {
-  LoanCashflowChartProps,
-  LoanChartItem,
-} from "./LoanCashflowChart.type";
-import { buildLoanCashflowSeries } from "./LoanCashflowChart.series";
+import type { LoanCashflowChartProps } from "./LoanCashflowChart.type";
+import { useLoanCashflowChart } from "./LoanCashflowChart.hook";
 import { LoanCashflowContextMenu } from "../../molecules/loan-cashflow-context-menu";
 
 function formatCompact(val: number): string {
@@ -28,57 +22,17 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
   onRecordPayment,
 }) => {
   const { t } = useV2Translation();
-  const chartTheme = useV2ChartTheme();
-  const [contextMenu, setContextMenu] = useState<{
-    period: LoanChartItem;
-    position: { x: number; y: number };
-  } | null>(null);
-
-  const hasPaid = useMemo(() => schedule.some((p) => p.isPaid), [schedule]);
-
-  const labels = useMemo(() => {
-    return schedule.map((p, idx) => {
-      if (p.isPaid && p.periodNumber) return `Kỳ ${p.periodNumber} ✓`;
-      if (p.monthKey) return p.monthKey;
-      if (p.month) return p.month;
-      if (p.periodNumber) return `Kỳ ${p.periodNumber}`;
-      return `T${idx + 1}`;
-    });
-  }, [schedule]);
-
-  const series: V2ComboSeries[] = useMemo(
-    () =>
-      buildLoanCashflowSeries({
-        schedule,
-        palette: V2_CHART_SERIES[chartTheme.mode],
-        balanceColor: chartTheme.textPrimary,
-        labels: {
-          paid: t("v2.loans.cashflow.chartPaid", "Đã trả"),
-          unpaid: t("v2.loans.cashflow.chartUnpaid", "Còn phải trả"),
-          remaining: t("v2.loans.cashflow.chartRemaining", "Dư nợ còn lại"),
-          principal: t("v2.loans.cashflow.chartPrincipal", "Tiền gốc"),
-          interest: t("v2.loans.cashflow.chartInterest", "Tiền lãi"),
-        },
-      }),
-    [schedule, t, chartTheme.mode, chartTheme.textPrimary],
-  );
-
-  const handleBarContextMenu = useCallback(
-    (periodIndex: number, _datasetIndex: number, event: React.MouseEvent) => {
-      if (!onRecordPayment) return;
-      const targetPeriod = schedule[periodIndex];
-      if (!targetPeriod) return;
-      setContextMenu({
-        period: targetPeriod,
-        position: { x: event.clientX, y: event.clientY },
-      });
-    },
-    [schedule, onRecordPayment],
-  );
-
-  const handleCloseMenu = useCallback(() => {
-    setContextMenu(null);
-  }, []);
+  const {
+    viewResolution,
+    setUserResolution,
+    hasPaid,
+    labels,
+    series,
+    minColWidth,
+    contextMenu,
+    handleBarContextMenu,
+    handleCloseMenu,
+  } = useLoanCashflowChart({ schedule, onRecordPayment });
 
   if (!schedule || schedule.length === 0) return null;
 
@@ -86,26 +40,65 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
     <div
       className={`relative rounded-2xl border border-border bg-card p-5 shadow-xs ${className}`}
     >
-      <div className="mb-4">
-        <V2Text as="h3" variant="h3" className="font-semibold text-base">
-          {title ||
-            t(
-              "v2.loans.cashflow.chartTitle",
-              "Biểu Đồ Áp Lực Dòng Tiền Trả Nợ Hàng Tháng",
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="min-w-0">
+          <V2Text as="h3" variant="h3" className="font-semibold text-base">
+            {title ||
+              t(
+                "v2.loans.cashflow.chartTitle",
+                "Biểu Đồ Áp Lực Dòng Tiền Trả Nợ Hàng Tháng",
+              )}
+          </V2Text>
+          <V2Text variant="caption" className="text-muted-foreground block">
+            {subtitle ||
+              (hasPaid
+                ? t(
+                    "v2.loans.cashflow.chartSubtitlePaid",
+                    "Số tiền thực tế đã trả và lịch tính toán lại trên dư nợ còn lại",
+                  )
+                : t(
+                    "v2.loans.cashflow.chartSubtitle",
+                    "So sánh gốc, lãi hàng tháng và lộ trình giảm dần dư nợ toàn doanh nghiệp",
+                  ))}
+          </V2Text>
+        </div>
+
+        {schedule.length > 24 && (
+          <div className="flex items-center gap-2">
+            {viewResolution === "month" && (
+              <V2Text
+                variant="caption"
+                color="muted"
+                className="hidden sm:inline text-xs"
+              >
+                {t(
+                  "v2.loans.cashflow.scrollHint",
+                  `Kéo ngang hoặc lăn chuột để xem toàn bộ ${schedule.length} kỳ`,
+                )}
+              </V2Text>
             )}
-        </V2Text>
-        <V2Text variant="caption" className="text-muted-foreground">
-          {subtitle ||
-            (hasPaid
-              ? t(
-                  "v2.loans.cashflow.chartSubtitlePaid",
-                  "Số tiền thực tế đã trả và lịch tính toán lại trên dư nợ còn lại",
-                )
-              : t(
-                  "v2.loans.cashflow.chartSubtitle",
-                  "So sánh gốc, lãi hàng tháng và lộ trình giảm dần dư nợ toàn doanh nghiệp",
-                ))}
-        </V2Text>
+            <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
+              <V2Button
+                type="button"
+                size="xs"
+                variant={viewResolution === "year" ? "secondary" : "ghost"}
+                onClick={() => setUserResolution("year")}
+                className="h-7 px-2.5 text-xs font-medium"
+              >
+                {t("v2.loans.cashflow.viewYearly", "Theo Năm")}
+              </V2Button>
+              <V2Button
+                type="button"
+                size="xs"
+                variant={viewResolution === "month" ? "secondary" : "ghost"}
+                onClick={() => setUserResolution("month")}
+                className="h-7 px-2.5 text-xs font-medium"
+              >
+                {t("v2.loans.cashflow.viewMonthly", "Theo Tháng")}
+              </V2Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <V2ComboChart
@@ -115,6 +108,7 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
         formatValue={formatCompact}
         secondaryFormatValue={formatCompact}
         height={height}
+        minColumnWidth={minColWidth}
         onBarContextMenu={handleBarContextMenu}
         ariaLabel={t(
           "v2.loans.cashflow.chartAriaLabel",

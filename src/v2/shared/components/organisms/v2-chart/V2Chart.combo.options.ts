@@ -34,6 +34,7 @@ export const buildComboData = (
     const borderColor = s.borderColor ?? color;
 
     if (isLine) {
+      const isDense = labels.length > 36;
       return {
         type: "line" as const,
         label: s.label,
@@ -45,8 +46,9 @@ export const buildComboData = (
         borderJoinStyle: "round" as const,
         borderCapStyle: "round" as const,
         tension: s.tension ?? 0.3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius:
+          s.pointRadius !== undefined ? s.pointRadius : isDense ? 0 : 4,
+        pointHoverRadius: s.pointHoverRadius ?? 6,
         pointHitRadius: 12,
         pointBackgroundColor: color,
         pointBorderColor: theme.surface,
@@ -56,6 +58,7 @@ export const buildComboData = (
       };
     }
 
+    const isDenseBars = labels.length > 36;
     return {
       type: "bar" as const,
       label: s.label,
@@ -64,7 +67,7 @@ export const buildComboData = (
       backgroundColor:
         s.fillAlpha !== undefined ? withAlpha(color, s.fillAlpha) : color,
       borderColor: theme.surface,
-      borderWidth: stacked ? 2 : 0,
+      borderWidth: stacked ? (isDenseBars ? 0 : 2) : 0,
       borderRadius: { topLeft: 4, topRight: 4 },
       borderSkipped: "start" as const,
       maxBarThickness: 24,

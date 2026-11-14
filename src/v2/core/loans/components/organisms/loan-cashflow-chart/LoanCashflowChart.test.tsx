@@ -139,4 +139,18 @@ describe("LoanCashflowChart", () => {
     expect(principalSeries?.tooltipLabel).toBe("Vay Vietcombank – Nợ gốc");
     expect(interestSeries?.tooltipLabel).toBe("Vay Vietcombank – Tiền lãi");
   });
+
+  it("hiển thị nút chuyển đổi Theo Năm và Theo Tháng khi số kỳ > 24", () => {
+    const longSchedule = Array.from({ length: 48 }, (_, i) => ({
+      monthKey: `2026-${String((i % 12) + 1).padStart(2, "0")}`,
+      principalDue: 10000000,
+      interestDue: 2000000,
+      remainingPrincipal: 500000000 - i * 10000000,
+    }));
+
+    render(<LoanCashflowChart schedule={longSchedule} />);
+
+    expect(screen.getByText("Theo Năm")).toBeInTheDocument();
+    expect(screen.getByText("Theo Tháng")).toBeInTheDocument();
+  });
 });

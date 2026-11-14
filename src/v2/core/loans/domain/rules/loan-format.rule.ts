@@ -97,45 +97,45 @@ export function getAmortizationMethodOptions(
 ): LoanMethodOption[] {
   return [
     {
-      value: AmortizationMethod.EQUAL_PRINCIPAL,
-      label: t(
-        "v2.loans.methods.EQUAL_PRINCIPAL",
-        "Dư nợ giảm dần (Gốc chia đều, lãi giảm dần)",
-      ),
-    },
-    {
       value: AmortizationMethod.AMORTIZED,
       label: t(
         "v2.loans.methods.AMORTIZED",
-        "Trả góp đều cố định (Gốc + Lãi bằng nhau mỗi tháng)",
+        "Trả góp đều cố định (Gốc + Lãi bằng nhau) - Vay tín chấp, Mua nhà, Mua xe",
+      ),
+    },
+    {
+      value: AmortizationMethod.EQUAL_PRINCIPAL,
+      label: t(
+        "v2.loans.methods.EQUAL_PRINCIPAL",
+        "Dư nợ giảm dần (Gốc chia đều, lãi giảm dần) - Vay thế chấp BĐS, Mua xe",
       ),
     },
     {
       value: AmortizationMethod.BULLET,
       label: t(
         "v2.loans.methods.BULLET",
-        "Trả lãi hàng tháng, gốc trả cuối kỳ",
-      ),
-    },
-    {
-      value: AmortizationMethod.FLAT,
-      label: t(
-        "v2.loans.methods.FLAT",
-        "Lãi cố định trên gốc ban đầu (Lãi phẳng)",
+        "Trả lãi hàng tháng, gốc trả cuối kỳ - Vay vốn kinh doanh, Vốn lưu động",
       ),
     },
     {
       value: AmortizationMethod.GRACE_PERIOD,
       label: t(
         "v2.loans.methods.GRACE_PERIOD",
-        "Ân hạn gốc (Chỉ trả lãi giai đoạn đầu, gốc trả sau)",
+        "Ân hạn gốc (Chỉ trả lãi giai đoạn đầu, gốc trả sau) - Vay dự án BĐS ưu đãi CĐT",
+      ),
+    },
+    {
+      value: AmortizationMethod.FLAT,
+      label: t(
+        "v2.loans.methods.FLAT",
+        "Lãi cố định trên gốc ban đầu (Lãi phẳng) - Vay tiêu dùng công ty tài chính",
       ),
     },
     {
       value: AmortizationMethod.MATURITY_LUMP_SUM,
       label: t(
         "v2.loans.methods.MATURITY_LUMP_SUM",
-        "Thanh toán 1 lần khi đáo hạn (Gốc + Lãi cuối kỳ)",
+        "Thanh toán 1 lần khi đáo hạn (Gốc + Lãi cuối kỳ) - Vay ngắn hạn đặc thù",
       ),
     },
   ];

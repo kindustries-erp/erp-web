@@ -41,6 +41,9 @@ export interface V2ComboSeries extends V2ChartSeries {
   borderWidth?: number;
   tension?: number;
   secondaryAxis?: boolean;
+  /** Bán kính điểm cho line chart (mặc định 4, tự động 0 nếu nhiều điểm) */
+  pointRadius?: number;
+  pointHoverRadius?: number;
   /** Ẩn mục này khỏi legend (dùng khi một nhóm đã có mục đại diện) */
   legendHidden?: boolean;
   /** Nhãn hiển thị trong tooltip thay cho `label` */
@@ -53,6 +56,8 @@ export interface V2ComboChartProps extends V2ChartBaseProps {
   series: V2ComboSeries[];
   stacked?: boolean;
   secondaryFormatValue?: (value: number) => string;
+  /** Chiều rộng tối thiểu cho mỗi cột (px) để kích hoạt cuộn ngang khi có nhiều kỳ */
+  minColumnWidth?: number;
   onBarClick?: (periodIndex: number, datasetIndex: number, event: any) => void;
   onBarContextMenu?: (
     periodIndex: number,

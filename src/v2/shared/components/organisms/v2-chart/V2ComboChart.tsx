@@ -3,6 +3,7 @@ import { Chart } from "react-chartjs-2";
 import { V2ChartFrame } from "@/v2/shared/components/molecules/v2-chart-frame";
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 import { defaultFormat } from "./V2Chart.options";
+import { cn } from "@/v2/shared/utils/cn";
 import {
   buildComboData,
   buildComboOptions,
@@ -19,6 +20,7 @@ export const V2ComboChart: React.FC<V2ComboChartProps> = ({
   stacked = false,
   formatValue = defaultFormat,
   secondaryFormatValue,
+  minColumnWidth,
   ariaLabel,
   loading,
   height,
@@ -98,13 +100,31 @@ export const V2ComboChart: React.FC<V2ComboChartProps> = ({
       height={height}
       className={className}
     >
-      <div onContextMenu={handleContextMenu} className="h-full w-full">
-        <Chart
-          ref={chartRef}
-          type="bar"
-          data={comboData}
-          options={comboOptions}
-        />
+      <div
+        onContextMenu={handleContextMenu}
+        className={cn(
+          "h-full w-full",
+          minColumnWidth
+            ? "overflow-x-auto overflow-y-hidden pb-1.5 scrollbar-thin"
+            : "",
+        )}
+      >
+        <div
+          style={{
+            width: minColumnWidth
+              ? `${Math.max(100, labels.length * minColumnWidth)}px`
+              : "100%",
+            minWidth: "100%",
+            height: "100%",
+          }}
+        >
+          <Chart
+            ref={chartRef}
+            type="bar"
+            data={comboData}
+            options={comboOptions}
+          />
+        </div>
       </div>
     </V2ChartFrame>
   );

@@ -63,12 +63,29 @@ export const loansVi = {
   },
   listLoadError: "Không thể tải danh sách khoản vay",
   methods: {
-    EQUAL_PRINCIPAL: "Dư nợ giảm dần (Gốc chia đều, lãi giảm dần)",
-    AMORTIZED: "Trả góp đều cố định (Gốc + Lãi bằng nhau mỗi tháng)",
-    BULLET: "Trả lãi hàng tháng, gốc trả cuối kỳ",
-    FLAT: "Lãi cố định trên gốc ban đầu (Lãi phẳng)",
-    GRACE_PERIOD: "Ân hạn gốc (Chỉ trả lãi giai đoạn đầu, gốc trả sau)",
-    MATURITY_LUMP_SUM: "Thanh toán 1 lần khi đáo hạn (Gốc + Lãi cuối kỳ)",
+    AMORTIZED:
+      "Trả góp đều cố định (Gốc + Lãi bằng nhau) - Vay tín chấp, Mua nhà, Mua xe",
+    EQUAL_PRINCIPAL:
+      "Dư nợ giảm dần (Gốc chia đều, lãi giảm dần) - Vay thế chấp BĐS, Mua xe",
+    BULLET:
+      "Trả lãi hàng tháng, gốc trả cuối kỳ - Vay vốn kinh doanh, Vốn lưu động",
+    GRACE_PERIOD:
+      "Ân hạn gốc (Chỉ trả lãi giai đoạn đầu, gốc trả sau) - Vay dự án BĐS ưu đãi CĐT",
+    FLAT: "Lãi cố định trên gốc ban đầu (Lãi phẳng) - Vay tiêu dùng công ty tài chính",
+    MATURITY_LUMP_SUM:
+      "Thanh toán 1 lần khi đáo hạn (Gốc + Lãi cuối kỳ) - Vay ngắn hạn đặc thù",
+  },
+  presets: {
+    label: "Gói vay mẫu (Chọn nhanh)",
+    placeholder: "⚡ Chọn gói vay mẫu để điền nhanh...",
+    custom: "Tùy chỉnh",
+    mortgageAmortized: "🏢 Vay mua căn hộ / Nhà (Trả góp đều cố định)",
+    mortgageDeclining: "🏠 Vay mua nhà / BĐS thế chấp (Dư nợ giảm dần)",
+    carLoan: "🚗 Vay mua ô tô (Thế chấp xe)",
+    personalUnsecured: "💳 Vay tín chấp tiêu dùng (Theo lương)",
+    workingCapital: "🏭 Vay vốn lưu động / Sản xuất kinh doanh",
+    projectGrace: "🏗️ Vay dự án BĐS (Ân hạn nợ gốc)",
+    otherCustom: "✨ Khoản vay khác / Tùy chỉnh",
   },
   status: {
     DRAFT: "Dự thảo",
@@ -159,6 +176,12 @@ export const loansVi = {
     chartPrincipalDue: "Nợ gốc",
     chartInterestDue: "Tiền lãi",
     chartActualPaid: "Đã trả",
+    viewMonthly: "Theo Tháng",
+    viewYearly: "Theo Năm",
+    viewAllYears: "Toàn cảnh {{years}} năm",
+    scrollHint: "Kéo ngang hoặc lăn chuột để xem toàn bộ {{count}} kỳ",
+    scrollStart: "Đầu kỳ",
+    scrollEnd: "Cuối kỳ",
     tableTitle: "Chi Tiết Dòng Tiền Theo Tháng",
     tableSubtitle:
       "Tổng hợp nghĩa vụ trả gốc, lãi và dư nợ còn lại theo từng tháng",

@@ -62,6 +62,25 @@ describe("buildComboData", () => {
     expect(unpaid.tooltipLabel).toBe("Vay A – Còn phải trả");
     expect(plain.tooltipLabel).toBeUndefined();
   });
+
+  it("tự động đặt pointRadius: 0 và borderWidth: 0 khi labels.length > 36", () => {
+    const denseLabels = Array.from({ length: 48 }, (_, i) => `T${i + 1}`);
+    const lineAndBarSeries: V2ComboSeries[] = [
+      { key: "line1", label: "Line 1", type: "line", data: Array(48).fill(10) },
+      { key: "bar1", label: "Bar 1", type: "bar", data: Array(48).fill(20) },
+    ];
+    const data = buildComboData(
+      denseLabels,
+      lineAndBarSeries,
+      ["#ea580c", "#059669"],
+      theme,
+      true,
+    );
+    const [lineDs, barDs] = data.datasets as any[];
+
+    expect(lineDs.pointRadius).toBe(0);
+    expect(barDs.borderWidth).toBe(0);
+  });
 });
 
 describe("buildComboOptions tooltip", () => {

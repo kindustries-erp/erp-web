@@ -5,6 +5,7 @@ export * from "./domain/rules/loan-amortization.rule";
 export * from "./domain/rules/loan-recalculate.rule";
 export * from "./domain/rules/loan-portfolio.rule";
 export * from "./domain/rules/loan-format.rule";
+export * from "./domain/rules/loan-presets.rule";
 export * from "./components/molecules/loan-kpi-summary";
 export * from "./components/molecules/amortization-schedule-table";
 export * from "./components/molecules/loan-cashflow-context-menu";
