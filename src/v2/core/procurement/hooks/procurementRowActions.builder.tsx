@@ -6,6 +6,7 @@ import {
   Eye,
   FileCheck,
   Lock,
+  PackageCheck,
   Pencil,
   Send,
   ShoppingCart,
@@ -54,8 +55,9 @@ export interface BuildProcurementRowActionsInput<T extends { id: string }> {
   orderFromRequest: (row: T) => void;
   /** Nhân bản phiếu đã từ chối/hủy thành nháp mới */
   cloneRow?: (row: T) => void;
-  /** Hành động xóa vĩnh viễn của hook purge */
-  purgeActions: (row: T) => V2RowAction[];
+  /** Quyền nhập kho (tạo phiếu nhập) và hành động mở trang nhập kho từ đơn mua */
+  canReceive?: boolean;
+  receive?: (row: T) => void;
 }
 
 /**
@@ -80,7 +82,8 @@ export function buildProcurementRowActions<T extends { id: string }>(
     openDelete,
     orderFromRequest,
     cloneRow,
-    purgeActions,
+    canReceive: canReceiveGoods = false,
+    receive,
   } = input;
 
   return (row: T): V2RowActionGroup[] => {
@@ -136,6 +139,32 @@ export function buildProcurementRowActions<T extends { id: string }>(
           ]
         : [];
 
+    // PO: "Nhập kho" mở trang nhập kho với đơn đã chọn; không đủ điều kiện thì mờ kèm lý do
+    const receiveAllowed = config.canReceive?.(row) ?? false;
+    const receiveBlockedKey = config.receiveBlockedKey?.(row) ?? null;
+    const receiveItems: V2RowAction[] =
+      canReceiveGoods && receive && config.receiveHref && config.canReceive
+        ? [
+            {
+              label: t("v2.procurement.actions.receive", "Nhập kho"),
+              icon: <PackageCheck className={ICON_CLASS} />,
+              disabled: !receiveAllowed,
+              disabledReason: receiveAllowed
+                ? undefined
+                : receiveBlockedKey === "fullyReceived"
+                  ? t(
+                      "v2.procurement.actions.receiveFullReason",
+                      "Đơn mua đã nhận đủ hàng",
+                    )
+                  : t(
+                      "v2.procurement.actions.receiveNotIssuedReason",
+                      "Chỉ nhập kho khi đơn mua đã phát hành",
+                    ),
+              onClick: () => receive(row),
+            },
+          ]
+        : [];
+
     const transitions: V2RowAction[] = canUpdate
       ? config.availableActions(row).map((action) => {
           let disabled = false;
@@ -171,6 +200,13 @@ export function buildProcurementRowActions<T extends { id: string }>(
             icon: ACTION_ICONS[action],
             disabled,
             disabledReason,
+            hint:
+              action === "issue"
+                ? t(
+                    "v2.procurement.actions.issueHint",
+                    "Chốt đơn đã duyệt và gửi cho nhà cung cấp",
+                  )
+                : undefined,
             onClick: () => start(row, action),
             variant: isDangerAction(action)
               ? ("danger" as const)
@@ -193,11 +229,6 @@ export function buildProcurementRowActions<T extends { id: string }>(
           ]
         : [];
 
-    const purgeable = purgeActions(row).map((action) => ({
-      ...action,
-      icon: <Trash2 className={ICON_CLASS} />,
-    }));
-
     // Nhân bản: chỉ phiếu đã từ chối/hủy, cần quyền tạo
     const rowStatus = (row as unknown as { status?: string }).status ?? "";
     const clonable: V2RowAction[] =
@@ -218,10 +249,10 @@ export function buildProcurementRowActions<T extends { id: string }>(
       ...edit,
       ...clonable,
       ...fromRequest,
+      ...receiveItems,
       ...normalTransitions,
       ...dangerTransitions,
       ...deletable,
-      ...purgeable,
     ];
 
     return [

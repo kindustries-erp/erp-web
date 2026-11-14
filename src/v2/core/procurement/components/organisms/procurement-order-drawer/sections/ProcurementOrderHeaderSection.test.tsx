@@ -89,7 +89,7 @@ describe("ProcurementOrderHeaderSection", () => {
           ),
     );
 
-  it("Garage: ngày đơn, ngày dự kiến nhận rồi chi nhánh", () => {
+  it("Garage: ngày đơn, ngày dự kiến nhận, số hóa đơn, NCC rồi chi nhánh", () => {
     render(
       <ProcurementOrderHeaderSection
         form={{ ...baseForm, requestId: null }}
@@ -104,8 +104,9 @@ describe("ProcurementOrderHeaderSection", () => {
       labelsInOrder([
         "Ngày đơn",
         "Ngày dự kiến nhận",
-        "Chi nhánh",
+        "Số hóa đơn NCC",
         "Nhà cung cấp",
+        "Chi nhánh",
       ]),
     ).toBe(true);
   });

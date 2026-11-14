@@ -3,6 +3,7 @@ import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import type { ColumnSizingState, Updater } from "@tanstack/react-table";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useV2TableColumns } from "../hooks/V2StandardTable.hook";
+import { useV2RowExpansion } from "../hooks/V2StandardTable.expand.hook";
 import { useV2TableController } from "../hooks/V2StandardTable.controller.hook";
 import { useV2FilterPanelToolbar } from "../filterpanel/V2StandardTable.filterpanel.hook";
 import { useV2DesktopToolbar } from "../toolbar/V2StandardTable.toolbar.hook";
@@ -31,10 +32,17 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     columnKeys,
     storage: props.preferencesStorage,
   });
+  const expansion = useV2RowExpansion({
+    expandedRowKeys: props.expandedRowKeys,
+    onExpandedRowsChange: props.onExpandedRowsChange,
+  });
   const { columnDefs, columnOrder, columnVisibility } = useV2TableColumns({
     columns,
     prefs,
     enableRowSelection,
+    enableRowExpansion: Boolean(props.renderExpandedRow),
+    canExpandRow: props.canExpandRow,
+    expansion,
     startIndex: view.startIndex,
   });
   const filters = useV2HeaderFilters({
@@ -137,6 +145,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     toolbarConfig,
     () => selection.onRowSelectionChange({}),
     viewPresets,
+    props.enableColumnVisibility,
   );
 
   return {
@@ -144,6 +153,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     rowActions,
     state,
     selection,
+    expansion,
     view,
     scroll,
     table,

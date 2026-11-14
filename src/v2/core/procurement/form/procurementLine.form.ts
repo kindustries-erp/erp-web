@@ -16,6 +16,8 @@ export interface ProcurementLineFormValue {
   /** Đơn giá (PO) hoặc đơn giá dự kiến (PR) */
   price: string;
   requestLineId: string | null;
+  /** Số đã nhận của dòng PO (chỉ đọc, từ API; không gửi lên khi lưu) */
+  qtyFulfilled?: string;
 }
 
 let lineSeq = 0;
@@ -121,4 +123,5 @@ export const procurementLineFromDetail = (
   qty: toInputText(detail.qtyRequested ?? detail.qtyOrdered) ?? "0",
   price: toInputText(detail.unitPrice ?? detail.estUnitPrice) ?? "",
   requestLineId: detail.requestLineId ?? null,
+  qtyFulfilled: toInputText(detail.qtyFulfilled) ?? undefined,
 });

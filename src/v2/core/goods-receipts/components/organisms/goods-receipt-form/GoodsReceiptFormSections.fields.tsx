@@ -8,7 +8,7 @@ import {
 } from "@/v2/shared/components";
 import type { GoodsReceiptFormValue } from "@/v2/core/goods-receipts";
 import { ProcurementBranchPicker } from "@/v2/core/procurement";
-import { GoodsReceiptStatusBadge } from "../../molecules/goods-receipt-status-badge/GoodsReceiptStatusBadge";
+import { GoodsReceiptOrderPicker } from "../../molecules/goods-receipt-order-picker/GoodsReceiptOrderPicker";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import type { FormSectionsProps } from "./GoodsReceiptFormSections.type";
@@ -55,28 +55,80 @@ const renderReceiptDate: FieldRenderer = ({ form, viewing, setField }) => (
   />
 );
 
-const renderSupplierName: FieldRenderer = ({ form, viewing, setField }) => (
-  <V2TextField
-    viewing={viewing}
-    value={form.supplierName}
-    className={V2_DRAWER_FOCUS_RING_CLASS}
-    onChange={(v) => setField("supplierName", v)}
+/** Đơn mua nguồn: chọn một đơn đã phát hành; NCC, chi nhánh, dòng hàng lấy theo đơn đó. */
+const renderSourceOrderId: FieldRenderer = ({
+  form,
+  viewing,
+  sourceOrder,
+  orderLocked,
+  onPickOrder,
+}) =>
+  sourceOrder ? (
+    <GoodsReceiptOrderPicker
+      sourceOrder={sourceOrder}
+      value={form.sourceOrderId}
+      label={form.sourceOrderNo}
+      viewing={viewing}
+      locked={Boolean(orderLocked)}
+      onPick={(id) => onPickOrder?.(id)}
+    />
+  ) : null;
+
+const renderSourceOrderTotal: FieldRenderer = ({ form }) => (
+  <V2ReadValue
+    value={
+      form.sourceOrderTotal
+        ? `${Number(form.sourceOrderTotal).toLocaleString("vi-VN")} ₫`
+        : "—"
+    }
   />
 );
 
+/** Phiếu gắn đơn mua: NCC lấy theo đơn (chỉ đọc); phiếu không gắn đơn nhập tay như cũ. */
+const renderSupplierName: FieldRenderer = ({
+  form,
+  viewing,
+  sourceOrder,
+  t,
+  setField,
+}) =>
+  sourceOrder ? (
+    <V2ReadValue
+      value={
+        form.supplierName ||
+        t("v2.goodsReceipts.form.supplierFromOrder", "Tự điền theo đơn mua")
+      }
+    />
+  ) : (
+    <V2TextField
+      viewing={viewing}
+      value={form.supplierName}
+      className={V2_DRAWER_FOCUS_RING_CLASS}
+      onChange={(v) => setField("supplierName", v)}
+    />
+  );
+
 /** Phiếu nhập chọn tối đa một chi nhánh; để trống thì tồn kho vào nhóm không chi nhánh. */
-const renderBranchName: FieldRenderer = ({ form, viewing, setField }) => (
-  <ProcurementBranchPicker
-    value={form.branchId}
-    label={form.branchName}
-    viewing={viewing}
-    clearable
-    onChange={(id, name) => {
-      setField("branchId", id);
-      setField("branchName", name);
-    }}
-  />
-);
+const renderBranchName: FieldRenderer = ({
+  form,
+  viewing,
+  sourceOrder,
+  setField,
+}) =>
+  sourceOrder ? (
+    <V2ReadValue value={form.branchName || "—"} />
+  ) : (
+    <ProcurementBranchPicker
+      value={form.branchId}
+      label={form.branchName}
+      viewing={viewing}
+      clearable
+      onChange={(id, name) => {
+        setField("branchId", id);
+        setField("branchName", name);
+      }}
+    />
+  );
 
 const renderTotalAmount: FieldRenderer = ({ form, viewing, setField }) => (
   <V2TextField
@@ -87,12 +139,6 @@ const renderTotalAmount: FieldRenderer = ({ form, viewing, setField }) => (
     className={V2_DRAWER_FOCUS_RING_CLASS}
     onChange={(v) => setField("totalAmount", v)}
   />
-);
-
-const renderStatus: FieldRenderer = ({ form }) => (
-  <div className="flex items-center min-h-[36px]">
-    <GoodsReceiptStatusBadge status={form.status} />
-  </div>
 );
 
 const renderRemarks: FieldRenderer = ({ form, viewing, setField }) =>
@@ -115,6 +161,7 @@ export const GOODS_RECEIPT_FIELD_RENDERERS: Partial<
   supplierName: renderSupplierName,
   branchName: renderBranchName,
   totalAmount: renderTotalAmount,
-  status: renderStatus,
+  sourceOrderId: renderSourceOrderId,
+  sourceOrderTotal: renderSourceOrderTotal,
   remarks: renderRemarks,
 };

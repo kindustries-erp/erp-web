@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "ai-hub",
+  "entity": "AiInvoice",
+  "barrel": "src/v2/core/ai-hub/index.ts",
+  "localeNamespace": "aiHub",
+  "exports": {
+    "types": "aiHub.type",
+    "api": "createAiInvoiceApi",
+    "assistantHook": "useAiInvoiceAssistant",
+    "lineList": "AiInvoiceLineList",
+    "assistant": "AiInvoiceAssistant"
+  }
+}

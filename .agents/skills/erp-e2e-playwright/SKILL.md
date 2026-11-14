@@ -9,19 +9,22 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 
 ## 1. Vị trí và cấu hình
 
-- Script: `erp/erp-web/e2e/*.e2e.mjs`. Hiện có `garage-procurement.e2e.mjs` (PR/PO garage, 24 kiểm tra).
+- Script: `erp/erp-web/e2e/*.e2e.mjs`. Hiện có `garage-procurement.e2e.mjs` (PR/PO garage và phiếu nhập garage, 87 kiểm tra; mục A–D PR/PO, E nhập kho từ PO, F–G hóa đơn/NCC và nhập nhiều đợt, H xóa vĩnh viễn, I phiếu nhập gắn PO).
+- Script `garage-save-and-act.e2e.mjs` (27 kiểm tra): PR Tạo mới/Cập nhật qua modal người duyệt, PO Tạo mới từ PR không còn 409, phiếu nhập Nhập kho một bước và Hoàn nhập. Chạy: `bun run e2e:garage-save-and-act`.
 - Chạy: `bun run e2e:garage-procurement` (thêm script mới trong `package.json` theo cùng mẫu).
 - Biến môi trường (không hardcode mật khẩu hay URL trong repo):
   - `E2E_PASSWORD`: BẮT BUỘC, mật khẩu tài khoản test. Script thoát mã 2 nếu thiếu.
+    - Nguồn: dòng `E2E_PASSWORD=` trong `erp/erp-api/.env`. Mỗi lần chạy, nếu shell chưa có biến này thì tự đọc từ file đó, không hỏi người dùng. Không in giá trị, không ghi vào repo hay log.
   - `E2E_WEB_URL` (mặc định `http://127.0.0.1:5173`), `E2E_API_URL` (mặc định `http://localhost:10003`).
   - `E2E_TAO_EMAIL`, `E2E_DUYET_EMAIL`: tài khoản người tạo và người duyệt.
   - `E2E_CHROME_PATH` (mặc định `/usr/bin/google-chrome`).
-- Ví dụ: `E2E_PASSWORD='...' bun run e2e:garage-procurement`.
+- Ví dụ (từ `erp-web/`, lấy mật khẩu từ API `.env`, không in ra):
+  `E2E_PASSWORD="$(sed -n 's/^E2E_PASSWORD=//p' ../erp-api/.env | head -1 | tr -d "\"'")" bun run e2e:garage-procurement`.
 - Ảnh chụp và báo cáo ghi vào `e2e/.artifacts/` (đã gitignore).
 
 ## 2. Điều kiện trước khi chạy
 
-1. Vite dev server đang chạy ở `E2E_WEB_URL` (`bun run dev`, đọc `PORT` nếu có). Không tự kill server đang có sẵn của phiên khác.
+1. Vite dev server đang chạy ở `E2E_WEB_URL` (`bun run dev`, đọc `PORT` trong `erp-web/.env`). `PORT` của web phải khớp web port suy ra từ API. Không tự kill server đang có sẵn của phiên khác.
 2. API đang chạy ở `E2E_API_URL` với DB đúng. Trước khi ghi DB phải xác nhận DB bằng `SELECT current_database();` và báo cho người dùng (quy tắc chung của ERP).
 3. Tài khoản test có quyền cần thiết. Nếu thiếu quyền thì kiểm tra fail là đúng, không phải lỗi UI.
 4. Không chạy E2E trên DB production. Chỉ dùng staging hoặc dev.
@@ -54,3 +57,7 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 - Drawer PO thiếu `directConfirm` ở một nơi render thì nút "Cập nhật" không hiện. Mọi nơi render `ProcurementOrderDrawer` phải truyền prop này.
 - Dòng PO garage bắt buộc mã hàng (`itemCode`). Dữ liệu seed thiếu mã sẽ bị chặn bởi validation và trông như lỗi UI.
 - Tooltip cần chờ độ trễ của Radix (khoảng 700ms trở lên).
+- **Quyền của tài khoản test**: `ai-test-tao` và `ai-test-duyet` không có quyền xóa/purge PO và PR (API trả 403). Mục H chỉ kiểm nhánh âm (menu thường không có "Xóa vĩnh viễn") và ghi INFO; nhánh dương (bộ lọc "Đã xóa mềm" có "Xóa vĩnh viễn") được unit test `useProcurementListTabState.test.tsx` bao phủ. Cần tài khoản có quyền delete + purge để chạy nhánh dương.
+- **Selector trong drawer**: bảng dòng của drawer cùng tồn tại với bảng danh sách phía sau, nên scope bằng `[role="dialog"]` trước khi tìm `table tbody tr` hoặc nhãn trùng tên cột (ví dụ "Nhà cung cấp").
+- Nút tạo đơn mua tên "Tạo đơn mua" (không phải "Tạo mới"); nút tạo phiếu nhập tên "Tạo phiếu nhập kho".
+

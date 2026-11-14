@@ -49,7 +49,7 @@ src/v2/shared/
     └── templates/v2-module-page/               Khung trang `V2ModulePage`: `V2PageHeader` (icon, tiêu đề, mô tả, slot toolbar theo tab, actions) + tab (`kind`: `list` dựng `V2StandardTable`, `dashboard` render nội dung) + vùng nội dung full-height (`V2Stack`)
 ```
 
-Quy tắc tầng đã áp dụng (theo `ui-structure`):
+Quy tắc tầng đã áp dụng (theo `erp-ui-structure`):
 - Molecule **không import molecule khác**: popup dùng primitive `shared/ui` (`Popover`) và `V2Button` (atom) thay vì `V2Popover`/`V2Dropdown`.
 - Molecule **0% API**: `V2ColumnHeaderFilter` nhận `optionsState` qua props; hook React Query nằm ở organism (`hooks/V2StandardTable.options.hook.ts`) và chỉ truy vấn cột đang mở popup.
 - Không dùng `<button>` thuần trong code bảng: dùng `V2Button`.
@@ -138,8 +138,10 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - Cột đệm cuối (116px) hấp thụ phần dư và chứa hover pill (`sticky right-0 z-20 pointer-events-none`, pill `pointer-events-auto`).
 - Chỉ có một giao diện (spreadsheet), không có prop `variant`.
 
-**Phân trang (khớp `TablePagination` V1):**
-- Nằm **ngoài khung bảng**, `mt-2 shrink-0`. Trái: "Hiển thị [20▾] hàng/trang" (chọn số dòng bằng `ui/popover`, dấu check ở giá trị hiện tại, mốc `[20,50,100,200]`). Giữa: `a–b / total` (ẩn dưới 480px). Phải: `‹ 1 … 4 [5] 6 … N ›` bằng `V2PageButton`.
+**Phân trang (khớp `TablePagination` V1 trên desktop; Bottom Sheet trên mobile):**
+- Nằm **ngoài khung bảng**, `mt-2 shrink-0`. Hỗ trợ enum `V2TablePaginationVariant` (`AUTO` / `DESKTOP` / `MOBILE`).
+- **Desktop**: Trái: "Hiển thị [20▾] hàng/trang" (chọn số dòng bằng `ui/popover`, dấu check ở giá trị hiện tại, mốc `[20,50,100,200]`). Giữa: `a–b / total` (ẩn dưới 480px). Phải: `‹ 1 … 4 [5] 6 … N ›` bằng `V2PageButton`.
+- **Mobile**: Thanh compact 1 dòng gồm Prev / Trigger Pill (`Trang X / Y • a–b / total`) / Next (`V2Button` cao `h-11`); chạm Trigger mở `V2BottomSheet` chọn số dòng/trang, nhảy Trang đầu/Trang cuối, lưới chọn trang (khi `totalPages > 20`, tự chia cụm **Range Chips** `1–20`, `21–40`… kèm ô nhập `V2Input` `V2Size.LG` nhảy thẳng tới trang). Thanh tìm kiếm và bộ lọc mobile (`V2StandardTableMobileToolbar`) gom chung vào `V2TableSearchFilterSheet` (`V2BottomSheet`); thanh tab trang (`TabBarPageView` của `V2TabBar`) trên mobile mở `TabBarPageViewSheet`.
 - Cửa sổ trang do `getPageWindow(page, totalPages, 5)` (thuật toán V1: trang đầu/cuối kèm `…`).
 - Mặc định page size theo `innerHeight` (< 900 → 20, ≥ 900 → 50).
 
@@ -257,3 +259,11 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - **Hằng số**: nhóm "Tất cả" là `V2_FILTER_GROUP_ALL_KEY` (`V2ViewModeCombobox.helper.ts`), không viết chuỗi `"all"` trần.
 - **Tách action**: `createV2ViewActions` (`hooks/V2StandardTable.views.actions.hook.ts`) giữ logic chọn/sửa/lưu/xóa chế độ xem, để `views.hook.ts` dưới 180 dòng.
 - i18n: `v2.table.createFilterPreset`, `filterPresetsSection`, `editFilterPreset`, `deleteFilterPreset`, `filterPresetCreateTitle` / `filterPresetEditTitle`, `filterPresetName*`, `filterPresetBase` đã xóa (nền dùng `viewFilterLabel`), `filterPresetConditions`, `filterPresetUseCurrent`, `filterPresetClearConditions`, `filterPresetEmpty`, `filterPresetDeleteTitle` / `filterPresetDeleteConfirm` (vi + en).
+
+## 14. Hợp đồng response API v2 (list và column-options)
+
+- List: `{ items, pagination: { page, pageSize, total, totalPages, next, previous }, summaries?, extraData? }`. Web đọc `res.pagination.total`, không đọc `total`/`totalPages` ở gốc. Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`).
+- Column-options: `{ items, pagination }`. API client đổi sang kiểu bảng `V2FetchOptionsResult` (`items`, `total`, `next`) bằng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`); `V2StandardTable` không đổi.
+- Dữ liệu phụ chung của list (ví dụ `unreadCount`) nằm trong `extraData`, đọc `res.extraData.<key>`; không chờ key phẳng ở gốc.
+- Route API v2 là `/api/v2/<tên module>`; API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`).
+

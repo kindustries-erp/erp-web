@@ -6,6 +6,7 @@ import {
   V2Text,
 } from "@/v2/shared/components";
 import { GOODS_RECEIPT_DEFAULT_UNIT } from "@/v2/core/goods-receipts";
+import { LineItemCodeInput } from "@/v2/shared/context/LineItemCodeFieldContext";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import type { LineColumnRenderContext } from "./GoodsReceiptLinesTable.type";
@@ -23,10 +24,18 @@ export const renderItemCodeCell = (ctx: LineColumnRenderContext) =>
   ctx.viewing ? (
     <V2Text className="font-mono text-xs">{ctx.line.itemCode || "—"}</V2Text>
   ) : (
-    <V2Input
-      sizeVariant="xs"
+    <LineItemCodeInput
+      ariaLabel={ctx.t("v2.goodsReceipts.lines.itemCode", "Mã")}
       value={ctx.line.itemCode}
-      onChange={(e) => ctx.onUpdate(ctx.index, "itemCode", e.target.value)}
+      onPick={(pick) =>
+        ctx.onPatch(ctx.index, {
+          itemCode: pick.itemCode,
+          ...(pick.itemName && !ctx.line.itemName.trim()
+            ? { itemName: pick.itemName }
+            : {}),
+          ...(pick.unit && !ctx.line.unit.trim() ? { unit: pick.unit } : {}),
+        })
+      }
       placeholder={ctx.t(
         "v2.goodsReceipts.lines.itemCodePlaceholder",
         "Mã SKU...",
@@ -74,6 +83,7 @@ export const renderQtyCell = (ctx: LineColumnRenderContext) =>
     <V2NumberInput
       sizeVariant="xs"
       min={0}
+      max={ctx.line.maxQty}
       decimals={0}
       value={Number(ctx.line.qtyReceived) || 0}
       onValueChange={(val) =>

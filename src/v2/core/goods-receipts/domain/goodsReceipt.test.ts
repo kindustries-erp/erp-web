@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   GoodsReceiptStatus,
+  applyGoodsReceiptPrefill,
+  clearGoodsReceiptSourceOrder,
   emptyGoodsReceiptForm,
   toGoodsReceiptForm,
 } from "./goodsReceipt";
@@ -51,5 +53,65 @@ describe("emptyGoodsReceiptForm", () => {
     const form = emptyGoodsReceiptForm();
     expect(form.status).toBe(GoodsReceiptStatus.DRAFT);
     expect(form.lines).toEqual([]);
+  });
+});
+
+describe("đơn mua nguồn của phiếu", () => {
+  const prefill = {
+    sourceOrderId: "po-1",
+    sourceOrderNo: "GDMH-1",
+    sourceOrderTotal: 950,
+    supplierId: "sup-1",
+    supplierName: "NCC A",
+    branchId: "br-1",
+    branchName: "Chi nhánh 1",
+    lines: [
+      {
+        itemCode: "",
+        itemName: "Lọc dầu",
+        unit: "Cái",
+        qtyReceived: "3",
+        unitCost: "100",
+        amount: "300",
+        notes: "",
+      },
+    ],
+  };
+
+  it("điền sẵn đơn mua: số đơn, tổng đơn, NCC và tổng dòng nhận", () => {
+    const form = applyGoodsReceiptPrefill(emptyGoodsReceiptForm(), prefill);
+    expect(form).toMatchObject({
+      sourceOrderId: "po-1",
+      sourceOrderNo: "GDMH-1",
+      sourceOrderTotal: "950",
+      supplierName: "NCC A",
+      totalAmount: "300",
+    });
+  });
+
+  it("đọc số đơn và tổng đơn từ phiếu API", () => {
+    const form = toGoodsReceiptForm({
+      id: "r1",
+      receiptNo: "GGR-1",
+      receiptDate: "2026-11-04",
+      sourceOrderId: "po-1",
+      sourceOrderNo: "GDMH-1",
+      sourceOrderTotal: 950,
+    });
+    expect(form.sourceOrderNo).toBe("GDMH-1");
+    expect(form.sourceOrderTotal).toBe("950");
+  });
+
+  it("bỏ đơn mua thì xóa NCC, chi nhánh, tổng và dòng", () => {
+    const filled = applyGoodsReceiptPrefill(emptyGoodsReceiptForm(), prefill);
+    const cleared = clearGoodsReceiptSourceOrder(filled);
+    expect(cleared).toMatchObject({
+      sourceOrderId: "",
+      sourceOrderNo: "",
+      supplierName: "",
+      branchName: "",
+      totalAmount: "0",
+      lines: [],
+    });
   });
 });

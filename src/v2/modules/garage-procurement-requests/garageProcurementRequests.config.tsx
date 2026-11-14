@@ -16,7 +16,12 @@ import { ProcurementRequestDrawer } from "@/v2/core/procurement";
 export const garageProcurementRequestsApi =
   createProcurementApi<ProcurementRequestRow>(
     "/api/v2/procurement-requests-garage",
-    { supportsDelete: true, supportsPurge: true, supportsClone: true },
+    {
+      supportsDelete: true,
+      supportsPurge: true,
+      supportsClone: true,
+      saveAndAct: "save-and-submit",
+    },
   );
 
 export const garageProcurementRequestsConfig: ProcurementListConfig<ProcurementRequestRow> =
@@ -25,8 +30,11 @@ export const garageProcurementRequestsConfig: ProcurementListConfig<ProcurementR
     queryKey: "v2-garage-procurement-requests",
     approvalConfigPath: "/api/v2/approval-config/garage-procurement-requests",
     permissionCollection: "garage_procurement_requests",
+    // PR nháp gửi duyệt qua "Tạo mới / Cập nhật" trong drawer, không còn "Gửi duyệt" riêng ở menu dòng
     availableActions: (row) =>
-      availableProcurementActions(PROCUREMENT_REQUEST_FROM, row.status),
+      availableProcurementActions(PROCUREMENT_REQUEST_FROM, row.status).filter(
+        (action) => action !== "submit",
+      ),
     isEditable: (row) => row.status === "DRAFT",
     cloneable: true,
     rowLabel: (row) => row.requestNo,
@@ -50,6 +58,7 @@ const REQUEST_VIEW_VISIBILITY = {
     estimatedTotal: true,
     status: true,
     orderingStatus: true,
+    relatedOrders: true,
     createdBy: false,
     approver: false,
   },
@@ -61,6 +70,7 @@ const REQUEST_VIEW_VISIBILITY = {
     estimatedTotal: true,
     status: true,
     orderingStatus: true,
+    relatedOrders: true,
     createdBy: true,
     approver: true,
   },
@@ -75,6 +85,6 @@ export const garageProcurementRequestsDisplay: ProcurementPageDisplay<Procuremen
     icon: <ClipboardList className="h-4 w-4" />,
     buildColumns: buildProcurementRequestColumns,
     renderDrawer: (props) => (
-      <ProcurementRequestDrawer {...props} branchOptional />
+      <ProcurementRequestDrawer {...props} branchOptional submitFromDrawer />
     ),
   };

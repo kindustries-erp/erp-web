@@ -55,6 +55,11 @@ export function useProcurementList<T extends { id: string }>(
     collection: config.permissionCollection,
     action: "delete",
   });
+  const canReceive = useV2HasPermission({
+    collection:
+      config.receivePermissionCollection ?? config.permissionCollection,
+    action: "create",
+  });
   const [drawer, setDrawer] = React.useState<ProcurementDrawerTarget | null>(
     null,
   );
@@ -135,6 +140,36 @@ export function useProcurementList<T extends { id: string }>(
     [config.poHref],
   );
 
+  /**
+   * Sang trang nhập kho kèm tham số (?fromOrder=<id> hoặc ?receipt=<id>); trang nhập kho tự xử lý.
+   * Giữ tiền tố `/v2` khi người dùng đang ở shell V2.
+   */
+  const goToReceipts = React.useCallback(
+    (search: string) => {
+      if (!config.receiveHref) return;
+      setDrawer(null);
+      const base = window.location.pathname.startsWith("/v2/")
+        ? `/v2${config.receiveHref}`
+        : config.receiveHref;
+      window.history.pushState(null, "", `${base}?${search}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    },
+    [config.receiveHref],
+  );
+
+  /** Nhập kho từ đơn: trang nhập kho điền sẵn phiếu mới theo đơn. */
+  const receive = React.useCallback(
+    (row: T) => goToReceipts(`fromOrder=${encodeURIComponent(row.id)}`),
+    [goToReceipts],
+  );
+
+  /** Mở một phiếu nhập đã tạo cho đơn (lịch sử nhập kho). */
+  const openReceipt = React.useCallback(
+    (receiptId: string) =>
+      goToReceipts(`receipt=${encodeURIComponent(receiptId)}`),
+    [goToReceipts],
+  );
+
   const openDrawer = React.useCallback(
     (id: string, mode: "view" | "edit") => setDrawer({ id, mode }),
     [],
@@ -182,7 +217,8 @@ export function useProcurementList<T extends { id: string }>(
     start,
     openDelete: (row) => setDeleteTarget(row),
     orderFromRequest,
-    purgeActions: purgeState.purgeActions,
+    canReceive,
+    receive,
   });
 
   const submitReason = (reason: string) => {
@@ -194,11 +230,20 @@ export function useProcurementList<T extends { id: string }>(
     });
   };
 
+  // Ổn định identity: cột bảng dựng bằng useMemo phụ thuộc hàm này
+  const openView = React.useCallback(
+    (id: string) => openDrawer(id, "view"),
+    [openDrawer],
+  );
+
   return {
     canCreate,
     canUpdate,
+    canReceive,
+    receive,
+    openReceipt,
     drawer,
-    openView: (id: string) => openDrawer(id, "view"),
+    openView,
     openCreate: () => setDrawer({ id: null, mode: "edit" }),
     /** Sau khi lưu (tạo hoặc sửa): mở lại chứng từ ở chế độ xem */
     openSaved: (id: string) => setDrawer({ id, mode: "view" }),

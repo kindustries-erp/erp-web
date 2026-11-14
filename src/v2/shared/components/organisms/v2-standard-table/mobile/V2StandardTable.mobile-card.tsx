@@ -7,6 +7,7 @@ import { V2TableSelectCheckbox } from "@/v2/shared/components/molecules/v2-table
 import { hasRowActions } from "@/v2/shared/components/molecules/v2-table-row-actions";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2TableExpandToggleButton } from "../body/V2StandardTable.expanded-row";
 import type { V2MobileSlots } from "./V2StandardTable.mobile-slots";
 import type { V2RowActionGroup } from "@/v2/shared/types/v2-table";
 
@@ -17,6 +18,10 @@ export interface V2StandardTableMobileCardProps<T> {
   startIndex: number;
   slots: V2MobileSlots<T>;
   isSelected: boolean;
+  isExpanded?: boolean;
+  canExpand?: boolean;
+  onToggleExpand?: () => void;
+  renderExpandedRow?: (row: T, index: number) => React.ReactNode;
   enableRowSelection?: boolean;
   rowActions?: (row: T) => V2RowActionGroup[];
   getRowClassName?: (row: T, index: number) => string | undefined;
@@ -30,6 +35,10 @@ export function V2StandardTableMobileCard<T>({
   startIndex,
   slots,
   isSelected,
+  isExpanded,
+  canExpand,
+  onToggleExpand,
+  renderExpandedRow,
   enableRowSelection,
   rowActions,
   getRowClassName,
@@ -54,6 +63,12 @@ export function V2StandardTableMobileCard<T>({
       )}
     >
       <div className="flex items-start gap-2 pb-2 border-b border-border/40 dark:border-white/[0.05]">
+        {canExpand && onToggleExpand && (
+          <V2TableExpandToggleButton
+            isExpanded={Boolean(isExpanded)}
+            onToggle={onToggleExpand}
+          />
+        )}
         {enableRowSelection && (
           <V2TableSelectCheckbox
             aria-label={t("v2.table.selectRow", "Chọn dòng")}
@@ -131,6 +146,11 @@ export function V2StandardTableMobileCard<T>({
             </div>
           ))}
         </dl>
+      )}
+      {isExpanded && renderExpandedRow && (
+        <div className="mt-1 rounded-lg border-l-4 border-l-primary/70 bg-muted/40 p-2.5 text-xs">
+          {renderExpandedRow(row, index)}
+        </div>
       )}
     </li>
   );

@@ -1,5 +1,8 @@
 import React from "react";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+} from "@/v2/shared/components/molecules/v2-tab-bar";
 import { V2Stack } from "@/v2/shared/components/atoms/v2-stack";
 import { cn } from "@/v2/shared/utils/cn";
 import type { useStandardDrawer } from "../hooks/V2StandardDrawer.hook";
@@ -38,7 +41,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
       >
         {props.leftTabs && props.leftTabs.length > 0 && (
           <V2TabBar
-            variant="sub"
+            variant={V2TabBarVariant.SUB}
             tabs={props.leftTabs}
             activeTabKey={h.activeLeftTabKey}
             onTabChange={h.handleLeftTabChange}
@@ -74,7 +77,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
           >
             {props.rightTabs && props.rightTabs.length > 0 && (
               <V2TabBar
-                variant="sub"
+                variant={V2TabBarVariant.SUB}
                 tabs={props.rightTabs}
                 activeTabKey={h.activeRightTabKey}
                 onTabChange={h.handleRightTabChange}

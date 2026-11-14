@@ -1,7 +1,11 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { FileSpreadsheet, Users } from "lucide-react";
-import { V2TabBar, type V2TabItemData } from "@/v2/shared/components";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+  type V2TabItemData,
+} from "@/v2/shared/components";
 import { GarageCasePreview } from "../GarageCasePreview";
 import { GarageCasePartnerTab } from "../GarageCasePartnerTab";
 import { useGarageCaseDetailsTab } from "./GarageCaseDetailsTab.hook";
@@ -48,7 +52,7 @@ export const GarageCaseDetailsTab = React.memo(function GarageCaseDetailsTab(
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5 w-full">
         <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0">
           <V2TabBar
-            variant="sub"
+            variant={V2TabBarVariant.SUB}
             activeTabKey={activeViewMode}
             onTabChange={(key) =>
               handleViewModeChange(key as GarageCaseDetailViewMode)

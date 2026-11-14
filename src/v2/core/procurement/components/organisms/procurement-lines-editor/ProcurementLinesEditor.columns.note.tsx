@@ -7,8 +7,7 @@ export const procurementLineNoteColumn: ProcurementLineColumn = {
   id: "note",
   headerKey: "v2.procurement.lines.note",
   defaultHeader: "Ghi chú",
-  headerClassName: "p-2 text-left min-w-[180px] w-[34%]",
-  cellClassName: "p-2 text-xs min-w-[180px] w-[34%]",
+  layout: { width: 200, align: "left", wrap: true },
   renderCell: ({ viewing, line, onPatch, t }) =>
     viewing ? (
       <V2Text className="text-xs">{line.description || "—"}</V2Text>

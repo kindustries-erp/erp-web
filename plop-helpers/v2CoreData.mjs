@@ -32,10 +32,14 @@ export function buildV2CoreData(answers) {
   const entity = String(answers.entityInput ?? "").trim();
 
   if (!FAMILY_PATTERN.test(family)) {
-    throw new Error(`Tên họ không hợp lệ: "${family}" (kebab-case, ví dụ: customer-claims)`);
+    throw new Error(
+      `Tên họ không hợp lệ: "${family}" (kebab-case, ví dụ: customer-claims)`,
+    );
   }
   if (!ENTITY_PATTERN.test(entity)) {
-    throw new Error(`Tên entity không hợp lệ: "${entity}" (PascalCase, ví dụ: CustomerClaim)`);
+    throw new Error(
+      `Tên entity không hợp lệ: "${entity}" (PascalCase, ví dụ: CustomerClaim)`,
+    );
   }
 
   const familyCamel = toCamelCase(family);

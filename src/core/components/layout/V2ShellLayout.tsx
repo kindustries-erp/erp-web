@@ -187,10 +187,15 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.garage", "Garage") },
           { label: t("nav.items.garageCases", "Hoạt động garage") },
         ];
-      case "garage-goods-receipts":
+      case "garage-stock-vouchers":
         return [
           { label: t("nav.sections.garage", "Garage") },
-          { label: t("nav.items.garageGoodsReceipts", "Nhập kho Garage") },
+          { label: t("nav.items.garageStockVouchers", "Chứng từ kho Garage") },
+        ];
+      case "garage-stock-balances":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          { label: t("nav.items.garageStockBalances", "Tồn kho Garage") },
         ];
       case "garage-procurement":
         return [
@@ -264,6 +269,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         return [
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.activitylog", "Nhật ký hoạt động") },
+        ];
+      case "loans":
+        return [
+          { label: t("breadcrumb.tools", "Công cụ") },
+          { label: t("nav.items.loans", "Khoản vay & Lãi suất") },
         ];
       default:
         return [

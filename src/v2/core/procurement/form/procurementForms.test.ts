@@ -155,6 +155,22 @@ describe("form đơn mua (PO)", () => {
     expect(payload.supplierId).toBe("s1");
   });
 
+  it("payload tạo đơn gửi số hóa đơn NCC đã cắt khoảng trắng, rỗng thì bỏ", () => {
+    const base = {
+      ...emptyOrderForm("2026-11-05"),
+      branchId: "b1",
+      lines: [filledLine()],
+    };
+    expect(
+      toOrderCreatePayload({ ...base, supplierInvoiceNo: "  HD-001 " })
+        .supplierInvoiceNo,
+    ).toBe("HD-001");
+    expect(
+      toOrderCreatePayload({ ...base, supplierInvoiceNo: "  " })
+        .supplierInvoiceNo,
+    ).toBeUndefined();
+  });
+
   it("payload sửa đầu đơn gửi null cho ô bị xóa trắng", () => {
     const payload = toOrderHeaderPayload({
       ...emptyOrderForm("2026-11-05"),

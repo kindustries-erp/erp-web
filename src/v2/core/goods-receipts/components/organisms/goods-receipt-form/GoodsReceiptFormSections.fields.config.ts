@@ -9,6 +9,11 @@ export interface GoodsReceiptFieldMeta {
   className?: string;
 }
 
+/** Trường chỉ có khi phiếu gắn đơn mua (module cấu hình `sourceOrder`) */
+export const GOODS_RECEIPT_ORDER_FIELD_KEYS: ReadonlySet<
+  keyof GoodsReceiptFormValue
+> = new Set(["sourceOrderId", "sourceOrderTotal"]);
+
 export const GOODS_RECEIPT_FIELD_META: GoodsReceiptFieldMeta[] = [
   {
     key: "receiptNo",
@@ -23,6 +28,13 @@ export const GOODS_RECEIPT_FIELD_META: GoodsReceiptFieldMeta[] = [
     required: true,
   },
   {
+    key: "sourceOrderId",
+    labelKey: "v2.goodsReceipts.columns.sourceOrderId",
+    defaultLabel: "Đơn mua",
+    required: true,
+    className: "sm:col-span-2",
+  },
+  {
     key: "supplierName",
     labelKey: "v2.goodsReceipts.columns.supplierName",
     defaultLabel: "Nhà cung cấp",
@@ -33,9 +45,9 @@ export const GOODS_RECEIPT_FIELD_META: GoodsReceiptFieldMeta[] = [
     defaultLabel: "Tổng tiền",
   },
   {
-    key: "status",
-    labelKey: "v2.goodsReceipts.columns.status",
-    defaultLabel: "Trạng thái",
+    key: "sourceOrderTotal",
+    labelKey: "v2.goodsReceipts.columns.sourceOrderTotal",
+    defaultLabel: "Tổng tiền đơn mua",
   },
   {
     key: "branchName",

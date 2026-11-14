@@ -7,11 +7,13 @@ import {
 } from "@/v2/shared/components";
 import {
   GoodsReceiptLinesTable,
-  GoodsReceiptStatusBadge,
   sumGoodsReceiptLineAmounts,
 } from "@/v2/core/goods-receipts";
 import type { GoodsReceiptFormLine } from "@/v2/core/goods-receipts";
-import { GOODS_RECEIPT_FIELD_META } from "./GoodsReceiptFormSections.fields.config";
+import {
+  GOODS_RECEIPT_FIELD_META,
+  GOODS_RECEIPT_ORDER_FIELD_KEYS,
+} from "./GoodsReceiptFormSections.fields.config";
 import { GOODS_RECEIPT_FIELD_RENDERERS } from "./GoodsReceiptFormSections.fields";
 import type { FormSectionsProps } from "./GoodsReceiptFormSections.type";
 
@@ -35,6 +37,16 @@ export function GoodsReceiptFormSections(props: FormSectionsProps) {
       label: t("v2.goodsReceipts.columns.receiptDate", "Ngày nhập"),
       value: form.receiptDate || "—",
     },
+    ...(props.sourceOrder
+      ? [
+          {
+            key: "sourceOrderId",
+            label: t("v2.goodsReceipts.columns.sourceOrderId", "Đơn mua"),
+            value: form.sourceOrderNo || "—",
+            copyable: Boolean(form.sourceOrderNo),
+          },
+        ]
+      : []),
     {
       key: "supplierName",
       label: t("v2.goodsReceipts.columns.supplierName", "Nhà cung cấp"),
@@ -45,11 +57,20 @@ export function GoodsReceiptFormSections(props: FormSectionsProps) {
       label: t("v2.goodsReceipts.columns.totalAmount", "Tổng tiền"),
       value: Number(form.totalAmount || 0).toLocaleString("vi-VN") + " ₫",
     },
-    {
-      key: "status",
-      label: t("v2.goodsReceipts.columns.status", "Trạng thái"),
-      value: <GoodsReceiptStatusBadge status={form.status} />,
-    },
+    ...(props.sourceOrder
+      ? [
+          {
+            key: "sourceOrderTotal",
+            label: t(
+              "v2.goodsReceipts.columns.sourceOrderTotal",
+              "Tổng tiền đơn mua",
+            ),
+            value: form.sourceOrderTotal
+              ? Number(form.sourceOrderTotal).toLocaleString("vi-VN") + " ₫"
+              : "—",
+          },
+        ]
+      : []),
     {
       key: "branchName",
       label: t("v2.goodsReceipts.columns.branchName", "Chi nhánh"),
@@ -63,7 +84,10 @@ export function GoodsReceiptFormSections(props: FormSectionsProps) {
     },
   ];
 
-  const fields: V2DrawerFieldItem[] = GOODS_RECEIPT_FIELD_META.map((meta) => ({
+  const fields: V2DrawerFieldItem[] = GOODS_RECEIPT_FIELD_META.filter(
+    (meta) =>
+      props.sourceOrder || !GOODS_RECEIPT_ORDER_FIELD_KEYS.has(meta.key),
+  ).map((meta) => ({
     key: meta.key,
     label: t(meta.labelKey, meta.defaultLabel),
     required: meta.required,

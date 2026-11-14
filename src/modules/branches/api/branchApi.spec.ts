@@ -97,12 +97,12 @@ describe("branchApi normalize is_active", () => {
     await createBranchApi({ code: "HN", name: "Hà Nội", is_active: true });
     await updateBranchApi("b1", { is_active: false });
 
-    expect(axiosInstance.post).toHaveBeenCalledWith("/api/v1/branches", {
+    expect(axiosInstance.post).toHaveBeenCalledWith("/api/v2/branches", {
       code: "HN",
       name: "Hà Nội",
       is_active: true,
     });
-    expect(axiosInstance.patch).toHaveBeenCalledWith("/api/v1/branches/b1", {
+    expect(axiosInstance.patch).toHaveBeenCalledWith("/api/v2/branches/b1", {
       is_active: false,
     });
   });

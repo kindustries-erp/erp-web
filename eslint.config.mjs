@@ -38,7 +38,7 @@ export default tseslint.config(
     },
   },
   {
-    // Chặn import sâu (xem ui-structure Phần B). Áp dụng theo từng phạm vi đã migrate;
+    // Chặn import sâu (xem erp-ui-structure Phần B). Áp dụng theo từng phạm vi đã migrate;
     // mở rộng dần sang các module V2 khác khi được migrate.
     files: [
       "src/v2/core/goods-receipts/**/*.{ts,tsx}",

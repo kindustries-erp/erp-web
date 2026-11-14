@@ -4,7 +4,6 @@ import {
   V2DrawerLayout,
   V2DrawerSize,
 } from "@/v2/shared/components";
-import type { DrawerAction } from "@/v2/shared/components";
 import {
   GoodsReceiptLinesTable,
   sumGoodsReceiptLineAmounts,
@@ -16,6 +15,7 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { GoodsReceiptDrawerState } from "./GoodsReceiptDrawer.type";
 import type { GoodsReceiptModuleConfig } from "../goodsReceipts.config.type";
 import { useGoodsReceiptDrawer } from "./GoodsReceiptDrawer.hook";
+import { buildGoodsReceiptActions } from "./GoodsReceiptDrawer.actions";
 
 export type GoodsReceiptDrawerProps = GoodsReceiptDrawerState & {
   config: GoodsReceiptModuleConfig;
@@ -27,7 +27,8 @@ export function GoodsReceiptDrawer({
 }: GoodsReceiptDrawerProps) {
   const { t } = useV2Translation();
   const state = useGoodsReceiptDrawer({ config, state: props });
-  const title = state.creating
+  // Mô tả chế độ nằm ở dòng phụ; tiêu đề là mã phiếu kèm Badge trạng thái ngay bên cạnh
+  const modeLabel = state.creating
     ? t("v2.goodsReceipts.form.create", "Thêm mới")
     : state.viewing
       ? t("v2.goodsReceipts.form.detail", "Chi tiết")
@@ -36,38 +37,6 @@ export function GoodsReceiptDrawer({
   const handleLinesChange = (newLines: GoodsReceiptFormLine[]) => {
     state.setField("lines", newLines);
     state.setField("totalAmount", String(sumGoodsReceiptLineAmounts(newLines)));
-  };
-
-  const buildViewingActions = (): DrawerAction[] => {
-    const actions: DrawerAction[] = [
-      {
-        label: t("v2.common.close", "Đóng"),
-        onClick: props.onClose,
-        variant: "outline",
-      },
-    ];
-
-    if (state.canCancel) {
-      actions.unshift({
-        label: t("v2.goodsReceipts.actions.cancel", "Hủy phiếu"),
-        onClick: state.cancel,
-        variant: "outline",
-        loading: state.cancelling,
-        disabled: state.cancelling || state.posting,
-      });
-    }
-
-    if (state.canPost) {
-      actions.unshift({
-        label: t("v2.goodsReceipts.actions.post", "Ghi sổ nhập kho"),
-        onClick: state.post,
-        primary: true,
-        loading: state.posting,
-        disabled: state.posting || state.cancelling,
-      });
-    }
-
-    return actions;
   };
 
   return (
@@ -82,36 +51,18 @@ export function GoodsReceiptDrawer({
             ? () => state.setMode("edit")
             : undefined
         }
-        title={title}
-        subtitle={state.form.receiptNo || undefined}
-        titleExtra={
-          !state.creating ? (
-            <GoodsReceiptStatusBadge status={state.form.status} />
-          ) : undefined
-        }
+        title={state.form.receiptNo || modeLabel}
+        subtitle={state.form.receiptNo ? modeLabel : undefined}
+        titleExtra={<GoodsReceiptStatusBadge status={state.form.status} />}
         layout={V2DrawerLayout.TWO_COLUMNS}
         size={V2DrawerSize.XL}
         loading={state.loading}
         confirmOnClose={state.dirty && !state.viewing}
-        actions={
-          state.viewing
-            ? buildViewingActions()
-            : [
-                {
-                  label: t("v2.common.cancel", "Hủy"),
-                  onClick: state.cancelEdit,
-                  variant: "outline",
-                  disabled: state.saving,
-                },
-                {
-                  label: t("v2.goodsReceipts.actions.saveDraft", "Lưu nháp"),
-                  onClick: state.submit,
-                  primary: true,
-                  loading: state.saving,
-                  disabled: state.saving || state.loading,
-                },
-              ]
-        }
+        actions={buildGoodsReceiptActions({
+          ...state,
+          t,
+          onClose: props.onClose,
+        })}
         rightPanel={
           <GoodsReceiptFormSections
             form={state.form}
@@ -122,6 +73,9 @@ export function GoodsReceiptDrawer({
             errorMessage={state.errorMessage}
             t={t}
             setField={state.setField}
+            sourceOrder={config.sourceOrder}
+            onPickOrder={state.pickOrder}
+            orderLocked={state.orderLocked}
             hideLines
             columns={1}
           />
@@ -149,6 +103,25 @@ export function GoodsReceiptDrawer({
         onConfirm={state.confirmDiscard}
         onCancel={state.closeDiscard}
         onOpenChange={(next) => !next && state.closeDiscard()}
+      />
+      <V2ConfirmModal
+        open={state.reverseOpen}
+        title={t(
+          "v2.goodsReceipts.actions.reverseConfirmTitle",
+          "Hoàn nhập phiếu?",
+        )}
+        message={t(
+          "v2.goodsReceipts.actions.reverseConfirmMessage",
+          "Phiếu chuyển sang Đã hủy và tồn kho được trả về như trước khi nhập. Chỉ làm được khi hàng chưa sử dụng.",
+        )}
+        confirmLabel={t("v2.goodsReceipts.actions.reverse", "Hoàn nhập")}
+        cancelLabel={t("v2.common.cancel", "Hủy")}
+        variant="danger"
+        className="z-[700]"
+        overlayClassName="z-[699]"
+        onConfirm={state.reverse}
+        onCancel={state.closeReverse}
+        onOpenChange={(next) => !next && state.closeReverse()}
       />
     </>
   );

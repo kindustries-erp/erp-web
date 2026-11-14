@@ -216,4 +216,38 @@ describe("V2Combobox", () => {
     fireEvent.scroll(listbox);
     expect(handleScrollBottom).toHaveBeenCalled();
   });
+
+  it("renders V2BottomSheet on mobile without auto-focusing search input", () => {
+    vi.spyOn(viewportHook, "useViewport").mockReturnValue({
+      width: 375,
+      height: 812,
+      isMobile: true,
+      isTablet: false,
+      isDesktop: false,
+    });
+    const onValueChange = vi.fn();
+
+    render(
+      <V2Combobox
+        options={options}
+        value={null}
+        onValueChange={onValueChange}
+        placeholder="Phương thức"
+      />,
+    );
+    open();
+
+    expect(screen.getByTestId("v2-bottom-sheet-content")).toBeInTheDocument();
+    const searchInput = screen.getByRole("textbox");
+    expect(document.activeElement).not.toBe(searchInput);
+
+    const opt = screen.getByRole("option", { name: /Hóa đơn bán ra/ });
+    expect(opt.className).toContain("min-h-[44px]");
+    fireEvent.click(opt);
+
+    expect(onValueChange).toHaveBeenCalledWith("out");
+    expect(
+      screen.queryByTestId("v2-bottom-sheet-content"),
+    ).not.toBeInTheDocument();
+  });
 });

@@ -159,4 +159,42 @@ describe("ProcurementLinesEditor", () => {
       screen.getByRole("button", { name: /thêm vật tư/i }),
     ).toBeInTheDocument();
   });
+
+  it("hiện cột Đã nhận và Còn lại khi showReceived (nhập nhiều đợt)", () => {
+    const lines = [
+      {
+        ...emptyProcurementLine(),
+        itemName: "Lọc dầu",
+        qty: "5",
+        price: "100",
+        qtyFulfilled: "2",
+      },
+    ];
+    render(
+      <ProcurementLinesEditor
+        lines={lines}
+        onChange={vi.fn()}
+        viewing
+        showReceived
+        priceLabel="Đơn giá"
+      />,
+    );
+    expect(screen.getByText("Đã nhận")).toBeDefined();
+    expect(screen.getByText("Còn lại")).toBeDefined();
+    // Đã nhận 2, còn lại 5 - 2 = 3 (cũng có ở dòng tổng cộng)
+    expect(screen.getAllByText("2").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("3").length).toBeGreaterThan(0);
+  });
+
+  it("không có cột Đã nhận khi không bật showReceived", () => {
+    render(
+      <ProcurementLinesEditor
+        lines={[emptyProcurementLine()]}
+        onChange={vi.fn()}
+        viewing
+        priceLabel="Đơn giá"
+      />,
+    );
+    expect(screen.queryByText("Đã nhận")).toBeNull();
+  });
 });

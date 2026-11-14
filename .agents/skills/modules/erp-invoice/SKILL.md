@@ -486,3 +486,10 @@ bun run lint:check
 - **Status Badges**: `formatTaxInvoiceStatus(status, t)` hỗ trợ đa ngôn ngữ linh hoạt ("Mới" / "New", "Thay thế" / "Replaced", "Điều chỉnh" / "Adjusted", "Bị thay thế" / "Was Replaced", "Bị điều chỉnh" / "Was Adjusted", "Bị hủy" / "Cancelled").
 - **Toasts**: Các thao tác liên kết PO, SO, ngân hàng và vụ việc garage sử dụng các khóa `toastLinkedBankSuccess`, `toastLinkedPoSuccess`, `toastLinkedSoSuccess`, `toastLinkedCaseSuccess`.
 
+
+## Hợp đồng phân trang chuẩn v2 (pagination)
+
+- API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.
+- Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
+- Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
+- Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.

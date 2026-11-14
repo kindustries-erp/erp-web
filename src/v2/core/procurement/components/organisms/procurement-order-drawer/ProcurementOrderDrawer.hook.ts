@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { todayIsoDate } from "../../../procurement.rules";
@@ -7,13 +7,10 @@ import {
   emptyOrderForm,
   hasOrderFormErrors,
   orderFormFromDetail,
-  toOrderCreatePayload,
-  toOrderHeaderPayload,
   validateOrderForm,
   type ProcurementOrderFormErrors,
   type ProcurementOrderFormValue,
 } from "../../../form/procurementOrder.form";
-import { toOrderLinePayload } from "../../../form/procurementLine.form";
 import { isProcurementFormDirty } from "../../../form/procurementDirty";
 import type {
   ProcurementOrderDetail,
@@ -23,10 +20,10 @@ import type {
 import { orderFormFromRequestDraft } from "../../../form/procurementOrder.form";
 import {
   showProcurementError,
-  showProcurementSuccess,
   showProcurementWarning,
 } from "../../../procurement.toast";
 import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
+import { useProcurementOrderSave } from "./ProcurementOrderDrawer.save.hook";
 
 /**
  * Trạng thái drawer PO: tải chi tiết, form, lưu. Sửa được khi đơn còn nháp.
@@ -34,10 +31,10 @@ import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
  */
 export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const { t } = useV2Translation();
-  const queryClient = useQueryClient();
   const creating = !props.documentId;
   const branchOptional = Boolean(props.branchOptional);
   const itemCodeRequired = Boolean(props.itemCodeRequired);
+  const invoicePicker = Boolean(props.invoicePicker);
   const [mode, setMode] = React.useState(props.mode);
   const [form, setForm] = React.useState<ProcurementOrderFormValue>(() =>
     emptyOrderForm(todayIsoDate()),
@@ -147,35 +144,6 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const viewing = !editable || mode === "view";
   const dirty = isProcurementFormDirty(form, initial);
 
-  /** Ghi nháp (tạo mới hoặc cập nhật header + dòng), trả về id đơn. */
-  const persist = async (): Promise<{ id: string }> => {
-    if (creating) return props.api.create(toOrderCreatePayload(form));
-    const id = props.documentId!;
-    await props.api.updateHeader?.(
-      id,
-      toOrderHeaderPayload(form, branchOptional),
-    );
-    await props.api.replaceLines(id, form.lines.map(toOrderLinePayload));
-    return { id };
-  };
-
-  const save = useMutation({
-    mutationFn: persist,
-    onSuccess: ({ id }) => {
-      showProcurementSuccess(
-        t("v2.procurement.drawer.saved", "Đã lưu đơn mua"),
-      );
-      void queryClient.invalidateQueries({ queryKey: [props.queryKey] });
-      if (props.onSaved) props.onSaved(id);
-      else props.onClose();
-    },
-    onError: (error) =>
-      showProcurementError(
-        error,
-        t("v2.procurement.drawer.saveError", "Không lưu được đơn mua"),
-      ),
-  });
-
   const setField = <K extends keyof ProcurementOrderFormValue>(
     key: K,
     value: ProcurementOrderFormValue[K],
@@ -196,38 +164,16 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     return false;
   };
 
-  const submit = () => {
-    if (validateForm()) save.mutate();
-  };
-
-  /**
-   * Khóa duyệt tắt: lưu rồi ghi nhận luôn (chuyển APPROVED, không qua duyệt).
-   * Dùng cho nút Tạo mới / Cập nhật khi `props.directConfirm` và khóa tắt.
-   */
-  const confirm = useMutation({
-    mutationFn: async () => {
-      const { id } = await persist();
-      await props.api.transition(id, "submit");
-      return { id };
-    },
-    onSuccess: ({ id }) => {
-      showProcurementSuccess(
-        t("v2.procurement.drawer.confirmed", "Đã ghi nhận đơn mua"),
-      );
-      void queryClient.invalidateQueries({ queryKey: [props.queryKey] });
-      if (props.onSaved) props.onSaved(id);
-      else props.onClose();
-    },
-    onError: (error) =>
-      showProcurementError(
-        error,
-        t("v2.procurement.drawer.confirmError", "Không ghi nhận được đơn mua"),
-      ),
+  const { saveDraft, confirmSubmit, saving } = useProcurementOrderSave({
+    api: props.api,
+    queryKey: props.queryKey,
+    documentId: props.documentId,
+    branchOptional,
+    form,
+    validate: validateForm,
+    onSaved: props.onSaved,
+    onClose: props.onClose,
   });
-
-  const confirmSubmit = () => {
-    if (validateForm()) confirm.mutate();
-  };
 
   /** Hiện nút Tạo mới / Cập nhật thay cho gửi duyệt khi khóa duyệt PO đang tắt. */
   const directConfirm = Boolean(
@@ -261,6 +207,7 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     branchLocked: branchOptional ? false : !creating,
     branchOptional,
     itemCodeRequired,
+    invoicePicker,
     canPickRequest,
     requestLabel,
     requestApi: props.requestApi,
@@ -273,8 +220,8 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     status,
     detail: detail.data,
     loading: detail.isFetching || fromRequest.isFetching,
-    saving: save.isPending || confirm.isPending,
-    submit,
+    saving,
+    submit: saveDraft,
     directConfirm,
     confirmSubmit,
     cancelEdit,

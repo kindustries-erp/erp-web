@@ -1,5 +1,6 @@
 import * as React from "react";
 import { X } from "lucide-react";
+import { V2Icon, V2Text } from "@/v2/shared/components/atoms";
 import {
   Dialog,
   DialogTrigger,
@@ -32,13 +33,14 @@ export const V2PopoverMobile: React.FC<V2PopoverProps> = ({
       <DialogContent
         hideCloseButton={true}
         className={cn(
-          "fixed inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0",
-          "w-full max-w-none rounded-b-none rounded-t-2xl max-h-[85vh]",
+          "fixed top-auto translate-x-0 translate-y-0",
+          "rounded-b-none rounded-t-2xl max-h-[85vh]",
           "flex flex-col p-0 overflow-hidden border-b-0",
           "bg-[var(--modal-bg,rgba(246,248,252,0.85))] backdrop-blur-[var(--glass-blur,16px)]",
           "border border-[color:var(--popup-border,rgba(226,232,240,0.8))]",
           "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           className,
+          "inset-x-0 bottom-0 left-0 w-full max-w-none",
         )}
       >
         {/* Mobile Grab Handle Indicator */}
@@ -50,15 +52,17 @@ export const V2PopoverMobile: React.FC<V2PopoverProps> = ({
 
         {/* Mobile Header Bar */}
         <div className="flex items-center justify-between px-4 pb-2.5 pt-0.5 border-b border-border/50 shrink-0">
-          <DialogTitle className="text-xs font-semibold text-foreground">
-            {title || "Thông tin chi tiết"}
+          <DialogTitle asChild>
+            <V2Text variant="body-sm" weight="semibold">
+              {title || "Thông tin chi tiết"}
+            </V2Text>
           </DialogTitle>
           {!hideCloseButton && (
             <DialogClose
               aria-label={closeAriaLabel}
               className="rounded-md p-1 opacity-70 hover:opacity-100 hover:bg-surface-hover text-muted-fg hover:text-foreground cursor-pointer transition-opacity"
             >
-              <X className="h-4 w-4" />
+              <V2Icon icon={X} size={16} />
             </DialogClose>
           )}
         </div>

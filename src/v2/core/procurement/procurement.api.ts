@@ -1,11 +1,13 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import type {
   V2FetchOptions,
-  V2FetchOptionsResult,
+  V2FilterOption,
 } from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
 import { PROCUREMENT_REASON_ACTIONS } from "./procurement.rules";
 import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
+import { toFetchOptionsResult } from "@/v2/shared/utils/v2FetchOptionsAdapter";
+import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
 import type {
   ProcurementApi,
   ProcurementApprovalEvent,
@@ -68,6 +70,8 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
     supportsPoDraft?: boolean;
     supportsPurge?: boolean;
     supportsClone?: boolean;
+    /** Đường dẫn lưu-và-hành-động một bước: PR `save-and-submit`, PO `save-and-confirm` */
+    saveAndAct?: "save-and-submit" | "save-and-confirm";
   } = {},
 ): ProcurementApi<T, D, C, H> {
   return {
@@ -115,6 +119,17 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
       const { data } = await v2HttpClient.patch(`${basePath}/${id}`, payload);
       return data;
     },
+    saveAndSubmit: options.saveAndAct
+      ? async (id, body) => {
+          const url = id
+            ? `${basePath}/${id}/${options.saveAndAct}`
+            : `${basePath}/${options.saveAndAct}`;
+          const { data } = id
+            ? await v2HttpClient.patch<{ id: string }>(url, body)
+            : await v2HttpClient.post<{ id: string }>(url, body);
+          return data;
+        }
+      : undefined,
     replaceLines: async (id, lines: ProcurementLinePayload[]) => {
       const { data } = await v2HttpClient.patch(`${basePath}/${id}/lines`, {
         lines,
@@ -158,20 +173,19 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
         }
       : undefined,
     options: async (params: ProcurementFetchOptionsParams) => {
-      const { data } = await v2HttpClient.get<V2FetchOptionsResult>(
-        `${basePath}/column-options`,
-        {
-          params: {
-            column: params.columnKey,
-            search: params.search,
-            page: params.pageParam,
-            pageSize: 20,
-            filters: params.filtersStr,
-            deleted: params.deleted,
-          },
+      const { data } = await v2HttpClient.get<
+        V2PaginatedResponse<V2FilterOption>
+      >(`${basePath}/column-options`, {
+        params: {
+          column: params.columnKey,
+          search: params.search,
+          page: params.pageParam,
+          pageSize: 20,
+          filters: params.filtersStr,
+          deleted: params.deleted,
         },
-      );
-      return data;
+      });
+      return toFetchOptionsResult(data);
     },
   };
 }

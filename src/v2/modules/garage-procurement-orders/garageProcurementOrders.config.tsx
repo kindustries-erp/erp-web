@@ -13,6 +13,7 @@ import type {
   ProcurementRequestRow,
 } from "@/v2/core/procurement";
 import { ProcurementOrderDrawer } from "@/v2/core/procurement";
+import { listGarageOrderReceipts } from "./api/garageOrderReceipts";
 
 /** Đơn mua hàng garage (lõi procurement-orders, API v2). */
 export const garageProcurementOrdersApi =
@@ -22,6 +23,7 @@ export const garageProcurementOrdersApi =
       supportsDelete: true,
       supportsPurge: true,
       supportsClone: true,
+      saveAndAct: "save-and-confirm",
     },
   );
 
@@ -38,6 +40,16 @@ export const garageProcurementOrdersConfig: ProcurementListConfig<ProcurementOrd
     // Khóa duyệt PO garage đang tắt: gửi duyệt = ghi nhận luôn, xử lý ở drawer
     directConfirmWhenApprovalOff: true,
     rowLabel: (row) => row.orderNo,
+    receiveHref: "/garage-stock-vouchers",
+    receivePermissionCollection: "garage_goods_receipts",
+    canReceive: (row) =>
+      row.status === "ISSUED" && row.fulfillmentStatus !== "FULL",
+    loadReceipts: listGarageOrderReceipts,
+    receiveBlockedKey: (row) => {
+      if (row.status !== "ISSUED") return "notIssued";
+      if (row.fulfillmentStatus === "FULL") return "fullyReceived";
+      return null;
+    },
     requestApi: createProcurementApi<
       ProcurementRequestRow,
       ProcurementRequestDetail
@@ -57,6 +69,7 @@ const ORDER_VIEW_VISIBILITY = {
     paymentStatus: true,
     supplierInvoiceNo: false,
     createdBy: false,
+    requestNo: true,
   },
   all: {
     orderNo: true,
@@ -69,6 +82,7 @@ const ORDER_VIEW_VISIBILITY = {
     paymentStatus: true,
     supplierInvoiceNo: true,
     createdBy: true,
+    requestNo: true,
   },
 };
 
@@ -84,6 +98,7 @@ export const garageProcurementOrdersDisplay: ProcurementPageDisplay<ProcurementO
       <ProcurementOrderDrawer
         {...props}
         branchOptional
+        invoicePicker
         itemCodeRequired
         requestPickerCollection="garage_procurement_requests"
       />

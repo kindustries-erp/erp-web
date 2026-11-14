@@ -1,20 +1,16 @@
 import type { Role } from "../../domain/entities/role";
+import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
 
 export type RoleDto = Role;
 
-export interface RoleListResultDto {
-  items: RoleDto[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+/** Response danh sách chuẩn v2: `items` và `pagination` */
+export type RoleListResultDto = V2PaginatedResponse<RoleDto>;
 
-export interface ColumnOptionsResultDto {
-  items: { label: string; value: string }[];
-  total: number;
-  next: number | null;
-}
+/** Response column-options chuẩn v2: `items` và `pagination` (có next/previous) */
+export type ColumnOptionsResultDto = V2PaginatedResponse<{
+  label: string;
+  value: string;
+}>;
 
 export interface RoleEnvelopeDto {
   message?: string;

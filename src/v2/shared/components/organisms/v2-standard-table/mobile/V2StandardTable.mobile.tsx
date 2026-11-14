@@ -1,25 +1,34 @@
 import * as React from "react";
-import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
+import {
+  V2TablePagination,
+  V2TablePaginationVariant,
+} from "@/v2/shared/components/molecules/v2-table-pagination";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2TableController } from "../hooks/V2StandardTable.controller.hook";
+import { useV2RowExpansion } from "../hooks/V2StandardTable.expand.hook";
 import { useV2ViewPresets } from "../hooks/V2StandardTable.views.hook";
 import { resolveMobileSlots } from "./V2StandardTable.mobile-slots";
 import { V2StandardTableMobileCard } from "./V2StandardTable.mobile-card";
+import { V2StandardTableMobileToolbar } from "./V2StandardTable.mobile-toolbar";
+import { V2TableSearchFilterSheet } from "./V2TableSearchFilterSheet";
 import { V2TableSkeletonCards } from "../skeleton";
-import { V2TableToolbar } from "../toolbar/V2StandardTable.toolbar";
 import { useV2ToolbarPortal } from "@/v2/shared/components/molecules/v2-tab-panel";
 import { useV2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import { useV2FilterPanelToolbar } from "../filterpanel/V2StandardTable.filterpanel.hook";
-import { V2TableFilterDrawer } from "../filterpanel/filterdrawer";
 import type { V2StandardTableProps } from "../V2StandardTable.type";
 
 export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
   const { columns, getRowKey, rowActions, loading = false } = props;
   const { t } = useV2Translation();
+  const [sheetOpen, setSheetOpen] = React.useState(false);
   const { state, view, selection, columnsByKey, fetchOptionsForKey } =
     useV2TableController(props);
+  const expansion = useV2RowExpansion({
+    expandedRowKeys: props.expandedRowKeys,
+    onExpandedRowsChange: props.onExpandedRowsChange,
+  });
   const filters = useV2HeaderFilters({
     tableId: props.tableId,
     columnsByKey,
@@ -51,10 +60,15 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
     [selection.keys],
   );
   const slot = useV2ToolbarPortal();
+  const isSheetOpen = sheetOpen || panel.open;
+  const handleSheetOpenChange = (next: boolean) => {
+    setSheetOpen(next);
+    if (!next && panel.open) panel.close();
+  };
 
   return (
     <div className={cn("flex h-full min-h-0 flex-col gap-2", props.className)}>
-      <V2TableToolbar
+      <V2StandardTableMobileToolbar
         activeFilterCount={state.activeFilterCount}
         onClearAllFilters={state.resetAll}
         selectedCount={selection.selectedCount}
@@ -64,6 +78,7 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         onClearSelection={() => selection.onRowSelectionChange({})}
         loading={loading}
         search={{ value: state.query.search ?? "", onChange: state.setSearch }}
+        onOpenSheet={() => setSheetOpen(true)}
       />
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
         {view.rows.length === 0 && loading ? (
@@ -83,6 +98,11 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
           <ul className={cn("flex flex-col gap-2", loading && "opacity-60")}>
             {view.rows.map((row, rowIndex) => {
               const key = getRowKey(row);
+              const index = view.startIndex + rowIndex + 1;
+              const canExpand = Boolean(
+                props.renderExpandedRow &&
+                (props.canExpandRow ? props.canExpandRow(row, index) : true),
+              );
               return (
                 <V2StandardTableMobileCard
                   key={key}
@@ -92,6 +112,10 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
                   startIndex={view.startIndex}
                   slots={slots}
                   isSelected={selected.has(key)}
+                  isExpanded={canExpand && expansion.isExpanded(key)}
+                  canExpand={canExpand}
+                  onToggleExpand={() => expansion.toggleExpand(key)}
+                  renderExpandedRow={props.renderExpandedRow}
                   enableRowSelection={props.enableRowSelection}
                   rowActions={rowActions}
                   getRowClassName={props.getRowClassName}
@@ -108,14 +132,28 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         total={view.total}
         onPageChange={state.setPage}
         onPageSizeChange={state.setPageSize}
+        variant={V2TablePaginationVariant.MOBILE}
         className="mt-2 shrink-0 pb-12 sm:pb-0"
       />
-      <V2TableFilterDrawer
-        panel={panel}
-        columns={columns}
-        state={state}
-        filters={filters}
-        extraContent={props.toolbar?.filterPanel?.extraContent}
+      <V2TableSearchFilterSheet
+        open={isSheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        search={
+          toolbarConfig?.search
+            ? { value: state.query.search ?? "", onChange: state.setSearch }
+            : undefined
+        }
+        searchPlaceholder={toolbarConfig?.search?.placeholder}
+        filterGroup={toolbarConfig?.filterGroup}
+        activeFilterCount={state.activeFilterCount}
+        onClearAllFilters={state.resetAll}
+        filterDrawer={{
+          panel,
+          columns,
+          state,
+          filters,
+          extraContent: props.toolbar?.filterPanel?.extraContent,
+        }}
       />
     </div>
   );

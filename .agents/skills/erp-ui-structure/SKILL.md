@@ -1,0 +1,99 @@
+---
+name: erp-ui-structure
+description: Playbook cấu trúc UI của erp-web (React/Vite) - chuẩn Atomic Design 5 tầng, quy tắc import, folder-per-component, co-located test, giới hạn 180 dòng, i18n, No Blue, Mobile-First chuẩn công thái học di động, quy trình migrate module V1 sang V2 (src/v2/, dual-run /v2/, generator plop), và cửa vào cho Table và Drawer (chọn skill standardize-table hoặc standardize-drawer). Dùng khi tạo mới, tách file lớn, chuẩn hóa component, làm bảng hoặc drawer, hoặc migrate V2 trong erp-web. Nạp erp-web-truth trước.
+---
+
+# ERP Web — Structure & Refactor
+
+Workflow đi kèm (cùng tên): `.agents/workflows/erp-ui-structure.md`.
+
+Skill gộp hai playbook: chuẩn Atomic cho component (V1 và V2) và quy trình migrate module sang `src/v2/`. Nạp `erp-web-truth` trước để có ngữ cảnh repo, lane và luồng API.
+
+Chỉ tách, refactor hoặc migrate khi user yêu cầu rõ hoặc task đã được duyệt. Migrate V2 theo nguyên tắc rolling: mỗi module chạy riêng, kiểm audit đầy đủ trước khi báo xong.
+
+## 1. Chọn hướng xử lý
+
+| Tình huống | Làm gì | Tài liệu chi tiết |
+| :--- | :--- | :--- |
+| Tạo component mới, hoặc tách file trên 180 dòng | Áp dụng 5 tầng Atomic, folder-per-component, decision tree chọn nơi đặt | `references/atomic-ui.md` |
+| Làm bảng hoặc drawer (V1 hay V2) | Chọn skill theo mục 3, rồi kiểm theo chuẩn Atomic | Mục 3; `references/atomic-ui.md` |
+| Chuẩn hóa modal, dashboard | Dùng `standardize-modal`, `standardize-dashboard-page`, rồi kiểm theo chuẩn Atomic | `references/atomic-ui.md` |
+| Migrate module V1 sang V2 (`src/v2/`) | Scaffold bằng generator `v2-module`, làm parity, audit | `references/v2-migration.md` |
+
+## 2. Chuẩn Atomic (V1 và V2)
+
+Năm tầng:
+
+1. **Atoms**: primitive UI (`@/shared/components/ui`, `atoms`), không có logic nghiệp vụ, props-driven.
+2. **Molecules**: UI kèm state cục bộ (useState/useRef), không gọi API hay store.
+3. **Organisms**: khối phức hợp có store, RBAC, form hoặc API qua hook.
+4. **Templates**: khung layout chưa gắn dữ liệu.
+5. **Pages**: gắn route, lấy dữ liệu qua domain hook, ghép template và organism.
+
+Quy tắc:
+
+- **V2 Atom bắt buộc**: trong `src/v2/**` cấm thẻ HTML trần (`<button>`, `<span>`, `<input>`, `<textarea>`…) khi đã có V2 Atom (`V2Button`, `V2Text`, `V2Badge`, `V2Input`…). Chưa có atom thì tạo trong `src/v2/shared/components/atoms/` bằng `bun run plop v2-component` (tầng `atoms`) rồi mới dùng. Chi tiết và ngoại lệ: `references/atomic-ui.md` mục 2.1.
+- **Import**: chỉ đi từ tầng cao xuống tầng thấp. Cấm import ngang hàng giữa các component cùng tầng, trừ trường hợp được phép ghi trong `references/atomic-ui.md`.
+- **Folder-per-component**: mỗi component một thư mục kebab-case, có `index.ts`, file `.type.ts`, `.hook.ts` khi cần, và thư mục `__tests__` hoặc file test co-located.
+- **Giới hạn**: cảnh báo ở 180 dòng cho `.tsx` và `.hook.ts`, chặn ở 250 dòng. Loại trừ file dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`). Tách hook, helper và sub-component khi gần ngưỡng.
+- **Tên hook**: `[Component].hook.ts` (hook gắn một component, export `use[Component]`); `use<Tên>.ts` (hook độc lập trong `api/`, `hooks/`, `stores/`). Hook không có JSX đuôi `.ts`. Chi tiết: `erp-ui-structure`, mục "Quy Ước Tên Hook".
+- **Tầng core theo họ (áp dụng cho mọi họ, không ngoại lệ)**: UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ>/` (ví dụ `core/goods-receipts/`), giống `src/v2/core/` của API v2. Module của họ chỉ giữ API, cấu hình ghép core, page và locale riêng. Chiều phụ thuộc `modules/* → core/* → shared/`; core không import module và không chứa tên module. Import qua barrel (`@/v2/core/<họ>`, `@/v2/shared/components`), không import sâu từ module hay core. Chi tiết: `erp-ui-structure` Phần B.
+- **i18n**: 100% chuỗi hiển thị đi qua `t()` cho VI/EN. Với V2, key bắt buộc có prefix `v2.`, dùng `useV2Translation` (không `react-i18next`), và **mỗi key phải khai báo đủ vi và en cùng lúc** (atom/shared vào `src/v2/shared/locales/vi.ts` + `en.ts`; core/module vào `<họ>.locale.ts` qua `registerV2ModuleLocale`). Chi tiết: `references/atomic-ui.md` mục 6.1.
+- **Màu**: không dùng `blue-*`. Dùng token ngữ cảnh (bảng token và màu raw được chấp nhận: `erp-web-truth/references/ui-shell-and-theme.md` mục 4).
+- **Zustand**: đọc state bằng selector riêng lẻ (`useXStore((s) => s.field)`). Tránh `const { a, b } = useXStore()` vì component render lại theo cả store.
+- **A11y**: control, overlay và field lỗi theo mục A11y trong checklist `references/atomic-ui.md`.
+- **Mobile-First & Responsive**: thiết kế và viết CSS Mobile-First (style gốc cho mobile, mở rộng bằng `sm:`, `md:`, `lg:`). Touch target $\ge 44\text{px}$, input font $\ge 16\text{px}$ chống iOS Safari zoom, bọc safe-area insets. Tách `*.desktop.tsx` / `*.mobile.tsx` (Platform Split) khi UX khác biệt căn bản (App Layout, Drawer Bottom Sheet, Table vs Card List) qua Switcher `< 15 LoC`.
+- **Storybook (tùy chọn)**: khuyến khích `*.stories.tsx` cho atoms; không bắt buộc, không nằm trong gate CI. Story phải đặt trong `src/v2/shared/components/<tầng>/<folder>/` và có `title: "Components/<Tầng>/<Name>"` (`.storybook/main.ts` chỉ quét vùng này).
+- **Test theo tầng**: bắt buộc cho Organism và luồng page (`tests/integration/`); Atom/Molecule chỉ test khi có logic riêng.
+- **Enum nhập liệu**: key field và option dùng chung khai báo bằng `enum` (một nguồn, nhãn qua `t()`), tái sử dụng giữa form, bảng và filter. Xem `erp-ui-structure` Phần D.
+
+## 3. Table và Drawer
+
+Mỗi loại có một skill duy nhất, đã gồm V1, V2 và phần phụ. Skill tự chọn reference theo V1 (`src/`) hay V2 (`src/v2/`). Thứ tự: nạp `erp-web-truth`, đọc mục này, mở skill, làm theo reference, rồi chạy audit của mục 5.
+
+| Việc | Skill | Reference chính |
+| :--- | :--- | :--- |
+| Trang bảng mới hoặc refactor trang bảng | `standardize-table` | `references/table-page.md`, rồi `table-rules.md` |
+| Cột, filter, sort, subtotal, phân trang, view mode, bảng nhúng | `standardize-table` | `references/table-rules.md` |
+| Bảng hoặc trang dưới `src/v2/` | `standardize-table` | `references/v2-table.md` |
+| Drawer chi tiết hoặc form (V1) | `standardize-drawer` | `references/drawer-rules.md` |
+| Drawer dưới `src/v2/` | `standardize-drawer` | `references/v2-drawer.md` |
+| Tab chứng từ liên kết, cấn trừ, truy vết | `standardize-drawer` | `references/drawer-rules.md` mục 11 |
+
+Đường dẫn đầy đủ: `.agents/skills/<skill>/references/<file>`. Quy trình từng bước và bộ grep audit: workflow `/standardize-table`, `/standardize-drawer` (xem `erp-ui-structure` Phần C). Modal và dashboard dùng `standardize-modal`, `standardize-dashboard-page`.
+
+## 4. Migrate V2 (`src/v2/`)
+
+Nguyên tắc chính:
+
+- **Dual-run**: `/v2/*` và `/` (V1) chạy song song trên cùng bundle. V2 dùng session qua `useAuthStore`.
+- **Không import V1**: module và shared V2 không import `@/core`, `@/shared`, `@/modules`, trừ auth store dùng chung.
+- **Rolling migration**: chỉ migrate khi user ra lệnh cho module đó.
+- **Parity**: trước khi viết, liệt kê feature của module V1 và lập bảng parity V1 → V2.
+- **Audit**: chạy audit ở `references/v2-migration.md` mục 8 trước khi báo hoàn tất (không import V1, key i18n `v2.*`, không `blue-*`, file không vượt ngưỡng 180/250, `core/` không import `modules/`, type-check, test).
+
+Generator (plop):
+
+- `v2-module`: tạo module đầy đủ trong `src/v2/modules/<module>/` (api, domain, components, drawers, pages, locale, tests), đồng thời nối route, menu và i18n.
+- `v2-component`: tạo component dùng chung (index, component, type; organism thêm test, atom thêm stories) và nối barrel của tầng Atomic đã chọn.
+
+Module mẫu đã hoàn chỉnh: `src/v2/modules/business-partners/`.
+
+## 5. Checklist tối thiểu trước khi báo xong
+
+- [ ] `bun run type:check` pass.
+- [ ] `bun run check:ci` pass (tsc + eslint `--max-warnings=0` + prettier).
+- [ ] `bun run test` (hoặc scope liên quan) pass. Ghi rõ scope.
+- [ ] Không có file vượt 180 dòng trong phạm vi đã đổi (trừ V1 cũ không được chạm).
+- [ ] Không có chuỗi hardcode, không có `blue-*`, không import V1 từ V2.
+- [ ] Tuân thủ Mobile-First: touch targets $\ge 44\text{px}$, input font $\ge 16\text{px}$ trên mobile, không tràn ngang layout.
+- [ ] Route và luồng gọi API khớp contract thật của backend.
+- [ ] Đã kiểm trên cả light và dark khi đụng token.
+
+## 6. Tài liệu đi kèm
+
+- `references/atomic-ui.md`: 5 tầng chi tiết, ma trận import, decision tree, co-located testing, i18n, No Blue, responsive, checklist DoD.
+- `references/v2-migration.md`: nguyên tắc V2, cây module chuẩn, hạ tầng shared V2, quy ước, playbook migrate, bảng parity, bẫy đã gặp, audit, trạng thái migrate.
+- Workflow đầy đủ: `.agents/workflows/erp-ui-structure.md` (Phần A, B, C). Workflow chi tiết cho bảng và drawer: `.agents/workflows/standardize-table.md`, `.agents/workflows/standardize-drawer.md`.
+- Các skill chuẩn hóa theo loại: `standardize-table` (gồm trang bảng và V2), `standardize-drawer` (gồm V2 và truy vết chứng từ), `standardize-modal`, `standardize-dashboard-page`.
+- Field nhập liệu và focus ring trong dark theme (không viền trắng, dùng `V2_DRAWER_FOCUS_RING_CLASS`): `standardize-drawer/references/v2-drawer.md`, mục "Field trong card & focus ring".

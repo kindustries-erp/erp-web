@@ -1,9 +1,16 @@
+import type { ReactNode } from "react";
+
 export interface V2ComboboxOption {
   value: string;
   label: string;
   disabled?: boolean;
   /** Dòng phụ nhỏ bên dưới nhãn (ví dụ mã số thuế) */
   description?: string;
+  /**
+   * Nội dung giải thích thêm (ví dụ chi tiết kỳ đã trả).
+   * Desktop: hiện khi hover qua V2Tooltip. Mobile: hiện thành dòng phụ dưới nhãn.
+   */
+  tooltip?: ReactNode;
 }
 
 export interface V2ComboboxProps {

@@ -39,4 +39,5 @@ export interface V2AppLayoutProps extends V2BaseProps {
   onToggleCollapse?: () => void;
   bottomNavVariant?: V2BottomNavVariantType;
   bottomNavIndicator?: V2NavIndicatorType;
+  hideBottomNav?: boolean;
 }

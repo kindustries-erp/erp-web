@@ -244,3 +244,21 @@ describe("ProcurementOrderDrawer — khóa duyệt PO tắt (ghi nhận trực t
     expect(screen.queryByRole("button", { name: "Cập nhật" })).toBeNull();
   });
 });
+
+describe("ProcurementOrderDrawer - nút Nhập kho", () => {
+  it("chế độ xem hiện Nhập kho và gọi onReceive với id đơn", async () => {
+    const onReceive = vi.fn();
+    renderDrawer({
+      receive: { canReceive: () => true, onReceive },
+    });
+    const btn = await screen.findByRole("button", { name: "Nhập kho" });
+    fireEvent.click(btn);
+    expect(onReceive).toHaveBeenCalledWith({ id: "po-1" });
+  });
+
+  it("không hiện Nhập kho khi không truyền receive", async () => {
+    renderDrawer();
+    await screen.findByText("PO-2026-1");
+    expect(screen.queryByRole("button", { name: "Nhập kho" })).toBeNull();
+  });
+});

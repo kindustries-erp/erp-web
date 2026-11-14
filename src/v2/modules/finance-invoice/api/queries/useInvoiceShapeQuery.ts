@@ -39,7 +39,7 @@ export function useInvoiceList(
       const res = await financeInvoiceV2Api.list(params);
       return {
         items: res.items.map((inv) => toInvoiceRow(inv, direction)),
-        total: res.total,
+        total: res.pagination.total,
         summaries: toInvoiceSummary(res.summaries),
       };
     },

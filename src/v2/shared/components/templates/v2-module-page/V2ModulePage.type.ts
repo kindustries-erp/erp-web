@@ -1,19 +1,53 @@
 import type * as React from "react";
-import type {
+import { V2PageHeaderVariant } from "@/v2/shared/components/molecules/v2-page-header";
+import {
   V2TabBarVariant,
-  V2TabItemData,
+  type V2TabItemData,
 } from "@/v2/shared/components/molecules/v2-tab-bar";
-
-/** Biến thể thanh tab của trang module (runtime), là tập con của `V2TabBarVariant` */
-export const V2_MODULE_PAGE_TAB_VARIANTS = [
-  "header",
-  "page",
-] as const satisfies readonly V2TabBarVariant[];
-export type V2ModulePageTabVariant =
-  (typeof V2_MODULE_PAGE_TAB_VARIANTS)[number];
 import type { V2StandardTableProps } from "@/v2/shared/components/organisms/v2-standard-table";
 import type { V2SummaryMetric, V2TableQuery } from "@/v2/shared/types/v2-table";
 import type { V2TabComboboxItem } from "@/v2/shared/components/molecules/v2-tab-combobox";
+
+/** Biến thể tổng thể của trang module V2 (preset Header + TabBar) */
+export enum V2ModulePageVariant {
+  DEFAULT = "default",
+  CARD = "card",
+}
+
+/** Biến thể thanh tab dùng được trong trang module V2 */
+export enum V2ModulePageTabVariant {
+  HEADER = "header",
+  PAGE = "page",
+  PILL = "pill",
+  /** Segmented control: track xám, tab chọn là thẻ trắng trượt (V2TabBarVariant.SUB) */
+  SEGMENTED = "segmented",
+  /** Chip trạng thái có chấm màu (V2TabBarVariant.STATUS_CHIP) */
+  STATUS_CHIP = "status-chip",
+}
+
+export const V2_MODULE_PAGE_HEADER_VARIANTS = [
+  V2PageHeaderVariant.FLAT,
+  V2PageHeaderVariant.CARD,
+] as const;
+
+export const V2_MODULE_PAGE_TAB_VARIANTS = [
+  V2ModulePageTabVariant.HEADER,
+  V2ModulePageTabVariant.PAGE,
+  V2ModulePageTabVariant.PILL,
+  V2ModulePageTabVariant.SEGMENTED,
+  V2ModulePageTabVariant.STATUS_CHIP,
+] as const;
+
+export const V2_MODULE_PAGE_TAB_TO_BAR_VARIANT: Record<
+  V2ModulePageTabVariant,
+  V2TabBarVariant
+> = {
+  [V2ModulePageTabVariant.HEADER]: V2TabBarVariant.HEADER,
+  [V2ModulePageTabVariant.PAGE]: V2TabBarVariant.PAGE,
+  [V2ModulePageTabVariant.PILL]: V2TabBarVariant.PILL,
+  [V2ModulePageTabVariant.SEGMENTED]: V2TabBarVariant.SUB,
+  [V2ModulePageTabVariant.STATUS_CHIP]: V2TabBarVariant.STATUS_CHIP,
+};
 
 type V2ModuleTabBase = Omit<V2TabItemData, "key" | "content">;
 
@@ -62,6 +96,12 @@ export interface V2ModulePageProps<T> {
   title: string;
   description?: string;
   icon?: React.ReactNode;
+  /** Preset bố cục tổng thể (`DEFAULT`: phẳng + tab gạch chân; `CARD`: header card + pill tabs) */
+  variant?: V2ModulePageVariant;
+  /** Ghi đè biến thể Header (`FLAT` | `CARD`) */
+  headerVariant?: V2PageHeaderVariant;
+  /** Ghi đè biến thể thanh tab (`HEADER` | `PAGE` | `PILL`) */
+  tabVariant?: V2ModulePageTabVariant;
   /** Cụm nút bên phải tiêu đề (làm mới, tạo mới, ...) */
   actions?: React.ReactNode;
   tabs: V2ModuleTab<T>[];
@@ -72,10 +112,11 @@ export interface V2ModulePageProps<T> {
   onTabChange?: (key: string) => void;
   /** Giữ tab đang mở trên URL (`?tab=`). Mặc định true; tắt trong story/test cần cô lập */
   syncUrl?: boolean;
-  tabVariant?: V2ModulePageTabVariant;
   /** Drawer, modal do page quản lý */
   overlays?: React.ReactNode;
   className?: string;
+  /** Class thêm cho thanh tab (ví dụ bỏ đường kẻ dưới của pill) */
+  tabBarClassName?: string;
   /** Tab trang (ví dụ chuyển giữa các trang liên quan PR / PO) */
   pageTabs?: V2TabComboboxItem[];
   /** Khóa tab trang đang kích hoạt */

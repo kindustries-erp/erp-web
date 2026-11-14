@@ -47,6 +47,18 @@ export const V2_ROUTES: V2RouteDef[] = [
     title: "Hóa đơn điện tử",
     permission: { collection: "invoices", action: "read" },
   },
+  {
+    id: "loans",
+    path: "/loans-tool",
+    title: "Khoản vay & Dòng tiền",
+    permission: { collection: "loans", action: "read" },
+  },
+  {
+    id: "loans",
+    path: "/v2/loans",
+    title: "Khoản vay & Dòng tiền",
+    permission: { collection: "loans", action: "read" },
+  },
   { id: "inventory", path: "/v2/inventory", title: "Kho vận (Inventory)" },
   {
     id: "settings",
@@ -102,16 +114,41 @@ export const V2_ROUTES: V2RouteDef[] = [
     permission: { collection: "admin_users", action: "read" },
   },
   {
-    id: "garage-goods-receipts",
-    path: "/garage-goods-receipts",
-    title: "Nhập kho Garage",
-    permission: { collection: "garage_goods_receipts", action: "read" },
+    id: "garage-stock-vouchers",
+    path: "/garage-stock-vouchers",
+    title: "Chứng từ kho Garage",
+    permission: { collection: "garage_stock_vouchers", action: "read" },
   },
   {
-    id: "garage-goods-receipts",
+    id: "garage-stock-vouchers",
+    path: "/v2/garage-stock-vouchers",
+    title: "Chứng từ kho Garage",
+    permission: { collection: "garage_stock_vouchers", action: "read" },
+  },
+  // Đường dẫn cũ của trang Nhập kho Garage: mở thẳng trang mới, giữ nguyên query (?fromOrder=, ?receipt=)
+  {
+    id: "garage-stock-vouchers",
+    path: "/garage-goods-receipts",
+    title: "Chứng từ kho Garage",
+    permission: { collection: "garage_stock_vouchers", action: "read" },
+  },
+  {
+    id: "garage-stock-vouchers",
     path: "/v2/garage-goods-receipts",
-    title: "Nhập kho Garage",
-    permission: { collection: "garage_goods_receipts", action: "read" },
+    title: "Chứng từ kho Garage",
+    permission: { collection: "garage_stock_vouchers", action: "read" },
+  },
+  {
+    id: "garage-stock-balances",
+    path: "/garage-stock-balances",
+    title: "Tồn kho Garage",
+    permission: { collection: "garage_stock_ledger", action: "read" },
+  },
+  {
+    id: "garage-stock-balances",
+    path: "/v2/garage-stock-balances",
+    title: "Tồn kho Garage",
+    permission: { collection: "garage_stock_ledger", action: "read" },
   },
   {
     id: "garage-procurement",
@@ -125,7 +162,7 @@ export const V2_ROUTES: V2RouteDef[] = [
     title: "Mua hàng Garage",
     permission: { collection: "garage_procurement_requests", action: "read" },
   },
-  // v2-module:garage-goods-receipts:routes
+  // v2-module:inventory-movements-garage:routes
   {
     id: "permission",
     path: "/permission",

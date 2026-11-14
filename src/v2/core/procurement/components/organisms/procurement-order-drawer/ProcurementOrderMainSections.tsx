@@ -14,6 +14,8 @@ export interface ProcurementOrderMainSectionsProps {
   linesLocked?: boolean;
   /** Mã hàng bắt buộc (đơn Garage) */
   itemCodeRequired?: boolean;
+  /** Hiện cột Đã nhận / Còn lại (đơn đã phát hành, chỉ xem) */
+  showReceived?: boolean;
   setField: <K extends keyof ProcurementOrderFormValue>(
     key: K,
     value: ProcurementOrderFormValue[K],
@@ -34,6 +36,7 @@ export function ProcurementOrderMainSections({
   viewing,
   linesLocked = false,
   itemCodeRequired = false,
+  showReceived = false,
   setField,
 }: ProcurementOrderMainSectionsProps) {
   const { t } = useV2Translation();
@@ -50,6 +53,7 @@ export function ProcurementOrderMainSections({
       errorText={linesError}
       lockLines={linesLocked}
       itemCodeRequired={itemCodeRequired}
+      showReceived={showReceived}
     />
   );
 }

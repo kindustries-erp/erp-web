@@ -1,6 +1,11 @@
 import * as React from "react";
 import { Plus } from "lucide-react";
-import { V2Button, DrawerSection } from "@/v2/shared/components";
+import {
+  V2Button,
+  DrawerSection,
+  V2DrawerLinesTable,
+  type V2DrawerLinesColumn,
+} from "@/v2/shared/components";
 import {
   GOODS_RECEIPT_DEFAULT_UNIT,
   createGoodsReceiptClientKey,
@@ -9,16 +14,6 @@ import {
   sumGoodsReceiptLineQuantities,
 } from "@/v2/core/goods-receipts";
 import type { GoodsReceiptFormLine } from "@/v2/core/goods-receipts";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/v2/shared/ui/table";
-import { GoodsReceiptLineRow } from "./GoodsReceiptLineRow";
 import { GOODS_RECEIPT_LINES_COLUMNS } from "./GoodsReceiptLinesTable.columns";
 import type { GoodsReceiptTranslate } from "./GoodsReceiptLinesTable.type";
 import "../../../goodsReceipts.locale";
@@ -72,6 +67,15 @@ export function GoodsReceiptLinesTable({
     onChangeLines(next);
   };
 
+  const handlePatchLine = (
+    index: number,
+    patch: Partial<GoodsReceiptFormLine>,
+  ) => {
+    const next = [...lines];
+    next[index] = { ...next[index], ...patch };
+    onChangeLines(next);
+  };
+
   const handleRemoveLine = (index: number) => {
     onChangeLines(lines.filter((_, i) => i !== index));
   };
@@ -84,6 +88,30 @@ export function GoodsReceiptLinesTable({
     () => sumGoodsReceiptLineAmounts(lines),
     [lines],
   );
+
+  const layoutColumns: V2DrawerLinesColumn[] = visibleColumns.map((col) => ({
+    id: col.id,
+    header: col.headerKey ? t(col.headerKey, col.defaultHeader) : "",
+    ...col.layout,
+  }));
+
+  const renderCell = (
+    column: V2DrawerLinesColumn,
+    line: GoodsReceiptFormLine,
+    index: number,
+  ) => {
+    const def = visibleColumns.find((col) => col.id === column.id);
+    if (!def) return null;
+    return def.renderCell({
+      line,
+      index,
+      viewing,
+      t,
+      onUpdate: handleUpdateLine,
+      onPatch: handlePatchLine,
+      onRemove: handleRemoveLine,
+    });
+  };
 
   return (
     <DrawerSection
@@ -98,67 +126,27 @@ export function GoodsReceiptLinesTable({
         )
       }
     >
-      <div className="overflow-x-auto rounded border border-border">
-        <Table className="w-full text-xs">
-          <TableHeader>
-            <TableRow className="bg-muted/50 border-b border-border text-muted-fg font-medium">
-              {visibleColumns.map((col) => (
-                <TableHead key={col.id} className={col.headerClassName}>
-                  {col.headerKey ? t(col.headerKey, col.defaultHeader) : ""}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {lines.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumns.length}
-                  className="p-6 text-center text-muted-fg"
-                >
-                  {t(
-                    "v2.goodsReceipts.lines.noParts",
-                    "Chưa có phụ tùng nào trong phiếu nhập",
-                  )}
-                </TableCell>
-              </TableRow>
-            ) : (
-              lines.map((line, idx) => (
-                <GoodsReceiptLineRow
-                  key={line.clientKey ?? line.id ?? `row-${idx}`}
-                  line={line}
-                  index={idx}
-                  viewing={viewing}
-                  t={t}
-                  onUpdate={handleUpdateLine}
-                  onRemove={handleRemoveLine}
-                />
-              ))
-            )}
-          </TableBody>
-          {lines.length > 0 && (
-            <TableFooter className="bg-muted/40 font-semibold border-t border-border">
-              <TableRow>
-                <TableCell
-                  colSpan={3}
-                  className="text-right p-2 font-bold text-xs"
-                >
-                  {t("v2.common.total", "Tổng cộng")}:
-                </TableCell>
-                <TableCell className="text-center p-2 text-xs">—</TableCell>
-                <TableCell className="text-right p-2 tabular-nums text-xs font-semibold">
-                  {totalQty.toLocaleString("vi-VN")}
-                </TableCell>
-                <TableCell className="text-right p-2 text-xs">—</TableCell>
-                <TableCell className="text-right p-2 tabular-nums font-bold text-primary text-xs">
-                  {totalAmount.toLocaleString("vi-VN")}
-                </TableCell>
-                {!viewing && <TableCell className="p-2" />}
-              </TableRow>
-            </TableFooter>
-          )}
-        </Table>
-      </div>
+      <V2DrawerLinesTable<GoodsReceiptFormLine>
+        ariaLabel={t(
+          "v2.goodsReceipts.lines.title",
+          "Chi tiết phụ tùng nhập kho",
+        )}
+        columns={layoutColumns}
+        rows={lines}
+        getRowKey={(line, idx) => line.clientKey ?? line.id ?? `row-${idx}`}
+        renderCell={renderCell}
+        footerLabel={`${t("v2.common.total", "Tổng cộng")}:`}
+        footerCells={{
+          unit: "—",
+          qtyReceived: totalQty.toLocaleString("vi-VN"),
+          unitCost: "—",
+          amount: totalAmount.toLocaleString("vi-VN"),
+        }}
+        emptyLabel={t(
+          "v2.goodsReceipts.lines.noParts",
+          "Chưa có phụ tùng nào trong phiếu nhập",
+        )}
+      />
     </DrawerSection>
   );
 }

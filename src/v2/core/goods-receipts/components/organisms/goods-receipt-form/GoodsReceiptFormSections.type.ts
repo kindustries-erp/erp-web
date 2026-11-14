@@ -1,4 +1,7 @@
-import type { GoodsReceiptFormValue } from "@/v2/core/goods-receipts";
+import type {
+  GoodsReceiptFormValue,
+  GoodsReceiptSourceOrderLoader,
+} from "@/v2/core/goods-receipts";
 
 export interface FormSectionsProps {
   form: GoodsReceiptFormValue;
@@ -12,6 +15,11 @@ export interface FormSectionsProps {
     key: K,
     value: GoodsReceiptFormValue[K],
   ) => void;
+  /** Có cấu hình thì phiếu gắn đơn mua: chọn đơn, NCC/chi nhánh/tổng đơn chỉ đọc */
+  sourceOrder?: GoodsReceiptSourceOrderLoader;
+  onPickOrder?: (orderId: string | null) => void;
+  /** Phiếu đã lưu kèm đơn mua: không đổi đơn */
+  orderLocked?: boolean;
   hideLines?: boolean;
   columns?: 1 | 2;
 }

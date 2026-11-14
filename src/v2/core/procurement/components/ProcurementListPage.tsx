@@ -25,6 +25,7 @@ export interface ProcurementPageDisplay<T> {
   buildColumns: (
     t: (key: string, fallback: string) => string,
     openDetail?: (id: string) => void,
+    openLinked?: (id: string) => void,
   ) => V2Column<T>[];
   /** Drawer chi tiết/sửa của họ chứng từ, dựng bởi module */
   renderDrawer: (props: ProcurementDrawerProps) => React.ReactNode;
@@ -124,6 +125,7 @@ export function ProcurementListPage<T extends { id: string }>({
                 api: config.api,
                 fromRequestId: drawer.fromRequestId ?? null,
                 approval: state.approval.gate,
+                approvalConfigPath: config.approvalConfigPath,
                 directConfirm: Boolean(config.directConfirmWhenApprovalOff),
                 requestApi: config.requestApi,
                 onTransition: (action, row) => {
@@ -131,6 +133,23 @@ export function ProcurementListPage<T extends { id: string }>({
                   if (target) state.start(target, action);
                 },
                 onSaved: state.openSaved,
+                receive:
+                  config.receiveHref && config.canReceive && state.canReceive
+                    ? {
+                        canReceive: (order) =>
+                          config.canReceive?.(order as unknown as T) ?? false,
+                        onReceive: (row) => {
+                          const target = resolveDrawerTarget<T>(row, drawer.id);
+                          if (target) state.receive(target);
+                        },
+                      }
+                    : undefined,
+                receiptHistory: config.loadReceipts
+                  ? {
+                      load: config.loadReceipts,
+                      onOpen: state.openReceipt,
+                    }
+                  : undefined,
                 canCreateOrder: state.canCreate && Boolean(config.poHref),
                 onOrderFromRequest: (row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);

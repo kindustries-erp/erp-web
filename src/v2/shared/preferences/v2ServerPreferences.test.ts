@@ -9,7 +9,7 @@ vi.mock("@/v2/shared/api/v2HttpClient", () => ({
 }));
 
 const TABLES_URL = "/api/v1/app/table-preferences";
-const V2_TABLES_URL = "/api/v2/table-preferences?tableIdPrefix=procurement-";
+const V2_TABLES_URL_PREFIX = "/api/v2/table-preferences?tableIdPrefix=";
 const USER_URL = "/api/v1/app/preferences";
 
 const mockResponses = (
@@ -19,7 +19,7 @@ const mockResponses = (
 ) =>
   vi.mocked(v2HttpClient.get).mockImplementation((url: string) => {
     if (url === TABLES_URL) return tables();
-    if (url === V2_TABLES_URL) return v2Tables();
+    if (url.startsWith(V2_TABLES_URL_PREFIX)) return v2Tables();
     return user();
   });
 
