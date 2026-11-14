@@ -51,7 +51,7 @@ describe("notificationsApi (v2)", () => {
     expect(result).toEqual([ITEM]);
   });
 
-  it("markAsRead gọi PATCH /:id/read", async () => {
+  it("markAsRead gọi PATCH /:id/read với _silentSuccess: true", async () => {
     vi.mocked(axiosInstance.patch).mockResolvedValue({
       data: { message: "ok" },
     } as any);
@@ -60,16 +60,20 @@ describe("notificationsApi (v2)", () => {
 
     expect(axiosInstance.patch).toHaveBeenCalledWith(
       "/api/v2/notifications-inbox/n-1/read",
+      undefined,
+      { _silentSuccess: true },
     );
   });
 
-  it("markAllAsRead gọi PATCH /read-all", async () => {
+  it("markAllAsRead gọi PATCH /read-all với _silentSuccess: true", async () => {
     vi.mocked(axiosInstance.patch).mockResolvedValue({ data: {} } as any);
 
     await notificationsApi.markAllAsRead();
 
     expect(axiosInstance.patch).toHaveBeenCalledWith(
       "/api/v2/notifications-inbox/read-all",
+      undefined,
+      { _silentSuccess: true },
     );
   });
 

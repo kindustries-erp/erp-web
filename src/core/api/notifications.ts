@@ -46,11 +46,15 @@ export const notificationsApi = {
     return res.data.items;
   },
   markAsRead: async (id: string): Promise<void> => {
-    const res = await axiosInstance.patch(`${BASE_URL}/${id}/read`);
+    const res = await axiosInstance.patch(`${BASE_URL}/${id}/read`, undefined, {
+      _silentSuccess: true,
+    });
     return res.data;
   },
   markAllAsRead: async (): Promise<void> => {
-    const res = await axiosInstance.patch(`${BASE_URL}/read-all`);
+    const res = await axiosInstance.patch(`${BASE_URL}/read-all`, undefined, {
+      _silentSuccess: true,
+    });
     return res.data;
   },
   delete: async (id: string): Promise<void> => {

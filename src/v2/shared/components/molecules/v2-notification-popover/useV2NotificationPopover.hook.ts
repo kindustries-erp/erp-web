@@ -31,7 +31,29 @@ export function useV2NotificationPopover({
 
   const markAsReadMutation = useMutation({
     mutationFn: (id: string) => notificationsApi.markAsRead(id),
-    onSuccess: () => {
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData<CoreNotification[]>([
+        "notifications",
+      ]);
+      if (previous) {
+        queryClient.setQueryData<CoreNotification[]>(
+          ["notifications"],
+          previous.map((n) =>
+            n.id === id
+              ? { ...n, isRead: true, readAt: new Date().toISOString() }
+              : n,
+          ),
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["notifications"], context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
@@ -45,7 +67,29 @@ export function useV2NotificationPopover({
 
   const markAllAsReadMutation = useMutation({
     mutationFn: () => notificationsApi.markAllAsRead(),
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData<CoreNotification[]>([
+        "notifications",
+      ]);
+      if (previous) {
+        queryClient.setQueryData<CoreNotification[]>(
+          ["notifications"],
+          previous.map((n) => ({
+            ...n,
+            isRead: true,
+            readAt: new Date().toISOString(),
+          })),
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["notifications"], context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
@@ -57,15 +101,17 @@ export function useV2NotificationPopover({
     },
   });
 
-  // Click nội dung thông báo: điều hướng và đóng panel (desktop và mobile) để không che modal/drawer.
-  // Đánh dấu đã đọc do icon riêng đảm nhiệm.
+  // Click nội dung thông báo: tự động đánh dấu đã đọc (nếu chưa đọc), điều hướng và đóng panel.
   const handleNotificationItemClick = React.useCallback(
     (notif: CoreNotification) => {
+      if (!notif.isRead) {
+        markAsReadMutation.mutate(notif.id);
+      }
       onNotificationClick?.(notif);
       setMobileOpen(false);
       setDesktopOpen(false);
     },
-    [onNotificationClick],
+    [onNotificationClick, markAsReadMutation],
   );
 
   return {

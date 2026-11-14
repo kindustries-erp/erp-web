@@ -201,6 +201,7 @@ describe("V2NotificationPopover Molecule", () => {
       expect(handleNotificationClick).toHaveBeenCalledWith(
         mockNotifications[0],
       );
+      expect(notificationsApi.markAsRead).toHaveBeenCalledWith("notif-1");
       expect(screen.queryByText("Đơn hàng mới #1001")).not.toBeInTheDocument();
     });
   });
@@ -267,14 +268,14 @@ describe("V2NotificationPopover Molecule", () => {
     expect(screen.getByText("Thông báo")).toBeInTheDocument();
     expect(screen.getByText("Đơn hàng mới #1001")).toBeInTheDocument();
 
-    // Click a notification item: chỉ điều hướng, không mark read
+    // Click a notification item: tự động mark read và gọi callback điều hướng
     fireEvent.click(screen.getByText("Đơn hàng mới #1001"));
     await waitFor(() => {
       expect(handleNotificationClick).toHaveBeenCalledWith(
         mockNotifications[0],
       );
+      expect(notificationsApi.markAsRead).toHaveBeenCalledWith("notif-1");
     });
-    expect(notificationsApi.markAsRead).not.toHaveBeenCalled();
   });
 
   it("applies high-contrast Light theme classes while preserving Dark variants and supports per-item delete", async () => {
