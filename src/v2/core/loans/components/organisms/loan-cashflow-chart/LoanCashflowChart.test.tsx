@@ -53,4 +53,53 @@ describe("LoanCashflowChart", () => {
     expect(screen.getByText("Tiền lãi")).toBeInTheDocument();
     expect(screen.getByText(/Dư nợ còn lại/i)).toBeInTheDocument();
   });
+
+  it("có dữ liệu đã trả thực tế thì tách đã trả/còn phải trả, legend chỉ hiện một mục mỗi khoản", () => {
+    const schedule = [
+      {
+        monthKey: "2026-11",
+        principalDue: 0,
+        interestDue: 0,
+        remainingPrincipal: 90000000,
+        isPaid: true,
+        breakdown: [
+          {
+            loanId: "l1",
+            loanName: "Vay Vietcombank",
+            principalDue: 10000000,
+            interestDue: 2000000,
+            totalPayment: 12000000,
+            scheduledTotal: 12000000,
+            actualTotalPaid: 12000000,
+            isPaid: true,
+          },
+        ],
+      },
+      {
+        monthKey: "2026-12",
+        principalDue: 10000000,
+        interestDue: 1500000,
+        remainingPrincipal: 80000000,
+        breakdown: [
+          {
+            loanId: "l1",
+            loanName: "Vay Vietcombank",
+            principalDue: 10000000,
+            interestDue: 1500000,
+            totalPayment: 11500000,
+            scheduledTotal: 11500000,
+            actualTotalPaid: 0,
+            isPaid: false,
+          },
+        ],
+      },
+    ];
+
+    render(<LoanCashflowChart schedule={schedule} />);
+
+    // Một khoản: vẫn hiện tên khoản làm legend, không hiện Tiền gốc/Tiền lãi
+    expect(screen.getAllByText("Vay Vietcombank").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Tiền gốc")).not.toBeInTheDocument();
+    expect(screen.getByText("Dư nợ còn lại")).toBeInTheDocument();
+  });
 });

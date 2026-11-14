@@ -1,7 +1,8 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import { useCashflowProjectionQuery } from "../../../api";
 import type { MonthlyProjectionRow } from "./ConsolidatedCashflowTable";
 import type { CashflowLoanItem } from "./CashflowLoanFilterPanel";
+import { useEnabledLoanIds } from "./useEnabledLoanIds";
 
 export function useConsolidatedCashflow() {
   const { data, isLoading } = useCashflowProjectionQuery(true);
@@ -22,19 +23,7 @@ export function useConsolidatedCashflow() {
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [data]);
 
-  const [enabledLoanIds, setEnabledLoanIds] = useState<Set<string>>(new Set());
-
-  // Initialize enabled loans to all loans when loaded
-  useEffect(() => {
-    if (allLoans.length > 0) {
-      setEnabledLoanIds((prev) => {
-        if (prev.size === 0) {
-          return new Set(allLoans.map((l) => l.id));
-        }
-        return prev;
-      });
-    }
-  }, [allLoans]);
+  const { enabledLoanIds, setEnabledLoanIds } = useEnabledLoanIds(allLoans);
 
   const handleToggleLoan = (id: string) => {
     setEnabledLoanIds((prev) => {

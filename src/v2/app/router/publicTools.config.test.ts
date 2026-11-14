@@ -29,12 +29,21 @@ describe("publicTools.config - resolvePublicTool", () => {
     expect(resolvePublicTool("/tools/unknown", false)).toBeNull();
   });
 
-  it("chứa nhóm tools và chuẩn URL /tools/*", () => {
+  it("khớp /loans-tool (URL chuẩn) khi chưa đăng nhập", () => {
+    expect(resolvePublicTool("/loans-tool", false)?.id).toBe("loans");
+    expect(resolvePublicTool("/loans-tool", true)).toBeNull();
+  });
+
+  it("chứa nhóm tools, path chuẩn và alias cho URL cũ", () => {
     for (const tool of PUBLIC_TOOLS) {
       expect(tool.id).toBeTruthy();
-      expect(tool.path.startsWith("/tools/")).toBe(true);
       expect(tool.sectionId).toBe("tools");
       expect(tool.component).toBeDefined();
     }
+    const loans = PUBLIC_TOOLS.find((t) => t.id === "loans");
+    expect(loans?.path).toBe("/loans-tool");
+    expect(loans?.aliasPaths).toEqual(
+      expect.arrayContaining(["/tools/loans", "/loans"]),
+    );
   });
 });

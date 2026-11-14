@@ -2,12 +2,12 @@ import * as React from "react";
 import { Chart } from "react-chartjs-2";
 import { V2ChartFrame } from "@/v2/shared/components/molecules/v2-chart-frame";
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
+import { defaultFormat } from "./V2Chart.options";
 import {
   buildComboData,
   buildComboOptions,
-  defaultFormat,
   prepareComboSeries,
-} from "./V2Chart.options";
+} from "./V2Chart.combo.options";
 import { registerV2Chart } from "./V2Chart.setup";
 import type { V2ComboChartProps } from "./V2Chart.type";
 
@@ -38,12 +38,15 @@ export const V2ComboChart: React.FC<V2ComboChartProps> = ({
     <V2ChartFrame
       labels={labels}
       series={prepared.series}
-      legend={prepared.series.map((s, i) => ({
-        key: s.key,
-        label: s.label,
-        color: prepared.colors[i] as string,
-        isLine: s.type === "line",
-      }))}
+      legend={prepared.series
+        .map((s, i) => ({ s, i }))
+        .filter(({ s }) => !s.legendHidden)
+        .map(({ s, i }) => ({
+          key: s.key,
+          label: s.label,
+          color: prepared.colors[i] as string,
+          isLine: s.type === "line",
+        }))}
       formatValue={formatValue}
       ariaLabel={ariaLabel}
       loading={loading}

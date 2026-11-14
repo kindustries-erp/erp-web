@@ -36,10 +36,12 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
     isSubmitting,
     handleSubmit,
     periodOptions,
+    isLoadingPayments,
     currentScheduledPeriod,
     handleFillFromSchedule,
     handleSettleAll,
     totalPaid,
+    allPeriodsPaid,
   } = useRecordPaymentModal(props);
 
   const modalTitle = isEdit
@@ -57,6 +59,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
         <RecordPaymentFooter
           totalPaid={totalPaid}
           isSubmitting={isSubmitting}
+          submitDisabled={allPeriodsPaid}
           onClose={onClose}
         />
       }
@@ -69,6 +72,12 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
         {error && (
           <div className="p-2.5 rounded-lg bg-destructive/10 text-destructive text-sm font-medium">
             {error}
+          </div>
+        )}
+
+        {allPeriodsPaid && (
+          <div className="p-2.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium">
+            {t("v2.loans.modal.allPeriodsPaid", "Đã thanh toán đủ các kỳ")}
           </div>
         )}
 
@@ -88,6 +97,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = (
               value={String(periodNumber)}
               onValueChange={(val) => val && setPeriodNumber(Number(val))}
               clearable={false}
+              disabled={isLoadingPayments}
               searchable={periodOptions.length > 8}
               className="w-full"
             />

@@ -6,16 +6,7 @@ import type { V2ComboSeries } from "@/v2/shared/components/organisms/v2-chart/V2
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 import { V2_CHART_SERIES } from "@/v2/shared/utils/v2ChartPalette";
 import type { LoanCashflowChartProps } from "./LoanCashflowChart.type";
-
-const EXTRA_LOAN_COLORS = {
-  light: ["#0d9488", "#be123c", "#65a30d", "#c2410c"],
-  dark: ["#2dd4bf", "#fb7185", "#a3e635", "#fb923c"],
-} as const;
-
-const BALANCE_LINE_COLOR = {
-  light: "#7c3aed",
-  dark: "#a78bfa",
-} as const;
+import { buildLoanCashflowSeries } from "./LoanCashflowChart.series";
 
 function formatCompact(val: number): string {
   if (Math.abs(val) >= 1_000_000_000) {
@@ -49,70 +40,22 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
     });
   }, [schedule]);
 
-  const series: V2ComboSeries[] = useMemo(() => {
-    const palette = [
-      ...V2_CHART_SERIES[chartTheme.mode],
-      ...EXTRA_LOAN_COLORS[chartTheme.mode],
-    ];
-
-    const loanMap = new Map<string, string>();
-    for (const period of schedule) {
-      for (const item of period.breakdown ?? []) {
-        if (!loanMap.has(item.loanId)) {
-          loanMap.set(item.loanId, item.loanName);
-        }
-      }
-    }
-
-    const remainingSeries: V2ComboSeries = {
-      key: "remaining",
-      label: t("v2.loans.cashflow.chartRemaining", "Dư nợ còn lại"),
-      type: "line",
-      color: BALANCE_LINE_COLOR[chartTheme.mode],
-      data: schedule.map((p) =>
-        Math.round(
-          p.endingBalance ??
-            p.remainingPrincipal ??
-            p.cumulativeRemainingPrincipal ??
-            0,
-        ),
-      ),
-      secondaryAxis: true,
-    };
-
-    if (loanMap.size > 1) {
-      const loanEntries = Array.from(loanMap.entries());
-      const loanSeries: V2ComboSeries[] = loanEntries.map(
-        ([loanId, loanName], idx) => ({
-          key: `loan-${loanId}`,
-          label: loanName,
-          type: "bar",
-          color: palette[idx % palette.length],
-          data: schedule.map((period) => {
-            const match = period.breakdown?.find((b) => b.loanId === loanId);
-            return Math.round(match?.totalPayment ?? 0);
-          }),
-        }),
-      );
-      return [...loanSeries, remainingSeries];
-    }
-
-    return [
-      {
-        key: "principal",
-        label: t("v2.loans.cashflow.chartPrincipal", "Tiền gốc"),
-        type: "bar",
-        data: schedule.map((p) => Math.round(p.principalDue)),
-      },
-      {
-        key: "interest",
-        label: t("v2.loans.cashflow.chartInterest", "Tiền lãi"),
-        type: "bar",
-        data: schedule.map((p) => Math.round(p.interestDue)),
-      },
-      remainingSeries,
-    ];
-  }, [schedule, t, chartTheme.mode]);
+  const series: V2ComboSeries[] = useMemo(
+    () =>
+      buildLoanCashflowSeries({
+        schedule,
+        palette: V2_CHART_SERIES[chartTheme.mode],
+        balanceColor: chartTheme.textPrimary,
+        labels: {
+          paid: t("v2.loans.cashflow.chartPaid", "Đã trả"),
+          unpaid: t("v2.loans.cashflow.chartUnpaid", "Còn phải trả"),
+          remaining: t("v2.loans.cashflow.chartRemaining", "Dư nợ còn lại"),
+          principal: t("v2.loans.cashflow.chartPrincipal", "Tiền gốc"),
+          interest: t("v2.loans.cashflow.chartInterest", "Tiền lãi"),
+        },
+      }),
+    [schedule, t, chartTheme.mode, chartTheme.textPrimary],
+  );
 
   if (!schedule || schedule.length === 0) {
     return null;

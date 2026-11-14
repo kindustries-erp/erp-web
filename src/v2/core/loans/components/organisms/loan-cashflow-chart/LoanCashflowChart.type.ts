@@ -4,6 +4,11 @@ export interface LoanChartBreakdownItem {
   principalDue: number;
   interestDue: number;
   totalPayment: number;
+  /** Số theo lịch gốc (không bị 0 hóa khi đã trả) */
+  scheduledTotal?: number;
+  /** Số thực tế đã trả của kỳ này (chỉ có ở projection) */
+  actualTotalPaid?: number;
+  isPaid?: boolean;
 }
 
 export interface LoanChartItem {

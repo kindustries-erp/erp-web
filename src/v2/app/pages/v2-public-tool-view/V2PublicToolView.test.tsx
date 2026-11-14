@@ -11,7 +11,7 @@ const DummyToolComponent: React.FC = () => (
 
 const mockTool: V2PublicToolDef = {
   id: "tools-loans",
-  path: "/tools/loans",
+  path: "/loans-tool",
   sectionId: "tools",
   labelKey: "v2.nav.items.loans",
   fallback: "Khoản vay & Dòng tiền",

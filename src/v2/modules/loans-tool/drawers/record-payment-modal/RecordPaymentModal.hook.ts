@@ -1,27 +1,18 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import type { LoanSchedulePeriod } from "@/v2/core/loans";
 import { useRecordPaymentMutation, useUpdatePaymentMutation } from "../../api";
 import type { RecordPaymentModalProps } from "./RecordPaymentModal.type";
-import {
-  buildPeriodOptions,
-  resolveEffectiveSchedule,
-  resolveInitialPayment,
-} from "./RecordPaymentModal.helper";
+import { resolveInitialPayment } from "./RecordPaymentModal.helper";
+import { buildPeriodOptions } from "./RecordPaymentModal.periods";
+import { useRecordPaymentContext } from "./useRecordPaymentContext";
 import { submitPaymentForm } from "./RecordPaymentModal.submit";
-
-const EMPTY_PAID: number[] = [];
 
 export function useRecordPaymentModal(props: RecordPaymentModalProps) {
   const {
     open,
     onClose,
     loanId,
-    loan,
-    schedule: propSchedule,
-    paidPeriodNumbers = EMPTY_PAID,
     remainingPrincipal = 0,
-    suggestedPeriod = 1,
     suggestedPrincipal = 0,
     suggestedInterest = 0,
     mode = "create",
@@ -31,12 +22,17 @@ export function useRecordPaymentModal(props: RecordPaymentModalProps) {
   const recordPaymentMutation = useRecordPaymentMutation();
   const updatePaymentMutation = useUpdatePaymentMutation();
 
-  const effectiveSchedule = useMemo<LoanSchedulePeriod[]>(
-    () => resolveEffectiveSchedule(propSchedule, loan),
-    [propSchedule, loan],
-  );
+  const {
+    effectiveSchedule,
+    paidByPeriod,
+    initialPeriod,
+    allPeriodsPaid,
+    isLoadingPayments,
+  } = useRecordPaymentContext(props);
 
-  const [periodNumber, setPeriodNumber] = useState<number>(suggestedPeriod);
+  const isEdit = mode === "edit" && Boolean(editPayment?.id);
+
+  const [periodNumber, setPeriodNumber] = useState<number>(initialPeriod);
   const [paymentDate, setPaymentDate] = useState<string>(
     new Date().toISOString().split("T")[0],
   );
@@ -47,11 +43,6 @@ export function useRecordPaymentModal(props: RecordPaymentModalProps) {
   const [notes, setNotes] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
-  const isEdit = mode === "edit" && Boolean(editPayment?.id);
-  const paidSet = useMemo(
-    () => new Set(paidPeriodNumbers),
-    [paidPeriodNumbers],
-  );
   const currentScheduledPeriod = useMemo(
     () => effectiveSchedule.find((p) => p.periodNumber === periodNumber),
     [effectiveSchedule, periodNumber],
@@ -87,30 +78,35 @@ export function useRecordPaymentModal(props: RecordPaymentModalProps) {
     [effectiveSchedule, periodNumber],
   );
 
-  const prevOpenRef = useRef<boolean>(false);
+  // Khởi tạo form một lần mỗi lần mở, sau khi dữ liệu thanh toán đã sẵn sàng
+  const initializedRef = useRef<boolean>(false);
   useEffect(() => {
-    if (open && !prevOpenRef.current) {
-      const init = resolveInitialPayment(
-        suggestedPeriod,
-        suggestedPrincipal,
-        suggestedInterest,
-        effectiveSchedule,
-        isEdit ? editPayment : null,
-      );
-      setPeriodNumber(init.period);
-      setPrincipalPaid(init.pPaid);
-      setInterestPaid(init.iPaid);
-      setPaymentDate(init.pDate);
-      setPaymentReference(init.ref);
-      setNotes(init.notes);
-      setError(null);
+    if (!open) {
+      initializedRef.current = false;
+      return;
     }
-    prevOpenRef.current = open;
+    if (initializedRef.current || isLoadingPayments) return;
+    initializedRef.current = true;
+    const init = resolveInitialPayment(
+      initialPeriod,
+      suggestedPrincipal,
+      suggestedInterest,
+      effectiveSchedule,
+      isEdit ? editPayment : null,
+    );
+    setPeriodNumber(init.period);
+    setPrincipalPaid(init.pPaid);
+    setInterestPaid(init.iPaid);
+    setPaymentDate(init.pDate);
+    setPaymentReference(init.ref);
+    setNotes(init.notes);
+    setError(null);
   }, [
     open,
+    isLoadingPayments,
     isEdit,
     editPayment,
-    suggestedPeriod,
+    initialPeriod,
     suggestedPrincipal,
     suggestedInterest,
     effectiveSchedule,
@@ -134,8 +130,8 @@ export function useRecordPaymentModal(props: RecordPaymentModalProps) {
   }, [remainingPrincipal, currentScheduledPeriod]);
 
   const periodOptions = useMemo(
-    () => buildPeriodOptions(effectiveSchedule, paidSet),
-    [effectiveSchedule, paidSet],
+    () => buildPeriodOptions(effectiveSchedule, paidByPeriod, t),
+    [effectiveSchedule, paidByPeriod, t],
   );
 
   const totalPaid = (principalPaid || 0) + (interestPaid || 0);
@@ -186,5 +182,7 @@ export function useRecordPaymentModal(props: RecordPaymentModalProps) {
     handleFillFromSchedule,
     handleSettleAll,
     totalPaid,
+    allPeriodsPaid,
+    isLoadingPayments,
   };
 }

@@ -11,7 +11,11 @@ import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
-import { pathToPage, pageToPath } from "@/shared/utils/pageUrl";
+import {
+  LOANS_TOOL_PATH,
+  pathToPage,
+  pageToPath,
+} from "@/shared/utils/pageUrl";
 import { useEnvStore } from "@/core/store/useEnvStore";
 import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
 import { V2LoginPage } from "@/v2/modules/auth/pages/login/V2LoginPage";
@@ -452,7 +456,7 @@ export default function App() {
       if (parsed) {
         if (
           parsed.page === "loans" &&
-          location.pathname.replace(/\/+$/, "") !== "/tools/loans"
+          location.pathname.replace(/\/+$/, "") !== LOANS_TOOL_PATH
         ) {
           window.history.replaceState(
             null,

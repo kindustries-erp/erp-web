@@ -146,6 +146,8 @@ export const loansVi = {
     chartPrincipal: "Gốc phải trả",
     chartInterest: "Lãi phải trả",
     chartRemaining: "Dư nợ còn lại",
+    chartPaid: "Đã trả",
+    chartUnpaid: "Còn phải trả",
     tableTitle: "Chi Tiết Dòng Tiền Theo Tháng",
     tableSubtitle:
       "Tổng hợp nghĩa vụ trả gốc, lãi và dư nợ còn lại theo từng tháng",

@@ -6,12 +6,15 @@ import { formatVndCurrency } from "@/v2/core/loans";
 interface RecordPaymentFooterProps {
   totalPaid: number;
   isSubmitting: boolean;
+  /** Khóa nút xác nhận, ví dụ khi đã trả đủ mọi kỳ */
+  submitDisabled?: boolean;
   onClose: () => void;
 }
 
 export const RecordPaymentFooter: React.FC<RecordPaymentFooterProps> = ({
   totalPaid,
   isSubmitting,
+  submitDisabled = false,
   onClose,
 }) => {
   const { t } = useV2Translation();
@@ -40,6 +43,7 @@ export const RecordPaymentFooter: React.FC<RecordPaymentFooterProps> = ({
           form="record-payment-form"
           variant="primary"
           isLoading={isSubmitting}
+          disabled={submitDisabled || isSubmitting}
         >
           {t("v2.loans.modal.confirmPayment", "Xác nhận thanh toán")}
         </V2Button>

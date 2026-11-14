@@ -66,7 +66,7 @@ describe("LoansListPage Mobile", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    window.history.replaceState(null, "", "/tools/loans");
+    window.history.replaceState(null, "", "/loans-tool");
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -103,7 +103,7 @@ describe("LoansListPage Mobile", () => {
   });
 
   it("hiển thị V2StandardTableMobile ở tab Danh Sách Hợp Đồng trên mobile", async () => {
-    window.history.replaceState(null, "", "/tools/loans?tab=list");
+    window.history.replaceState(null, "", "/loans-tool?tab=list");
     renderPage();
 
     expect(

@@ -13,7 +13,8 @@ export interface RecordPaymentModalProps {
   remainingPrincipal?: number;
   loan?: LoanItem;
   schedule?: LoanSchedulePeriod[];
-  paidPeriodNumbers?: number[];
+  /** Thanh toán đã ghi nhận. Bỏ trống thì modal tự tải chi tiết khoản vay. */
+  payments?: LoanPaymentRecord[];
   suggestedPeriod?: number;
   suggestedPrincipal?: number;
   suggestedInterest?: number;

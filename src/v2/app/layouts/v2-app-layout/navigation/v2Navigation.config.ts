@@ -126,7 +126,7 @@ export const NAV_DEFS: RawNavDef[] = [
     labelKey: "v2.nav.items.loans",
     fallback: "Khoản vay & Dòng tiền",
     icon: Calculator,
-    href: "/tools/loans",
+    href: "/loans-tool",
   },
   {
     id: "settings-app",

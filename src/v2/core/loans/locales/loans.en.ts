@@ -146,6 +146,8 @@ export const loansEn = {
     chartPrincipal: "Principal Due",
     chartInterest: "Interest Due",
     chartRemaining: "Remaining Balance",
+    chartPaid: "Paid",
+    chartUnpaid: "Still Due",
     tableTitle: "Monthly Cashflow Breakdown",
     tableSubtitle:
       "Consolidated monthly principal, interest and remaining balance",

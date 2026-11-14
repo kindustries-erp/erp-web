@@ -49,6 +49,12 @@ export const loansViForm = {
     remainingPrincipal: "Dư nợ còn lại",
     scheduledDue: "Dự kiến kỳ này",
     periodOption: "Kỳ {{period}} (Hạn {{dueDate}}) — Dự kiến {{amount}}",
+    periodPaidTag: "Đã trả",
+    periodPaidTooltipPrincipal: "Gốc đã trả",
+    periodPaidTooltipInterest: "Lãi đã trả",
+    periodPaidTooltipTotal: "Tổng đã trả",
+    periodPaidTooltipDate: "Ngày thanh toán",
+    allPeriodsPaid: "Đã thanh toán đủ các kỳ",
   },
   toast: {
     paymentRecordedTitle: "Đã ghi nhận thanh toán",

@@ -1,6 +1,6 @@
 import React from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2Text } from "@/v2/shared/components";
+import { V2Panel, V2Text } from "@/v2/shared/components";
 import { formatVndCurrency } from "@/v2/core/loans";
 
 interface RecordPaymentSummaryCardProps {
@@ -14,8 +14,9 @@ export const RecordPaymentSummaryCard: React.FC<
 > = ({ remainingPrincipal, scheduledDue, periodNumber }) => {
   const { t } = useV2Translation();
 
+  // border-input khớp viền của V2Combobox/V2Input bên dưới, không dùng độ mờ
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-muted/40 border border-border/60">
+    <V2Panel className="grid grid-cols-1 gap-3 border-input bg-background p-3 sm:grid-cols-2">
       <div>
         <V2Text variant="caption" color="muted" className="block">
           {t("v2.loans.modal.remainingPrincipal", "Dư nợ còn lại")}
@@ -33,7 +34,7 @@ export const RecordPaymentSummaryCard: React.FC<
           {formatVndCurrency(scheduledDue ?? 0)}
         </V2Text>
       </div>
-    </div>
+    </V2Panel>
   );
 };
 

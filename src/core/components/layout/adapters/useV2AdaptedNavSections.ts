@@ -559,7 +559,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           id: "loans",
           label: t("nav.items.loans", "Khoản vay & Lãi suất"),
           icon: Calculator,
-          href: "/tools/loans",
+          href: "/loans-tool",
         },
       ],
     });

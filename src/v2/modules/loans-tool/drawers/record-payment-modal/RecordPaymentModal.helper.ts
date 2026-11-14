@@ -1,18 +1,10 @@
 import type { LoanItem, LoanSchedulePeriod } from "@/v2/core/loans";
-import {
-  formatVndCurrency,
-  generateAmortizationSchedule,
-} from "@/v2/core/loans";
+import { generateAmortizationSchedule } from "@/v2/core/loans";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import type {
   useRecordPaymentMutation,
   useUpdatePaymentMutation,
 } from "../../api";
-
-export interface PeriodOptionItem {
-  value: string;
-  label: string;
-}
 
 export function resolveEffectiveSchedule(
   propSchedule?: LoanSchedulePeriod[],
@@ -30,26 +22,6 @@ export function resolveEffectiveSchedule(
     }).schedule;
   }
   return [];
-}
-
-export function buildPeriodOptions(
-  schedule: LoanSchedulePeriod[],
-  paidSet: Set<number>,
-): PeriodOptionItem[] {
-  if (schedule.length > 0) {
-    return schedule.map((p) => {
-      const isPaid = paidSet.has(p.periodNumber);
-      const tag = isPaid ? " [Đã trả]" : "";
-      return {
-        value: String(p.periodNumber),
-        label: `Kỳ ${p.periodNumber} (${p.dueDate}) — ${formatVndCurrency(p.totalPaymentDue)}${tag}`,
-      };
-    });
-  }
-  return Array.from({ length: 12 }, (_, i) => ({
-    value: String(i + 1),
-    label: `Kỳ ${i + 1}`,
-  }));
 }
 
 export function validatePaymentInput(

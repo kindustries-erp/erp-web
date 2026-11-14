@@ -52,5 +52,6 @@ export function useCashflowProjectionQuery(includeAllPeriods = false) {
     queryKey: [...loansKeys.cashflow(), { includeAllPeriods }],
     queryFn: () => loansApi.getCashflow(includeAllPeriods),
     staleTime: 60_000,
+    refetchOnMount: "always",
   });
 }

@@ -76,12 +76,7 @@ export const LoansListPage: React.FC<LoansListPageProps> = ({ className }) => {
                 state.paymentModalLoan.remainingPrincipal || 0,
               )}
               schedule={state.paymentModalLoan.schedule}
-              paidPeriodNumbers={state.paymentModalLoan.payments?.map((p) =>
-                Number(p.periodNumber),
-              )}
-              suggestedPeriod={
-                (state.paymentModalLoan.payments?.length ?? 0) + 1
-              }
+              payments={state.paymentModalLoan.payments}
             />
           )}
 

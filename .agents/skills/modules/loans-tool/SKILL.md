@@ -7,9 +7,9 @@ description: Module tri thức Frontend Quản lý Khoản Vay & Mô Phỏng Dò
 
 ## 1. Tổng quan Nghiệp vụ
 
-Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn chỉnh theo chuẩn V2 Architecture với **URL thống nhất `/tools/loans`** cho cả khách chưa đăng nhập và người dùng ERP:
-- **Chế độ Khách (Chưa đăng nhập - `/tools/loans`)**: Truy cập ngay lập tức không cần đăng nhập thông qua `V2PublicToolView` (`V2AppLayout`, `hideBottomNav={!isLoggedIn}` ẩn Bottom Nav trên Mobile, Sidebar Desktop hiển thị nhóm **CÔNG CỤ** và nút **Đăng nhập**). Khi chưa đăng nhập, nút "Đăng nhập để lưu vào ERP" lưu bản nháp vào `sessionStorage` và chuyển hướng sang `/login?redirect=/tools/loans` (tự động quay lại `/tools/loans` sau khi đăng nhập thành công).
-- **Chế độ ERP (Đã đăng nhập - `/tools/loans` hoặc `/v2/loans`)**: Dành cho người dùng nội bộ có quyền `loans:read`. Render `LoansListPage` theo khung `V2ModulePage` với `variant={V2ModulePageVariant.CARD}` (Header Card có `Calculator` icon + thanh tab pill kèm `border-b`), `defaultTab={LoansTabKey.SIMULATOR}`, `syncUrl=true` đồng bộ `?tab=simulator|projection|list` (giữ lazy-load cho tab `list`) gồm 3 tab:
+Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn chỉnh theo chuẩn V2 Architecture với **URL thống nhất `/loans-tool`** (URL cũ `/tools/loans` và `/loans` là alias, chuyển hướng về `/loans-tool` giữ query) cho cả khách chưa đăng nhập và người dùng ERP:
+- **Chế độ Khách (Chưa đăng nhập - `/loans-tool`)**: Truy cập ngay lập tức không cần đăng nhập thông qua `V2PublicToolView` (`V2AppLayout`, `hideBottomNav={!isLoggedIn}` ẩn Bottom Nav trên Mobile, Sidebar Desktop hiển thị nhóm **CÔNG CỤ** và nút **Đăng nhập**). Khi chưa đăng nhập, nút "Đăng nhập để lưu vào ERP" lưu bản nháp vào `sessionStorage` và chuyển hướng sang `/login?redirect=/loans-tool` (tự động quay lại `/loans-tool` sau khi đăng nhập thành công).
+- **Chế độ ERP (Đã đăng nhập - `/loans-tool` hoặc `/v2/loans`)**: Dành cho người dùng nội bộ có quyền `loans:read`. Render `LoansListPage` theo khung `V2ModulePage` với `variant={V2ModulePageVariant.CARD}` (Header Card có `Calculator` icon + thanh tab pill kèm `border-b`), `defaultTab={LoansTabKey.SIMULATOR}`, `syncUrl=true` đồng bộ `?tab=simulator|projection|list` (giữ lazy-load cho tab `list`) gồm 3 tab:
   1. *Mô Phỏng & Tính Nhanh* (`simulator`, `kind="dashboard"`): Nhúng trực tiếp `LoanSimulatorPage` để tính toán nhanh ngay trong phiên làm việc; khi lưu thành công chuyển sang `?tab=list`.
   2. *Dòng Tiền* (`projection`, `kind="dashboard"`): Gọi API `/api/v2/loans-tool/cashflow/projection?includeAllPeriods=true` hiển thị toàn bộ kỳ đã trả và tương lai, bộ lọc checkbox từng khoản vay (`CashflowLoanFilterPanel`), 3 thẻ KPI (`ConsolidatedCashflowKpis`: Tổng phải trả, Đã thanh toán, Dư nợ còn lại), biểu đồ `LoanCashflowChart` và bảng chi tiết `ConsolidatedCashflowTable`.
   3. *Danh Sách Hợp Đồng* (`list`, `kind="list"`): `V2ModuleListTab` + `V2StandardTable` (`mode="server"`, `tableId="loans-master-table"`, `v2ColumnPreferencesStorage`, `v2ViewPresetStorage`), nhận response `{ items, pagination: { page, pageSize, total, totalPages }, summaries }`, gửi `summary_keys` và hiển thị hàng tổng (`principalAmount`, `totalPaidPrincipal`, `remainingPrincipal`), `headerFilter` + `fetchOptions` (`/api/v2/loans-tool/column-options`), `viewModes` (`overview` / `all`), `filterGroup` (`Tất cả`, 4 trạng thái, `Đã xóa mềm`), Xóa mềm (`loans:delete`) & Xóa vĩnh viễn (`loans:purge`, ở mode `Đã xóa mềm`) kèm `V2ConfirmModal`.
@@ -47,14 +47,14 @@ Module `loans` trong `erp-web` cung cấp bộ công cụ tài chính hoàn ch�
 ## 3. Điều Hướng & Routing
 
 1. **Public Tool Route (Guest Mode)**:
-   - Đăng ký trong `src/v2/app/router/publicTools.config.ts` (`PUBLIC_TOOLS` với `path: "/tools/loans"`, `aliasPaths: ["/loans"]`).
-   - `src/App.tsx` dùng `resolvePublicTool(location.pathname, isLoggedIn)` render `<AppProviders allowAnonymous><V2PublicToolView tool={publicTool} isLoggedIn={false} /></AppProviders>` và chuẩn hóa alias `/loans` về `/tools/loans`.
+   - Đăng ký trong `src/v2/app/router/publicTools.config.ts` (`PUBLIC_TOOLS` với `path: "/loans-tool"`, `aliasPaths: ["/tools/loans", "/loans"]`).
+   - `src/App.tsx` dùng `resolvePublicTool(location.pathname, isLoggedIn)` render `<AppProviders allowAnonymous><V2PublicToolView tool={publicTool} isLoggedIn={false} /></AppProviders>` và chuẩn hóa alias `/tools/loans` và `/loans` về `/loans-tool`.
 2. **V2 Route**:
-   - `src/v2/app/router/v2RouteConfig.ts`: đăng ký `/tools/loans` và `/v2/loans` (`permission: { collection: "loans", action: "read" }`).
+   - `src/v2/app/router/v2RouteConfig.ts`: đăng ký `/loans-tool` và `/v2/loans` (`permission: { collection: "loans", action: "read" }`).
    - `src/v2/app/router/v2PageRegistry.tsx`: ánh xạ `"loans": () => <LoansListPage />`.
-   - `src/v2/app/layouts/v2-app-layout/navigation/v2Navigation.config.ts`: mục menu sidebar thuộc nhóm `tools` (`href: "/tools/loans"`, icon `Calculator`).
+   - `src/v2/app/layouts/v2-app-layout/navigation/v2Navigation.config.ts`: mục menu sidebar thuộc nhóm `tools` (`href: "/loans-tool"`, icon `Calculator`).
 3. **V1 Shell Navigation**:
-   - Đăng ký `"loans"` trong `PageKey`, `ALL_PAGE_KEYS`, `pageToPath` / `pathToPage` (`"tools/loans"`), `ErpResource.LOANS`, `PAGE_COMPONENTS`, `V2ShellLayout` breadcrumb (`case "loans":` -> `Công cụ > Khoản vay & Lãi suất`), và `useV2AdaptedNavSections` (`href: "/tools/loans"`).
+   - Đăng ký `"loans"` trong `PageKey`, `ALL_PAGE_KEYS`, `pageToPath` / `pathToPage` (`LOANS_TOOL_PATH = "/loans-tool"`, nhận cả `tools/loans`), `ErpResource.LOANS`, `PAGE_COMPONENTS`, `V2ShellLayout` breadcrumb (`case "loans":` -> `Công cụ > Khoản vay & Lãi suất`), và `useV2AdaptedNavSections` (`href: "/loans-tool"`).
 
 ---
 
@@ -86,3 +86,12 @@ grep -rn "blue-" erp/erp-web/src/v2/modules/loans-tool erp/erp-web/src/v2/core/l
 - Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
 - Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
 - Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.
+
+## Contract modal Ghi nhận thanh toán (cập nhật)
+- Props: `payments?: LoanPaymentRecord[]` thay cho `paidPeriodNumbers`. Bỏ trống `payments` thì modal tự tải chi tiết khoản vay (`useLoanDetailQuery`), nên mở từ danh sách vẫn có kỳ đã trả.
+- Hook dữ liệu: `useRecordPaymentContext.ts` (lịch tính lại bằng `recalculateAmortizationSchedule`, bản đồ kỳ đã trả, kỳ gợi ý = kỳ chưa trả đầu tiên, cờ `allPeriodsPaid`).
+- Dropdown kỳ: `RecordPaymentModal.periods.ts`. Kỳ đã trả bị `disabled`, có tooltip chi tiết gốc/lãi/tổng/ngày. Chế độ sửa vẫn chọn được kỳ của chính thanh toán.
+- Khi `allPeriodsPaid`: hiện thông báo và khóa nút xác nhận (`RecordPaymentFooter.submitDisabled`).
+- Shared: `V2ComboboxOption.tooltip?: ReactNode` (desktop: `V2Tooltip`, mobile: dòng phụ dưới nhãn).
+- Card tóm tắt dùng `V2Panel` với `border-input`, khớp viền input bên dưới.
+- URL module: `LOANS_TOOL_PATH = "/loans-tool"` (`shared/utils/pageUrl.ts`).

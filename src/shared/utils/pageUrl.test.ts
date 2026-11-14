@@ -1,10 +1,28 @@
 import { describe, expect, it } from "vitest";
 import {
+  LOANS_TOOL_PATH,
   pageToPath,
   pathToPage,
   encodeStateParam,
   decodeStateParam,
 } from "./pageUrl";
+
+describe("URL khoản vay (loans-tool)", () => {
+  it("LOANS_TOOL_PATH là /loans-tool", () => {
+    expect(LOANS_TOOL_PATH).toBe("/loans-tool");
+  });
+
+  it("pageToPath sinh /loans-tool kèm tab", () => {
+    expect(pageToPath("loans", "list")).toBe("/loans-tool?tab=list");
+    expect(pageToPath("loans")).toBe("/loans-tool");
+  });
+
+  it("pathToPage nhận cả URL chuẩn và URL cũ /tools/loans", () => {
+    expect(pathToPage("/loans-tool", "?tab=list")?.page).toBe("loans");
+    expect(pathToPage("/loans-tool", "?tab=list")?.tab).toBe("list");
+    expect(pathToPage("/tools/loans", "")?.page).toBe("loans");
+  });
+});
 
 describe("pageUrl with report dashboards", () => {
   it("serializes sales report dashboard path", () => {

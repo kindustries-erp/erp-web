@@ -59,7 +59,7 @@ describe("LoansListPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    window.history.replaceState(null, "", "/tools/loans");
+    window.history.replaceState(null, "", "/loans-tool");
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -145,7 +145,7 @@ describe("LoansListPage", () => {
   });
 
   it("tải thẳng tab list khi URL có ?tab=list", async () => {
-    window.history.replaceState(null, "", "/tools/loans?tab=list");
+    window.history.replaceState(null, "", "/loans-tool?tab=list");
     renderPage();
 
     expect(await screen.findByText("LOAN-001")).toBeDefined();
@@ -153,7 +153,7 @@ describe("LoansListPage", () => {
   });
 
   it("hỗ trợ xóa mềm khoản vay qua V2ConfirmModal", async () => {
-    window.history.replaceState(null, "", "/tools/loans?tab=list");
+    window.history.replaceState(null, "", "/loans-tool?tab=list");
     removeMock.mockResolvedValueOnce(undefined);
     renderPage();
 
@@ -179,7 +179,7 @@ describe("LoansListPage", () => {
   });
 
   it("lọc Đã xóa mềm gửi deleted=only và cho phép xóa vĩnh viễn", async () => {
-    window.history.replaceState(null, "", "/tools/loans?tab=list");
+    window.history.replaceState(null, "", "/loans-tool?tab=list");
     purgeMock.mockResolvedValueOnce({ id: "loan-1" });
     renderPage();
 

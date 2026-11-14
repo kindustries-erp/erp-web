@@ -1,6 +1,9 @@
 import { PageKey } from "@/shared/types";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 
+/** URL chuẩn của module khoản vay, thống nhất với API `api/v2/loans-tool`. */
+export const LOANS_TOOL_PATH = "/loans-tool";
+
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
   "opex",
@@ -233,7 +236,7 @@ export function pageToPath(
   if (page === "permission" || page === "erp-permissions-core") {
     slug = "permission";
   } else if (page === "loans") {
-    slug = "tools/loans";
+    slug = LOANS_TOOL_PATH.slice(1);
   }
   const base = slug ? `/${slug}` : "/";
   const searchParams = new URLSearchParams();
@@ -297,7 +300,7 @@ export function pathToPage(
     page = "garage-cases";
   } else if (slug === "garage-cashflow") {
     page = "garage-cashflow";
-  } else if (slug === "tools/loans") {
+  } else if (slug === "loans-tool" || slug === "tools/loans") {
     page = "loans";
   } else if (
     slug === "permission" ||

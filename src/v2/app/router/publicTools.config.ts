@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import { Calculator } from "lucide-react";
+import { LOANS_TOOL_PATH } from "@/shared/utils/pageUrl";
 
 const LoanSimulatorPage = React.lazy(() =>
   import("@/v2/modules/loans-tool/pages/loan-simulator").then((m) => ({
@@ -20,14 +21,14 @@ export interface V2PublicToolDef {
 }
 
 /**
- * Registry các công cụ public của ERP (chuẩn URL `/tools/*`).
+ * Registry các công cụ public của ERP. Path chuẩn lấy từ `path`; URL cũ đặt trong `aliasPaths` và được chuyển hướng về path chuẩn.
  * Trong tương lai, muốn thêm công cụ public mới chỉ cần khai báo một mục vào mảng này.
  */
 export const PUBLIC_TOOLS: V2PublicToolDef[] = [
   {
     id: "loans",
-    path: "/tools/loans",
-    aliasPaths: ["/loans"],
+    path: LOANS_TOOL_PATH,
+    aliasPaths: ["/tools/loans", "/loans"],
     sectionId: "tools",
     labelKey: "v2.nav.items.loans",
     fallback: "Khoản vay & Dòng tiền",

@@ -41,6 +41,12 @@ export interface V2ComboSeries extends V2ChartSeries {
   borderWidth?: number;
   tension?: number;
   secondaryAxis?: boolean;
+  /** Ẩn mục này khỏi legend (dùng khi một nhóm đã có mục đại diện) */
+  legendHidden?: boolean;
+  /** Nhãn hiển thị trong tooltip thay cho `label` */
+  tooltipLabel?: string;
+  /** Độ trong suốt của màu nền cột (0–1), dùng cho phần chưa trả */
+  fillAlpha?: number;
 }
 
 export interface V2ComboChartProps extends V2ChartBaseProps {

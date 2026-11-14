@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { V2Icon } from "@/v2/shared/components/atoms/v2-icon";
 import { V2Spinner } from "@/v2/shared/components/atoms/v2-spinner";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2Tooltip } from "@/v2/shared/components/atoms/v2-tooltip/V2Tooltip";
 import { cn } from "@/v2/shared/utils/cn";
 import type { V2ComboboxOption } from "./V2Combobox.type";
 
@@ -57,7 +58,7 @@ export const V2ComboboxList: React.FC<V2ComboboxListProps> = ({
     )}
     {options.map((option, index) => {
       const isSelected = option.value === value;
-      return (
+      const row = (
         <li
           key={option.value}
           role="option"
@@ -105,8 +106,25 @@ export const V2ComboboxList: React.FC<V2ComboboxListProps> = ({
                 {option.description}
               </V2Text>
             )}
+            {isMobile && option.tooltip && (
+              <div className="mt-0.5 whitespace-normal text-xs leading-snug text-muted-foreground">
+                {option.tooltip}
+              </div>
+            )}
           </div>
         </li>
+      );
+      if (!option.tooltip) return row;
+      return (
+        <V2Tooltip
+          key={option.value}
+          content={option.tooltip}
+          side="right"
+          align="start"
+          asChild
+        >
+          {row}
+        </V2Tooltip>
       );
     })}
   </ul>

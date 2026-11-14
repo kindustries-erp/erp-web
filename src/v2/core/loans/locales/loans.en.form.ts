@@ -49,6 +49,12 @@ export const loansEnForm = {
     remainingPrincipal: "Remaining Principal",
     scheduledDue: "Scheduled Due",
     periodOption: "Period {{period}} (Due {{dueDate}}) — Expected {{amount}}",
+    periodPaidTag: "Paid",
+    periodPaidTooltipPrincipal: "Principal paid",
+    periodPaidTooltipInterest: "Interest paid",
+    periodPaidTooltipTotal: "Total paid",
+    periodPaidTooltipDate: "Payment date",
+    allPeriodsPaid: "All periods have been paid",
   },
   toast: {
     paymentRecordedTitle: "Payment recorded",
