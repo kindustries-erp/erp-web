@@ -86,6 +86,16 @@ export interface PortfolioMonthlyPeriod {
   totalPayment: number;
   remainingPrincipal: number;
   loansCount: number;
+  scheduledPrincipalDue?: number;
+  scheduledInterestDue?: number;
+  scheduledTotalDue?: number;
+  actualPrincipalPaid?: number;
+  actualInterestPaid?: number;
+  actualTotalPaid?: number;
+  remainingPrincipalDue?: number;
+  remainingInterestDue?: number;
+  remainingTotalDue?: number;
+  isPaid?: boolean;
   breakdown?: Array<{
     loanId: string;
     loanName: string;
@@ -94,6 +104,16 @@ export interface PortfolioMonthlyPeriod {
     interestDue: number;
     totalPayment: number;
     endingBalance: number;
+    scheduledPrincipal?: number;
+    scheduledInterest?: number;
+    scheduledTotal?: number;
+    actualPrincipalPaid?: number;
+    actualInterestPaid?: number;
+    actualTotalPaid?: number;
+    remainingPrincipal?: number;
+    remainingInterest?: number;
+    remainingTotal?: number;
+    isPaid?: boolean;
   }>;
 }
 

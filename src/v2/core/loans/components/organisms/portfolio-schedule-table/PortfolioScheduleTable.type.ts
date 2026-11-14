@@ -5,4 +5,12 @@ export interface PortfolioScheduleTableProps {
   title?: string;
   description?: string;
   className?: string;
+  onRecordPayment?: (
+    loanId: string,
+    loanName: string,
+    periodNumber?: number,
+    dueDate?: string,
+    principalDue?: number,
+    interestDue?: number,
+  ) => void;
 }

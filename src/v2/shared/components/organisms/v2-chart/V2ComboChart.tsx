@@ -23,7 +23,10 @@ export const V2ComboChart: React.FC<V2ComboChartProps> = ({
   loading,
   height,
   className,
+  onBarClick,
+  onBarContextMenu,
 }) => {
+  const chartRef = React.useRef<any>(null);
   const theme = useV2ChartTheme();
   const prepared = React.useMemo(
     () => prepareComboSeries(series, theme),
@@ -33,6 +36,48 @@ export const V2ComboChart: React.FC<V2ComboChartProps> = ({
     () => series.some((s) => s.secondaryAxis),
     [series],
   );
+
+  const comboData = React.useMemo(
+    () =>
+      buildComboData(labels, prepared.series, prepared.colors, theme, stacked),
+    [labels, prepared.series, prepared.colors, theme, stacked],
+  );
+
+  const comboOptions = React.useMemo(
+    () =>
+      buildComboOptions(
+        theme,
+        formatValue,
+        stacked,
+        hasSecondary,
+        secondaryFormatValue,
+        onBarClick,
+      ),
+    [
+      theme,
+      formatValue,
+      stacked,
+      hasSecondary,
+      secondaryFormatValue,
+      onBarClick,
+    ],
+  );
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!onBarContextMenu) return;
+    const chart = chartRef.current;
+    if (!chart) return;
+    const elements = chart.getElementsAtEventForMode(
+      e.nativeEvent,
+      "index",
+      { intersect: false },
+      true,
+    );
+    if (elements && elements.length > 0) {
+      e.preventDefault();
+      onBarContextMenu(elements[0].index, elements[0].datasetIndex, e);
+    }
+  };
 
   return (
     <V2ChartFrame
@@ -53,23 +98,14 @@ export const V2ComboChart: React.FC<V2ComboChartProps> = ({
       height={height}
       className={className}
     >
-      <Chart
-        type="bar"
-        data={buildComboData(
-          labels,
-          prepared.series,
-          prepared.colors,
-          theme,
-          stacked,
-        )}
-        options={buildComboOptions(
-          theme,
-          formatValue,
-          stacked,
-          hasSecondary,
-          secondaryFormatValue,
-        )}
-      />
+      <div onContextMenu={handleContextMenu} className="h-full w-full">
+        <Chart
+          ref={chartRef}
+          type="bar"
+          data={comboData}
+          options={comboOptions}
+        />
+      </div>
     </V2ChartFrame>
   );
 };

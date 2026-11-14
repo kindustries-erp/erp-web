@@ -1,20 +1,21 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Text } from "@/v2/shared/components";
 import { V2ComboChart } from "@/v2/shared/components/organisms/v2-chart";
 import type { V2ComboSeries } from "@/v2/shared/components/organisms/v2-chart/V2Chart.type";
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
 import { V2_CHART_SERIES } from "@/v2/shared/utils/v2ChartPalette";
-import type { LoanCashflowChartProps } from "./LoanCashflowChart.type";
+import type {
+  LoanCashflowChartProps,
+  LoanChartItem,
+} from "./LoanCashflowChart.type";
 import { buildLoanCashflowSeries } from "./LoanCashflowChart.series";
+import { LoanCashflowContextMenu } from "../../molecules/loan-cashflow-context-menu";
 
 function formatCompact(val: number): string {
-  if (Math.abs(val) >= 1_000_000_000) {
+  if (Math.abs(val) >= 1_000_000_000)
     return `${(val / 1_000_000_000).toFixed(1)} tỷ`;
-  }
-  if (Math.abs(val) >= 1_000_000) {
-    return `${(val / 1_000_000).toFixed(0)} tr`;
-  }
+  if (Math.abs(val) >= 1_000_000) return `${(val / 1_000_000).toFixed(0)} tr`;
   return val.toLocaleString("vi-VN");
 }
 
@@ -24,9 +25,14 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
   subtitle,
   className = "",
   height = 320,
+  onRecordPayment,
 }) => {
   const { t } = useV2Translation();
   const chartTheme = useV2ChartTheme();
+  const [contextMenu, setContextMenu] = useState<{
+    period: LoanChartItem;
+    position: { x: number; y: number };
+  } | null>(null);
 
   const hasPaid = useMemo(() => schedule.some((p) => p.isPaid), [schedule]);
 
@@ -57,13 +63,28 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
     [schedule, t, chartTheme.mode, chartTheme.textPrimary],
   );
 
-  if (!schedule || schedule.length === 0) {
-    return null;
-  }
+  const handleBarContextMenu = useCallback(
+    (periodIndex: number, _datasetIndex: number, event: React.MouseEvent) => {
+      if (!onRecordPayment) return;
+      const targetPeriod = schedule[periodIndex];
+      if (!targetPeriod) return;
+      setContextMenu({
+        period: targetPeriod,
+        position: { x: event.clientX, y: event.clientY },
+      });
+    },
+    [schedule, onRecordPayment],
+  );
+
+  const handleCloseMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  if (!schedule || schedule.length === 0) return null;
 
   return (
     <div
-      className={`rounded-2xl border border-border bg-card p-5 shadow-xs ${className}`}
+      className={`relative rounded-2xl border border-border bg-card p-5 shadow-xs ${className}`}
     >
       <div className="mb-4">
         <V2Text as="h3" variant="h3" className="font-semibold text-base">
@@ -94,11 +115,22 @@ export const LoanCashflowChart: React.FC<LoanCashflowChartProps> = ({
         formatValue={formatCompact}
         secondaryFormatValue={formatCompact}
         height={height}
+        onBarContextMenu={handleBarContextMenu}
         ariaLabel={t(
           "v2.loans.cashflow.chartAriaLabel",
           "Biểu đồ áp lực dòng tiền trả nợ hàng tháng",
         )}
       />
+
+      {onRecordPayment && (
+        <LoanCashflowContextMenu
+          open={Boolean(contextMenu)}
+          period={contextMenu?.period || null}
+          position={contextMenu?.position || null}
+          onClose={handleCloseMenu}
+          onRecordPayment={onRecordPayment}
+        />
+      )}
     </div>
   );
 };

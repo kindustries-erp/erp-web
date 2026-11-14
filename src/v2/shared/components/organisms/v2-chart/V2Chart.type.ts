@@ -53,4 +53,10 @@ export interface V2ComboChartProps extends V2ChartBaseProps {
   series: V2ComboSeries[];
   stacked?: boolean;
   secondaryFormatValue?: (value: number) => string;
+  onBarClick?: (periodIndex: number, datasetIndex: number, event: any) => void;
+  onBarContextMenu?: (
+    periodIndex: number,
+    datasetIndex: number,
+    event: React.MouseEvent,
+  ) => void;
 }

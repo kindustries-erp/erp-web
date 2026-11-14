@@ -17,6 +17,7 @@ export const PortfolioScheduleTable: React.FC<PortfolioScheduleTableProps> = ({
   title,
   description,
   className = "",
+  onRecordPayment,
 }) => {
   const { t } = useV2Translation();
 
@@ -69,7 +70,10 @@ export const PortfolioScheduleTable: React.FC<PortfolioScheduleTableProps> = ({
           }
           renderExpandedRow={(row) =>
             row.breakdown && row.breakdown.length > 0 ? (
-              <PortfolioBreakdownRow items={row.breakdown} />
+              <PortfolioBreakdownRow
+                items={row.breakdown}
+                onRecordPayment={onRecordPayment}
+              />
             ) : null
           }
           emptyLabel={t(

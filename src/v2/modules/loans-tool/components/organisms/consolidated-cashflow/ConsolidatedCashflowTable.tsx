@@ -19,13 +19,28 @@ export interface MonthlyProjectionRow {
   actualPrincipalPaid?: number;
   actualInterestPaid?: number;
   actualTotalPaid?: number;
+  remainingPrincipalDue?: number;
+  remainingInterestDue?: number;
+  remainingTotalDue?: number;
   isPaid?: boolean;
   breakdown?: CashflowLoanBreakdownItem[];
 }
 
-export const ConsolidatedCashflowTable: React.FC<{
+export interface ConsolidatedCashflowTableProps {
   projections: MonthlyProjectionRow[];
-}> = ({ projections }) => {
+  onRecordPayment?: (
+    loanId: string,
+    loanName: string,
+    periodNumber?: number,
+    dueDate?: string,
+    principalDue?: number,
+    interestDue?: number,
+  ) => void;
+}
+
+export const ConsolidatedCashflowTable: React.FC<
+  ConsolidatedCashflowTableProps
+> = ({ projections, onRecordPayment }) => {
   const { t } = useV2Translation();
 
   const schedule: PortfolioMonthlyPeriod[] = useMemo(
@@ -38,7 +53,39 @@ export const ConsolidatedCashflowTable: React.FC<{
         totalPayment: p.totalPaymentDue,
         remainingPrincipal: p.cumulativeRemainingPrincipal,
         loansCount: p.activeLoanCount,
-        breakdown: p.breakdown,
+        scheduledPrincipalDue: p.scheduledPrincipalDue,
+        scheduledInterestDue: p.scheduledInterestDue,
+        scheduledTotalDue: p.scheduledTotalDue,
+        actualPrincipalPaid: p.actualPrincipalPaid,
+        actualInterestPaid: p.actualInterestPaid,
+        actualTotalPaid: p.actualTotalPaid,
+        remainingPrincipalDue: p.remainingPrincipalDue,
+        remainingInterestDue: p.remainingInterestDue,
+        remainingTotalDue: p.remainingTotalDue,
+        isPaid: p.isPaid,
+        breakdown: p.breakdown?.map((b) => ({
+          ...b,
+          remainingPrincipal: b.isPaid
+            ? 0
+            : Math.max(
+                0,
+                (b.scheduledPrincipal ?? b.principalDue) -
+                  (b.actualPrincipalPaid || 0),
+              ),
+          remainingInterest: b.isPaid
+            ? 0
+            : Math.max(
+                0,
+                (b.scheduledInterest ?? b.interestDue) -
+                  (b.actualInterestPaid || 0),
+              ),
+          remainingTotal: b.isPaid
+            ? 0
+            : Math.max(
+                0,
+                (b.scheduledTotal ?? b.totalPayment) - (b.actualTotalPaid || 0),
+              ),
+        })),
       })),
     [projections],
   );
@@ -46,6 +93,7 @@ export const ConsolidatedCashflowTable: React.FC<{
   return (
     <PortfolioScheduleTable
       schedule={schedule}
+      onRecordPayment={onRecordPayment}
       title={t("v2.loans.cashflow.tableTitle", "Chi Tiết Dòng Tiền Theo Tháng")}
       description={t(
         "v2.loans.cashflow.tableSubtitle",

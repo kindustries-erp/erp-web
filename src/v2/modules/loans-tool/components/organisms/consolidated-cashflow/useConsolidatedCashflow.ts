@@ -59,19 +59,6 @@ export function useConsolidatedCashflow() {
           return null;
         }
 
-        const principalDue = matchingBreakdown.reduce(
-          (sum, b) => sum + (b.isPaid ? 0 : b.principalDue),
-          0,
-        );
-        const interestDue = matchingBreakdown.reduce(
-          (sum, b) => sum + (b.isPaid ? 0 : b.interestDue),
-          0,
-        );
-        const totalPaymentDue = principalDue + interestDue;
-        const cumulativeRemainingPrincipal = matchingBreakdown.reduce(
-          (sum, b) => sum + (b.endingBalance || 0),
-          0,
-        );
         const scheduledPrincipalDue = matchingBreakdown.reduce(
           (sum, b) => sum + (b.scheduledPrincipal ?? b.principalDue),
           0,
@@ -81,6 +68,7 @@ export function useConsolidatedCashflow() {
           0,
         );
         const scheduledTotalDue = scheduledPrincipalDue + scheduledInterestDue;
+
         const actualPrincipalPaid = matchingBreakdown.reduce(
           (sum, b) => sum + (b.actualPrincipalPaid || 0),
           0,
@@ -91,12 +79,43 @@ export function useConsolidatedCashflow() {
         );
         const actualTotalPaid = actualPrincipalPaid + actualInterestPaid;
 
+        const remainingPrincipalDue = matchingBreakdown.reduce(
+          (sum, b) =>
+            sum +
+            (b.isPaid
+              ? 0
+              : Math.max(
+                  0,
+                  (b.scheduledPrincipal ?? b.principalDue) -
+                    (b.actualPrincipalPaid || 0),
+                )),
+          0,
+        );
+        const remainingInterestDue = matchingBreakdown.reduce(
+          (sum, b) =>
+            sum +
+            (b.isPaid
+              ? 0
+              : Math.max(
+                  0,
+                  (b.scheduledInterest ?? b.interestDue) -
+                    (b.actualInterestPaid || 0),
+                )),
+          0,
+        );
+        const remainingTotalDue = remainingPrincipalDue + remainingInterestDue;
+
+        const cumulativeRemainingPrincipal = matchingBreakdown.reduce(
+          (sum, b) => sum + (b.endingBalance || 0),
+          0,
+        );
+
         return {
           month: m.month,
           activeLoanCount: matchingBreakdown.length,
-          principalDue,
-          interestDue,
-          totalPaymentDue,
+          principalDue: scheduledPrincipalDue,
+          interestDue: scheduledInterestDue,
+          totalPaymentDue: scheduledTotalDue,
           cumulativeRemainingPrincipal,
           scheduledPrincipalDue,
           scheduledInterestDue,
@@ -104,6 +123,9 @@ export function useConsolidatedCashflow() {
           actualPrincipalPaid,
           actualInterestPaid,
           actualTotalPaid,
+          remainingPrincipalDue,
+          remainingInterestDue,
+          remainingTotalDue,
           isPaid:
             matchingBreakdown.length > 0 &&
             matchingBreakdown.every((b) => b.isPaid),

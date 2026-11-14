@@ -81,6 +81,7 @@ export const buildComboOptions = (
   stacked: boolean,
   hasSecondary: boolean,
   secondaryFormat?: Format,
+  onBarClick?: (periodIndex: number, datasetIndex: number, event: any) => void,
 ): ChartOptions<"bar" | "line"> => {
   const baseAxes = axes(theme, format, stacked, false);
   const scales: any = {
@@ -105,6 +106,13 @@ export const buildComboOptions = (
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: "index", intersect: false },
+    onClick: onBarClick
+      ? (event, elements) => {
+          if (elements && elements.length > 0) {
+            onBarClick(elements[0].index, elements[0].datasetIndex, event);
+          }
+        }
+      : undefined,
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -113,6 +121,9 @@ export const buildComboOptions = (
           label: (ctx: any) => {
             const isSecondary = ctx.dataset.yAxisID === "y1";
             const val = Number(ctx.parsed.y);
+            if (!isSecondary && val <= 0) {
+              return undefined;
+            }
             const valFormatted =
               isSecondary && secondaryFormat
                 ? secondaryFormat(val)

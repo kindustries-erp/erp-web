@@ -11,17 +11,20 @@ export interface LoanCashflowSeriesLabels {
 
 export interface BuildLoanCashflowSeriesInput {
   schedule: LoanChartItem[];
-  /** Màu theo thứ tự khoản vay, lấy từ palette V2 */
   palette: readonly string[];
-  /** Màu đường dư nợ, lấy từ token theme */
   balanceColor: string;
   labels: LoanCashflowSeriesLabels;
 }
 
-/** Có số đã trả thực tế (chỉ projection có) thì mới tách cột đã trả / còn phải trả */
+/** Có số đã trả thực tế thì mới tách cột đã trả / nợ gốc / tiền lãi */
 export const hasActualPaid = (schedule: LoanChartItem[]): boolean =>
-  schedule.some((p) =>
-    p.breakdown?.some((b) => b.actualTotalPaid !== undefined),
+  schedule.some(
+    (p) =>
+      Boolean(p.isPaid) ||
+      Number(p.actualTotalPaid ?? 0) > 0 ||
+      p.breakdown?.some(
+        (b) => Boolean(b.isPaid) || Number(b.actualTotalPaid ?? 0) > 0,
+      ),
   );
 
 const collectLoans = (schedule: LoanChartItem[]): Map<string, string> => {
@@ -36,13 +39,13 @@ const collectLoans = (schedule: LoanChartItem[]): Map<string, string> => {
 
 const balanceSeries = (
   schedule: LoanChartItem[],
-  balanceColor: string,
+  color: string,
   label: string,
 ): V2ComboSeries => ({
   key: "remaining",
   label,
   type: "line",
-  color: balanceColor,
+  color,
   data: schedule.map((p) =>
     Math.round(
       p.endingBalance ??
@@ -54,7 +57,7 @@ const balanceSeries = (
   secondaryAxis: true,
 });
 
-/** Một khoản vay: có số thực trả thì tách đã trả (đậm) và còn phải trả (nhạt) */
+/** Một khoản vay: tách Đã trả, Nợ gốc và Tiền lãi (số phải trả tự điều chỉnh về 0 khi đã trả) */
 const loanBarSeries = (
   schedule: LoanChartItem[],
   loanId: string,
@@ -63,41 +66,51 @@ const loanBarSeries = (
   labels: LoanCashflowSeriesLabels,
   actual: boolean,
 ): V2ComboSeries[] => {
-  const matchOf = (period: LoanChartItem) =>
-    period.breakdown?.find((b) => b.loanId === loanId);
+  const matchOf = (p: LoanChartItem) =>
+    p.breakdown?.find((b) => b.loanId === loanId);
 
-  const paid: V2ComboSeries[] = actual
-    ? [
-        {
-          key: `loan-${loanId}-paid`,
-          label: loanName,
-          type: "bar",
-          color,
-          tooltipLabel: `${loanName} – ${labels.paid}`,
-          data: schedule.map((period) =>
-            Math.round(matchOf(period)?.actualTotalPaid ?? 0),
-          ),
-        },
-      ]
-    : [];
-
-  const unpaid: V2ComboSeries = {
-    key: `loan-${loanId}-unpaid`,
+  const paid: V2ComboSeries = {
+    key: `loan-${loanId}-paid`,
     label: loanName,
     type: "bar",
     color,
-    legendHidden: actual,
-    fillAlpha: actual ? 0.35 : undefined,
-    tooltipLabel: actual ? `${loanName} – ${labels.unpaid}` : undefined,
-    data: schedule.map((period) => {
-      const match = matchOf(period);
-      if (!match) return 0;
-      const scheduled = match.scheduledTotal ?? match.totalPayment;
-      return Math.round(Math.max(0, scheduled - (match.actualTotalPaid ?? 0)));
+    legendHidden: true,
+    tooltipLabel: `${loanName} – ${labels.paid}`,
+    data: schedule.map((p) => Math.round(matchOf(p)?.actualTotalPaid ?? 0)),
+  };
+
+  const principal: V2ComboSeries = {
+    key: `loan-${loanId}-principal`,
+    label: loanName,
+    type: "bar",
+    color,
+    legendHidden: false,
+    tooltipLabel: `${loanName} – ${labels.principal}`,
+    data: schedule.map((p) => {
+      const m = matchOf(p);
+      if (!m || m.isPaid) return 0;
+      const sched = m.scheduledPrincipal ?? m.principalDue;
+      return Math.round(Math.max(0, sched - (m.actualPrincipalPaid ?? 0)));
     }),
   };
 
-  return [...paid, unpaid];
+  const interest: V2ComboSeries = {
+    key: `loan-${loanId}-interest`,
+    label: loanName,
+    type: "bar",
+    color,
+    fillAlpha: 0.35,
+    legendHidden: true,
+    tooltipLabel: `${loanName} – ${labels.interest}`,
+    data: schedule.map((p) => {
+      const m = matchOf(p);
+      if (!m || m.isPaid) return 0;
+      const sched = m.scheduledInterest ?? m.interestDue;
+      return Math.round(Math.max(0, sched - (m.actualInterestPaid ?? 0)));
+    }),
+  };
+
+  return actual ? [paid, principal, interest] : [principal, interest];
 };
 
 export const buildLoanCashflowSeries = ({
@@ -110,19 +123,49 @@ export const buildLoanCashflowSeries = ({
   const remaining = balanceSeries(schedule, balanceColor, labels.remaining);
   const loans = collectLoans(schedule);
 
-  if (loans.size > 1 || actual) {
-    const loanSeries = Array.from(loans.entries()).flatMap(
-      ([loanId, loanName], idx) =>
-        loanBarSeries(
-          schedule,
-          loanId,
-          loanName,
-          palette[idx % palette.length],
-          labels,
-          actual,
-        ),
+  if (loans.size > 0) {
+    const loanSeries = Array.from(loans.entries()).flatMap(([id, name], idx) =>
+      loanBarSeries(
+        schedule,
+        id,
+        name,
+        palette[idx % palette.length],
+        labels,
+        actual,
+      ),
     );
     return [...loanSeries, remaining];
+  }
+
+  if (actual) {
+    return [
+      {
+        key: "paid",
+        label: labels.paid,
+        type: "bar",
+        data: schedule.map((p) =>
+          Math.round(
+            p.isPaid
+              ? (p.actualTotalPaid ?? p.principalDue + p.interestDue)
+              : (p.actualTotalPaid ?? 0),
+          ),
+        ),
+      },
+      {
+        key: "principal",
+        label: labels.principal,
+        type: "bar",
+        data: schedule.map((p) => (p.isPaid ? 0 : Math.round(p.principalDue))),
+      },
+      {
+        key: "interest",
+        label: labels.interest,
+        type: "bar",
+        fillAlpha: 0.35,
+        data: schedule.map((p) => (p.isPaid ? 0 : Math.round(p.interestDue))),
+      },
+      remaining,
+    ];
   }
 
   return [

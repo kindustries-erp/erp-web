@@ -32,15 +32,7 @@ export const LoanDetailOverviewTab: React.FC<LoanDetailOverviewTabProps> = ({
     <div className="space-y-6">
       <LoanKpiSummary {...kpiSummary} />
 
-      <div className="rounded-xl border border-border p-4 bg-card">
-        <V2Text variant="h3" className="text-base font-semibold mb-3">
-          {t(
-            "v2.loans.charts.cashflowTitle",
-            "Dòng Chảy Tiền Vay & Dư Nợ Theo Kỳ",
-          )}
-        </V2Text>
-        <LoanCashflowChart schedule={schedule} height={chartHeight} />
-      </div>
+      <LoanCashflowChart schedule={schedule} height={chartHeight} />
 
       <div>
         <V2Text variant="h3" className="text-base font-semibold mb-3">
