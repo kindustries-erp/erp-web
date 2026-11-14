@@ -32,12 +32,13 @@ Năm tầng:
 
 Quy tắc:
 
+- **V2 Atom bắt buộc**: trong `src/v2/**` cấm thẻ HTML trần (`<button>`, `<span>`, `<input>`, `<textarea>`…) khi đã có V2 Atom (`V2Button`, `V2Text`, `V2Badge`, `V2Input`…). Chưa có atom thì tạo trong `src/v2/shared/components/atoms/` bằng `bun run plop v2-component` (tầng `atoms`) rồi mới dùng. Chi tiết và ngoại lệ: `references/atomic-ui.md` mục 2.1.
 - **Import**: chỉ đi từ tầng cao xuống tầng thấp. Cấm import ngang hàng giữa các component cùng tầng, trừ trường hợp được phép ghi trong `references/atomic-ui.md`.
 - **Folder-per-component**: mỗi component một thư mục kebab-case, có `index.ts`, file `.type.ts`, `.hook.ts` khi cần, và thư mục `__tests__` hoặc file test co-located.
 - **Giới hạn**: cảnh báo ở 180 dòng cho `.tsx` và `.hook.ts`, chặn ở 250 dòng. Loại trừ file dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`). Tách hook, helper và sub-component khi gần ngưỡng.
 - **Tên hook**: `[Component].hook.ts` (hook gắn một component, export `use[Component]`); `use<Tên>.ts` (hook độc lập trong `api/`, `hooks/`, `stores/`). Hook không có JSX đuôi `.ts`. Chi tiết: `erp-ui-structure`, mục "Quy Ước Tên Hook".
 - **Tầng core theo họ (áp dụng cho mọi họ, không ngoại lệ)**: UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ>/` (ví dụ `core/goods-receipts/`), giống `src/v2/core/` của API v2. Module của họ chỉ giữ API, cấu hình ghép core, page và locale riêng. Chiều phụ thuộc `modules/* → core/* → shared/`; core không import module và không chứa tên module. Import qua barrel (`@/v2/core/<họ>`, `@/v2/shared/components`), không import sâu từ module hay core. Chi tiết: `erp-ui-structure` Phần B.
-- **i18n**: 100% chuỗi hiển thị đi qua `t()` cho VI/EN. Với V2, key bắt buộc có prefix `v2.`.
+- **i18n**: 100% chuỗi hiển thị đi qua `t()` cho VI/EN. Với V2, key bắt buộc có prefix `v2.`, dùng `useV2Translation` (không `react-i18next`), và **mỗi key phải khai báo đủ vi và en cùng lúc** (atom/shared vào `src/v2/shared/locales/vi.ts` + `en.ts`; core/module vào `<họ>.locale.ts` qua `registerV2ModuleLocale`). Chi tiết: `references/atomic-ui.md` mục 6.1.
 - **Màu**: không dùng `blue-*`. Dùng token ngữ cảnh (bảng token và màu raw được chấp nhận: `erp-web-truth/references/ui-shell-and-theme.md` mục 4).
 - **Zustand**: đọc state bằng selector riêng lẻ (`useXStore((s) => s.field)`). Tránh `const { a, b } = useXStore()` vì component render lại theo cả store.
 - **A11y**: control, overlay và field lỗi theo mục A11y trong checklist `references/atomic-ui.md`.

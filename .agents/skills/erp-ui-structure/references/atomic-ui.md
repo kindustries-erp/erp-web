@@ -105,6 +105,55 @@ graph TD
 
 ---
 
+## 🧱 2.1. Mandate: Dùng V2 Atom, cấm thẻ HTML trần (V2 Atom Mandate)
+
+> [!IMPORTANT]
+> **Trong `src/v2/**`, mọi phần tử UI phải dùng V2 Atom có sẵn. CẤM thẻ HTML trần khi đã có atom tương ứng.**
+
+**M1. Bảng thay thế bắt buộc**
+
+| Thẻ trần | Dùng thay | Ghi chú |
+| :--- | :--- | :--- |
+| `<button>` | `V2Button` (icon-only: `V2ToolbarIconButton`) | |
+| `<span>` / `<p>` / `<label>` chứa chữ | `V2Text` | |
+| `<input>` | `V2Input` / `V2NumberInput` / `V2Switch` | |
+| `<textarea>` | `V2Textarea` | |
+| Pill / badge tự dựng | `V2Badge` | |
+| `<hr>`, viền ngăn tự dựng | `V2Divider` | |
+| Thanh tiến trình tự dựng, `role="progressbar"` | `V2Progress` | |
+| Wrapper flex / gap thuần bố cục | `V2Stack` (ưu tiên); `<div>` bố cục vẫn được | |
+
+**M2. Chưa có atom thì tạo trong V2** (không dùng thẻ trần, không tạo ở V1 hay trong module):
+
+1. Xác nhận thật sự chưa có: `/erp-find-ui-patterns` và `ls src/v2/shared/components/atoms/`, kể cả molecule hoặc `shared/ui` tương đương.
+2. Tạo bằng generator: `bun run plop v2-component`, chọn tầng `atoms`. Kết quả: folder kebab-case `src/v2/shared/components/atoms/v2-<tên>/` gồm `V2<Tên>.tsx`, `V2<Tên>.type.ts`, `index.ts`, `V2<Tên>.stories.tsx` (`title: "Components/Atoms/V2<Tên>"`). Generator tự nối barrel `atoms/index.ts`. Test chỉ viết khi atom có logic riêng. Sau khi sinh, thêm key i18n theo mục 6.1 (I2).
+3. Atom bọc primitive từ `@/v2/shared/ui` (một chiều: `ui` không import ngược). Props kế thừa kiểu primitive. Không `blue-*`. Touch target ≥ 44px; input font ≥ 16px trên mobile.
+4. Task tạo atom đi **trước** task dùng atom đó (thứ tự UI: atom → molecule → organism → page). Ghi vào plan: `Reuse-check: không có atom, lý do tạo mới`.
+5. Ưu tiên mở rộng atom có sẵn (thêm variant hoặc prop) khi không đổi hành vi hiện có. Không fork atom song song.
+
+**M3. Ngoại lệ hợp lệ** (ghi lý do trong task hoặc báo cáo audit):
+
+- (a) Chính file atom và `shared/ui` đang bọc primitive.
+- (b) File test và stories.
+- (c) `<span className="sr-only">` và phần trang trí thuần (chấm, gạch chân) không có atom tương ứng.
+- (d) V1 (`src/`) chưa được task chạm tới.
+
+**M4. Mức độ**: `must` cho code mới và file đang sửa trong `src/v2`. File V2 cũ chưa chạm thì miễn đến khi task chạm tới, không migrate hàng loạt.
+
+**Ví dụ**
+
+```tsx
+// ❌ Thẻ trần
+<button onClick={save} className="rounded bg-primary px-3">{t("v2.common.save", "Lưu")}</button>
+<span className="rounded-full bg-muted px-2 text-xs">{status}</span>
+
+// ✅ V2 Atom
+<V2Button onClick={save}>{t("v2.common.save", "Lưu")}</V2Button>
+<V2Badge>{status}</V2Badge>
+```
+
+---
+
 ## 📐 3. Quy Chuẩn Đặt Tên & Cấu Trúc Thư Mục (Folder-per-Component Standard)
 
 > [!IMPORTANT]
@@ -247,6 +296,34 @@ src/shared/components/
    ```
 2. **Đồng bộ song ngữ 1-1**: Cập nhật đồng thời cả `locales/vi.ts` và `locales/en.ts`.
 3. **Fallback mặc định**: Luôn cung cấp fallback tiếng Việt rõ ràng: `t("key", "Fallback tiếng Việt")`.
+
+---
+
+### 6.1. i18n cho V2 và Atom mới (V2 i18n Mandate)
+
+> [!IMPORTANT]
+> Trong `src/v2/**` **không dùng `react-i18next`**. Dùng `useV2Translation` (`@/v2/shared/hooks/useV2Translation`), key bắt buộc có prefix `v2.`, và **mỗi key phải có đủ vi và en cùng lúc**.
+
+- **I1**: chuỗi hiển thị (kể cả `aria-label`, `title`, `placeholder`, trạng thái loading/empty) đi qua `t()`, có fallback tiếng Việt. Ví dụ: `t("v2.table.removeFilter", "Gỡ bộ lọc")`.
+- **I2**: vị trí khai báo:
+  - Atom và shared dùng chung → `src/v2/shared/locales/vi.ts` + `en.ts` (nhóm bảng → `vi.table.ts` + `en.table.ts`).
+  - Core và module → `<họ>.locale.ts` qua `registerV2ModuleLocale(namespace, { vi, en })`.
+  - Không đặt key của atom trong module.
+- **I3**: ưu tiên nhận chữ qua `children` hoặc props (caller truyền `t()`). Chỉ giữ chuỗi cố định trong atom khi là chữ chung (aria-label, trạng thái) và khi đó phải có key theo I2.
+- **I4 (DoD khi tạo atom V2)**: đã thêm đủ key vi và en; stories hiển thị đúng cả hai ngôn ngữ nếu atom có chuỗi cố định; không còn chuỗi thô trong JSX.
+
+**Audit**: `grep -nE "t\(\s*\"v2\.[^\"]+\"" <file>` rồi đối chiếu từng key ở cả `vi*.ts` và `en*.ts` (hoặc `.locale.ts` của họ). Chuỗi thô: `grep -nP "[>\"'](?=[^<>\"']*[À-ỹ])" <file>`.
+
+**Ví dụ**
+
+```tsx
+// ❌ V1 pattern, không dùng trong V2
+import { useTranslation } from "react-i18next";
+
+// ✅ V2
+const { t } = useV2Translation();
+<V2Text>{t("v2.common.save", "Lưu")}</V2Text>
+```
 
 ---
 

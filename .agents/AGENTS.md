@@ -10,6 +10,8 @@ Source of truth for this repo (`./erp-web`).
 
 ### 1. UI Reusability Enforcer (Anti-Reinvention)
 
+- **V2 Atom Mandate**: trong `src/v2/**` luôn dùng V2 Atom (`V2Button`, `V2Text`, `V2Badge`, `V2Input`, `V2Textarea`, `V2Divider`, `V2Progress`, `V2Stack`…), cấm thẻ HTML trần khi đã có atom. Thiếu atom thì tạo trong `src/v2/shared/components/atoms/` bằng `bun run plop v2-component` (tầng `atoms`). Chi tiết: `erp-ui-structure` mục 2.1 của `references/atomic-ui.md`.
+
 - **CRITICAL:** Do NOT build basic components like Modal, Drawer, Table/Spreadsheet, or Filter Panel from scratch.
 - Always use `grep_search` in `src/shared/components/` (e.g., `ConfirmModal`, `StandardFormDrawer`, `DataTable`, `FilterPanel`) first. V2 components live in `src/v2/shared/components/`.
 - If found, read its interface/props and reuse it.
@@ -40,6 +42,8 @@ Source of truth for this repo (`./erp-web`).
 - Full test / build / check:ci chạy trên GitHub CI. Không push tiếp khi CI của nhánh đang đỏ.
 
 ### 6. i18n Translation Mandate
+
+- **V2**: dùng `useV2Translation`, key `v2.*`, và khai báo đủ VI và EN cùng lúc (`src/v2/shared/locales/` hoặc `<họ>.locale.ts`). Không dùng `react-i18next` trong `src/v2`.
 
 - You **MUST** use the project's i18n translation system (e.g., `useTranslation`, `t('key')`) for **all user-facing text** including titles, labels, placeholders, buttons, and validation messages.
 - **NEVER** hardcode raw strings like `title="Xác nhận"`. Always use translation keys.

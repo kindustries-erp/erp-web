@@ -29,6 +29,7 @@ graph LR
 
 1. **Phân Tầng Tuyệt Đối**: Mọi UI component phải thuộc chính xác 1 trong 5 tầng (`Atoms`, `Molecules`, `Organisms`, `Templates`, `Pages`). Không có component "vô thừa nhận" hoặc dồn đống trong `shared`.
 2. **Import Một Chiều (Top-Down)**: `Templates > Organisms > Molecules > Atoms`. Tầng cao import tầng thấp. **CẤM** import ngược dòng. **CẤM** import ngang hàng cùng cấp trong cùng một scope.
+2a. **V2 Atom Mandate (Dùng V2 Atom, cấm thẻ HTML trần)**: trong `src/v2/**`, dùng V2 Atom có sẵn (`V2Button`, `V2Text`, `V2Badge`, `V2Input`, `V2Textarea`, `V2Divider`, `V2Progress`, `V2Stack`…) thay cho `<button>`, `<span>` chứa chữ, `<input>`, `<textarea>`, `<hr>`, badge hay progress tự dựng. Chưa có atom thì **tạo trong V2** bằng `bun run plop v2-component` (tầng `atoms`) trước, không tạo ở V1 hay trong module. Chi tiết: `references/atomic-ui.md` mục 2.1 (M1–M4).
 3. **Folder-per-Component (`kebab-case`)**: Mỗi component có 1 thư mục riêng, file chính `PascalCase.tsx`, các file vệ tinh chuẩn số ít (`.hook.ts`, `.state.ts`, `.type.ts`, `.schema.ts`, `.helper.ts`, `.test.tsx`, `index.ts`).
 4. **Giới Hạn Cứng < 180 LoC & Co-located Test**: Không file nào vượt quá 180 dòng. Test nằm ngay bên cạnh component (co-located). Trọng tâm test là Organism (L3) và Integration (page); Atom/Molecule chỉ có test khi có logic riêng (filter, format, validate, state).
 5. **Tư Duy Mobile-First & Chuẩn Công Thái Học Di Động**: 
@@ -240,6 +241,7 @@ Quy tắc:
 ### 📋 Checklist Kiểm Tra Hoàn Thành (Atomic DoD)
 
 - [ ] **Đúng Tầng Atomic**: Xác định chuẩn xác component thuộc Level 1, 2, 3, 4 hay 5.
+- [ ] **Reuse-check V2 Atom**: Trong `src/v2/**` không còn thẻ trần (`<button>`, `<span>` chứa chữ, `<input>`, `<textarea>`, `<hr>`, badge/progress tự dựng) khi đã có V2 Atom. Thiếu atom thì đã tạo trong `src/v2/shared/components/atoms/` bằng `bun run plop v2-component`, và task tạo atom đứng trước task dùng. Quét: `grep -nE "<(button|input|select|textarea|span|p|label|hr)[[:space:]>]" <file>`.
 - [ ] **Mỗi Component 1 Folder**: Toàn bộ component nằm trong thư mục `kebab-case/` riêng có `index.ts`.
 - [ ] **Đặt Tên Chuẩn Số Ít**: File chính `PascalCase.tsx`, các file đi kèm chuẩn số ít (`.hook.ts`, `.state.ts`, `.type.ts`, `.schema.ts`, `.helper.ts`, `.stories.tsx`, `.test.tsx`).
 - [ ] **Ranh Giới Hook Chuẩn**: Atoms & Molecules CHỈ chứa Pure UI Hook (0% API/Store). Organisms chứa Business Logic Hooks.
@@ -247,7 +249,7 @@ Quy tắc:
 - [ ] **Giới Hạn File**: 100% các file đều $< 180\text{ LoC}$.
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong mã nguồn giao diện.
 - [ ] **Field & Focus Ring theo theme**: Field dùng `bg-background`/`border-input`; focus dùng `V2_DRAWER_FOCUS_RING_CLASS`; không có `ring-offset-<n>` thiếu `ring-offset-background` (audit #9, #10). Chi tiết: `standardize-drawer/references/v2-drawer.md`, mục "Field trong card & focus ring".
-- [ ] **i18n 100%**: Tất cả user-facing text bọc trong `t(...)` có fallback tiếng Việt và đồng bộ VI/EN.
+- [ ] **i18n đủ VI/EN**: Tất cả user-facing text (kể cả `aria-label`, `title`, `placeholder`) bọc trong `t(...)` có fallback tiếng Việt. V2 dùng `useV2Translation` với key `v2.*`, mỗi key có đủ vi và en (`src/v2/shared/locales/vi.ts` + `en.ts`, hoặc `<họ>.locale.ts`). Audit: `grep -nE "t\(\s*\"v2\.[^\"]+\"" <file>` rồi đối chiếu cả hai ngôn ngữ.
 - [ ] **Co-located Stories (tùy chọn)**: Khuyến khích `[ComponentName].stories.tsx` cho shared/v2 atoms và ui; render độc lập không phụ thuộc V1.
 - [ ] **Co-located Test**: Organism và luồng page có test; Atom/Molecule chỉ khi có logic riêng. File `[ComponentName].test.tsx` nằm trực tiếp cùng cấp trong folder.
 - [ ] **Mobile-First CSS & Ergonomics**:

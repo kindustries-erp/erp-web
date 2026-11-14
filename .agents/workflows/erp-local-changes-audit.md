@@ -16,12 +16,14 @@ Kỹ năng chi tiết nằm ở skill `erp-local-changes-audit`. Nạp `erp-ui-s
    wc -l <file>
    ```
    Chưa có scanner cho Web, nên bước này dùng `wc`, `grep` và eslint ở chế độ chỉ đọc.
-3. **Quét tái sử dụng atom V2** trong các file đổi. Tìm phần tử HTML tự dựng rồi đối chiếu với atom có sẵn:
+3. **Quét V2 Atom** trong các file đổi (`src/v2/**`). Tìm thẻ HTML trần rồi đối chiếu với atom có sẵn:
    ```bash
-   grep -n "<button\|<input\|<select\|<textarea\|role=\"progressbar\"\|role=\"tab\"" <file>
+   grep -nE "<(button|input|select|textarea|span|p|label|hr)[[:space:]>]|role=\"(progressbar|tab)\"" <file>
    ls src/v2/shared/components/atoms/
    ```
-   Nếu một phần tử tự dựng có atom V2 tương ứng (ví dụ `<button>` → `V2Button`, progress → `V2Progress`, chữ → `V2Text`) thì ghi FAIL. Ngoại lệ được phép: phần trang trí không có atom sẵn (chấm, gạch chân), ghi rõ lý do trong báo cáo.
+   - **(A) FAIL — thẻ trần khi đã có atom**: phần tử tự dựng có atom V2 tương ứng (`<button>` → `V2Button`, `<input>` → `V2Input`, `<span>` chứa chữ → `V2Text`, badge → `V2Badge`, progress → `V2Progress`).
+   - **(B) FAIL — thẻ trần vì thiếu atom**: chưa có atom tương ứng nhưng không có task tạo atom trong V2 (`src/v2/shared/components/atoms/`), hoặc atom được tạo ở sai chỗ (V1 `src/shared`, module). Khi FAIL (B), plan fix phải có task tạo atom bằng `bun run plop v2-component` (tầng `atoms`) đặt **trước** task sửa file dùng atom đó.
+   - Ngoại lệ theo M3 (`erp-ui-structure` `references/atomic-ui.md` mục 2.1): chính file atom/`shared/ui`, test, stories, `<span className="sr-only">`, phần trang trí thuần (chấm, gạch chân) không có atom. Ghi rõ lý do trong báo cáo.
 4. **Quét màu theo token**: tìm màu raw cố định (`slate-`, `zinc-`, `teal-`, `emerald-`, `amber-`, `gray-`, `#hex`) trong file đổi. Màu có token ngữ cảnh tương ứng (`surface`, `border`, `foreground`, `muted-fg`, `primary`, `up-fg`, `warn-fg`, `faint`) phải dùng token để khớp mọi theme. Không dùng opacity modifier (`/50`) trên token dạng `var()`; dùng màu đặc hoặc `opacity-*`.
 5. **Đối chiếu từng rule** trong bảng dưới. Mỗi dòng ghi PASS hoặc FAIL kèm `file#dòng`.
 6. **Xuất báo cáo** theo bố cục tuân thủ: `1. Tổng quan`, `2. Bảng tuân thủ`, `3. Kết luận`.
@@ -39,10 +41,12 @@ Kỹ năng chi tiết nằm ở skill `erp-local-changes-audit`. Nạp `erp-ui-s
 | i18n | Không hardcode chuỗi hiển thị; V2 có prefix `v2.` | `erp-ui-structure` mục 2 |
 | No Blue | Không `blue-*` | `erp-ui-structure` mục 2 |
 | Màu theo token theme | Màu có token ngữ cảnh phải dùng token (`surface`, `border`, `primary`, `muted-fg`…); không màu raw cố định; không opacity trên token `var()` | `erp-web-truth` mục 7, `erp-ui-structure` mục 2 |
-| Tái sử dụng atom V2 | Không tự dựng `<button>`, `<input>`, progress, chữ khi đã có `V2Button`, `V2Input`, `V2Progress`, `V2Text`… Ngoại lệ phải ghi lý do | `erp-web/.agents/AGENTS.md` mục 1, skill `erp-find-ui-patterns` |
+| (A) Không thẻ trần khi đã có atom V2 | Trong `src/v2/**`, không tự dựng `<button>`, `<input>`, `<span>` chứa chữ, progress, badge… khi đã có `V2Button`, `V2Input`, `V2Text`, `V2Badge`, `V2Progress`… Ngoại lệ theo M3 phải ghi lý do | `erp-ui-structure` `references/atomic-ui.md` mục 2.1, `erp-web/.agents/AGENTS.md` mục 1 |
+| (B) Thiếu atom → tạo trong V2 | Khi chưa có atom tương ứng: tạo trong `src/v2/shared/components/atoms/v2-<tên>/` bằng `bun run plop v2-component` (tầng `atoms`), đủ `V2<Tên>.tsx`, `.type.ts`, `index.ts`, `.stories.tsx`, barrel `atoms/index.ts`. Không tạo atom ở V1 hay trong module. Task tạo atom phải đứng trước task dùng atom | `erp-ui-structure` `references/atomic-ui.md` mục 2.1 M2 |
 | Zustand | Selector riêng lẻ | `erp-ui-structure` mục 2 |
 | Server state | `@tanstack/react-query`, không `useEffect` + fetch | `erp-web/.agents/AGENTS.md` mục 3 |
 | Bảng và drawer chuẩn | `SpreadsheetPageTemplate` hoặc `V2StandardTable`; `StandardFormDrawer` hoặc `V2StandardDrawer` | `erp-ui-structure` Phần C |
+| i18n V2 đủ VI/EN | Không hardcode chuỗi hiển thị. V2 dùng `useV2Translation`, key `v2.*`; mỗi key có đủ vi và en (`src/v2/shared/locales/` hoặc `<họ>.locale.ts`). Thiếu một bên là FAIL. Atom mới phải kèm key vi/en | `erp-ui-structure` `references/atomic-ui.md` mục 6.1, `erp-ui-structure` mục 2 |
 | Test đi kèm | Logic mới có `.test.tsx` hoặc `.test.ts` | `erp-web/.agents/AGENTS.md` mục 4 |
 
 ## Quy tắc
