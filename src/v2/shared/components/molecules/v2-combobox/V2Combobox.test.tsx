@@ -125,6 +125,30 @@ describe("V2Combobox", () => {
     expect(onValueChange).toHaveBeenCalledWith(null);
   });
 
+  it("reserves room on the trigger for the clear button and chevron cluster", () => {
+    render(
+      <V2Combobox
+        options={options}
+        value="in"
+        onValueChange={vi.fn()}
+        clearable
+      />,
+    );
+    expect(screen.getByRole("combobox").className).toContain("pr-16");
+    const clear = screen.getByRole("button", { name: "Bỏ lựa chọn" });
+    // Nút X là V2Button ghost icon-xs, không phải <button> thuần
+    expect(clear.className).toContain("h-5 w-5");
+    expect(clear.className).toContain("pointer-events-auto");
+  });
+
+  it("does not reserve clear space when not clearable", () => {
+    render(<V2Combobox options={options} value="in" onValueChange={vi.fn()} />);
+    const trigger = screen.getByRole("combobox");
+    expect(trigger.className).toContain("pr-9");
+    expect(trigger.className).not.toContain("pr-16");
+    expect(screen.queryByRole("button", { name: "Bỏ lựa chọn" })).toBeNull();
+  });
+
   it("hides the search box when not searchable", () => {
     render(
       <V2Combobox
@@ -191,5 +215,39 @@ describe("V2Combobox", () => {
 
     fireEvent.scroll(listbox);
     expect(handleScrollBottom).toHaveBeenCalled();
+  });
+
+  it("renders V2BottomSheet on mobile without auto-focusing search input", () => {
+    vi.spyOn(viewportHook, "useViewport").mockReturnValue({
+      width: 375,
+      height: 812,
+      isMobile: true,
+      isTablet: false,
+      isDesktop: false,
+    });
+    const onValueChange = vi.fn();
+
+    render(
+      <V2Combobox
+        options={options}
+        value={null}
+        onValueChange={onValueChange}
+        placeholder="Phương thức"
+      />,
+    );
+    open();
+
+    expect(screen.getByTestId("v2-bottom-sheet-content")).toBeInTheDocument();
+    const searchInput = screen.getByRole("textbox");
+    expect(document.activeElement).not.toBe(searchInput);
+
+    const opt = screen.getByRole("option", { name: /Hóa đơn bán ra/ });
+    expect(opt.className).toContain("min-h-[44px]");
+    fireEvent.click(opt);
+
+    expect(onValueChange).toHaveBeenCalledWith("out");
+    expect(
+      screen.queryByTestId("v2-bottom-sheet-content"),
+    ).not.toBeInTheDocument();
   });
 });

@@ -47,11 +47,11 @@ export const V2RowActionList: React.FC<V2RowActionListProps> = ({
             </V2Button>
           );
 
-          if (item.disabled && item.disabledReason) {
+          if (item.disabled ? item.disabledReason : item.hint) {
             return (
               <V2Tooltip
                 key={item.label}
-                content={item.disabledReason}
+                content={item.disabled ? item.disabledReason : item.hint}
                 side="right"
               >
                 <span className="block w-full">{button}</span>

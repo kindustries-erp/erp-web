@@ -106,6 +106,24 @@ export interface V2TableQuery {
   dateRanges: Record<string, V2DateRange>;
   /** Tìm kiếm toàn cục trên mọi cột; bỏ trống nghĩa là không tìm */
   search?: string;
+  /**
+   * Key cột cần tổng (lấy từ cột có `summary`), gửi thành `summary_keys`.
+   * Không đưa vào URL: khung bảng gắn khi gọi `useData`.
+   */
+  summaryKeys?: string[];
+}
+
+/**
+ * Số liệu tổng của một cột từ API (theo `summary_keys`).
+ * `null` ở mức key nghĩa là API không tính được; FE hiển thị "—".
+ */
+export interface V2SummaryMetric {
+  /** Tổng toàn bộ dòng khớp bộ lọc */
+  total: number;
+  /** Tổng riêng trang hiện tại */
+  pageSubtotal: number;
+  /** Tổng từ dòng 1 đến hết trang hiện tại */
+  cumulative: number;
 }
 
 export interface V2RowAction {
@@ -115,6 +133,8 @@ export interface V2RowAction {
   disabled?: boolean;
   /** Lý do hiển thị khi `disabled`, ví dụ "Chỉ sửa được khi còn nháp" */
   disabledReason?: string;
+  /** Gợi ý hiển thị khi hành động đang bật (tooltip), ví dụ giải thích "Phát hành" */
+  hint?: string;
   variant?: "default" | "danger";
 }
 

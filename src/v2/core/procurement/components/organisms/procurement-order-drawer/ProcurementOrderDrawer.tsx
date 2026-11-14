@@ -7,6 +7,8 @@ import { useProcurementOrderDrawer } from "./ProcurementOrderDrawer.hook";
 import { ProcurementOrderMainSections } from "./ProcurementOrderMainSections";
 import { ProcurementOrderHeaderSection } from "./sections/ProcurementOrderHeaderSection";
 import { ProcurementOrderSummarySection } from "./sections/ProcurementOrderSummarySection";
+import { ProcurementAuditSection } from "../procurement-audit-section";
+import { ProcurementReceiptsSection } from "../procurement-receipts-section";
 
 /** Drawer đơn mua hàng 2 cột: trái là dòng hàng, phải là đầu đơn và tổng quan. */
 export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
@@ -44,6 +46,17 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
         actions={
           state.viewing
             ? [
+                ...(props.receive && state.detail
+                  ? [
+                      {
+                        label: t("v2.procurement.actions.receive", "Nhập kho"),
+                        onClick: () =>
+                          props.receive?.onReceive({ id: state.detail!.id }),
+                        primary: true,
+                        disabled: !props.receive.canReceive(state.detail),
+                      },
+                    ]
+                  : []),
                 {
                   label: t("v2.common.close", "Đóng"),
                   onClick: props.onClose,
@@ -60,10 +73,23 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
                 {
                   label: t("v2.procurement.actions.saveDraft", "Lưu nháp"),
                   onClick: state.submit,
-                  primary: true,
+                  primary: !state.directConfirm,
                   loading: state.saving,
                   disabled: state.saving || state.loading,
                 },
+                ...(state.directConfirm
+                  ? [
+                      {
+                        label: state.creating
+                          ? t("v2.procurement.actions.create", "Tạo mới")
+                          : t("v2.procurement.actions.update", "Cập nhật"),
+                        onClick: state.confirmSubmit,
+                        primary: true,
+                        loading: state.saving,
+                        disabled: state.saving || state.loading,
+                      },
+                    ]
+                  : []),
               ]
         }
         leftPanel={
@@ -71,6 +97,12 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
             form={state.form}
             errors={state.errors}
             viewing={state.viewing}
+            linesLocked={state.linesLocked}
+            itemCodeRequired={state.itemCodeRequired}
+            showReceived={
+              state.viewing &&
+              (state.status === "ISSUED" || state.status === "CLOSED")
+            }
             setField={state.setField}
           />
         }
@@ -82,12 +114,33 @@ export function ProcurementOrderDrawer(props: ProcurementDrawerProps) {
               viewing={state.viewing}
               branchLocked={state.branchLocked}
               branchOptional={state.branchOptional}
+              invoicePicker={state.invoicePicker}
               setField={state.setField}
+              canPickRequest={state.canPickRequest}
+              requestLabel={state.requestLabel}
+              requestApi={state.requestApi}
+              onPickRequest={state.pickRequest}
             />
             <ProcurementOrderSummarySection
               form={state.form}
               detail={state.detail}
             />
+            {props.receiptHistory &&
+              props.documentId &&
+              state.viewing &&
+              (state.status === "ISSUED" || state.status === "CLOSED") && (
+                <ProcurementReceiptsSection
+                  orderId={props.documentId}
+                  history={props.receiptHistory}
+                />
+              )}
+            {!state.creating && props.documentId && (
+              <ProcurementAuditSection
+                documentId={props.documentId}
+                api={props.api}
+                queryKey={props.queryKey}
+              />
+            )}
           </div>
         }
       />

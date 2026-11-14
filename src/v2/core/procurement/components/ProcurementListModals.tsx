@@ -6,6 +6,7 @@ import type { ProcurementListState } from "../hooks/useProcurementList";
 import { ProcurementReasonModal } from "./ProcurementReasonModal";
 import { SubmitApprovalModal } from "./organisms/submit-approval-modal";
 import { ProcurementApproveModal } from "./organisms/procurement-approve-modal";
+import { ProcurementAlreadyDecidedModal } from "./organisms/procurement-already-decided-modal";
 
 export interface ProcurementListModalsProps<T extends { id: string }> {
   config: ProcurementListConfig<T>;
@@ -66,6 +67,10 @@ export function ProcurementListModals<T extends { id: string }>({
             state.closeConfirm();
           }
         }}
+      />
+      <ProcurementAlreadyDecidedModal
+        target={state.alreadyDecided}
+        onClose={state.closeAlreadyDecided}
       />
       <V2ConfirmModal
         open={Boolean(state.deleteTarget)}

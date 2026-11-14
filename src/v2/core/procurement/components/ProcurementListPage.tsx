@@ -6,6 +6,7 @@ import {
   v2ColumnPreferencesStorage,
   v2ViewPresetStorage,
 } from "@/v2/shared/preferences/v2TablePreferenceStorages";
+import { withProcurementFilter } from "../procurement.api";
 import { useProcurementList } from "../hooks/useProcurementList";
 import { useProcurementQuery } from "../hooks/useProcurementQuery";
 import type { ProcurementListConfig } from "../hooks/procurementListConfig.type";
@@ -13,6 +14,7 @@ import { V2Button } from "@/v2/shared/components";
 import type { V2TabComboboxItem } from "@/v2/shared/components/molecules/v2-tab-combobox";
 import type { ProcurementDrawerProps } from "../procurement.drawer.type";
 import type { ProcurementDocumentRef } from "../procurement.types";
+import type { ProcurementViewVisibility } from "../hooks/useProcurementListView";
 import { ProcurementListModals } from "./ProcurementListModals";
 
 export interface ProcurementPageDisplay<T> {
@@ -23,9 +25,12 @@ export interface ProcurementPageDisplay<T> {
   buildColumns: (
     t: (key: string, fallback: string) => string,
     openDetail?: (id: string) => void,
+    openLinked?: (id: string) => void,
   ) => V2Column<T>[];
   /** Drawer chi tiết/sửa của họ chứng từ, dựng bởi module */
   renderDrawer: (props: ProcurementDrawerProps) => React.ReactNode;
+  /** Cột hiển thị theo từng view hệ thống ("overview", "all") */
+  viewVisibility?: ProcurementViewVisibility;
 }
 
 /** Chứng từ mở trong drawer: ưu tiên row từ drawer, không có thì lấy id đang mở. */
@@ -73,12 +78,13 @@ export function ProcurementListPage<T extends { id: string }>({
           columns,
           getRowKey: (row) => row.id,
           mode: "server",
-          fetchOptions: config.api.options,
+          fetchOptions: withProcurementFilter(config.api.options, {}),
           rowActions: state.rowActions,
           preferencesStorage: v2ColumnPreferencesStorage,
           viewPresetStorage: v2ViewPresetStorage,
           emptyLabel: t("v2.procurement.empty", "Không có dữ liệu"),
-          toolbar: { search: {} },
+          // filterPanel: nút "Bộ lọc (n)" trên toolbar cần panel để mở được
+          toolbar: { search: {}, filterPanel: {} },
         },
         useData: (query) =>
           useProcurementQuery(config, query, state.onListError),
@@ -119,12 +125,31 @@ export function ProcurementListPage<T extends { id: string }>({
                 api: config.api,
                 fromRequestId: drawer.fromRequestId ?? null,
                 approval: state.approval.gate,
+                approvalConfigPath: config.approvalConfigPath,
+                directConfirm: Boolean(config.directConfirmWhenApprovalOff),
                 requestApi: config.requestApi,
                 onTransition: (action, row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);
                   if (target) state.start(target, action);
                 },
                 onSaved: state.openSaved,
+                receive:
+                  config.receiveHref && config.canReceive && state.canReceive
+                    ? {
+                        canReceive: (order) =>
+                          config.canReceive?.(order as unknown as T) ?? false,
+                        onReceive: (row) => {
+                          const target = resolveDrawerTarget<T>(row, drawer.id);
+                          if (target) state.receive(target);
+                        },
+                      }
+                    : undefined,
+                receiptHistory: config.loadReceipts
+                  ? {
+                      load: config.loadReceipts,
+                      onOpen: state.openReceipt,
+                    }
+                  : undefined,
                 canCreateOrder: state.canCreate && Boolean(config.poHref),
                 onOrderFromRequest: (row) => {
                   const target = resolveDrawerTarget<T>(row, drawer.id);

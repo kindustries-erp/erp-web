@@ -18,28 +18,32 @@ export function useGarageNavSection({
     ErpResource.GARAGE_DEBTS,
     ErpAction.READ,
   );
-  const canReadGarageGoodsReceipts =
-    useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
+  const canReadGarageStockVouchers =
+    useHasPermission(ErpResource.GARAGE_STOCK_VOUCHERS, ErpAction.READ) ||
+    canReadGarageCases;
+  const canReadGarageStockLedger =
+    useHasPermission(ErpResource.GARAGE_STOCK_LEDGER, ErpAction.READ) ||
     canReadGarageCases;
   const canReadGarageOpex = canReadGarageCases;
-  // Menu PO garage chỉ dựa vào quyền của chính nó (không fallback sang garage)
+  // Quyền truy cập trang mua hàng garage (gồm cả đề nghị và đơn mua)
   const canReadGaragePurchaseOrders = useHasPermission(
     ErpResource.GARAGE_PROCUREMENT_ORDERS,
     ErpAction.READ,
   );
-  const canReadGarageProcurementRequests = useHasPermission(
-    ErpResource.GARAGE_PROCUREMENT_REQUESTS,
-    ErpAction.READ,
-  );
+  const canReadGarageProcurementRequests =
+    useHasPermission(ErpResource.GARAGE_PROCUREMENT_REQUESTS, ErpAction.READ) ||
+    canReadGaragePurchaseOrders;
 
   const isCashflowActive = currentPage === "garage-cashflow";
 
   const isCasesActive =
     currentPage === "garage-cases" || currentPage === "garage-dashboard";
 
-  const isGoodsReceiptsActive = currentPage === "garage-goods-receipts";
+  const isStockVouchersActive = currentPage === "garage-stock-vouchers";
+  const isStockBalancesActive = currentPage === "garage-stock-balances";
 
   const isProcurementRequestsActive =
+    currentPage === "garage-procurement" ||
     currentPage === "garage-procurement-requests";
 
   const isPurchaseOrdersActive = currentPage === "garage-procurement-orders";
@@ -53,31 +57,34 @@ export function useGarageNavSection({
 
   const handleNavCashflow = () => navTo("garage-cashflow");
   const handleNavCases = () => navTo("garage-cases");
-  const handleNavGoodsReceipts = () => navTo("garage-goods-receipts");
-  const handleNavProcurementRequests = () =>
-    navTo("garage-procurement-requests");
-  const handleNavPurchaseOrders = () => navTo("garage-procurement-orders");
+  const handleNavStockVouchers = () => navTo("garage-stock-vouchers");
+  const handleNavStockBalances = () => navTo("garage-stock-balances");
+  const handleNavProcurementRequests = () => navTo("garage-procurement");
+  const handleNavPurchaseOrders = () => navTo("garage-procurement");
   const handleNavDebts = () => navTo("garage-debts");
   const handleNavOpex = () => navTo("garage-opex");
 
   return {
     canReadGarageCashflow,
     canReadGarageCases,
-    canReadGarageGoodsReceipts,
+    canReadGarageStockVouchers,
+    canReadGarageStockLedger,
     canReadGarageProcurementRequests,
     canReadGaragePurchaseOrders,
     canReadGarageDebts,
     canReadGarageOpex,
     isCashflowActive,
     isCasesActive,
-    isGoodsReceiptsActive,
+    isStockVouchersActive,
+    isStockBalancesActive,
     isProcurementRequestsActive,
     isPurchaseOrdersActive,
     isDebtsActive,
     isOpexActive,
     handleNavCashflow,
     handleNavCases,
-    handleNavGoodsReceipts,
+    handleNavStockVouchers,
+    handleNavStockBalances,
     handleNavProcurementRequests,
     handleNavPurchaseOrders,
     handleNavDebts,

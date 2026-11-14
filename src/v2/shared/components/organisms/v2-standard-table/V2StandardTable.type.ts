@@ -41,8 +41,15 @@ export interface V2ColumnSummary<T> {
   label?: string;
   /** Lấy số để cộng; mặc định đọc theo `key` của cột (hỗ trợ "a.b") */
   accessor?: (row: T) => unknown;
-  /** Chế độ `server`: tổng toàn bộ do consumer truyền (từ API); `client` tự tính */
-  total?: number;
+  /**
+   * Chế độ `server`: tổng toàn bộ do API trả về; `null` = API không tính được (hiện "—").
+   * Không truyền thì bảng tự hiểu là chưa có số từ server.
+   */
+  total?: number | null;
+  /** Chế độ `server`: subtotal trang hiện tại từ API; không có thì bảng tự cộng theo dòng đang hiển thị */
+  pageSubtotal?: number | null;
+  /** Chế độ `server`: lũy kế đến trang hiện tại từ API; `null` = không tính được (hiện "—") */
+  cumulative?: number | null;
   /** Tiêu đề chỉ số trong popover, ví dụ "SL nhập kho" */
   metricTitle?: string;
   /** Đơn vị sau số, ví dụ "kg", "dòng" */
@@ -93,6 +100,16 @@ export interface V2StandardTableProps<T> {
   enableRowSelection?: boolean;
   selectedKeys?: string[];
   onSelectionChange?: (keys: string[]) => void;
+  /** Cho phép hiển thị nút ẩn/hiện cột trên toolbar (mặc định: true) */
+  enableColumnVisibility?: boolean;
+  /** Render nội dung mở rộng dưới một dòng (opt-in) */
+  renderExpandedRow?: (row: T, index: number) => ReactNode;
+  /** Kiểm tra dòng có thể mở rộng không (mặc định true nếu có renderExpandedRow) */
+  canExpandRow?: (row: T, index: number) => boolean;
+  /** Danh sách row key đang mở rộng (controlled) */
+  expandedRowKeys?: string[];
+  /** Callback khi trạng thái mở rộng dòng thay đổi */
+  onExpandedRowsChange?: (keys: string[]) => void;
   rowActions?: (row: T) => V2RowActionGroup[];
   getRowClassName?: (row: T, index: number) => string | undefined;
   preferencesStorage?: V2ColumnPreferencesStorage;

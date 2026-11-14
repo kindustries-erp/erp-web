@@ -11,7 +11,11 @@ import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
-import { pathToPage, pageToPath } from "@/shared/utils/pageUrl";
+import {
+  LOANS_TOOL_PATH,
+  pathToPage,
+  pageToPath,
+} from "@/shared/utils/pageUrl";
 import { useEnvStore } from "@/core/store/useEnvStore";
 import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
 import { V2LoginPage } from "@/v2/modules/auth/pages/login/V2LoginPage";
@@ -23,10 +27,37 @@ import { VinfastPartsOtoStockPage } from "@/pages/VinfastPartsOtoStockPage";
 import { VinfastPartsMotoStockPage } from "@/pages/VinfastPartsMotoStockPage";
 
 import { PageKey } from "@/shared/types";
+import { AppProviders } from "@/v2/app/providers";
+import { resolvePublicTool } from "@/v2/app/router/publicTools.config";
 
 type PageLoader = () => Promise<unknown>;
 
 const V2App = lazy(() => import("@/v2/app/App"));
+const V2DeckViewerPage = lazy(() =>
+  import("@/v2/modules/deck-viewer").then((m) => ({
+    default: m.V2DeckViewerPage,
+  })),
+);
+const V2PublicToolView = lazy(() =>
+  import("@/v2/app/pages/v2-public-tool-view").then((m) => ({
+    default: m.V2PublicToolView,
+  })),
+);
+const LoansListPage = lazy(() =>
+  import("@/v2/modules/loans-tool/pages/loans-list").then((m) => ({
+    default: m.LoansListPage,
+  })),
+);
+
+const PUBLIC_DECK_ROUTES: Record<string, string> = {
+  "/imotorbike": "imotorbike",
+};
+
+function resolvePublicDeckKey(): string | null {
+  if (typeof window === "undefined") return null;
+  const normalized = location.pathname.replace(/\/+$/, "") || "/";
+  return PUBLIC_DECK_ROUTES[normalized] ?? null;
+}
 
 const loadDashboard = () =>
   import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard }));
@@ -203,24 +234,20 @@ const GarageCasesPage = lazy(() =>
     default: m.GarageCasesPage,
   })),
 );
-const GarageGoodsReceiptsPage = lazy(() =>
-  import("@/v2/modules/garage-goods-receipts/pages/GarageGoodsReceiptsPage").then(
-    (m) => ({
-      default: m.GarageGoodsReceiptsPage,
-    }),
-  ),
+const GarageStockVouchersPage = lazy(() =>
+  import("@/v2/modules/inventory-movements-garage").then((m) => ({
+    default: m.GarageStockVouchersPage,
+  })),
+);
+const GarageStockBalancesPage = lazy(() =>
+  import("@/v2/modules/inventory-movements-garage").then((m) => ({
+    default: m.GarageStockBalancesPage,
+  })),
 );
 const GarageProcurementRequestsPage = lazy(() =>
   import("@/v2/modules/garage-procurement-requests/GarageProcurementRequestsPage").then(
     (m) => ({
       default: m.GarageProcurementRequestsPage,
-    }),
-  ),
-);
-const GarageProcurementOrdersPage = lazy(() =>
-  import("@/v2/modules/garage-procurement-orders/GarageProcurementOrdersPage").then(
-    (m) => ({
-      default: m.GarageProcurementOrdersPage,
     }),
   ),
 );
@@ -264,6 +291,7 @@ const InvoiceDebtsPage = lazy(() =>
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   opex: OpexPage,
+  loans: LoansListPage,
   "inventory-dashboard": InventoryDashboard,
   cashflow: () => <BankStatementPage initialTab="dashboard" />,
   purchasing: MuaHang,
@@ -309,9 +337,9 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "invoice-debts": InvoiceDebtsPage,
   "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
-  "garage-goods-receipts": GarageGoodsReceiptsPage,
-  "garage-procurement-requests": GarageProcurementRequestsPage,
-  "garage-procurement-orders": GarageProcurementOrdersPage,
+  "garage-stock-vouchers": GarageStockVouchersPage,
+  "garage-stock-balances": GarageStockBalancesPage,
+  "garage-procurement": GarageProcurementRequestsPage,
   "garage-opex": GarageOpex,
   "garage-cashflow": GarageCashflowPage,
   "garage-customers": GaragePartners,
@@ -389,20 +417,54 @@ export default function App() {
   const { bootstrapAction } = useAuthStore();
   const contentRef = useRef<HTMLDivElement | null>(null);
   const openTabsKey = openTabs.map((t) => t.instanceId).join("|");
+  const publicDeckKey = resolvePublicDeckKey();
 
   useSerialGenerationProgress();
 
   useEffect(() => {
+    if (publicDeckKey || resolvePublicTool(location.pathname, isLoggedIn))
+      return;
     useEnvStore.getState().fetchAppConfig();
     bootstrapAction();
-  }, []);
+  }, [publicDeckKey, isLoggedIn]);
 
   useEffect(() => {
     const sync = () => {
-      if (location.pathname.startsWith("/v2")) return;
+      const loggedIn =
+        typeof useAppStore.getState === "function"
+          ? useAppStore.getState().isLoggedIn
+          : isLoggedIn;
+      const matchedPublicTool = resolvePublicTool(location.pathname, loggedIn);
+      if (matchedPublicTool) {
+        if (location.pathname !== matchedPublicTool.path) {
+          window.history.replaceState(
+            null,
+            "",
+            matchedPublicTool.path + location.search,
+          );
+        }
+        return;
+      }
+      if (
+        location.pathname.startsWith("/v2") ||
+        resolvePublicDeckKey() ||
+        (!loggedIn && location.pathname === "/login")
+      ) {
+        return;
+      }
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
         if (
+          parsed.page === "loans" &&
+          location.pathname.replace(/\/+$/, "") !== LOANS_TOOL_PATH
+        ) {
+          window.history.replaceState(
+            null,
+            "",
+            pageToPath("loans", parsed.tab) +
+              (location.search && !parsed.tab ? location.search : ""),
+          );
+        } else if (
           parsed.page === "erp-invoices" &&
           !location.search.includes("tab=")
         ) {
@@ -458,6 +520,25 @@ export default function App() {
     if (el && el.scrollLeft !== 0) el.scrollLeft = 0;
   }
 
+  if (publicDeckKey) {
+    return (
+      <Suspense fallback={PAGE_FALLBACK}>
+        <V2DeckViewerPage deckKey={publicDeckKey} />
+      </Suspense>
+    );
+  }
+
+  const publicTool = resolvePublicTool(location.pathname, isLoggedIn);
+  if (publicTool) {
+    return (
+      <Suspense fallback={PAGE_FALLBACK}>
+        <AppProviders allowAnonymous>
+          <V2PublicToolView tool={publicTool} isLoggedIn={isLoggedIn} />
+        </AppProviders>
+      </Suspense>
+    );
+  }
+
   if (typeof window !== "undefined" && location.pathname.startsWith("/v2")) {
     return (
       <Suspense fallback={PAGE_FALLBACK}>
@@ -466,7 +547,28 @@ export default function App() {
     );
   }
 
-  if (!isLoggedIn) return <V2LoginPage />;
+  if (!isLoggedIn) {
+    return (
+      <V2LoginPage
+        onSuccess={() => {
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get("redirect");
+          if (
+            redirect &&
+            redirect.startsWith("/") &&
+            !redirect.startsWith("//")
+          ) {
+            const url = new URL(redirect, window.location.origin);
+            window.history.replaceState(null, "", redirect);
+            const parsed = pathToPage(url.pathname, url.search);
+            if (parsed) {
+              syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
+            }
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <TooltipProvider>

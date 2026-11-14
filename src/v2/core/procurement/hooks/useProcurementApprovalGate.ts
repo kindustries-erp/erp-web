@@ -13,9 +13,11 @@ import { useApproversQuery } from "./useApproversQuery";
 
 /** Lấy người duyệt và người tạo từ dòng danh sách (PR/PO đều có; dòng khác thì trả null). */
 const approvalSubjectOf = (row: object): ApprovalSubject => {
-  const r = row as Partial<ApprovalSubject>;
+  const r = row as Partial<ApprovalSubject> & {
+    approval?: { approverId?: string | null };
+  };
   return {
-    approverId: r.approverId ?? null,
+    approverId: r.approval?.approverId ?? null,
     createdBy: r.createdBy ?? null,
   };
 };
@@ -47,6 +49,7 @@ export function useProcurementApprovalGate<T extends { id: string }>(
           config.availableActions(row),
           gate,
           approvalSubjectOf(row),
+          Boolean(config.directConfirmWhenApprovalOff),
         ),
     }),
     [config, gate],

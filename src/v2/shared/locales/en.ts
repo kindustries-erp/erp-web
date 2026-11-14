@@ -12,6 +12,7 @@ export const v2En: V2Dictionary = {
         manufacturing: "MANUFACTURING / WORKSHOP",
         garage: "GARAGE",
         accounting: "ACCOUNTING",
+        tools: "TOOLS",
         settings: "SYSTEM",
       },
       items: {
@@ -27,6 +28,7 @@ export const v2En: V2Dictionary = {
         erpProduction: "Production",
         erpInvoices: "Invoices",
         cashflow: "Cash Flow",
+        loans: "Loans & Cashflow",
         catalog: "General Settings",
         allModules: "All",
         catalogTitle: "All Modules",
@@ -36,10 +38,11 @@ export const v2En: V2Dictionary = {
         pinnedShortcutsCount: "Pinned {{count}} shortcuts on Bottom Nav",
         resetDefault: "Reset to default",
         inventoryGroup: "Inventory",
-        garageGoodsReceipts: "Garage Goods Receipts",
+        garageStockVouchers: "Garage Stock Vouchers",
+        garageStockBalances: "Garage Stock",
         garageProcurementRequests: "Garage Purchase Requests",
         garageProcurementOrders: "Garage Purchase Orders",
-        // v2-module:garage-goods-receipts:locale-en
+        // v2-module:inventory-movements-garage:locale-en
         erpPermissionsCore: "Roles & Permissions",
         // v2-module:rbac-roles:locale-en
         // plop:v2-nav-items
@@ -48,6 +51,10 @@ export const v2En: V2Dictionary = {
       noSearchResults: "No matching modules found",
       clearSearch: "Clear search",
       modulesCountBadge: "{{count}} modules",
+    },
+    appearance: {
+      title: "Appearance & Language",
+      subtitle: "Customize color theme and display language",
     },
     common: {
       close: "Close",
@@ -79,6 +86,7 @@ export const v2En: V2Dictionary = {
       empty: "No notifications yet",
       deleteAll: "Delete all",
       markAllAsRead: "Mark all as read",
+      markAsRead: "Mark as read",
       deleteItem: "Delete notification",
     },
     topbar: {
@@ -107,6 +115,7 @@ export const v2En: V2Dictionary = {
       closeTabShort: "Close tab",
       headerAriaLabel: "Drawer top navigation tabs",
       subAriaLabel: "Drawer sub navigation tabs",
+      statusChipAriaLabel: "Filter by status",
       buttonGroupAriaLabel: "Button group tabs",
     },
     welcome: {
@@ -239,6 +248,9 @@ export const v2En: V2Dictionary = {
       expand: "Expand",
       collapse: "Collapse",
     },
+    activityTimeline: {
+      empty: "No activities recorded",
+    },
     dropdown: {
       optionsTitle: "Action options",
     },
@@ -349,6 +361,7 @@ export const v2En: V2Dictionary = {
     table: v2EnTable,
     auth: {
       title: "Sign In",
+      loginAction: "Sign In",
       subtitle: "Sign in to ERP system",
       emailLabel: "Email",
       emailPlaceholder: "Enter your email",

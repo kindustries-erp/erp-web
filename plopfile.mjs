@@ -12,7 +12,11 @@ import { join } from "node:path";
 import { buildV2CoreData } from "./plop-helpers/v2CoreData.mjs";
 import { v2CoreFileMap } from "./plop-helpers/v2CoreFiles.mjs";
 import { v2CoreManifestJson } from "./plop-helpers/v2CoreManifest.mjs";
-import { buildV2ThinData, listWebCoreFamilies, readWebCoreManifest } from "./plop-helpers/v2ThinData.mjs";
+import {
+  buildV2ThinData,
+  listWebCoreFamilies,
+  readWebCoreManifest,
+} from "./plop-helpers/v2ThinData.mjs";
 import { v2ThinFileMap } from "./plop-helpers/v2ThinFiles.mjs";
 
 export default function (plop) {
@@ -143,7 +147,8 @@ export default function (plop) {
 
   // 2. GENERATOR: Standalone Drawer
   plop.setGenerator("drawer", {
-    description: "[LEGACY-V1] Tạo StandardFormDrawer V1 (src/modules). Drawer V2 nằm trong lõi họ (src/v2/core/<họ>/drawers)",
+    description:
+      "[LEGACY-V1] Tạo StandardFormDrawer V1 (src/modules). Drawer V2 nằm trong lõi họ (src/v2/core/<họ>/drawers)",
     prompts: [
       {
         type: "input",
@@ -198,7 +203,8 @@ export default function (plop) {
 
   // 3. GENERATOR: Standalone Modal
   plop.setGenerator("modal", {
-    description: "[LEGACY-V1] Tạo Dialog/Modal V1 (src/modules). Component V2 dùng generator v2-component",
+    description:
+      "[LEGACY-V1] Tạo Dialog/Modal V1 (src/modules). Component V2 dùng generator v2-component",
     prompts: [
       {
         type: "input",
@@ -248,7 +254,8 @@ export default function (plop) {
 
   // 4. GENERATOR: Embedded Table Section
   plop.setGenerator("table-section", {
-    description: "[LEGACY-V1] Tạo bảng nhúng DataTable V1 (src/modules). Bảng V2 nằm trong lõi họ hoặc v2-component",
+    description:
+      "[LEGACY-V1] Tạo bảng nhúng DataTable V1 (src/modules). Bảng V2 nằm trong lõi họ hoặc v2-component",
     prompts: [
       {
         type: "input",
@@ -280,7 +287,7 @@ export default function (plop) {
     ],
   });
 
-  // 5. GENERATOR: Module V2 chuẩn (Dual-Run /v2/) — xem .agents/skills/erp-web-structure/references/v2-migration.md
+  // 5. GENERATOR: Module V2 chuẩn (Dual-Run /v2/) — xem .agents/skills/erp-ui-structure/references/v2-migration.md
   plop.setGenerator("v2-module", {
     description:
       "Tạo module V2 standalone (API, domain, atomic components, drawer, page, locale, test) và nối route/menu/i18n. Họ đã có lõi thì dùng v2-thin-module",
@@ -290,7 +297,8 @@ export default function (plop) {
         name: "moduleName",
         message: "Tên module (kebab-case, vd: sample-items):",
         validate: (value) =>
-          /^[a-z][a-z0-9-]*$/.test(value) || "Dùng kebab-case, bắt đầu bằng chữ thường",
+          /^[a-z][a-z0-9-]*$/.test(value) ||
+          "Dùng kebab-case, bắt đầu bằng chữ thường",
       },
       {
         type: "input",
@@ -375,7 +383,8 @@ export default function (plop) {
             type: "modify",
             path: change.file,
             transform: (content) =>
-              insertAtMarker(content, change.marker, change.snippet, change.id).content,
+              insertAtMarker(content, change.marker, change.snippet, change.id)
+                .content,
           });
         }
       }
@@ -398,9 +407,11 @@ export default function (plop) {
       {
         type: "input",
         name: "name",
-        message: "Tên component (PascalCase, bắt đầu V2, vd: V2TraceabilityCanvas):",
+        message:
+          "Tên component (PascalCase, bắt đầu V2, vd: V2TraceabilityCanvas):",
         validate: (value) =>
-          /^V2[A-Z][A-Za-z0-9]*$/.test(value) || "Phải bắt đầu bằng V2 và PascalCase",
+          /^V2[A-Z][A-Za-z0-9]*$/.test(value) ||
+          "Phải bắt đầu bằng V2 và PascalCase",
       },
       {
         type: "input",
@@ -435,13 +446,17 @@ export default function (plop) {
         type: "input",
         name: "familyInput",
         message: "Tên họ (kebab-case, vd: customer-claims):",
-        validate: (value) => (/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(value) ? true : "Dùng kebab-case"),
+        validate: (value) =>
+          /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(value)
+            ? true
+            : "Dùng kebab-case",
       },
       {
         type: "input",
         name: "entityInput",
         message: "Entity gốc (PascalCase, vd: CustomerClaim):",
-        validate: (value) => (/^[A-Za-z][A-Za-z0-9]*$/.test(value) ? true : "Dùng PascalCase"),
+        validate: (value) =>
+          /^[A-Za-z][A-Za-z0-9]*$/.test(value) ? true : "Dùng PascalCase",
       },
     ],
     actions: (answers) => {
@@ -484,7 +499,10 @@ export default function (plop) {
         type: "input",
         name: "moduleInput",
         message: "Tên module (kebab-case, vd: garage-goods-receipts):",
-        validate: (value) => (/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(value) ? true : "Dùng kebab-case"),
+        validate: (value) =>
+          /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(value)
+            ? true
+            : "Dùng kebab-case",
       },
       { type: "input", name: "titleViInput", message: "Tiêu đề tiếng Việt:" },
       { type: "input", name: "titleEnInput", message: "Tiêu đề tiếng Anh:" },
@@ -520,7 +538,9 @@ export default function (plop) {
       // Validate và dựng dữ liệu trước: input sai thì dừng tại đây, chưa ghi file nào.
       const data = buildV2ThinData(answers, manifest);
       if (existsSync(join(base, data.modulePath))) {
-        throw new Error(`Module "${data.moduleName}" đã tồn tại tại ${data.modulePath}.`);
+        throw new Error(
+          `Module "${data.moduleName}" đã tồn tại tại ${data.modulePath}.`,
+        );
       }
       const actions = v2ThinFileMap(data).map(({ template, path }) => ({
         type: "add",
@@ -534,7 +554,8 @@ export default function (plop) {
             type: "modify",
             path: change.file,
             transform: (content) =>
-              insertAtMarker(content, change.marker, change.snippet, change.id).content,
+              insertAtMarker(content, change.marker, change.snippet, change.id)
+                .content,
           });
         }
       }

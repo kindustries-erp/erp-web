@@ -1,4 +1,10 @@
-import { mkdtempSync, readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  existsSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import nodePlop from "node-plop";
@@ -17,14 +23,18 @@ const answers = {
   routeInput: "sample-items",
   navSection: "settings",
   tableInput: "erp-sample-items-table",
-  fieldSpec: "code:string:required,name:string:required,phone:string,address:text,status:status",
+  fieldSpec:
+    "code:string:required,name:string:required,phone:string,address:text,status:status",
   hasNextCode: false,
   wire: false,
 };
 
 const runGenerator = async (overrides = {}) => {
   const dest = mkdtempSync(join(tmpdir(), "v2-module-"));
-  const plop = await nodePlop(join(ROOT, "plopfile.mjs"), { destBasePath: dest, force: false });
+  const plop = await nodePlop(join(ROOT, "plopfile.mjs"), {
+    destBasePath: dest,
+    force: false,
+  });
   const generator = plop.getGenerator("v2-module");
   const result = await generator.runActions({ ...answers, ...overrides });
   return { dest, result };
@@ -57,7 +67,8 @@ describe("v2-module generator", () => {
       "sampleItems.locale.ts",
       "index.ts",
     ];
-    for (const file of expected) expect(existsSync(join(base, file)), file).toBe(true);
+    for (const file of expected)
+      expect(existsSync(join(base, file)), file).toBe(true);
   });
 
   it("leaves no template placeholders and no V1 imports", async () => {
@@ -66,7 +77,9 @@ describe("v2-module generator", () => {
     for (const file of files) {
       const text = readFileSync(file, "utf8");
       expect(text, file).not.toMatch(/\{\{/);
-      expect(text, file).not.toMatch(/from "@\/(core|shared|modules|pages|components)\//);
+      expect(text, file).not.toMatch(
+        /from "@\/(core|shared|modules|pages|components)\//,
+      );
     }
   });
 
@@ -79,17 +92,26 @@ describe("v2-module generator", () => {
   });
 
   it("skips the status molecule when there is no status field", async () => {
-    const { dest } = await runGenerator({ fieldSpec: "code:string:required,name:string:required" });
+    const { dest } = await runGenerator({
+      fieldSpec: "code:string:required,name:string:required",
+    });
     expect(
-      existsSync(join(dest, "src/v2/modules/sample-items/components/molecules")),
+      existsSync(
+        join(dest, "src/v2/modules/sample-items/components/molecules"),
+      ),
     ).toBe(false);
   });
 
   it("throws on invalid input before any file is generated", async () => {
     const dest = mkdtempSync(join(tmpdir(), "v2-module-"));
-    const plop = await nodePlop(join(ROOT, "plopfile.mjs"), { destBasePath: dest, force: false });
+    const plop = await nodePlop(join(ROOT, "plopfile.mjs"), {
+      destBasePath: dest,
+      force: false,
+    });
     const generator = plop.getGenerator("v2-module");
-    await expect(generator.runActions({ ...answers, entityName: "1bad" })).rejects.toThrow(/entityName/);
+    await expect(
+      generator.runActions({ ...answers, entityName: "1bad" }),
+    ).rejects.toThrow(/entityName/);
     expect(existsSync(join(dest, "src/v2/modules/sample-items"))).toBe(false);
   });
 });

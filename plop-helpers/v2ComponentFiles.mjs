@@ -3,17 +3,25 @@ import { kebabCase, pascalCase } from "./v2ModuleData.mjs";
 /** Tầng Atomic V2 hợp lệ (khớp thư mục src/v2/shared/components/<layer>) */
 export const COMPONENT_LAYERS = ["atoms", "molecules", "organisms"];
 
-const LAYER_TITLE = { atoms: "Atoms", molecules: "Molecules", organisms: "Organisms" };
+const LAYER_TITLE = {
+  atoms: "Atoms",
+  molecules: "Molecules",
+  organisms: "Organisms",
+};
 
 /** Chuẩn hóa đầu vào: tên bắt buộc tiền tố V2 (quy ước mọi component shared V2) */
 export function buildComponentData(answers) {
   const layer = answers.layer;
   if (!COMPONENT_LAYERS.includes(layer)) {
-    throw new Error(`Tầng không hợp lệ "${layer}", chọn: ${COMPONENT_LAYERS.join(", ")}`);
+    throw new Error(
+      `Tầng không hợp lệ "${layer}", chọn: ${COMPONENT_LAYERS.join(", ")}`,
+    );
   }
   const Name = pascalCase(answers.name);
   if (!/^V2[A-Z][A-Za-z0-9]*$/.test(Name)) {
-    throw new Error(`Tên "${answers.name}" phải bắt đầu bằng V2 và PascalCase, vd: V2TraceabilityCanvas`);
+    throw new Error(
+      `Tên "${answers.name}" phải bắt đầu bằng V2 và PascalCase, vd: V2TraceabilityCanvas`,
+    );
   }
   return {
     layer,
@@ -39,7 +47,10 @@ export function componentFileMap(data) {
     files.push(["Component.test.tsx.hbs", `${base}/${data.Name}.test.tsx`]);
   }
   if (data.layer === "atoms") {
-    files.push(["Component.stories.tsx.hbs", `${base}/${data.Name}.stories.tsx`]);
+    files.push([
+      "Component.stories.tsx.hbs",
+      `${base}/${data.Name}.stories.tsx`,
+    ]);
   }
   files.push(["index.ts.hbs", `${base}/index.ts`]);
   return files;

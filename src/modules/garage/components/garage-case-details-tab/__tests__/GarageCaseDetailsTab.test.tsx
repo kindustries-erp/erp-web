@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageCaseDetailsTab } from "../GarageCaseDetailsTab";
 import { garageApi } from "../../../api/garageApi";
 
-// Mock child components to keep unit test isolated according to /ui-structure
+// Mock child components to keep unit test isolated according to /erp-ui-structure
 vi.mock("../../GarageCasePreview", () => ({
   GarageCasePreview: vi.fn(({ caseData }: any) => (
     <div data-testid="garage-case-preview">

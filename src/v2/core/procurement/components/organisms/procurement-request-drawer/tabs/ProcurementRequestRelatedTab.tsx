@@ -78,13 +78,13 @@ export function ProcurementRequestRelatedTab({
                     <ShoppingCart className="h-4 w-4 text-primary" />
                     {t(
                       "v2.procurement.related.createPoTitle",
-                      "Khởi tạo đơn mua hàng (PO)",
+                      "Lập đơn mua hàng",
                     )}
                   </V2Text>
                   <V2Text as="p" variant="caption" color="muted">
                     {t(
                       "v2.procurement.related.createPoDesc",
-                      "Đề nghị đã được duyệt. Bạn có thể tạo đơn mua PO điền sẵn từ các dòng hàng của đề nghị này.",
+                      "Đề nghị đã được duyệt. Bạn có thể lập đơn mua hàng điền sẵn từ các dòng hàng của đề nghị này.",
                     )}
                   </V2Text>
                 </div>
@@ -94,7 +94,10 @@ export function ProcurementRequestRelatedTab({
                     className="shrink-0"
                     onClick={onOrderFromRequest}
                   >
-                    {t("v2.procurement.actions.createOrder", "Tạo PO từ PR")}
+                    {t(
+                      "v2.procurement.actions.createOrder",
+                      "Lập đơn mua từ đề nghị này",
+                    )}
                     <ArrowRight className="ml-1 h-3.5 w-3.5" />
                   </V2Button>
                 )}

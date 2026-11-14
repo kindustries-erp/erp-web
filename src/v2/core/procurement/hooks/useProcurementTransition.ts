@@ -1,5 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import {
+  isStatusConflictError,
+  readCurrentStatus,
+} from "@/v2/shared/utils/v2ApiError";
 import type { ProcurementActionKey } from "../procurement.rules";
 import {
   showProcurementError,
@@ -12,6 +16,8 @@ export interface ProcurementTransitionCallbacks {
   onTransitioned: () => void;
   /** Sau khi xóa nháp thành công: đóng modal xóa */
   onRemoved: () => void;
+  /** Chứng từ đã đổi trạng thái trên server (ví dụ đã duyệt rồi): hiện modal thay toast lỗi */
+  onAlreadyDecided?: (status: string | null) => void;
 }
 
 /** Mutation chuyển trạng thái và xóa nháp của màn danh sách: toast, làm mới cache. */
@@ -37,11 +43,18 @@ export function useProcurementTransition<T extends { id: string }>(
       callbacks.onTransitioned();
       void queryClient.invalidateQueries({ queryKey: [config.queryKey] });
     },
-    onError: (error) =>
+    onError: (error) => {
+      if (isStatusConflictError(error) && callbacks.onAlreadyDecided) {
+        // Dữ liệu trên màn hình đã cũ: làm mới danh sách để hiện trạng thái thật
+        void queryClient.invalidateQueries({ queryKey: [config.queryKey] });
+        callbacks.onAlreadyDecided(readCurrentStatus(error));
+        return;
+      }
       showProcurementError(
         error,
         t("v2.procurement.actionError", "Không thực hiện được thao tác"),
-      ),
+      );
+    },
   });
 
   const remove = useMutation({

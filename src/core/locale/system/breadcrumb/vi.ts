@@ -1,5 +1,6 @@
 export const breadcrumbVi = {
   accounting: "Kế toán",
+  tools: "Công cụ",
   dashboard: "Tổng quan",
   cashflow: "Dòng tiền",
   cashflowOverview: "Tổng hợp",
@@ -73,6 +74,7 @@ export const breadcrumbVi = {
   garage: "Garage",
   garageDashboard: "Tổng quan Garage",
   garageCases: "Hoạt động garage",
+  garageProcurement: "Mua hàng Garage",
   garageOpex: "Chi phí vận hành Garage",
   garageCashflow: "Thu chi garage",
   garagePartnersGroup: "Công nợ",

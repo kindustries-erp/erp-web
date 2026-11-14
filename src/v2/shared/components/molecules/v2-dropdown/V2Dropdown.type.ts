@@ -8,6 +8,8 @@ export interface V2DropdownItem {
   variant?: "default" | "danger";
   disabled?: boolean;
   disabledReason?: string;
+  /** Gợi ý tooltip khi hành động đang bật */
+  hint?: string;
   loading?: boolean;
   preventClose?: boolean;
   hidden?: boolean;

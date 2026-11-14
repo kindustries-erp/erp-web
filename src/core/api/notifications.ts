@@ -1,36 +1,64 @@
 import axiosInstance from "./axiosInstance";
 
+export type NotificationType = "INFO" | "WARNING" | "ERROR" | "SUCCESS";
+
+/** Chứng từ liên quan để bấm thông báo mở đúng drawer/modal. */
+export interface NotificationTarget {
+  module: string;
+  id: string;
+  action: string | null;
+}
+
 export interface CoreNotification {
   id: string;
-  userId: string;
   title: string;
   message: string;
-  type: "INFO" | "WARNING" | "ERROR" | "SUCCESS";
+  type: NotificationType;
   isRead: boolean;
-  metadata?: any;
+  readAt: string | null;
   createdAt: string;
-  updatedAt: string;
+  extraData: Record<string, unknown>;
+  target: NotificationTarget | null;
 }
+
+interface NotificationListResponse {
+  items: CoreNotification[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    next: number | null;
+    previous: number | null;
+  };
+  /** Dữ liệu phụ của danh sách (không thuộc từng dòng). */
+  extraData: { unreadCount: number };
+}
+
+const BASE_URL = "/api/v2/notifications-inbox";
+const LIST_PAGE_SIZE = 50;
 
 export const notificationsApi = {
   findAll: async (): Promise<CoreNotification[]> => {
-    const res = await axiosInstance.get("/api/v1/notifications");
-    return res.data;
+    const res = await axiosInstance.get<NotificationListResponse>(BASE_URL, {
+      params: { page: 1, pageSize: LIST_PAGE_SIZE },
+    });
+    return res.data.items;
   },
   markAsRead: async (id: string): Promise<void> => {
-    const res = await axiosInstance.patch(`/api/v1/notifications/${id}/read`);
+    const res = await axiosInstance.patch(`${BASE_URL}/${id}/read`);
     return res.data;
   },
   markAllAsRead: async (): Promise<void> => {
-    const res = await axiosInstance.patch("/api/v1/notifications/read-all");
+    const res = await axiosInstance.patch(`${BASE_URL}/read-all`);
     return res.data;
   },
   delete: async (id: string): Promise<void> => {
-    const res = await axiosInstance.delete(`/api/v1/notifications/${id}`);
+    const res = await axiosInstance.delete(`${BASE_URL}/${id}`);
     return res.data;
   },
   deleteAll: async (): Promise<void> => {
-    const res = await axiosInstance.delete("/api/v1/notifications/all");
+    const res = await axiosInstance.delete(`${BASE_URL}/all`);
     return res.data;
   },
 };

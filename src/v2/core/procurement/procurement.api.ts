@@ -1,22 +1,38 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import type {
-  V2FetchOptionsParams,
-  V2FetchOptionsResult,
-  V2TableQuery,
+  V2FetchOptions,
+  V2FilterOption,
 } from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
 import { PROCUREMENT_REASON_ACTIONS } from "./procurement.rules";
+import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
+import { toFetchOptionsResult } from "@/v2/shared/utils/v2FetchOptionsAdapter";
+import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
 import type {
   ProcurementApi,
   ProcurementApprovalEvent,
+  ProcurementFetchOptionsParams,
   ProcurementLinePayload,
   ProcurementListResponse,
   ProcurementPoDraft,
+  ProcurementTableQuery,
 } from "./procurement.types";
 
-/** Tham số danh sách của API procurement: phân trang, sắp xếp và bộ lọc bảng V2. */
-export const toProcurementListParams = (query: V2TableQuery) => ({
+/**
+ * Gắn bộ lọc procurement (đã xóa mềm) vào hàm lấy gợi ý cột của bảng V2.
+ * Thiếu API thì trả undefined để bảng dùng cấu hình mặc định.
+ */
+export const withProcurementFilter = (
+  options: ProcurementApi<unknown>["options"],
+  filter: Pick<ProcurementFetchOptionsParams, "deleted">,
+): V2FetchOptions | undefined =>
+  options ? (params) => options({ ...params, ...filter }) : undefined;
+
+/** Tham số danh sách của API procurement: phân trang, sắp xếp, bộ lọc bảng V2 và bộ lọc riêng. */
+export const toProcurementListParams = (query: ProcurementTableQuery) => ({
   page: query.page,
+  status: query.status || undefined,
+  deleted: query.deleted,
   pageSize: query.pageSize,
   search: query.search?.trim() || undefined,
   sort: query.sorts?.length
@@ -40,6 +56,7 @@ export const toProcurementListParams = (query: V2TableQuery) => ({
     query.dateRanges && Object.keys(query.dateRanges).length
       ? JSON.stringify(query.dateRanges)
       : undefined,
+  summary_keys: toSummaryKeysParam(query),
 });
 
 /**
@@ -52,6 +69,9 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
     supportsDelete?: boolean;
     supportsPoDraft?: boolean;
     supportsPurge?: boolean;
+    supportsClone?: boolean;
+    /** Đường dẫn lưu-và-hành-động một bước: PR `save-and-submit`, PO `save-and-confirm` */
+    saveAndAct?: "save-and-submit" | "save-and-confirm";
   } = {},
 ): ProcurementApi<T, D, C, H> {
   return {
@@ -60,7 +80,11 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
         basePath,
         { params: toProcurementListParams(query) },
       );
-      return { items: data.rows, total: data.total };
+      return {
+        items: data.items,
+        total: data.pagination.total,
+        summaries: data.summaries,
+      };
     },
     transition: async (
       id,
@@ -95,6 +119,17 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
       const { data } = await v2HttpClient.patch(`${basePath}/${id}`, payload);
       return data;
     },
+    saveAndSubmit: options.saveAndAct
+      ? async (id, body) => {
+          const url = id
+            ? `${basePath}/${id}/${options.saveAndAct}`
+            : `${basePath}/${options.saveAndAct}`;
+          const { data } = id
+            ? await v2HttpClient.patch<{ id: string }>(url, body)
+            : await v2HttpClient.post<{ id: string }>(url, body);
+          return data;
+        }
+      : undefined,
     replaceLines: async (id, lines: ProcurementLinePayload[]) => {
       const { data } = await v2HttpClient.patch(`${basePath}/${id}/lines`, {
         lines,
@@ -121,6 +156,14 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
           return data;
         }
       : undefined,
+    clone: options.supportsClone
+      ? async (id) => {
+          const { data } = await v2HttpClient.post<{ id: string }>(
+            `${basePath}/${id}/clone`,
+          );
+          return data;
+        }
+      : undefined,
     purge: options.supportsPurge
       ? async (id) => {
           const { data } = await v2HttpClient.delete(
@@ -129,20 +172,20 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
           return data;
         }
       : undefined,
-    options: async (params: V2FetchOptionsParams) => {
-      const { data } = await v2HttpClient.get<V2FetchOptionsResult>(
-        `${basePath}/column-options`,
-        {
-          params: {
-            column: params.columnKey,
-            search: params.search,
-            page: params.pageParam,
-            pageSize: 20,
-            filters: params.filtersStr,
-          },
+    options: async (params: ProcurementFetchOptionsParams) => {
+      const { data } = await v2HttpClient.get<
+        V2PaginatedResponse<V2FilterOption>
+      >(`${basePath}/column-options`, {
+        params: {
+          column: params.columnKey,
+          search: params.search,
+          page: params.pageParam,
+          pageSize: 20,
+          filters: params.filtersStr,
+          deleted: params.deleted,
         },
-      );
-      return data;
+      });
+      return toFetchOptionsResult(data);
     },
   };
 }

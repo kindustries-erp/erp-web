@@ -46,7 +46,13 @@ export function extractRolePermissionMeta(
       (p.action === "*" ||
         supportedActionsOf(item).includes(p.action as PermissionAction));
     if (!representable) {
-      preserved.push(p);
+      preserved.push({
+        resource: p.resource,
+        action: p.action,
+        ...(p.conditions !== undefined && p.conditions !== null
+          ? { conditions: p.conditions }
+          : {}),
+      });
     } else if (p.conditions !== undefined && p.conditions !== null) {
       conditions[`${p.resource}|${p.action}`] = p.conditions;
     }
@@ -101,7 +107,14 @@ export function serializePermissionsMap(
       );
     }
   }
-  return [...list, ...meta.preserved];
+  const cleanPreserved: RawPermission[] = (meta.preserved || []).map((p) => ({
+    resource: p.resource,
+    action: p.action,
+    ...(p.conditions !== undefined && p.conditions !== null
+      ? { conditions: p.conditions }
+      : {}),
+  }));
+  return [...list, ...cleanPreserved];
 }
 
 export function buildRoleHistoryItems(

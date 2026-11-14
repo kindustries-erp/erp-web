@@ -31,17 +31,27 @@ export function applyApprovalGate(
   actions: ProcurementActionKey[],
   gate: ApprovalGate,
   subject: ApprovalSubject,
+  /** Khóa tắt thì "Gửi duyệt" ghi nhận luôn: ẩn khỏi menu, drawer xử lý thay */
+  directConfirmWhenOff = false,
 ): ProcurementActionKey[] {
-  if (!gate.configured) return actions;
   const { approverId, createdBy } = subject;
   const isCreator = Boolean(createdBy) && createdBy === gate.currentUserId;
+  // Thu hồi chỉ người tạo (khớp backend). Phiếu không có người tạo thì giữ như cũ.
+  const canRecall = !createdBy || isCreator;
+  if (!gate.configured) {
+    return actions.filter((action) => action !== "recall" || canRecall);
+  }
   const canDecide =
     gate.enabled &&
     !isCreator &&
     (!approverId || approverId === gate.currentUserId);
-  return actions.filter(
-    (action) => (action !== "approve" && action !== "reject") || canDecide,
-  );
+  const hideSubmit = directConfirmWhenOff && !gate.enabled;
+  return actions.filter((action) => {
+    if (action === "approve" || action === "reject") return canDecide;
+    if (action === "recall") return canRecall;
+    if (action === "submit") return !hideSubmit;
+    return true;
+  });
 }
 
 /** Gửi duyệt khi khóa bật phải chọn người duyệt (mở modal). Khóa tắt thì gửi thẳng. */

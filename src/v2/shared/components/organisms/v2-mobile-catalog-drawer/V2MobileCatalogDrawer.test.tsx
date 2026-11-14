@@ -37,12 +37,16 @@ const defaultProps: V2MobileCatalogDrawerProps = {
 };
 
 describe("V2MobileCatalogDrawer Organism", () => {
-  it("renders catalog bottom sheet with full screen height (h-[100dvh])", () => {
+  it("renders catalog bottom sheet with full screen height (h-[100dvh]) and without appearance settings", () => {
     render(<V2MobileCatalogDrawer {...defaultProps} />);
 
     const sheetContent = screen.getByTestId("v2-bottom-sheet-content");
     expect(sheetContent).toBeDefined();
     expect(sheetContent.className).toContain("h-[100dvh]");
     expect(sheetContent.className).toContain("max-h-[100dvh]");
+
+    expect(
+      screen.queryByTestId("mobile-appearance-settings"),
+    ).not.toBeInTheDocument();
   });
 });

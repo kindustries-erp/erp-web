@@ -1,18 +1,16 @@
 import * as React from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { todayIsoDate } from "../../../procurement.rules";
 import {
   emptyOrderForm,
   hasOrderFormErrors,
   orderFormFromDetail,
-  toOrderCreatePayload,
-  toOrderHeaderPayload,
   validateOrderForm,
   type ProcurementOrderFormErrors,
   type ProcurementOrderFormValue,
 } from "../../../form/procurementOrder.form";
-import { toOrderLinePayload } from "../../../form/procurementLine.form";
 import { isProcurementFormDirty } from "../../../form/procurementDirty";
 import type {
   ProcurementOrderDetail,
@@ -22,10 +20,10 @@ import type {
 import { orderFormFromRequestDraft } from "../../../form/procurementOrder.form";
 import {
   showProcurementError,
-  showProcurementSuccess,
   showProcurementWarning,
 } from "../../../procurement.toast";
 import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
+import { useProcurementOrderSave } from "./ProcurementOrderDrawer.save.hook";
 
 /**
  * Trạng thái drawer PO: tải chi tiết, form, lưu. Sửa được khi đơn còn nháp.
@@ -33,9 +31,10 @@ import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
  */
 export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const { t } = useV2Translation();
-  const queryClient = useQueryClient();
   const creating = !props.documentId;
   const branchOptional = Boolean(props.branchOptional);
+  const itemCodeRequired = Boolean(props.itemCodeRequired);
+  const invoicePicker = Boolean(props.invoicePicker);
   const [mode, setMode] = React.useState(props.mode);
   const [form, setForm] = React.useState<ProcurementOrderFormValue>(() =>
     emptyOrderForm(todayIsoDate()),
@@ -45,6 +44,17 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   );
   const [errors, setErrors] = React.useState<ProcurementOrderFormErrors>({});
   const [discardOpen, setDiscardOpen] = React.useState(false);
+  const [requestLabel, setRequestLabel] = React.useState("");
+  // Ô chọn đề nghị chỉ hiện khi tạo mới, có cấu hình collection và user được đọc đề nghị
+  const canReadRequests = useV2HasPermission({
+    collection: props.requestPickerCollection ?? "",
+    action: "read",
+  });
+  const canPickRequest =
+    creating &&
+    Boolean(props.requestPickerCollection) &&
+    Boolean(props.requestApi?.poDraft) &&
+    canReadRequests;
 
   const detail = useQuery({
     queryKey: [props.queryKey, "detail", props.documentId],
@@ -71,6 +81,46 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
       Boolean(props.requestApi?.poDraft),
   });
 
+  /** Điền form từ đề nghị và bản nháp PO (dùng cho cả mở từ PR lẫn chọn PR trong drawer) */
+  const applyRequest = (
+    request: ProcurementRequestDetail,
+    draft: ProcurementPoDraft,
+  ) => {
+    const next = orderFormFromRequestDraft(request, draft);
+    setForm(next);
+    setInitial(next);
+    setRequestLabel(request.requestNo);
+  };
+
+  /**
+   * Chọn đề nghị trong drawer PO (tạo mới). Bỏ chọn thì giữ dòng đã nạp nhưng gỡ liên kết PR,
+   * để dòng trở lại dạng lập tay.
+   */
+  const pickRequest = (requestId: string | null) => {
+    if (!requestId) {
+      setRequestLabel("");
+      setForm((current) => ({
+        ...current,
+        requestId: null,
+        lines: current.lines.map((l) => ({ ...l, requestLineId: null })),
+      }));
+      return;
+    }
+    const api = props.requestApi;
+    if (!api?.poDraft) return;
+    void Promise.all([
+      api.get(requestId) as Promise<ProcurementRequestDetail>,
+      api.poDraft(requestId) as Promise<ProcurementPoDraft>,
+    ])
+      .then(([request, draft]) => applyRequest(request, draft))
+      .catch((error) =>
+        showProcurementError(
+          error,
+          t("v2.procurement.errors.requestLoad", "Không tải được đề nghị mua"),
+        ),
+      );
+  };
+
   React.useEffect(() => {
     if (!props.open) return;
     setErrors({});
@@ -79,16 +129,12 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
       setForm(next);
       setInitial(next);
     } else if (creating && fromRequest.data) {
-      const next = orderFormFromRequestDraft(
-        fromRequest.data.request,
-        fromRequest.data.draft,
-      );
-      setForm(next);
-      setInitial(next);
+      applyRequest(fromRequest.data.request, fromRequest.data.draft);
     } else if (creating) {
       const empty = emptyOrderForm(todayIsoDate());
       setForm(empty);
       setInitial(empty);
+      setRequestLabel("");
     }
   }, [props.open, detail.data, creating, fromRequest.data]);
 
@@ -98,52 +144,43 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
   const viewing = !editable || mode === "view";
   const dirty = isProcurementFormDirty(form, initial);
 
-  const save = useMutation({
-    mutationFn: async () => {
-      if (creating) return props.api.create(toOrderCreatePayload(form));
-      const id = props.documentId!;
-      await props.api.updateHeader?.(
-        id,
-        toOrderHeaderPayload(form, branchOptional),
-      );
-      await props.api.replaceLines(id, form.lines.map(toOrderLinePayload));
-      return { id };
-    },
-    onSuccess: ({ id }) => {
-      showProcurementSuccess(
-        t("v2.procurement.drawer.saved", "Đã lưu đơn mua"),
-      );
-      void queryClient.invalidateQueries({ queryKey: [props.queryKey] });
-      if (props.onSaved) props.onSaved(id);
-      else props.onClose();
-    },
-    onError: (error) =>
-      showProcurementError(
-        error,
-        t("v2.procurement.drawer.saveError", "Không lưu được đơn mua"),
-      ),
-  });
-
   const setField = <K extends keyof ProcurementOrderFormValue>(
     key: K,
     value: ProcurementOrderFormValue[K],
   ) => setForm((current) => ({ ...current, [key]: value }));
 
-  const submit = () => {
-    const next = validateOrderForm(form, branchOptional);
+  /** Kiểm tra trường bắt buộc; trả về false và báo lỗi nếu còn thiếu. */
+  const validateForm = (): boolean => {
+    const next = validateOrderForm(form, branchOptional, itemCodeRequired);
     setErrors(next);
-    if (hasOrderFormErrors(next)) {
-      showProcurementWarning(
-        t("v2.procurement.drawer.missingInfo", "Thiếu thông tin"),
-        t(
-          "v2.procurement.drawer.fillRequired",
-          "Vui lòng điền các trường bắt buộc",
-        ),
-      );
-      return;
-    }
-    save.mutate();
+    if (!hasOrderFormErrors(next)) return true;
+    showProcurementWarning(
+      t("v2.procurement.drawer.missingInfo", "Thiếu thông tin"),
+      t(
+        "v2.procurement.drawer.fillRequired",
+        "Vui lòng điền các trường bắt buộc",
+      ),
+    );
+    return false;
   };
+
+  const { saveDraft, confirmSubmit, saving } = useProcurementOrderSave({
+    api: props.api,
+    queryKey: props.queryKey,
+    documentId: props.documentId,
+    branchOptional,
+    form,
+    validate: validateForm,
+    onSaved: props.onSaved,
+    onClose: props.onClose,
+  });
+
+  /** Hiện nút Tạo mới / Cập nhật thay cho gửi duyệt khi khóa duyệt PO đang tắt. */
+  const directConfirm = Boolean(
+    props.directConfirm &&
+    props.approval?.configured &&
+    !props.approval.enabled,
+  );
 
   /** Hủy sửa: tạo mới thì đóng; đơn cũ có thay đổi thì hỏi trước, rồi về chế độ xem. */
   const cancelEdit = () => {
@@ -169,14 +206,24 @@ export function useProcurementOrderDrawer(props: ProcurementDrawerProps) {
     /** Chi nhánh tùy chọn được sửa khi nháp; PO lập từ PR vẫn khóa theo PR trong section */
     branchLocked: branchOptional ? false : !creating,
     branchOptional,
+    itemCodeRequired,
+    invoicePicker,
+    canPickRequest,
+    requestLabel,
+    requestApi: props.requestApi,
+    pickRequest,
+    /** Có PR thì dòng do PR điền sẵn: không thêm, không xóa dòng */
+    linesLocked: Boolean(form.requestId),
     editable,
     mode,
     setMode,
     status,
     detail: detail.data,
     loading: detail.isFetching || fromRequest.isFetching,
-    saving: save.isPending,
-    submit,
+    saving,
+    submit: saveDraft,
+    directConfirm,
+    confirmSubmit,
     cancelEdit,
     discardOpen,
     closeDiscard: () => setDiscardOpen(false),

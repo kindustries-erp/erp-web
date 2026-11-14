@@ -5,6 +5,7 @@ import type { V2TabItemData } from "@/v2/shared/components/organisms/v2-standard
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
 import { ProcurementDiscardModal } from "../../ProcurementDiscardModal";
+import { SubmitApprovalModal } from "../submit-approval-modal";
 import { ProcurementStatusBadge } from "../../molecules/procurement-status-badge";
 import {
   useProcurementRequestDrawer,
@@ -13,7 +14,7 @@ import {
 import { ProcurementRequestMainSections } from "./ProcurementRequestMainSections";
 import { ProcurementRequestHeaderSection } from "./sections/ProcurementRequestHeaderSection";
 import { ProcurementRequestSummarySection } from "./sections/ProcurementRequestSummarySection";
-import { ProcurementRequestAuditSection } from "./sections/ProcurementRequestAuditSection";
+import { ProcurementAuditSection } from "../procurement-audit-section";
 import { ProcurementRequestRelatedTab } from "./tabs/ProcurementRequestRelatedTab";
 import { useProcurementDrawerActions } from "./ProcurementRequestDrawer.biz.hook";
 
@@ -53,6 +54,9 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
     onClose: props.onClose,
     onCancelEdit: state.cancelEdit,
     onSubmit: state.submit,
+    creating: state.creating,
+    canSubmitRequest: Boolean(props.submitFromDrawer),
+    onSubmitRequest: state.submitRequest,
     onTransition: props.onTransition,
   });
 
@@ -129,7 +133,7 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
                 detail={state.detail}
               />
               {!state.creating && props.documentId && (
-                <ProcurementRequestAuditSection
+                <ProcurementAuditSection
                   documentId={props.documentId}
                   api={props.api}
                   queryKey={props.queryKey}
@@ -138,6 +142,18 @@ export function ProcurementRequestDrawer(props: ProcurementDrawerProps) {
             </div>
           ) : undefined
         }
+      />
+      <SubmitApprovalModal
+        open={state.approverOpen}
+        rowLabel={
+          state.form.title ||
+          t("v2.procurement.drawer.createRequest", "Tạo đề nghị mua")
+        }
+        approvers={state.approvers}
+        loading={state.approversLoading}
+        submitting={state.saving}
+        onConfirm={state.confirmApprover}
+        onCancel={state.closeApprover}
       />
       <ProcurementDiscardModal
         open={state.discardOpen}

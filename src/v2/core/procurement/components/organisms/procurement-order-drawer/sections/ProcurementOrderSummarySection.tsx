@@ -67,12 +67,12 @@ export function ProcurementOrderSummarySection({
     {
       key: "createdBy",
       label: t("v2.procurement.columns.createdBy", "Người tạo"),
-      value: detail?.createdBy ?? "—",
+      value: detail?.createdByEmail ?? "—",
     },
     {
       key: "sourceRequest",
       label: t("v2.procurement.fields.sourceRequest", "Từ đề nghị mua"),
-      value: detail?.requestId ?? "—",
+      value: detail?.requestNo ?? "—",
       hidden: !form.requestId,
     },
   ];

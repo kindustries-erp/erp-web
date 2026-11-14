@@ -27,6 +27,7 @@ import {
   Target,
   PackageCheck,
   ClipboardList,
+  Calculator,
 } from "lucide-react";
 
 export interface NavSearchItem {
@@ -338,11 +339,8 @@ export function useNavItems(): NavSearchItem[] {
     }
     if (canReadGarageProcurementRequests) {
       items.push({
-        key: "garage-procurement-requests",
-        label: t(
-          "nav.items.garageProcurementRequests",
-          "Đề nghị mua hàng Garage",
-        ),
+        key: "garage-procurement",
+        label: t("nav.items.garageProcurement", "Mua hàng Garage"),
         section: garageSection,
         keywords: [
           "garage",
@@ -352,6 +350,7 @@ export function useNavItems(): NavSearchItem[] {
           "đề nghị mua hàng garage",
           "pr garage",
           "mua hang garage",
+          "mua hàng garage",
           "phu tung",
           "phụ tùng",
         ],
@@ -569,6 +568,23 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Paperclip className="w-4 h-4" />,
       });
     }
+
+    // 8.5 Tools (Công cụ)
+    const toolsSection = t("nav.sections.tools", "CÔNG CỤ");
+    items.push({
+      key: "loans",
+      label: t("nav.items.loans", "Khoản vay & Lãi suất"),
+      section: toolsSection,
+      keywords: [
+        "vay",
+        "khoan vay",
+        "lai suat",
+        "cong cu",
+        "loans",
+        "calculator",
+      ],
+      icon: <Calculator className="w-4 h-4" />,
+    });
 
     // 9. Settings (Hệ thống & Cài đặt)
     const settingsSection = t("nav.sections.settings");

@@ -22,3 +22,14 @@ export interface V1TablePreference {
   }>;
   activeView?: string;
 }
+
+/** Một dòng trả về từ `GET /api/v2/table-preferences` */
+export interface V2TablePreferenceItem extends V2TablePreferenceEntry {
+  tableId: string;
+  updatedAt: string;
+}
+
+/** Response danh sách v2: không phong bì `{message,data}`, không phân trang */
+export interface V2TablePreferenceListResponse {
+  items: V2TablePreferenceItem[];
+}

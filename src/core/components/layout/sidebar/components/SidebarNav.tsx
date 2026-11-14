@@ -10,6 +10,7 @@ import {
 } from "./SidebarPrimitives";
 import { GarageNavSection } from "./garage-nav-section";
 import { AccountingNavSection } from "./accounting-nav-section";
+import { ToolsNavSection } from "./tools-nav-section";
 import {
   Boxes,
   Users,
@@ -406,6 +407,12 @@ export function SidebarNav({
           )}
         </NavSection>
       )}
+
+      {/* Công cụ */}
+      <ToolsNavSection collapsed={c} currentPage={currentPage} navTo={navTo} />
+
+      {/* Công cụ */}
+      <ToolsNavSection collapsed={c} currentPage={currentPage} navTo={navTo} />
 
       {/* Settings & System */}
       {showSettings && (

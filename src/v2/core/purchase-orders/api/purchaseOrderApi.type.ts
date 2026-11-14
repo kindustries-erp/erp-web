@@ -12,7 +12,6 @@ import type {
 export interface PurchaseOrderListResult {
   items: PurchaseOrderRecord[];
   total: number;
-  summaries?: Record<string, number>;
 }
 
 /**

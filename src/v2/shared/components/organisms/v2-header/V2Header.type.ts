@@ -16,4 +16,5 @@ export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
   showLanguageSwitcher?: boolean;
   userMenuNode?: V2UserMenuRenderProp;
   notificationNode?: React.ReactNode;
+  appearanceNode?: React.ReactNode;
 }

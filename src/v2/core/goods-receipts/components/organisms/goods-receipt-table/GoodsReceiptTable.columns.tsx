@@ -1,4 +1,4 @@
-import { V2TableText } from "@/v2/shared/components";
+import { V2TableText, V2Text } from "@/v2/shared/components";
 import type { V2Column } from "@/v2/shared/components";
 import { GoodsReceiptStatusBadge } from "@/v2/core/goods-receipts";
 import type { GoodsReceiptRecord } from "@/v2/core/goods-receipts";
@@ -50,9 +50,13 @@ export const buildGoodsReceiptColumns = (
     mobileSlot: "meta",
     filter: { valueType: ColumnValueType.TEXT, showBlankOption: true },
     cell: (row) => (
-      <span className="block truncate font-medium">
+      <V2Text
+        as="span"
+        variant="body-sm"
+        className="block truncate font-medium"
+      >
         {value(row.supplierName)}
-      </span>
+      </V2Text>
     ),
   },
   {
@@ -63,7 +67,9 @@ export const buildGoodsReceiptColumns = (
     mobileSlot: "meta",
     filter: { valueType: ColumnValueType.TEXT, showBlankOption: true },
     cell: (row) => (
-      <span className="block truncate">{value(row.branchName)}</span>
+      <V2Text as="span" variant="body-sm" className="block truncate">
+        {value(row.branchName)}
+      </V2Text>
     ),
   },
   {
@@ -76,11 +82,15 @@ export const buildGoodsReceiptColumns = (
     filter: { valueType: ColumnValueType.NUMBER },
     summary: { variant: "qty" },
     cell: (row) => (
-      <span className="block text-right tabular-nums font-semibold text-primary">
+      <V2Text
+        as="span"
+        variant="body-sm"
+        className="block text-right tabular-nums font-semibold text-primary"
+      >
         {row.totalAmount != null
           ? Number(row.totalAmount).toLocaleString("vi-VN")
           : "0"}
-      </span>
+      </V2Text>
     ),
   },
   {
@@ -117,7 +127,13 @@ export const buildGoodsReceiptColumns = (
     mobileSlot: "hidden",
     filter: { valueType: ColumnValueType.TEXT, showBlankOption: true },
     cell: (row) => (
-      <span className="block truncate text-muted-fg">{value(row.remarks)}</span>
+      <V2Text
+        as="span"
+        variant="body-sm"
+        className="block truncate text-muted-fg"
+      >
+        {value(row.remarks)}
+      </V2Text>
     ),
   },
 ];

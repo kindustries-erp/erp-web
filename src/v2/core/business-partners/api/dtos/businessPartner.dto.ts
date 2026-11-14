@@ -1,3 +1,6 @@
+import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
+import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
+
 /** Hình dạng bản ghi và payload của `/api/v2/business-partners` (khớp backend, không phụ thuộc V1) */
 
 export interface BusinessPartnerDto {
@@ -18,26 +21,19 @@ export interface BusinessPartnerDto {
   updatedAt: string;
 }
 
-export interface BusinessPartnerListResultDto {
-  items: BusinessPartnerDto[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  /** Tổng toàn bộ dòng khớp bộ lọc theo tên cột số; BP không có cột số nên thường rỗng */
-  summaries?: Record<string, number>;
-}
+/** Response danh sách: `items`, `pagination`, và `summaries` (tổng theo cột số, BP thường không có) */
+export type BusinessPartnerListResultDto =
+  V2PaginatedResponse<BusinessPartnerDto> & {
+    summaries?: Record<string, V2SummaryMetric | null>;
+  };
 
 export interface ColumnOptionDto {
   label: string;
   value: string;
 }
 
-export interface ColumnOptionsResultDto {
-  items: ColumnOptionDto[];
-  total: number;
-  next: number | null;
-}
+/** Response column-options chuẩn v2: `items` và `pagination` (có next/previous) */
+export type ColumnOptionsResultDto = V2PaginatedResponse<ColumnOptionDto>;
 
 export interface NextCodeDto {
   nextCode: string;
@@ -73,13 +69,9 @@ export interface PartnerSelectOptionDto {
   source: "MASTER" | "INVOICE";
 }
 
-export interface PartnerSelectOptionsDto {
-  items: PartnerSelectOptionDto[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+/** Response danh sách chọn đối tượng: `items` và `pagination` */
+export type PartnerSelectOptionsDto =
+  V2PaginatedResponse<PartnerSelectOptionDto>;
 
 /** Kết quả đồng bộ đối tác từ hóa đơn (dryRun hoặc thực tế) */
 export interface SyncFromInvoicesItemDto {

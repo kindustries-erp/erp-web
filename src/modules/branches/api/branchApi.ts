@@ -29,7 +29,7 @@ function normalizeBranch(item: any): Branch {
 export async function getBranchesApi(): Promise<Branch[]> {
   return dedupeRequest("branches:list", async () => {
     const { data } = await axiosInstance.get<{ items?: any[]; data?: any[] }>(
-      "/api/v1/branches",
+      "/api/v2/branches",
       { params: { page: 1, pageSize: 500, sort: "code" } },
     );
     const items = Array.isArray(data?.items)
@@ -50,7 +50,7 @@ export async function getBranchOptionsApi(): Promise<
 
 export async function createBranchApi(dto: CreateBranchDto): Promise<Branch> {
   const { data } = await axiosInstance.post<{ message: string; data: any }>(
-    "/api/v1/branches",
+    "/api/v2/branches",
     dto,
   );
   return normalizeBranch(data.data);
@@ -61,12 +61,12 @@ export async function updateBranchApi(
   dto: UpdateBranchDto,
 ): Promise<Branch> {
   const { data } = await axiosInstance.patch<{ message: string; data: any }>(
-    `/api/v1/branches/${id}`,
+    `/api/v2/branches/${id}`,
     dto,
   );
   return normalizeBranch(data.data);
 }
 
 export async function deleteBranchApi(id: string): Promise<void> {
-  await axiosInstance.delete(`/api/v1/branches/${id}`);
+  await axiosInstance.delete(`/api/v2/branches/${id}`);
 }

@@ -4,7 +4,7 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { ViewModeCombobox } from "@/shared/components/ViewModeCombobox";
 import { GarageCaseStandaloneDrawer } from "../GarageCaseStandaloneDrawer";
 import { GarageCaseSyncDrawer } from "../GarageCaseSyncDrawer";
-import { GarageWorkflowDrawer } from "../GarageWorkflowDrawer";
+import { GarageWorkflowDrawer } from "@/v2/modules/garage-workflow";
 import { DEFAULT_GARAGE_SERVICE_COLUMN_VISIBILITY } from "../../utils/garageCaseServicesViewPresets";
 import { useGarageCaseServicesSectionLogic } from "./useGarageCaseServicesSectionLogic";
 import type {

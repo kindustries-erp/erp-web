@@ -23,7 +23,12 @@ import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
 import { useQuery } from "@tanstack/react-query";
-import { notificationsApi } from "@/core/api/notifications";
+import {
+  notificationsApi,
+  type CoreNotification,
+} from "@/core/api/notifications";
+import { resolveNotificationHref } from "@/v2/app/router/notificationTargetRoutes";
+import { navigateV2Url } from "@/v2/shared/utils/v2Url";
 
 interface V2ShellLayoutProps {
   children: React.ReactNode;
@@ -56,6 +61,15 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   });
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  /** Bấm thông báo có đích được hỗ trợ thì mở đúng chứng từ; không thì chỉ đánh dấu đã đọc. */
+  const handleNotificationClick = useCallback((notif: CoreNotification) => {
+    const href = resolveNotificationHref(
+      notif.target,
+      window.location.pathname,
+    );
+    if (href) navigateV2Url(href);
+  }, []);
 
   const sections = useV2AdaptedNavSections();
   const { tabs, activeTabId, handleTabSelect, handleTabClose } =
@@ -173,25 +187,22 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.garage", "Garage") },
           { label: t("nav.items.garageCases", "Hoạt động garage") },
         ];
-      case "garage-goods-receipts":
+      case "garage-stock-vouchers":
         return [
           { label: t("nav.sections.garage", "Garage") },
-          { label: t("nav.items.garageGoodsReceipts", "Nhập kho Garage") },
+          { label: t("nav.items.garageStockVouchers", "Chứng từ kho Garage") },
         ];
-      case "garage-procurement-requests":
+      case "garage-stock-balances":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          { label: t("nav.items.garageStockBalances", "Tồn kho Garage") },
+        ];
+      case "garage-procurement":
         return [
           { label: t("nav.sections.garage", "Garage") },
           {
-            label: t(
-              "nav.items.garageProcurementRequests",
-              "Đề nghị mua hàng Garage",
-            ),
+            label: t("nav.items.garageProcurement", "Mua hàng Garage"),
           },
-        ];
-      case "garage-procurement-orders":
-        return [
-          { label: t("nav.sections.garage", "Garage") },
-          { label: t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage") },
         ];
       case "garage-cashflow":
         return [
@@ -259,6 +270,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.activitylog", "Nhật ký hoạt động") },
         ];
+      case "loans":
+        return [
+          { label: t("breadcrumb.tools", "Công cụ") },
+          { label: t("nav.items.loans", "Khoản vay & Lãi suất") },
+        ];
       default:
         return [
           { label: t("nav.items.dashboard", "Tổng quan") },
@@ -302,7 +318,10 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   );
 
   const notificationNode = (
-    <V2NotificationPopover notifications={notifications}>
+    <V2NotificationPopover
+      notifications={notifications}
+      onNotificationClick={handleNotificationClick}
+    >
       <V2Button
         type="button"
         variant="ghost"

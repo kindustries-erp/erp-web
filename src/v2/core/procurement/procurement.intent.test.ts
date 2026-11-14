@@ -57,4 +57,20 @@ describe("điền PO từ bản nháp PR", () => {
       requestLineId: "rl-1",
     });
   });
+
+  it("điền ngày dự kiến nhận từ ngày cần hàng của đề nghị", () => {
+    const form = orderFormFromRequestDraft(
+      {
+        ...request,
+        neededDate: "2026-11-20",
+      } as unknown as ProcurementRequestDetail,
+      draft,
+    );
+    expect(form.expectedDate).toBe("2026-11-20");
+  });
+
+  it("để trống ngày dự kiến nhận khi đề nghị không có ngày cần hàng", () => {
+    const form = orderFormFromRequestDraft(request, draft);
+    expect(form.expectedDate).toBe("");
+  });
 });

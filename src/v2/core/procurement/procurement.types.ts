@@ -1,5 +1,23 @@
-import type { V2FetchOptions, V2TableQuery } from "@/v2/shared/types/v2-table";
+import type {
+  V2FetchOptionsParams,
+  V2FetchOptionsResult,
+  V2SummaryMetric,
+  V2TableQuery,
+} from "@/v2/shared/types/v2-table";
 import type { ProcurementActionKey } from "./procurement.rules";
+
+/** Bộ lọc riêng của danh sách procurement, gửi thêm vào query API. */
+export interface ProcurementListFilter {
+  /** Trạng thái chứng từ; thiếu thì không lọc theo trạng thái */
+  status?: string;
+  /** only: chỉ phiếu đã xóa mềm (xóa cứng cần quyền purge) */
+  deleted?: "only";
+}
+
+export type ProcurementTableQuery = V2TableQuery & ProcurementListFilter;
+
+export type ProcurementFetchOptionsParams = V2FetchOptionsParams &
+  Pick<ProcurementListFilter, "deleted">;
 
 /** Dòng danh sách PO (đã bỏ dòng chi tiết, khớp response danh sách của API). */
 export interface ProcurementOrderRow {
@@ -15,16 +33,19 @@ export interface ProcurementOrderRow {
   fulfillmentStatus: string;
   totalAmount: string;
   approvedTotal: string | null;
-  /** Người duyệt được chỉ định khi gửi duyệt (null nếu không có). */
-  approverId?: string | null;
+  /** Khối vòng đời duyệt dùng chung PR/PO (API). */
+  approval?: ProcurementApprovalSummary;
   remarks: string | null;
   branchId?: string | null;
   branchName: string | null;
   paymentStatus: string;
   supplierInvoiceNo: string | null;
+  /** Id người tạo (API), dùng để nhận diện người tạo khi duyệt. */
   createdBy: string | null;
-  /** Email người tạo, chỉ có trong danh sách. */
+  /** Email người tạo (API), hiển thị ở cột và tóm tắt "Người tạo". */
   createdByEmail?: string | null;
+  /** Số đề nghị nguồn (API, chỉ garage); null khi đơn lập trực tiếp. */
+  requestNo?: string | null;
   issuedAt: string | null;
 }
 
@@ -40,14 +61,42 @@ export interface ProcurementRequestRow {
   estimatedTotal?: string | number | null;
   branchId?: string | null;
   branchName: string | null;
+  /** Id người tạo (API), dùng để nhận diện người tạo khi duyệt. */
   createdBy: string | null;
   /** Email người tạo (API), hiển thị ở cột "Người tạo". */
   createdByEmail?: string | null;
-  /** Người duyệt được chỉ định khi gửi duyệt. */
-  approverId?: string | null;
-  /** Email người duyệt: người đã duyệt, chưa duyệt thì người được giao. */
-  approverEmail?: string | null;
+  /** Khối vòng đời duyệt dùng chung PR/PO (API). */
+  approval?: ProcurementApprovalSummary;
+  /** PO đã sinh từ đề nghị (API chỉ trả ở danh sách; không có thì coi như rỗng). */
+  relatedOrders?: ProcurementRelatedOrder[];
   createdAt: string;
+}
+
+/** PO liên quan của một đề nghị, dùng cho cột "Đơn mua liên quan". */
+export interface ProcurementRelatedOrder {
+  id: string;
+  orderNo: string;
+  status: string;
+}
+
+/** Một bước duyệt: người thực hiện, email, thời điểm, lý do (reject/cancel/close). */
+export interface ProcurementApprovalStep {
+  by: string | null;
+  byEmail: string | null;
+  at: string | null;
+  reason?: string | null;
+}
+
+/** Khối approval của API. Bước chưa xảy ra là null. */
+export interface ProcurementApprovalSummary {
+  approverId: string | null;
+  approverEmail: string | null;
+  submit: ProcurementApprovalStep | null;
+  approve: ProcurementApprovalStep | null;
+  reject: ProcurementApprovalStep | null;
+  cancel: ProcurementApprovalStep | null;
+  close: ProcurementApprovalStep | null;
+  issue: ProcurementApprovalStep | null;
 }
 
 /** Sự kiện trong nhật ký duyệt (khớp DTO API). Không có id nội bộ của nhật ký. */
@@ -93,10 +142,21 @@ export interface ProcurementRequestDetail extends ProcurementRequestRow {
   lines: ProcurementDetailLine[];
 }
 
-/** Kết quả danh sách chuẩn của API: `rows` đổi thành `items` ở phía web. */
-export interface ProcurementListResponse<T> {
-  rows: T[];
+/** Phân trang của danh sách API (object `pagination`). */
+export interface ProcurementPagination {
+  page: number;
+  pageSize: number;
   total: number;
+  totalPages: number;
+  next: number | null;
+  previous: number | null;
+}
+
+/** Kết quả danh sách chuẩn của API: `items`, `pagination`, `summaries` (tổng cột số trên toàn bộ dòng khớp). */
+export interface ProcurementListResponse<T> {
+  items: T[];
+  pagination: ProcurementPagination;
+  summaries: Record<string, V2SummaryMetric | null>;
 }
 
 /** Dòng bản nháp PO điền sẵn từ PR đã duyệt (còn lại chưa đặt). */
@@ -123,7 +183,7 @@ export type ProcurementLinePayload = Record<string, unknown>;
 
 /**
  * Hợp đồng gọi API của một họ chứng từ procurement. Mỗi module cung cấp
- * base path riêng (ví dụ `/api/v2/garage-procurement-orders`).
+ * base path riêng (ví dụ `/api/v2/procurement-orders-garage`).
  * D: chi tiết, C: payload tạo, H: payload sửa đầu đơn.
  */
 /** Tham chiếu tối thiểu tới một chứng từ (đủ để chuyển trạng thái hoặc mở PO). */
@@ -132,7 +192,11 @@ export interface ProcurementDocumentRef {
 }
 
 export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
-  list: (query: V2TableQuery) => Promise<{ items: T[]; total: number }>;
+  list: (query: ProcurementTableQuery) => Promise<{
+    items: T[];
+    total: number;
+    summaries?: Record<string, V2SummaryMetric | null>;
+  }>;
   /** `approverId` chỉ dùng cho gửi duyệt khi khóa duyệt đang bật. */
   transition: (
     id: string,
@@ -143,6 +207,15 @@ export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   get: (id: string) => Promise<D>;
   create: (payload: C) => Promise<{ id: string }>;
   updateHeader?: (id: string, payload: H) => Promise<unknown>;
+  /**
+   * Lưu rồi gửi duyệt/ghi nhận trong MỘT request (một transaction ở server). `id` null = tạo mới.
+   * `body` là payload tạo (kèm dòng) hoặc đầu đề + dòng khi sửa nháp, kèm `approverId` nếu khóa duyệt bật.
+   * Họ không hỗ trợ thì bỏ trống và drawer giữ luồng cũ.
+   */
+  saveAndSubmit?: (
+    id: string | null,
+    body: Record<string, unknown>,
+  ) => Promise<{ id: string }>;
   replaceLines: (
     id: string,
     lines: ProcurementLinePayload[],
@@ -150,11 +223,15 @@ export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   remove?: (id: string) => Promise<unknown>;
   /** Xóa cứng nháp; chỉ người có quyền purge mới thấy nút */
   purge?: (id: string) => Promise<unknown>;
+  /** Nhân bản phiếu đã từ chối/hủy thành nháp mới (trả về id nháp) */
+  clone?: (id: string) => Promise<{ id: string }>;
   /** Chỉ PR có: bản nháp PO điền sẵn (chỉ đọc) */
   poDraft?: (id: string) => Promise<ProcurementPoDraft>;
   /** Nhật ký các bước duyệt của đề nghị mua hàng */
   approvalEvents?: (id: string) => Promise<ProcurementApprovalEvent[]>;
-  options?: V2FetchOptions;
+  options?: (
+    params: ProcurementFetchOptionsParams,
+  ) => Promise<V2FetchOptionsResult>;
 }
 
 /** Khóa bật/tắt duyệt của một họ chứng từ (đọc từ API cấu hình duyệt). */

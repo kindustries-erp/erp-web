@@ -1,7 +1,7 @@
 import * as React from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { V2ModuleListData } from "@/v2/shared/components";
-import type { V2TableQuery } from "@/v2/shared/types/v2-table";
+import type { V2SummaryMetric, V2TableQuery } from "@/v2/shared/types/v2-table";
 import type {
   BusinessPartner,
   BusinessPartnerType,
@@ -17,6 +17,19 @@ export interface UseBusinessPartnersQueryParams {
   query: V2TableQuery;
   onError?: (error: unknown) => void;
 }
+
+/** Metric của cột "Mã" (đếm dòng): tổng toàn bộ, số dòng trang hiện tại, lũy kế đến hết trang */
+const countMetric = (
+  data: { pagination?: { total: number }; items?: unknown[] } | undefined,
+  query: V2TableQuery,
+): V2SummaryMetric => {
+  const total = data?.pagination?.total ?? 0;
+  return {
+    total,
+    pageSubtotal: data?.items?.length ?? 0,
+    cumulative: Math.min(query.page * query.pageSize, total),
+  };
+};
 
 export function useBusinessPartnersQuery(
   params: UseBusinessPartnersQueryParams,
@@ -55,8 +68,12 @@ export function useBusinessPartnersQuery(
 
   return {
     items: (result.data?.items ?? []) as BusinessPartner[],
-    total: result.data?.total ?? 0,
-    summaries: { code: result.data?.total ?? 0, ...result.data?.summaries },
+    total: result.data?.pagination.total ?? 0,
+    summaries: {
+      // Cột "Mã" là đếm dòng: total = toàn bộ, subtotal = số dòng trang, lũy kế = dòng đến hết trang
+      code: countMetric(result.data, query),
+      ...result.data?.summaries,
+    },
     loading: result.isFetching,
     refetch: () => void result.refetch(),
   };

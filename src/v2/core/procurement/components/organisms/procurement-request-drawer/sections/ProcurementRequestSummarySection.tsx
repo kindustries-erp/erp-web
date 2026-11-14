@@ -56,7 +56,7 @@ export function ProcurementRequestSummarySection({
     {
       key: "approver",
       label: t("v2.procurement.columns.approver", "Người duyệt"),
-      value: detail?.approverEmail ?? "—",
+      value: detail?.approval?.approverEmail ?? "—",
     },
   ];
 

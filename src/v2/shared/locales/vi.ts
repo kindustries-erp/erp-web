@@ -11,6 +11,7 @@ export const v2Vi = {
         manufacturing: "SẢN XUẤT / XƯỞNG",
         garage: "GARAGE",
         accounting: "KẾ TOÁN",
+        tools: "CÔNG CỤ",
         settings: "HỆ THỐNG",
       },
       items: {
@@ -26,6 +27,7 @@ export const v2Vi = {
         erpProduction: "Sản xuất",
         erpInvoices: "Hóa đơn",
         cashflow: "Dòng tiền",
+        loans: "Khoản vay & Dòng tiền",
         catalog: "Thiết lập chung",
         allModules: "Tất cả",
         catalogTitle: "Danh mục phân hệ",
@@ -36,10 +38,11 @@ export const v2Vi = {
         pinnedShortcutsCount: "Đang ghim {{count}} mục lối tắt ở Bottom Nav",
         resetDefault: "Khôi phục mặc định",
         inventoryGroup: "Kho",
-        garageGoodsReceipts: "Nhập kho Garage",
+        garageStockVouchers: "Chứng từ kho Garage",
+        garageStockBalances: "Tồn kho Garage",
         garageProcurementRequests: "Đề nghị mua hàng Garage",
         garageProcurementOrders: "Đơn mua hàng Garage",
-        // v2-module:garage-goods-receipts:locale-vi
+        // v2-module:inventory-movements-garage:locale-vi
         erpPermissionsCore: "Phân quyền & Vai trò",
         // v2-module:rbac-roles:locale-vi
         // plop:v2-nav-items
@@ -48,6 +51,10 @@ export const v2Vi = {
       noSearchResults: "Không tìm thấy phân hệ phù hợp",
       clearSearch: "Xóa tìm kiếm",
       modulesCountBadge: "{{count}} phân hệ",
+    },
+    appearance: {
+      title: "Giao diện & Ngôn ngữ",
+      subtitle: "Tùy chỉnh chủ đề màu sắc và ngôn ngữ hiển thị",
     },
     common: {
       close: "Đóng",
@@ -79,6 +86,7 @@ export const v2Vi = {
       empty: "Chưa có thông báo nào",
       deleteAll: "Xóa tất cả",
       markAllAsRead: "Đánh dấu đã đọc tất cả",
+      markAsRead: "Đánh dấu đã đọc",
       deleteItem: "Xóa thông báo",
     },
     topbar: {
@@ -107,6 +115,7 @@ export const v2Vi = {
       closeTabShort: "Đóng tab",
       headerAriaLabel: "Thanh điều hướng tiêu đề",
       subAriaLabel: "Thanh điều hướng phụ",
+      statusChipAriaLabel: "Lọc theo trạng thái",
       buttonGroupAriaLabel: "Nhóm nút chuyển đổi tab",
     },
     welcome: {
@@ -238,6 +247,9 @@ export const v2Vi = {
       expand: "Mở rộng",
       collapse: "Thu gọn",
     },
+    activityTimeline: {
+      empty: "Chưa có sự kiện nào",
+    },
     dropdown: {
       optionsTitle: "Tùy chọn thao tác",
     },
@@ -349,6 +361,7 @@ export const v2Vi = {
     table: v2ViTable,
     auth: {
       title: "Đăng nhập",
+      loginAction: "Đăng nhập",
       subtitle: "Đăng nhập vào hệ thống ERP",
       emailLabel: "Email",
       emailPlaceholder: "Nhập email của bạn",

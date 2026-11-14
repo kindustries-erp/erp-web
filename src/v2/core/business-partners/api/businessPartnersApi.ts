@@ -1,6 +1,9 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
+import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
+import { toFetchOptionsResult } from "@/v2/shared/utils/v2FetchOptionsAdapter";
 import type {
   V2FetchOptionsParams,
+  V2FetchOptionsResult,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 import type {
@@ -48,6 +51,7 @@ export const toBusinessPartnerListParams = (
   date_ranges: Object.keys(query.dateRanges).length
     ? JSON.stringify(query.dateRanges)
     : undefined,
+  summary_keys: toSummaryKeysParam(query),
 });
 
 export const toBusinessPartnerPayload = (
@@ -105,7 +109,7 @@ export const businessPartnersV2Api = {
   options: async (
     partnerType: BusinessPartnerType,
     params: V2FetchOptionsParams,
-  ) => {
+  ): Promise<V2FetchOptionsResult> => {
     const { data } = await v2HttpClient.get<ColumnOptionsResultDto>(
       `${BASE}/column-options`,
       {
@@ -119,7 +123,7 @@ export const businessPartnersV2Api = {
         },
       },
     );
-    return data;
+    return toFetchOptionsResult(data);
   },
   get: async (id: string): Promise<BusinessPartner> => {
     const { data } = await v2HttpClient.get<BusinessPartnerEnvelopeDto>(

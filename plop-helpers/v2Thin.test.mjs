@@ -23,7 +23,11 @@ const exportsFixture = {
   viewVisibility: "goodsReceiptViewVisibility",
 };
 
-const manifestFixture = { layer: "web", family: "goods-receipts", exports: exportsFixture };
+const manifestFixture = {
+  layer: "web",
+  family: "goods-receipts",
+  exports: exportsFixture,
+};
 
 const thinAnswers = {
   moduleInput: "garage-goods-receipts",
@@ -40,7 +44,10 @@ function fakeRepo(families) {
   const root = mkdtempSync(join(tmpdir(), "v2thin-"));
   for (const [family, manifest] of Object.entries(families)) {
     mkdirSync(join(root, "src/v2/core", family), { recursive: true });
-    writeFileSync(join(root, "src/v2/core", family, "core.manifest.json"), JSON.stringify(manifest));
+    writeFileSync(
+      join(root, "src/v2/core", family, "core.manifest.json"),
+      JSON.stringify(manifest),
+    );
   }
   return root;
 }
@@ -48,23 +55,41 @@ function fakeRepo(families) {
 describe("readWebCoreManifest", () => {
   it("đọc được manifest thật của goods-receipts (đã khai báo exports)", () => {
     const manifest = readWebCoreManifest(repoRoot, "goods-receipts");
-    expect(manifest.exports.listController).toBe("useGoodsReceiptListController");
+    expect(manifest.exports.listController).toBe(
+      "useGoodsReceiptListController",
+    );
   });
 
   it("từ chối lõi chưa khai báo exports", () => {
-    const root = fakeRepo({ "customer-claims": { ...manifestFixture, family: "customer-claims", exports: null } });
-    expect(() => readWebCoreManifest(root, "customer-claims")).toThrow(/chưa khai báo exports/);
+    const root = fakeRepo({
+      "customer-claims": {
+        ...manifestFixture,
+        family: "customer-claims",
+        exports: null,
+      },
+    });
+    expect(() => readWebCoreManifest(root, "customer-claims")).toThrow(
+      /chưa khai báo exports/,
+    );
   });
 
   it("từ chối lõi thiếu một export bắt buộc", () => {
     const partial = { ...exportsFixture, drawer: undefined };
-    const root = fakeRepo({ "goods-receipts": { ...manifestFixture, exports: partial } });
-    expect(() => readWebCoreManifest(root, "goods-receipts")).toThrow(/exports\.drawer/);
+    const root = fakeRepo({
+      "goods-receipts": { ...manifestFixture, exports: partial },
+    });
+    expect(() => readWebCoreManifest(root, "goods-receipts")).toThrow(
+      /exports\.drawer/,
+    );
   });
 
   it("từ chối manifest của layer api", () => {
-    const root = fakeRepo({ "goods-receipts": { ...manifestFixture, layer: "api" } });
-    expect(() => readWebCoreManifest(root, "goods-receipts")).toThrow(/layer web/);
+    const root = fakeRepo({
+      "goods-receipts": { ...manifestFixture, layer: "api" },
+    });
+    expect(() => readWebCoreManifest(root, "goods-receipts")).toThrow(
+      /layer web/,
+    );
   });
 });
 
@@ -72,13 +97,19 @@ describe("listWebCoreFamilies", () => {
   it("chỉ liệt kê họ có exports đủ", () => {
     const root = fakeRepo({
       "goods-receipts": manifestFixture,
-      "draft-family": { ...manifestFixture, family: "draft-family", exports: null },
+      "draft-family": {
+        ...manifestFixture,
+        family: "draft-family",
+        exports: null,
+      },
     });
     expect(listWebCoreFamilies(root)).toEqual(["goods-receipts"]);
   });
 
   it("thư mục gốc không có src/v2/core trả về danh sách rỗng", () => {
-    expect(listWebCoreFamilies(mkdtempSync(join(tmpdir(), "empty-")))).toEqual([]);
+    expect(listWebCoreFamilies(mkdtempSync(join(tmpdir(), "empty-")))).toEqual(
+      [],
+    );
   });
 });
 
@@ -95,7 +126,10 @@ describe("buildV2ThinData", () => {
   });
 
   it("không có viewVisibility thì dùng {} và không import thêm", () => {
-    const manifest = { ...manifestFixture, exports: { ...exportsFixture, viewVisibility: undefined } };
+    const manifest = {
+      ...manifestFixture,
+      exports: { ...exportsFixture, viewVisibility: undefined },
+    };
     const data = buildV2ThinData(thinAnswers, manifest);
     expect(data.viewVisibilityImport).toBe("");
     expect(data.viewVisibilityExpr).toBe("{}");
@@ -104,7 +138,11 @@ describe("buildV2ThinData", () => {
   it("sinh post/cancel/nextCode theo exports.lifecycle và nextCode", () => {
     const manifest = {
       ...manifestFixture,
-      exports: { ...exportsFixture, lifecycle: ["post", "cancel"], nextCode: true },
+      exports: {
+        ...exportsFixture,
+        lifecycle: ["post", "cancel"],
+        nextCode: true,
+      },
     };
     const data = buildV2ThinData(thinAnswers, manifest);
     expect(data.apiExtraMembers).toContain("post: async (id: string)");
@@ -114,20 +152,35 @@ describe("buildV2ThinData", () => {
   });
 
   it("không khai báo lifecycle thì không sinh thành viên thừa", () => {
-    expect(buildV2ThinData(thinAnswers, manifestFixture).apiExtraMembers).toBe("");
+    expect(buildV2ThinData(thinAnswers, manifestFixture).apiExtraMembers).toBe(
+      "",
+    );
   });
 
   it("từ chối hành động vòng đời không hỗ trợ", () => {
-    const manifest = { ...manifestFixture, exports: { ...exportsFixture, lifecycle: ["approve"] } };
+    const manifest = {
+      ...manifestFixture,
+      exports: { ...exportsFixture, lifecycle: ["approve"] },
+    };
     expect(() => buildV2ThinData(thinAnswers, manifest)).toThrow(/approve/);
   });
 
   it("từ chối tiêu đề chứa dấu nháy kép", () => {
-    expect(() => buildV2ThinData({ ...thinAnswers, titleViInput: 'Kho "A"' }, manifestFixture)).toThrow(/dấu/);
+    expect(() =>
+      buildV2ThinData(
+        { ...thinAnswers, titleViInput: 'Kho "A"' },
+        manifestFixture,
+      ),
+    ).toThrow(/dấu/);
   });
 
   it("từ chối tên module sai định dạng", () => {
-    expect(() => buildV2ThinData({ ...thinAnswers, moduleInput: "GarageX" }, manifestFixture)).toThrow(/Tên module/);
+    expect(() =>
+      buildV2ThinData(
+        { ...thinAnswers, moduleInput: "GarageX" },
+        manifestFixture,
+      ),
+    ).toThrow(/Tên module/);
   });
 });
 
@@ -142,11 +195,16 @@ describe("buildV2ThinData (nối route/menu)", () => {
   });
 
   it("từ chối nhóm menu không hợp lệ", () => {
-    expect(() => buildV2ThinData({ ...thinAnswers, navSection: "khac" }, manifestFixture)).toThrow(/navSection/);
+    expect(() =>
+      buildV2ThinData({ ...thinAnswers, navSection: "khac" }, manifestFixture),
+    ).toThrow(/navSection/);
   });
 
   it("wireInput bật thì wire = true", () => {
-    expect(buildV2ThinData({ ...thinAnswers, wireInput: true }, manifestFixture).wire).toBe(true);
+    expect(
+      buildV2ThinData({ ...thinAnswers, wireInput: true }, manifestFixture)
+        .wire,
+    ).toBe(true);
   });
 });
 
@@ -154,7 +212,10 @@ describe("v2ThinFileMap", () => {
   it("sinh 8 file trong src/v2/modules/<module>, có test tích hợp", () => {
     const files = v2ThinFileMap(buildV2ThinData(thinAnswers, manifestFixture));
     expect(files).toHaveLength(8);
-    for (const { path } of files) expect(path.startsWith("src/v2/modules/garage-goods-receipts/")).toBe(true);
+    for (const { path } of files)
+      expect(path.startsWith("src/v2/modules/garage-goods-receipts/")).toBe(
+        true,
+      );
     expect(files.map((f) => f.path)).toContain(
       "src/v2/modules/garage-goods-receipts/pages/GarageGoodsReceiptsPage.hook.ts",
     );

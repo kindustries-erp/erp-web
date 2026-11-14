@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ShoppingCart, ClipboardList } from "lucide-react";
+import { ClipboardList, Calculator, Warehouse } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
@@ -48,9 +48,9 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-finished-goods": PackageCheck,
   "garage-dashboard": LayoutDashboard,
   "garage-cases": Car,
-  "garage-procurement-requests": ClipboardList,
-  "garage-goods-receipts": Package,
-  "garage-procurement-orders": ShoppingCart,
+  "garage-procurement": ClipboardList,
+  "garage-stock-vouchers": Package,
+  "garage-stock-balances": Warehouse,
   "garage-opex": ReceiptText,
   "garage-cashflow": Wallet,
   "garage-customers": Users,
@@ -59,6 +59,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "invoice-debts": ReceiptText,
   "vinfast-parts-stock": Package,
   cashflow: Wallet,
+  loans: Calculator,
   "erp-invoices": ReceiptText,
   "journal-entry": FileText,
   "settings-accounts": Layers,
@@ -116,15 +117,12 @@ export function useV2AdaptedTabs(): {
       case "garage-dashboard":
       case "garage-cases":
         return t("nav.items.garageCases", "Hoạt động garage");
-      case "garage-procurement-requests":
-        return t(
-          "nav.items.garageProcurementRequests",
-          "Đề nghị mua hàng Garage",
-        );
-      case "garage-goods-receipts":
-        return t("nav.items.garageGoodsReceipts", "Nhập kho Garage");
-      case "garage-procurement-orders":
-        return t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage");
+      case "garage-procurement":
+        return t("nav.items.garageProcurement", "Mua hàng Garage");
+      case "garage-stock-vouchers":
+        return t("nav.items.garageStockVouchers", "Chứng từ kho Garage");
+      case "garage-stock-balances":
+        return t("nav.items.garageStockBalances", "Tồn kho Garage");
       case "garage-cashflow":
         return t("nav.items.garageCashflow", "Thu chi garage");
       case "garage-debts":
@@ -135,6 +133,8 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.vinfastPartsGroup", "Phụ tùng Vinfast");
       case "cashflow":
         return t("nav.items.cashflow", "Dòng tiền");
+      case "loans":
+        return t("nav.items.loans", "Khoản vay & Lãi suất");
       case "erp-invoices":
         return t("nav.items.invoices", "Hóa đơn");
       case "invoice-debts":

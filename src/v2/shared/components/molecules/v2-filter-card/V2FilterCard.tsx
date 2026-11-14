@@ -28,7 +28,9 @@ export const V2FilterCard: React.FC<V2FilterCardProps> = ({
       data-active={active ? "true" : "false"}
       className={cn(
         "overflow-hidden rounded-lg border bg-surface",
-        active ? "border-primary/40" : "border-border/60",
+        active
+          ? "border-[color:color-mix(in_srgb,var(--primary)_40%,transparent)]"
+          : "border-[color:color-mix(in_srgb,var(--border)_50%,transparent)] dark:border-white/[0.06]",
         className,
       )}
     >
@@ -56,7 +58,10 @@ export const V2FilterCard: React.FC<V2FilterCardProps> = ({
         />
       </V2Button>
       {open && (
-        <div id={bodyId} className="border-t border-border/60">
+        <div
+          id={bodyId}
+          className="border-t border-[color:color-mix(in_srgb,var(--border)_40%,transparent)] dark:border-white/[0.05]"
+        >
           {children}
         </div>
       )}

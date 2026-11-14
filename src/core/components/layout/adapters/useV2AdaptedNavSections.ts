@@ -19,6 +19,7 @@ import {
   Factory,
   Shield,
   Package,
+  Warehouse,
   LayoutDashboard,
   Wallet,
   Settings,
@@ -29,9 +30,9 @@ import {
   PackageCheck,
   Receipt,
   ReceiptText,
-  ShoppingCart,
   ClipboardList,
   Sliders,
+  Calculator,
 } from "lucide-react";
 
 export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
@@ -110,8 +111,11 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpAction.READ,
   );
   const canReadGarageOpex = canReadGarageCases;
-  const canReadGarageGoodsReceipts =
-    useHasPermission(ErpResource.GARAGE_GOODS_RECEIPTS, ErpAction.READ) ||
+  const canReadGarageStockVouchers =
+    useHasPermission(ErpResource.GARAGE_STOCK_VOUCHERS, ErpAction.READ) ||
+    canReadGarageCases;
+  const canReadGarageStockLedger =
+    useHasPermission(ErpResource.GARAGE_STOCK_LEDGER, ErpAction.READ) ||
     canReadGarageCases;
   const canReadGaragePurchaseOrders = useHasPermission(
     ErpResource.GARAGE_PROCUREMENT_ORDERS,
@@ -125,7 +129,8 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     canReadGarageCases ||
     canReadGarageProcurementRequests ||
     canReadGaragePurchaseOrders ||
-    canReadGarageGoodsReceipts ||
+    canReadGarageStockVouchers ||
+    canReadGarageStockLedger ||
     canReadGarageCashflow ||
     canReadGarageDebts ||
     canReadGarageOpex;
@@ -387,31 +392,28 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/garage-cases",
         });
       }
-      if (canReadGarageProcurementRequests) {
+      if (canReadGarageProcurementRequests || canReadGaragePurchaseOrders) {
         items.push({
-          id: "garage-procurement-requests",
-          label: t(
-            "nav.items.garageProcurementRequests",
-            "Đề nghị mua hàng Garage",
-          ),
+          id: "garage-procurement",
+          label: t("nav.items.garageProcurement", "Mua hàng Garage"),
           icon: ClipboardList,
-          href: "/garage-procurement-requests",
+          href: "/garage-procurement?tab=requests",
         });
       }
-      if (canReadGaragePurchaseOrders) {
+      if (canReadGarageStockVouchers) {
         items.push({
-          id: "garage-procurement-orders",
-          label: t("nav.items.garagePurchaseOrders", "Đơn mua hàng Garage"),
-          icon: ShoppingCart,
-          href: "/garage-procurement-orders",
-        });
-      }
-      if (canReadGarageGoodsReceipts) {
-        items.push({
-          id: "garage-goods-receipts",
-          label: t("nav.items.garageGoodsReceipts", "Nhập kho Garage"),
+          id: "garage-stock-vouchers",
+          label: t("nav.items.garageStockVouchers", "Chứng từ kho Garage"),
           icon: Package,
-          href: "/garage-goods-receipts",
+          href: "/garage-stock-vouchers",
+        });
+      }
+      if (canReadGarageStockLedger) {
+        items.push({
+          id: "garage-stock-balances",
+          label: t("nav.items.garageStockBalances", "Tồn kho Garage"),
+          icon: Warehouse,
+          href: "/garage-stock-balances",
         });
       }
       if (canReadGarageCashflow) {
@@ -547,6 +549,20 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
         });
       }
     }
+
+    // 9.5 Công cụ
+    sections.push({
+      id: "sec-tools",
+      label: t("nav.sections.tools", "CÔNG CỤ"),
+      items: [
+        {
+          id: "loans",
+          label: t("nav.items.loans", "Khoản vay & Lãi suất"),
+          icon: Calculator,
+          href: "/loans-tool",
+        },
+      ],
+    });
 
     // 10. Thiết lập
     if (showSettings) {

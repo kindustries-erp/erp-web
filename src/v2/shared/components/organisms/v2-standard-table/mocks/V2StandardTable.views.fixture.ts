@@ -37,6 +37,7 @@ export const renderViews = ({
   withViewModes = true,
   prefs = createViewPrefs(),
   filterKey,
+  filterOnChange = vi.fn<(key: string) => void>(),
 }: {
   storage?: V2ViewPresetStorage;
   modes?: ViewModesFixture;
@@ -44,6 +45,8 @@ export const renderViews = ({
   withViewModes?: boolean;
   prefs?: ViewPrefsFixture;
   filterKey?: string;
+  /** Spy cho `filterGroup.onChange` của trang */
+  filterOnChange?: (key: string) => void;
 } = {}) => {
   const hook = renderHook(
     (props: { filterActive?: string }) =>
@@ -57,7 +60,7 @@ export const renderViews = ({
                 { key: "new", label: "Mới" },
               ],
               activeKey: props.filterActive,
-              onChange: vi.fn(),
+              onChange: filterOnChange,
             }
           : undefined,
         prefs,
@@ -65,5 +68,5 @@ export const renderViews = ({
       }),
     { initialProps: { filterActive: filterKey } },
   );
-  return { ...hook, storage, modes, prefs };
+  return { ...hook, storage, modes, prefs, filterOnChange };
 };

@@ -17,7 +17,10 @@ const queryClient = new QueryClient({
   },
 });
 
-export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
+export const AppProviders: React.FC<AppProvidersProps> = ({
+  children,
+  allowAnonymous = false,
+}) => {
   const { accessToken } = useAuthStore();
   const isAuthenticated = Boolean(accessToken);
 
@@ -25,7 +28,7 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
     if (isAuthenticated) void loadV2ServerPreferences();
   }, [isAuthenticated]);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !allowAnonymous) {
     return <V2LoginPage />;
   }
 

@@ -16,6 +16,8 @@ export interface ProcurementLineFormValue {
   /** Đơn giá (PO) hoặc đơn giá dự kiến (PR) */
   price: string;
   requestLineId: string | null;
+  /** Số đã nhận của dòng PO (chỉ đọc, từ API; không gửi lên khi lưu) */
+  qtyFulfilled?: string;
 }
 
 let lineSeq = 0;
@@ -64,13 +66,17 @@ export const sumProcurementLines = (
 ): number => lines.reduce((sum, l) => sum + (procurementLineAmount(l) ?? 0), 0);
 
 /** Mã lỗi dòng đầu tiên gặp phải, hoặc null nếu hợp lệ. */
-export type ProcurementLinesError = "empty" | "itemName" | "qty";
+export type ProcurementLinesError = "empty" | "itemName" | "itemCode" | "qty";
 
+/** Mã hàng bắt buộc khi `itemCodeRequired` (đơn mua Garage). */
 export const validateProcurementLines = (
   lines: ProcurementLineFormValue[],
+  itemCodeRequired = false,
 ): ProcurementLinesError | null => {
   if (lines.length === 0) return "empty";
   if (lines.some((l) => !l.itemName.trim())) return "itemName";
+  if (itemCodeRequired && lines.some((l) => !l.itemCode.trim()))
+    return "itemCode";
   if (lines.some((l) => (toNumberOrNull(l.qty) ?? 0) <= 0)) return "qty";
   return null;
 };
@@ -117,4 +123,5 @@ export const procurementLineFromDetail = (
   qty: toInputText(detail.qtyRequested ?? detail.qtyOrdered) ?? "0",
   price: toInputText(detail.unitPrice ?? detail.estUnitPrice) ?? "",
   requestLineId: detail.requestLineId ?? null,
+  qtyFulfilled: toInputText(detail.qtyFulfilled) ?? undefined,
 });

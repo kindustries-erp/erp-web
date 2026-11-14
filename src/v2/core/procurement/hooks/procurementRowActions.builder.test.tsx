@@ -33,7 +33,6 @@ const deps = () => ({
   start: vi.fn(),
   openDelete: vi.fn(),
   orderFromRequest: vi.fn(),
-  purgeActions: () => [],
 });
 
 const labelsOf = (
@@ -224,5 +223,165 @@ describe("buildProcurementRowActions", () => {
     const submit = groups[1].items.find((i) => i.label === "Gửi duyệt")!;
     expect(submit.disabled).toBe(false);
     expect(submit.disabledReason).toBeUndefined();
+  });
+});
+
+describe("buildProcurementRowActions — lập đơn mua từ PR", () => {
+  type PrRow = { id: string; status: string };
+  const prLabels: Record<string, string> = {
+    "v2.procurement.actions.createOrder": "Lập đơn mua từ đề nghị này",
+    "v2.procurement.actions.orderFullyOrderedReason":
+      "Đề nghị đã được lập đủ đơn mua",
+    "v2.procurement.actions.orderNotApprovedReason":
+      "Chỉ lập đơn mua khi đề nghị đã duyệt",
+  };
+  const prT = (key: string, fallback: string) => prLabels[key] ?? fallback;
+  const prConfig = (
+    allowed: boolean,
+    blockedKey: "notApproved" | "fullyOrdered" | null,
+  ): ProcurementListConfig<PrRow> =>
+    ({
+      ...makeConfig([], true),
+      poHref: "/garage-procurement?tab=orders",
+      canOrderFromRequest: () => allowed,
+      orderFromRequestBlockedKey: () => blockedKey,
+    }) as unknown as ProcurementListConfig<PrRow>;
+  const findOrder = (
+    groups: ReturnType<ReturnType<typeof buildProcurementRowActions<PrRow>>>,
+  ) =>
+    groups
+      .flatMap((g) => g.items)
+      .find((i) => i.label === "Lập đơn mua từ đề nghị này");
+
+  it("PR đã duyệt còn thiếu: mục bật, không có lý do", () => {
+    const d = deps();
+    const build = buildProcurementRowActions<PrRow>({
+      t: prT,
+      config: prConfig(true, null),
+      canCreate: true,
+      canUpdate: false,
+      canDelete: false,
+      ...d,
+    });
+    const item = findOrder(build({ id: "r1", status: "APPROVED" }))!;
+    expect(item.disabled).toBe(false);
+    expect(item.disabledReason).toBeUndefined();
+    item.onClick?.();
+    expect(d.orderFromRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it("PR đã lập đủ PO: hiện nhưng mờ kèm lý do, không gọi callback", () => {
+    const d = deps();
+    const build = buildProcurementRowActions<PrRow>({
+      t: prT,
+      config: prConfig(false, "fullyOrdered"),
+      canCreate: true,
+      canUpdate: false,
+      canDelete: false,
+      ...d,
+    });
+    const item = findOrder(build({ id: "r2", status: "APPROVED" }))!;
+    expect(item.disabled).toBe(true);
+    expect(item.disabledReason).toBe("Đề nghị đã được lập đủ đơn mua");
+  });
+
+  it("PR chưa duyệt: hiện nhưng mờ kèm lý do chờ duyệt", () => {
+    const build = buildProcurementRowActions<PrRow>({
+      t: prT,
+      config: prConfig(false, "notApproved"),
+      canCreate: true,
+      canUpdate: false,
+      canDelete: false,
+      ...deps(),
+    });
+    const item = findOrder(build({ id: "r3", status: "PENDING_APPROVAL" }))!;
+    expect(item.disabled).toBe(true);
+    expect(item.disabledReason).toBe("Chỉ lập đơn mua khi đề nghị đã duyệt");
+  });
+
+  it("không có quyền tạo: không hiện mục lập đơn mua", () => {
+    const build = buildProcurementRowActions<PrRow>({
+      t: prT,
+      config: prConfig(true, null),
+      canCreate: false,
+      canUpdate: false,
+      canDelete: false,
+      ...deps(),
+    });
+    expect(findOrder(build({ id: "r4", status: "APPROVED" }))).toBeUndefined();
+  });
+});
+
+describe("buildProcurementRowActions — nhân bản", () => {
+  type CloneRow = { id: string; status: string };
+  const cloneLabels: Record<string, string> = {
+    "v2.procurement.actions.clone": "Nhân bản",
+  };
+  const cloneT = (key: string, fallback: string) =>
+    cloneLabels[key] ?? fallback;
+  const cloneConfig = (cloneable: boolean) =>
+    ({
+      ...makeConfig([], true),
+      cloneable,
+    }) as unknown as ProcurementListConfig<CloneRow>;
+  const hasClone = (
+    groups: ReturnType<ReturnType<typeof buildProcurementRowActions<CloneRow>>>,
+  ) => groups.flatMap((g) => g.items).some((i) => i.label === "Nhân bản");
+
+  it("phiếu đã từ chối hoặc đã hủy: hiện Nhân bản và gọi callback", () => {
+    const cloneRow = vi.fn();
+    const build = buildProcurementRowActions<CloneRow>({
+      t: cloneT,
+      config: cloneConfig(true),
+      canCreate: true,
+      canUpdate: false,
+      canDelete: false,
+      cloneRow,
+      ...deps(),
+    });
+    const groups = build({ id: "c1", status: "REJECTED" });
+    const item = groups[1].items.find((i) => i.label === "Nhân bản")!;
+    item.onClick?.();
+    expect(cloneRow).toHaveBeenCalledWith({ id: "c1", status: "REJECTED" });
+    expect(hasClone(build({ id: "c2", status: "CANCELLED" }))).toBe(true);
+  });
+
+  it("phiếu nháp hoặc đang duyệt: không có Nhân bản", () => {
+    const build = buildProcurementRowActions<CloneRow>({
+      t: cloneT,
+      config: cloneConfig(true),
+      canCreate: true,
+      canUpdate: false,
+      canDelete: false,
+      cloneRow: vi.fn(),
+      ...deps(),
+    });
+    expect(hasClone(build({ id: "c3", status: "DRAFT" }))).toBe(false);
+    expect(hasClone(build({ id: "c4", status: "PENDING_APPROVAL" }))).toBe(
+      false,
+    );
+  });
+
+  it("cấu hình không cho nhân bản hoặc thiếu quyền tạo: không hiện", () => {
+    const off = buildProcurementRowActions<CloneRow>({
+      t: cloneT,
+      config: cloneConfig(false),
+      canCreate: true,
+      canUpdate: false,
+      canDelete: false,
+      cloneRow: vi.fn(),
+      ...deps(),
+    });
+    expect(hasClone(off({ id: "c5", status: "REJECTED" }))).toBe(false);
+    const noPerm = buildProcurementRowActions<CloneRow>({
+      t: cloneT,
+      config: cloneConfig(true),
+      canCreate: false,
+      canUpdate: false,
+      canDelete: false,
+      cloneRow: vi.fn(),
+      ...deps(),
+    });
+    expect(hasClone(noPerm({ id: "c6", status: "REJECTED" }))).toBe(false);
   });
 });

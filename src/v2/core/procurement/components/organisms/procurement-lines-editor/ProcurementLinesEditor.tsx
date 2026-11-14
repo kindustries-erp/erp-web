@@ -1,26 +1,26 @@
 import * as React from "react";
 import { Plus } from "lucide-react";
-import { V2Button, DrawerSection } from "@/v2/shared/components";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/v2/shared/ui/table";
+  V2Button,
+  V2Text,
+  DrawerSection,
+  V2DrawerLinesTable,
+  type V2DrawerLinesColumn,
+} from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   emptyProcurementLine,
-  procurementLineAmount,
   type ProcurementLineFormValue,
 } from "../../../form/procurementLine.form";
 import {
   getProcurementLineColumns,
   type ProcurementLineColumn,
+  type ProcurementLineColumnContext,
 } from "./ProcurementLinesEditor.columns";
-import { ProcurementLineRow } from "./ProcurementLineRow";
+import {
+  buildFooterCells,
+  withReceivedColumns,
+} from "./ProcurementLinesEditor.helper";
 
 export interface ProcurementLinesEditorProps {
   lines: ProcurementLineFormValue[];
@@ -30,9 +30,15 @@ export interface ProcurementLinesEditorProps {
   errorText?: string;
   title?: React.ReactNode;
   addButtonLabel?: string;
+  /** Khóa thêm/xóa dòng (dòng do đề nghị mua điền sẵn). Vẫn sửa được nội dung dòng. */
+  lockLines?: boolean;
+  /** Đánh dấu cột Mã là bắt buộc (đơn mua Garage) */
+  itemCodeRequired?: boolean;
+  /** Thêm cột Đã nhận / Còn lại (đơn đã phát hành, chỉ xem) để theo dõi nhập nhiều đợt */
+  showReceived?: boolean;
 }
 
-/** Bảng dòng chứng từ PR/PO chuẩn V2: dùng Table và array config, đồng bộ kiến trúc với GoodsReceiptLinesTable. */
+/** Bảng dòng chứng từ PR/PO chuẩn V2: dùng V2DrawerLinesTable (table-fixed, cuộn, header không xuống dòng). */
 export function ProcurementLinesEditor({
   lines,
   onChange,
@@ -41,6 +47,9 @@ export function ProcurementLinesEditor({
   errorText,
   title,
   addButtonLabel,
+  lockLines = false,
+  itemCodeRequired = false,
+  showReceived = false,
 }: ProcurementLinesEditorProps) {
   const { t } = useV2Translation();
   const patch = (key: string, ch: Partial<ProcurementLineFormValue>) =>
@@ -57,32 +66,63 @@ export function ProcurementLinesEditor({
   );
 
   const visibleColumns = React.useMemo(
-    () => columns.filter((col) => !viewing || !col.hideWhenViewing),
-    [columns, viewing],
+    () =>
+      withReceivedColumns(
+        columns.filter(
+          (col) =>
+            (!viewing || !col.hideWhenViewing) &&
+            !(lockLines && col.id === "actions"),
+        ),
+        showReceived,
+      ),
+    [columns, viewing, lockLines, showReceived],
+  );
+  const canEditLines = !viewing && !lockLines;
+
+  const layoutColumns: V2DrawerLinesColumn[] = React.useMemo(
+    () =>
+      visibleColumns.map((col) => ({
+        id: col.id,
+        header: col.headerKey
+          ? t(col.headerKey, col.defaultHeader)
+          : col.defaultHeader,
+        ...col.layout,
+      })),
+    [visibleColumns, t],
   );
 
-  const totalQty = React.useMemo(
-    () => lines.reduce((sum, l) => sum + (Number(l.qty) || 0), 0),
-    [lines],
+  const footerCells = React.useMemo(
+    () => buildFooterCells(lines, showReceived),
+    [lines, showReceived],
   );
 
-  const totalAmount = React.useMemo(
-    () => lines.reduce((sum, l) => sum + (procurementLineAmount(l) ?? 0), 0),
-    [lines],
-  );
-
-  const qtyIndex = visibleColumns.findIndex((col) => col.id === "qty");
-  const prefixSpan = qtyIndex > 0 ? qtyIndex : 4;
-  const amountIndex = visibleColumns.findIndex((col) => col.id === "amount");
-  const suffixSpan =
-    amountIndex >= 0 ? visibleColumns.length - (amountIndex + 1) : 0;
+  const renderCell = (
+    column: V2DrawerLinesColumn,
+    line: ProcurementLineFormValue,
+    index: number,
+  ) => {
+    const def = visibleColumns.find((col) => col.id === column.id);
+    if (!def) return null;
+    const context: ProcurementLineColumnContext = {
+      line,
+      index,
+      viewing,
+      priceLabel,
+      canRemove: lines.length > 1,
+      typeOptions,
+      onPatch: (ch) => patch(line.key, ch),
+      onRemove: () => onChange(lines.filter((l) => l.key !== line.key)),
+      t,
+    };
+    return def.renderCell(context);
+  };
 
   return (
     <DrawerSection
       title={title ?? t("v2.procurement.sections.lines", "Dòng hàng")}
       count={lines.length}
       titleExtra={
-        !viewing && (
+        canEditLines && (
           <V2Button
             variant="outline"
             size="sm"
@@ -94,82 +134,39 @@ export function ProcurementLinesEditor({
         )
       }
     >
-      <div className="overflow-x-auto rounded border border-border">
-        <Table className="w-full text-xs">
-          <TableHeader>
-            <TableRow className="bg-muted/50 border-b border-border text-muted-fg font-medium">
-              {visibleColumns.map((col) => (
-                <TableHead key={col.id} className={col.headerClassName}>
-                  {col.headerKey
-                    ? t(col.headerKey, col.defaultHeader)
-                    : col.defaultHeader}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {lines.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={visibleColumns.length}
-                  className="p-6 text-center text-muted-fg"
-                >
-                  {t(
-                    "v2.procurement.lines.empty",
-                    "Chưa có dòng hàng nào trong chứng từ",
-                  )}
-                </TableCell>
-              </TableRow>
-            ) : (
-              lines.map((line, idx) => (
-                <ProcurementLineRow
-                  key={line.key}
-                  line={line}
-                  index={idx}
-                  viewing={viewing}
-                  priceLabel={priceLabel}
-                  canRemove={lines.length > 1}
-                  typeOptions={typeOptions}
-                  visibleColumns={visibleColumns}
-                  onPatch={(ch) => patch(line.key, ch)}
-                  onRemove={() =>
-                    onChange(lines.filter((l) => l.key !== line.key))
-                  }
-                />
-              ))
-            )}
-          </TableBody>
-          {lines.length > 0 && (
-            <TableFooter className="bg-muted/40 font-semibold border-t border-border">
-              <TableRow>
-                <TableCell
-                  colSpan={prefixSpan}
-                  className="text-right p-2 font-bold text-xs"
-                >
-                  {t("v2.common.total", "Tổng cộng")}:
-                </TableCell>
-                <TableCell className="text-right p-2 tabular-nums text-xs font-semibold">
-                  {totalQty.toLocaleString("vi-VN", {
-                    maximumFractionDigits: 3,
-                  })}
-                </TableCell>
-                <TableCell className="text-right p-2 text-xs">—</TableCell>
-                <TableCell className="text-right p-2 tabular-nums font-bold text-primary text-xs">
-                  {totalAmount.toLocaleString("vi-VN", {
-                    maximumFractionDigits: 3,
-                  })}
-                </TableCell>
-                {suffixSpan > 0 && (
-                  <TableCell colSpan={suffixSpan} className="p-2" />
-                )}
-              </TableRow>
-            </TableFooter>
-          )}
-        </Table>
-      </div>
+      <V2DrawerLinesTable<ProcurementLineFormValue>
+        ariaLabel={t("v2.procurement.sections.lines", "Dòng hàng")}
+        columns={layoutColumns.map((col) =>
+          col.id === "itemCode" && itemCodeRequired && !viewing
+            ? {
+                ...col,
+                header: (
+                  <>
+                    {col.header}
+                    <V2Text as="span" className="text-destructive">
+                      {" "}
+                      *
+                    </V2Text>
+                  </>
+                ),
+              }
+            : col,
+        )}
+        rows={lines}
+        getRowKey={(line) => line.key}
+        renderCell={renderCell}
+        footerLabel={t("v2.common.total", "Tổng cộng") + ":"}
+        footerCells={footerCells}
+        emptyLabel={t(
+          "v2.procurement.lines.empty",
+          "Chưa có dòng hàng nào trong chứng từ",
+        )}
+      />
 
       {errorText && (
-        <p className="mt-2 text-sm text-destructive">{errorText}</p>
+        <V2Text as="p" variant="body-sm" className="mt-2 text-destructive">
+          {errorText}
+        </V2Text>
       )}
     </DrawerSection>
   );

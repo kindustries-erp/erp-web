@@ -53,23 +53,25 @@ vi.mock("@/v2/shared/hooks/useViewport", () => ({
 const mockNotifications: CoreNotification[] = [
   {
     id: "notif-1",
-    userId: "user-1",
     title: "Đơn hàng mới #1001",
     message: "Khách hàng Nguyễn Văn A vừa đặt hàng.",
     type: "INFO",
     isRead: false,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
   {
     id: "notif-2",
-    userId: "user-1",
     title: "Cập nhật tồn kho",
     message: "Mã SKU ABC đã hết hàng.",
     type: "WARNING",
     isRead: true,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
 ];
 
@@ -156,11 +158,12 @@ describe("V2NotificationPopover Molecule", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open" }));
 
-    // Click unread notification item
-    fireEvent.click(screen.getByText("Đơn hàng mới #1001"));
+    // Click icon đánh dấu đã đọc: mark read (không điều hướng, panel giữ nguyên)
+    fireEvent.click(screen.getByTestId("mark-as-read-button"));
     await waitFor(() => {
       expect(notificationsApi.markAsRead).toHaveBeenCalledWith("notif-1");
     });
+    expect(screen.getByText("Đơn hàng mới #1001")).toBeInTheDocument();
 
     // Click mark all as read
     const markAllBtn = screen.getByText("Đánh dấu đã đọc tất cả");
@@ -174,6 +177,31 @@ describe("V2NotificationPopover Molecule", () => {
     fireEvent.click(deleteAllBtn);
     await waitFor(() => {
       expect(notificationsApi.deleteAll).toHaveBeenCalled();
+    });
+  });
+
+  it("click nội dung thông báo trên desktop: điều hướng và đóng popover", async () => {
+    const handleNotificationClick = vi.fn();
+
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <V2NotificationPopover
+          notifications={mockNotifications}
+          onNotificationClick={handleNotificationClick}
+        >
+          <button>Open</button>
+        </V2NotificationPopover>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open" }));
+    fireEvent.click(screen.getByText("Đơn hàng mới #1001"));
+
+    await waitFor(() => {
+      expect(handleNotificationClick).toHaveBeenCalledWith(
+        mockNotifications[0],
+      );
+      expect(screen.queryByText("Đơn hàng mới #1001")).not.toBeInTheDocument();
     });
   });
 
@@ -239,13 +267,79 @@ describe("V2NotificationPopover Molecule", () => {
     expect(screen.getByText("Thông báo")).toBeInTheDocument();
     expect(screen.getByText("Đơn hàng mới #1001")).toBeInTheDocument();
 
-    // Click a notification item
+    // Click a notification item: chỉ điều hướng, không mark read
     fireEvent.click(screen.getByText("Đơn hàng mới #1001"));
     await waitFor(() => {
-      expect(notificationsApi.markAsRead).toHaveBeenCalledWith("notif-1");
       expect(handleNotificationClick).toHaveBeenCalledWith(
         mockNotifications[0],
       );
+    });
+    expect(notificationsApi.markAsRead).not.toHaveBeenCalled();
+  });
+
+  it("applies high-contrast Light theme classes while preserving Dark variants and supports per-item delete", async () => {
+    (notificationsApi.delete as any).mockResolvedValue({});
+
+    const allTypeNotifications: CoreNotification[] = [
+      ...mockNotifications,
+      {
+        id: "notif-3",
+        title: "Nhập kho hoàn tất",
+        message: "Phiếu nhập #GR-01 đã xác nhận.",
+        type: "SUCCESS",
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        readAt: null,
+        extraData: {},
+        target: null,
+      },
+      {
+        id: "notif-4",
+        title: "Lỗi đồng bộ",
+        message: "Không thể kết nối máy chủ hóa đơn.",
+        type: "ERROR",
+        isRead: true,
+        createdAt: new Date().toISOString(),
+        readAt: null,
+        extraData: {},
+        target: null,
+      },
+    ];
+
+    render(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <V2NotificationPopover notifications={allTypeNotifications}>
+          <button>Open All Types</button>
+        </V2NotificationPopover>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Open All Types" }));
+
+    expect(screen.getByText("Nhập kho hoàn tất")).toBeInTheDocument();
+    expect(screen.getByText("Lỗi đồng bộ")).toBeInTheDocument();
+
+    const unreadCard = screen
+      .getByText("Đơn hàng mới #1001")
+      .closest("div.group");
+    const readCard = screen.getByText("Cập nhật tồn kho").closest("div.group");
+
+    expect(unreadCard?.className).toContain("bg-teal-50/70");
+    expect(unreadCard?.className).toContain("border-teal-500/25");
+    expect(readCard?.className).toContain("bg-slate-50/75");
+    expect(readCard?.className).toContain("dark:opacity-60");
+    expect(readCard?.className).not.toMatch(/(?:^|\s)opacity-60(?:\s|$)/);
+
+    const unreadDots = screen.getAllByTestId("unread-indicator");
+    expect(unreadDots[0].className).toContain("bg-teal-600");
+    expect(unreadDots[0].className).toContain("dark:bg-teal-400");
+
+    const deleteButtons = screen.getAllByRole("button", {
+      name: "Xóa thông báo",
+    });
+    fireEvent.click(deleteButtons[0]);
+    await waitFor(() => {
+      expect(notificationsApi.delete).toHaveBeenCalledWith("notif-1");
     });
   });
 });

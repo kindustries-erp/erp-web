@@ -1,8 +1,12 @@
 import * as React from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { showProcurementError } from "../procurement.toast";
+import {
+  showProcurementError,
+  showProcurementSuccess,
+} from "../procurement.toast";
 import {
   PROCUREMENT_REASON_ACTIONS,
   type ProcurementActionKey,
@@ -12,10 +16,9 @@ import { useProcurementPurge } from "./useProcurementPurge";
 import { useProcurementTransition } from "./useProcurementTransition";
 import { useProcurementRowActions } from "./useProcurementRowActions";
 import { useProcurementApprovalGate } from "./useProcurementApprovalGate";
-import {
-  consumeProcurementRequestIntent,
-  useProcurementIntentStore,
-} from "../procurement.intent";
+import { useProcurementAlreadyDecided } from "./useProcurementAlreadyDecided";
+import { useProcurementOrderIntent } from "./useProcurementOrderIntent";
+import { useProcurementIntentStore } from "../procurement.intent";
 
 /** Cấu hình một màn danh sách procurement: module truyền vào, core xử lý phần còn lại. */
 export interface ProcurementActionTarget<T> {
@@ -52,6 +55,11 @@ export function useProcurementList<T extends { id: string }>(
     collection: config.permissionCollection,
     action: "delete",
   });
+  const canReceive = useV2HasPermission({
+    collection:
+      config.receivePermissionCollection ?? config.permissionCollection,
+    action: "create",
+  });
   const [drawer, setDrawer] = React.useState<ProcurementDrawerTarget | null>(
     null,
   );
@@ -62,16 +70,13 @@ export function useProcurementList<T extends { id: string }>(
   const [deleteTarget, setDeleteTarget] = React.useState<T | null>(null);
   const purgeState = useProcurementPurge(config);
   const approval = useProcurementApprovalGate(config);
-  const pendingRequestId = useProcurementIntentStore((s) => s.pendingRequestId);
-
-  // Mở sẵn drawer tạo PO nếu vừa được chuyển sang từ một PR
-  React.useEffect(() => {
-    if (!canCreate) return;
-    const fromRequestId = consumeProcurementRequestIntent();
-    if (fromRequestId) {
-      setDrawer({ id: null, mode: "edit", fromRequestId });
-    }
-  }, [canCreate, pendingRequestId]);
+  // Mở sẵn drawer tạo đơn mua nếu vừa được chuyển sang từ một đề nghị (chỉ danh sách đơn mua)
+  const openOrderDraft = React.useCallback(
+    (fromRequestId: string) =>
+      setDrawer({ id: null, mode: "edit", fromRequestId }),
+    [],
+  );
+  useProcurementOrderIntent(config, canCreate, openOrderDraft);
 
   const onListError = React.useCallback(
     (error: unknown) =>
@@ -82,6 +87,9 @@ export function useProcurementList<T extends { id: string }>(
     [t],
   );
 
+  const alreadyDecidedState = useProcurementAlreadyDecided();
+  const { showAlreadyDecided } = alreadyDecidedState;
+
   const { transition, remove } = useProcurementTransition(config, {
     onTransitioned: () => {
       setReasonTarget(null);
@@ -89,6 +97,20 @@ export function useProcurementList<T extends { id: string }>(
       approval.closeSubmit();
     },
     onRemoved: () => setDeleteTarget(null),
+    onAlreadyDecided: (status) => {
+      const row =
+        confirmTarget?.row ??
+        reasonTarget?.row ??
+        approval.submitTarget ??
+        null;
+      setReasonTarget(null);
+      setConfirmTarget(null);
+      approval.closeSubmit();
+      showAlreadyDecided({
+        rowLabel: row ? config.rowLabel(row) : "",
+        status,
+      });
+    },
   });
 
   const { requestSubmit } = approval;
@@ -109,11 +131,43 @@ export function useProcurementList<T extends { id: string }>(
   const orderFromRequest = React.useCallback(
     (row: T) => {
       if (!config.poHref) return;
+      // Đóng drawer đề nghị đang mở (nếu có) để chỉ còn drawer đơn mua
+      setDrawer(null);
       useProcurementIntentStore.getState().setPendingRequestId(row.id);
       window.history.pushState(null, "", config.poHref);
       window.dispatchEvent(new PopStateEvent("popstate"));
     },
     [config.poHref],
+  );
+
+  /**
+   * Sang trang nhập kho kèm tham số (?fromOrder=<id> hoặc ?receipt=<id>); trang nhập kho tự xử lý.
+   * Giữ tiền tố `/v2` khi người dùng đang ở shell V2.
+   */
+  const goToReceipts = React.useCallback(
+    (search: string) => {
+      if (!config.receiveHref) return;
+      setDrawer(null);
+      const base = window.location.pathname.startsWith("/v2/")
+        ? `/v2${config.receiveHref}`
+        : config.receiveHref;
+      window.history.pushState(null, "", `${base}?${search}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    },
+    [config.receiveHref],
+  );
+
+  /** Nhập kho từ đơn: trang nhập kho điền sẵn phiếu mới theo đơn. */
+  const receive = React.useCallback(
+    (row: T) => goToReceipts(`fromOrder=${encodeURIComponent(row.id)}`),
+    [goToReceipts],
+  );
+
+  /** Mở một phiếu nhập đã tạo cho đơn (lịch sử nhập kho). */
+  const openReceipt = React.useCallback(
+    (receiptId: string) =>
+      goToReceipts(`receipt=${encodeURIComponent(receiptId)}`),
+    [goToReceipts],
   );
 
   const openDrawer = React.useCallback(
@@ -126,7 +180,33 @@ export function useProcurementList<T extends { id: string }>(
     (s) => s.profile?.email ?? s.employee?.email ?? null,
   );
 
+  // Nhân bản phiếu đã từ chối/hủy: tạo nháp mới rồi mở ngay ở chế độ sửa
+  const queryClient = useQueryClient();
+  const { mutate: cloneMutate } = useMutation({
+    mutationFn: (id: string) => {
+      if (!config.api.clone) throw new Error("Chưa hỗ trợ nhân bản");
+      return config.api.clone(id);
+    },
+    onSuccess: ({ id }) => {
+      void queryClient.invalidateQueries({ queryKey: [config.queryKey] });
+      showProcurementSuccess(
+        t("v2.procurement.drawer.cloned", "Đã nhân bản thành phiếu nháp mới"),
+      );
+      setDrawer({ id, mode: "edit" });
+    },
+    onError: (error) =>
+      showProcurementError(
+        error,
+        t("v2.procurement.drawer.cloneError", "Không nhân bản được phiếu"),
+      ),
+  });
+  const cloneRow = React.useCallback(
+    (row: T) => cloneMutate(row.id),
+    [cloneMutate],
+  );
+
   const rowActions = useProcurementRowActions<T>({
+    cloneRow,
     config: approval.approvalConfig,
     canCreate,
     canUpdate,
@@ -137,7 +217,8 @@ export function useProcurementList<T extends { id: string }>(
     start,
     openDelete: (row) => setDeleteTarget(row),
     orderFromRequest,
-    purgeActions: purgeState.purgeActions,
+    canReceive,
+    receive,
   });
 
   const submitReason = (reason: string) => {
@@ -149,11 +230,20 @@ export function useProcurementList<T extends { id: string }>(
     });
   };
 
+  // Ổn định identity: cột bảng dựng bằng useMemo phụ thuộc hàm này
+  const openView = React.useCallback(
+    (id: string) => openDrawer(id, "view"),
+    [openDrawer],
+  );
+
   return {
     canCreate,
     canUpdate,
+    canReceive,
+    receive,
+    openReceipt,
     drawer,
-    openView: (id: string) => openDrawer(id, "view"),
+    openView,
     openCreate: () => setDrawer({ id: null, mode: "edit" }),
     /** Sau khi lưu (tạo hoặc sửa): mở lại chứng từ ở chế độ xem */
     openSaved: (id: string) => setDrawer({ id, mode: "view" }),
@@ -175,9 +265,14 @@ export function useProcurementList<T extends { id: string }>(
     deleteTarget,
     isTransitioning:
       transition.isPending || remove.isPending || purgeState.isPurging,
+    /** Nút xóa vĩnh viễn của một dòng (chế độ xem phiếu đã xóa mềm) */
+    purgeActions: purgeState.purgeActions,
     purgeTarget: purgeState.purgeTarget,
     closePurge: purgeState.closePurge,
     confirmPurge: purgeState.confirmPurge,
+    alreadyDecided: alreadyDecidedState.alreadyDecided,
+    showAlreadyDecided,
+    closeAlreadyDecided: alreadyDecidedState.closeAlreadyDecided,
     closeReason: () => setReasonTarget(null),
     closeConfirm: () => setConfirmTarget(null),
     closeDelete: () => setDeleteTarget(null),
