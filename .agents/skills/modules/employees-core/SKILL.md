@@ -19,7 +19,7 @@ src/v2/core/employees/                  # lõi họ employees
 ├── api/                                # employeesApi (employeesV2Api, toEmployeePayload), keys, queries, mutations, dtos
 ├── domain/                             # employee.ts, rules/employeeDates.ts, rules/employeeRules.ts
 ├── components/                         # status badge, employee-table (cột, views), employee-form (3 section)
-├── drawers/                            # EmployeeDrawer + hook
+├── drawers/                            # EmployeeDrawer + hook; view mode dùng EmployeeProfileView/EmployeeWorkView (V2DrawerRowList, không ô nhập)
 ├── hooks/                              # useEmployeeListController, employeeRowActions
 └── index.ts                            # barrel @/v2/core/employees
 src/v2/modules/employees-management/    # thin module: api delegate, config, page + hook, locale riêng, test

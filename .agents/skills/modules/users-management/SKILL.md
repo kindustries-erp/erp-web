@@ -30,7 +30,7 @@ src/v2/core/users/                      # lõi họ users
 │   └── mutations/useUserMutations.ts   # save, toggle status, reset password
 ├── domain/                             # user.ts (UserRecord, UserFormValue), rules/userRules.ts
 ├── components/{molecules,organisms}/   # user-status-badge, user-table (cột, views), user-form, user-reset-password
-├── drawers/                            # UserDrawer + hook (tạo: email + mật khẩu; sửa: trạng thái + nhân viên; tab Lịch sử khi xem/sửa)
+├── drawers/                            # UserDrawer + hook; view mode render nhãn - giá trị qua UserFormView (không ô nhập) (tạo: email + mật khẩu; sửa: trạng thái + nhân viên; tab Lịch sử khi xem/sửa)
 ├── hooks/useUserListController.tsx     # quyền, drawer, xác nhận đổi trạng thái, đặt lại mật khẩu, đăng nhập dưới quyền, view mode
 ├── hooks/userRowActions.tsx            # hành động từng dòng (ẩn theo quyền, trạng thái, impersonate)
 └── index.ts                            # barrel @/v2/core/users

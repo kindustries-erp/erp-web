@@ -12,6 +12,7 @@ import { RolesPage } from "@/v2/modules/rbac-roles"; // v2-module:rbac-roles:imp
 import { LoansListPage } from "@/v2/modules/loans-tool";
 import { UsersManagementPage } from "@/v2/modules/users-management"; // v2-module:users-management:imports
 import { EmployeesManagementPage } from "@/v2/modules/employees-management"; // v2-module:employees-management:imports
+import { AuditLogsGuarded } from "@/v2/modules/audit-logs"; // v2-module:audit-logs:imports
 // plop:v2-page-imports
 import { V2AdminDashboardPage } from "@/v2/modules/admin-dashboard";
 
@@ -38,6 +39,8 @@ export const V2_PAGE_REGISTRY: Record<string, () => ReactNode> = {
   "users-management": () => <UsersManagementPage />,
   "employees-management": () => <EmployeesManagementPage />,
   // v2-module:users-management:pages
+  [V2AdminRouteId.AUDIT_LOGS]: () => <AuditLogsGuarded />,
+  // v2-module:audit-logs:pages
   // plop:v2-pages
   loans: () => <LoansListPage />,
   [V2AdminRouteId.DASHBOARD]: () => <V2AdminDashboardPage />,
