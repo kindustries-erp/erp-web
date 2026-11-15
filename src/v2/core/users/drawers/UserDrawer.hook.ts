@@ -4,6 +4,10 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
 import { useUserEmployeeOptionsQuery } from "../api/queries/useUserEmployeeOptionsQuery";
+import {
+  toUserAuditItems,
+  useUserAuditTimelineQuery,
+} from "../api/queries/useUserAuditTimelineQuery";
 import { useSaveUserMutation } from "../api/mutations/useUserMutations";
 import {
   emptyUserForm,
@@ -34,6 +38,7 @@ export function useUserDrawer(props: UserDrawerProps) {
   const [form, setForm] = React.useState<UserFormValue>(emptyUserForm);
   const [initial, setInitial] = React.useState<UserFormValue>(emptyUserForm);
   const [errorKey, setErrorKey] = React.useState<string>("");
+  const [activeTab, setActiveTab] = React.useState<string>("info");
 
   const detail = useQuery({
     queryKey: keys.detail(userId ?? "new"),
@@ -45,7 +50,21 @@ export function useUserDrawer(props: UserDrawerProps) {
     props.open && mode === "edit",
   );
 
+  const audit = useUserAuditTimelineQuery({
+    api,
+    keys,
+    userId,
+    enabled: props.open && activeTab === "history",
+  });
+  const historyItems = React.useMemo(
+    () => toUserAuditItems(audit.data ?? [], t),
+    [audit.data, t],
+  );
+
   React.useEffect(() => setMode(props.mode), [props.mode, props.open]);
+  React.useEffect(() => {
+    if (props.open) setActiveTab("info");
+  }, [props.open, userId]);
   React.useEffect(() => {
     if (!props.open) return;
     setErrorKey("");
@@ -130,5 +149,10 @@ export function useUserDrawer(props: UserDrawerProps) {
     loading: detail.isFetching,
     saving: save.isPending,
     submit,
+    activeTab,
+    setActiveTab,
+    historyItems,
+    historyLoading: audit.isFetching,
+    historyError: Boolean(audit.error),
   };
 }

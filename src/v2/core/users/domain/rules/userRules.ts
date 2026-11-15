@@ -32,3 +32,15 @@ export const canEditUserEmail = (isCreating: boolean): boolean => isCreating;
 
 export const isUserInactive = (status: string): boolean =>
   status === "INACTIVE";
+
+/** Tài khoản quản trị gốc, không cho đăng nhập dưới quyền chính nó */
+export const IMPERSONATION_PROTECTED_EMAIL = "admin@liouni.com";
+
+/** Chỉ người được phép impersonate, với tài khoản ACTIVE và không phải tài khoản quản trị gốc */
+export const canImpersonateUser = (
+  allowed: boolean,
+  user: { email: string; status: string },
+): boolean =>
+  allowed &&
+  user.status === "ACTIVE" &&
+  user.email.trim().toLowerCase() !== IMPERSONATION_PROTECTED_EMAIL;

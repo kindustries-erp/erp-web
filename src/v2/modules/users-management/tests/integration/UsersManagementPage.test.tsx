@@ -12,6 +12,7 @@ const api = vi.hoisted(() => ({
   activate: vi.fn(),
   deactivate: vi.fn(),
   resetPassword: vi.fn(),
+  timeline: vi.fn(),
 }));
 
 vi.mock("../../api/usersManagementApi", () => ({

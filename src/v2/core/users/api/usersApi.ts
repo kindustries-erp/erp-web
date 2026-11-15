@@ -11,6 +11,7 @@ import type {
   ColumnOptionsResultDto,
   CreateUserPayloadDto,
   UpdateUserPayloadDto,
+  UserAuditEntryDto,
   UserEmployeeOptionDto,
   UserEnvelopeDto,
   UserListResultDto,
@@ -19,6 +20,9 @@ import type {
 const BASE = "/api/v2/users-management";
 const OPTIONS_PAGE_SIZE = 20;
 const EMPLOYEES_BASE = "/api/v2/employees";
+const AUDIT_BASE = "/api/v2/audit-logs";
+/** Tên entity backend ghi vào audit khi thao tác tài khoản */
+export const USER_AUDIT_ENTITY_TYPE = "users_management";
 const EMPLOYEE_PAGE_SIZE = 200;
 
 export const toUserListParams = (query: V2TableQuery) => ({
@@ -126,6 +130,12 @@ export const usersV2Api = {
         )
       ).data,
     ),
+  timeline: async (id: string): Promise<UserAuditEntryDto[]> => {
+    const { data } = await v2HttpClient.get<{ items?: UserAuditEntryDto[] }>(
+      `${AUDIT_BASE}/${USER_AUDIT_ENTITY_TYPE}/${encodeURIComponent(id)}/timeline`,
+    );
+    return data.items ?? [];
+  },
   /** Nhân viên đang làm để liên kết, lấy từ `/api/v2/employees` (backend cũng từ chối nhân viên đã nghỉ). */
   listEmployees: async (): Promise<UserEmployeeOptionDto[]> => {
     const { data } = await v2HttpClient.get<{

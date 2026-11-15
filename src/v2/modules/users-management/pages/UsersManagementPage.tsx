@@ -137,6 +137,24 @@ export function UsersManagementPage() {
             onCancel={() => state.setStatusTarget(null)}
             onOpenChange={(open) => !open && state.setStatusTarget(null)}
           />
+          <V2ConfirmModal
+            open={Boolean(state.impersonateTarget)}
+            title={t(
+              "v2.users.impersonate.title",
+              "Đăng nhập dưới quyền tài khoản này?",
+            )}
+            message={`${t(
+              "v2.users.impersonate.message",
+              "Bạn sẽ truy cập hệ thống với các quyền của",
+            )} ${state.impersonateTarget?.email ?? ""}`}
+            confirmLabel={t("v2.users.impersonate.confirm", "Đăng nhập")}
+            cancelLabel={t("v2.common.cancel", "Hủy")}
+            variant="primary"
+            isLoading={state.impersonating}
+            onConfirm={() => void state.confirmImpersonate()}
+            onCancel={() => state.setImpersonateTarget(null)}
+            onOpenChange={(open) => !open && state.setImpersonateTarget(null)}
+          />
           <UserResetPasswordModal
             open={Boolean(state.resetTarget)}
             email={state.resetTarget?.email ?? ""}

@@ -9,6 +9,7 @@ export const createUserKeys = (base: readonly string[]) => {
     all,
     list: (query: V2TableQuery) => [...all, "list", query] as const,
     detail: (id: string) => [...all, "detail", id] as const,
+    audit: (id: string) => [...all, "audit", id] as const,
     employeeOptions: () => [...all, "employee-options"] as const,
   };
 };

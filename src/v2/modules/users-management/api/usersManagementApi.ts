@@ -10,4 +10,5 @@ export const usersManagementApi: UserApi = {
   activate: usersV2Api.activate,
   deactivate: usersV2Api.deactivate,
   resetPassword: usersV2Api.resetPassword,
+  timeline: usersV2Api.timeline,
 };

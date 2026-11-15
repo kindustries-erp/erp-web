@@ -36,3 +36,13 @@ export interface UserEmployeeOptionDto {
   fullName: string;
   employeeCode: string;
 }
+
+/** Một dòng nhật ký audit của tài khoản (rút gọn từ `/api/v2/audit-logs/:entityType/:entityId/timeline`) */
+export interface UserAuditEntryDto {
+  id: string;
+  actionType: string;
+  actorEmail: string | null;
+  message: string | null;
+  status: string;
+  createdAt: string;
+}

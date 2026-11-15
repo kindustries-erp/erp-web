@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Eye, KeyRound, Pencil, Power, PowerOff } from "lucide-react";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2RowActionGroup } from "@/v2/shared/types/v2-table";
@@ -14,7 +14,7 @@ import {
 } from "../api/mutations/useUserMutations";
 import { buildUserColumns } from "../components/organisms/user-table";
 import type { UserRecord } from "../domain/user";
-import { isUserInactive } from "../domain/rules/userRules";
+import { buildUserRowActions } from "./userRowActions";
 
 export interface UserDrawerTarget {
   id: string | null;
@@ -77,45 +77,45 @@ export function useUserListController(config: UserModuleConfig) {
     [t, open],
   );
 
+  const [impersonateTarget, setImpersonateTarget] =
+    React.useState<UserRecord | null>(null);
+  const canImpersonate = useAuthStore((state) => state.canImpersonate);
+  const impersonateAction = useAuthStore((state) => state.impersonateAction);
+  const [impersonating, setImpersonating] = React.useState(false);
+
+  const confirmImpersonate = React.useCallback(async () => {
+    if (!impersonateTarget) return;
+    setImpersonating(true);
+    try {
+      await impersonateAction(impersonateTarget.id);
+      setImpersonateTarget(null);
+    } catch (error) {
+      const fallback = t(
+        "v2.users.impersonate.error",
+        "Không đăng nhập dưới quyền được",
+      );
+      useV2ToastStore.getState().showToast({
+        variant: "destructive",
+        title: fallback,
+        description: extractV2ApiError(error, fallback),
+      });
+    } finally {
+      setImpersonating(false);
+    }
+  }, [impersonateAction, impersonateTarget, t]);
+
   const rowActions = React.useCallback(
-    (row: UserRecord): V2RowActionGroup[] => {
-      const items: V2RowActionGroup["items"] = [
-        {
-          label: t("v2.users.actions.view", "Xem chi tiết"),
-          icon: <Eye className="h-3.5 w-3.5" />,
-          onClick: () => open(row.id, "view"),
-        },
-      ];
-      if (canManage) {
-        const inactive = isUserInactive(row.status);
-        items.push(
-          {
-            label: t("v2.users.actions.edit", "Chỉnh sửa"),
-            icon: <Pencil className="h-3.5 w-3.5" />,
-            onClick: () => open(row.id, "edit"),
-          },
-          {
-            label: t("v2.users.actions.resetPassword", "Đặt lại mật khẩu"),
-            icon: <KeyRound className="h-3.5 w-3.5" />,
-            onClick: () => setResetTarget(row),
-          },
-          {
-            label: inactive
-              ? t("v2.users.actions.activate", "Kích hoạt")
-              : t("v2.users.actions.deactivate", "Ngưng hoạt động"),
-            icon: inactive ? (
-              <Power className="h-3.5 w-3.5" />
-            ) : (
-              <PowerOff className="h-3.5 w-3.5" />
-            ),
-            variant: inactive ? undefined : "danger",
-            onClick: () => setStatusTarget(row),
-          },
-        );
-      }
-      return [{ items }];
-    },
-    [canManage, open, t],
+    (row: UserRecord): V2RowActionGroup[] =>
+      buildUserRowActions(row, {
+        t,
+        canManage,
+        canImpersonate,
+        onOpen: open,
+        onToggleStatus: setStatusTarget,
+        onResetPassword: setResetTarget,
+        onImpersonate: setImpersonateTarget,
+      }),
+    [canImpersonate, canManage, open, t],
   );
 
   const toggleStatus = useToggleUserStatusMutation(
@@ -158,6 +158,10 @@ export function useUserListController(config: UserModuleConfig) {
     resetTarget,
     setResetTarget,
     resetPassword,
+    impersonateTarget,
+    setImpersonateTarget,
+    impersonating,
+    confirmImpersonate,
     view,
     selectView,
     onListError,
