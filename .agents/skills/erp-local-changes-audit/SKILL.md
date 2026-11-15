@@ -28,6 +28,6 @@ Nạp `erp-ui-structure` và `erp-web-truth` trước. Quy trình đầy đủ v
    - Chuỗi tiếng Việt hoặc Anh thô trong JSX (không qua `t()`) là FAIL.
    Lệnh: `grep -nE "t\(\s*\"v2\.[^\"]+\"" <file>` và đối chiếu từng key.
    Báo cáo bắt buộc một dòng: `i18n VI/EN đủ: PASS/FAIL`.
-5. Đối chiếu từng file với `erp-ui-structure`: tầng Atomic và import một chiều, folder-per-component, tên hook, core theo họ, i18n (prefix `v2.` cho V2), No Blue, selector Zustand, react-query, bảng và drawer chuẩn, test đi kèm.
+5. Đối chiếu từng file với `erp-ui-structure`: tầng Atomic và import một chiều, folder-per-component, tên hook, core theo họ, i18n (prefix `v2.` cho V2), No Blue, selector Zustand, react-query, bảng và drawer chuẩn, drawer V2 view mode render thông tin bằng `V2DrawerRowList` (không `V2ReadValue`/`V2TextField viewing`), test đi kèm.
 6. Ghi bảng tuân thủ: rule | file#dòng | PASS hoặc FAIL. Bảng phải có đủ các dòng: tái sử dụng atom V2 và màu theo token.
 7. Nếu có FAIL, đưa plan enhance và fix theo mẫu `/erp-plan`, rồi dừng chờ `OK`.

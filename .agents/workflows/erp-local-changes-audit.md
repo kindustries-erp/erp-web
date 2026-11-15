@@ -46,6 +46,7 @@ Kỹ năng chi tiết nằm ở skill `erp-local-changes-audit`. Nạp `erp-ui-s
 | Zustand | Selector riêng lẻ | `erp-ui-structure` mục 2 |
 | Server state | `@tanstack/react-query`, không `useEffect` + fetch | `erp-web/.agents/AGENTS.md` mục 3 |
 | Bảng và drawer chuẩn | `SpreadsheetPageTemplate` hoặc `V2StandardTable`; `StandardFormDrawer` hoặc `V2StandardDrawer` | `erp-ui-structure` Phần C |
+| Drawer V2 view mode render thông tin | Ở view mode không có `V2ReadValue`, `V2TextField viewing`, input khóa; có `*View.tsx` dùng `V2DrawerRowList`; test khẳng định không có textbox/combobox. Audit: `/usr/bin/grep -rnE "V2ReadValue\|V2TextField[^>]*viewing" <file đổi>` | `standardize-drawer/references/v2-drawer.md` mục "View mode" |
 | i18n V2 đủ VI/EN | Không hardcode chuỗi hiển thị. V2 dùng `useV2Translation`, key `v2.*`; mỗi key có đủ vi và en (`src/v2/shared/locales/` hoặc `<họ>.locale.ts`). Thiếu một bên là FAIL. Atom mới phải kèm key vi/en | `erp-ui-structure` `references/atomic-ui.md` mục 6.1, `erp-ui-structure` mục 2 |
 | Test đi kèm | Logic mới có `.test.tsx` hoặc `.test.ts` | `erp-web/.agents/AGENTS.md` mục 4 |
 

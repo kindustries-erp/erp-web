@@ -24,6 +24,7 @@ Xác định trước: code nằm ở `src/` (V1) hay `src/v2/` (V2). Hai bên d
 
 - **Component**: V1 dùng `StandardFormDrawer` từ `@/shared/components/StandardFormDrawer`. V2 dùng `V2StandardDrawer`.
 - **Layout**: chọn 1 cột hay 2 cột theo độ phức tạp của form; tab điều hướng đặt phía trên.
+- **View mode (V2)**: render thông tin nhãn - giá trị bằng `V2DrawerRowList` (file `*View.tsx`), không render ô nhập hay `V2ReadValue`/`V2TextField viewing`. Chi tiết và test bắt buộc: `references/v2-drawer.md`, mục "View mode: render thông tin, không render ô nhập".
 - **Màu**: không dùng `blue-*`. Bảng token: `erp-web-truth/references/ui-shell-and-theme.md` mục 4.
 - **i18n**: 100% chuỗi qua `t()` (VI/EN); V2 dùng prefix `v2.`.
 - **A11y**: theo mục A11y trong `erp-ui-structure/references/atomic-ui.md`.

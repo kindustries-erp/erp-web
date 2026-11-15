@@ -420,7 +420,8 @@ graph TD
   uppercase
 />
 ```
-- Loại bỏ hoàn toàn sự phân mảnh giữa các file `[Name]DrawerViewSection.tsx` và `[Name]DrawerEditSection.tsx`.
+- **Lưu ý (drawer dưới `src/v2/`)**: view mode phải render thông tin bằng `V2DrawerRowList`, không render control nhập hay hộp giống ô nhập (`V2ReadValue`, `V2TextField viewing`). Xem "View mode: render thông tin, không render ô nhập" trong `v2-drawer.md`. `V2FormField viewing` chỉ dùng cho drawer đang chuyển tiếp từ V1.
+- (Pattern gộp View và Edit vào một field áp dụng cho drawer đang chuyển tiếp từ V1) Loại bỏ sự phân mảnh giữa các file `[Name]DrawerViewSection.tsx` và `[Name]DrawerEditSection.tsx`.
 - Tự động định dạng ngày tháng (`type="date"`), tiền tệ (`type="number"`), sao chép mã (`copyable`), tra cứu nhãn enum/select (`options`).
 - Trường phức tạp hoặc combobox phụ thuộc có thể dùng `type="custom"` kèm `render={() => <MyCombobox ... />}`.
 - Đảm bảo nghiêm ngặt quy tắc kích thước file: **mọi file luôn < 180 LoC** theo `/erp-ui-structure`.
@@ -508,4 +509,5 @@ Dùng cho drawer chứng từ kế toán/kinh doanh (Hóa đơn, PO, SO, Phiếu
 - [ ] Cột bên phải (Right Panel) đã bao bọc các trường theo `<DrawerSection>`, `<DrawerRow>`, `<DrawerField>` chuẩn chưa?
 - [ ] Icon hành động và icon menu context menu đã được dùng màu neutral, không hardcode màu mè chưa?
 - [ ] Chức năng cảnh báo đóng Drawer khi đang Edit (`confirmOnClose={mode === 'edit'}`) đã được cấu hình đúng chưa?
+- [ ] **Drawer V2: view mode đã render nhãn - giá trị bằng `V2DrawerRowList` (file `*View.tsx`), không còn `V2ReadValue`/`V2TextField viewing`/ô nhập khóa; test khẳng định không có textbox/combobox ở view mode chưa?**
 

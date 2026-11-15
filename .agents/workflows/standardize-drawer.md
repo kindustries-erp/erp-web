@@ -287,5 +287,6 @@ const drawerTabs: DrawerTopTabItem[] = useMemo(() => [
 | **Status Badge & Edit Mode** | Record có trạng thái phải truyền `<Badge>` vào `titleExtra`. Cho phép chỉnh sửa phải truyền `onToggleEdit` và `confirmOnClose={mode === "edit"}`. | [ ] |
 | **Timeline Trục Dọc** | Lịch sử / Audit Timeline dùng trục dọc spine liên tục (`w-[2px]`), node tròn (`w-7 h-7`), không lồng nhiều lớp border card. | [ ] |
 | **0ms Input Debounce** | Text input / textarea dùng local buffer với 500ms debounce và nút `X` clear với `onMouseDown={(e) => { e.preventDefault(); handleClear(); }}`. | [ ] |
+| **View mode render thông tin (Drawer V2)** | Ở `mode="view"`, section render nhãn - giá trị bằng `V2DrawerRowList` (file `*View.tsx`), không render ô nhập hay `V2ReadValue`/`V2TextField viewing`. Test khẳng định không có textbox/combobox ở view mode. Audit: `/usr/bin/grep -rnE "V2ReadValue\|V2TextField[^>]*viewing" src/v2/core src/v2/modules`. Chi tiết: `standardize-drawer/references/v2-drawer.md`. | [ ] |
 | **i18n 100%** | 100% text, tab labels, badge, placeholder và button được bọc trong `t(...)`. | [ ] |
 | **QC Build & Typecheck** | Chạy `bun run type:check` (0 errors) và `bun run test` (100% tests pass). | [ ] |
