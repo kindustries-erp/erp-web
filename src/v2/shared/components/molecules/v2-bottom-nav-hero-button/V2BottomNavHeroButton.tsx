@@ -13,24 +13,24 @@ import {
 } from "./V2BottomNavHeroButton.type";
 
 const sizeClasses: Record<V2HeroButtonSize, string> = {
-  [V2HeroButtonSize.SM]: "h-11 w-11",
-  [V2HeroButtonSize.MD]: "h-[52px] w-[52px]",
-  [V2HeroButtonSize.DEFAULT]: "h-[60px] w-[60px]",
-  [V2HeroButtonSize.LG]: "h-16 w-16",
+  [V2HeroButtonSize.SM]: "h-9 w-9",
+  [V2HeroButtonSize.MD]: "h-10 w-10",
+  [V2HeroButtonSize.DEFAULT]: "h-11 w-11",
+  [V2HeroButtonSize.LG]: "h-[52px] w-[52px]",
 };
 
 const iconSizes: Record<V2HeroButtonSize, number> = {
-  [V2HeroButtonSize.SM]: 20,
-  [V2HeroButtonSize.MD]: 24,
-  [V2HeroButtonSize.DEFAULT]: 28,
-  [V2HeroButtonSize.LG]: 30,
+  [V2HeroButtonSize.SM]: 18,
+  [V2HeroButtonSize.MD]: 20,
+  [V2HeroButtonSize.DEFAULT]: 22,
+  [V2HeroButtonSize.LG]: 24,
 };
 
 const translateClasses: Record<V2HeroButtonSize, string> = {
-  [V2HeroButtonSize.SM]: "-translate-y-4",
-  [V2HeroButtonSize.MD]: "-translate-y-5",
-  [V2HeroButtonSize.DEFAULT]: "-translate-y-6",
-  [V2HeroButtonSize.LG]: "-translate-y-6",
+  [V2HeroButtonSize.SM]: "-translate-y-2",
+  [V2HeroButtonSize.MD]: "-translate-y-2.5",
+  [V2HeroButtonSize.DEFAULT]: "-translate-y-3",
+  [V2HeroButtonSize.LG]: "-translate-y-3.5",
 };
 
 export const V2BottomNavHeroButton: React.FC<V2BottomNavHeroButtonProps> = ({
@@ -66,7 +66,7 @@ export const V2BottomNavHeroButton: React.FC<V2BottomNavHeroButtonProps> = ({
         aria-label={label}
         data-testid="bottom-nav-hero-button"
         className={cn(
-          "relative flex items-center justify-center rounded-full bg-primary text-primary-fg shadow-xl shadow-black/20 dark:shadow-black/70 transition-all duration-200 active:scale-90 hover:scale-105 touch-manipulation [-webkit-tap-highlight-color:transparent] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 select-none border-4 border-background cursor-pointer p-0",
+          "relative flex items-center justify-center rounded-full bg-primary text-primary-fg shadow-xl shadow-black/20 dark:shadow-black/70 transition-all duration-200 active:scale-90 hover:scale-105 touch-manipulation [-webkit-tap-highlight-color:transparent] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 select-none border-[3px] border-background cursor-pointer p-0",
           resolvedSizeClass,
           isActive &&
             "ring-2 ring-primary ring-offset-2 ring-offset-background",

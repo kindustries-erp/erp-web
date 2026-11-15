@@ -64,7 +64,7 @@ export enum ErpApiEndpoint {
   FINISHED_GOODS = "/api/v1/finished-goods",
 
   // 7. Đối Tác Kinh Doanh & Phân Hệ Mua/Bán Hàng (Partners, Purchasing & Sales)
-  BUSINESS_PARTNERS = "/api/v1/business-partners",
+  BUSINESS_PARTNERS = "/api/v2/business-partners",
   PURCHASE_ORDERS = "/api/v1/purchasing/orders",
   SALES_ORDERS = "/api/v1/sales-orders",
   AFTER_SALES = "/api/v1/after-sales",
@@ -92,7 +92,7 @@ export enum ErpApiEndpoint {
   RBAC_ROLES = "/api/v1/roles",
   RBAC_PERMISSIONS = "/api/v1/permissions",
   SYS_TAGS = "/api/v1/tags",
-  BRANCHES = "/api/v1/branches",
+  BRANCHES = "/api/v2/branches",
   AUDIT_LOGS = "/api/v1/audit-logs",
   ATTACHMENTS = "/api/v1/attachments",
   EMAIL_INBOX = "/api/v1/email/inbox",

@@ -1,5 +1,6 @@
 import type {
   V2FetchOptionsParams,
+  V2FetchOptionsResult,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 import type {
@@ -8,7 +9,6 @@ import type {
 } from "../domain/entities/businessPartner";
 import type {
   BusinessPartnerListResultDto,
-  ColumnOptionsResultDto,
   NextCodeDto,
   SyncFromInvoicesDto,
 } from "./dtos/businessPartner.dto";
@@ -16,7 +16,7 @@ import type {
 /** Hợp đồng API chuẩn của họ đối tác kinh doanh (dùng trong core và cho thin modules) */
 export interface BusinessPartnerApi {
   list: (query: V2TableQuery) => Promise<BusinessPartnerListResultDto>;
-  options: (params: V2FetchOptionsParams) => Promise<ColumnOptionsResultDto>;
+  options: (params: V2FetchOptionsParams) => Promise<V2FetchOptionsResult>;
   get: (id: string) => Promise<BusinessPartner>;
   create: (form: BusinessPartnerFormValue) => Promise<BusinessPartner>;
   update: (

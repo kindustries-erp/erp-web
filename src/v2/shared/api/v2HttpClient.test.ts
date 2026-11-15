@@ -87,7 +87,7 @@ describe("v2HttpClient document dependency conflicts", () => {
     );
 
     await expect(
-      v2HttpClient.delete("/api/v1/business-partners/p1", { adapter }),
+      v2HttpClient.delete("/api/v2/business-partners/p1", { adapter }),
     ).rejects.toBeInstanceOf(AxiosError);
     expect(useV2DocumentDependencyStore.getState()).toMatchObject({
       isOpen: true,

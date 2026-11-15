@@ -27,6 +27,8 @@ export interface V2PopoverProps {
   hideCloseButton?: boolean;
   /** Nhãn aria cho nút đóng */
   closeAriaLabel?: string;
+  /** Phần tử chứa panel (Desktop). Mặc định portal ra <body>; truyền khung fullscreen để panel không bị ẩn. */
+  portalContainer?: HTMLElement | null;
   /** ClassName cho PopoverContent */
   className?: string;
   /** ClassName cho Trigger wrapper */

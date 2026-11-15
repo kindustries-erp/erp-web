@@ -25,3 +25,6 @@ export * from "./v2-copy-button";
 export * from "./v2-sparkline";
 export * from "./v2-icon";
 export * from "./v2-badge";
+export * from "./v2-chat-bubble";
+export * from "./v2-typing-indicator";
+export * from "./v2-floating-action-button";

@@ -8,7 +8,10 @@ import {
   type ToolbarToggleArgs,
 } from "@/v2/shared/components/organisms/v2-standard-table/playground/V2StandardTable.playground.toolbar";
 import {
+  V2_MODULE_PAGE_HEADER_VARIANTS,
   V2_MODULE_PAGE_TAB_VARIANTS,
+  V2ModulePageTabVariant,
+  V2ModulePageVariant,
   type V2ModulePageProps,
   type V2ModuleTab,
 } from "./V2ModulePage.type";
@@ -45,7 +48,13 @@ const dashboardTab: V2ModuleTab<DemoRow> = {
 type PagePlaygroundProps = Partial<
   Pick<
     V2ModulePageProps<DemoRow>,
-    "title" | "description" | "tabVariant" | "syncUrl" | "className"
+    | "title"
+    | "description"
+    | "variant"
+    | "headerVariant"
+    | "tabVariant"
+    | "syncUrl"
+    | "className"
   >
 >;
 
@@ -54,8 +63,16 @@ type PlaygroundArgs = PagePlaygroundProps &
 
 /** Trang playground: tab danh sách có toolbar bật/tắt theo công tắc, cộng tab tổng quan tùy chọn */
 const PagePlayground = ({ showDashboard = true, ...args }: PlaygroundArgs) => {
-  const { title, description, tabVariant, syncUrl, className, ...toggles } =
-    args;
+  const {
+    title,
+    description,
+    variant,
+    headerVariant,
+    tabVariant,
+    syncUrl,
+    className,
+    ...toggles
+  } = args;
 
   const listTab: V2ModuleTab<DemoRow> = {
     key: "list",
@@ -81,6 +98,8 @@ const PagePlayground = ({ showDashboard = true, ...args }: PlaygroundArgs) => {
     <V2ModulePage<DemoRow>
       title={title ?? ""}
       description={description}
+      variant={variant}
+      headerVariant={headerVariant}
       tabVariant={tabVariant}
       syncUrl={syncUrl}
       className={className}
@@ -104,7 +123,8 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     title: "Hóa đơn",
     description: "Tổng quan và danh sách hóa đơn",
-    tabVariant: "page",
+    variant: V2ModulePageVariant.DEFAULT,
+    tabVariant: V2ModulePageTabVariant.PAGE,
     syncUrl: false,
     showDashboard: true,
     ...TOOLBAR_TOGGLE_DEFAULTS,
@@ -112,6 +132,14 @@ const meta: Meta<PlaygroundArgs> = {
   argTypes: {
     title: { control: "text" },
     description: { control: "text" },
+    variant: {
+      control: "inline-radio",
+      options: Object.values(V2ModulePageVariant),
+    },
+    headerVariant: {
+      control: "inline-radio",
+      options: [...V2_MODULE_PAGE_HEADER_VARIANTS],
+    },
     tabVariant: {
       control: "inline-radio",
       options: [...V2_MODULE_PAGE_TAB_VARIANTS],

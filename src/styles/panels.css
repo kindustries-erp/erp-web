@@ -33,9 +33,9 @@
   height: calc(100vh - 18px) !important;
   width: 420px;
   max-width: calc(100vw - 44px);
-  background: var(--drawer-bg, rgba(255, 255, 255, 0.82));
-  backdrop-filter: blur(24px) saturate(190%) contrast(102%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  background: var(--drawer-bg, rgba(255, 255, 255, 0.96));
+  backdrop-filter: blur(10px) saturate(140%) contrast(101%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%) contrast(101%);
   border: 1px solid var(--drawer-border, var(--border));
   border-radius: 14px;
   display: flex;
@@ -69,19 +69,19 @@
   transform: none;
 }
 
-/* Make V2 sheets translucent on V1 routes without changing V1 slide-panel. */
+/* Keep V2 sheets crisp and readable on V1 routes without changing V1 slide-panel. */
 :root:not(.dark):not(.theme-orcaq):not(.theme-midnight)
   [data-v2-standard-drawer] {
-  --drawer-bg: rgba(255, 255, 255, 0.35);
-  --drawer-blur: 28px;
+  --drawer-bg: rgba(255, 255, 255, 0.96);
+  --drawer-blur: 8px;
   --drawer-shadow:
     0 0 32px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 /* V2StandardDrawer can run from V1 routes, where v2-theme.css is not loaded. */
 .theme-midnight [data-v2-standard-drawer] {
-  --drawer-bg: rgba(22, 25, 34, 0.85);
-  --drawer-blur: 24px;
+  --drawer-bg: rgba(22, 25, 34, 0.96);
+  --drawer-blur: 8px;
   --drawer-shadow:
     0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --drawer-overlay-bg: rgba(0, 0, 0, 0.2);
@@ -116,8 +116,8 @@
   --primary-accent: #2dd4bf;
   --accent: rgba(20, 184, 166, 0.15);
   --accent-foreground: #2dd4bf;
-  --drawer-bg: rgba(22, 25, 31, 0.85);
-  --drawer-blur: 24px;
+  --drawer-bg: rgba(22, 25, 31, 0.96);
+  --drawer-blur: 8px;
   --drawer-shadow:
     0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --drawer-overlay-bg: rgba(0, 0, 0, 0.2);
@@ -161,9 +161,9 @@
   border-radius: 0;
   border: none;
   border-left: 1px solid var(--border);
-  background: var(--drawer-bg, rgba(24, 24, 27, 0.82));
-  backdrop-filter: blur(24px) saturate(190%) contrast(102%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  background: var(--drawer-bg, rgba(24, 24, 27, 0.96));
+  backdrop-filter: blur(10px) saturate(140%) contrast(101%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%) contrast(101%);
   box-shadow:
     -6px 0 28px rgba(0, 0, 0, 0.4),
     -2px 0 8px rgba(0, 0, 0, 0.2),
@@ -172,9 +172,9 @@
 
 /* Midnight theme: frosted dark glass */
 .theme-midnight .slide-panel {
-  background: var(--drawer-bg, rgba(20, 20, 24, 0.82));
-  backdrop-filter: blur(24px) saturate(190%) contrast(102%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  background: var(--drawer-bg, rgba(20, 20, 24, 0.96));
+  backdrop-filter: blur(10px) saturate(140%) contrast(101%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%) contrast(101%);
   border: 1px solid var(--border);
   box-shadow:
     0 20px 50px -10px rgba(0, 0, 0, 0.55),

@@ -6,11 +6,13 @@ import {
   FileText,
   Building2,
   Package,
+  Warehouse,
   PackageCheck,
   Layers,
   Factory,
   ReceiptText,
   Wallet,
+  Calculator,
   Settings,
   ClipboardList,
 } from "lucide-react";
@@ -119,6 +121,14 @@ export const NAV_DEFS: RawNavDef[] = [
     href: "/v2/cashflow",
   },
   {
+    id: "loans",
+    sectionId: "tools",
+    labelKey: "v2.nav.items.loans",
+    fallback: "Khoản vay & Dòng tiền",
+    icon: Calculator,
+    href: "/loans-tool",
+  },
+  {
     id: "settings-app",
     sectionId: "settings",
     labelKey: "v2.nav.items.catalog",
@@ -127,12 +137,20 @@ export const NAV_DEFS: RawNavDef[] = [
     href: "/v2/settings",
   },
   {
-    id: "garage-goods-receipts",
+    id: "garage-stock-vouchers",
     sectionId: "garage",
-    labelKey: "v2.nav.items.garageGoodsReceipts",
-    fallback: "Nhập kho Garage",
+    labelKey: "v2.nav.items.garageStockVouchers",
+    fallback: "Chứng từ kho Garage",
     icon: Package,
-    href: "/garage-goods-receipts",
+    href: "/garage-stock-vouchers",
+  },
+  {
+    id: "garage-stock-balances",
+    sectionId: "garage",
+    labelKey: "v2.nav.items.garageStockBalances",
+    fallback: "Tồn kho Garage",
+    icon: Warehouse,
+    href: "/garage-stock-balances",
   },
   {
     id: "garage-procurement",
@@ -142,7 +160,7 @@ export const NAV_DEFS: RawNavDef[] = [
     icon: ClipboardList,
     href: "/garage-procurement?tab=requests",
   },
-  // v2-module:garage-goods-receipts:nav
+  // v2-module:inventory-movements-garage:nav
   {
     id: "permission",
     sectionId: "settings",
@@ -182,6 +200,11 @@ export const SECTION_DEFS: RawSectionDef[] = [
     id: "accounting",
     labelKey: "v2.nav.sections.accounting",
     fallback: "KẾ TOÁN & DÒNG TIỀN",
+  },
+  {
+    id: "tools",
+    labelKey: "v2.nav.sections.tools",
+    fallback: "CÔNG CỤ",
   },
   { id: "settings", labelKey: "v2.nav.sections.settings", fallback: "CÀI ĐẶT" },
 ];

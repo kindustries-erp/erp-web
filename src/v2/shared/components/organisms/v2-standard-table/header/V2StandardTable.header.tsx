@@ -69,12 +69,15 @@ function V2TableHeaderCell<T>({
       </V2Text>
     );
 
+  const isUtilityHeader = key === "__expand" || key === "__selection";
+
   return (
     <TableHead
       data-column={key}
       style={{ width: header.getSize() }}
       className={cn(
-        "sticky top-0 z-20 h-auto truncate border-r border-border bg-transparent px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-fg",
+        "sticky top-0 z-20 h-auto border-r border-border bg-transparent py-1 text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-fg",
+        isUtilityHeader ? "px-1 text-center" : "truncate px-2",
         column?.headerClassName,
       )}
     >

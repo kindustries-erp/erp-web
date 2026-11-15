@@ -50,11 +50,12 @@ export const emptyOrderForm = (today: string): ProcurementOrderFormValue => ({
 export const validateOrderForm = (
   form: ProcurementOrderFormValue,
   branchOptional = false,
+  itemCodeRequired = false,
 ): ProcurementOrderFormErrors => {
   const errors: ProcurementOrderFormErrors = {};
   if (!branchOptional && !form.branchId) errors.branchId = true;
   if (!form.orderDate) errors.orderDate = true;
-  const linesError = validateProcurementLines(form.lines);
+  const linesError = validateProcurementLines(form.lines, itemCodeRequired);
   if (linesError) errors.lines = linesError;
   return errors;
 };
@@ -72,6 +73,7 @@ export const toOrderCreatePayload = (form: ProcurementOrderFormValue) => ({
   expectedDate: form.expectedDate || undefined,
   supplierId: form.supplierId ?? undefined,
   supplierName: form.supplierName.trim() || undefined,
+  supplierInvoiceNo: form.supplierInvoiceNo.trim() || undefined,
   requestId: form.requestId ?? undefined,
   remarks: form.remarks.trim() || undefined,
   lines: form.lines.map(toOrderLinePayload),
@@ -130,6 +132,8 @@ export const orderFormFromRequestDraft = (
   ...emptyOrderForm(todayIsoDate()),
   branchId: request.branchId ?? "",
   branchName: request.branchName ?? "",
+  // Ngày dự kiến nhận = ngày cần hàng của đề nghị (vẫn sửa được)
+  expectedDate: dateOnly(request.neededDate),
   requestId: request.id,
   remarks: "",
   lines: draft.lines.length

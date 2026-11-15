@@ -58,8 +58,8 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
   const containerClasses = cn(
     "fixed z-40 flex items-center justify-between select-none touch-manipulation [-webkit-tap-highlight-color:transparent] animate-slide-in-from-bottom transition-all duration-300",
     variant === V2BottomNavVariant.FLOATING || isHeroLayout
-      ? "bottom-3 inset-x-3.5 max-w-lg mx-auto h-14 rounded-2xl border border-border/80 dark:border-white/10 bg-card/90 dark:bg-card/95 px-2 shadow-2xl dark:shadow-black/70 backdrop-blur-xl"
-      : "bottom-0 inset-x-0 h-14 w-full border-t border-border/80 dark:border-white/10 bg-background/90 dark:bg-card/90 px-1 pb-safe backdrop-blur-xl",
+      ? "bottom-2 inset-x-3 max-w-md mx-auto h-12 rounded-2xl border border-border/80 dark:border-white/10 bg-card/90 dark:bg-card/95 px-1.5 shadow-xl dark:shadow-black/70 backdrop-blur-xl"
+      : "bottom-0 inset-x-0 h-12 w-full border-t border-border/80 dark:border-white/10 bg-background/90 dark:bg-card/90 px-1 pb-safe backdrop-blur-xl",
     className,
   );
 
@@ -70,7 +70,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
       className={containerClasses}
       {...props}
     >
-      <div className="flex flex-1 items-center justify-around pr-1.5">
+      <div className="flex flex-1 items-center justify-around pr-1">
         {leftItems.map((item) => (
           <V2NavItem
             key={item.id}
@@ -88,7 +88,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
       </div>
 
       {heroItem && (
-        <div className="shrink-0 px-2.5 flex items-center justify-center">
+        <div className="shrink-0 px-1.5 flex items-center justify-center">
           <V2BottomNavHeroButton
             key={heroItem.id}
             label={heroItem.label}
@@ -102,7 +102,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
       )}
 
       {rightItems.length > 0 && (
-        <div className="flex flex-1 items-center justify-around pl-1.5">
+        <div className="flex flex-1 items-center justify-around pl-1">
           {rightItems.map((item) => (
             <V2NavItem
               key={item.id}

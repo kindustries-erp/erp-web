@@ -24,7 +24,7 @@ graph LR
 2. **Thứ tự giao hàng**: `DB → API → UI → QC`. Repo chỉ dùng các phase thuộc phạm vi task, nhưng không đảo thứ tự.
 3. **Task 3 cấp `X.Y.Z`**: mỗi task chạm tối đa 1–2 file, có **DoD** và **Verification** thu hẹp (chạy được dưới 10 giây).
    - Lệnh trong `Verification` khi lập plan chỉ là **đặc tả văn bản**. Chỉ chạy ở Giai đoạn 5 sau khi có `OK`.
-4. **Structure Routing bắt buộc**: task chạm cấu trúc code phải theo `/ui-structure` hoặc `/api-structure` (xem mục 3).
+4. **Structure Routing bắt buộc**: task chạm cấu trúc code phải theo `/erp-ui-structure` hoặc `/erp-api-structure` (xem mục 3).
 5. **Session Checkpoint**: tạm dừng và tiếp tục không mất ngữ cảnh.
 6. **Knowledge-Sync Guard**: sau khi xong task đổi schema, contract, component, store hoặc token, cập nhật Module Skill ngay. Không để tri thức lỗi thời.
 
@@ -56,9 +56,9 @@ Quy tắc chung:
 
   | Task chạm | Theo workflow | Ghi trong plan |
   | :--- | :--- | :--- |
-  | `erp-web`: component, page, drawer, table, form, enum nhập liệu | `/ui-structure` (kèm `/standardize-table` hoặc `/standardize-drawer` nếu là bảng/drawer) | `Structure: /ui-structure` |
-  | `erp-api`: Controller/Service vượt ngưỡng, module mới, chuyển v2 | `/api-structure` | `Structure: /api-structure` |
-  | Cả hai | Theo cả hai, thứ tự DB → API → UI | `Structure: /ui-structure + /api-structure` |
+  | `erp-web`: component, page, drawer, table, form, enum nhập liệu | `/erp-ui-structure` (kèm `/standardize-table` hoặc `/standardize-drawer` nếu là bảng/drawer) | `Structure: /erp-ui-structure` |
+  | `erp-api`: Controller/Service vượt ngưỡng, module mới, chuyển v2 | `/erp-api-structure` | `Structure: /erp-api-structure` |
+  | Cả hai | Theo cả hai, thứ tự DB → API → UI | `Structure: /erp-ui-structure + /erp-api-structure` |
   | Không chạm cấu trúc (ví dụ sửa một endpoint nhỏ) | — | `Structure: N/A (lý do)` |
 
 - **Chọn Track (khi chạm module v1 hoặc v2)**: `T1` = refactor v1 theo hướng v2-ready (mặc định). `T2` = migrate sang v2, chỉ khi user ra lệnh cho từng module. Module mới: đề xuất v2 qua plop, hỏi user ở Approval Gate. Ghi `Track:` đầu `implementation_plan.md`.
@@ -159,6 +159,8 @@ Khi user gõ `tiếp tục`, `continue` hoặc gửi prompt mới:
 4. Làm tiếp đúng bước, không làm lại từ đầu.
 
 ### 4. Final Gate, Knowledge-Sync & Walkthrough
+- **E2E (khi task chạm luồng nhiều bước)**: chạy skill E2E của repo trên môi trường đang chạy, trước khi báo hoàn tất. erp-api: `erp-e2e-api-smoke`. erp-web: `erp-e2e-playwright`. Ghi PASS hoặc FAIL theo lần chạy hiện tại.
+- **Nạp `E2E_PASSWORD`**: nếu shell chưa có biến này, đọc dòng `E2E_PASSWORD=` trong `erp/erp-api/.env` và nạp vào tiến trình chạy script. Không in giá trị ra log, không ghi vào repo, không hỏi lại user nếu `.env` đã có. Trước khi ghi DB, chạy `SELECT current_database();` và báo tên DB. Không chạy E2E trên DB production.
 - **Final Gate**: phụ lục repo quy định lệnh và thứ tự (thường: commit → `git pull --rebase` → push → xác nhận CI xanh trên commit cuối).
 - **Knowledge & Skill Sync**: cập nhật Module Skill tương ứng liền sau khi xong task. Nếu là module mới thì tạo skill và gắn vào `*-truth` của repo. Không để tri thức chỉ nằm trong commit.
 - **Walkthrough**: tạo `walkthrough.md` gồm bằng chứng test, trạng thái đồng bộ skill và hướng dẫn kiểm thử thủ công.
@@ -173,7 +175,7 @@ Khi user gõ `tiếp tục`, `continue` hoặc gửi prompt mới:
 Tóm tắt mục tiêu và giá trị.
 
 Track: [T1 / T2 / N/A]
-Structure: [/ui-structure | /api-structure | N/A (lý do)]
+Structure: [/erp-ui-structure | /erp-api-structure | N/A (lý do)]
 Consistency Check: [đạt / chỗ lệch và cách xử lý]
 Plane: [KINDU-xx / không theo dõi]
 
@@ -228,7 +230,7 @@ Plane: [KINDU-xx / không theo dõi]
 
 1. **Kiểm tra Backend contract**: xác nhận backend đã có `getList` và `getColumnOptions`. Kiểm tra DTO trả về, enum, permission keys.
 2. **Khảo sát UI reusable**: dùng skill `/erp-find-ui-patterns`, `/standardize-table`, `/standardize-drawer`. Tìm `SpreadsheetPageTemplate`, `StandardFormDrawer`, `ConfirmModal`, `DateRangePicker`.
-3. **Structure Routing**: plan theo `/ui-structure` (Phần A cho V1, Phần B cho `src/v2/`, Phần D cho enum nhập liệu). Bảng và drawer kèm `/standardize-table` hoặc `/standardize-drawer`. Ghi `Structure: /ui-structure` (hoặc `N/A` kèm lý do).
+3. **Structure Routing**: plan theo `/erp-ui-structure` (Phần A cho V1, Phần B cho `src/v2/`, Phần D cho enum nhập liệu). Bảng và drawer kèm `/standardize-table` hoặc `/standardize-drawer`. Ghi `Structure: /erp-ui-structure` (hoặc `N/A` kèm lý do).
 4. ⚠️ Không chạy test runner, build hay sửa file ở bước này.
 
 ---
@@ -254,7 +256,7 @@ graph TD
 ### Form & Validation
 - Zod schema hoặc React Hook Form rules.
 - Có trạng thái Loading, Error, Empty và Skeleton.
-- Option của select và radio lấy từ enum + map nhãn (xem `/ui-structure` Phần D).
+- Option của select và radio lấy từ enum + map nhãn (xem `/erp-ui-structure` Phần D).
 
 ### Quy tắc UI bắt buộc
 - Bảng: STT 1-based, Header Filter (`showColumnFilter: true`), sort và search phía server (`applyMultiKeywordFilter`), phân trang `getDefaultPageSize()`.

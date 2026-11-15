@@ -48,7 +48,7 @@ Chọn generator web: họ mới → `v2-core`; họ đã có lõi → `v2-thin-
 ## Bước 3. UI drawer
 
 - `V2StandardDrawer` theo `standardize-drawer/references/v2-drawer.md`.
-- Form map 1-1 với DTO của API. Key field và option lấy từ enum theo Phần D của `.agents/workflows/ui-structure.md`.
+- Form map 1-1 với DTO của API. Key field và option lấy từ enum theo Phần D của `.agents/workflows/erp-ui-structure.md`.
 - Validate trong `domain/rules`.
 - Footer, tab liên kết, multi-drawer nếu cần.
 

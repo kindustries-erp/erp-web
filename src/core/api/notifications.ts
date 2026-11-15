@@ -28,11 +28,14 @@ interface NotificationListResponse {
     pageSize: number;
     total: number;
     totalPages: number;
+    next: number | null;
+    previous: number | null;
   };
-  unreadCount: number;
+  /** Dữ liệu phụ của danh sách (không thuộc từng dòng). */
+  extraData: { unreadCount: number };
 }
 
-const BASE_URL = "/api/v2/notifications";
+const BASE_URL = "/api/v2/notifications-inbox";
 const LIST_PAGE_SIZE = 50;
 
 export const notificationsApi = {
@@ -43,11 +46,15 @@ export const notificationsApi = {
     return res.data.items;
   },
   markAsRead: async (id: string): Promise<void> => {
-    const res = await axiosInstance.patch(`${BASE_URL}/${id}/read`);
+    const res = await axiosInstance.patch(`${BASE_URL}/${id}/read`, undefined, {
+      _silentSuccess: true,
+    });
     return res.data;
   },
   markAllAsRead: async (): Promise<void> => {
-    const res = await axiosInstance.patch(`${BASE_URL}/read-all`);
+    const res = await axiosInstance.patch(`${BASE_URL}/read-all`, undefined, {
+      _silentSuccess: true,
+    });
     return res.data;
   },
   delete: async (id: string): Promise<void> => {

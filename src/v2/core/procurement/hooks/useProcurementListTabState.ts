@@ -25,9 +25,15 @@ export interface ProcurementListTabStateInput<R extends { id: string }> {
   state: ProcurementListState<R>;
   api: ProcurementApi<R>;
   viewVisibility: ProcurementViewVisibility;
-  buildColumns: (t: T, openDetail?: (id: string) => void) => V2Column<R>[];
+  buildColumns: (
+    t: T,
+    openDetail?: (id: string) => void,
+    openLinked?: (id: string) => void,
+  ) => V2Column<R>[];
   /** Các trạng thái đưa vào nhóm lọc, theo thứ tự hiển thị */
   statusItems: V2FilterOption[];
+  /** Mở chứng từ liên kết của họ kia (PR ↔ PO) ngay trên trang */
+  openLinked?: (id: string) => void;
 }
 
 /**
@@ -42,6 +48,7 @@ export function useProcurementListTabState<R extends { id: string }>({
   viewVisibility,
   buildColumns,
   statusItems,
+  openLinked,
 }: ProcurementListTabStateInput<R>) {
   const filterState = useProcurementListFilter();
   const viewState = useProcurementListView(tableId, viewVisibility);
@@ -58,8 +65,8 @@ export function useProcurementListTabState<R extends { id: string }>({
   );
 
   const columns = React.useMemo(
-    () => buildColumns(t, openDetail),
-    [buildColumns, openDetail, t],
+    () => buildColumns(t, openDetail, openLinked),
+    [buildColumns, openDetail, openLinked, t],
   );
 
   const rowActionsForMode = React.useCallback(

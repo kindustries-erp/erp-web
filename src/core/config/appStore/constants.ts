@@ -198,6 +198,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.cashflow",
     group: "accounting",
   },
+  loans: {
+    labelKey: "nav.items.loans",
+    group: "tools",
+  },
   "garage-dashboard": {
     labelKey: "breadcrumb.garageDashboard",
     group: "garage",
@@ -364,6 +368,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "email-inbox": [["nav.items.system"], ["nav.items.emailInbox"]],
   cashflow: [["breadcrumb.accounting"], ["nav.items.cashflow"]],
+  loans: [["breadcrumb.tools"], ["nav.items.loans"]],
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
   "custom-fields": [

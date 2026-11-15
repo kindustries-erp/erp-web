@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "loans",
+  "entity": "Loan",
+  "barrel": "src/v2/core/loans/index.ts",
+  "localeNamespace": "loans",
+  "exports": {
+    "domainRules": "loan-amortization.rule",
+    "types": "loan.types",
+    "kpiSummary": "LoanKpiSummary",
+    "scheduleTable": "AmortizationScheduleTable",
+    "cashflowChart": "LoanCashflowChart"
+  }
+}

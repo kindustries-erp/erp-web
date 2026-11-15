@@ -6,6 +6,10 @@ import {
   listBranchOptions,
   listSupplierOptions,
 } from "../../../api/procurementLookups";
+import type {
+  ProcurementApi,
+  ProcurementRequestRow,
+} from "../../../procurement.types";
 
 /**
  * Chọn một chi nhánh. `clearable` cho phép bỏ trống (chi nhánh tùy chọn).
@@ -16,12 +20,15 @@ export function ProcurementBranchPicker({
   value,
   label,
   viewing,
+  locked = false,
   clearable = false,
   onChange,
 }: {
   value: string;
   label: string;
   viewing: boolean;
+  /** Khóa theo đề nghị: hiện combobox vô hiệu hóa (giống kiểu ô của đề nghị), không đổi được */
+  locked?: boolean;
   clearable?: boolean;
   onChange: (branchId: string, branchName: string) => void;
 }) {
@@ -35,15 +42,17 @@ export function ProcurementBranchPicker({
   return (
     <V2Combobox
       aria-label={t("v2.procurement.fields.branch", "Chi nhánh")}
-      placeholder={t(
-        "v2.procurement.fields.branchPlaceholder",
-        "Chọn chi nhánh",
-      )}
+      placeholder={
+        locked && !value
+          ? "—"
+          : t("v2.procurement.fields.branchPlaceholder", "Chọn chi nhánh")
+      }
       options={options.data ?? []}
       loading={options.isFetching}
       value={value || null}
       fallbackLabel={label || undefined}
-      clearable={clearable}
+      disabled={locked}
+      clearable={clearable && !locked}
       onValueChange={(v) => {
         const picked = options.data?.find((o) => o.value === v);
         onChange(v ?? "", picked?.label ?? "");
@@ -108,6 +117,64 @@ export function ProcurementDateField({
       minDate={minDate}
       clearable
       onValueChange={(v) => onChange(v ?? "")}
+    />
+  );
+}
+
+/**
+ * Chọn một đề nghị mua đã duyệt để điền sẵn đơn mua. Chỉ liệt kê đề nghị còn số lượng chưa đặt
+ * (bỏ đề nghị đã đặt đủ). `onChange(null)` khi bỏ chọn. Tìm trên server khi gõ.
+ */
+export function ProcurementRequestPicker({
+  value,
+  label,
+  requestApi,
+  onChange,
+}: {
+  value: string | null;
+  label: string;
+  requestApi: ProcurementApi<unknown>;
+  onChange: (requestId: string | null) => void;
+}) {
+  const { t } = useV2Translation();
+  const [search, setSearch] = React.useState("");
+  const options = useQuery({
+    queryKey: ["v2-procurement", "request-options", search],
+    queryFn: async () => {
+      const { items } = await requestApi.list({
+        page: 1,
+        pageSize: 50,
+        sorts: [],
+        columnFilters: {},
+        columnSearch: {},
+        columnOperators: {},
+        dateRanges: {},
+        search: search.trim() || undefined,
+        status: "APPROVED",
+      });
+      return (items as ProcurementRequestRow[])
+        .filter((r) => r.orderingStatus !== "FULL")
+        .map((r) => ({
+          value: r.id,
+          label: r.title ? `${r.requestNo} · ${r.title}` : r.requestNo,
+        }));
+    },
+    staleTime: 30_000,
+  });
+  return (
+    <V2Combobox
+      aria-label={t("v2.procurement.fields.request", "Từ đề nghị mua")}
+      placeholder={t(
+        "v2.procurement.fields.requestPlaceholder",
+        "Chọn đề nghị mua hàng",
+      )}
+      options={options.data ?? []}
+      loading={options.isFetching}
+      value={value}
+      fallbackLabel={label || undefined}
+      onSearchChange={setSearch}
+      clearable
+      onValueChange={(v) => onChange(v ?? null)}
     />
   );
 }

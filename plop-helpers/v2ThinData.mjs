@@ -23,16 +23,19 @@ export const REQUIRED_CORE_EXPORTS = [
  */
 export function readWebCoreManifest(baseDir, family) {
   const path = join(baseDir, "src/v2/core", family, "core.manifest.json");
-  if (!existsSync(path)) throw new Error(`Không tìm thấy manifest của họ "${family}"`);
+  if (!existsSync(path))
+    throw new Error(`Không tìm thấy manifest của họ "${family}"`);
   const manifest = JSON.parse(readFileSync(path, "utf8"));
-  if (manifest.layer !== "web") throw new Error(`Manifest của họ "${family}" không phải layer web`);
+  if (manifest.layer !== "web")
+    throw new Error(`Manifest của họ "${family}" không phải layer web`);
   if (!manifest.exports) {
     throw new Error(
       `Lõi "${family}" chưa khai báo exports (hook UI). Viết hook danh sách, query và drawer của lõi rồi khai báo trong core.manifest.json trước khi ghép module.`,
     );
   }
   for (const key of REQUIRED_CORE_EXPORTS) {
-    if (!manifest.exports[key]) throw new Error(`Manifest của họ "${family}" thiếu exports.${key}`);
+    if (!manifest.exports[key])
+      throw new Error(`Manifest của họ "${family}" thiếu exports.${key}`);
   }
   return manifest;
 }
@@ -66,7 +69,9 @@ export function buildApiExtraMembers(exports, recordType) {
   const lines = [];
   for (const action of exports.lifecycle ?? []) {
     if (!LIFECYCLE_ACTIONS.includes(action)) {
-      throw new Error(`Hành động vòng đời "${action}" không được hỗ trợ. Chọn: ${LIFECYCLE_ACTIONS.join(", ")}`);
+      throw new Error(
+        `Hành động vòng đời "${action}" không được hỗ trợ. Chọn: ${LIFECYCLE_ACTIONS.join(", ")}`,
+      );
     }
     lines.push(
       `  ${action}: async (id: string) => {`,
@@ -91,7 +96,8 @@ export function buildApiExtraMembers(exports, recordType) {
 const cleanTitle = (value, label) => {
   const title = String(value ?? "").trim();
   if (!title) throw new Error(`Thiếu ${label}`);
-  if (/["\\]/.test(title)) throw new Error(`${label} không được chứa dấu " hoặc \\`);
+  if (/["\\]/.test(title))
+    throw new Error(`${label} không được chứa dấu " hoặc \\`);
   return title;
 };
 
@@ -99,7 +105,9 @@ const cleanTitle = (value, label) => {
 export function buildV2ThinData(answers, manifest) {
   const moduleName = String(answers.moduleInput ?? "").trim();
   if (!MODULE_PATTERN.test(moduleName)) {
-    throw new Error(`Tên module không hợp lệ: "${moduleName}" (kebab-case, ví dụ: garage-goods-receipts)`);
+    throw new Error(
+      `Tên module không hợp lệ: "${moduleName}" (kebab-case, ví dụ: garage-goods-receipts)`,
+    );
   }
   const exports = manifest.exports;
   const modulePascal = toPascalCase(moduleName);
@@ -109,7 +117,9 @@ export function buildV2ThinData(answers, manifest) {
   const routePath = toKebabCase(answers.routeInput || moduleName);
   const navSection = String(answers.navSection ?? "").trim();
   if (!NAV_SECTIONS.includes(navSection)) {
-    throw new Error(`navSection không hợp lệ: "${navSection}". Chọn: ${NAV_SECTIONS.join(", ")}`);
+    throw new Error(
+      `navSection không hợp lệ: "${navSection}". Chọn: ${NAV_SECTIONS.join(", ")}`,
+    );
   }
 
   return {
@@ -135,11 +145,15 @@ export function buildV2ThinData(answers, manifest) {
     query: exports.query,
     drawer: exports.drawer,
     apiExtraMembers: buildApiExtraMembers(exports, exports.recordType),
-    viewVisibilityImport: exports.viewVisibility ? `, ${exports.viewVisibility}` : "",
+    viewVisibilityImport: exports.viewVisibility
+      ? `, ${exports.viewVisibility}`
+      : "",
     viewVisibilityExpr: exports.viewVisibility ?? "{}",
     titleVi,
     titleEn,
-    permissionCollection: String(answers.permissionInput ?? "").trim() || moduleName.replace(/-/g, "_"),
+    permissionCollection:
+      String(answers.permissionInput ?? "").trim() ||
+      moduleName.replace(/-/g, "_"),
     tableId: `erp-${moduleName}-table`,
     localeNamespace: moduleCamel,
     pageName: `${modulePascal}Page`,

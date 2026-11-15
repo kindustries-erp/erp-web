@@ -36,6 +36,14 @@ describe("RBAC Configuration & Resource Collections", () => {
     expect(garageGroup?.resources).toContain(ErpResource.GARAGE_GOODS_RECEIPTS);
   });
 
+  it("contains tools group in PERMISSION_RESOURCE_GROUPS with ErpResource.LOANS", () => {
+    const toolsGroup = PERMISSION_RESOURCE_GROUPS.find(
+      (g) => g.groupKey === "tools",
+    );
+    expect(toolsGroup).toBeDefined();
+    expect(toolsGroup?.resources).toContain(ErpResource.LOANS);
+  });
+
   it("ensures all collections have collection, label, and group defined", () => {
     for (const c of RBAC_COLLECTIONS) {
       expect(c.collection).toBeTruthy();

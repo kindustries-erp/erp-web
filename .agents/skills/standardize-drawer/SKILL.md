@@ -1,13 +1,13 @@
 ---
 name: standardize-drawer
-description: Chuẩn Drawer của erp-web, gồm V1 (StandardFormDrawer, DrawerSection, DrawerField), V2 (V2StandardDrawer) và mạng lưới chứng từ liên kết (DrawerDocumentTraceability, trong drawer-rules mục 11). Dùng khi tạo hoặc sửa drawer chi tiết hoặc form, layout 1 hay 2 cột, tab, hoặc tab chứng từ liên kết. Create or enhance a Drawer following ERP UI standards. Nạp erp-web-truth trước; cấu trúc Atomic xem erp-web-structure.
+description: Chuẩn Drawer của erp-web, gồm V1 (StandardFormDrawer, DrawerSection, DrawerField), V2 (V2StandardDrawer) và mạng lưới chứng từ liên kết (DrawerDocumentTraceability, trong drawer-rules mục 11). Dùng khi tạo hoặc sửa drawer chi tiết hoặc form, layout 1 hay 2 cột, tab, hoặc tab chứng từ liên kết. Create or enhance a Drawer following ERP UI standards. Nạp erp-web-truth trước; cấu trúc Atomic xem erp-ui-structure.
 ---
 
 # ERP Web — Drawer Standards
 
 Skill gộp mọi chuẩn drawer của `erp-web`: V1, V2 và mạng lưới chứng từ liên kết. SKILL.md này chỉ định tuyến; chi tiết nằm trong `references/` (đường dẫn đầy đủ bên dưới, vì adapter của agent không nạp thư mục `references/`).
 
-Nạp `erp-web-truth` trước để có ngữ cảnh repo. Cấu trúc Atomic, giới hạn 180 dòng và audit chung nằm ở `erp-web-structure`.
+Nạp `erp-web-truth` trước để có ngữ cảnh repo. Cấu trúc Atomic, giới hạn 180 dòng và audit chung nằm ở `erp-ui-structure`.
 
 ## 1. Chọn hướng xử lý
 
@@ -26,7 +26,7 @@ Xác định trước: code nằm ở `src/` (V1) hay `src/v2/` (V2). Hai bên d
 - **Layout**: chọn 1 cột hay 2 cột theo độ phức tạp của form; tab điều hướng đặt phía trên.
 - **Màu**: không dùng `blue-*`. Bảng token: `erp-web-truth/references/ui-shell-and-theme.md` mục 4.
 - **i18n**: 100% chuỗi qua `t()` (VI/EN); V2 dùng prefix `v2.`.
-- **A11y**: theo mục A11y trong `erp-web-structure/references/atomic-ui.md`.
+- **A11y**: theo mục A11y trong `erp-ui-structure/references/atomic-ui.md`.
 - **Kích thước**: mỗi file dưới 180 dòng; tách section và hook khi gần ngưỡng.
 
 ## 3. Sinh khung và quy trình

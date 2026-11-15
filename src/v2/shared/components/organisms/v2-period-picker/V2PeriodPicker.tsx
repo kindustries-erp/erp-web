@@ -2,7 +2,10 @@ import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
 import { V2DatePicker } from "@/v2/shared/components/molecules/v2-date-picker";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+} from "@/v2/shared/components/molecules/v2-tab-bar";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2PeriodPickerProps, V2PeriodUnit } from "./V2PeriodPicker.type";
 
@@ -36,7 +39,7 @@ export const V2PeriodPicker: React.FC<V2PeriodPickerProps> = ({
   return (
     <div className={cn("space-y-3", className)}>
       <V2TabBar
-        variant="sub"
+        variant={V2TabBarVariant.SUB}
         stretch
         tabs={tabs}
         activeTabKey={unit}

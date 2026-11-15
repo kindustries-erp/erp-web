@@ -96,6 +96,7 @@ vi.mock("@/core/components/GlobalErpDocumentOpener", () => ({
 }));
 
 vi.mock("@/shared/utils/pageUrl", () => ({
+  LOANS_TOOL_PATH: "/loans-tool",
   pathToPage: () => ({ page: "purchasing" }),
 }));
 

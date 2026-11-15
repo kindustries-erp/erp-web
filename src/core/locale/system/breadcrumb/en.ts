@@ -1,5 +1,6 @@
 export const breadcrumbEn = {
   accounting: "Accounting",
+  tools: "Tools",
   dashboard: "Dashboard",
   cashflow: "Cash Flow",
   cashflowOverview: "Overview",

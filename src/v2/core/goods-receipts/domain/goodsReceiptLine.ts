@@ -10,4 +10,8 @@ export interface GoodsReceiptFormLine {
   unitCost: string;
   amount: string;
   notes: string;
+  /** Id dòng đơn mua nguồn (nếu nhập từ đơn mua); không hiển thị, gửi lên API */
+  sourceLineId?: string;
+  /** Số tối đa được nhận trên dòng (phần còn lại của đơn mua lúc lập phiếu); chỉ để chặn nhập quá, không gửi API */
+  maxQty?: number;
 }

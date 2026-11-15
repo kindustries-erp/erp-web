@@ -56,6 +56,15 @@ describe("dòng chứng từ", () => {
     expect(validateProcurementLines([filledLine({ qty: "0" })])).toBe("qty");
     expect(validateProcurementLines([filledLine()])).toBeNull();
   });
+
+  it("mã hàng chỉ bắt buộc khi bật itemCodeRequired (đơn Garage)", () => {
+    const noCode = [filledLine({ itemCode: " " })];
+    expect(validateProcurementLines(noCode)).toBeNull();
+    expect(validateProcurementLines(noCode, true)).toBe("itemCode");
+    expect(
+      validateProcurementLines([filledLine({ itemCode: "M1" })], true),
+    ).toBeNull();
+  });
 });
 
 describe("dòng từ API (API trả số, không phải chuỗi)", () => {
@@ -144,6 +153,22 @@ describe("form đơn mua (PO)", () => {
       unitPrice: 150000,
     });
     expect(payload.supplierId).toBe("s1");
+  });
+
+  it("payload tạo đơn gửi số hóa đơn NCC đã cắt khoảng trắng, rỗng thì bỏ", () => {
+    const base = {
+      ...emptyOrderForm("2026-11-05"),
+      branchId: "b1",
+      lines: [filledLine()],
+    };
+    expect(
+      toOrderCreatePayload({ ...base, supplierInvoiceNo: "  HD-001 " })
+        .supplierInvoiceNo,
+    ).toBe("HD-001");
+    expect(
+      toOrderCreatePayload({ ...base, supplierInvoiceNo: "  " })
+        .supplierInvoiceNo,
+    ).toBeUndefined();
   });
 
   it("payload sửa đầu đơn gửi null cho ô bị xóa trắng", () => {

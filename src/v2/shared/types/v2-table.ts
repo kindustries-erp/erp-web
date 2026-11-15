@@ -133,6 +133,8 @@ export interface V2RowAction {
   disabled?: boolean;
   /** Lý do hiển thị khi `disabled`, ví dụ "Chỉ sửa được khi còn nháp" */
   disabledReason?: string;
+  /** Gợi ý hiển thị khi hành động đang bật (tooltip), ví dụ giải thích "Phát hành" */
+  hint?: string;
   variant?: "default" | "danger";
 }
 

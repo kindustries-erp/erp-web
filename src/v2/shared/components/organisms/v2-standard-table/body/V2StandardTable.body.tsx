@@ -9,6 +9,7 @@ import type { V2RowActionGroup } from "@/v2/shared/types/v2-table";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_ROW_ACTIONS_COLUMN_WIDTH } from "../header/V2StandardTable.header";
 import { V2TableSkeletonRows } from "../skeleton";
+import { V2TableExpandedRow } from "./V2StandardTable.expanded-row";
 import type { V2Column } from "../V2StandardTable.type";
 
 const ALIGN_CLASS: Record<TableColumnAlign, string> = {
@@ -22,6 +23,7 @@ interface RowProps<T> {
   /** Đổi khi thứ tự/ẩn hiện cột thay đổi để row memo vẫn render lại đúng */
   layoutKey: string;
   isSelected: boolean;
+  isExpanded?: boolean;
   rowClassName?: string;
   isMenuOpen: boolean;
   columnsByKey: Map<string, V2Column<T>>;
@@ -32,6 +34,7 @@ interface RowProps<T> {
 function V2TableRowInner<T>({
   row,
   isSelected,
+  isExpanded,
   rowClassName,
   isMenuOpen,
   columnsByKey,
@@ -47,23 +50,27 @@ function V2TableRowInner<T>({
   return (
     <TableRow
       data-state={isSelected ? "selected" : undefined}
+      data-expanded={isExpanded ? "true" : undefined}
       data-context-menu-active={isMenuOpen ? "true" : undefined}
       onContextMenu={
         hasActions ? (event) => onRowContextMenu(event, row.id) : undefined
       }
       className={cn(
-        "group h-[38px] border-b border-[color:var(--border-light)] hover:bg-surface-hover data-[state=selected]:bg-muted data-[context-menu-active=true]:bg-primary/[0.04]",
+        "group h-[38px] border-b border-[color:var(--border-light)] hover:bg-surface-hover data-[state=selected]:bg-muted data-[expanded=true]:bg-[color:color-mix(in_srgb,var(--primary)_5%,transparent)] data-[context-menu-active=true]:bg-[color:color-mix(in_srgb,var(--primary)_5%,transparent)]",
         rowClassName,
       )}
     >
       {row.getVisibleCells().map((cell) => {
         const column = columnsByKey.get(cell.column.id);
+        const isUtilityCell =
+          cell.column.id === "__expand" || cell.column.id === "__selection";
         return (
           <TableCell
             key={cell.id}
             style={{ width: cell.column.getSize() }}
             className={cn(
-              "truncate border-r border-border px-2 py-1 text-xs",
+              "border-r border-border py-1 text-xs",
+              isUtilityCell ? "px-1 text-center" : "truncate px-2",
               column?.align && ALIGN_CLASS[column.align],
               column?.className,
             )}
@@ -96,6 +103,8 @@ export interface V2TableBodyRowsProps<T> {
   rowActions?: (row: T) => V2RowActionGroup[];
   getRowClassName?: (row: T, index: number) => string | undefined;
   onRowContextMenu: (event: React.MouseEvent, rowKey: string) => void;
+  expandedKeys?: Set<string>;
+  renderExpandedRow?: (row: T, index: number) => React.ReactNode;
 }
 
 export function V2TableBodyRows<T>({
@@ -110,6 +119,8 @@ export function V2TableBodyRows<T>({
   rowActions,
   getRowClassName,
   onRowContextMenu,
+  expandedKeys,
+  renderExpandedRow,
 }: V2TableBodyRowsProps<T>) {
   const rows = table.getRowModel().rows;
 
@@ -138,19 +149,31 @@ export function V2TableBodyRows<T>({
 
   return (
     <TableBody className={cn(loading && "pointer-events-none opacity-60")}>
-      {rows.map((row, index) => (
-        <V2TableRow
-          key={row.id}
-          row={row}
-          layoutKey={layoutKey}
-          isSelected={row.getIsSelected()}
-          rowClassName={getRowClassName?.(row.original, index + 1)}
-          isMenuOpen={menuRowKey === row.id}
-          columnsByKey={columnsByKey}
-          rowActions={rowActions}
-          onRowContextMenu={onRowContextMenu}
-        />
-      ))}
+      {rows.map((row, index) => {
+        const isExpanded = Boolean(
+          expandedKeys?.has(row.id) && renderExpandedRow,
+        );
+        return (
+          <React.Fragment key={row.id}>
+            <V2TableRow
+              row={row}
+              layoutKey={layoutKey}
+              isSelected={row.getIsSelected()}
+              isExpanded={isExpanded}
+              rowClassName={getRowClassName?.(row.original, index + 1)}
+              isMenuOpen={menuRowKey === row.id}
+              columnsByKey={columnsByKey}
+              rowActions={rowActions}
+              onRowContextMenu={onRowContextMenu}
+            />
+            {isExpanded && renderExpandedRow && (
+              <V2TableExpandedRow colSpan={colSpan}>
+                {renderExpandedRow(row.original, index + 1)}
+              </V2TableExpandedRow>
+            )}
+          </React.Fragment>
+        );
+      })}
     </TableBody>
   );
 }

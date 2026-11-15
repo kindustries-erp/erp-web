@@ -1,3 +1,4 @@
+import type { V2PaginationMeta } from "@/v2/shared/types/v2-pagination";
 import type { InvoiceDirection } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
 
@@ -38,20 +39,16 @@ export type InvoiceSummariesDto = Record<string, V2SummaryMetric | null>;
 /** `GET /api/v2/invoices` */
 export interface InvoiceListResponseDto {
   items: InvoiceDto[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+  pagination: V2PaginationMeta;
   summaries: InvoiceSummariesDto;
 }
 
 export type InvoiceColumnOptionDto = string | { value: string; label: string };
 
-/** `GET /api/v2/invoices/column-options`: `next` là trang kế, hoặc null khi hết */
+/** `GET /api/v2/invoices/column-options`: `pagination.next` là trang kế, hoặc null khi hết */
 export interface InvoiceColumnOptionsResponseDto {
   items: InvoiceColumnOptionDto[];
-  total: number;
-  next: number | null;
+  pagination: V2PaginationMeta;
 }
 
 /** `GET /api/v1/erp-invoices/stats`: KPI theo tháng/tuần/ngày của một chiều hóa đơn */

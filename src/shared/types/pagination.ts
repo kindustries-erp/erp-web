@@ -34,3 +34,43 @@ export function buildPaginated<T>(
     totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 1,
   };
 }
+
+/** Khối `pagination` của response danh sách chuẩn v2 (có `next`/`previous`). */
+export interface PaginationWireMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  next: number | null;
+  previous: number | null;
+}
+
+/** Response danh sách chuẩn v2 từ API: `items` + `pagination`. */
+export interface PaginatedWireResponse<T> {
+  items: T[];
+  pagination: PaginationWireMeta;
+}
+
+/**
+ * Đổi response chuẩn v2 sang kiểu phẳng `PaginatedResponse` mà các bảng V1 đang dùng.
+ * Chỉ gọi ở lớp API client V1; màn hình V1 không đọc key chuẩn v2 trực tiếp.
+ */
+export function fromPaginatedWire<T>(
+  wire: PaginatedWireResponse<T>,
+): PaginatedResponse<T> {
+  const { page, pageSize, total, totalPages } = wire.pagination;
+  return { items: wire.items, total, page, pageSize, totalPages };
+}
+
+/** Đổi response column-options chuẩn v2 sang `{ items, total, next }` của bộ lọc V1. */
+export function fromColumnOptionsWire<T>(wire: PaginatedWireResponse<T>): {
+  items: T[];
+  total: number;
+  next: number | null;
+} {
+  return {
+    items: wire.items,
+    total: wire.pagination.total,
+    next: wire.pagination.next,
+  };
+}

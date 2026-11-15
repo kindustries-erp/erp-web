@@ -278,7 +278,7 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - [x] Floating Card: 4 góc bo cong `rounded-2xl`, viền 4 cạnh `border border-border/80`, cách mép màn hình `top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5`.
 - [x] Slide animation êm mượt: Sử dụng `cubic-bezier(0.16, 1, 0.3, 1)` với Tailwind keyframes `slide-in-from-right` và `slide-in-from-bottom`.
 - [x] 2 Khối Card Kính Độc Lập: Cột trái và cột phải nằm trên canvas với `gap-4 lg:gap-6`, không dùng đường kẻ dọc `border-l` cứng nhắc.
-- [x] Khống chế kích thước file: 100% file thành phần đều `< 178 LoC` (tuân thủ /ui-structure < 180 LoC).
+- [x] Khống chế kích thước file: 100% file thành phần đều `< 178 LoC` (tuân thủ /erp-ui-structure < 180 LoC).
 - [x] Tuân thủ No Blue Mandate: Không dùng class màu `blue-*`.
 - [x] Phím tắt `Esc` 2 tầng: Esc lần 1 thu nhỏ toàn màn hình, Esc lần 2 đóng drawer (hỏi confirm nếu đang edit).
 - [x] Multi-Drawer Stacking Store: `utils/v2DrawerStack.ts` quản lý active stack cross-tree qua `useSyncExternalStore`, tự động cấp phát `zIndex = 50 + depth * 10`, `depth`, `isTopmost`, `isUnderlying`.
@@ -293,10 +293,10 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 
 ### Glass surface và theme tokens
 
-- `SheetContent` dùng `--drawer-bg` cho bề mặt translucent, `--drawer-blur: 20px`, saturate `190%`, contrast `102%`, shadow nhẹ theo theme (`--drawer-shadow`). Light surface dùng alpha `0.35`, dark surface dùng alpha `0.75`; overlay dùng alpha `0.2` và blur nhẹ `1px` ở cả hai theme.
-- Light và dark theme định nghĩa alpha background riêng để giữ contrast đồng thời cho thấy backdrop. V2 drawer mount trên route V1 nhận fallback token từ `src/styles/panels.css`.
-- OrcaQ dùng cùng blur `20px` theo yêu cầu glass đồng nhất giữa theme.
-- `SheetOverlay` là lớp dim độc lập; overlay alpha 0.2 và blur 1px, còn blur glass 20px được áp dụng trên Sheet content.
+- `SheetContent` dùng `--drawer-bg` cho bề mặt gần như đặc (độ đục `0.96`), `--drawer-blur: 8px`, saturate `140%`, contrast `101%`, shadow nhẹ theo theme (`--drawer-shadow`). Cả light surface và dark surface đều dùng alpha `0.96` để tránh lộ chữ/bảng phía sau; overlay mặc định `transparent` (`--overlay-bg`, `--overlay-blur: 0px`) hoặc dim nhẹ theo biến `--drawer-overlay-bg`.
+- Light và dark theme định nghĩa alpha background riêng để giữ độ đọc tối đa. V2 drawer mount trên route V1 nhận fallback token từ `src/styles/panels.css`.
+- OrcaQ dùng cùng blur `8px` theo chuẩn glass tinh gọn đồng nhất giữa theme.
+- `SheetOverlay` là lớp phủ độc lập (`FLOATING_OVERLAY_CLASS`), tách biệt với blur `8px` trên Sheet content.
 
 - `V2TabItemData.rightPanel` chọn panel phải theo tab active; nếu không đặt, drawer dùng `V2StandardDrawerProps.rightPanel` làm fallback. `rightTabs` vẫn có ưu tiên nội dung riêng của sub-tab phải. Quy tắc áp dụng đồng nhất trên Desktop và Mobile.
 - ERP Invoice detail drawer dùng API này để giữ panel chung theo tab và chuyển sang panel đối soát khi sub-tab Chứng từ liên kết được chọn. Luồng nghiệp vụ vẫn do module invoice hiện tại quản lý.

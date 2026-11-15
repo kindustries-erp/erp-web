@@ -81,7 +81,7 @@ erp-api/src/rbac-core/
 │   ├── erp-resource.enum.ts          # Enum các tài nguyên ErpResource (*, purchase_orders, sales_orders, invoices, etc.)
 │   ├── erp-action.enum.ts            # Enum các hành động ErpAction (read, create, update, delete, manage, *)
 │   └── index.ts
-├── rbac-core.controller.ts           # REST API endpoints (/api/v1/rbac-core/roles...)
+├── rbac-core.controller.ts           # REST API endpoints (/api/v2/rbac-roles...)
 ├── rbac-core.service.ts              # Business logic tra cứu quyền, gán quyền, phân trang vai trò
 ├── rbac-core.module.ts               # NestJS Module đăng ký TypeORM và exports
 └── index.ts
@@ -122,17 +122,17 @@ Tất cả các endpoint dưới đây đều được bảo vệ bởi `JwtAuth
 
 | Phương thức | Endpoint | Mô tả |
 | :--- | :--- | :--- |
-| `GET` | `/api/v1/rbac-core/roles` | Lấy danh sách vai trò có phân trang, tìm kiếm, lọc theo cột và ngày |
-| `GET` | `/api/v1/rbac-core/roles/column-options` | Lấy danh sách options lọc động cho cột trên bảng |
-| `POST` | `/api/v1/rbac-core/roles` | Tạo mới vai trò (`name`, `description`) |
-| `PATCH` | `/api/v1/rbac-core/roles/:id` | Cập nhật tên, mô tả, trạng thái hoạt động của vai trò |
-| `DELETE` | `/api/v1/rbac-core/roles/:id` | Xóa vai trò (tự động xóa cascade permissions và gán người dùng) |
-| `GET` | `/api/v1/rbac-core/roles/:roleId/permissions` | Lấy danh sách quyền chi tiết của vai trò |
-| `PATCH` | `/api/v1/rbac-core/roles/:roleId/permissions` | Lưu ma trận quyền của vai trò (`permissions: [{ resource, action, conditions }]`). Backend thay toàn bộ quyền, nên web giữ lại dòng ngoài ma trận (`preserved`) và `conditions` khi lưu (`RoleDrawer.helper.ts`). |
-| `GET` | `/api/v1/rbac-core/collections` | Danh sách resource; resource có `actions` (ví dụ `approve`, `reject`) hiển thị thêm cột Duyệt/Từ chối trên ma trận V2 |
-| `GET` | `/api/v1/rbac-core/roles/:roleId/users` | Lấy danh sách người dùng được gán vào vai trò |
-| `PATCH` | `/api/v1/rbac-core/roles/:roleId/users` | Cập nhật danh sách người dùng gán vào vai trò (`userIds: string[]`) |
-| `GET` | `/api/v1/rbac-core/collections` | Lấy danh sách toàn bộ tài nguyên (resources) khả dụng trong hệ thống |
+| `GET` | `/api/v2/rbac-roles` | Lấy danh sách vai trò có phân trang, tìm kiếm, lọc theo cột và ngày |
+| `GET` | `/api/v2/rbac-roles/column-options` | Lấy danh sách options lọc động cho cột trên bảng |
+| `POST` | `/api/v2/rbac-roles` | Tạo mới vai trò (`name`, `description`) |
+| `PATCH` | `/api/v2/rbac-roles/:id` | Cập nhật tên, mô tả, trạng thái hoạt động của vai trò |
+| `DELETE` | `/api/v2/rbac-roles/:id` | Xóa vai trò (tự động xóa cascade permissions và gán người dùng) |
+| `GET` | `/api/v2/rbac-roles/:roleId/permissions` | Lấy danh sách quyền chi tiết của vai trò |
+| `PATCH` | `/api/v2/rbac-roles/:roleId/permissions` | Lưu ma trận quyền của vai trò (`permissions: [{ resource, action, conditions }]`). Backend thay toàn bộ quyền, nên web giữ lại dòng ngoài ma trận (`preserved`) và `conditions` khi lưu (`RoleDrawer.helper.ts`). |
+| `GET` | `/api/v2/rbac-roles/collections` | Danh sách resource; resource có `actions` (ví dụ `approve`, `reject`) hiển thị thêm cột Duyệt/Từ chối trên ma trận V2 |
+| `GET` | `/api/v2/rbac-roles/:roleId/users` | Lấy danh sách người dùng được gán vào vai trò |
+| `PATCH` | `/api/v2/rbac-roles/:roleId/users` | Cập nhật danh sách người dùng gán vào vai trò (`userIds: string[]`) |
+| `GET` | `/api/v2/rbac-roles/collections` | Lấy danh sách toàn bộ tài nguyên (resources) khả dụng trong hệ thống |
 
 ---
 
@@ -193,3 +193,10 @@ Các tài nguyên được gom thành 8 nhóm nghiệp vụ chính:
   cd erp/erp-web
   bun run check:ci
   ```
+
+## Hợp đồng phân trang chuẩn v2 (pagination)
+
+- API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.
+- Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
+- Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
+- Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.

@@ -1,5 +1,8 @@
 import type { V2TabItemData } from "../V2StandardDrawer.type";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+} from "@/v2/shared/components/molecules/v2-tab-bar";
 import {
   FileText,
   RefreshCw,
@@ -66,7 +69,7 @@ export const GoldenPreviewToggle = ({
   onChange: (value: "template" | "pdf") => void;
 }) => (
   <V2TabBar
-    variant="button-group"
+    variant={V2TabBarVariant.BUTTON_GROUP}
     tabs={[
       {
         key: "template",

@@ -32,14 +32,14 @@ export const V2NotificationPopoverMobile: React.FC<
   });
 
   const headerActions = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
       {notifications.length > 0 && (
         <V2Button
           type="button"
           variant="ghost"
           size="xs"
           onClick={() => deleteAllMutation.mutate()}
-          className="text-xs text-destructive dark:text-rose-400 dark:hover:text-rose-300 hover:bg-transparent p-0 h-auto font-normal"
+          className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-500/10 px-1.5 py-0.5 rounded h-auto"
         >
           {t("v2.notifications.deleteAll", "Xóa tất cả")}
         </V2Button>
@@ -50,7 +50,7 @@ export const V2NotificationPopoverMobile: React.FC<
           variant="ghost"
           size="xs"
           onClick={() => markAllAsReadMutation.mutate()}
-          className="text-xs text-primary dark:text-teal-400 dark:hover:text-teal-300 hover:bg-transparent p-0 h-auto font-normal"
+          className="text-xs font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-500/10 dark:text-teal-400 dark:hover:text-teal-300 dark:hover:bg-teal-500/10 px-1.5 py-0.5 rounded h-auto"
         >
           {t("v2.notifications.markAllAsRead", "Đánh dấu đã đọc tất cả")}
         </V2Button>
@@ -95,23 +95,23 @@ export const V2NotificationPopoverMobile: React.FC<
         open={mobileOpen}
         onOpenChange={setMobileOpen}
         title={t("v2.notifications.title", "Thông báo")}
-        icon={<BellRing className="w-4 h-4 text-primary dark:text-teal-400" />}
+        icon={<BellRing className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
         headerAction={headerActions}
         bodyClassName="p-0 flex flex-col min-h-0"
         maxHeightClass="h-[100dvh] max-h-[100dvh]"
       >
-        <div className="overflow-y-auto p-2 custom-scrollbar flex-1 min-h-0">
+        <div className="overflow-y-auto p-2.5 custom-scrollbar flex-1 min-h-0">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-12 h-12 rounded-full bg-black/5 dark:bg-white/[0.04] flex items-center justify-center mb-3">
-                <BellRing className="w-6 h-6 text-faint dark:text-slate-500" />
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center mb-3">
+                <BellRing className="w-6 h-6 text-slate-400 dark:text-slate-500" />
               </div>
               <V2Text variant="body-sm" color="muted" className="m-0">
                 {t("v2.notifications.empty", "Chưa có thông báo nào")}
               </V2Text>
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               {notifications.map((notif) => (
                 <V2NotificationItem
                   key={notif.id}

@@ -20,10 +20,10 @@ export interface UseBusinessPartnersQueryParams {
 
 /** Metric của cột "Mã" (đếm dòng): tổng toàn bộ, số dòng trang hiện tại, lũy kế đến hết trang */
 const countMetric = (
-  data: { total?: number; items?: unknown[] } | undefined,
+  data: { pagination?: { total: number }; items?: unknown[] } | undefined,
   query: V2TableQuery,
 ): V2SummaryMetric => {
-  const total = data?.total ?? 0;
+  const total = data?.pagination?.total ?? 0;
   return {
     total,
     pageSubtotal: data?.items?.length ?? 0,
@@ -68,7 +68,7 @@ export function useBusinessPartnersQuery(
 
   return {
     items: (result.data?.items ?? []) as BusinessPartner[],
-    total: result.data?.total ?? 0,
+    total: result.data?.pagination.total ?? 0,
     summaries: {
       // Cột "Mã" là đếm dòng: total = toàn bộ, subtotal = số dòng trang, lũy kế = dòng đến hết trang
       code: countMetric(result.data, query),

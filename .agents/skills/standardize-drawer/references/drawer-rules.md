@@ -423,7 +423,7 @@ graph TD
 - Loại bỏ hoàn toàn sự phân mảnh giữa các file `[Name]DrawerViewSection.tsx` và `[Name]DrawerEditSection.tsx`.
 - Tự động định dạng ngày tháng (`type="date"`), tiền tệ (`type="number"`), sao chép mã (`copyable`), tra cứu nhãn enum/select (`options`).
 - Trường phức tạp hoặc combobox phụ thuộc có thể dùng `type="custom"` kèm `render={() => <MyCombobox ... />}`.
-- Đảm bảo nghiêm ngặt quy tắc kích thước file: **mọi file luôn < 180 LoC** theo `/ui-structure`.
+- Đảm bảo nghiêm ngặt quy tắc kích thước file: **mọi file luôn < 180 LoC** theo `/erp-ui-structure`.
 
 ### 3. Khởi tạo & render Form bằng Mảng cấu hình (Config Array) với `V2FormGrid`:
 Để chuẩn hóa form theo kiến trúc data-driven (Config Array) và loại bỏ việc JSX lặp đi lặp lại nhiều thẻ `<V2FormField>`, sử dụng `<V2FormGrid>`:

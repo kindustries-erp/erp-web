@@ -31,6 +31,11 @@ export interface GoodsReceiptApi {
     id: string,
     form: GoodsReceiptFormValue,
   ) => Promise<GoodsReceiptRecord>;
+  /** Lưu (tạo mới khi id null, sửa khi có id) rồi nhập kho trong một bước; họ không hỗ trợ thì bỏ trống */
+  saveAndPost?: (
+    id: string | null,
+    form: GoodsReceiptFormValue,
+  ) => Promise<GoodsReceiptRecord>;
   post: (id: string) => Promise<GoodsReceiptRecord>;
   cancel: (id: string) => Promise<GoodsReceiptRecord>;
   remove: (id: string) => Promise<GoodsReceiptRecord>;

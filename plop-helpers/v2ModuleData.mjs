@@ -20,13 +20,22 @@ export const kebabCase = (value) =>
     .join("-")
     .toLowerCase();
 
-export const NAV_SECTIONS = ["overview", "sales", "purchasing", "inventory", "manufacturing", "accounting", "settings"];
+export const NAV_SECTIONS = [
+  "overview",
+  "sales",
+  "purchasing",
+  "inventory",
+  "manufacturing",
+  "accounting",
+  "settings",
+];
 
 /** Gắn cờ hiển thị cho từng trường để template chỉ cần `{{#if isStatus}}` */
 export function decorateFields(fields) {
   return fields.map((field, index) => ({
     ...field,
-    tsType: field.type === "number" || field.type === "decimal" ? "number" : "string",
+    tsType:
+      field.type === "number" || field.type === "decimal" ? "number" : "string",
     isStatus: field.type === "status",
     isText: field.type === "text",
     // decimal là tiền (variant amount), number là số lượng (variant qty); cả hai đều có ô tổng
@@ -48,21 +57,41 @@ export function buildModuleData(answers) {
   const entityName = pascalCase(answers.entityName ?? "");
   const entityPlural = pascalCase(answers.pluralName ?? "");
 
-  if (!/^[a-z][a-z0-9-]*$/.test(moduleName)) throw new Error(`moduleName không hợp lệ: "${answers.moduleName}" (kebab-case)`);
-  if (!/^[A-Z][A-Za-z0-9]*$/.test(entityName)) throw new Error(`entityName không hợp lệ: "${answers.entityName}" (PascalCase số ít)`);
-  if (!/^[A-Z][A-Za-z0-9]*$/.test(entityPlural)) throw new Error(`pluralName không hợp lệ: "${answers.pluralName}" (PascalCase số nhiều)`);
-  if (!String(answers.apiBase ?? "").startsWith("/api/")) throw new Error(`apiBase phải bắt đầu bằng /api/: "${answers.apiBase}"`);
-  if (!NAV_SECTIONS.includes(answers.navSection)) throw new Error(`navSection không hợp lệ: "${answers.navSection}". Chọn: ${NAV_SECTIONS.join(", ")}`);
+  if (!/^[a-z][a-z0-9-]*$/.test(moduleName))
+    throw new Error(
+      `moduleName không hợp lệ: "${answers.moduleName}" (kebab-case)`,
+    );
+  if (!/^[A-Z][A-Za-z0-9]*$/.test(entityName))
+    throw new Error(
+      `entityName không hợp lệ: "${answers.entityName}" (PascalCase số ít)`,
+    );
+  if (!/^[A-Z][A-Za-z0-9]*$/.test(entityPlural))
+    throw new Error(
+      `pluralName không hợp lệ: "${answers.pluralName}" (PascalCase số nhiều)`,
+    );
+  if (!String(answers.apiBase ?? "").startsWith("/api/"))
+    throw new Error(`apiBase phải bắt đầu bằng /api/: "${answers.apiBase}"`);
+  if (!NAV_SECTIONS.includes(answers.navSection))
+    throw new Error(
+      `navSection không hợp lệ: "${answers.navSection}". Chọn: ${NAV_SECTIONS.join(", ")}`,
+    );
 
   const routePath = kebabCase(answers.routeInput || moduleName);
   const fields = decorateFields(parseFields(answers.fieldSpec));
   const formFields = fields.filter((field) => !field.isCreatedAt);
   const requiredFields = formFields.filter((field) => field.required);
 
-  if (formFields.length === 0) throw new Error("Cần ít nhất một trường ngoài createdAt");
-  if (requiredFields.length === 0) throw new Error("Cần ít nhất một trường required (đánh dấu :required)");
-  if (answers.hasNextCode && (formFields[0].isStatus || formFields[0].isNumber)) {
-    throw new Error("Khi hasNextCode = true, trường đầu tiên phải là chuỗi (dùng làm mã)");
+  if (formFields.length === 0)
+    throw new Error("Cần ít nhất một trường ngoài createdAt");
+  if (requiredFields.length === 0)
+    throw new Error("Cần ít nhất một trường required (đánh dấu :required)");
+  if (
+    answers.hasNextCode &&
+    (formFields[0].isStatus || formFields[0].isNumber)
+  ) {
+    throw new Error(
+      "Khi hasNextCode = true, trường đầu tiên phải là chuỗi (dùng làm mã)",
+    );
   }
 
   return {
@@ -86,7 +115,8 @@ export function buildModuleData(answers) {
     hasText: fields.some((field) => field.isText),
     statusName: fields.find((field) => field.isStatus)?.name ?? "status",
     firstName: formFields[0].name,
-    needsReadValue: hasStatusField(fields) || fields.some((field) => field.isText),
+    needsReadValue:
+      hasStatusField(fields) || fields.some((field) => field.isText),
     fields,
     formFields,
     requiredFields,

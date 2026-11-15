@@ -46,10 +46,14 @@ describe("RolesPage", () => {
           createdAt: "2026-01-01",
         },
       ],
-      total: 1,
-      page: 1,
-      pageSize: 20,
-      totalPages: 1,
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: 1,
+        totalPages: 1,
+        next: null,
+        previous: null,
+      },
     });
     api.options.mockResolvedValue({ items: [], total: 0, next: null });
   });

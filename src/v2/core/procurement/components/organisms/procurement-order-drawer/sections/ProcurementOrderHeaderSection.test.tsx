@@ -76,4 +76,67 @@ describe("ProcurementOrderHeaderSection", () => {
     await userEvent.type(invoiceInput, "9");
     expect(setField).toHaveBeenCalledWith("supplierInvoiceNo", "9");
   });
+
+  const labelsInOrder = (labels: string[]) =>
+    labels.every((label, i) =>
+      i === 0
+        ? true
+        : Boolean(
+            screen
+              .getByText(labels[i - 1])
+              .compareDocumentPosition(screen.getByText(label)) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+          ),
+    );
+
+  it("Garage: ngày đơn, ngày dự kiến nhận, số hóa đơn, NCC rồi chi nhánh", () => {
+    render(
+      <ProcurementOrderHeaderSection
+        form={{ ...baseForm, requestId: null }}
+        errors={{}}
+        viewing={false}
+        branchLocked={false}
+        branchOptional
+        setField={vi.fn()}
+      />,
+    );
+    expect(
+      labelsInOrder([
+        "Ngày đơn",
+        "Ngày dự kiến nhận",
+        "Số hóa đơn NCC",
+        "Nhà cung cấp",
+        "Chi nhánh",
+      ]),
+    ).toBe(true);
+  });
+
+  it("luồng thường (ERP): chi nhánh vẫn đứng đầu", () => {
+    render(
+      <ProcurementOrderHeaderSection
+        form={{ ...baseForm, requestId: null }}
+        errors={{}}
+        viewing={false}
+        branchLocked={false}
+        setField={vi.fn()}
+      />,
+    );
+    expect(labelsInOrder(["Chi nhánh", "Ngày đơn", "Ngày dự kiến nhận"])).toBe(
+      true,
+    );
+  });
+
+  it("chế độ xem Garage: chi nhánh đứng sau ngày dự kiến nhận", () => {
+    render(
+      <ProcurementOrderHeaderSection
+        form={{ ...baseForm, requestId: null }}
+        errors={{}}
+        viewing
+        branchLocked
+        branchOptional
+        setField={vi.fn()}
+      />,
+    );
+    expect(labelsInOrder(["Ngày dự kiến nhận", "Chi nhánh"])).toBe(true);
+  });
 });

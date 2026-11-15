@@ -140,3 +140,79 @@ src/v2/core/procurement/
 - Bấm Duyệt mà server trả 409 `code: INVALID_STATUS_TRANSITION` (kèm `currentStatus`): `useProcurementTransition` đóng modal duyệt, làm mới danh sách và gọi `onAlreadyDecided` thay toast lỗi. Helper: `isStatusConflictError`, `readCurrentStatus` trong `shared/utils/v2ApiError.ts`.
 - State modal: `hooks/useProcurementAlreadyDecided.ts`. Locale: `procurement.alreadyDecided.locale.ts` (`v2.procurementAlreadyDecided.*`).
 - Tab `orders` chưa có deep link và chưa có thông báo PO, nên chưa áp dụng.
+
+## 12. Cập nhật: lập đơn mua từ đề nghị (cập nhật 2026-11-10)
+
+- Nhãn menu và nút trên tab liên quan: "Lập đơn mua từ đề nghị này" (`v2.procurement.actions.createOrder`).
+- Luồng: bấm menu gọi `orderFromRequest` (`hooks/useProcurementList.ts`): đóng drawer đề nghị đang mở, đặt ý định (`procurement.intent.ts`), chuyển sang `?tab=orders`.
+- Chỉ danh sách có `requestApi` mới nhận ý định, qua `hooks/useProcurementOrderIntent.ts`. Trang Garage có hai danh sách cùng lúc, nên danh sách đề nghị không được nhận ý định (trước đây nó nuốt ý định và mở nhầm drawer đề nghị).
+- Điền sẵn từ đề nghị (`orderFormFromRequestDraft`): chi nhánh, dòng còn lại, ngày dự kiến nhận = ngày cần hàng.
+- Test: `hooks/useProcurementOrderIntent.test.tsx`, `procurement.intent.test.ts`.
+
+## 13. Cập nhật: bố cục đầu đơn mua và chi nhánh khóa (cập nhật 2026-11-10)
+
+- Đầu đơn mua (`procurement-order-drawer/sections/ProcurementOrderHeaderSection.tsx`) dùng lưới 2 cột: ô đề nghị (nếu có), Ngày đơn và Ngày dự kiến nhận cùng hàng, rồi chi nhánh. Garage đặt chi nhánh ngay dưới hai ô ngày (`placeBranchAfter`); luồng ERP giữ chi nhánh đầu.
+- `ProcurementBranchPicker` có prop `locked`: hiện combobox vô hiệu hóa (cùng kiểu với ô đề nghị), không hiện khung chỉ-đọc. Đơn gắn đề nghị luôn khóa chi nhánh vì API bắt cùng chi nhánh với đề nghị.
+- `V2Combobox` khi `clearable`: trigger `pl-3`, `pr-16` (có X) hoặc `pr-9`; nút X là `V2Button` ghost `icon-xs` trong cụm neo `right-3` cùng mũi tên, không đè nhau.
+- Cột dòng hàng (PR và PO): Mã `w-24 min-w-[88px]`, Tên `min-w-[160px] w-[26%]`, Ghi chú `min-w-[180px] w-[34%]`, Thành tiền `w-40 min-w-[160px] whitespace-nowrap` (đủ số 12 chữ số).
+- Đơn mua Garage bắt buộc mã hàng: `itemCodeRequired` (truyền từ `garageProcurementOrders.config.tsx`) → `validateProcurementLines(lines, true)` trả `"itemCode"`; cột Mã có dấu `*`. PR và ERP PO giữ mã tùy chọn.
+
+## 9. Cập nhật 2026-11-11: REJECTED, Nhân bản, PO duyệt tắt
+
+- Trạng thái REJECTED hiển thị nhãn "Đã từ chối". Bộ lọc trạng thái PR và PO có REJECTED (`GarageProcurementRequestsPage.hook.ts`, `procurementStatusOptions.ts`).
+- Nhân bản: mục "Nhân bản" trong menu dòng, chỉ khi config có `cloneable` và trạng thái là REJECTED hoặc CANCELLED (`procurementRowActions.builder.tsx`). Gọi `api.clone` (`procurement.api.ts`, bật bằng `supportsClone`). Thành công thì mở drawer sửa của bản nháp mới.
+- PO garage (`directConfirmWhenApprovalOff: true`): menu bỏ "Gửi duyệt" khi khóa tắt (`applyApprovalGate`, tham số `directConfirmWhenOff`). Drawer có nút "Tạo mới" (phiếu mới) hoặc "Cập nhật" (phiếu nháp) cạnh "Lưu nháp". Bấm là lưu rồi gửi, PO chuyển APPROVED.
+- Bắt buộc truyền `directConfirm` cho mọi nơi render `ProcurementOrderDrawer`. Có hai nơi: `ProcurementListPage.tsx` và `GarageProcurementRequestsPage.tsx`. Thiếu prop ở một nơi thì nút không hiện (đã gặp và sửa 2026-11-11).
+- Có E2E Playwright cho luồng này: xem `erp-web/e2e/` và skill `erp-e2e-playwright`.
+
+## 14. Cập nhật 2026-11-11: hóa đơn/NCC, nhập nhiều đợt, xóa vĩnh viễn
+
+- **Hóa đơn → NCC (đơn Garage)**: `ProcurementInvoicePicker` (combobox hóa đơn mua vào, tìm kiếm + cuộn tải thêm) ở hàng riêng; NCC ở hàng dưới, chỉ đọc "Tự điền theo hóa đơn". Chọn hóa đơn điền `supplierName` theo người bán và tìm NCC cùng MST (`findSupplierByTaxCode`); bỏ hóa đơn thì xóa NCC. Thiếu quyền đọc `invoices` thì lùi về ô text + chọn NCC. Số hóa đơn được gửi lúc tạo (`toOrderCreatePayload`).
+- **Nhập nhiều đợt**: bảng dòng PO đã phát hành có cột Đã nhận / Còn lại (`showReceived`, `ProcurementLinesEditor.columns.received.tsx`); mục "Lịch sử nhập kho" (`ProcurementReceiptsSection`, nhận `receiptHistory` qua props, Garage tải bằng `listGarageOrderReceipts` lọc `garageProcurementOrderId`); bấm số phiếu mở `/garage-goods-receipts?receipt=<id>`. Form phiếu giới hạn số nhận theo `maxQty`.
+- **Xóa vĩnh viễn chỉ ở bộ lọc "Đã xóa mềm"**: `buildProcurementRowActions` không còn nhận `purgeActions`; `useProcurementListTabState` chỉ trả nhóm "Xóa vĩnh viễn" khi bộ lọc có sẵn là "Đã xóa mềm" (cần quyền `purge`, chỉ phiếu nháp). Test: `useProcurementListTabState.test.tsx`.
+- **V2 component**: `ProcurementReceiptsSection`, `ProcurementInvoicePicker`, `ProcurementLinesEditor` dùng `V2Text`/`V2Button` (không còn `<p>/<span>/<button>` thô). `ProcurementLinesEditor.helper.ts` giữ phần chèn cột và tổng chân bảng để file < 180 dòng.
+
+## 7. Cập nhật 2026-11-12: Tạo mới / Cập nhật và bỏ Gửi duyệt riêng
+
+- Drawer PR Garage: Hủy | Lưu nháp | Gửi duyệt (từ 2026-11-14, xem mục 17). Chỉ nút Gửi duyệt gửi duyệt, qua `api.saveAndSubmit` (`POST` / `PATCH .../save-and-submit`, một request).
+- Khóa duyệt bật: modal chọn người duyệt (`SubmitApprovalModal`) mở trước khi gọi. `ProcurementListPage` và `GarageProcurementRequestsPage` truyền `approvalConfigPath` cho drawer để tải danh sách người duyệt.
+- PR nháp không còn "Gửi duyệt" ở menu dòng (`availableActions` lọc `submit`) và trong drawer xem.
+- Code: `ProcurementRequestDrawer.save.hook.ts` (tách khỏi `biz.hook`), `ProcurementRequestDrawer.hook.ts`.
+
+## 15. Cập nhật 2026-11-12: cột chứng từ liên quan (PR ↔ PO)
+
+- Tab Đề nghị có cột **Đơn mua liên quan** (`relatedOrders`): PO đầu hiện kèm copy và icon ngăn kéo mở drawer PO; từ PO thứ hai hiện chip `+N` (Popover liệt kê, bấm để mở). Không có PO thì hiện "—".
+- Tab Đơn mua có cột **Đề nghị mua** (`requestNo`): mở drawer PR ngay trên trang.
+- Molecule dùng chung: `core/procurement/components/molecules/procurement-linked-doc-cell/` (`ProcurementLinkedDocCell`, bọc `V2TableText`).
+- Nối mở chéo ở `GarageProcurementRequestsPage.hook.ts`: tab đề nghị truyền `ordersState.openView`, tab đơn mua truyền `requestsState.openView` qua input `openLinked` của `useProcurementListTabState`. `buildColumns(t, openDetail, openLinked)`.
+- `useProcurementList.openView` đã bọc `useCallback` để cột không dựng lại mỗi render.
+- Cột không có `headerFilter`: không lọc, không sắp xếp theo cột liên kết. Cả hai cột có trong view `overview` và `all`, `mobileSlot: "meta"`.
+- Drawer PO mục "Từ đề nghị mua" hiển thị `requestNo` thay vì UUID.
+
+## 16. Cập nhật 2026-11-12: header filter cho cột liên kết
+
+- Cột **Đơn mua liên quan** (tab đề nghị) và **Đề nghị mua** (tab đơn mua) dùng `headerFilter(label)`, nên có popover lọc và gợi ý giá trị từ server qua `fetchOptions` (key cột là `relatedOrders` hoặc `requestNo`). Không thêm API client.
+- Cột **Đề nghị mua** đã dời xuống cuối bảng tab đơn mua và đứng cuối trong view visibility (`garageProcurementOrders.config.tsx`). Không có skill web riêng cho đơn mua, nên mục này ghi tại đây.
+- Test: `core/procurement/columns/procurementColumns.test.tsx` (có filter, thứ tự cuối).
+
+## 17. Cập nhật 2026-11-14: nút Gửi duyệt trong drawer
+
+- Nút chính của drawer PR Garage (tạo mới và sửa nháp) có nhãn "Gửi duyệt" (`v2.procurement.actions.submit`), thay cho "Tạo mới" / "Cập nhật". Vẫn gọi `onSubmitRequest` và vẫn khóa theo `isSubmitAllowed` (chỉ người tạo gửi duyệt).
+- Hook: `ProcurementRequestDrawer.biz.hook.ts` (`creating` không còn dùng trong footer; prop vẫn có trong type để không ảnh hưởng nơi gọi). Nhãn "Tạo mới"/"Cập nhật" của `ProcurementOrderDrawer` (PO) không đổi.
+- Test: `ProcurementRequestDrawer.save.hook.test.tsx` (sửa nháp và tạo mới đều ra "Gửi duyệt"), `ProcurementRequestDrawer.mode.test.tsx`.
+- Thông báo thu hồi/hủy phía API: xem `erp-api/.agents/skills/modules/garage-procurement-requests/SKILL.md` mục 16.
+
+## 18. Cập nhật 2026-11-15: ma trận quyền cho hủy và xóa; người duyệt chỉ duyệt/từ chối
+- Hủy và Xóa không còn kiểm người tạo ở web: hiện theo quyền (`config.availableActions` và `useV2HasPermission`), khớp API. `CREATOR_ONLY_ACTION_REASON` (`src/v2/core/procurement/procurement.creator.ts`) chỉ còn `submit`.
+- Người duyệt được chỉ định (khác người tạo, khóa duyệt bật) chỉ thấy Duyệt/Từ chối: `applyApprovalGate` (`src/v2/core/procurement/approval/approval.gate.ts`) có nhánh `isApproverOnly`. Không có cấu hình duyệt (họ thường) thì không đổi.
+- Menu dòng: builder tách nhóm chuyển trạng thái sang `hooks/procurementRowTransitions.tsx` (giữ `procurementRowActions.builder.tsx` dưới 250 dòng).
+- Drawer PR: "Hủy" chỉ bị khóa theo người tạo đã bỏ; "Gửi duyệt" vẫn khóa theo `isCreator`.
+- Lý do đã xóa khỏi i18n: `cancelNotCreatorReason`, `deleteNotCreatorReason`.
+- Test: `approval.gate.test.ts`, `procurementRowActions.builder.test.tsx`, `ProcurementRequestDrawer.biz.hook.test.tsx`, `procurement.creator.test.ts`.
+- E2E `e2e/garage-procurement.e2e.mjs` mục J1–J5 (2026-11-15): J1–J5 PASS. Tổng 86: PASS 82, FAIL 4 (G1, G5, I3, E4; ngoài phạm vi, chưa kiểm baseline).
+## Hợp đồng phân trang chuẩn v2 (pagination)
+
+- API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.
+- Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
+- Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
+- Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.

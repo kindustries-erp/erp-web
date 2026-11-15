@@ -72,7 +72,7 @@ export function ProcurementOrderSummarySection({
     {
       key: "sourceRequest",
       label: t("v2.procurement.fields.sourceRequest", "Từ đề nghị mua"),
-      value: detail?.requestId ?? "—",
+      value: detail?.requestNo ?? "—",
       hidden: !form.requestId,
     },
   ];

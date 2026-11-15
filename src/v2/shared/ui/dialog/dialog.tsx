@@ -58,8 +58,8 @@ const DialogContent = React.forwardRef<
         ref={ref}
         className={cn(
           "fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%]",
-          "rounded-2xl border border-[color:var(--popup-border,rgba(226,232,240,0.8))] bg-[var(--modal-bg,rgba(246,248,252,0.75))]",
-          "backdrop-blur-[var(--glass-blur,16px)] text-foreground",
+          "rounded-2xl border border-[color:var(--popup-border,rgba(226,232,240,0.8))] bg-[var(--modal-bg,rgba(246,248,252,0.96))]",
+          "backdrop-blur-[var(--glass-blur,8px)] text-foreground",
           "p-6 shadow-[var(--drawer-shadow,var(--popup-shadow,0_24px_48px_-12px_rgba(15,23,42,0.22)))] duration-150",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",

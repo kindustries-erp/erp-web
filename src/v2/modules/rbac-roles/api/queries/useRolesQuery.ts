@@ -24,7 +24,7 @@ export function useRolesQuery(
 
   return {
     items: (result.data?.items ?? []) as Role[],
-    total: result.data?.total ?? 0,
+    total: result.data?.pagination.total ?? 0,
     loading: result.isFetching,
     refetch: () => void result.refetch(),
   };

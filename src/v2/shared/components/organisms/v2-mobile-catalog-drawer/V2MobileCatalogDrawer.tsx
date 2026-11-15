@@ -7,10 +7,7 @@ import {
   V2BadgeVariant,
 } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import {
-  V2MobileAppearanceSettings,
-  V2MobileNavCustomizeBar,
-} from "@/v2/shared/components/molecules";
+import { V2MobileNavCustomizeBar } from "@/v2/shared/components/molecules";
 import { V2MobileCatalogSectionList } from "../v2-mobile-catalog-section-list";
 import type { V2MobileCatalogDrawerProps } from "./V2MobileCatalogDrawer.type";
 
@@ -21,8 +18,6 @@ export const V2MobileCatalogDrawer: React.FC<V2MobileCatalogDrawerProps> = ({
   filteredSectionsCount,
   searchQuery,
   onSearchChange,
-  currentTheme,
-  onThemeChange,
   isCustomizing,
   limitWarning,
   currentCount,
@@ -66,14 +61,6 @@ export const V2MobileCatalogDrawer: React.FC<V2MobileCatalogDrawerProps> = ({
       icon={LayoutGrid}
     >
       <div className="space-y-4 pb-6">
-        {/* Quick theme & language settings */}
-        {!searchQuery && (
-          <V2MobileAppearanceSettings
-            currentTheme={currentTheme}
-            onThemeChange={onThemeChange}
-          />
-        )}
-
         {/* Quick actions customization bar */}
         {!searchQuery && (
           <V2MobileNavCustomizeBar

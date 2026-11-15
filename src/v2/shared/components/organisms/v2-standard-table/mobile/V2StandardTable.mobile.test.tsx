@@ -179,16 +179,29 @@ describe("V2StandardTableMobile", () => {
     expect(onRefresh).toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Toàn màn hình" })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Bộ lọc dữ liệu" }));
+    fireEvent.click(screen.getByTestId("v2-table-mobile-search-filter-btn"));
     expect(screen.queryByRole("option", { name: /Tổng quan/ })).toBeNull();
     fireEvent.click(screen.getByRole("option", { name: /Mới/ }));
     expect(onChange).toHaveBeenCalledWith("new");
   });
 
-  it("opens the column filter panel in a mobile modal", () => {
-    render({ toolbar: { filterPanel: {} } });
-    fireEvent.click(screen.getByRole("button", { name: "Bộ lọc" }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/Bộ lọc theo cột/)).toBeInTheDocument();
+  it("opens unified search and column filter bottom sheet on mobile", () => {
+    const onQueryChange = vi.fn();
+    render({
+      toolbar: { search: {}, filterPanel: {} },
+      onQueryChange,
+    });
+    fireEvent.click(screen.getByTestId("v2-table-mobile-search-filter-btn"));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText(/Bộ lọc theo cột/)).toBeInTheDocument();
+
+    const searchInput = within(dialog).getByLabelText("Tìm kiếm...");
+    fireEvent.change(searchInput, { target: { value: "HD-001" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Áp dụng" }));
+
+    expect(onQueryChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ search: "HD-001" }),
+    );
   });
 });

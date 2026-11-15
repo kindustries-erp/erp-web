@@ -2,7 +2,7 @@ import * as React from "react";
 import { Copy, RotateCcw } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
-import { V2FilterColumnSearch } from "@/v2/shared/components/molecules/v2-filter-panel";
+import { V2FilterColumnSearch } from "@/v2/shared/components/molecules/v2-filter-column-search";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import type { V2TableState } from "../hooks/V2StandardTable.state.hook";

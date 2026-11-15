@@ -19,11 +19,13 @@ import { isProcurementFormDirty } from "../../../form/procurementDirty";
 import {
   applyApprovalGate,
   NO_APPROVAL_GATE,
+  requiresApproverPick,
 } from "../../../approval/approval.gate";
 import type { ProcurementRequestDetail } from "../../../procurement.types";
 import { showProcurementWarning } from "../../../procurement.toast";
 import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
-import { useProcurementRequestSave } from "./ProcurementRequestDrawer.biz.hook";
+import { useApproversQuery } from "../../../hooks/useApproversQuery";
+import { useProcurementRequestSave } from "./ProcurementRequestDrawer.save.hook";
 
 export type ProcurementDrawerTabKey = "general" | "traceability";
 
@@ -46,6 +48,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
   );
   const [errors, setErrors] = React.useState<ProcurementRequestFormErrors>({});
   const [discardOpen, setDiscardOpen] = React.useState(false);
+  const [approverOpen, setApproverOpen] = React.useState(false);
 
   const detail = useQuery({
     queryKey: [props.queryKey, "detail", props.documentId],
@@ -78,7 +81,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
 
   const availableActions = React.useMemo<ProcurementActionKey[]>(() => {
     if (creating || !detail.data) return [];
-    return applyApprovalGate(
+    const gated = applyApprovalGate(
       availableProcurementActions(PROCUREMENT_REQUEST_FROM, status),
       props.approval ?? NO_APPROVAL_GATE,
       {
@@ -86,7 +89,13 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
         createdBy: detail.data.createdBy,
       },
     );
-  }, [creating, detail.data, status, props.approval]);
+    // Gửi duyệt chỉ đi qua "Tạo mới / Cập nhật": bỏ "Gửi duyệt" riêng của PR nháp
+    return props.submitFromDrawer
+      ? gated.filter((action) => action !== "submit")
+      : gated;
+  }, [creating, detail.data, status, props.approval, props.submitFromDrawer]);
+
+  const approvers = useApproversQuery(props.approvalConfigPath, approverOpen);
 
   const save = useProcurementRequestSave({
     api: props.api,
@@ -105,20 +114,39 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
     value: ProcurementRequestFormValue[K],
   ) => setForm((current) => ({ ...current, [key]: value }));
 
-  const submit = () => {
+  /** Kiểm tra trường bắt buộc, báo lỗi nếu thiếu. */
+  const validateRequest = (): boolean => {
     const next = validateRequestForm(form, branchOptional);
     setErrors(next);
-    if (hasRequestFormErrors(next)) {
-      showProcurementWarning(
-        t("v2.procurement.drawer.missingInfo", "Thiếu thông tin"),
-        t(
-          "v2.procurement.drawer.fillRequired",
-          "Vui lòng điền các trường bắt buộc",
-        ),
-      );
-      return;
-    }
-    save.mutate();
+    if (!hasRequestFormErrors(next)) return true;
+    showProcurementWarning(
+      t("v2.procurement.drawer.missingInfo", "Thiếu thông tin"),
+      t(
+        "v2.procurement.drawer.fillRequired",
+        "Vui lòng điền các trường bắt buộc",
+      ),
+    );
+    return false;
+  };
+
+  const submit = () => {
+    if (validateRequest()) save.mutate(undefined);
+  };
+
+  /**
+   * Tạo mới / Cập nhật: lưu và gửi duyệt một request. Khóa duyệt bật thì chọn người duyệt trước
+   * (modal), rồi mới gọi; tắt thì gọi thẳng.
+   */
+  const submitRequest = () => {
+    if (!validateRequest()) return;
+    const gate = props.approval ?? NO_APPROVAL_GATE;
+    if (requiresApproverPick(gate, "submit")) setApproverOpen(true);
+    else save.mutate({ submit: true });
+  };
+
+  const confirmApprover = (approverId: string) => {
+    setApproverOpen(false);
+    save.mutate({ submit: true, approverId });
   };
 
   /** Hủy sửa: tạo mới thì đóng; bản ghi cũ có thay đổi thì hỏi trước, rồi về chế độ xem. */
@@ -161,6 +189,12 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
     loading: detail.isFetching,
     saving: save.isPending,
     submit,
+    submitRequest,
+    approverOpen,
+    approvers: approvers.data ?? [],
+    approversLoading: approvers.isFetching,
+    closeApprover: () => setApproverOpen(false),
+    confirmApprover,
     cancelEdit,
     discardOpen,
     closeDiscard: () => setDiscardOpen(false),

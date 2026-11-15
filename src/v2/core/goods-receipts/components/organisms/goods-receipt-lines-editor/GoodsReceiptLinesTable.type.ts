@@ -1,3 +1,4 @@
+import type { V2DrawerLinesLayout } from "@/v2/shared/components";
 import type { ReactNode } from "react";
 import type { GoodsReceiptFormLine } from "@/v2/core/goods-receipts";
 
@@ -13,6 +14,8 @@ export interface LineColumnRenderContext {
     field: keyof GoodsReceiptFormLine,
     val: string,
   ) => void;
+  /** Cập nhật nhiều trường của một dòng trong một lần ghi */
+  onPatch: (index: number, patch: Partial<GoodsReceiptFormLine>) => void;
   onRemove: (index: number) => void;
 }
 
@@ -20,8 +23,7 @@ export interface GoodsReceiptLineColumn {
   id: string;
   headerKey: string;
   defaultHeader: string;
-  headerClassName?: string;
-  cellClassName?: string;
+  layout: V2DrawerLinesLayout;
   hideWhenViewing?: boolean;
   renderCell: (ctx: LineColumnRenderContext) => ReactNode;
 }

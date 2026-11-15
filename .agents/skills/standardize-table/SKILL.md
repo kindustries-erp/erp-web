@@ -1,13 +1,13 @@
 ---
 name: standardize-table
-description: Chuẩn Bảng dữ liệu của erp-web, gồm V1 (DataTable, SpreadsheetPageTemplate) và V2 (V2StandardTable). Dùng khi tạo hoặc sửa trang bảng, cột, filter/sort, subtotal, phân trang, view mode, bảng nhúng trong drawer hoặc modal. Create or enhance a DataTable page following ERP UI standards. Nạp erp-web-truth trước; cấu trúc Atomic xem erp-web-structure.
+description: Chuẩn Bảng dữ liệu của erp-web, gồm V1 (DataTable, SpreadsheetPageTemplate) và V2 (V2StandardTable). Dùng khi tạo hoặc sửa trang bảng, cột, filter/sort, subtotal, phân trang, view mode, bảng nhúng trong drawer hoặc modal. Create or enhance a DataTable page following ERP UI standards. Nạp erp-web-truth trước; cấu trúc Atomic xem erp-ui-structure.
 ---
 
 # ERP Web — Table Standards
 
 Skill gộp mọi chuẩn bảng của `erp-web`: luật cột và bảng, trang bảng, và bản V2. SKILL.md này chỉ định tuyến; chi tiết nằm trong `references/` (đường dẫn đầy đủ bên dưới, vì adapter của agent không nạp thư mục `references/`).
 
-Nạp `erp-web-truth` trước để có ngữ cảnh repo. Cấu trúc Atomic, giới hạn 180 dòng và audit chung nằm ở `erp-web-structure`.
+Nạp `erp-web-truth` trước để có ngữ cảnh repo. Cấu trúc Atomic, giới hạn 180 dòng và audit chung nằm ở `erp-ui-structure`.
 
 ## 1. Chọn hướng xử lý
 

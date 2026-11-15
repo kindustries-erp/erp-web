@@ -1,3 +1,4 @@
+import type { V2DrawerLinesLayout } from "@/v2/shared/components";
 import type { ReactNode } from "react";
 import type { PurchaseOrderFormLine } from "../../../domain/purchaseOrderLine";
 
@@ -20,8 +21,7 @@ export interface PurchaseOrderLineColumn {
   id: string;
   headerKey: string;
   defaultHeader: string;
-  headerClassName?: string;
-  cellClassName?: string;
+  layout: V2DrawerLinesLayout;
   /** Ẩn khi đang xem (chỉ đọc) */
   hideWhenViewing?: boolean;
   /** Ẩn khi đang tạo mới (ví dụ SL đã nhận chỉ có ý nghĩa sau khi lưu) */

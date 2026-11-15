@@ -3,7 +3,7 @@ import type { V2TablePreferenceEntry } from "./v2TablePreferences.type";
 
 /** V1: `PATCH …/table-preferences/:tableId` cho mọi bảng chưa chuyển sang V2 */
 export const V2_TABLE_PREFERENCES_PATH = "/api/v1/app/table-preferences";
-/** V2 (`/api-structure`): module `table-preferences` của API v2 */
+/** V2 (`/erp-api-structure`): module `table-preferences` của API v2 */
 export const V2_TABLE_PREFERENCES_V2_PATH = "/api/v2/table-preferences";
 /**
  * Tableid có tiền tố này đi qua API v2. Đổi danh sách để chuyển thêm họ bảng sang v2;
@@ -11,6 +11,7 @@ export const V2_TABLE_PREFERENCES_V2_PATH = "/api/v2/table-preferences";
  */
 export const V2_TABLE_PREFERENCES_V2_PREFIXES: readonly string[] = [
   "procurement-",
+  "inventory-movements-",
 ];
 const SYNC_DEBOUNCE_MS = 500;
 

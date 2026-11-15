@@ -71,6 +71,45 @@ describe("ProcurementRequestHeaderSection", () => {
     expect(order("Ngày cần hàng", "Nội dung")).toBeTruthy();
   });
 
+  it("Garage (chi nhánh tùy chọn) chế độ xem: chi nhánh đứng sau ngày cần hàng", () => {
+    render(
+      <ProcurementRequestHeaderSection
+        form={baseForm}
+        errors={{}}
+        headerViewing
+        branchLocked
+        branchOptional
+        setField={vi.fn()}
+      />,
+    );
+    const follows = (a: string, b: string) =>
+      Boolean(
+        screen.getByText(a).compareDocumentPosition(screen.getByText(b)) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    expect(follows("Ngày cần hàng", "Chi nhánh")).toBe(true);
+    expect(follows("Chi nhánh", "Nội dung")).toBe(true);
+  });
+
+  it("Garage chế độ sửa: chi nhánh nằm sau ngày cần hàng, trước nội dung", () => {
+    render(
+      <ProcurementRequestHeaderSection
+        form={baseForm}
+        errors={{}}
+        headerViewing={false}
+        branchLocked={false}
+        branchOptional
+        setField={vi.fn()}
+      />,
+    );
+    const labels = screen
+      .getAllByText(/^(Ngày đề nghị|Ngày cần hàng|Chi nhánh|Nội dung|Ghi chú)/)
+      .map((el) => el.textContent);
+    const idx = (s: string) => labels.findIndex((l) => l?.startsWith(s));
+    expect(idx("Ngày cần hàng")).toBeLessThan(idx("Chi nhánh"));
+    expect(idx("Chi nhánh")).toBeLessThan(idx("Nội dung"));
+  });
+
   it("chế độ sửa: chi nhánh đứng trước nội dung và hai ngày nằm cùng một lưới", () => {
     render(
       <ProcurementRequestHeaderSection

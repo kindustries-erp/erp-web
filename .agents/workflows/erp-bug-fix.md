@@ -6,6 +6,8 @@ description: Quy trình sửa lỗi có kiểm chứng cho erp-web (đánh giá 
 
 Dùng khi user báo lỗi hoặc yêu cầu sửa bug trong `erp-web`. Khác `/erp-review` (chỉ hỏi đáp, không sửa) và `/erp-plan` (tính năng, refactor): workflow này đi từ tái hiện lỗi tới kết luận có bằng chứng. Phần plan, `OK` và theo dõi Plane vẫn theo `/erp-plan`.
 
+Nạp trước: `erp-web-truth` và `erp-ui-structure`. Rule cấu trúc cần tuân thủ được lấy từ `/erp-local-changes-audit` (bảng rule web), không chép lại ở đây. Lỗi nằm trong module V2 (`src/v2/`) thì áp dụng thêm chuẩn V2 của skill tương ứng (`standardize-table`, `standardize-drawer`, `standardize-modal`).
+
 ---
 
 ## 🛡️ Nguyên Tắc
@@ -31,20 +33,28 @@ Dùng khi user báo lỗi hoặc yêu cầu sửa bug trong `erp-web`. Khác `/e
 
 1. Trình bày: nguyên nhân gốc, cách sửa tối thiểu, file sẽ đổi, test sẽ thêm, rủi ro hồi quy.
 2. Tiêu chí chấp nhận dạng `AC-n` (ít nhất: lỗi không còn tái hiện, không hỏng hành vi lân cận).
+3. **Tuân thủ cấu trúc**: liệt kê file sẽ chạm tới và số dòng hiện tại. Nếu fix làm file `.tsx`/`.hook.ts` vượt 180 dòng (cảnh báo) hoặc 250 dòng (chặn), plan phải có task tách file trước. Thẻ HTML trần trong `src/v2/**` phải dùng V2 Atom, thiếu atom thì nêu task tạo bằng `bun run plop v2-component`.
 3. **DỪNG**: chờ user trả lời `OK` hoặc `Confirm`. Sau `OK`, hỏi về Plane theo mục "Sau `OK`" của `/erp-plan`. Nếu lỗi nhỏ và user đã yêu cầu sửa thẳng, vẫn phải nêu nguyên nhân và cách sửa trong một đoạn ngắn trước khi sửa.
 
 ### 🔹 BƯỚC 3: Fix và Test
 
 1. **Đỏ trước**: viết hoặc cập nhật spec (`*.spec.tsx` / `*.test.ts`) tái hiện đúng lỗi, chạy thấy đỏ.
-2. Sửa tối thiểu theo kế hoạch đã duyệt. Giữ chuẩn của repo (giới hạn 180 dòng, i18n, token màu, DTO có class).
+2. Sửa tối thiểu theo kế hoạch đã duyệt. Giữ chuẩn của repo, theo đúng bảng rule của `/erp-local-changes-audit` web: giới hạn dòng, V2 Atom, token màu (không `blue-*`, không opacity trên token `var()`), i18n VI/EN với key `v2.*` trong V2, tên hook (`[Component].hook.ts` / `use<Tên>.ts`), import một chiều, core theo họ qua barrel, React Query cho server state, DTO có class.
 3. **Xanh sau**: chạy scoped verification: `bunx vitest run <spec>` hoặc `bunx vitest related <file> --run` (chỉ khi có spec), còn lại `bunx tsc --noEmit`. Không chạy full test hay full build ở bước này.
 4. Cập nhật `.agents/skills/modules/<module>/SKILL.md` nếu đổi DTO, API, schema hoặc business rule (Knowledge-Sync Guard).
 
 ### 🔹 BƯỚC 4: Verdict (kết luận có bằng chứng)
 
+**Cổng audit trước kết luận** (chỉ đọc, trên các file đã đổi, theo `/erp-local-changes-audit`):
+1. Đo dòng: `wc -l <file>` với `.tsx` và `.hook.ts` đã đổi.
+2. Quét thẻ HTML trần trong `src/v2/**` và màu raw (`slate-`, `zinc-`, `gray-`, `#hex`, `blue-*`).
+3. Kiểm tra tên hook, i18n (không chuỗi cứng), test đi kèm.
+
+Nếu có FAIL trong cổng này, verdict tối đa là `partial`, kèm danh sách FAIL và plan sửa theo `/erp-plan`. Không tự sửa phần FAIL ngoài phạm vi lỗi.
+
 | Kết luận | Điều kiện |
 | :--- | :--- |
-| `verified` | Đã tái hiện lỗi trước khi sửa; test tái hiện từ đỏ sang xanh (hoặc có cách kiểm chứng thay thế đã nêu); scoped verification pass; không thấy hồi quy ở hành vi lân cận. |
+| `verified` | Đã tái hiện lỗi trước khi sửa; test tái hiện từ đỏ sang xanh (hoặc có cách kiểm chứng thay thế đã nêu); scoped verification pass; cổng audit không có FAIL; không thấy hồi quy ở hành vi lân cận. |
 | `partial` | Triệu chứng hết nhưng chưa xác định nguyên nhân gốc, hoặc còn bước kiểm chưa chạy được, hoặc chỉ sửa một phần các tình huống. Nêu rõ phần còn lại. |
 | `failed` | Lỗi vẫn tái hiện, hoặc cách sửa gây hồi quy. Không giữ thay đổi sai; nêu những gì đã loại trừ. |
 

@@ -65,11 +65,11 @@ describe("procurementColumns", () => {
     expect(screen.getByText("APPROVED")).toBeInTheDocument();
   });
 
-  it("buildProcurementRequestColumns tạo đủ 8 cột với đầy đủ filter và format", () => {
+  it("buildProcurementRequestColumns tạo đủ 10 cột với đầy đủ filter và format", () => {
     const openDetail = vi.fn();
     const columns = buildProcurementRequestColumns(mockT, openDetail);
 
-    expect(columns).toHaveLength(9);
+    expect(columns).toHaveLength(10);
     const keys = columns.map((c) => c.key);
     expect(keys).toEqual([
       "requestNo",
@@ -79,6 +79,7 @@ describe("procurementColumns", () => {
       "estimatedTotal",
       "status",
       "orderingStatus",
+      "relatedOrders",
       "createdBy",
       "approver",
     ]);
@@ -222,5 +223,73 @@ describe("procurementColumns", () => {
     );
     expect(getProcurementBadgeVariant("UNPAID")).toBe(V2BadgeVariant.OUTLINE);
     expect(getProcurementBadgeVariant("ISSUED")).toBe(V2BadgeVariant.WARNING);
+  });
+
+  it("cột Đơn mua liên quan (PR) hiện PO đầu, mở PO bằng openLinked", () => {
+    const openLinked = vi.fn();
+    const columns = buildProcurementRequestColumns(
+      mockT,
+      undefined,
+      openLinked,
+    );
+    const col = columns.find((c) => c.key === "relatedOrders");
+    expect(col).toBeDefined();
+
+    const row = {
+      id: "req-1",
+      requestNo: "PR-1",
+      status: "APPROVED",
+      orderingStatus: "PARTIAL",
+      createdAt: "2026-11-12T00:00:00Z",
+      createdBy: null,
+      branchName: null,
+      title: null,
+      relatedOrders: [
+        { id: "po-1", orderNo: "PO-0001", status: "ISSUED" },
+        { id: "po-2", orderNo: "PO-0002", status: "DRAFT" },
+      ],
+    } as ProcurementRequestRow;
+
+    render(<>{col!.cell(row, 0)}</>);
+    expect(screen.getByText("PO-0001")).toBeTruthy();
+    expect(screen.getByText("+1")).toBeTruthy();
+
+    fireEvent.click(screen.getByText("PO-0001"));
+    expect(openLinked).toHaveBeenCalledWith("po-1");
+  });
+
+  it("cột Đề nghị mua (PO) hiện số đề nghị và mở PR bằng openLinked", () => {
+    const openLinked = vi.fn();
+    const columns = buildProcurementOrderColumns(mockT, undefined, openLinked);
+    const col = columns.find((c) => c.key === "requestNo");
+    expect(col).toBeDefined();
+
+    const linked = {
+      id: "po-1",
+      orderNo: "PO-0001",
+      requestId: "req-9",
+      requestNo: "PR-9",
+    } as never;
+    const { unmount } = render(<>{col!.cell(linked, 0)}</>);
+    fireEvent.click(screen.getByText("PR-9"));
+    expect(openLinked).toHaveBeenCalledWith("req-9");
+    unmount();
+
+    const direct = { id: "po-2", orderNo: "PO-0002", requestId: null } as never;
+    render(<>{col!.cell(direct, 0)}</>);
+    expect(screen.getByText("—")).toBeTruthy();
+  });
+
+  it("cột Đề nghị mua (PO) nằm cuối bảng và có header filter", () => {
+    const columns = buildProcurementOrderColumns(mockT);
+    expect(columns[columns.length - 1].key).toBe("requestNo");
+    expect(columns.find((c) => c.key === "requestNo")?.filter).toBeDefined();
+  });
+
+  it("cột Đơn mua liên quan (PR) có header filter để lọc theo số PO", () => {
+    const columns = buildProcurementRequestColumns(mockT);
+    expect(
+      columns.find((c) => c.key === "relatedOrders")?.filter,
+    ).toBeDefined();
   });
 });

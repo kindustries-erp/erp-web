@@ -20,6 +20,7 @@ export interface ProcurementRequestSectionsProps {
 const LINES_ERROR_KEY = {
   empty: "v2.procurement.errors.linesEmpty",
   itemName: "v2.procurement.errors.itemName",
+  itemCode: "v2.procurement.errors.itemCode",
   qty: "v2.procurement.errors.qty",
 } as const;
 

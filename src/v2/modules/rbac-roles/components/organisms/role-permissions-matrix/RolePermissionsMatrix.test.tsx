@@ -67,4 +67,29 @@ describe("RolePermissionsMatrix", () => {
       screen.getByText("Chưa có danh sách tài nguyên"),
     ).toBeInTheDocument();
   });
+
+  it("renders tools group with loans resource when provided", () => {
+    const resourcesWithLoans: ResourceItem[] = [
+      { resource: "loans", label: "Khoản vay & Lãi suất" },
+    ];
+    const permMapWithLoans: PermissionMap = {
+      loans: { create: true, read: true, update: false, delete: false },
+    };
+
+    render(
+      <RolePermissionsMatrix
+        permMap={permMapWithLoans}
+        setPermMap={vi.fn()}
+        resources={resourcesWithLoans}
+        loading={false}
+        error={null}
+        isView={false}
+        t={(_k, fb) => fb ?? ""}
+      />,
+    );
+
+    expect(screen.getByText("Công cụ & Tiện ích")).toBeInTheDocument();
+    expect(screen.getByText("Khoản vay & Lãi suất")).toBeInTheDocument();
+    expect(screen.getByText("2 quyền được cấp")).toBeInTheDocument();
+  });
 });

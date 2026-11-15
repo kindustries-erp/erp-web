@@ -1,7 +1,12 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { FileText, Boxes, TrendingUp, RotateCcw } from "lucide-react";
-import { V2TabBar, V2Text, type V2TabItemData } from "@/v2/shared/components";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+  V2Text,
+  type V2TabItemData,
+} from "@/v2/shared/components";
 import { Button } from "@/shared/components/ui/Button";
 
 export * from "./ErpInvoiceDetailTabNav";
@@ -59,7 +64,7 @@ export const ErpInvoicePartnerSubTabNav = React.memo(
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full">
           <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1">
             <V2TabBar
-              variant="sub"
+              variant={V2TabBarVariant.SUB}
               activeTabKey={partnerSubTab}
               onTabChange={(k) => onPartnerSubTabChange(k as PartnerSubTabMode)}
               tabs={partnerTabs}

@@ -39,7 +39,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           "group relative flex items-center justify-center transition-all duration-150 select-none hover:bg-transparent mx-auto active:scale-95 touch-manipulation [-webkit-tap-highlight-color:transparent] outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus:bg-transparent shadow-none",
           showLabel
             ? "h-auto flex-col py-1.5 px-1 text-xs font-medium rounded-lg min-w-0 max-w-[64px] w-full"
-            : "h-10 w-10 p-0 rounded-xl",
+            : "h-9 w-9 p-0 rounded-lg",
           isActive
             ? "text-foreground font-semibold"
             : "text-muted-fg hover:text-foreground",
@@ -56,7 +56,7 @@ export const V2NavItem: React.FC<V2NavItemProps> = ({
           <V2NavIcon
             icon={icon}
             isActive={isActive}
-            size={showLabel ? 18 : 22}
+            size={showLabel ? 18 : 20}
             className={cn(
               "transition-transform duration-200",
               isActive && "text-foreground",

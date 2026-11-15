@@ -76,4 +76,25 @@ describe("GoodsReceiptLinesTable", () => {
     expect(next.unit).toBe("Cái");
     expect(next.clientKey).toBeTruthy();
   });
+
+  it("chặn số nhận vượt phần còn lại của đơn mua (maxQty)", () => {
+    const onChangeLines = vi.fn();
+    render(
+      <GoodsReceiptLinesTable
+        lines={[{ ...dummyLines[0], qtyReceived: "3", maxQty: 3 }]}
+        viewing={false}
+        t={t}
+        onChangeLines={onChangeLines}
+      />,
+    );
+
+    const qtyInput = screen.getByDisplayValue("3");
+    fireEvent.change(qtyInput, { target: { value: "9" } });
+    fireEvent.blur(qtyInput);
+
+    const calls = onChangeLines.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    const last = calls[calls.length - 1][0] as GoodsReceiptFormLine[];
+    expect(Number(last[0].qtyReceived)).toBeLessThanOrEqual(3);
+  });
 });

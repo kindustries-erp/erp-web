@@ -28,6 +28,7 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
   triggerClassName,
   modal = false,
   style,
+  portalContainer,
 }) => {
   const triggerNode = trigger ?? children;
 
@@ -37,6 +38,7 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
         {triggerNode}
       </PopoverTrigger>
       <PopoverContent
+        container={portalContainer}
         side={side}
         align={align}
         sideOffset={sideOffset}

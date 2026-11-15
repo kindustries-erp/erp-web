@@ -31,24 +31,27 @@ describe("notificationsApi (v2)", () => {
     vi.clearAllMocks();
   });
 
-  it("findAll gọi /api/v2/notifications với pageSize 50 và trả mảng items", async () => {
+  it("findAll gọi /api/v2/notifications-inbox với pageSize 50 và trả mảng items", async () => {
     vi.mocked(axiosInstance.get).mockResolvedValue({
       data: {
         items: [ITEM],
         pagination: { page: 1, pageSize: 50, total: 1, totalPages: 1 },
-        unreadCount: 1,
+        extraData: { unreadCount: 1 },
       },
     } as any);
 
     const result = await notificationsApi.findAll();
 
-    expect(axiosInstance.get).toHaveBeenCalledWith("/api/v2/notifications", {
-      params: { page: 1, pageSize: 50 },
-    });
+    expect(axiosInstance.get).toHaveBeenCalledWith(
+      "/api/v2/notifications-inbox",
+      {
+        params: { page: 1, pageSize: 50 },
+      },
+    );
     expect(result).toEqual([ITEM]);
   });
 
-  it("markAsRead gọi PATCH /:id/read", async () => {
+  it("markAsRead gọi PATCH /:id/read với _silentSuccess: true", async () => {
     vi.mocked(axiosInstance.patch).mockResolvedValue({
       data: { message: "ok" },
     } as any);
@@ -56,17 +59,21 @@ describe("notificationsApi (v2)", () => {
     await notificationsApi.markAsRead("n-1");
 
     expect(axiosInstance.patch).toHaveBeenCalledWith(
-      "/api/v2/notifications/n-1/read",
+      "/api/v2/notifications-inbox/n-1/read",
+      undefined,
+      { _silentSuccess: true },
     );
   });
 
-  it("markAllAsRead gọi PATCH /read-all", async () => {
+  it("markAllAsRead gọi PATCH /read-all với _silentSuccess: true", async () => {
     vi.mocked(axiosInstance.patch).mockResolvedValue({ data: {} } as any);
 
     await notificationsApi.markAllAsRead();
 
     expect(axiosInstance.patch).toHaveBeenCalledWith(
-      "/api/v2/notifications/read-all",
+      "/api/v2/notifications-inbox/read-all",
+      undefined,
+      { _silentSuccess: true },
     );
   });
 
@@ -78,17 +85,17 @@ describe("notificationsApi (v2)", () => {
 
     expect(axiosInstance.delete).toHaveBeenNthCalledWith(
       1,
-      "/api/v2/notifications/n-1",
+      "/api/v2/notifications-inbox/n-1",
     );
     expect(axiosInstance.delete).toHaveBeenNthCalledWith(
       2,
-      "/api/v2/notifications/all",
+      "/api/v2/notifications-inbox/all",
     );
   });
 
   it("không còn URL v1 nào", async () => {
     vi.mocked(axiosInstance.get).mockResolvedValue({
-      data: { items: [], pagination: {}, unreadCount: 0 },
+      data: { items: [], pagination: {}, extraData: { unreadCount: 0 } },
     } as any);
 
     await notificationsApi.findAll();

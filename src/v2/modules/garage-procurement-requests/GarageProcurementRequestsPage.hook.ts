@@ -62,11 +62,17 @@ export function useGarageProcurementActiveTab(
 }
 
 /** Trạng thái đưa vào nhóm lọc có sẵn của từng tab (khớp vòng đời PR và PO) */
-const REQUEST_FILTER_STATUSES = ["DRAFT", "PENDING_APPROVAL", "APPROVED"];
+const REQUEST_FILTER_STATUSES = [
+  "DRAFT",
+  "PENDING_APPROVAL",
+  "APPROVED",
+  "REJECTED",
+];
 const ORDER_FILTER_STATUSES = [
   "DRAFT",
   "PENDING_APPROVAL",
   "APPROVED",
+  "REJECTED",
   "ISSUED",
 ];
 
@@ -101,6 +107,8 @@ export function useGarageProcurementListStates(
     viewVisibility: garageProcurementRequestsDisplay.viewVisibility ?? NO_VIEWS,
     buildColumns: garageProcurementRequestsDisplay.buildColumns,
     statusItems: requestStatusItems,
+    // Cột "Đơn mua liên quan": mở drawer PO ngay trên trang đề nghị
+    openLinked: ordersState.openView,
   });
 
   // Bấm thông báo mở đúng phiếu (?open=&action=) trên tab đề nghị
@@ -114,6 +122,8 @@ export function useGarageProcurementListStates(
     viewVisibility: garageProcurementOrdersDisplay.viewVisibility ?? NO_VIEWS,
     buildColumns: garageProcurementOrdersDisplay.buildColumns,
     statusItems: orderStatusItems,
+    // Cột "Đề nghị mua": mở drawer PR ngay trên trang đơn mua
+    openLinked: requestsState.openView,
   });
 
   return { requests, orders };

@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { V2Size } from "@/v2/shared/types";
+import { V2DrawerMode, V2Size, type V2DrawerModeType } from "@/v2/shared/types";
 import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar";
 import type { DrawerAction } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import type { DrawerRelatedTabItem } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
@@ -28,7 +28,7 @@ export enum V2DrawerSize {
 }
 
 export type V2DrawerSizeType = V2DrawerSize | `${V2DrawerSize}`;
-export type V2DrawerMode = "view" | "edit";
+export { V2DrawerMode, type V2DrawerModeType };
 
 export enum V2DrawerLayout {
   ONE_COLUMN = "1-column",
@@ -62,7 +62,7 @@ export type V2DrawerChildren =
 
 export interface V2StandardDrawerProps {
   open: boolean;
-  mode?: V2DrawerMode;
+  mode?: V2DrawerMode | `${V2DrawerMode}`;
   onClose: () => void;
   onToggleEdit?: () => void;
 

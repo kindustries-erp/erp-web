@@ -2,7 +2,7 @@ import type { Meta } from "@storybook/react";
 import React, { useState } from "react";
 import { FileText, Link2, Wallet } from "lucide-react";
 import { V2TabBar } from "./V2TabBar";
-import type { V2TabBarVariant, V2TabItemData } from "./V2TabBar.type";
+import { V2TabBarVariant, type V2TabItemData } from "./V2TabBar.type";
 
 const meta: Meta<typeof V2TabBar> = {
   title: "Components/Molecules/V2TabBar",
@@ -38,15 +38,15 @@ const Demo = ({ variant }: { variant: V2TabBarVariant }) => {
   );
 };
 
-export const App = () => <Demo variant="app" />;
-export const Header = () => <Demo variant="header" />;
-export const Sub = () => <Demo variant="sub" />;
+export const App = () => <Demo variant={V2TabBarVariant.APP} />;
+export const Header = () => <Demo variant={V2TabBarVariant.HEADER} />;
+export const Sub = () => <Demo variant={V2TabBarVariant.SUB} />;
 export const SubStretch = () => {
   const [active, setActive] = useState("detail");
   return (
     <div className="w-[420px]">
       <V2TabBar
-        variant="sub"
+        variant={V2TabBarVariant.SUB}
         stretch
         tabs={TABS.filter((tab) => !tab.disabled)}
         activeTabKey={active}
@@ -55,8 +55,12 @@ export const SubStretch = () => {
     </div>
   );
 };
-export const ButtonGroup = () => <Demo variant="button-group" />;
-export const Page = () => <Demo variant="page" />;
+export const ButtonGroup = () => (
+  <Demo variant={V2TabBarVariant.BUTTON_GROUP} />
+);
+export const Page = () => <Demo variant={V2TabBarVariant.PAGE} />;
+export const Pill = () => <Demo variant={V2TabBarVariant.PILL} />;
+export const StatusChip = () => <Demo variant={V2TabBarVariant.STATUS_CHIP} />;
 export const PageManyTabs = () => {
   const [active, setActive] = useState("t0");
   const tabs = Array.from({ length: 14 }, (_, i) => ({
@@ -66,7 +70,7 @@ export const PageManyTabs = () => {
   return (
     <div className="w-[480px]">
       <V2TabBar
-        variant="page"
+        variant={V2TabBarVariant.PAGE}
         tabs={tabs}
         activeTabKey={active}
         onTabChange={setActive}

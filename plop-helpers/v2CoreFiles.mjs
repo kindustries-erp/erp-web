@@ -6,11 +6,20 @@
 export function v2CoreFileMap(data) {
   const dir = data.coreDir;
   return [
-    { template: "v2-core/config.type.ts.hbs", path: `${dir}/${data.configFile}.ts` },
-    { template: "v2-core/api-type.ts.hbs", path: `${dir}/${data.apiTypeFile}.ts` },
+    {
+      template: "v2-core/config.type.ts.hbs",
+      path: `${dir}/${data.configFile}.ts`,
+    },
+    {
+      template: "v2-core/api-type.ts.hbs",
+      path: `${dir}/${data.apiTypeFile}.ts`,
+    },
     { template: "v2-core/keys.ts.hbs", path: `${dir}/${data.keysFile}.ts` },
     { template: "v2-core/domain.ts.hbs", path: `${dir}/${data.domainFile}.ts` },
-    { template: "v2-core/locale.ts.hbs", path: `${dir}/${data.family}.locale.ts` },
+    {
+      template: "v2-core/locale.ts.hbs",
+      path: `${dir}/${data.family}.locale.ts`,
+    },
     { template: "v2-core/barrel.ts.hbs", path: `${dir}/index.ts` },
   ];
 }

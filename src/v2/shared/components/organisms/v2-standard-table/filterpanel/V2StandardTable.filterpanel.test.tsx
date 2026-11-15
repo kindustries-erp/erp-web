@@ -13,7 +13,7 @@ const withPanel = (
   extra: Partial<V2TableToolbarConfig> = {},
 ): V2TableToolbarConfig => ({ filterPanel, ...extra });
 
-const panel = () => screen.queryByRole("complementary", { name: "Bộ lọc" });
+const panel = () => screen.queryByRole("dialog", { name: "Bộ lọc" });
 
 describe("V2StandardTable filter panel", () => {
   beforeEach(() => {
@@ -111,10 +111,13 @@ describe("V2StandardTable filter panel", () => {
         expect.objectContaining({ columnFilters: { code: ["HD-001"] } }),
       ),
     );
-    expect(within(p).getByText("(1)")).toBeInTheDocument();
+    expect(within(p).getByTestId("filter-drawer-count")).toHaveTextContent(
+      "(1)",
+    );
     expect(within(p).getByText("Đang lọc (1)")).toBeInTheDocument();
+    // Sheet modal đặt thanh công cụ phía sau thành aria-hidden: tra cứu cả nút ẩn
     expect(
-      screen.getByRole("button", { name: "Xóa bộ lọc (1)" }),
+      screen.getByRole("button", { name: "Xóa bộ lọc (1)", hidden: true }),
     ).toBeInTheDocument();
 
     fireEvent.click(within(p).getByRole("button", { name: "Gỡ bộ lọc: Mã" }));
@@ -135,11 +138,15 @@ describe("V2StandardTable filter panel", () => {
       toolbar: withPanel({ defaultOpen: true }),
     });
     const p = panel() as HTMLElement;
-    expect(within(p).getByText("(2)")).toBeInTheDocument();
+    expect(within(p).getByTestId("filter-drawer-count")).toHaveTextContent(
+      "(2)",
+    );
     fireEvent.click(
       within(p).getByRole("button", { name: "Xóa tất cả bộ lọc" }),
     );
-    await waitFor(() => expect(within(p).queryByText("(2)")).toBeNull());
+    await waitFor(() =>
+      expect(within(p).queryByTestId("filter-drawer-count")).toBeNull(),
+    );
   });
 
   it("extraContent hiện trên danh sách cột", () => {
@@ -150,5 +157,33 @@ describe("V2StandardTable filter panel", () => {
       }),
     });
     expect(screen.getByText("Bộ lọc kỳ")).toBeInTheDocument();
+  });
+});
+
+describe("V2StandardTable filter drawer", () => {
+  beforeEach(() => mockViewport(false));
+  afterEach(() => vi.restoreAllMocks());
+
+  it("có tab Bộ lọc đã lưu; chưa có preset thì hiện gợi ý tạo ở thanh công cụ", () => {
+    renderTable(V2StandardTableDesktop, {
+      toolbar: withPanel({ defaultOpen: true }),
+    });
+    const p = panel() as HTMLElement;
+    fireEvent.click(within(p).getByRole("tab", { name: /Bộ lọc đã lưu/ }));
+    expect(
+      within(p).getByText(
+        "Chưa có bộ lọc đã lưu. Tạo bộ lọc ở thanh công cụ của bảng.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("nút Xóa tất cả bộ lọc bị vô hiệu khi chưa có điều kiện", () => {
+    renderTable(V2StandardTableDesktop, {
+      toolbar: withPanel({ defaultOpen: true }),
+    });
+    const p = panel() as HTMLElement;
+    expect(
+      within(p).getByRole("button", { name: "Xóa tất cả bộ lọc" }),
+    ).toBeDisabled();
   });
 });

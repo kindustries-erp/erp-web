@@ -1,0 +1,42 @@
+export const aiHubVi = {
+  invoice: {
+    launcher: "Trợ lý AI đọc hóa đơn",
+    title: "Trợ lý hóa đơn",
+    subtitle: "Đọc hóa đơn và lập đề nghị mua",
+    greeting:
+      "Gửi ảnh hoặc file PDF hóa đơn. Tôi sẽ đọc các dòng hàng, đối chiếu mã hàng trong danh mục và lập đề nghị mua nháp để bạn kiểm tra.",
+    attach: "Chọn ảnh hoặc file hóa đơn",
+    attachAnother: "Đọc hóa đơn khác",
+    reading: "Đang đọc hóa đơn",
+    creating: "Đang tạo đề nghị mua",
+    summary:
+      "Đã đọc {{count}} dòng hàng. Kiểm tra mã và số lượng rồi xác nhận.",
+    seller: "Nhà cung cấp",
+    invoiceNo: "Số hóa đơn",
+    total: "Tổng tiền",
+    confirm: "Tạo đề nghị mua",
+    reset: "Làm lại",
+    done: "Đã tạo đề nghị mua {{requestNo}}.",
+    createdItems: "Mã hàng mới: {{codes}}",
+    noLines: "Cần ít nhất một dòng hàng để tạo đề nghị mua.",
+    readError: "Không đọc được hóa đơn. Vui lòng thử lại.",
+    createError: "Không tạo được đề nghị mua. Vui lòng thử lại.",
+    rejectType: "Chỉ nhận ảnh JPG, PNG, WEBP hoặc file PDF.",
+    rejectSize: "File vượt quá 10MB.",
+  },
+  line: {
+    matched: "Đã có mã",
+    isNew: "Mã mới",
+    code: "Mã hàng",
+    codeAuto: "Tự sinh mã",
+    qty: "Số lượng",
+    unitPrice: "Đơn giá",
+    remove: "Bỏ dòng {{name}}",
+    catalogName: "Trong danh mục: {{name}}",
+  },
+  warning: {
+    SKIPPED_LINES: "Một số dòng không đọc được và đã bị bỏ qua.",
+    MISSING_UNIT_PRICE: "Có dòng chưa đọc được đơn giá.",
+    TOTAL_MISMATCH: "Tổng các dòng lệch nhiều so với tổng tiền trên hóa đơn.",
+  },
+};

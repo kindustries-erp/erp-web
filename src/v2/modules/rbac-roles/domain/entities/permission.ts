@@ -76,6 +76,8 @@ export const FALLBACK_RESOURCES: ResourceItem[] = [
   { resource: "garage_debts", label: "Công nợ Garage" },
   { resource: "garage_cashflow", label: "Thu chi xưởng Garage" },
   { resource: "garage_goods_receipts", label: "Nhập kho Garage" },
+  { resource: "garage_stock_vouchers", label: "Chứng từ kho Garage" },
+  { resource: "garage_stock_ledger", label: "Tồn kho Garage" },
   {
     resource: "garage_procurement_requests",
     label: "Yêu cầu mua hàng Garage",
@@ -109,4 +111,5 @@ export const FALLBACK_RESOURCES: ResourceItem[] = [
   { resource: "email_ingest", label: "Hộp thư hệ thống" },
   { resource: "sys_tags", label: "Thẻ hệ thống" },
   { resource: "attachments", label: "Tệp đính kèm" },
+  { resource: "loans", label: "Khoản vay & Lãi suất" },
 ];

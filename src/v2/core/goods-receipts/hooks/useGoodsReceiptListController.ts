@@ -6,15 +6,23 @@ import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { useV2TablePreferencesStore } from "@/v2/shared/preferences/useV2TablePreferencesStore";
 import { applyV2SystemView } from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
-import type { GoodsReceiptModuleConfig } from "../goodsReceipts.config.type";
+import type {
+  GoodsReceiptModuleConfig,
+  GoodsReceiptPrefill,
+} from "../goodsReceipts.config.type";
+import { describeSourceOrderError } from "./goodsReceiptSourceOrderError";
 import { useGoodsReceiptMutations } from "../api/mutations/useGoodsReceiptMutations";
 import { buildGoodsReceiptColumns } from "../components/organisms/goods-receipt-table/GoodsReceiptTable.columns";
 import { buildGoodsReceiptRowActions } from "../components/organisms/goods-receipt-table/GoodsReceiptTable.rowActions";
 import type { GoodsReceiptRecord } from "../domain/goodsReceipt";
 
+export { FROM_ORDER_CODES } from "./goodsReceiptSourceOrderError";
+
 export interface GoodsReceiptDrawerTarget {
   id: string | null;
   mode: "view" | "edit";
+  /** Dữ liệu điền sẵn khi lập phiếu mới từ đơn mua */
+  prefill?: GoodsReceiptPrefill;
 }
 
 /**
@@ -99,6 +107,36 @@ export function useGoodsReceiptListController(
     t,
     onRemoved: () => setDeleteTarget(null),
   });
+
+  // Mở từ đơn mua: `?fromOrder=<id>` tải đơn rồi mở drawer tạo mới điền sẵn; xóa tham số để F5 không lập lại
+  React.useEffect(() => {
+    const loader = config.sourceOrder;
+    if (!canCreate || !loader) return;
+    const orderId = new URLSearchParams(window.location.search).get(
+      "fromOrder",
+    );
+    if (!orderId) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    loader
+      .load(orderId)
+      .then((prefill) => setDrawer({ id: null, mode: "edit", prefill }))
+      .catch((error: unknown) => {
+        useV2ToastStore.getState().showToast({
+          variant: "destructive",
+          ...describeSourceOrderError(error, t),
+        });
+      });
+  }, [canCreate, config, t]);
+
+  // Mở một phiếu có sẵn từ lịch sử nhập kho của đơn mua: `?receipt=<id>` mở drawer xem; xóa tham số để F5 không mở lại
+  React.useEffect(() => {
+    const receiptId = new URLSearchParams(window.location.search).get(
+      "receipt",
+    );
+    if (!receiptId) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    setDrawer({ id: receiptId, mode: "view" });
+  }, []);
 
   const selectView = (key: string) => {
     setView(key);

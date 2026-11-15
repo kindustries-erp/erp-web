@@ -1,8 +1,10 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import type {
   V2FetchOptionsParams,
+  V2FetchOptionsResult,
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
+import { toFetchOptionsResult } from "@/v2/shared/utils/v2FetchOptionsAdapter";
 import type { Role, RoleFormValue } from "../domain/entities/role";
 import {
   FALLBACK_RESOURCES,
@@ -14,7 +16,7 @@ import type {
   ColumnOptionsResultDto,
 } from "./dtos/role.dto";
 
-const BASE = "/api/v1/rbac-core/roles";
+const BASE = "/api/v2/rbac-roles";
 const OPTIONS_PAGE_SIZE = 20;
 
 export const toRolesListParams = (query: V2TableQuery) => ({
@@ -43,7 +45,9 @@ export const rolesV2Api = {
     });
     return data;
   },
-  options: async (params: V2FetchOptionsParams) => {
+  options: async (
+    params: V2FetchOptionsParams,
+  ): Promise<V2FetchOptionsResult> => {
     const { data } = await v2HttpClient.get<ColumnOptionsResultDto>(
       `${BASE}/column-options`,
       {
@@ -56,7 +60,7 @@ export const rolesV2Api = {
         },
       },
     );
-    return data;
+    return toFetchOptionsResult(data);
   },
   get: async (id: string): Promise<Role> => {
     try {
@@ -118,7 +122,7 @@ export const rolesV2Api = {
     try {
       const { data } = await v2HttpClient.get<{
         resources: ResourceItem[];
-      }>("/api/v1/rbac-core/collections");
+      }>("/api/v2/rbac-roles/collections");
       const list: ResourceItem[] =
         data?.resources ?? (Array.isArray(data) ? data : []);
       const filtered = list.filter(

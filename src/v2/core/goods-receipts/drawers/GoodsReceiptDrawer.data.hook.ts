@@ -3,8 +3,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
-import type { GoodsReceiptModuleConfig } from "../goodsReceipts.config.type";
+import { describeSourceOrderError } from "../hooks/goodsReceiptSourceOrderError";
+import type {
+  GoodsReceiptModuleConfig,
+  GoodsReceiptPrefill,
+} from "../goodsReceipts.config.type";
 import {
+  applyGoodsReceiptPrefill,
+  clearGoodsReceiptSourceOrder,
   emptyGoodsReceiptForm,
   toGoodsReceiptForm,
   type GoodsReceiptFormValue,
@@ -14,6 +20,8 @@ export interface GoodsReceiptDrawerDataParams {
   config: GoodsReceiptModuleConfig;
   open: boolean;
   recordId: string | null;
+  /** Dữ liệu điền sẵn khi lập phiếu từ đơn mua */
+  prefill?: GoodsReceiptPrefill;
 }
 
 /**
@@ -24,6 +32,7 @@ export function useGoodsReceiptDrawerData({
   config,
   open,
   recordId,
+  prefill,
 }: GoodsReceiptDrawerDataParams) {
   const { api, keys } = config;
   const { t } = useV2Translation();
@@ -58,13 +67,14 @@ export function useGoodsReceiptDrawerData({
     setInitial(loaded);
   }, [open, detail.data]);
 
-  // Phiếu mới bắt đầu từ form rỗng
+  // Phiếu mới bắt đầu từ form rỗng, hoặc từ dữ liệu điền sẵn của đơn mua
   React.useEffect(() => {
     if (!open || !creating) return;
     const fresh = emptyGoodsReceiptForm();
-    setForm(fresh);
-    setInitial(fresh);
-  }, [open, creating]);
+    const seeded = prefill ? applyGoodsReceiptPrefill(fresh, prefill) : fresh;
+    setForm(seeded);
+    setInitial(seeded);
+  }, [open, creating, prefill]);
 
   // Khi có mã phiếu tự sinh thì gán vào form
   React.useEffect(() => {
@@ -104,6 +114,28 @@ export function useGoodsReceiptDrawerData({
       .then(({ nextCode: code }) => setField("receiptNo", code));
   };
 
+  /**
+   * Chọn hoặc bỏ đơn mua nguồn: chọn thì tải đơn và điền NCC, chi nhánh, tổng, dòng còn lại
+   * (người dùng không nhập tay); bỏ chọn thì xóa các phần đó.
+   */
+  const pickOrder = (orderId: string | null) => {
+    if (!orderId) {
+      setForm(clearGoodsReceiptSourceOrder);
+      return;
+    }
+    void config.sourceOrder
+      ?.load(orderId)
+      .then((loaded) =>
+        setForm((current) => applyGoodsReceiptPrefill(current, loaded)),
+      )
+      .catch((error: unknown) =>
+        useV2ToastStore.getState().showToast({
+          variant: "destructive",
+          ...describeSourceOrderError(error, t),
+        }),
+      );
+  };
+
   /** Bỏ thay đổi chưa lưu: đưa form về bản gốc */
   const resetForm = () => setForm(initial);
 
@@ -112,8 +144,11 @@ export function useGoodsReceiptDrawerData({
     initial,
     setField,
     resetForm,
+    pickOrder,
     regenerateCode,
     creating,
+    /** Bản ghi server (có `reversible`/`reverseBlockedReason` của phiếu đã nhập kho) */
+    record: detail.data ?? null,
     loading: detail.isFetching,
     /** Đã có dữ liệu server; trước đó form mang status DRAFT mặc định, không được dùng để quyết định quyền sửa */
     loaded: Boolean(detail.data),

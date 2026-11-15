@@ -75,6 +75,25 @@ export function useGoodsReceiptMutations({
       ),
   });
 
+  const saveAndPost = useMutation({
+    mutationFn: ({ id, form }: SaveGoodsReceiptInput) => {
+      if (!api.saveAndPost) throw new Error("saveAndPost chưa được hỗ trợ");
+      return api.saveAndPost(id, form);
+    },
+    onSuccess: async () => {
+      await refresh();
+      notifySuccess(
+        t("v2.goodsReceipts.actions.postSuccess", "Ghi sổ nhập kho thành công"),
+      );
+      onPosted?.();
+    },
+    onError: (error) =>
+      notifyError(
+        error,
+        t("v2.goodsReceipts.actions.postError", "Không thể ghi sổ nhập kho"),
+      ),
+  });
+
   const post = useMutation({
     mutationFn: (id: string): Promise<GoodsReceiptRecord> => api.post(id),
     onSuccess: async () => {
@@ -96,20 +115,14 @@ export function useGoodsReceiptMutations({
     onSuccess: async () => {
       await refresh();
       notifySuccess(
-        t(
-          "v2.goodsReceipts.actions.cancelSuccess",
-          "Hủy phiếu nhập kho thành công",
-        ),
+        t("v2.goodsReceipts.actions.cancelSuccess", "Hoàn nhập thành công"),
       );
       onCancelled?.();
     },
     onError: (error) =>
       notifyError(
         error,
-        t(
-          "v2.goodsReceipts.actions.cancelError",
-          "Không thể hủy phiếu nhập kho",
-        ),
+        t("v2.goodsReceipts.actions.cancelError", "Không thể hoàn nhập"),
       ),
   });
 
@@ -124,5 +137,5 @@ export function useGoodsReceiptMutations({
       notifyError(error, t("v2.goodsReceipts.delete.error", "Không thể xóa")),
   });
 
-  return { save, post, cancel, remove };
+  return { save, saveAndPost, post, cancel, remove };
 }

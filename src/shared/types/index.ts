@@ -1,6 +1,7 @@
 export type PageKey =
   | "opex"
   | "dashboard"
+  | "loans"
   | "cashflow"
   | "cashflow-vouchers"
   | "cash-fund"
@@ -64,7 +65,8 @@ export type PageKey =
   | "cash-statement"
   | "garage-dashboard"
   | "garage-cases"
-  | "garage-goods-receipts"
+  | "garage-stock-vouchers"
+  | "garage-stock-balances"
   | "garage-procurement"
   | "garage-opex"
   | "garage-customers"

@@ -35,17 +35,17 @@
   /* ── Glass chrome (top bar & tab bar only) ── */
   --glass-chrome: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-blur: 15px;
+  --glass-blur: 8px;
 
   /* ── Popups & dropdowns ── */
-  --popup-bg: rgba(246, 248, 252, 0.65);
+  --popup-bg: rgba(246, 248, 252, 0.96);
   --popup-bg-hover: rgba(0, 0, 0, 0.05);
   --popup-border: rgba(226, 232, 240, 0.8);
   --popup-shadow:
     0 16px 40px -8px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(246, 248, 252, 0.7);
+  --modal-bg: rgba(246, 248, 252, 0.96);
   --tooltip-bg: #0f172a;
 
   /* ── Table sticky glass ── */
@@ -54,13 +54,13 @@
 
   /* ── Drawer frosted glass & overlay ── */
   --drawer-overlay-bg: rgba(15, 23, 42, 0.04);
-  --drawer-bg: rgba(255, 255, 255, 0.82);
+  --drawer-bg: rgba(255, 255, 255, 0.96);
   --drawer-border: rgba(255, 255, 255, 0.65);
-  --drawer-header-bg: rgba(246, 248, 252, 0.75);
-  --drawer-header-scrolled-bg: rgba(246, 248, 252, 0.9);
-  --drawer-footer-bg: rgba(246, 248, 252, 0.75);
-  --drawer-footer-scrolled-bg: rgba(246, 248, 252, 0.9);
-  --drawer-section-bg: rgba(255, 255, 255, 0.65);
+  --drawer-header-bg: rgba(246, 248, 252, 0.94);
+  --drawer-header-scrolled-bg: rgba(246, 248, 252, 0.98);
+  --drawer-footer-bg: rgba(246, 248, 252, 0.94);
+  --drawer-footer-scrolled-bg: rgba(246, 248, 252, 0.98);
+  --drawer-section-bg: rgba(255, 255, 255, 0.95);
 
   /* ── App shell ── */
   --app-shell-bg: #1e1e1e;

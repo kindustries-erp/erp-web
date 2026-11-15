@@ -71,6 +71,7 @@ registerV2ModuleLocale("rbacRoles", {
       vinfast: "VinFast & Xe cộ",
       accounting: "Kế toán & Dòng tiền",
       system: "Quản trị & Hệ thống",
+      tools: "Công cụ & Tiện ích",
       other: "Tài nguyên khác",
     },
     form: {
@@ -163,6 +164,7 @@ registerV2ModuleLocale("rbacRoles", {
       vinfast: "VinFast & Vehicles",
       accounting: "Accounting & Cashflow",
       system: "System Administration",
+      tools: "Tools & Utilities",
       other: "Other Resources",
     },
     form: {

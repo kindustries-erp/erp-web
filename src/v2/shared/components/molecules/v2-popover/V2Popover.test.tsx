@@ -72,6 +72,31 @@ describe("V2Popover Molecule", () => {
     expect(screen.getByText("Tiêu đề Popup")).toBeInTheDocument();
   });
 
+  it("keeps full width on mobile even when caller passes narrow width className", () => {
+    vi.spyOn(useViewportModule, "useViewport").mockReturnValue({
+      width: 375,
+      height: 667,
+      isMobile: true,
+      isTablet: false,
+      isDesktop: false,
+    });
+
+    render(
+      <V2Popover
+        open
+        onOpenChange={vi.fn()}
+        title="Rộng đầy đủ"
+        className="w-64 p-1"
+        content={<div>Nội dung</div>}
+        trigger={<button type="button">Trigger</button>}
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.className).toContain("w-full");
+    expect(dialog.className).toContain("max-w-none");
+  });
+
   it("exports AppPopover as alias of V2Popover", () => {
     expect(AppPopover).toBe(V2Popover);
   });

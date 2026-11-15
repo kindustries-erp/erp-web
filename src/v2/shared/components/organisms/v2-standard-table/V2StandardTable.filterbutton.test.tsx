@@ -20,22 +20,21 @@ describe("nút Bộ lọc (n) trên toolbar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Bộ lọc (1)" }));
 
-    expect(
-      screen.getByRole("complementary", { name: "Bộ lọc" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Bộ lọc" })).toBeInTheDocument();
   });
 
-  it("bấm lần nữa thì đóng panel", () => {
+  it("nút ✕ của drawer thì đóng panel", () => {
     renderTable(V2StandardTableDesktop, {
       ...withActiveFilter,
       toolbar: { filterPanel: {} },
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Bộ lọc (1)" }));
-    fireEvent.click(screen.getByRole("button", { name: "Bộ lọc (1)" }));
+    // Drawer là Sheet modal: nút trên thanh công cụ bị aria-hidden, đóng bằng nút ✕ của drawer
+    fireEvent.click(screen.getByRole("button", { name: "Đóng bộ lọc" }));
 
     expect(
-      screen.queryByRole("complementary", { name: "Bộ lọc" }),
+      screen.queryByRole("dialog", { name: "Bộ lọc" }),
     ).not.toBeInTheDocument();
   });
 });
