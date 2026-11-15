@@ -8,7 +8,10 @@ export interface V2ReadValueProps {
   copy?: boolean;
 }
 
-/** Hiển thị giá trị chỉ đọc theo kiểu ô nhập (dùng trong drawer ở chế độ xem) */
+/**
+ * Giá trị chỉ đọc theo kiểu ô nhập. Dùng cho trường bị khóa trong edit mode.
+ * Drawer V2 ở view mode KHÔNG dùng component này: render `V2DrawerRowList` (xem `standardize-drawer/references/v2-drawer.md`).
+ */
 export const V2ReadValue = ({ value, copy = false }: V2ReadValueProps) => (
   <div className="flex min-h-10 items-center justify-between rounded-lg border border-border/60 bg-surface-muted/50 px-3 py-2 text-sm">
     <span className="min-w-0 truncate">{value || "—"}</span>
@@ -26,7 +29,10 @@ export interface V2TextFieldProps extends Omit<
   onChange: (value: string) => void;
 }
 
-/** Ô nhập ở chế độ sửa, tự chuyển sang `V2ReadValue` ở chế độ xem; mã/MST/SĐT/email có nút sao chép */
+/**
+ * Ô nhập ở chế độ sửa; `viewing` chuyển sang `V2ReadValue` (kiểu ô nhập, mã/MST/SĐT/email có nút sao chép).
+ * Drawer V2 mới: view mode dùng `V2DrawerRowList`, không dùng `viewing` của component này.
+ */
 export const V2TextField = ({
   viewing,
   value,

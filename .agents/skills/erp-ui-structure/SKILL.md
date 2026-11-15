@@ -57,7 +57,7 @@ Mỗi loại có một skill duy nhất, đã gồm V1, V2 và phần phụ. Ski
 | Cột, filter, sort, subtotal, phân trang, view mode, bảng nhúng | `standardize-table` | `references/table-rules.md` |
 | Bảng hoặc trang dưới `src/v2/` | `standardize-table` | `references/v2-table.md` |
 | Drawer chi tiết hoặc form (V1) | `standardize-drawer` | `references/drawer-rules.md` |
-| Drawer dưới `src/v2/` | `standardize-drawer` | `references/v2-drawer.md` |
+| Drawer dưới `src/v2/` | `standardize-drawer` | `references/v2-drawer.md` (view mode render thông tin bằng `V2DrawerRowList`, không render ô nhập) |
 | Tab chứng từ liên kết, cấn trừ, truy vết | `standardize-drawer` | `references/drawer-rules.md` mục 11 |
 | Modal dưới `src/v2/` (`V2Modal`, `V2ConfirmModal`) | `standardize-modal` | mục 9 của `standardize-modal/SKILL.md` |
 

@@ -81,7 +81,7 @@ Tài liệu chi tiết của từng module nằm tại `.agents/skills/modules/<
 - **Garage**: `garage-cases`, `garage-dashboard`, `inventory-movements-garage` (chứng từ kho và tồn kho Garage, thay trang Nhập kho Garage; lõi `inventory-movements` và `goods-receipts`; lõi PO dùng chung ở `src/v2/core/purchase-orders/`)
 - **Đối tác & nhà cung cấp**: `business-partners`, `erp-suppliers`
 - **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`
-- **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`, `users-management` (lõi `src/v2/core/users`, module `src/v2/modules/users-management`, route `/v2/users-management`), `employees-core` (lõi `src/v2/core/employees`, module `src/v2/modules/employees-management`, route `/v2/employees-management`)
+- **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`, `users-management` (lõi `src/v2/core/users`, module `src/v2/modules/users-management`, route `/v2/users-management`), `employees-core` (lõi `src/v2/core/employees`, module `src/v2/modules/employees-management`, route `/v2/employees-management`), `audit-logs` (lõi `src/v2/core/audit`, module `src/v2/modules/audit-logs`, route `/v2/admin/audit-logs`)
 - **Layout và thành phần chuẩn V2**: `v2-layout`, `v2-foundation`, `v2-auth`, `v2-admin-layout`; bảng và drawer V2 nằm trong skill `standardize-table` (`standardize-table/references/v2-table.md`) và `standardize-drawer` (`standardize-drawer/references/v2-drawer.md`)
 - **AI Hub V2**: `ai-hub` (core `src/v2/core/ai-hub`, chatbot nổi dùng chung `V2FloatingChat` trong `src/v2/shared`, trợ lý AI đọc hóa đơn gắn ở trang garage-procurement tab `requests`)
 - **Shell và điều hướng**: xem `references/ui-shell-and-theme.md`

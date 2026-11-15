@@ -1,4 +1,4 @@
-// E2E Nhật ký hoạt động (/erp-activity-logs): bảng và timeline user đi qua API v2 /api/v2/audit-logs.
+// E2E Nhật ký hoạt động: V1 (/erp-activity-logs, API v1) và V2 (/v2/admin/audit-logs, API v2, drawer chỉ xem).
 // Chỉ đọc. E2E_PASSWORD bắt buộc; E2E_ADMIN_EMAIL mặc định admin@liouni.com. KHÔNG chạy trên DB production.
 // Chạy: bun run e2e:audit-logs
 import { chromium } from "playwright-core";
@@ -44,33 +44,85 @@ try {
     { timeout: 30000 },
   );
 
+  // ---- V1
   await page.goto(`${WEB}/erp-activity-logs`, {
     waitUntil: "domcontentloaded",
   });
   await page.locator("table tbody tr").first().waitFor({ timeout: 20000 });
   check(
-    "A1 bảng nhật ký có dòng dữ liệu",
+    "A1 V1 bảng có dòng",
     (await page.locator("table tbody tr").count()) > 0,
   );
   check(
-    "A2 web gọi /api/v2/audit-logs trả 200, không gọi v1",
+    "A2 V1 gọi /api/v1/audit-logs-core 200, không gọi v2",
+    calls.some(
+      (c) => c.url.includes("/api/v1/audit-logs-core") && c.status === 200,
+    ) && !calls.some((c) => c.url.includes("/api/v2/audit-logs")),
+    JSON.stringify(calls.map((c) => c.status)),
+  );
+  await page.screenshot({ path: `${SHOTS}audit-logs-table.png` });
+
+  // ---- V2
+  calls.length = 0;
+  await page.goto(`${WEB}/v2/admin/audit-logs`, {
+    waitUntil: "domcontentloaded",
+  });
+  await page.locator("table tbody tr").first().waitFor({ timeout: 30000 });
+  check(
+    "B1 V2 bảng có dòng",
+    (await page.locator("table tbody tr").count()) > 0,
+  );
+  check(
+    "B2 V2 gọi /api/v2/audit-logs 200, không gọi v1",
     calls.some(
       (c) => c.url.includes("/api/v2/audit-logs") && c.status === 200,
     ) && !calls.some((c) => c.url.includes("/api/v1/audit-logs-core")),
     JSON.stringify(calls.map((c) => c.status)),
   );
-  await page.screenshot({ path: `${SHOTS}audit-logs-table.png` });
+  await page.screenshot({ path: `${SHOTS}audit-logs-v2-table.png` });
 
-  const first = page.locator("table tbody tr").first();
-  const before = calls.length;
-  await first.click();
-  await page.waitForTimeout(1200);
+  const colOpts = calls.length;
+  await page.getByRole("button", { name: "Lọc cột Module" }).click();
+  await page.waitForTimeout(2000);
+  const optCalls = calls
+    .slice(colOpts)
+    .filter((c) => c.url.includes("/column-options"));
   check(
-    "A3 bấm dòng không lỗi trang",
+    "B3 mở lọc cột Module gọi column-options 200",
+    optCalls.length > 0 && optCalls.every((c) => c.status === 200),
+    JSON.stringify(optCalls.map((c) => c.status)),
+  );
+  await page.keyboard.press("Escape");
+
+  const detail = page
+    .locator("table tbody tr")
+    .first()
+    .locator("button, a")
+    .first();
+  await detail.click();
+  const dialog = page.locator('[role="dialog"]').first();
+  await dialog.waitFor({ timeout: 10000 });
+  await page.waitForTimeout(500);
+  check(
+    "B4 drawer chi tiết có nhãn Thông tin và Người thực hiện",
+    (await dialog.getByText("Thông tin", { exact: true }).count()) > 0 &&
+      (await dialog.getByText("Người thực hiện").count()) > 0,
+  );
+  check(
+    "B5 drawer view mode không có ô nhập",
+    (await dialog
+      .locator("input, textarea, select, [role=combobox], [role=textbox]")
+      .count()) === 0,
+  );
+  check(
+    "B6 drawer không có nút Chỉnh sửa",
+    (await dialog.getByText("Chỉnh sửa").count()) === 0,
+  );
+  await page.screenshot({ path: `${SHOTS}audit-logs-v2-drawer.png` });
+  check(
+    "B7 không lỗi trang",
     !(await page.getByText(/Cannot read|Something went wrong/i).count()),
   );
-  await page.screenshot({ path: `${SHOTS}audit-logs-row.png` });
-  console.log(`(request audit mới sau khi bấm dòng: ${calls.length - before})`);
 } catch (e) {
   check("E2E audit-logs", false, e.message.split("\n")[0]);
   await page

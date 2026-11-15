@@ -3,7 +3,7 @@ import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
 
 const BASE = "/api/v2/audit-logs";
 
-/** Một dòng nhật ký (cùng hình dạng web đang dùng). */
+/** Một dòng nhật ký theo DTO `/api/v2/audit-logs` (V2 tự định nghĩa, không dùng chung với V1). */
 export interface AuditLogRowDto {
   id: string;
   requestId: string | null;
@@ -36,8 +36,6 @@ export interface AuditLogsListQuery {
   entityType?: string;
   entityId?: string;
   actorUserId?: string;
-  dateFrom?: string;
-  dateTo?: string;
   date_from?: string;
   date_to?: string;
   status?: string;
@@ -69,10 +67,8 @@ export const toAuditLogsListParams = (
     const v = query[k];
     if (v) params.set(k, v);
   });
-  const from = query.date_from || query.dateFrom;
-  const to = query.date_to || query.dateTo;
-  if (from) params.set("date_from", from);
-  if (to) params.set("date_to", to);
+  if (query.date_from) params.set("date_from", query.date_from);
+  if (query.date_to) params.set("date_to", query.date_to);
   query.sorts?.forEach((s) => params.append("sorts", s));
   return params;
 };
