@@ -31,13 +31,13 @@ const check = (step, pass, detail = "") => {
 };
 
 async function apiLogin(email, password) {
-  const r = await fetch(`${API}/api/v1/auth/login`, {
+  const r = await fetch(`${API}/api/v2/auth-sessions/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
   const b = await r.json().catch(() => ({}));
-  return { status: r.status, token: b.accessToken };
+  return { status: r.status, token: b.data?.accessToken };
 }
 async function apiGetUsers(token, search) {
   const r = await fetch(
@@ -137,8 +137,8 @@ try {
       found.length === 1 && !("passwordHash" in found[0]),
     );
     check(
-      "B4 tài khoản mới đăng nhập được qua auth v1 (đã sync)",
-      (await apiLogin(EMAIL, NEW_PASSWORD)).status === 201,
+      "B4 tài khoản mới đăng nhập được qua auth v2",
+      (await apiLogin(EMAIL, NEW_PASSWORD)).status === 200,
     );
   });
 
@@ -162,7 +162,7 @@ try {
     check("C2 trạng thái hiển thị Ngưng hoạt động", true);
     check(
       "C3 tài khoản ngưng không đăng nhập được",
-      (await apiLogin(EMAIL, NEW_PASSWORD)).status !== 201,
+      (await apiLogin(EMAIL, NEW_PASSWORD)).status !== 200,
     );
   });
 
@@ -195,7 +195,7 @@ try {
     await page.waitForTimeout(1500);
     check(
       "D2 mật khẩu mới đăng nhập được, mật khẩu cũ bị từ chối",
-      (await apiLogin(EMAIL, reset)).status === 201 &&
+      (await apiLogin(EMAIL, reset)).status === 200 &&
         (await apiLogin(EMAIL, NEW_PASSWORD)).status === 401,
     );
   });
