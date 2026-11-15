@@ -11,6 +11,7 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 
 - Script: `erp/erp-web/e2e/*.e2e.mjs`. Hiện có `garage-procurement.e2e.mjs` (PR/PO garage và phiếu nhập garage, 87 kiểm tra; mục A–D PR/PO, E nhập kho từ PO, F–G hóa đơn/NCC và nhập nhiều đợt, H xóa vĩnh viễn, I phiếu nhập gắn PO).
 - Script `garage-save-and-act.e2e.mjs` (27 kiểm tra): PR Tạo mới/Cập nhật qua modal người duyệt, PO Tạo mới từ PR không còn 409, phiếu nhập Nhập kho một bước và Hoàn nhập. Chạy: `bun run e2e:garage-save-and-act`.
+- Script `users-management.e2e.mjs` (11 kiểm tra): Quản lý tài khoản V2 (tạo qua drawer, ngưng/kích hoạt, đặt lại mật khẩu, kiểm đăng nhập qua auth v1). Chạy: `bun run e2e:users-management`. Dùng `E2E_ADMIN_PASSWORD` (admin) thay cho `E2E_PASSWORD`; dọn dữ liệu `e2e-users-*` bằng SQL. Xem skill `users-management`.
 - Chạy: `bun run e2e:garage-procurement` (thêm script mới trong `package.json` theo cùng mẫu).
 - Biến môi trường (không hardcode mật khẩu hay URL trong repo):
   - `E2E_PASSWORD`: BẮT BUỘC, mật khẩu tài khoản test. Script thoát mã 2 nếu thiếu.

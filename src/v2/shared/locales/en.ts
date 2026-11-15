@@ -45,6 +45,8 @@ export const v2En: V2Dictionary = {
         // v2-module:inventory-movements-garage:locale-en
         erpPermissionsCore: "Roles & Permissions",
         // v2-module:rbac-roles:locale-en
+        usersManagement: "User management",
+        // v2-module:users-management:locale-en
         // plop:v2-nav-items
       },
       searchPlaceholder: "Search modules...",

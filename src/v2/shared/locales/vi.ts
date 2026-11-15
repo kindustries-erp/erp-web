@@ -45,6 +45,8 @@ export const v2Vi = {
         // v2-module:inventory-movements-garage:locale-vi
         erpPermissionsCore: "Phân quyền & Vai trò",
         // v2-module:rbac-roles:locale-vi
+        usersManagement: "Quản lý tài khoản",
+        // v2-module:users-management:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",

@@ -188,6 +188,13 @@ export const V2_ROUTES: V2RouteDef[] = [
     permission: { collection: "admin_users", action: "read" },
   },
   // v2-module:rbac-roles:routes
+  {
+    id: "users-management",
+    path: "/v2/users-management",
+    title: "Quản lý tài khoản",
+    permission: { collection: "admin_users", action: "manage" },
+  },
+  // v2-module:users-management:routes
   // plop:v2-routes
 ];
 
