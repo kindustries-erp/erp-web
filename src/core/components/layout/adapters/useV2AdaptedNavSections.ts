@@ -171,6 +171,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpResource.ADMIN_USERS,
     ErpAction.READ,
   );
+  const canManageAdminUsers = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.MANAGE,
+  );
   const canReadActivityLogs = useHasPermission(
     ErpResource.ACTIVITY_LOGS,
     ErpAction.READ,
@@ -580,13 +584,15 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
 
       // 10.2 Sub-Group: Quản lý truy cập & bảo mật
       const accessChildren: V2SidebarItem[] = [];
-      if (canReadAdminUsers) {
+      if (canManageAdminUsers) {
         accessChildren.push({
-          id: "erp-users",
+          id: "users-management",
           label: t("nav.items.users", "Quản lý người dùng"),
           icon: Users,
-          href: "/erp-users",
+          href: "/users-management",
         });
+      }
+      if (canReadAdminUsers) {
         accessChildren.push({
           id: "permission",
           label: t("nav.items.phanquyen", "Phân quyền & Vai trò"),
@@ -607,7 +613,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           id: "sub-access-control",
           label: t("nav.items.erpAccessControl", "Quản lý truy cập"),
           icon: Shield,
-          href: accessChildren[0]?.href ?? "/erp-users",
+          href: accessChildren[0]?.href ?? "/users-management",
           children: accessChildren,
         });
       }
@@ -709,6 +715,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     canReadEmailInbox,
     isAdminEmail,
     canReadAdminUsers,
+    canManageAdminUsers,
     canReadActivityLogs,
     canReadBankStatements,
     canReadCashStatements,

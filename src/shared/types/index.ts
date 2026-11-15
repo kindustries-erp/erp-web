@@ -50,7 +50,7 @@ export type PageKey =
   | "erp-suppliers"
   | "erp-customers"
   | "employees-management"
-  | "erp-users"
+  | "users-management"
   | "erp-activity-logs"
   | "permission"
   | "erp-permissions-core"

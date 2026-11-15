@@ -90,7 +90,7 @@ export const V2_ROUTES: V2RouteDef[] = [
     path: "/v2/admin/users",
     title: "Quản lý người dùng",
     isAdmin: true,
-    permission: { collection: "admin_users", action: "read" },
+    permission: { collection: "admin_users", action: "manage" },
   },
   {
     id: V2AdminRouteId.PERMISSIONS,

@@ -260,7 +260,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.phanquyen", "Phân quyền & Vai trò") },
         ];
-      case "erp-users":
+      case "users-management":
         return [
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.users", "Quản lý người dùng") },

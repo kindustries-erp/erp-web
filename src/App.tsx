@@ -150,8 +150,10 @@ const ErpSuppliersPage = lazy(() =>
     default: m.ErpSuppliersPage,
   })),
 );
-const ErpUsersPage = lazy(() =>
-  import("@/pages/ErpUsersPage").then((m) => ({ default: m.ErpUsersPage })),
+const UsersManagementPage = lazy(() =>
+  import("@/v2/modules/users-management").then((m) => ({
+    default: m.UsersManagementGuarded,
+  })),
 );
 const EmployeesManagementPage = lazy(() =>
   import("@/v2/modules/employees-management").then((m) => ({
@@ -314,7 +316,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-suppliers": ErpSuppliersPage,
   "erp-customers": ErpCustomersPage,
   "employees-management": EmployeesManagementPage,
-  "erp-users": ErpUsersPage,
+  "users-management": UsersManagementPage,
   "erp-activity-logs": ErpActivityLogsPage,
   "email-inbox": EmailInboxPage,
   permission: ErpPermissionsCorePage,

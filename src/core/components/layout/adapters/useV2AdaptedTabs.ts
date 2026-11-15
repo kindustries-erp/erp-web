@@ -66,7 +66,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "employees-management": UserSquare2,
   attachments: Paperclip,
   "email-inbox": Mail,
-  "erp-users": Users,
+  "users-management": Users,
   permission: Shield,
   "erp-permissions-core": Shield,
   "erp-activity-logs": FileText,
@@ -151,7 +151,7 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.attachments", "Tệp đính kèm");
       case "email-inbox":
         return t("nav.items.emailInbox", "Hòm thư");
-      case "erp-users":
+      case "users-management":
         return t("nav.items.users", "Người dùng");
       case "permission":
       case "erp-permissions-core":

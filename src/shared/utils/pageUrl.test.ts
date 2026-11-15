@@ -197,6 +197,11 @@ describe("URL nhân viên (employees-management)", () => {
     );
   });
 
+  it("URL cũ /erp-users của trang V1 vẫn mở trang users V2", () => {
+    expect(pathToPage("/erp-users", "")?.page).toBe("users-management");
+    expect(pathToPage("/users-management", "")?.page).toBe("users-management");
+  });
+
   it("URL cũ /erp-employees của trang V1 vẫn mở trang mới", () => {
     expect(pathToPage("/erp-employees", "")?.page).toBe("employees-management");
   });

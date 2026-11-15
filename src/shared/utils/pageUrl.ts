@@ -25,7 +25,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-inventory-item-types",
   "erp-suppliers",
   "erp-customers",
-  "erp-users",
+  "users-management",
   "erp-activity-logs",
   "permission",
   "erp-permissions-core",
@@ -73,6 +73,8 @@ export const ALL_PAGE_KEYS: PageKey[] = [
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
+  // URL cũ của trang người dùng V1, đã thay bằng module V2 users-management
+  "erp-users": "users-management",
   // URL cũ của trang nhân viên V1, đã thay bằng module V2 employees-management
   "erp-employees": "employees-management",
   "cashflow-dashboard": "cashflow",

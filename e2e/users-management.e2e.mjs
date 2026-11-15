@@ -2,6 +2,7 @@
 // Biến môi trường như garage-procurement.e2e.mjs (xem erp-e2e-playwright/SKILL.md): E2E_PASSWORD bắt buộc.
 // E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD (mặc định E2E_PASSWORD): tài khoản có quyền admin_users:manage (email mặc định admin@liouni.com).
 // Tạo dữ liệu có tiền tố email `e2e-users-`; không có API xóa nên dọn bằng SQL sau khi chạy. KHÔNG chạy trên DB production.
+// Bổ sung cutover: URL cũ /erp-users mở trang V2, tab Lịch sử (audit), đăng nhập dưới quyền rồi quay lại, mục admin nav.
 // Chạy: bun run e2e:users-management
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
@@ -60,6 +61,10 @@ page.on("response", (res) => {
       status: res.status(),
       url: u,
     });
+});
+const v1UserCalls = [];
+page.on("request", (req) => {
+  if (req.url().includes("/api/v1/admin/users")) v1UserCalls.push(req.url());
 });
 const shot = (name) => page.screenshot({ path: `${SHOTS}users-${name}.png` });
 
@@ -192,6 +197,71 @@ try {
       "D2 mật khẩu mới đăng nhập được, mật khẩu cũ bị từ chối",
       (await apiLogin(EMAIL, reset)).status === 201 &&
         (await apiLogin(EMAIL, NEW_PASSWORD)).status === 401,
+    );
+  });
+
+  const openRowMenu = async (emailText, itemName) => {
+    const row = page.locator("table tbody tr", { hasText: emailText }).first();
+    await row.waitFor({ timeout: 15000 });
+    await row.locator("button").last().click();
+    await page.getByRole("menuitem", { name: itemName, exact: true }).click();
+  };
+
+  await step("E. URL cũ /erp-users mở trang V2", async () => {
+    const before = v2Calls.length;
+    await page.goto(`${WEB}/erp-users`, { waitUntil: "domcontentloaded" });
+    await page.locator("table").first().waitFor({ timeout: 20000 });
+    await page.locator("table tbody tr").first().waitFor({ timeout: 20000 });
+    check(
+      "E1 /erp-users hiển thị trang Quản lý tài khoản V2 (có nút Thêm tài khoản)",
+      await page
+        .getByRole("button", { name: "Thêm tài khoản", exact: true })
+        .isVisible(),
+    );
+    check(
+      "E2 trang gọi API v2 và không gọi /api/v1/admin/users",
+      v2Calls.length > before && v1UserCalls.length === 0,
+      `v2+${v2Calls.length - before} v1=${v1UserCalls.length}`,
+    );
+  });
+
+  await step("F. tab Lịch sử hiện nhật ký audit", async () => {
+    await page.getByPlaceholder(/tìm/i).first().fill(EMAIL);
+    await openRowMenu(EMAIL, "Xem chi tiết");
+    const dlg = page.locator('[role="dialog"]');
+    await dlg.waitFor({ timeout: 10000 });
+    await dlg.getByText("Lịch sử", { exact: true }).first().click();
+    let found = false;
+    for (let i = 0; i < 12 && !found; i++) {
+      found = await dlg
+        .getByText("Tạo tài khoản", { exact: true })
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (!found) await page.waitForTimeout(1000);
+    }
+    check("F1 tab Lịch sử có dòng Tạo tài khoản của đúng user", found);
+    await page.keyboard.press("Escape");
+  });
+
+  await step("G. đăng nhập dưới quyền rồi quay lại admin", async () => {
+    await openRowMenu(EMAIL, "Đăng nhập dưới quyền");
+    await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+    const banner = page.getByTestId("v2-impersonation-banner").first();
+    await banner.waitFor({ timeout: 20000 });
+    check("G1 banner đăng nhập dưới quyền hiện", await banner.isVisible());
+    await banner.locator("button").first().click();
+    await banner.waitFor({ state: "detached", timeout: 20000 });
+    check("G2 quay lại tài khoản gốc, banner biến mất", true);
+  });
+
+  await step("H. mục Người dùng của admin nav mở trang thật", async () => {
+    await page.goto(`${WEB}/v2/admin/users`, { waitUntil: "domcontentloaded" });
+    await page.locator("table").first().waitFor({ timeout: 20000 });
+    check(
+      "H1 /v2/admin/users hiện bảng tài khoản, không còn placeholder",
+      (await page.getByText("đang được xây dựng").count()) === 0 &&
+        (await page.locator("table tbody tr").count()) > 0,
     );
   });
 

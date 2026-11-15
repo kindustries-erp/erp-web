@@ -175,7 +175,7 @@ export const NAV_DEFS: RawNavDef[] = [
     sectionId: "settings",
     labelKey: "v2.nav.items.usersManagement",
     fallback: "Quản lý tài khoản",
-    icon: FileText,
+    icon: Users,
     href: "/v2/users-management",
   },
   {

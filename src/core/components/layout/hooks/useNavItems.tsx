@@ -133,6 +133,10 @@ export function useNavItems(): NavSearchItem[] {
     ErpResource.ADMIN_USERS,
     ErpAction.READ,
   );
+  const canManageAdminUsers = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.MANAGE,
+  );
   const canReadActivityLogs = useHasPermission(
     ErpResource.ACTIVITY_LOGS,
     ErpAction.READ,
@@ -600,15 +604,17 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Mail className="w-4 h-4" />,
       });
     }
-    if (canReadAdminUsers) {
+    if (canManageAdminUsers) {
       items.push({
-        key: "erp-users",
+        key: "users-management",
         label: t("nav.items.users"),
         group: accessGroup,
         section: settingsSection,
         keywords: ["nguoi dung", "users", "tai khoan"],
         icon: <Shield className="w-4 h-4" />,
       });
+    }
+    if (canReadAdminUsers) {
       items.push({
         key: "permission",
         label: t("nav.items.phanquyen"),
@@ -717,6 +723,7 @@ export function useNavItems(): NavSearchItem[] {
     showAccounting,
     showHR,
     canReadAdminUsers,
+    canManageAdminUsers,
     canReadActivityLogs,
     canReadSysTags,
     canReadEmailInbox,

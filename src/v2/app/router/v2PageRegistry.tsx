@@ -41,5 +41,6 @@ export const V2_PAGE_REGISTRY: Record<string, () => ReactNode> = {
   // plop:v2-pages
   loans: () => <LoansListPage />,
   [V2AdminRouteId.DASHBOARD]: () => <V2AdminDashboardPage />,
+  [V2AdminRouteId.USERS]: () => <UsersManagementPage />,
   invoices: () => <InvoiceShapePage />,
 };
