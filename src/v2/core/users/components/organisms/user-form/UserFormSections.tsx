@@ -2,10 +2,10 @@ import {
   DrawerField,
   DrawerSection,
   V2Combobox,
-  V2ReadValue as ReadValue,
   V2TextField as TextInput,
 } from "@/v2/shared/components";
 import type { UserFormValue } from "../../../domain/user";
+import { UserFormView } from "./UserFormView";
 
 export interface UserEmployeeChoice {
   value: string;
@@ -30,15 +30,16 @@ interface FormProps {
   ) => void;
 }
 
+/** View mode render thông tin (`UserFormView`); edit/create render ô nhập. */
 export function UserFormSections(props: FormProps) {
   const { form, viewing, creating, t, setField } = props;
-  const statusLabel =
-    form.status === "ACTIVE"
-      ? t("v2.users.status.active", "Hoạt động")
-      : t("v2.users.status.inactive", "Ngưng hoạt động");
   const employeeLabel =
     props.employeeOptions.find((option) => option.value === form.employeeId)
       ?.label ?? props.employeeFallbackLabel;
+
+  if (viewing) {
+    return <UserFormView form={form} employeeLabel={employeeLabel} t={t} />;
+  }
 
   return (
     <div className="space-y-3">
@@ -51,7 +52,7 @@ export function UserFormSections(props: FormProps) {
             className="sm:col-span-2"
           >
             <TextInput
-              viewing={viewing}
+              viewing={false}
               value={form.email}
               type="email"
               disabled={!props.emailEditable}
@@ -77,43 +78,35 @@ export function UserFormSections(props: FormProps) {
       </DrawerSection>
       <DrawerSection title={t("v2.users.form.link", "Liên kết & trạng thái")}>
         <DrawerField label={t("v2.users.columns.employee", "Nhân viên")}>
-          {viewing ? (
-            <ReadValue value={employeeLabel ?? ""} />
-          ) : (
-            <V2Combobox
-              clearable
-              value={form.employeeId}
-              loading={props.employeeLoading}
-              fallbackLabel={props.employeeFallbackLabel}
-              placeholder={t("v2.users.form.noEmployee", "Không liên kết")}
-              onValueChange={(v) => setField("employeeId", v ?? "")}
-              options={props.employeeOptions}
-            />
-          )}
+          <V2Combobox
+            clearable
+            value={form.employeeId}
+            loading={props.employeeLoading}
+            fallbackLabel={props.employeeFallbackLabel}
+            placeholder={t("v2.users.form.noEmployee", "Không liên kết")}
+            onValueChange={(v) => setField("employeeId", v ?? "")}
+            options={props.employeeOptions}
+          />
         </DrawerField>
         <DrawerField label={t("v2.users.columns.status", "Trạng thái")}>
-          {viewing ? (
-            <ReadValue value={statusLabel} />
-          ) : (
-            <V2Combobox
-              searchable={false}
-              clearable={false}
-              value={form.status}
-              onValueChange={(v) =>
-                setField("status", v === "INACTIVE" ? "INACTIVE" : "ACTIVE")
-              }
-              options={[
-                {
-                  value: "ACTIVE",
-                  label: t("v2.users.status.active", "Hoạt động"),
-                },
-                {
-                  value: "INACTIVE",
-                  label: t("v2.users.status.inactive", "Ngưng hoạt động"),
-                },
-              ]}
-            />
-          )}
+          <V2Combobox
+            searchable={false}
+            clearable={false}
+            value={form.status}
+            onValueChange={(v) =>
+              setField("status", v === "INACTIVE" ? "INACTIVE" : "ACTIVE")
+            }
+            options={[
+              {
+                value: "ACTIVE",
+                label: t("v2.users.status.active", "Hoạt động"),
+              },
+              {
+                value: "INACTIVE",
+                label: t("v2.users.status.inactive", "Ngưng hoạt động"),
+              },
+            ]}
+          />
         </DrawerField>
       </DrawerSection>
     </div>

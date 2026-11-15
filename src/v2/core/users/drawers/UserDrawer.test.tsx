@@ -78,6 +78,19 @@ describe("UserDrawer: tab Lịch sử", () => {
     expect(await screen.findByText("Đặt lại mật khẩu")).toBeTruthy();
   });
 
+  it("view mode hiển thị thông tin, không có ô nhập; sửa thì có ô nhập", async () => {
+    renderDrawer("u1");
+    // Email xuất hiện ở phụ đề và ở dòng thông tin
+    expect((await screen.findAllByText("a@b.vn")).length).toBeGreaterThan(1);
+    expect(screen.queryAllByRole("textbox")).toHaveLength(0);
+    expect(screen.queryAllByRole("combobox")).toHaveLength(0);
+
+    fireEvent.click(screen.getByText("Chỉnh sửa"));
+    await waitFor(() =>
+      expect(screen.getAllByRole("textbox").length).toBeGreaterThan(0),
+    );
+  });
+
   it("tạo mới không có tab Lịch sử", async () => {
     renderDrawer(null);
     await waitFor(() => expect(screen.queryByText("Lịch sử")).toBeNull());
