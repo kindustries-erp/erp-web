@@ -1,6 +1,3 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { join, relative, sep } from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 /**
@@ -8,14 +5,17 @@ import { describe, expect, it } from "vitest";
  * Các file V1 bị ngắt được giữ lại (chưa xóa) và là nơi duy nhất còn chứa
  * các ký hiệu bên dưới. Mọi file khác không được nối lại V1.
  */
-const SRC_ROOT = join(process.cwd(), "src");
+const SOURCES = import.meta.glob(
+  ["/src/**/*.{ts,tsx}", "!/src/**/*.{test,spec}.{ts,tsx}"],
+  { query: "?raw", import: "default", eager: true },
+) as Record<string, string>;
 
 const LEGACY_V1_FILES = new Set([
-  "pages/ErpUsersPage.tsx",
-  "pages/ErpPermissionsCorePage.tsx",
-  "modules/system/hooks/useUsersAdminList.ts",
-  "modules/system/hooks/useCoreRoleUsers.ts",
-  "modules/system/api/usersCoreApi.ts",
+  "/src/pages/ErpUsersPage.tsx",
+  "/src/pages/ErpPermissionsCorePage.tsx",
+  "/src/modules/system/hooks/useUsersAdminList.ts",
+  "/src/modules/system/hooks/useCoreRoleUsers.ts",
+  "/src/modules/system/api/usersCoreApi.ts",
 ]);
 
 const FORBIDDEN = [
@@ -27,46 +27,25 @@ const FORBIDDEN = [
   "pages/ErpPermissionsCorePage",
 ];
 
-function listSourceFiles(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...listSourceFiles(full));
-    } else if (
-      /\.(ts|tsx)$/.test(entry.name) &&
-      !/\.(test|spec)\.(ts|tsx)$/.test(entry.name)
-    ) {
-      out.push(full);
-    }
-  }
-  return out;
-}
-
 describe("users V1 đã bị ngắt kết nối khỏi web", () => {
-  const files = listSourceFiles(SRC_ROOT).map((full) => ({
-    rel: relative(SRC_ROOT, full).split(sep).join("/"),
-    full,
-  }));
+  const entries = Object.entries(SOURCES);
 
   it("quét được source (tránh test pass rỗng)", () => {
-    expect(files.length).toBeGreaterThan(100);
+    expect(entries.length).toBeGreaterThan(100);
   });
 
   it("file V1 bị ngắt vẫn còn nguyên (chưa xóa)", () => {
-    const rels = new Set(files.map((f) => f.rel));
     for (const legacy of LEGACY_V1_FILES) {
-      expect(rels.has(legacy), `${legacy} phải còn tồn tại`).toBe(true);
+      expect(legacy in SOURCES, `${legacy} phải còn tồn tại`).toBe(true);
     }
   });
 
   it("không file runtime nào tham chiếu API/hook/page users V1", () => {
     const offenders: string[] = [];
-    for (const { rel, full } of files) {
-      if (LEGACY_V1_FILES.has(rel)) continue;
-      const content = readFileSync(full, "utf8");
+    for (const [path, content] of entries) {
+      if (LEGACY_V1_FILES.has(path)) continue;
       for (const token of FORBIDDEN) {
-        if (content.includes(token)) offenders.push(`${rel} -> ${token}`);
+        if (content.includes(token)) offenders.push(`${path} -> ${token}`);
       }
     }
     expect(offenders).toEqual([]);
