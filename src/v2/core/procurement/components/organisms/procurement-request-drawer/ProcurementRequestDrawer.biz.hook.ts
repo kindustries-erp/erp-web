@@ -5,6 +5,7 @@ import type {
   V2DropdownEntry,
 } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { isProcurementCreator } from "../../../procurement.creator";
 import type { ProcurementActionKey } from "../../../procurement.rules";
 import type {
   ProcurementDocumentRef,
@@ -22,7 +23,7 @@ export interface UseProcurementDrawerActionsInput {
   /** Hủy sửa: về chế độ xem (có xác nhận nếu đã đổi) */
   onCancelEdit: () => void;
   onSubmit: () => void;
-  /** Tạo mới: nút chính là "Tạo mới"; sửa nháp: "Cập nhật" */
+  /** Tạo mới (nút chính là "Gửi duyệt" ở cả tạo mới và sửa nháp) */
   creating?: boolean;
   /** Bật nút "Tạo mới / Cập nhật" (lưu và gửi duyệt một bước, opt-in qua `submitFromDrawer`) */
   canSubmitRequest?: boolean;
@@ -49,7 +50,6 @@ export function useProcurementDrawerActions(
     onClose,
     onCancelEdit,
     onSubmit,
-    creating = false,
     canSubmitRequest = false,
     onSubmitRequest,
     onTransition,
@@ -60,27 +60,18 @@ export function useProcurementDrawerActions(
     (s) => s.profile?.email ?? s.employee?.email ?? null,
   );
 
-  const isSubmitAllowed = React.useMemo(() => {
-    if (!detail) return true;
-    const hasCreatorInfo = Boolean(detail.createdBy || detail.createdByEmail);
-    if (!hasCreatorInfo) return true;
-    const idMatch = Boolean(
-      detail.createdBy && currentUserId && detail.createdBy === currentUserId,
-    );
-    const emailMatch = Boolean(
-      detail.createdByEmail &&
-      currentUserEmail &&
-      detail.createdByEmail.toLowerCase() === currentUserEmail.toLowerCase(),
-    );
-    return idMatch || emailMatch;
-  }, [detail, currentUserId, currentUserEmail]);
+  const isCreator = React.useMemo(
+    () =>
+      !detail || isProcurementCreator(detail, currentUserId, currentUserEmail),
+    [detail, currentUserId, currentUserEmail],
+  );
 
   const actionDropdownItems: V2DropdownEntry[] = React.useMemo(() => {
     if (!viewing || !canUpdate || !onTransition) return [];
     return availableActions.map((action) => {
       let disabled = false;
       let disabledReason: string | undefined;
-      if (action === "submit" && !isSubmitAllowed) {
+      if (action === "submit" && !isCreator) {
         disabled = true;
         disabledReason = t(
           "v2.procurement.actions.submitNotCreatorReason",
@@ -102,7 +93,7 @@ export function useProcurementDrawerActions(
     onTransition,
     availableActions,
     detail,
-    isSubmitAllowed,
+    isCreator,
     t,
   ]);
 
@@ -126,10 +117,10 @@ export function useProcurementDrawerActions(
         } else if (availableActions.includes("submit")) {
           list.push({
             label: t("v2.procurement.actions.submit", "Gửi duyệt"),
-            onClick: () => isSubmitAllowed && onTransition("submit", detail),
+            onClick: () => isCreator && onTransition("submit", detail),
             primary: true,
-            disabled: !isSubmitAllowed,
-            disabledReason: !isSubmitAllowed
+            disabled: !isCreator,
+            disabledReason: !isCreator
               ? t(
                   "v2.procurement.actions.submitNotCreatorReason",
                   "Chỉ người tạo mới được gửi duyệt",
@@ -151,7 +142,7 @@ export function useProcurementDrawerActions(
       {
         label: t("v2.procurement.actions.saveDraft", "Lưu nháp"),
         onClick: onSubmit,
-        // Có "Tạo mới / Cập nhật" thì "Lưu nháp" thành nút phụ
+        // Có nút "Gửi duyệt" (tạo mới và sửa nháp đều dùng chung) thì "Lưu nháp" thành nút phụ
         primary: !submitVisible,
         variant: submitVisible ? "outline" : undefined,
         loading: saving,
@@ -160,14 +151,12 @@ export function useProcurementDrawerActions(
     ];
     if (submitVisible) {
       list.push({
-        label: creating
-          ? t("v2.procurement.actions.create", "Tạo mới")
-          : t("v2.procurement.actions.update", "Cập nhật"),
-        onClick: () => isSubmitAllowed && onSubmitRequest?.(),
+        label: t("v2.procurement.actions.submit", "Gửi duyệt"),
+        onClick: () => isCreator && onSubmitRequest?.(),
         primary: true,
         loading: saving,
-        disabled: saving || loading || !isSubmitAllowed,
-        disabledReason: !isSubmitAllowed
+        disabled: saving || loading || !isCreator,
+        disabledReason: !isCreator
           ? t(
               "v2.procurement.actions.submitNotCreatorReason",
               "Chỉ người tạo mới được gửi duyệt",
@@ -189,8 +178,7 @@ export function useProcurementDrawerActions(
     loading,
     canSubmitRequest,
     onSubmitRequest,
-    creating,
-    isSubmitAllowed,
+    isCreator,
     t,
   ]);
 

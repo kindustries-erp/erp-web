@@ -41,6 +41,14 @@ export function applyApprovalGate(
   if (!gate.configured) {
     return actions.filter((action) => action !== "recall" || canRecall);
   }
+  // Người duyệt được chỉ định (không phải người tạo) chỉ được duyệt/từ chối (khớp backend).
+  const isApproverOnly =
+    Boolean(approverId) && approverId === gate.currentUserId && !isCreator;
+  if (isApproverOnly) {
+    return actions.filter(
+      (action) => (action === "approve" || action === "reject") && gate.enabled,
+    );
+  }
   const canDecide =
     gate.enabled &&
     !isCreator &&

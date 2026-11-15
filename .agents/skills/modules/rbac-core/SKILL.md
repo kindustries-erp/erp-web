@@ -107,11 +107,11 @@ erp-web/src/
 │   ├── hooks/
 │   │   ├── useCoreRoles.ts           # Hook danh sách vai trò, phân trang, lọc theo cột
 │   │   ├── useCorePermissionsEditor.ts # Hook quản lý matrix quyền (toggle, toggleRow, toggleColumn, toggleAll, save)
-│   │   └── useCoreRoleUsers.ts       # Hook gán và đồng bộ người dùng vào vai trò
+│   │   └── useCoreRoleUsers.ts       # [V1, đã ngắt, giữ file] gán user vào vai trò; V2 dùng rolesV2Api.getAllUsers
 │   └── types/
 │       └── rbac.ts                   # Types Role, PermissionMap, PERMISSION_RESOURCE_GROUPS
 └── pages/
-    └── ErpPermissionsCorePage.tsx    # Trang Quản lý Phân quyền & Vai trò chuẩn SpreadsheetPageTemplate
+    └── ErpPermissionsCorePage.tsx    # [V1, đã ngắt, giữ file] App.tsx map `permission` sang RolesPage V2 (rbac-roles)
 ```
 
 ---

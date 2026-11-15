@@ -242,6 +242,7 @@ registerV2ModuleLocale("procurement", {
       view: "View details",
       edit: "Edit",
       editDisabledReason: "Only drafts can be edited",
+      saveDraft: "Save draft",
       submitNotCreatorReason: "Only the creator can submit for approval",
       viewDetailInDrawer: "View details in Drawer",
       create: "Create",

@@ -12,6 +12,7 @@ const LABELS: Record<string, string> = {
   "v2.procurement.actions.recall": "Thu hồi",
   "v2.procurement.actions.approve": "Duyệt",
   "v2.procurement.actions.reject": "Từ chối",
+  "v2.procurement.actions.cancel": "Hủy",
 };
 const t = (key: string, fallback: string) => LABELS[key] ?? fallback;
 
@@ -223,6 +224,44 @@ describe("buildProcurementRowActions", () => {
     const submit = groups[1].items.find((i) => i.label === "Gửi duyệt")!;
     expect(submit.disabled).toBe(false);
     expect(submit.disabledReason).toBeUndefined();
+  });
+});
+
+describe("buildProcurementRowActions — Hủy và Xóa theo ma trận quyền", () => {
+  const build = (userId: string | null) =>
+    buildProcurementRowActions<any>({
+      t,
+      config: makeConfig(["cancel"], true),
+      canCreate: false,
+      canUpdate: true,
+      canDelete: true,
+      currentUserId: userId,
+      currentUserEmail: null,
+      ...deps(),
+    });
+  const itemOf = (
+    groups: ReturnType<ReturnType<typeof build>>,
+    label: string,
+  ) => groups.flatMap((g) => g.items).find((i) => i.label === label);
+
+  it("người không phải người tạo: Hủy và Xóa vẫn sáng (ma trận quyền quyết định)", () => {
+    const groups = build("user-2")({
+      id: "p1",
+      status: "APPROVED",
+      createdBy: "creator-1",
+    });
+    expect(itemOf(groups, "Hủy")?.disabled).toBeFalsy();
+    expect(itemOf(groups, "Xóa")?.disabled).toBeFalsy();
+  });
+
+  it("người tạo: Hủy và Xóa sáng", () => {
+    const groups = build("creator-1")({
+      id: "p1",
+      status: "APPROVED",
+      createdBy: "creator-1",
+    });
+    expect(itemOf(groups, "Hủy")?.disabled).toBeFalsy();
+    expect(itemOf(groups, "Xóa")?.disabled).toBeFalsy();
   });
 });
 

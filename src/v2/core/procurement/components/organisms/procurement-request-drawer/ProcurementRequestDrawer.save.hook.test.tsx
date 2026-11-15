@@ -111,4 +111,54 @@ describe("ProcurementRequestDrawer submitFromDrawer", () => {
       screen.queryByRole("button", { name: "Gửi duyệt" }),
     ).not.toBeInTheDocument();
   });
+
+  const submitFormProps = (documentId: string | null): ProcurementDrawerProps =>
+    ({
+      open: true,
+      documentId,
+      mode: "edit",
+      canUpdate: true,
+      submitFromDrawer: true,
+      onClose: vi.fn(),
+      onSubmitRequest: vi.fn(),
+      queryKey: "pr",
+      api: {
+        get: vi.fn().mockResolvedValue({
+          id: "r1",
+          requestNo: "PR-1",
+          requestDate: "2026-11-05",
+          status: "DRAFT",
+          orderingStatus: "NONE",
+          lines: [],
+        }),
+        create: vi.fn(),
+        replaceLines: vi.fn(),
+        list: vi.fn(),
+        transition: vi.fn(),
+      },
+    }) as unknown as ProcurementDrawerProps;
+
+  it("sửa nháp: nút chính là Gửi duyệt, không còn Cập nhật", async () => {
+    render(<ProcurementRequestDrawer {...submitFormProps("r1")} />, {
+      wrapper,
+    });
+    expect(
+      await screen.findByRole("button", { name: "Gửi duyệt" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Cập nhật" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("tạo mới: nút chính là Gửi duyệt, không còn Tạo mới", async () => {
+    render(<ProcurementRequestDrawer {...submitFormProps(null)} />, {
+      wrapper,
+    });
+    expect(
+      await screen.findByRole("button", { name: "Gửi duyệt" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Tạo mới" }),
+    ).not.toBeInTheDocument();
+  });
 });

@@ -59,6 +59,7 @@ Mỗi loại có một skill duy nhất, đã gồm V1, V2 và phần phụ. Ski
 | Drawer chi tiết hoặc form (V1) | `standardize-drawer` | `references/drawer-rules.md` |
 | Drawer dưới `src/v2/` | `standardize-drawer` | `references/v2-drawer.md` |
 | Tab chứng từ liên kết, cấn trừ, truy vết | `standardize-drawer` | `references/drawer-rules.md` mục 11 |
+| Modal dưới `src/v2/` (`V2Modal`, `V2ConfirmModal`) | `standardize-modal` | mục 9 của `standardize-modal/SKILL.md` |
 
 Đường dẫn đầy đủ: `.agents/skills/<skill>/references/<file>`. Quy trình từng bước và bộ grep audit: workflow `/standardize-table`, `/standardize-drawer` (xem `erp-ui-structure` Phần C). Modal và dashboard dùng `standardize-modal`, `standardize-dashboard-page`.
 

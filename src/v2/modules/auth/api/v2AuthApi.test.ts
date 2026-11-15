@@ -1,27 +1,35 @@
 import { describe, it, expect, vi } from "vitest";
 import { executeV2Login } from "./v2AuthApi";
-import * as authApiModule from "@/modules/auth/api/auth";
+import * as sessions from "@/v2/shared/api/authSessionsApi";
 
-vi.mock("@/modules/auth/api/auth", () => ({
-  loginApi: vi.fn(),
+vi.mock("@/v2/shared/api/authSessionsApi", () => ({
+  loginSession: vi.fn(),
 }));
 
 describe("executeV2Login", () => {
-  it("should delegate login call to v1 loginApi with identical payload", async () => {
+  it("calls the V2 login helper with the identical payload and returns its data", async () => {
     const mockResponse = {
-      message: "success",
-      employee: { id: "emp-1" },
-      access_token: "mock-token",
-      refresh_token: "mock-refresh",
-      expires: 3600,
-    } as unknown as authApiModule.LoginResponse;
-
-    vi.mocked(authApiModule.loginApi).mockResolvedValueOnce(mockResponse);
+      accessToken: "mock-token",
+      refreshToken: "mock-refresh",
+      expiresIn: 3600,
+      tokenType: "Bearer",
+      user: {
+        id: "u1",
+        email: "admin@liouni.com",
+        status: "ACTIVE",
+        employeeId: null,
+        legacyDirectusUserId: null,
+      },
+    } satisfies sessions.LoginSessionData;
+    vi.mocked(sessions.loginSession).mockResolvedValueOnce(mockResponse);
 
     const payload = { email: "admin@liouni.com", password: "password123" };
     const result = await executeV2Login(payload);
 
-    expect(authApiModule.loginApi).toHaveBeenCalledWith(payload);
+    expect(sessions.loginSession).toHaveBeenCalledWith(
+      expect.any(String),
+      payload,
+    );
     expect(result).toEqual(mockResponse);
   });
 });

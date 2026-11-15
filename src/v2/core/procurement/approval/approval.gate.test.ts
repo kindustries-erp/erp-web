@@ -15,6 +15,26 @@ const OFF: ApprovalGate = { ...ON, enabled: false };
 const ALL = ["submit", "recall", "approve", "reject"] as const;
 
 describe("applyApprovalGate", () => {
+  it("người duyệt được chỉ định (không phải người tạo): chỉ còn Duyệt và Từ chối", () => {
+    expect(
+      applyApprovalGate(
+        ["cancel", "close", "issue", "recall", "submit", "approve", "reject"],
+        { ...ON, currentUserId: "boss" },
+        { approverId: "boss", createdBy: "staff" },
+      ),
+    ).toEqual(["approve", "reject"]);
+  });
+
+  it("người duyệt chỉ định nhưng khóa tắt: không còn hành động nào để duyệt", () => {
+    expect(
+      applyApprovalGate(
+        ["approve", "reject"],
+        { ...OFF, currentUserId: "boss" },
+        { approverId: "boss", createdBy: "staff" },
+      ),
+    ).toEqual([]);
+  });
+
   it("không cấu hình duyệt, là người tạo: giữ nguyên danh sách", () => {
     expect(
       applyApprovalGate(
@@ -44,7 +64,7 @@ describe("applyApprovalGate", () => {
   it("khóa bật, đúng người được chọn: hiện duyệt/từ chối, ẩn thu hồi", () => {
     expect(
       applyApprovalGate([...ALL], ON, { approverId: "me", createdBy: "other" }),
-    ).toEqual(["submit", "approve", "reject"]);
+    ).toEqual(["approve", "reject"]);
   });
 
   it("khóa bật, người khác được chọn: ẩn duyệt/từ chối", () => {
@@ -62,7 +82,7 @@ describe("applyApprovalGate", () => {
         approverId: "me",
         createdBy: "other",
       }),
-    ).toEqual(["submit"]);
+    ).toEqual([]);
   });
 
   it("người tạo chứng từ không thấy duyệt/từ chối, kể cả khi là người được chọn", () => {
@@ -83,7 +103,7 @@ describe("applyApprovalGate", () => {
   it("người được chỉ định (khác người tạo): hiện duyệt/từ chối, không có thu hồi", () => {
     expect(
       applyApprovalGate([...ALL], ON, { approverId: "me", createdBy: "other" }),
-    ).toEqual(["submit", "approve", "reject"]);
+    ).toEqual(["approve", "reject"]);
   });
 
   it("chưa có người duyệt, không phải người tạo: hiện duyệt/từ chối, ẩn thu hồi", () => {
