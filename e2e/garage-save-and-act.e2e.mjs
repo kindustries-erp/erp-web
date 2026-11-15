@@ -191,17 +191,17 @@ const pickApproverAndConfirm = async () => {
 // ================= J. PR: Lưu nháp + Tạo mới / Cập nhật =================
 const prTitle = `${TAG} PR UI`;
 await step(
-  "J1 drawer tạo PR: Hủy | Lưu nháp | Tạo mới, không có Gửi duyệt",
+  "J1 drawer tạo PR: Hủy | Lưu nháp | Gửi duyệt (không còn Tạo mới)",
   async () => {
     const dialog = await openCreatePr();
     const names = await buttonNames(dialog);
     await shot(page, "J1-pr-create");
     check(
-      "J1 có Lưu nháp và Tạo mới",
-      names.includes("Lưu nháp") && names.includes("Tạo mới"),
+      "J1 có Lưu nháp và Gửi duyệt",
+      names.includes("Lưu nháp") && names.includes("Gửi duyệt"),
       names.join(" | "),
     );
-    check("J1 không có Gửi duyệt riêng", !names.includes("Gửi duyệt"));
+    check("J1 PR không còn nút Tạo mới", !names.includes("Tạo mới"));
     await page.keyboard.press("Escape");
   },
 );
@@ -212,7 +212,7 @@ await step(
     const dialog = await openCreatePr();
     await fillPrLine(dialog, prTitle);
     await fillTitle(dialog, prTitle);
-    await dialog.getByRole("button", { name: "Tạo mới", exact: true }).click();
+    await dialog.getByRole("button", { name: "Gửi duyệt", exact: true }).click();
     await pickApproverAndConfirm();
     const items = await poll(
       () => listByTitle(tao, `Vật tư ${prTitle}`),
@@ -246,7 +246,7 @@ await step(
 
 let draftPrId = null;
 const draftTitle = `${TAG} PR NHAP`;
-await step("J3 PR Lưu nháp → mở sửa → Cập nhật gửi duyệt cùng PR", async () => {
+await step("J3 PR Lưu nháp → mở sửa → Gửi duyệt cùng PR", async () => {
   const dialog = await openCreatePr();
   await fillPrLine(dialog, draftTitle);
   await fillTitle(dialog, draftTitle);
@@ -271,17 +271,17 @@ await step("J3 PR Lưu nháp → mở sửa → Cập nhật gửi duyệt cùng
   await menuItem(page, "Chỉnh sửa").click();
   const edit = page.getByRole("dialog").first();
   await edit
-    .getByRole("button", { name: "Cập nhật", exact: true })
+    .getByRole("button", { name: "Gửi duyệt", exact: true })
     .waitFor({ timeout: 20000 });
   await shot(page, "J3-pr-edit");
-  await edit.getByRole("button", { name: "Cập nhật", exact: true }).click();
+  await edit.getByRole("button", { name: "Gửi duyệt", exact: true }).click();
   await pickApproverAndConfirm();
   const after = await poll(
     () => api(tao, "GET", `/procurement-requests-garage/${draftPrId}`),
     (v) => v.data?.status !== "DRAFT",
   );
   check(
-    "J3 Cập nhật → cùng PR chuyển sang đã gửi duyệt",
+    "J3 Gửi duyệt → cùng PR chuyển sang đã gửi duyệt",
     after.data?.status && after.data.status !== "DRAFT",
     after.data?.status,
   );

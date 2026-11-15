@@ -1421,6 +1421,112 @@ await step(
   },
 );
 
+// ================= J. Ma trận quyền: người duyệt chỉ duyệt/từ chối; Hủy/Xóa theo quyền (tab requests và orders) =================
+// Người duyệt dùng context riêng để không đụng phiên người tạo
+const ctxDuyet = await browser.newContext({
+  viewport: { width: 1440, height: 900 },
+});
+const pageDuyet = await ctxDuyet.newPage();
+pageDuyet.setDefaultTimeout(20000);
+
+await step("J1 người duyệt được chỉ định: không có Hủy với PR đã duyệt", async () => {
+  await login(pageDuyet, DUYET_EMAIL);
+  await pageDuyet.goto(`${WEB}/v2/garage-procurement?tab=requests`, {
+    waitUntil: "domcontentloaded",
+  });
+  await waitTable(pageDuyet);
+  await openRowMenu(pageDuyet, prNos.approved);
+  const cancel = menuItem(pageDuyet, "Hủy");
+  check(
+    "J1 Người duyệt được chỉ định không thấy Hủy (chỉ Duyệt/Từ chối)",
+    (await cancel.count()) === 0,
+  );
+  await pageDuyet.keyboard.press("Escape");
+});
+
+await step("J2 người tạo: Hủy bật với PR đã duyệt của mình", async () => {
+  await page.goto(`${WEB}/v2/garage-procurement?tab=requests`, {
+    waitUntil: "domcontentloaded",
+  });
+  await waitTable(page);
+  await openRowMenu(page, prNos.approved);
+  const cancel = menuItem(page, "Hủy");
+  check(
+    "J2 Hủy bật với người tạo",
+    (await cancel.count()) === 1 && (await cancel.isEnabled()),
+  );
+  await page.keyboard.press("Escape");
+});
+
+await step("J3 không phải người duyệt, có DELETE: Xóa bật với nháp của người khác", async () => {
+  await pageDuyet.goto(`${WEB}/v2/garage-procurement?tab=requests`, {
+    waitUntil: "domcontentloaded",
+  });
+  await waitTable(pageDuyet);
+  await openRowMenu(pageDuyet, prNos.draft);
+  const del = menuItem(pageDuyet, "Xóa");
+  check(
+    "J3 Xóa bật với nháp của người khác (ma trận quyền)",
+    (await del.count()) === 1 && (await del.isEnabled()),
+  );
+  await pageDuyet.keyboard.press("Escape");
+});
+
+await step("J4 người duyệt: Xóa bật với nháp do chính mình tạo", async () => {
+  const own = await api(duyet, "POST", "/procurement-requests-garage", {
+    requestDate: TODAY,
+    title: `${TAG} PR nháp của người duyệt`,
+    lines: [
+      { lineType: "GOODS", itemName: `Vật tư ${TAG}`, qtyRequested: 1, estUnitPrice: 100 },
+    ],
+  });
+  const ownNo = (
+    await api(duyet, "GET", `/procurement-requests-garage/${own.data.id}`)
+  ).data.requestNo;
+  await pageDuyet.goto(`${WEB}/v2/garage-procurement?tab=requests`, {
+    waitUntil: "domcontentloaded",
+  });
+  await waitTable(pageDuyet);
+  await openRowMenu(pageDuyet, ownNo);
+  const del = menuItem(pageDuyet, "Xóa");
+  check(
+    "J4 Xóa bật với nháp do chính mình tạo",
+    (await del.count()) === 1 && (await del.isEnabled()),
+  );
+  await pageDuyet.keyboard.press("Escape");
+});
+
+await step("J5 không phải người duyệt, có DELETE: Xóa bật với đơn mua nháp của người tạo", async () => {
+  // Tạo PO nháp mới: PO nháp dùng ở trên có thể đã đổi trạng thái ở các mục trước
+  const j5 = await api(tao, "POST", "/procurement-orders-garage", {
+    orderDate: TODAY,
+    supplierId: SUPPLIER,
+    supplierName: "NCC E2E",
+    lines: [
+      {
+        lineType: "GOODS",
+        itemCode: `E2E-J5-${TAG}`.slice(0, 40),
+        itemName: `PO nháp J5 ${TAG}`,
+        qtyOrdered: 1,
+        unitPrice: 50,
+      },
+    ],
+  });
+  const j5No = j5.data.orderNo;
+  await pageDuyet.goto(`${WEB}/v2/garage-procurement?tab=orders`, {
+    waitUntil: "domcontentloaded",
+  });
+  await waitTable(pageDuyet);
+  await openRowMenu(pageDuyet, j5No);
+  const del = menuItem(pageDuyet, "Xóa");
+  check(
+    "J5 Xóa PO bật với người không phải người tạo (ma trận quyền)",
+    (await del.count()) === 1 && (await del.isEnabled()),
+  );
+  await pageDuyet.keyboard.press("Escape");
+});
+
+await ctxDuyet.close();
 await browser.close();
 
 // ---------- Đối chiếu DB qua API ----------
