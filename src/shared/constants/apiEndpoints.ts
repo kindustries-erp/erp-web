@@ -4,10 +4,10 @@
  */
 export enum ErpApiEndpoint {
   // 1. Phân hệ Xác thực & Người dùng (Auth & Users)
-  AUTH_LOGIN = "/api/v1/auth/login",
-  AUTH_LOGOUT = "/api/v1/auth/logout",
-  AUTH_REFRESH = "/api/v1/auth/refresh",
-  AUTH_ME = "/api/v1/auth/me",
+  AUTH_LOGIN = "/api/v2/auth-sessions/login",
+  AUTH_LOGOUT = "/api/v2/auth-sessions/logout",
+  AUTH_REFRESH = "/api/v2/auth-sessions/refresh",
+  AUTH_ME = "/api/v2/auth-sessions/profile",
   USERS = "/api/v1/users",
   EMPLOYEES = "/api/v1/employees",
 

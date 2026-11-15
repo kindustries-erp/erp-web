@@ -170,6 +170,23 @@ export const NAV_DEFS: RawNavDef[] = [
     href: "/permission",
   },
   // v2-module:rbac-roles:nav
+  {
+    id: "users-management",
+    sectionId: "settings",
+    labelKey: "v2.nav.items.usersManagement",
+    fallback: "Quản lý tài khoản",
+    icon: Users,
+    href: "/v2/users-management",
+  },
+  {
+    id: "employees-management",
+    sectionId: "settings",
+    labelKey: "v2.nav.items.employeesManagement",
+    fallback: "Quản lý nhân viên",
+    icon: FileText,
+    href: "/v2/employees-management",
+  },
+  // v2-module:users-management:nav
   // plop:v2-nav-items
 ];
 

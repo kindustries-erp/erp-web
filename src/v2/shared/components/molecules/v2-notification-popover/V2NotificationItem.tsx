@@ -44,7 +44,7 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
   const { t, locale } = useV2Translation();
   const dateLocale = locale === "en" ? enUS : vi;
 
-  // Click vào nội dung chỉ điều hướng; đánh dấu đã đọc dùng icon riêng.
+  // Click vào nội dung: kích hoạt onClick (useV2NotificationPopover sẽ tự động markAsRead và điều hướng).
   const handleClick = () => {
     onClick?.(notification);
   };

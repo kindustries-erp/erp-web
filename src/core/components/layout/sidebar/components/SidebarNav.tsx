@@ -127,6 +127,10 @@ export function SidebarNav({
     ErpResource.ADMIN_USERS,
     ErpAction.READ,
   );
+  const canManageAdminUsers = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.MANAGE,
+  );
   const canReadActivityLogs = useHasPermission(
     ErpResource.ACTIVITY_LOGS,
     ErpAction.READ,
@@ -390,9 +394,9 @@ export function SidebarNav({
                 <UserSquare2 className="w-4 h-4 opacity-65 flex-shrink-0" />
               }
               label={t("nav.items.erpEmployees")}
-              active={currentPage === "erp-employees"}
-              onClick={() => navTo("erp-employees")}
-              contextPage="erp-employees"
+              active={currentPage === "employees-management"}
+              onClick={() => navTo("employees-management")}
+              contextPage="employees-management"
             />
           )}
           {canReadAttachments && (
@@ -434,20 +438,22 @@ export function SidebarNav({
               icon={<Shield className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.accessControl")}
               active={
-                currentPage === "erp-users" ||
+                currentPage === "users-management" ||
                 currentPage === "permission" ||
                 currentPage === "erp-permissions-core" ||
                 currentPage === "erp-activity-logs"
               }
             >
+              {canManageAdminUsers && (
+                <NavGroupItem
+                  label={t("nav.items.users")}
+                  active={currentPage === "users-management"}
+                  onClick={() => navTo("users-management")}
+                  contextPage="users-management"
+                />
+              )}
               {canReadAdminUsers && (
                 <>
-                  <NavGroupItem
-                    label={t("nav.items.users")}
-                    active={currentPage === "erp-users"}
-                    onClick={() => navTo("erp-users")}
-                    contextPage="erp-users"
-                  />
                   <NavGroupItem
                     label={t("nav.items.phanquyen")}
                     active={

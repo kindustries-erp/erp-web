@@ -150,12 +150,14 @@ const ErpSuppliersPage = lazy(() =>
     default: m.ErpSuppliersPage,
   })),
 );
-const ErpUsersPage = lazy(() =>
-  import("@/pages/ErpUsersPage").then((m) => ({ default: m.ErpUsersPage })),
+const UsersManagementPage = lazy(() =>
+  import("@/v2/modules/users-management").then((m) => ({
+    default: m.UsersManagementGuarded,
+  })),
 );
-const ErpEmployeesPage = lazy(() =>
-  import("@/pages/ErpEmployeesPage").then((m) => ({
-    default: m.ErpEmployeesPage,
+const EmployeesManagementPage = lazy(() =>
+  import("@/v2/modules/employees-management").then((m) => ({
+    default: m.EmployeesManagementPage,
   })),
 );
 const ErpActivityLogsPage = lazy(() =>
@@ -313,8 +315,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-inventory-item-types": InventoryItemTypesPage,
   "erp-suppliers": ErpSuppliersPage,
   "erp-customers": ErpCustomersPage,
-  "erp-employees": ErpEmployeesPage,
-  "erp-users": ErpUsersPage,
+  "employees-management": EmployeesManagementPage,
+  "users-management": UsersManagementPage,
   "erp-activity-logs": ErpActivityLogsPage,
   "email-inbox": EmailInboxPage,
   permission: ErpPermissionsCorePage,

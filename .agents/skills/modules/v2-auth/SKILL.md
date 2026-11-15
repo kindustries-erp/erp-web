@@ -14,7 +14,7 @@ Module quản lý toàn bộ luồng đăng nhập của ERP Web theo chuẩn ki
 ```
 src/v2/modules/auth/
 ├── api/
-│   ├── v2AuthApi.ts                # Wrapper ủy thác gọi API V1 loginApi (/api/v1/auth/login)
+│   ├── v2AuthApi.ts                # executeV2Login: gọi thẳng /api/v2/auth-sessions/login (qua auth.core loginApi)
 │   └── v2AuthApi.test.ts           # Co-located unit test
 ├── domain/
 │   ├── auth.types.ts               # Interface LoginCredentials, LoginFormErrors, AuthStateSummary
@@ -61,3 +61,23 @@ src/v2/modules/auth/
    - Sử dụng `useV2Translation()` với namespace `v2.auth.*` trong cả `vi.ts` và `en.ts`.
 6. **Testing Pyramid 3 Tầng**:
    - 9/9 test files, 23/23 tests pass 100%.
+
+
+---
+
+## 🔌 Kết nối API Auth V2 (`/api/v2/auth-sessions`)
+
+Web đăng nhập, refresh, đăng xuất, hồ sơ, đổi mật khẩu, impersonate qua **API V2** (`erp-api` skill `auth-sessions`). `authStore` (95 file import) giữ nguyên; chỉ lớp API đổi và map về kiểu cũ ở đúng một chỗ.
+
+| Việc | File | Ghi chú |
+| :--- | :--- | :--- |
+| Endpoint + helper refresh | `src/v2/shared/api/authSessionsApi.ts` | `AUTH_SESSIONS_PATH`, `refreshSession(baseUrl, refreshToken)` dùng axios trần (không interceptor, tránh vòng lặp 401); trả lại dạng cũ `{ access_token, refresh_token, expires }`. |
+| Refresh khi 401 | `src/core/api/axiosInstance.ts` (2 chỗ: phiên thường và khôi phục actor sau impersonate), `src/v2/shared/api/v2HttpClient.ts` | Cùng gọi `refreshSession`. |
+| login, profile, impersonate, logout, selfUpdateProfile, changePassword | `src/modules/auth/api/auth.core.ts` | Bóc `{ message, data }`; `selfUpdateProfile` đổi snake_case <-> camelCase (`full_name` <-> `fullName`). Logout bắt buộc gọi V2, nếu không phiên V2 không bị thu hồi. |
+| Hàm cũ cùng tên | `src/modules/auth/api/auth.ts`, `src/shared/constants/apiEndpoints.ts` | Đã trỏ V2. |
+
+Lưu ý:
+- Server chấp nhận một lần refresh token của v1, nên người đang đăng nhập bằng v1 không bị văng khi web đổi sang v2.
+- Hợp đồng V2 camelCase thống nhất (`accessToken`, `refreshToken`, `expiresIn`), khác v1 trộn `access_token`.
+- Các script E2E khác lấy token API qua `/api/v1/auth/login` (V1 vẫn chạy song song).
+- Test: `bunx vitest run src/v2/shared/api src/modules/auth src/v2/modules/auth`; E2E: `bun run e2e:auth-sessions`.

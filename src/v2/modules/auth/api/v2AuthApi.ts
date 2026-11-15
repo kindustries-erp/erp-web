@@ -1,14 +1,13 @@
 import {
-  loginApi,
-  type LoginRequest,
-  type LoginResponse,
-} from "@/modules/auth/api/auth";
+  loginSession,
+  type LoginSessionData,
+} from "@/v2/shared/api/authSessionsApi";
+import { V2_API_BASE_URL } from "@/v2/shared/api/v2HttpClient";
 
-/**
- * Wrapper API đăng nhập V2 - Tái sử dụng 100% endpoint V1 hiện hành (/api/v1/auth/login)
- */
-export async function executeV2Login(
-  payload: LoginRequest,
-): Promise<LoginResponse> {
-  return loginApi(payload);
+/** Đăng nhập V2: gọi thẳng `/api/v2/auth-sessions/login`, không đi qua code V1. */
+export async function executeV2Login(payload: {
+  email: string;
+  password: string;
+}): Promise<LoginSessionData> {
+  return loginSession(V2_API_BASE_URL, payload);
 }

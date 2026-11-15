@@ -1,3 +1,4 @@
+import { V2_PAGE_REGISTRY } from "./v2PageRegistry";
 import { describe, expect, it } from "vitest";
 import { resolveV2Route, isAdminPath, type V2RouteDef } from "./v2RouteConfig";
 
@@ -14,6 +15,15 @@ describe("resolveV2Route", () => {
     expect(resolveV2Route("/v2/admin/dashboard")?.id).toBe("admin-dashboard");
     expect(resolveV2Route("/v2/admin/dashboard")?.isAdmin).toBe(true);
     expect(resolveV2Route("/v2/admin/users")?.id).toBe("admin-users");
+  });
+
+  it("mục Người dùng của admin dùng trang users thật và quyền manage", () => {
+    const route = resolveV2Route("/v2/admin/users");
+    expect(route?.permission).toEqual({
+      collection: "admin_users",
+      action: "manage",
+    });
+    expect(V2_PAGE_REGISTRY["admin-users"]).toBeTypeOf("function");
   });
 
   it("identifies admin paths correctly with isAdminPath", () => {

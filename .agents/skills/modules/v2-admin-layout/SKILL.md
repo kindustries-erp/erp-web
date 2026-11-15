@@ -20,7 +20,7 @@ Hệ thống ERP V2 phân tách thành **2 không gian làm việc độc lập*
      - `/v2/admin/reports/*`: Báo cáo bán hàng, tồn kho, tài chính cấp cao.
      - `/v2/admin/users`: Quản lý người dùng & tài khoản.
      - `/v2/admin/roles-permissions`: Phân quyền & Ma trận vai trò (RBAC).
-     - `/v2/admin/audit-logs`: Nhật ký hoạt động & Giám sát truy cập.
+     - `/v2/admin/audit-logs`: Nhật ký hoạt động & Giám sát truy cập (trang chỉ đọc, xem skill `audit-logs`).
      - `/v2/admin/settings`: Cấu hình hệ thống, chi nhánh & công ty.
    - **Bố cục**: Sử dụng `V2AdminLayout` (Menu quản trị phân nhóm ĐIỀU HÀNH - BÁO CÁO - BẢO MẬT - HỆ THỐNG).
    - **Bảo vệ**: Bọc bởi `AdminRouteGuard` (chặn 100% người dùng không phải Super Admin).

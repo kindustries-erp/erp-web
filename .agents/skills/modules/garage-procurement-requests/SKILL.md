@@ -174,7 +174,7 @@ src/v2/core/procurement/
 
 ## 7. Cập nhật 2026-11-12: Tạo mới / Cập nhật và bỏ Gửi duyệt riêng
 
-- Drawer PR Garage: Hủy | Lưu nháp | Tạo mới (khi tạo) hoặc Cập nhật (khi sửa nháp). Chỉ nút Tạo mới/Cập nhật gửi duyệt, qua `api.saveAndSubmit` (`POST` / `PATCH .../save-and-submit`, một request).
+- Drawer PR Garage: Hủy | Lưu nháp | Gửi duyệt (từ 2026-11-14, xem mục 17). Chỉ nút Gửi duyệt gửi duyệt, qua `api.saveAndSubmit` (`POST` / `PATCH .../save-and-submit`, một request).
 - Khóa duyệt bật: modal chọn người duyệt (`SubmitApprovalModal`) mở trước khi gọi. `ProcurementListPage` và `GarageProcurementRequestsPage` truyền `approvalConfigPath` cho drawer để tải danh sách người duyệt.
 - PR nháp không còn "Gửi duyệt" ở menu dòng (`availableActions` lọc `submit`) và trong drawer xem.
 - Code: `ProcurementRequestDrawer.save.hook.ts` (tách khỏi `biz.hook`), `ProcurementRequestDrawer.hook.ts`.
@@ -195,6 +195,21 @@ src/v2/core/procurement/
 - Cột **Đề nghị mua** đã dời xuống cuối bảng tab đơn mua và đứng cuối trong view visibility (`garageProcurementOrders.config.tsx`). Không có skill web riêng cho đơn mua, nên mục này ghi tại đây.
 - Test: `core/procurement/columns/procurementColumns.test.tsx` (có filter, thứ tự cuối).
 
+## 17. Cập nhật 2026-11-14: nút Gửi duyệt trong drawer
+
+- Nút chính của drawer PR Garage (tạo mới và sửa nháp) có nhãn "Gửi duyệt" (`v2.procurement.actions.submit`), thay cho "Tạo mới" / "Cập nhật". Vẫn gọi `onSubmitRequest` và vẫn khóa theo `isSubmitAllowed` (chỉ người tạo gửi duyệt).
+- Hook: `ProcurementRequestDrawer.biz.hook.ts` (`creating` không còn dùng trong footer; prop vẫn có trong type để không ảnh hưởng nơi gọi). Nhãn "Tạo mới"/"Cập nhật" của `ProcurementOrderDrawer` (PO) không đổi.
+- Test: `ProcurementRequestDrawer.save.hook.test.tsx` (sửa nháp và tạo mới đều ra "Gửi duyệt"), `ProcurementRequestDrawer.mode.test.tsx`.
+- Thông báo thu hồi/hủy phía API: xem `erp-api/.agents/skills/modules/garage-procurement-requests/SKILL.md` mục 16.
+
+## 18. Cập nhật 2026-11-15: ma trận quyền cho hủy và xóa; người duyệt chỉ duyệt/từ chối
+- Hủy và Xóa không còn kiểm người tạo ở web: hiện theo quyền (`config.availableActions` và `useV2HasPermission`), khớp API. `CREATOR_ONLY_ACTION_REASON` (`src/v2/core/procurement/procurement.creator.ts`) chỉ còn `submit`.
+- Người duyệt được chỉ định (khác người tạo, khóa duyệt bật) chỉ thấy Duyệt/Từ chối: `applyApprovalGate` (`src/v2/core/procurement/approval/approval.gate.ts`) có nhánh `isApproverOnly`. Không có cấu hình duyệt (họ thường) thì không đổi.
+- Menu dòng: builder tách nhóm chuyển trạng thái sang `hooks/procurementRowTransitions.tsx` (giữ `procurementRowActions.builder.tsx` dưới 250 dòng).
+- Drawer PR: "Hủy" chỉ bị khóa theo người tạo đã bỏ; "Gửi duyệt" vẫn khóa theo `isCreator`.
+- Lý do đã xóa khỏi i18n: `cancelNotCreatorReason`, `deleteNotCreatorReason`.
+- Test: `approval.gate.test.ts`, `procurementRowActions.builder.test.tsx`, `ProcurementRequestDrawer.biz.hook.test.tsx`, `procurement.creator.test.ts`.
+- E2E `e2e/garage-procurement.e2e.mjs` mục J1–J5 (2026-11-15): J1–J5 PASS. Tổng 86: PASS 82, FAIL 4 (G1, G5, I3, E4; ngoài phạm vi, chưa kiểm baseline).
 ## Hợp đồng phân trang chuẩn v2 (pagination)
 
 - API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.

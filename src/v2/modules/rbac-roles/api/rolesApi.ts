@@ -18,6 +18,8 @@ import type {
 
 const BASE = "/api/v2/rbac-roles";
 const OPTIONS_PAGE_SIZE = 20;
+const USERS_BASE = "/api/v2/users-management";
+const USERS_PAGE_SIZE = 1000;
 
 export const toRolesListParams = (query: V2TableQuery) => ({
   page: query.page,
@@ -155,14 +157,17 @@ export const rolesV2Api = {
   saveUsers: async (roleId: string, userIds: string[]) => {
     await v2HttpClient.patch(`${BASE}/${roleId}/users`, { userIds });
   },
+  /** Danh sách tài khoản để gán vào vai trò, lấy từ `/api/v2/users-management` */
   getAllUsers: async () => {
     try {
-      const { data } = await v2HttpClient.get<any>("/api/v1/admin/users", {
-        params: { pageSize: 1000 },
-      });
-      const list =
-        data?.data ?? data?.items ?? (Array.isArray(data) ? data : []);
-      return list.map((u: any) => ({
+      const { data } = await v2HttpClient.get<{
+        items?: {
+          id: string;
+          email?: string | null;
+          employee?: { fullName?: string | null } | null;
+        }[];
+      }>(USERS_BASE, { params: { page: 1, pageSize: USERS_PAGE_SIZE } });
+      return (data.items ?? []).map((u) => ({
         id: u.id,
         display: u.email || u.id,
         roleName: u.employee?.fullName || null,
