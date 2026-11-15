@@ -19,13 +19,12 @@ const pagination = {
 describe("auditLogsV2Api", () => {
   beforeEach(() => get.mockReset());
 
-  it("dịch tham số: date_from ưu tiên, sorts lặp, bỏ giá trị rỗng", () => {
+  it("dịch tham số: chỉ date_from/date_to, sorts lặp, bỏ giá trị rỗng", () => {
     const p = toAuditLogsListParams({
       page: 2,
       module: "users",
-      dateFrom: "2026-01-01",
       date_from: "2026-02-01",
-      dateTo: "2026-03-01",
+      date_to: "2026-03-01",
       sorts: ["-createdAt", "module"],
       search: "",
     });

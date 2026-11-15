@@ -1,4 +1,4 @@
-// E2E Nhật ký hoạt động (/erp-activity-logs): bảng và timeline user đi qua API v2 /api/v2/audit-logs.
+// E2E Nhật ký hoạt động V1 (/erp-activity-logs): bảng đi qua API V1 /api/v1/audit-logs-core (không gọi v2).
 // Chỉ đọc. E2E_PASSWORD bắt buộc; E2E_ADMIN_EMAIL mặc định admin@liouni.com. KHÔNG chạy trên DB production.
 // Chạy: bun run e2e:audit-logs
 import { chromium } from "playwright-core";
@@ -53,10 +53,10 @@ try {
     (await page.locator("table tbody tr").count()) > 0,
   );
   check(
-    "A2 web gọi /api/v2/audit-logs trả 200, không gọi v1",
+    "A2 trang V1 gọi /api/v1/audit-logs-core trả 200, không gọi v2",
     calls.some(
-      (c) => c.url.includes("/api/v2/audit-logs") && c.status === 200,
-    ) && !calls.some((c) => c.url.includes("/api/v1/audit-logs-core")),
+      (c) => c.url.includes("/api/v1/audit-logs-core") && c.status === 200,
+    ) && !calls.some((c) => c.url.includes("/api/v2/audit-logs")),
     JSON.stringify(calls.map((c) => c.status)),
   );
   await page.screenshot({ path: `${SHOTS}audit-logs-table.png` });
