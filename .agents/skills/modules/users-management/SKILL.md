@@ -11,7 +11,7 @@ description: Module tri thức Quản lý tài khoản V2 trong erp-web gồm l�
 - Trong shell V1, App.tsx mount `UsersManagementGuarded` (cổng quyền `admin_users:manage`, không đủ quyền thì không render và không gọi API); router `/v2/*` dùng `UsersManagementPage` với `PermissionGuard`.
 - Quyền: `admin_users` với action `manage` (route guard, menu, nút tạo, row action). Khớp guard backend `admin_users:manage`. Menu V1 shell cũng ẩn mục này khi chỉ có `read`.
 - Backend: `/api/v2/users-management` (bảng `users_management`, `users_management` là nguồn chính, mirror một chiều sang `core_users` cho các FK cũ; đăng nhập qua auth v2 `/api/v2/auth-sessions`, xem skill `v2-auth`). Chi tiết API: skill `erp-users` của erp-api (mục 0).
-- V1 (`ErpUsersPage.tsx`, `/api/v1/admin/users`) đã tạm ngắt trên web (không còn được import runtime), giữ file và API để quay lại; chỉ xóa khi có lệnh. Còn consumer V1: trang phân quyền V1 (`useCoreRoleUsers`, `usersAdminApi`).
+- V1 (`ErpUsersPage.tsx`, `/api/v1/admin/users`) đã tạm ngắt trên web (không còn được import runtime), giữ file và API để quay lại; chỉ xóa khi có lệnh. Không còn consumer runtime: trang phân quyền V1 (`ErpPermissionsCorePage.tsx`, `useCoreRoleUsers`, `useUsersAdminList`, `usersAdminApi`) cũng đã ngắt (App.tsx map `permission` sang `RolesPage` V2, gán user cho role dùng `rolesV2Api.getAllUsers`). Test guard `src/shared/utils/noV1UsersApi.test.ts` chặn nối lại, chỉ cho phép 5 file V1 giữ lại.
 - Tài khoản không có xóa: chỉ ngưng hoạt động / kích hoạt.
 
 ## 2. Cấu trúc
