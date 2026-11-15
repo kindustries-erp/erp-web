@@ -188,3 +188,16 @@ describe("encodeStateParam & decodeStateParam (Compact Human-Readable URL Format
     expect(decodeStateParam("")).toBeNull();
   });
 });
+
+describe("URL nhân viên (employees-management)", () => {
+  it("URL chuẩn khớp tên module", () => {
+    expect(pageToPath("employees-management")).toBe("/employees-management");
+    expect(pathToPage("/employees-management", "")?.page).toBe(
+      "employees-management",
+    );
+  });
+
+  it("URL cũ /erp-employees của trang V1 vẫn mở trang mới", () => {
+    expect(pathToPage("/erp-employees", "")?.page).toBe("employees-management");
+  });
+});

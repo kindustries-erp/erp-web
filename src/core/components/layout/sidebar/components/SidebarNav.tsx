@@ -390,9 +390,9 @@ export function SidebarNav({
                 <UserSquare2 className="w-4 h-4 opacity-65 flex-shrink-0" />
               }
               label={t("nav.items.erpEmployees")}
-              active={currentPage === "erp-employees"}
-              onClick={() => navTo("erp-employees")}
-              contextPage="erp-employees"
+              active={currentPage === "employees-management"}
+              onClick={() => navTo("employees-management")}
+              contextPage="employees-management"
             />
           )}
           {canReadAttachments && (

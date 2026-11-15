@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "employees",
+  "entity": "Employee",
+  "barrel": "src/v2/core/employees/index.ts",
+  "localeNamespace": "employees",
+  "exports": {
+    "configType": "EmployeeModuleConfig",
+    "apiType": "EmployeeApi",
+    "keysFactory": "createEmployeeKeys",
+    "recordType": "EmployeeRecord",
+    "formValueType": "EmployeeFormValue",
+    "listController": "useEmployeeListController",
+    "query": "useEmployeesQuery",
+    "drawer": "EmployeeDrawer",
+    "viewVisibility": "EMPLOYEE_VIEW_VISIBILITY"
+  }
+}

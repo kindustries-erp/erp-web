@@ -49,7 +49,7 @@ export type PageKey =
   | "erp-inventory-item-types"
   | "erp-suppliers"
   | "erp-customers"
-  | "erp-employees"
+  | "employees-management"
   | "erp-users"
   | "erp-activity-logs"
   | "permission"

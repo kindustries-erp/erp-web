@@ -552,7 +552,7 @@ export function useNavItems(): NavSearchItem[] {
     const adminSection = t("nav.sections.admin");
     if (showHR) {
       items.push({
-        key: "erp-employees",
+        key: "employees-management",
         label: t("nav.items.erpEmployees"),
         section: adminSection,
         keywords: ["nhan vien", "nhan su", "employees", "staff", "hr"],

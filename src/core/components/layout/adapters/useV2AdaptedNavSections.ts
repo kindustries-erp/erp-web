@@ -527,10 +527,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
       const items: V2SidebarItem[] = [];
       if (showHR) {
         items.push({
-          id: "erp-employees",
+          id: "employees-management",
           label: t("nav.items.erpEmployees", "Nhân sự"),
           icon: UserSquare2,
-          href: "/erp-employees",
+          href: "/employees-management",
         });
       }
       if (canReadAttachments) {

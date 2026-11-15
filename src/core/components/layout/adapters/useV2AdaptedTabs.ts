@@ -63,7 +63,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-invoices": ReceiptText,
   "journal-entry": FileText,
   "settings-accounts": Layers,
-  "erp-employees": UserSquare2,
+  "employees-management": UserSquare2,
   attachments: Paperclip,
   "email-inbox": Mail,
   "erp-users": Users,
@@ -145,7 +145,7 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.journal", "Nhật ký chung");
       case "settings-accounts":
         return t("nav.items.accounts", "Hệ thống tài khoản");
-      case "erp-employees":
+      case "employees-management":
         return t("nav.items.erpEmployees", "Nhân sự");
       case "attachments":
         return t("nav.items.attachments", "Tệp đính kèm");

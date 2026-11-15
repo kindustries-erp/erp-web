@@ -22,7 +22,7 @@ src/v2/core/users/                      # lõi họ users
 ├── users.locale.ts                     # i18n VI/EN v2.users.*
 ├── api/
 │   ├── userApi.type.ts                 # UserApi (list, options, get, create, update, activate, deactivate, resetPassword)
-│   ├── usersApi.ts                     # usersV2Api + mapper payload/params; listEmployees (tạm dùng /api/v1/employees)
+│   ├── usersApi.ts                     # usersV2Api + mapper payload/params; listEmployees (/api/v2/employees?status=ACTIVE)
 │   ├── userKeys.ts                     # createUserKeys, userKeys
 │   ├── dtos/user.dto.ts
 │   ├── queries/                        # useUsersQuery, useUserEmployeeOptionsQuery
@@ -43,7 +43,7 @@ src/v2/modules/users-management/        # thin module: api client, config, page,
 - Email chỉ nhập khi tạo; mật khẩu 8–72 ký tự (kiểm cả client và server). Sửa chỉ đổi `status` và `employeeId` (rỗng = gỡ liên kết). Backend chặn tự ngưng chính mình (400) và trả 409 khi nhân viên đã gắn user khác.
 - Đặt lại mật khẩu / ngưng hoạt động thu hồi phiên đăng nhập ở backend. Hộp thoại xóa giá trị mật khẩu khi đóng.
 - **Múi giờ**: DB `timestamptz`, API trả ISO UTC, bảng hiển thị theo múi giờ trình duyệt qua atom `V2TableDateCell`.
-- Nhân viên để liên kết: `listEmployees` gọi `/api/v1/employees?page=1&pageSize=200` (chưa có API v2 nhân viên; đổi khi có).
+- Nhân viên để liên kết: `listEmployees` gọi `/api/v2/employees?page=1&pageSize=200&status=ACTIVE` (họ employees, xem skill `employees-core`).
 - Mọi chuỗi hiển thị qua `useV2Translation` với khóa `v2.users.*` (lõi) và `v2.usersManagement.*` (module).
 
 ## 4. Kiểm thử

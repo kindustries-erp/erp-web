@@ -18,6 +18,7 @@ import type {
 
 const BASE = "/api/v2/users-management";
 const OPTIONS_PAGE_SIZE = 20;
+const EMPLOYEES_BASE = "/api/v2/employees";
 const EMPLOYEE_PAGE_SIZE = 200;
 
 export const toUserListParams = (query: V2TableQuery) => ({
@@ -125,14 +126,13 @@ export const usersV2Api = {
         )
       ).data,
     ),
-  /** Nhân viên để liên kết. Chưa có API v2 riêng cho nhân viên nên dùng endpoint danh sách hiện có. */
+  /** Nhân viên đang làm để liên kết, lấy từ `/api/v2/employees` (backend cũng từ chối nhân viên đã nghỉ). */
   listEmployees: async (): Promise<UserEmployeeOptionDto[]> => {
     const { data } = await v2HttpClient.get<{
       items?: UserEmployeeOptionDto[];
-      data?: UserEmployeeOptionDto[];
-    }>("/api/v1/employees", {
-      params: { page: 1, pageSize: EMPLOYEE_PAGE_SIZE },
+    }>(EMPLOYEES_BASE, {
+      params: { page: 1, pageSize: EMPLOYEE_PAGE_SIZE, status: "ACTIVE" },
     });
-    return data.items ?? data.data ?? [];
+    return data.items ?? [];
   },
 };
