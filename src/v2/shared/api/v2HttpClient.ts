@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { refreshSession } from "@/v2/shared/api/authSessionsApi";
 import { useV2DocumentDependencyStore } from "@/v2/shared/stores/useV2DocumentDependencyStore";
 import {
   isDocumentInUseError,
@@ -19,12 +20,6 @@ type RetryConfig = InternalAxiosRequestConfig & {
   _retryCount?: number;
 };
 
-interface RefreshResponse {
-  access_token: string;
-  refresh_token: string;
-  expires: number;
-}
-
 export const v2HttpClient = axios.create({
   baseURL: V2_API_BASE_URL,
   timeout: 60000,
@@ -35,16 +30,12 @@ export const v2HttpClient = axios.create({
 let refreshInFlight: Promise<string> | null = null;
 
 const refreshAccessToken = (refreshToken: string): Promise<string> => {
-  refreshInFlight ??= axios
-    .post<RefreshResponse>(
-      `${V2_API_BASE_URL}/api/v1/auth/refresh`,
-      { refresh_token: refreshToken },
-      {
-        headers: { "Content-Type": "application/json" },
-        timeout: REFRESH_TIMEOUT_MS,
-      },
-    )
-    .then(({ data }) => {
+  refreshInFlight ??= refreshSession(
+    V2_API_BASE_URL,
+    refreshToken,
+    REFRESH_TIMEOUT_MS,
+  )
+    .then((data) => {
       useAuthStore.setState({
         accessToken: data.access_token,
         refreshToken: data.refresh_token,

@@ -9,7 +9,7 @@ description: Module tri thức Quản lý tài khoản V2 trong erp-web gồm l�
 
 - Route: `/v2/users-management` (menu nhóm `settings`). Page key `users-management`.
 - Quyền: `admin_users` với action `manage` (route guard, nút tạo, row action). Khớp guard backend `admin_users:manage`.
-- Backend: `/api/v2/users-management` (bảng `users_management`, đồng bộ sang `core_users` cho auth v1). Chi tiết API: skill `erp-users` của erp-api (mục 0).
+- Backend: `/api/v2/users-management` (bảng `users_management`, `users_management` là nguồn chính, mirror một chiều sang `core_users` cho các FK cũ; đăng nhập qua auth v2 `/api/v2/auth-sessions`, xem skill `v2-auth`). Chi tiết API: skill `erp-users` của erp-api (mục 0).
 - V1 (`ErpUsersPage`, `/api/v1/admin/users`) vẫn chạy song song cho tới khi anh ra lệnh xóa.
 - Tài khoản không có xóa: chỉ ngưng hoạt động / kích hoạt.
 
@@ -49,7 +49,7 @@ src/v2/modules/users-management/        # thin module: api client, config, page,
 ## 4. Kiểm thử
 
 - Vitest: `bunx vitest --run src/v2/core/users src/v2/modules/users-management`.
-- E2E: `e2e/users-management.e2e.mjs` (`bun run e2e:users-management`), 11 kiểm tra: bảng gọi API v2, tạo qua drawer (chặn mật khẩu ngắn), tài khoản mới đăng nhập được qua auth v1, tìm, ngưng/kích hoạt, đặt lại mật khẩu.
+- E2E: `e2e/users-management.e2e.mjs` (`bun run e2e:users-management`), 11 kiểm tra: bảng gọi API v2, tạo qua drawer (chặn mật khẩu ngắn), tài khoản mới đăng nhập được, tìm, ngưng/kích hoạt, đặt lại mật khẩu.
   - Cần `E2E_ADMIN_PASSWORD` (mật khẩu admin, đọc `SEED_ADMIN_PASSWORD` trong `erp-api/.env`, không in ra) hoặc `E2E_PASSWORD`; `E2E_ADMIN_EMAIL` mặc định `admin@liouni.com`.
   - Tạo dữ liệu email `e2e-users-*@example.com`; không có API xóa nên dọn bằng SQL (xóa `core_refresh_tokens`, `core_users`, `users_management` theo email) sau khi xác nhận `SELECT current_database();`. Không chạy trên DB production.
 

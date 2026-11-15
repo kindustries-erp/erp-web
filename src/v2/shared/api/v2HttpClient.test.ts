@@ -43,9 +43,13 @@ describe("v2HttpClient", () => {
   it("refreshes once on 401 and retries the request with the new token", async () => {
     const refresh = vi.spyOn(axios, "post").mockResolvedValue({
       data: {
-        access_token: "new-token",
-        refresh_token: "new-refresh",
-        expires: 3600,
+        message: "ok",
+        data: {
+          accessToken: "new-token",
+          refreshToken: "new-refresh",
+          expiresIn: 3600,
+          tokenType: "Bearer",
+        },
       },
     });
     const adapter = vi.fn((config) =>
@@ -58,6 +62,8 @@ describe("v2HttpClient", () => {
 
     expect(response.data).toEqual({ retried: true });
     expect(refresh).toHaveBeenCalledTimes(1);
+    expect(refresh.mock.calls[0][0]).toContain("/api/v2/auth-sessions/refresh");
+    expect(refresh.mock.calls[0][1]).toEqual({ refreshToken: "refresh-token" });
     expect(useAuthStore.getState().accessToken).toBe("new-token");
     expect(useAuthStore.getState().refreshToken).toBe("new-refresh");
   });
