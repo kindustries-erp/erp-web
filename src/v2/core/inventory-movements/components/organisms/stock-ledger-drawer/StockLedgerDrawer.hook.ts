@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useStockTransactionsQuery } from "../../../api/queries/useStockTransactionsQuery";
-import type { InventoryMovementsModuleConfig } from "../../../inventoryMovements.config.type";
 import {
   calculateStockLedger,
   type CostingMethod,

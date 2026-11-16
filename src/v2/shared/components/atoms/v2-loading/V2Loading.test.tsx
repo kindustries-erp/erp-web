@@ -5,7 +5,6 @@ import { V2Loading } from "./V2Loading";
 import { V2PageFallback } from "./V2PageFallback";
 import {
   V2LoadingVariant,
-  V2LoadingSize,
   V2LoadingTextPosition,
   type V2LoadingVariantType,
 } from "./V2Loading.type";
