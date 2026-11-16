@@ -72,11 +72,20 @@ export default {
         },
         input: "var(--border)",
         ring: "var(--primary)",
+
+        /* Card & Item Context Tokens (Đồng nhất toàn UI & Match Light/Dark Theme) */
+        "item-border": "var(--item-border, var(--border))",
+        "item-border-subtle": "var(--item-border-subtle, var(--border-light))",
+        "item-border-unread": "var(--item-border-unread, var(--border))",
+        "item-bg-unread": "var(--item-bg-unread, transparent)",
       },
       boxShadow: {
         "2xs": "0 1px 2px rgba(0, 0, 0, 0.05)",
         xs: "0 1px 3px rgba(0, 0, 0, 0.08)",
         panel: "0 4px 16px rgba(0, 0, 0, 0.08)",
+        "card-item": "var(--item-shadow, 0 1px 3px rgba(0, 0, 0, 0.08))",
+        "card-item-hover":
+          "var(--item-shadow-hover, 0 4px 12px rgba(0, 0, 0, 0.12))",
       },
       borderRadius: {
         xs: "4px",

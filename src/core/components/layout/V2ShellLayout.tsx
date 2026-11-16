@@ -56,13 +56,14 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   const [userProfileOpen, setUserProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const { data: notifications = [] } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: notificationsApi.findAll,
+  const { data: inboxData } = useQuery({
+    queryKey: ["notifications", "inbox"],
+    queryFn: notificationsApi.findInbox,
     refetchInterval: 30000,
   });
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const notifications = inboxData?.items ?? [];
+  const unreadCount = inboxData?.unreadCount ?? 0;
 
   /** Bấm thông báo có đích được hỗ trợ thì mở đúng chứng từ; không thì chỉ đánh dấu đã đọc. */
   const handleNotificationClick = useCallback((notif: CoreNotification) => {
@@ -322,6 +323,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   const notificationNode = (
     <V2NotificationPopover
       notifications={notifications}
+      unreadCount={unreadCount}
       onNotificationClick={handleNotificationClick}
     >
       <V2Button

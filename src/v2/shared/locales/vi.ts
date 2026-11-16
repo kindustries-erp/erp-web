@@ -91,6 +91,8 @@ export const v2Vi = {
       markAllAsRead: "Đánh dấu đã đọc tất cả",
       markAsRead: "Đánh dấu đã đọc",
       deleteItem: "Xóa thông báo",
+      markAsReadSuccess: "Đã đánh dấu thông báo là đã đọc",
+      markAllAsReadSuccess: "Đã đánh dấu tất cả thông báo là đã đọc",
     },
     topbar: {
       quickSearchPlaceholder: "Tìm kiếm menu, chứng từ (Ctrl K)...",

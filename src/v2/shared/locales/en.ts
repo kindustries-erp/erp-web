@@ -91,6 +91,8 @@ export const v2En: V2Dictionary = {
       markAllAsRead: "Mark all as read",
       markAsRead: "Mark as read",
       deleteItem: "Delete notification",
+      markAsReadSuccess: "Notification marked as read",
+      markAllAsReadSuccess: "All notifications marked as read",
     },
     topbar: {
       quickSearchPlaceholder: "Search menus, documents (Ctrl K)...",
