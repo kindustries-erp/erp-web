@@ -79,6 +79,8 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "erp-employees": "employees-management",
   // URL cũ của trang tài liệu V1, đã thay bằng module V2 file-attachments
   attachments: "file-attachments",
+  // slug module V2 (trước đây /v2/file-attachments) cũng về URL chính
+  "file-attachments-management": "file-attachments",
   "cashflow-dashboard": "cashflow",
   "mua-hang": "purchasing",
   kho: "erp-inventory-stock",

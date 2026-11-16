@@ -14,7 +14,6 @@ export * from "./related-invoice-sidebar-section";
 export * from "./erp-invoice-adjustment-section";
 export * from "./erp-invoice-netoff-section";
 export * from "./bulk-edit-drawer";
-export * from "./erp-attachment-select-drawer";
 export * from "./gdt-portal-auth-drawer";
 export * from "./invoice-bulk-netoff-drawer";
 export * from "./invoice-bulk-posting-drawer";

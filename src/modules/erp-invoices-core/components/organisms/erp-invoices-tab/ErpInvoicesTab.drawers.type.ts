@@ -34,7 +34,6 @@ export interface InvoiceDrawersProps {
     filename: string;
     fileKey: string;
     invoiceId: string;
-    isAttachment?: boolean;
   } | null;
   setPreviewPdf: (pdf: any) => void;
   netOffInvoice: any | null;

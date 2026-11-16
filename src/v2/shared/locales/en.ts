@@ -49,7 +49,7 @@ export const v2En: V2Dictionary = {
         employeesManagement: "Employee management",
         // v2-module:users-management:locale-en
         fileAttachments: "File management",
-        // v2-module:file-attachments:locale-en
+        // v2-module:file-attachments-management:locale-en
         // plop:v2-nav-items
       },
       searchPlaceholder: "Search modules...",

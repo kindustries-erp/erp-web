@@ -1,20 +1,16 @@
 import { useState, useMemo } from "react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
-import { Download, Search } from "lucide-react";
+import { Download } from "lucide-react";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { invoiceFilesV2Api } from "@/modules/erp-invoices-core/api/invoiceFilesV2Api";
+import { useInvoiceFilesV2 } from "@/modules/erp-invoices-core/hooks/useInvoiceFilesV2";
+import { saveBlobAs } from "@/modules/erp-invoices-core/utils/invoiceFileV2Resolve";
 import toast from "react-hot-toast";
 import { AttachmentRow } from "@/shared/components/AttachmentComponents";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { Combobox } from "@/shared/components/Combobox";
 import { Attachment } from "@/shared/components/ui/Attachment";
-import {
-  getFileViewUrl,
-  getAttachmentDownloadUrlApi,
-  getAttachmentContentBlobApi,
-} from "@/modules/system/api/attachmentsApi";
-import { ErpAttachmentSelectDrawer } from "../erp-attachment-select-drawer";
 import type {
   PendingAttachment,
   ErpInvoicePdfUploadProps,
@@ -30,72 +26,53 @@ const TYPE_OPTS = [
 
 export function ErpInvoicePdfUpload({
   invoiceId,
-  attachments,
-  pdfFileKey,
-  pdfFiles,
   editMode,
   pendingDeletedPdfs = [],
   onPendingDeletePdf,
   pendingAddedAttachments = [],
   onPendingAddedAttachmentsChange,
-  onLinkExistingAttachment,
-  onUnlinkAttachment,
   noCard = false,
 }: ErpInvoicePdfUploadProps) {
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<{
     url: string;
     fileName: string;
-    fileKey: string;
-    mimeType?: string;
+    fileId: string;
   } | null>(null);
-
   const [uploadType, setUploadType] = useState<string>("HOA_DON");
-  const [showSelectDrawer, setShowSelectDrawer] = useState(false);
 
-  const displayFiles = useMemo(() => {
-    const list: any[] = [];
-    if (attachments && attachments.length > 0) {
-      list.push(...attachments);
-    }
+  const { files } = useInvoiceFilesV2(invoiceId);
 
-    if (pdfFileKey && !list.some((f) => f.attachment?.fileKey === pdfFileKey)) {
-      list.push({
-        attachmentId: pdfFileKey,
-        attachment: {
-          id: pdfFileKey,
-          fileKey: pdfFileKey,
-          fileName: pdfFileKey.split("/").pop() || "Hóa đơn PDF",
-          mimeType: "application/pdf",
-          documentType: "HOA_DON",
-        },
-        _isLegacy: true,
-      });
-    }
+  const displayFiles = useMemo(
+    () => files.filter((f) => !pendingDeletedPdfs.includes(f.id)),
+    [files, pendingDeletedPdfs],
+  );
 
-    if (pdfFiles && pdfFiles.length > 0) {
-      for (const f of pdfFiles) {
-        if (f.key && !list.some((item) => item.attachment?.fileKey === f.key)) {
-          list.push({
-            attachmentId: f.key,
-            attachment: {
-              id: f.key,
-              fileKey: f.key,
-              fileName: f.filename || f.key.split("/").pop() || "Hóa đơn PDF",
-              mimeType: "application/pdf",
-              documentType: "HOA_DON",
-            },
-            _isLegacy: true,
-          });
-        }
+  const openFile = async (
+    fileId: string,
+    fileName: string,
+    mode: "preview" | "download",
+  ) => {
+    if (!invoiceId) return;
+    try {
+      const { url } = await invoiceFilesV2Api.downloadUrl(
+        invoiceId,
+        fileId,
+        mode === "preview",
+      );
+      if (mode === "preview") {
+        setPreviewUrl({ url, fileName, fileId });
+        return;
       }
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.download = fileName;
+      a.click();
+    } catch {
+      toast.error("Không mở được tài liệu");
     }
-
-    return list.filter(
-      (f) =>
-        !pendingDeletedPdfs || !pendingDeletedPdfs.includes(f.attachmentId),
-    );
-  }, [attachments, pdfFileKey, pdfFiles, pendingDeletedPdfs]);
+  };
 
   const handleFilesChange = (newFiles: File[]) => {
     if (!onPendingAddedAttachmentsChange) return;
@@ -119,17 +96,6 @@ export function ErpInvoicePdfUpload({
 
   const sectionHeaderExtra = (
     <div className="flex items-center gap-2">
-      {editMode && invoiceId && onLinkExistingAttachment && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-6 text-xs px-2"
-          onClick={() => setShowSelectDrawer(true)}
-        >
-          <Search className="w-3.5 h-3.5 mr-1" />
-          Tìm tài liệu có sẵn
-        </Button>
-      )}
       {displayFiles.length > 1 && invoiceId && (
         <Button
           variant="ghost"
@@ -139,15 +105,8 @@ export function ErpInvoicePdfUpload({
             if (!invoiceId) return;
             try {
               toast.loading("Đang nén file...", { id: "zip-download" });
-              const blob = await erpInvoicesCoreApi.downloadPdfsZip(invoiceId);
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `hoadon_${invoiceId}_attachments.zip`;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
+              const blob = await invoiceFilesV2Api.downloadZip(invoiceId);
+              saveBlobAs(blob, `hoadon_${invoiceId}_attachments.zip`);
               toast.success("Tải xuống hoàn tất", { id: "zip-download" });
             } catch {
               toast.error("Lỗi khi tải xuống file zip", {
@@ -170,83 +129,28 @@ export function ErpInvoicePdfUpload({
       )}
       {displayFiles.length > 0 && (
         <div className="rounded-lg border border-border overflow-hidden">
-          {displayFiles.map((item, i) => {
-            const att = item.attachment;
-            if (!att) return null;
-            return (
-              <AttachmentRow
-                key={att.id || i}
-                item={
-                  {
-                    file: {
-                      id: att.id,
-                      filename_download: att.fileName,
-                    },
-                    attachment_type:
-                      TYPE_OPTS.find((t) => t.value === att.documentType)
-                        ?.label || att.documentType,
-                  } as any
-                }
-                onDelete={
-                  editMode && !item._isLegacy
-                    ? () => {
-                        if (onUnlinkAttachment) {
-                          onUnlinkAttachment(att.id);
-                        } else if (onPendingDeletePdf) {
-                          onPendingDeletePdf(att.id);
-                        }
-                      }
-                    : undefined
-                }
-                onPreview={() => {
-                  if (item._isLegacy && att.fileKey) {
-                    erpInvoicesCoreApi
-                      .getPdfDownloadUrl(invoiceId!, att.fileKey)
-                      .then((res) => window.open(res.url, "_blank"))
-                      .catch((err) =>
-                        console.error("Error downloading legacy PDF:", err),
-                      );
-                    return;
-                  }
-                  const url = getFileViewUrl(att.id);
-                  setPreviewUrl({
-                    url,
-                    fileName: att.fileName,
-                    fileKey: att.id,
-                    mimeType: att.mimeType,
-                  });
-                }}
-                onDownload={() => {
-                  if (item._isLegacy && att.fileKey) {
-                    erpInvoicesCoreApi
-                      .getPdfDownloadUrl(invoiceId!, att.fileKey)
-                      .then((res) => {
-                        const a = document.createElement("a");
-                        a.href = res.url;
-                        a.target = "_blank";
-                        a.download = att.fileName;
-                        a.click();
-                      })
-                      .catch((err) =>
-                        console.error("Error downloading legacy PDF:", err),
-                      );
-                    return;
-                  }
-                  getAttachmentDownloadUrlApi(att.id)
-                    .then((res) => {
-                      const a = document.createElement("a");
-                      a.href = res.url;
-                      a.target = "_blank";
-                      a.download = att.fileName;
-                      a.click();
-                    })
-                    .catch((err) => {
-                      console.error("Error downloading attachment:", err);
-                    });
-                }}
-              />
-            );
-          })}
+          {displayFiles.map((file) => (
+            <AttachmentRow
+              key={file.id}
+              item={
+                {
+                  file: { id: file.id, filename_download: file.fileName },
+                  attachment_type:
+                    TYPE_OPTS.find((t) => t.value === file.category)?.label ||
+                    file.category,
+                } as any
+              }
+              onDelete={
+                editMode && onPendingDeletePdf
+                  ? () => onPendingDeletePdf(file.id)
+                  : undefined
+              }
+              onPreview={() => void openFile(file.id, file.fileName, "preview")}
+              onDownload={() =>
+                void openFile(file.id, file.fileName, "download")
+              }
+            />
+          ))}
         </div>
       )}
       {editMode && onPendingAddedAttachmentsChange && (
@@ -301,32 +205,12 @@ export function ErpInvoicePdfUpload({
               }
             : undefined
         }
-        fetchBlobFn={
-          previewUrl?.fileKey
-            ? () => getAttachmentContentBlobApi(previewUrl.fileKey!)
-            : undefined
-        }
       />
-
-      {showSelectDrawer && invoiceId && (
-        <ErpAttachmentSelectDrawer
-          open={showSelectDrawer}
-          onClose={() => setShowSelectDrawer(false)}
-          onSelect={(attachment) => {
-            if (onLinkExistingAttachment) {
-              onLinkExistingAttachment(attachment.id);
-            }
-            setShowSelectDrawer(false);
-          }}
-        />
-      )}
     </>
   );
 
   if (noCard) {
-    const hasHeaderActions =
-      (editMode && invoiceId && Boolean(onLinkExistingAttachment)) ||
-      (displayFiles.length > 1 && Boolean(invoiceId));
+    const hasHeaderActions = displayFiles.length > 1 && Boolean(invoiceId);
 
     return (
       <div className="w-full space-y-3">

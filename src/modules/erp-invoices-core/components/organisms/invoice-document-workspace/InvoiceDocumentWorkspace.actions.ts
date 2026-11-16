@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { invoiceFilesV2Api } from "@/modules/erp-invoices-core/api/invoiceFilesV2Api";
 import type {
   InvoiceDocumentWorkspaceProps,
@@ -106,7 +105,7 @@ export function useInvoiceDocumentActions({
       toast.loading(t("zippingFiles", "Đang nén file..."), {
         id: "zip-download",
       });
-      const blob = await erpInvoicesCoreApi.downloadPdfsZip(detailInvoice.id);
+      const blob = await invoiceFilesV2Api.downloadZip(detailInvoice.id);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

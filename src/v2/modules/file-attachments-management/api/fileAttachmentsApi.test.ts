@@ -49,9 +49,12 @@ describe("fileAttachmentsV2Api", () => {
       },
     });
     const r = await fileAttachmentsV2Api.purge(["x"]);
-    expect(http.post).toHaveBeenCalledWith("/api/v2/file-attachments/purge", {
-      ids: ["x"],
-    });
+    expect(http.post).toHaveBeenCalledWith(
+      "/api/v2/file-attachments-management/purge",
+      {
+        ids: ["x"],
+      },
+    );
     expect(r.skipped[0].reason).toBe("NOT_SOFT_DELETED");
   });
 

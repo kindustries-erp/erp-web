@@ -184,7 +184,7 @@ const SysTagsPage = lazy(() =>
   import("@/pages/SysTagsPage").then((m) => ({ default: m.SysTagsPage })),
 );
 const FileAttachmentsPage = lazy(() =>
-  import("@/v2/modules/file-attachments").then((m) => ({
+  import("@/v2/modules/file-attachments-management").then((m) => ({
     default: m.FileAttachmentsPage,
   })),
 );

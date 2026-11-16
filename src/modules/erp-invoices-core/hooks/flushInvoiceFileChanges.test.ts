@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import { invoiceFilesV2Api } from "../api/invoiceFilesV2Api";
 import { flushInvoiceFileChanges } from "./flushInvoiceFileChanges";
 
-vi.mock("../api/erpInvoicesCoreApi", () => ({
-  erpInvoicesCoreApi: { deletePdf: vi.fn().mockResolvedValue({}) },
-}));
 vi.mock("../api/invoiceFilesV2Api", () => ({
   invoiceFilesV2Api: {
     remove: vi.fn().mockResolvedValue(undefined),
@@ -18,13 +14,10 @@ const UUID = "3f2b8c1e-1a2b-4c3d-8e4f-5a6b7c8d9e0f";
 describe("flushInvoiceFileChanges", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("id UUID xóa qua V2, khóa cũ xóa qua V1", async () => {
-    await flushInvoiceFileChanges("inv", [UUID, "invoices/a.pdf"], []);
+  it("mọi id chờ xóa đều đi qua V2", async () => {
+    await flushInvoiceFileChanges("inv", [UUID, "other-id"], []);
+    expect(invoiceFilesV2Api.remove).toHaveBeenCalledTimes(2);
     expect(invoiceFilesV2Api.remove).toHaveBeenCalledWith("inv", UUID);
-    expect(erpInvoicesCoreApi.deletePdf).toHaveBeenCalledWith(
-      "inv",
-      "invoices/a.pdf",
-    );
   });
 
   it("gom file chờ theo loại, mỗi loại một lần upload", async () => {
@@ -52,7 +45,7 @@ describe("flushInvoiceFileChanges", () => {
       [UUID, "k.pdf"],
       [{ file: new File(["x"], "n.pdf"), documentType: "KHAC" }],
     );
-    expect(erpInvoicesCoreApi.deletePdf).toHaveBeenCalled();
+    expect(invoiceFilesV2Api.remove).toHaveBeenCalledTimes(2);
     expect(invoiceFilesV2Api.upload).toHaveBeenCalled();
   });
 });

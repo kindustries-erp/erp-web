@@ -111,7 +111,8 @@ try {
   );
   const deleted = await call(
     "GET",
-    "/api/v2/file-attachments?deleted=only&search=" + encodeURIComponent(NAME),
+    "/api/v2/file-attachments-management?deleted=only&search=" +
+      encodeURIComponent(NAME),
   );
   check(
     "D4 là xóa mềm: còn ở bộ lọc Đã xóa",
@@ -124,7 +125,10 @@ try {
     .catch(() => {});
 } finally {
   if (fileId)
-    await call("DELETE", `/api/v2/file-attachments/${fileId}/permanent`);
+    await call(
+      "DELETE",
+      `/api/v2/file-attachments-management/${fileId}/permanent`,
+    );
   await browser.close();
 }
 console.log(state.failed ? `\n${state.failed} FAIL` : "\nTất cả PASS");

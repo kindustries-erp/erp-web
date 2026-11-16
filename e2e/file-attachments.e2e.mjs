@@ -17,11 +17,12 @@ requireEnv();
 const { state, check } = makeChecker();
 const call = apiCall(await apiLogin());
 const NAME = `e2e-mgmt-${Date.now()}.pdf`;
-const original = (await call("GET", "/api/v2/file-attachments/settings")).body
-  .data;
+const original = (
+  await call("GET", "/api/v2/file-attachments-management/settings")
+).body.data;
 const inv = (await call("GET", "/api/v2/invoices?pageSize=1")).body.items[0];
 const created = await uploadViaApi(call, inv.id, NAME);
-await call("DELETE", `/api/v2/file-attachments/${created.id}`);
+await call("DELETE", `/api/v2/file-attachments-management/${created.id}`);
 const { browser, page } = await openBrowser();
 const calls = [];
 page.on("response", (res) => {
@@ -34,7 +35,7 @@ try {
   });
   await page.locator("table tbody tr").first().waitFor({ timeout: 30000 });
   check(
-    "A1 trang tải danh sách qua /api/v2/file-attachments 200",
+    "A1 trang tải danh sách qua /api/v2/file-attachments-management 200",
     calls.some(
       (c) => c.m === "GET" && c.s === 200 && !c.u.includes("settings"),
     ),
@@ -101,7 +102,10 @@ try {
     purge?.s === 201 || purge?.s === 200,
     purge?.s,
   );
-  const gone = await call("GET", `/api/v2/file-attachments/${created.id}`);
+  const gone = await call(
+    "GET",
+    `/api/v2/file-attachments-management/${created.id}`,
+  );
   check("C4 API: bản ghi không còn (404)", gone.status === 404, gone.status);
 
   // Cài đặt lưu giữ
@@ -125,8 +129,9 @@ try {
   await days.fill("45");
   await drawer.getByRole("button", { name: "Lưu" }).click();
   await page.waitForTimeout(1500);
-  const saved = (await call("GET", "/api/v2/file-attachments/settings")).body
-    .data;
+  const saved = (
+    await call("GET", "/api/v2/file-attachments-management/settings")
+  ).body.data;
   check(
     "D3 PATCH settings lưu đúng giá trị",
     saved.autoPurgeEnabled === !original.autoPurgeEnabled &&
@@ -139,11 +144,14 @@ try {
     .screenshot({ path: `${SHOTS}file-attachments-fail.png` })
     .catch(() => {});
 } finally {
-  await call("PATCH", "/api/v2/file-attachments/settings", {
+  await call("PATCH", "/api/v2/file-attachments-management/settings", {
     autoPurgeEnabled: original.autoPurgeEnabled,
     retentionDays: original.retentionDays,
   });
-  await call("DELETE", `/api/v2/file-attachments/${created.id}/permanent`);
+  await call(
+    "DELETE",
+    `/api/v2/file-attachments-management/${created.id}/permanent`,
+  );
   await browser.close();
 }
 console.log(state.failed ? `\n${state.failed} FAIL` : "\nTất cả PASS");

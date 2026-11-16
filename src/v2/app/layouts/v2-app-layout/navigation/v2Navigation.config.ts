@@ -188,14 +188,14 @@ export const NAV_DEFS: RawNavDef[] = [
   },
   // v2-module:users-management:nav
   {
-    id: "file-attachments",
+    id: "file-attachments-management",
     sectionId: "settings",
     labelKey: "v2.nav.items.fileAttachments",
     fallback: "Quản lý tài liệu",
     icon: FileText,
-    href: "/v2/file-attachments",
+    href: "/v2/file-attachments-management",
   },
-  // v2-module:file-attachments:nav
+  // v2-module:file-attachments-management:nav
   // plop:v2-nav-items
 ];
 

@@ -15,7 +15,6 @@ export function useInvoiceDocumentWorkspaceLogic(
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [uploadType, setUploadType] = useState<string>("HOA_DON");
-  const [showSelectDrawer, setShowSelectDrawer] = useState(false);
 
   const pendingDeletedPdfs = form?.pendingDeletedPdfs;
   const pendingAddedAttachments = form?.pendingAddedAttachments;
@@ -107,8 +106,6 @@ export function useInvoiceDocumentWorkspaceLogic(
     isLoadingPreview,
     uploadType,
     setUploadType,
-    showSelectDrawer,
-    setShowSelectDrawer,
     handleSelectDoc,
     ...actions,
   };

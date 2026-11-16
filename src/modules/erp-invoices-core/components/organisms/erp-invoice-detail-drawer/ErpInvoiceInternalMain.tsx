@@ -27,8 +27,6 @@ export interface ErpInvoiceInternalMainProps {
   invoicePreview?: React.ReactNode;
   hideLinkedDocuments?: boolean;
   previewMode?: InvoiceDetailViewMode;
-  onLinkExistingAttachment?: (attachmentId: string) => void;
-  onUnlinkAttachment?: (attachmentId: string) => void;
 }
 
 export function ErpInvoiceInternalMain({
@@ -39,8 +37,6 @@ export function ErpInvoiceInternalMain({
   form,
   editMode,
   fieldSet,
-  onLinkExistingAttachment,
-  onUnlinkAttachment,
   onRefreshDetail,
 }: ErpInvoiceInternalMainProps) {
   const { t } = useTranslation("erpInvoices");
@@ -91,8 +87,6 @@ export function ErpInvoiceInternalMain({
               form={form}
               editMode={editMode}
               fieldSet={fieldSet}
-              onLinkExistingAttachment={onLinkExistingAttachment}
-              onUnlinkAttachment={onUnlinkAttachment}
               onRefreshDetail={onRefreshDetail}
             />
           ) : (

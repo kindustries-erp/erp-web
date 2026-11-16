@@ -212,6 +212,11 @@ describe("file-attachments URL", () => {
     expect(pathToPage("/file-attachments", "")?.page).toBe("file-attachments");
     expect(pageToPath("file-attachments")).toBe("/file-attachments");
   });
+  it("slug module file-attachments-management trỏ về /file-attachments", () => {
+    expect(pathToPage("/file-attachments-management", "")?.page).toBe(
+      "file-attachments",
+    );
+  });
   it("/attachments cũ vẫn trỏ về trang file-attachments", () => {
     expect(pathToPage("/attachments", "")?.page).toBe("file-attachments");
   });

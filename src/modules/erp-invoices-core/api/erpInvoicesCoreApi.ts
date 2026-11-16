@@ -953,60 +953,6 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
-  uploadPdfs: async (
-    id: string,
-    files: File[],
-  ): Promise<{ success: boolean; attachments: any[] }> => {
-    const formData = new FormData();
-    files.forEach((f) => formData.append("files", f));
-    const { data } = await axiosInstance.post<{
-      success: boolean;
-      attachments: any[];
-    }>(`${BASE}/${id}/pdfs`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    return data;
-  },
-
-  getPdfBlob: async (id: string, key: string): Promise<Blob> => {
-    try {
-      const { data } = await axiosInstance.get<Blob>(
-        `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/content`,
-        { responseType: "blob" },
-      );
-      return data;
-    } catch (error: any) {
-      throw new Error(
-        await resolveBlobErrorMessage(error, "Không thể tải nội dung file PDF"),
-      );
-    }
-  },
-
-  getPdfDownloadUrl: async (
-    id: string,
-    key: string,
-    inline?: boolean,
-  ): Promise<{ url: string }> => {
-    const { data } = await axiosInstance.get<{ url: string }>(
-      `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/download-url`,
-      { params: { inline } },
-    );
-    return data;
-  },
-
-  downloadPdfsZip: async (id: string): Promise<Blob> => {
-    try {
-      const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/pdfs/zip`, {
-        responseType: "blob",
-      });
-      return data;
-    } catch (error: any) {
-      throw new Error(
-        await resolveBlobErrorMessage(error, "Không thể tải file ZIP PDF"),
-      );
-    }
-  },
-
   bulkDownloadFiles: async (payload: {
     query: {
       date_from?: string;
@@ -1050,34 +996,6 @@ export const erpInvoicesCoreApi = {
         ),
       );
     }
-  },
-
-  deletePdf: async (
-    id: string,
-    key: string,
-  ): Promise<{ success: boolean; attachments: any[] }> => {
-    const { data } = await axiosInstance.delete<{
-      success: boolean;
-      attachments: any[];
-    }>(`${BASE}/${id}/pdfs/${encodeURIComponent(key)}`);
-    return data;
-  },
-
-  linkAttachment: async (id: string, attachmentId: string): Promise<any> => {
-    const { data } = await axiosInstance.post(
-      `${BASE}/${id}/attachments/link`,
-      {
-        attachmentId,
-      },
-    );
-    return data;
-  },
-
-  unlinkAttachment: async (id: string, attachmentId: string): Promise<any> => {
-    const { data } = await axiosInstance.delete(
-      `${BASE}/${id}/attachments/${attachmentId}`,
-    );
-    return data;
   },
 
   exportExcel: async (params: ErpInvoiceListParams): Promise<Blob> => {

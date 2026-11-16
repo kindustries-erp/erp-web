@@ -5,7 +5,7 @@ import type {
   PurgeResult,
 } from "../../domain/entities/fileAttachment";
 
-/** Hình dạng response của `/api/v2/file-attachments` (khớp backend, không phụ thuộc V1) */
+/** Hình dạng response của `/api/v2/file-attachments-management` (khớp backend, không phụ thuộc V1) */
 export interface FileAttachmentListResultDto {
   items: FileAttachment[];
   pagination: {

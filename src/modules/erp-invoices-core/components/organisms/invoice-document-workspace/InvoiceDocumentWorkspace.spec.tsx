@@ -10,17 +10,12 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
-  erpInvoicesCoreApi: {
-    downloadPdfsZip: vi.fn().mockResolvedValue(new Blob(["zip"])),
-  },
-}));
-
 vi.mock("@/modules/erp-invoices-core/api/invoiceFilesV2Api", () => ({
   invoiceFilesV2Api: {
     downloadUrl: vi
       .fn()
       .mockResolvedValue({ url: "https://example.com/x.pdf" }),
+    downloadZip: vi.fn().mockResolvedValue(new Blob(["zip"])),
     upload: vi.fn().mockResolvedValue([]),
     remove: vi.fn().mockResolvedValue(undefined),
   },

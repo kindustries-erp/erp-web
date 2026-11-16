@@ -72,4 +72,13 @@ export const invoiceFilesV2Api = {
     );
     return data.data;
   },
+
+  /** Tải tất cả file chưa xóa của hóa đơn thành một zip. */
+  downloadZip: async (invoiceId: string): Promise<Blob> => {
+    const { data } = await axiosInstance.get(`${base(invoiceId)}/zip`, {
+      responseType: "blob",
+      timeout: 120_000,
+    });
+    return data as Blob;
+  },
 };

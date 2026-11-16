@@ -49,7 +49,7 @@ export const v2Vi = {
         employeesManagement: "Quản lý nhân viên",
         // v2-module:users-management:locale-vi
         fileAttachments: "Quản lý tài liệu",
-        // v2-module:file-attachments:locale-vi
+        // v2-module:file-attachments-management:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",

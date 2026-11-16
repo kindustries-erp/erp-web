@@ -24,6 +24,14 @@ export const VAT_RATE_OPTIONS: V2FilterOption[] = [
   { value: "-2", label: "KTT (Không tính thuế)" },
 ];
 
+/** Nguồn PDF gốc; `__BLANK__` là hóa đơn chưa có nguồn (API lọc `pdf_source IS NULL`). */
+export const PDF_SOURCE_OPTIONS: V2FilterOption[] = [
+  { value: "provider_original", label: "PDF nhà cung cấp" },
+  { value: "manual_upload", label: "Tải lên thủ công" },
+  { value: "failed", label: "Lấy PDF lỗi" },
+  { value: "__BLANK__", label: "Chưa có" },
+];
+
 export const INVOICE_TYPE_OPTIONS: V2FilterOption[] = [
   { value: "1", label: "HĐ GTGT" },
   { value: "2", label: "HĐ Bán hàng" },

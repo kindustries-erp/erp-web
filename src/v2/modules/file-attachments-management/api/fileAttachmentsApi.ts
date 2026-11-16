@@ -18,7 +18,7 @@ import type {
   SettingsEnvelopeDto,
 } from "./dtos/fileAttachment.dto";
 
-const BASE = "/api/v2/file-attachments";
+const BASE = "/api/v2/file-attachments-management";
 const OPTIONS_PAGE_SIZE = 20;
 
 /** Bộ lọc có sẵn của trang: `deleted: "only"` chỉ xem file đã xóa mềm */

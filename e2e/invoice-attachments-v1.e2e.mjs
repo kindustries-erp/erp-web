@@ -2,7 +2,9 @@
 // Admin seed (E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD hoặc E2E_PASSWORD). Chỉ staging/dev, KHÔNG production.
 // Dọn dữ liệu: file test tự xóa cứng qua API (PURGE). Chạy: bun run e2e:invoice-attachments-v1
 import {
+  API,
   PDF,
+  uploadViaApi,
   SHOTS,
   WEB,
   apiCall,
@@ -14,7 +16,8 @@ import {
 
 requireEnv();
 const { state, check } = makeChecker();
-const call = apiCall(await apiLogin());
+const TOKEN = await apiLogin();
+const call = apiCall(TOKEN);
 const NAME = `e2e-v1-${Date.now()}.pdf`;
 const { browser, page } = await openBrowser();
 const net = [];
@@ -122,6 +125,38 @@ try {
     (await dialog.getByText(NAME).count()) === 0,
   );
   await page.screenshot({ path: SHOTS + "v1-after-delete.png" });
+
+  // B8 zip V2 (API): upload một file riêng của e2e rồi tải zip, phải ra application/zip có nội dung
+  await uploadViaApi(call, invoiceId, `zip-${NAME}`);
+  const zipRes = await fetch(
+    `${API}/api/v2/invoices/${invoiceId}/attachments/zip`,
+    { headers: { Authorization: `Bearer ${TOKEN}` } },
+  );
+  check(
+    "B8 route zip V2 trả application/zip có nội dung",
+    zipRes.status === 200 &&
+      (zipRes.headers.get("content-type") ?? "").includes("zip") &&
+      (await zipRes.arrayBuffer()).byteLength > 0,
+    String(zipRes.status),
+  );
+
+  // B9 lọc cột PDF gốc: V1 và V2 phải cho cùng tổng, và nhỏ hơn tổng không lọc
+  const filter = JSON.stringify({
+    pdfSource: ["manual_upload", "provider_original"],
+  });
+  const q = `column_filters=${encodeURIComponent(filter)}`;
+  const v1All = (await call("GET", `/api/v1/erp-invoices?page=1&pageSize=1`))
+    .body;
+  const v1F = (await call("GET", `/api/v1/erp-invoices?page=1&pageSize=1&${q}`))
+    .body;
+  const v2F = (await call("GET", `/api/v2/invoices?page=1&pageSize=1&${q}`))
+    .body;
+  const tot = (b) => b?.pagination?.total ?? b?.total ?? b?.meta?.total;
+  check(
+    "B9 lọc pdfSource có hiệu lực ở V1 và V2",
+    tot(v1F) < tot(v1All) && tot(v1F) > 0 && tot(v2F) > 0,
+    `v1All=${tot(v1All)} v1F=${tot(v1F)} v2F=${tot(v2F)}`,
+  );
 } catch (e) {
   state.failed++;
   console.log("FAIL  lỗi kịch bản —", e.message);
@@ -130,22 +165,29 @@ try {
 } finally {
   if (invoiceId) {
     const all =
-      (await call("GET", `/api/v2/file-attachments?deleted=only&limit=100`))
-        .body?.items ?? [];
-    for (const f of all.filter((x) => x.fileName === NAME)) {
+      (
+        await call(
+          "GET",
+          `/api/v2/file-attachments-management?deleted=only&limit=100`,
+        )
+      ).body?.items ?? [];
+    for (const f of all.filter((x) => x.fileName.endsWith(NAME))) {
       const r = await call(
         "DELETE",
-        `/api/v2/file-attachments/${f.id}/permanent`,
+        `/api/v2/file-attachments-management/${f.id}/permanent`,
       );
       console.log(`dọn ${f.id}: ${r.status}`);
     }
     const live =
       (
         await call("GET", `/api/v2/invoices/${invoiceId}/attachments`)
-      ).body?.items?.filter((i) => i.fileName === NAME) ?? [];
+      ).body?.items?.filter((i) => i.fileName.endsWith(NAME)) ?? [];
     for (const f of live) {
-      await call("DELETE", `/api/v2/file-attachments/${f.id}`);
-      await call("DELETE", `/api/v2/file-attachments/${f.id}/permanent`);
+      await call("DELETE", `/api/v2/file-attachments-management/${f.id}`);
+      await call(
+        "DELETE",
+        `/api/v2/file-attachments-management/${f.id}/permanent`,
+      );
     }
   }
   await browser.close();
