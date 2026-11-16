@@ -70,6 +70,7 @@ export const v2Vi = {
       done: "Xong",
       reset: "Mặc định",
       loading: "Đang tải...",
+      loadingPage: "Đang tải trang...",
       error: "Đã xảy ra lỗi",
       actions: "Thao tác",
       overview: "Tổng quan",

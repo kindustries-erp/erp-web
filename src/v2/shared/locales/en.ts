@@ -70,6 +70,7 @@ export const v2En: V2Dictionary = {
       done: "Done",
       reset: "Reset",
       loading: "Loading...",
+      loadingPage: "Loading page...",
       error: "An error occurred",
       actions: "Actions",
       overview: "Overview",
