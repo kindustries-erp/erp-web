@@ -18,6 +18,8 @@
     "test": "vitest --run",
     "test:v2": "vitest --run",
     "test:all": "vitest --run --include 'src/**/*.{test,spec}.{ts,tsx}'",
+    "e2e:invoice-attachments": "node e2e/invoice-attachments.e2e.mjs",
+    "e2e:file-attachments": "node e2e/file-attachments.e2e.mjs",
     "e2e:garage-procurement": "node e2e/garage-procurement.e2e.mjs",
     "e2e:garage-save-and-act": "node e2e/garage-save-and-act.e2e.mjs",
     "e2e:garage-stock": "node e2e/garage-stock.e2e.mjs",
@@ -42,7 +44,8 @@
     "plop": "plop",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build -o storybook-static"
+    "build-storybook": "storybook build -o storybook-static",
+    "e2e:invoice-attachments-v1": "bun e2e/invoice-attachments-v1.e2e.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

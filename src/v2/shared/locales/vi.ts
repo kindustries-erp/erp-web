@@ -48,6 +48,8 @@ export const v2Vi = {
         usersManagement: "Quản lý tài khoản",
         employeesManagement: "Quản lý nhân viên",
         // v2-module:users-management:locale-vi
+        fileAttachments: "Quản lý tài liệu",
+        // v2-module:file-attachments:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",

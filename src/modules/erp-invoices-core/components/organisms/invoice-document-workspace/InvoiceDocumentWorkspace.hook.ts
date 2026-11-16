@@ -1,10 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import {
-  getFileViewUrl,
-  getAttachmentDownloadUrlApi,
-} from "@/modules/system/api/attachmentsApi";
+import { invoiceFilesV2Api } from "@/modules/erp-invoices-core/api/invoiceFilesV2Api";
+import { useInvoiceFilesV2 } from "@/modules/erp-invoices-core/hooks/useInvoiceFilesV2";
 import { normalizeInvoiceDocuments } from "./InvoiceDocumentWorkspace.helper";
 import { useInvoiceDocumentActions } from "./InvoiceDocumentWorkspace.actions";
 import type { InvoiceDocumentWorkspaceProps } from "./InvoiceDocumentWorkspace.type";
@@ -23,14 +20,16 @@ export function useInvoiceDocumentWorkspaceLogic(
   const pendingDeletedPdfs = form?.pendingDeletedPdfs;
   const pendingAddedAttachments = form?.pendingAddedAttachments;
 
+  const { files, reload: reloadFiles } = useInvoiceFilesV2(detailInvoice?.id);
+
   const documents = useMemo(
     () =>
       normalizeInvoiceDocuments(
-        detailInvoice,
+        files,
         pendingAddedAttachments || [],
         pendingDeletedPdfs || [],
       ),
-    [detailInvoice, pendingAddedAttachments, pendingDeletedPdfs],
+    [files, pendingAddedAttachments, pendingDeletedPdfs],
   );
 
   const activeDoc = useMemo(() => {
@@ -43,8 +42,6 @@ export function useInvoiceDocumentWorkspaceLogic(
   }, [documents, selectedDocId]);
 
   const activeDocId = activeDoc?.id ?? null;
-  const activeDocFileKey = activeDoc?.fileKey ?? null;
-  const activeDocIsLegacy = activeDoc?.isLegacy ?? false;
   const activeDocIsPending = activeDoc?.isPending ?? false;
   const activeDocFileObj = activeDoc?.fileObj ?? null;
   const invoiceId = detailInvoice?.id ?? null;
@@ -67,9 +64,9 @@ export function useInvoiceDocumentWorkspaceLogic(
     }
 
     setIsLoadingPreview(true);
-    if (activeDocIsLegacy && activeDocFileKey && invoiceId) {
-      erpInvoicesCoreApi
-        .getPdfDownloadUrl(invoiceId, activeDocFileKey, true)
+    if (invoiceId) {
+      invoiceFilesV2Api
+        .downloadUrl(invoiceId, activeDocId, true)
         .then((res) => {
           if (isMounted) {
             setPreviewUrl(res.url);
@@ -83,32 +80,14 @@ export function useInvoiceDocumentWorkspaceLogic(
           }
         });
     } else {
-      getAttachmentDownloadUrlApi(activeDocId, true)
-        .then((res) => {
-          if (isMounted) {
-            setPreviewUrl(res.url || getFileViewUrl(activeDocId));
-            setIsLoadingPreview(false);
-          }
-        })
-        .catch(() => {
-          if (isMounted) {
-            setPreviewUrl(getFileViewUrl(activeDocId));
-            setIsLoadingPreview(false);
-          }
-        });
+      setPreviewUrl(null);
+      setIsLoadingPreview(false);
     }
 
     return () => {
       isMounted = false;
     };
-  }, [
-    activeDocId,
-    activeDocFileKey,
-    activeDocIsLegacy,
-    activeDocIsPending,
-    activeDocFileObj,
-    invoiceId,
-  ]);
+  }, [activeDocId, activeDocIsPending, activeDocFileObj, invoiceId]);
 
   const handleSelectDoc = useCallback((id: string) => {
     setSelectedDocId(id);
@@ -117,6 +96,7 @@ export function useInvoiceDocumentWorkspaceLogic(
   const actions = useInvoiceDocumentActions({
     ...props,
     uploadType,
+    reloadFiles,
   });
 
   return {

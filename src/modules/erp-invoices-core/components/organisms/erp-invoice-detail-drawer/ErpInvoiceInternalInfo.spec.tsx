@@ -6,8 +6,24 @@ import "@testing-library/jest-dom";
 
 vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
-    getPdfDownloadUrl: vi.fn().mockResolvedValue({ url: "blob:mock-url" }),
     setValid: vi.fn().mockResolvedValue({ success: true }),
+  },
+}));
+
+const v2Files = vi.hoisted(() => ({ current: [] as any[] }));
+vi.mock("@/modules/erp-invoices-core/hooks/useInvoiceFilesV2", () => ({
+  useInvoiceFilesV2: () => ({
+    files: v2Files.current,
+    policy: null,
+    loading: false,
+    reload: vi.fn(),
+  }),
+}));
+vi.mock("@/modules/erp-invoices-core/api/invoiceFilesV2Api", () => ({
+  invoiceFilesV2Api: {
+    downloadUrl: vi.fn().mockResolvedValue({ url: "blob:mock-url" }),
+    upload: vi.fn(),
+    remove: vi.fn(),
   },
 }));
 
@@ -124,6 +140,18 @@ describe("ErpInvoiceInternalMain", () => {
   });
 
   it("should render iframe when previewMode is pdf and pdfKey exists", async () => {
+    v2Files.current = [
+      {
+        id: "pdf-1",
+        category: "HOA_DON",
+        isOriginal: false,
+        fileName: "some-pdf.pdf",
+        fileSize: 10,
+        mimeType: "application/pdf",
+        origin: "V2",
+        createdAt: "2026-10-01T00:00:00Z",
+      },
+    ];
     const propsWithPdf = {
       ...defaultProps,
       previewMode: "pdf" as const,
@@ -143,6 +171,7 @@ describe("ErpInvoiceInternalMain", () => {
   });
 
   it("should render empty state when previewMode is pdf but no pdfKey exists", () => {
+    v2Files.current = [];
     renderWithQuery(
       <ErpInvoiceInternalMain {...defaultProps} previewMode="pdf" />,
     );

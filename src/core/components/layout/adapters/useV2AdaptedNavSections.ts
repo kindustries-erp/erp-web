@@ -561,10 +561,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
       }
       if (canReadAttachments) {
         items.push({
-          id: "attachments",
+          id: "file-attachments",
           label: t("nav.items.attachments", "Tệp đính kèm"),
           icon: Paperclip,
-          href: "/attachments",
+          href: "/file-attachments",
         });
       }
       if (items.length > 0) {

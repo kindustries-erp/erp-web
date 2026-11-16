@@ -2,10 +2,7 @@ import { useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import {
-  getAttachmentDownloadUrlApi,
-  uploadAttachmentApi,
-} from "@/modules/system/api/attachmentsApi";
+import { invoiceFilesV2Api } from "@/modules/erp-invoices-core/api/invoiceFilesV2Api";
 import type {
   InvoiceDocumentWorkspaceProps,
   NormalizedInvoiceDocument,
@@ -17,10 +14,13 @@ export function useInvoiceDocumentActions({
   form,
   editMode = false,
   fieldSet,
-  onUnlinkAttachment,
   onRefreshDetail,
   uploadType,
-}: InvoiceDocumentWorkspaceProps & { uploadType: string }) {
+  reloadFiles,
+}: InvoiceDocumentWorkspaceProps & {
+  uploadType: string;
+  reloadFiles: () => unknown;
+}) {
   const { t } = useTranslation("erpInvoices");
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
   const [isUploadingDirect, setIsUploadingDirect] = useState(false);
@@ -42,17 +42,11 @@ export function useInvoiceDocumentActions({
         return;
       }
       try {
-        let url: string;
-        if (doc.isLegacy && doc.fileKey && detailInvoice?.id) {
-          const res = await erpInvoicesCoreApi.getPdfDownloadUrl(
-            detailInvoice.id,
-            doc.fileKey,
-          );
-          url = res.url;
-        } else {
-          const res = await getAttachmentDownloadUrlApi(doc.id);
-          url = res.url;
-        }
+        if (!detailInvoice?.id) return;
+        const { url } = await invoiceFilesV2Api.downloadUrl(
+          detailInvoice.id,
+          doc.id,
+        );
         const a = document.createElement("a");
         a.href = url;
         a.target = "_blank";
@@ -78,24 +72,14 @@ export function useInvoiceDocumentActions({
         return;
       }
       if (editMode) {
-        if (onUnlinkAttachment) {
-          onUnlinkAttachment(doc.attachmentId || doc.id);
-        } else {
-          fieldSet?.("pendingDeletedPdfs", [...pendingDeletedPdfs, doc.id]);
-        }
+        fieldSet?.("pendingDeletedPdfs", [...pendingDeletedPdfs, doc.id]);
         toast.success(t("markedDeleteFile", "Đã đánh dấu xóa (chờ Lưu)"));
         return;
       }
       if (detailInvoice?.id) {
         try {
-          if (doc.isLegacy && doc.fileKey) {
-            await erpInvoicesCoreApi.deletePdf(detailInvoice.id, doc.fileKey);
-          } else {
-            await erpInvoicesCoreApi.unlinkAttachment(
-              detailInvoice.id,
-              doc.attachmentId || doc.id,
-            );
-          }
+          await invoiceFilesV2Api.remove(detailInvoice.id, doc.id);
+          await reloadFiles();
           toast.success(t("deleteSuccess", "Đã xóa tài liệu đính kèm"));
           onRefreshDetail?.();
         } catch {
@@ -109,9 +93,9 @@ export function useInvoiceDocumentActions({
       t,
       editMode,
       detailInvoice,
-      onUnlinkAttachment,
       pendingDeletedPdfs,
       onRefreshDetail,
+      reloadFiles,
     ],
   );
 
@@ -172,24 +156,12 @@ export function useInvoiceDocumentActions({
         toast.loading(t("uploadingFiles", "Đang tải lên tài liệu..."), {
           id: "direct-upload",
         });
-        const uploadRes = await uploadAttachmentApi(
-          newFiles,
-          uploadType,
-          "Hóa đơn",
-        );
-        if (uploadRes.success && uploadRes.attachments?.length > 0) {
-          for (const att of uploadRes.attachments) {
-            await erpInvoicesCoreApi.linkAttachment(detailInvoice.id, att.id);
-          }
-          toast.success(t("uploadSuccess", "Tải lên tài liệu thành công"), {
-            id: "direct-upload",
-          });
-          onRefreshDetail?.();
-        } else {
-          toast.error(t("uploadError", "Lỗi tải lên tài liệu"), {
-            id: "direct-upload",
-          });
-        }
+        await invoiceFilesV2Api.upload(detailInvoice.id, newFiles, uploadType);
+        await reloadFiles();
+        toast.success(t("uploadSuccess", "Tải lên tài liệu thành công"), {
+          id: "direct-upload",
+        });
+        onRefreshDetail?.();
       } catch {
         toast.error(t("uploadError", "Lỗi tải lên tài liệu"), {
           id: "direct-upload",
@@ -206,6 +178,7 @@ export function useInvoiceDocumentActions({
       fieldSet,
       t,
       onRefreshDetail,
+      reloadFiles,
     ],
   );
 

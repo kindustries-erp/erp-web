@@ -583,7 +583,7 @@ export function useNavItems(): NavSearchItem[] {
     }
     if (canReadAttachments) {
       items.push({
-        key: "attachments",
+        key: "file-attachments",
         label: t("nav.items.attachments"),
         section: adminSection,
         keywords: ["tai lieu", "dinh kem", "attachments", "files"],

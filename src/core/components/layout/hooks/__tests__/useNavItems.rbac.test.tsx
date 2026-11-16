@@ -33,7 +33,7 @@ describe("useNavItems RBAC Guard", () => {
     const keys = result.current.map((item) => item.key);
 
     expect(keys).not.toContain("dashboard");
-    expect(keys).not.toContain("attachments");
+    expect(keys).not.toContain("file-attachments");
     expect(keys).toContain("garage-cases");
     expect(keys).toContain("garage-debts");
     expect(keys).toContain("garage-opex");
@@ -75,7 +75,7 @@ describe("useNavItems RBAC Guard", () => {
     const keys = result.current.map((item) => item.key);
 
     expect(keys).toContain("dashboard");
-    expect(keys).toContain("attachments");
+    expect(keys).toContain("file-attachments");
   });
 
   it("includes garage-procurement when user has GARAGE_PROCUREMENT_REQUESTS permission", () => {

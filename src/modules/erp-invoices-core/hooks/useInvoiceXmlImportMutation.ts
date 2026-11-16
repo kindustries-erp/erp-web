@@ -1,3 +1,4 @@
+import { invoiceFilesV2Api } from "../api/invoiceFilesV2Api";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -53,7 +54,7 @@ export function useInvoiceXmlImportMutation() {
         await Promise.all(
           Array.from(manualFiles, async ([invoiceId, pdfs]) => {
             try {
-              await erpInvoicesCoreApi.uploadPdfs(invoiceId, pdfs);
+              await invoiceFilesV2Api.upload(invoiceId, pdfs, "HOA_DON");
               for (const f of pdfs) {
                 attached.push({
                   filename: f.name,

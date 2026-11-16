@@ -187,6 +187,15 @@ export const NAV_DEFS: RawNavDef[] = [
     href: "/v2/employees-management",
   },
   // v2-module:users-management:nav
+  {
+    id: "file-attachments",
+    sectionId: "settings",
+    labelKey: "v2.nav.items.fileAttachments",
+    fallback: "Quản lý tài liệu",
+    icon: FileText,
+    href: "/v2/file-attachments",
+  },
+  // v2-module:file-attachments:nav
   // plop:v2-nav-items
 ];
 

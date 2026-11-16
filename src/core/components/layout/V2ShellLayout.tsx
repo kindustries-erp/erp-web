@@ -268,6 +268,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.users", "Quản lý người dùng") },
         ];
+      case "file-attachments":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("nav.items.attachments", "Quản lý tài liệu") },
+        ];
       case "erp-activity-logs":
         return [
           { label: t("breadcrumb.settings", "Hệ thống") },

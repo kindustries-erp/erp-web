@@ -1,6 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { useErpInvoiceForm } from "./useErpInvoiceForm";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
+import { invoiceFilesV2Api } from "../api/invoiceFilesV2Api";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../api/erpInvoicesCoreApi", () => ({
@@ -18,11 +19,11 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
   },
 }));
 
-vi.mock("@/modules/system/api/attachmentsApi", () => ({
-  uploadAttachmentApi: vi.fn().mockResolvedValue({
-    success: true,
-    attachments: [{ id: "att-1" }],
-  }),
+vi.mock("../api/invoiceFilesV2Api", () => ({
+  invoiceFilesV2Api: {
+    upload: vi.fn().mockResolvedValue([]),
+    remove: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 vi.mock("react-i18next", () => ({
@@ -110,6 +111,12 @@ describe("useErpInvoiceForm", () => {
     expect(erpInvoicesCoreApi.deletePdf).toHaveBeenCalledWith(
       "inv-1",
       "delete-me.pdf",
+    );
+    // File chờ thêm đi qua V2 theo loại tài liệu
+    expect(invoiceFilesV2Api.upload).toHaveBeenCalledWith(
+      "inv-1",
+      [expect.any(File)],
+      "HOA_DON",
     );
   });
 });

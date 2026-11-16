@@ -121,7 +121,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.sysTags",
     group: "settings",
   },
-  attachments: {
+  "file-attachments": {
     labelKey: "nav.items.attachments",
     group: "settings",
   },
@@ -317,7 +317,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "users-management": [["breadcrumb.settings"], ["breadcrumb.users"]],
   permission: [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
   "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
-  attachments: [["breadcrumb.settings"], ["nav.items.attachments"]],
+  "file-attachments": [["breadcrumb.settings"], ["nav.items.attachments"]],
   "invoice-dashboard": [
     ["breadcrumb.accounting"],
     ["nav.items.invoiceDashboard"],

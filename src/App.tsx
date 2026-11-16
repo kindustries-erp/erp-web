@@ -183,8 +183,10 @@ const ErpInvoicesPage = lazy(() =>
 const SysTagsPage = lazy(() =>
   import("@/pages/SysTagsPage").then((m) => ({ default: m.SysTagsPage })),
 );
-const AttachmentsPage = lazy(() =>
-  import("@/pages/Attachments").then((m) => ({ default: m.DinhKemChungTu })),
+const FileAttachmentsPage = lazy(() =>
+  import("@/v2/modules/file-attachments").then((m) => ({
+    default: m.FileAttachmentsPage,
+  })),
 );
 const BankStatementPage = lazy(() =>
   import("@/pages/BankStatementPage").then((m) => ({
@@ -327,7 +329,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-invoices-draft": () => <ErpInvoicesPage initialTab="draft" />,
   "invoice-dashboard": () => <ErpInvoicesPage initialTab="overview" />,
   "sys-tags": SysTagsPage,
-  attachments: AttachmentsPage,
+  "file-attachments": FileAttachmentsPage,
   "bank-statement": () => <BankStatementPage initialTab="bank" />,
   "cash-statement": () => <BankStatementPage initialTab="cash" />,
   "journal-entry": GeneralJournalPage,

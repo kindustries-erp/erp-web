@@ -33,6 +33,7 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 - Alias `@/v2/*` → `src/v2/*`, `@/*` → `src/*`.
 - Module V2 và shared V2 không import V1, ngoại trừ auth store dùng chung (`@/modules/auth/domain/authStore`).
 - Key i18n trong V2 phải có prefix `v2.`.
+- **URL chính không có `v2`**: URL chính thức của mọi trang luôn là `/<slug>` (ví dụ `/file-attachments`, `/employees-management`), không bao giờ `/v2/...` hay `/v3/...`. `/v2/*` chỉ để demo/test song song với V1. Khi một module V2 sẵn sàng, nối vào shell chính: thêm PageKey `<slug>` (`shared/types`, `shared/utils/pageUrl.ts`, `core/config/appStore/constants.ts`, nav/sidebar, `V2ShellLayout` breadcrumb), đăng ký component V2 trong `App.tsx` (map PageKey → trang V2), và giữ slug cũ của V1 làm `LEGACY_SLUGS` trỏ về PageKey mới. Mẫu: `employees-management`, `file-attachments`.
 - Migrate V1 → V2 chỉ làm khi user ra lệnh (rolling migration). Chi tiết: skill `erp-ui-structure`.
 
 ## 5. Tooling
@@ -84,6 +85,7 @@ Tài liệu chi tiết của từng module nằm tại `.agents/skills/modules/<
 - **Garage**: `garage-cases`, `garage-dashboard`, `inventory-movements-garage` (chứng từ kho và tồn kho Garage, thay trang Nhập kho Garage; lõi `inventory-movements` và `goods-receipts`; lõi PO dùng chung ở `src/v2/core/purchase-orders/`)
 - **Đối tác & nhà cung cấp**: `business-partners`, `erp-suppliers`
 - **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`
+- **File đính kèm dùng chung**: `file-attachments` (client `src/v2/shared/files`, organism `V2AttachmentsPanel`, tab Tài liệu ở drawer hóa đơn V2, trang `/v2/file-attachments`)
 - **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`, `users-management` (lõi `src/v2/core/users`, module `src/v2/modules/users-management`, route `/v2/users-management`), `employees-core` (lõi `src/v2/core/employees`, module `src/v2/modules/employees-management`, route `/v2/employees-management`), `audit-logs` (lõi `src/v2/core/audit`, module `src/v2/modules/audit-logs`, route `/v2/admin/audit-logs`)
 - **Layout và thành phần chuẩn V2**: `v2-layout`, `v2-foundation`, `v2-auth`, `v2-admin-layout`; bảng và drawer V2 nằm trong skill `standardize-table` (`standardize-table/references/v2-table.md`) và `standardize-drawer` (`standardize-drawer/references/v2-drawer.md`)
 - **AI Hub V2**: `ai-hub` (core `src/v2/core/ai-hub`, chatbot nổi dùng chung `V2FloatingChat` trong `src/v2/shared`, trợ lý AI đọc hóa đơn gắn ở trang garage-procurement tab `requests`)
