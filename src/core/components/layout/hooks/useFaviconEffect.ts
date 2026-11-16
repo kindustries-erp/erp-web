@@ -1,6 +1,10 @@
 import { useEffect } from "react";
+import type { CompanyProfile } from "@/core/api/companyProfileApi";
 
-export function useFaviconEffect(companyProfile: any, appName: string) {
+export function useFaviconEffect(
+  companyProfile: CompanyProfile | null | undefined,
+  appName: string,
+) {
   useEffect(() => {
     if (companyProfile?.company_name) {
       document.title = companyProfile.company_name;

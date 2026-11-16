@@ -19,6 +19,7 @@ import { cn } from "@/v2/shared/utils/cn";
 import { useV2AdaptedNavSections } from "./adapters/useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "./adapters/useV2AdaptedTabs";
 import { useEnsureValidCurrentBranch } from "./hooks/useEnsureValidCurrentBranch";
+import { useFaviconEffect } from "./hooks/useFaviconEffect";
 import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
@@ -49,6 +50,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   const { data: companyProfile } = useCompanyProfile();
   const t = useT();
   useEnsureValidCurrentBranch();
+  useFaviconEffect(companyProfile, t("nav.appName", "Hệ thống ERP"));
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [userProfileOpen, setUserProfileOpen] = useState(false);

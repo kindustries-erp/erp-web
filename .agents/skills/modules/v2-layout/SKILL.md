@@ -432,6 +432,11 @@ cd erp/erp-web && bun run storybook
   - `V2TabBarVariant`: `APP` | `HEADER` | `SUB` | `BUTTON_GROUP` | `PAGE` | `PILL` (`"pill"`, render qua `TabBarPagePillView`: Desktop hiển thị pill active `bg-primary text-primary-fg` + inactive ghost kèm viền `border-b`; Mobile dùng `TabBarPageViewMobile` mở `V2BottomSheet` chọn tab).
   - `V2ModulePageVariant`: `DEFAULT` (`FLAT` + `PAGE`) | `CARD` (`CARD` + `PILL`). Có thể ghi đè từng phần qua `headerVariant={V2PageHeaderVariant.*}` hoặc `tabVariant={V2ModulePageTabVariant.*}`.
 
+### 7.4. Decommission V1 Shell & Bảo Toàn Nhận Diện Thương Hiệu
+- Toàn bộ layout V1 cũ (`src/core/components/layout/sidebar/*`, `Topbar.tsx`, `TabBar.tsx`, `UniversalSearchModal.tsx`) đã được loại bỏ hoàn toàn khỏi mã nguồn.
+- Hook cập nhật tiêu đề trang động và favicon canvas từ `companyProfile` được bảo toàn và đặt tại `src/core/components/layout/hooks/useFaviconEffect.ts`, được mount trực tiếp vào `V2ShellLayout`.
+- Cơ chế phân quyền RBAC trên menu điều hướng được kiểm soát chặt chẽ tại `useV2AdaptedNavSections.ts` và đồng bộ vào `useNavItems.tsx` (Ctrl+K search). Các mục đặc thù như `journal-entry` (`JOURNAL_ENTRIES:READ`), `settings-accounts` (`ACCOUNTING_CONFIGS:READ`), `loans` (`LOANS:READ`) và section `sec-tools` tự động ẩn khi không có quyền.
+
 ---
 
 ## 8. Quy Chuẩn Kiểm Thử & Quality Gate
