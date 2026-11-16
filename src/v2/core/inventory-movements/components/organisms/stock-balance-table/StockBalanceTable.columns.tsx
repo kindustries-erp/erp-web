@@ -1,6 +1,7 @@
 import { V2TableText, V2Text } from "@/v2/shared/components";
 import type { V2Column } from "@/v2/shared/components";
 import { ColumnValueType, TableColumnAlign } from "@/v2/shared/types/v2-table";
+import { formatNumberOptionLabel } from "@/v2/shared/utils/v2TableFormat";
 import type { StockBalanceRow } from "../../../domain/stockBalance";
 
 type Translate = (key: string, fallback?: string) => string;
@@ -64,7 +65,10 @@ export const buildStockBalanceColumns = (
     enableResizing: true,
     align: TableColumnAlign.RIGHT,
     mobileSlot: "hidden",
-    filter: { valueType: ColumnValueType.NUMBER },
+    filter: {
+      valueType: ColumnValueType.NUMBER,
+      formatOptionLabel: formatNumberOptionLabel,
+    },
     summary: { variant: "qty" },
     cell: (row) => numberCell(row.qtyReceived),
   },
@@ -75,7 +79,10 @@ export const buildStockBalanceColumns = (
     enableResizing: true,
     align: TableColumnAlign.RIGHT,
     mobileSlot: "hidden",
-    filter: { valueType: ColumnValueType.NUMBER },
+    filter: {
+      valueType: ColumnValueType.NUMBER,
+      formatOptionLabel: formatNumberOptionLabel,
+    },
     summary: { variant: "qty" },
     cell: (row) => numberCell(row.qtyIssued),
   },
@@ -86,7 +93,10 @@ export const buildStockBalanceColumns = (
     enableResizing: true,
     align: TableColumnAlign.RIGHT,
     mobileSlot: "hidden",
-    filter: { valueType: ColumnValueType.NUMBER },
+    filter: {
+      valueType: ColumnValueType.NUMBER,
+      formatOptionLabel: formatNumberOptionLabel,
+    },
     summary: { variant: "qty" },
     cell: (row) => (
       <V2Text
@@ -106,7 +116,10 @@ export const buildStockBalanceColumns = (
     enableResizing: true,
     align: TableColumnAlign.RIGHT,
     mobileSlot: "meta",
-    filter: { valueType: ColumnValueType.NUMBER },
+    filter: {
+      valueType: ColumnValueType.NUMBER,
+      formatOptionLabel: formatNumberOptionLabel,
+    },
     summary: { variant: "qty" },
     cell: (row) => numberCell(row.qtyOnHand, row.qtyOnHand < 0),
   },
@@ -126,7 +139,10 @@ export const buildStockBalanceColumns = (
     enableResizing: true,
     align: TableColumnAlign.RIGHT,
     mobileSlot: "meta",
-    filter: { valueType: ColumnValueType.NUMBER },
+    filter: {
+      valueType: ColumnValueType.NUMBER,
+      formatOptionLabel: formatNumberOptionLabel,
+    },
     summary: { variant: "qty" },
     cell: (row) => numberCell(row.inventoryValue),
   },
