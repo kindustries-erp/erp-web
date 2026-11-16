@@ -42,18 +42,21 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
   - `type:check` = `tsc --noEmit`
   - `check:ci` = `tsc --noEmit` + eslint `--max-warnings=0` + `prettier --check`
   - `build` = `tsc` + `vite build`
-  - `test` = `vitest --run`
+  - `test` = `vitest --run` (chỉ chạy test trong V2: `src/v2/**/*.{test,spec}.{ts,tsx}`)
+  - `test:v2` = `vitest --run` (alias chỉ chạy V2)
+  - `test:all` = `vitest --run --include 'src/**/*.{test,spec}.{ts,tsx}'` (chạy toàn bộ khi audit thủ công)
+  - `e2e:*` = chạy các luồng E2E Playwright trong `e2e/*.e2e.mjs`
   - `lint` / `lint:check` / `check:style`
 - Storybook: `build-storybook`.
 - Generator: `bun run plop` (ví dụ `v2-module`, `v2-component`).
 
 ## 6. Git, hook và CI (đã đối chiếu với `.husky/` và `.github/workflows/`)
 
-- **pre-commit**: `bunx lint-staged`.
+- **pre-commit**: `bunx lint-staged` (chỉ kích hoạt `vitest related` với file staged thuộc `src/v2/**/*.{ts,tsx}`; ngoài v2 chỉ chạy eslint/prettier).
 - **pre-push**: `bun run type:check`. Chỉ bypass bằng `SKIP_TESTS=1` hoặc `HUSKY_SKIP_TESTS=1` khi đã verify thủ công.
 - **CI `pipeline-erp-master.yml`** (trigger vào `erp-master`):
   - Type, Lint & Format: `bun run check:ci`
-  - Unit tests: `bun run test`
+  - Unit tests: `bun run test` (chỉ chạy unit tests V2)
   - Build check (chỉ PR): `bun run build`
   - Build & push image
   - Deploy qua Komodo
