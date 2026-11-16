@@ -72,7 +72,13 @@ describe("GarageStockBalancesPage", () => {
     expect(api.listBalances).toHaveBeenCalledWith(expect.anything(), "ALL");
     fireEvent.click(screen.getAllByRole("button", { name: "Xem chi tiết" })[0]);
     await waitFor(() =>
-      expect(api.listTransactions).toHaveBeenCalledWith("SKU-01", 1, 20),
+      expect(api.listTransactions).toHaveBeenCalledWith(
+        "SKU-01",
+        1,
+        200,
+        "WEIGHTED_AVG",
+        undefined,
+      ),
     );
   });
 

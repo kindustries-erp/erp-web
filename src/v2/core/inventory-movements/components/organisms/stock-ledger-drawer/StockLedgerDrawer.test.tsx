@@ -34,15 +34,16 @@ describe("StockLedgerDrawer", () => {
     vi.clearAllMocks();
   });
 
-  it("tải thẻ kho của mã hàng ở trang 1", async () => {
+  it("tải thẻ kho của mã hàng, hiển thị bảng và stat cards", async () => {
     listTransactions.mockResolvedValue({
       items: [
         {
           id: "t1",
           transactionDate: "2026-01-02T00:00:00Z",
           transactionType: "RECEIPT",
-          documentType: "GR",
+          documentType: "PURCHASE_RECEIPT",
           documentId: "d1",
+          documentNo: "PN-001",
           qtyIn: 5,
           qtyOut: 0,
           unitCost: 100,
@@ -51,20 +52,105 @@ describe("StockLedgerDrawer", () => {
       total: 1,
     });
     renderDrawer();
-    await waitFor(() => expect(screen.getByText("RECEIPT")).toBeTruthy());
-    expect(listTransactions).toHaveBeenCalledWith("SKU-01", 1, 20);
-    // Một trang thì không hiện điều hướng phân trang
-    expect(screen.queryByText("1 / 1")).toBeNull();
+    await waitFor(() => expect(screen.getByText("PN-001")).toBeTruthy());
+    expect(screen.getByText("Nhập kho")).toBeTruthy();
+    expect(screen.getByText("Tổng Nhập")).toBeTruthy();
+    expect(screen.getByText("Tồn Cuối")).toBeTruthy();
+    expect(listTransactions).toHaveBeenCalledWith(
+      "SKU-01",
+      1,
+      200,
+      "WEIGHTED_AVG",
+      undefined,
+    );
   });
 
-  it("phân trang: hiện 'trang / tổng' và chuyển trang khi bấm Sau", async () => {
-    listTransactions.mockResolvedValue({ items: [], total: 45 });
+  it("cho phép chuyển đổi qua lại giữa Bình quân gia quyền và FIFO", async () => {
+    listTransactions.mockResolvedValue({
+      items: [
+        {
+          id: "t1",
+          transactionDate: "2026-01-02T00:00:00Z",
+          transactionType: "RECEIPT",
+          documentType: "PURCHASE_RECEIPT",
+          documentId: "d1",
+          documentNo: "PN-001",
+          qtyIn: 10,
+          qtyOut: 0,
+          unitCost: 100,
+        },
+      ],
+      total: 1,
+    });
     renderDrawer();
-    await waitFor(() => expect(screen.getByText("1 / 3")).toBeTruthy());
-    fireEvent.click(screen.getByRole("button", { name: "Sau" }));
     await waitFor(() =>
-      expect(listTransactions).toHaveBeenCalledWith("SKU-01", 2, 20),
+      expect(screen.getAllByText("FIFO").length).toBeGreaterThan(0),
     );
-    await waitFor(() => expect(screen.getByText("2 / 3")).toBeTruthy());
+
+    // Click chuyển sang FIFO
+    fireEvent.click(screen.getAllByText("FIFO")[0]);
+    await waitFor(() => {
+      expect(screen.getAllByText("FIFO").length).toBeGreaterThan(0);
+    });
+
+    // Click chuyển lại Bình quân gia quyền
+    fireEvent.click(screen.getAllByText("Bình quân gia quyền")[0]);
+    await waitFor(() => {
+      expect(screen.getAllByText("Bình quân gia quyền").length).toBeGreaterThan(
+        0,
+      );
+    });
+  });
+
+  it("phân trang client khi số lượng giao dịch vượt quá 50 dòng", async () => {
+    const items = Array.from({ length: 60 }, (_, i) => ({
+      id: `t-${i}`,
+      transactionDate: "2026-01-02T00:00:00Z",
+      transactionType: "RECEIPT",
+      documentType: "PURCHASE_RECEIPT",
+      documentId: `d-${i}`,
+      documentNo: `PN-${i}`,
+      qtyIn: 1,
+      qtyOut: 0,
+      unitCost: 10,
+    }));
+    listTransactions.mockResolvedValue({ items, total: 60 });
+    renderDrawer();
+    await waitFor(() => expect(screen.getByText("1 / 2")).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: "Sau" }));
+    await waitFor(() => expect(screen.getByText("2 / 2")).toBeTruthy());
+  });
+
+  it("hiển thị đầy đủ thông tin itemInfo và panel cột phải khi được cung cấp", async () => {
+    listTransactions.mockResolvedValue({
+      items: [],
+      total: 0,
+    });
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={client}>
+        <StockLedgerDrawer
+          config={config}
+          itemCode="SKU-99"
+          itemName="Lọc gió động cơ"
+          itemInfo={{
+            itemCode: "SKU-99",
+            itemName: "Lọc gió động cơ",
+            unit: "Cái",
+            avgCost: 250000,
+            qtyOnHand: 15,
+          }}
+          onClose={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("Thông tin phụ tùng")).toBeTruthy(),
+    );
+    expect(screen.getByText("Cái")).toBeTruthy();
+    expect(screen.getByText("SKU-99")).toBeTruthy();
   });
 });

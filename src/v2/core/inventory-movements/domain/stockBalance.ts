@@ -46,9 +46,13 @@ export interface StockTransactionRow {
   transactionType: string;
   documentType: string;
   documentId: string;
+  documentNo?: string;
   qtyIn: number;
   qtyOut: number;
   unitCost: number;
+  totalAmount?: number;
+  balanceQty?: number;
+  balanceValue?: number;
 }
 
 export interface StockTransactionListResult {

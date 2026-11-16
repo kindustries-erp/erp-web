@@ -94,6 +94,7 @@ export function GarageStockBalancesPage() {
             config={config}
             itemCode={state.ledger.itemCode}
             itemName={state.ledger.itemName}
+            itemInfo={state.ledger}
             onClose={state.closeLedger}
           />
         )

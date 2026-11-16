@@ -39,5 +39,7 @@ export interface InventoryMovementsApi {
     itemCode: string,
     page: number,
     pageSize: number,
+    costingMethod?: "WEIGHTED_AVG" | "FIFO",
+    dateRange?: { dateFrom?: string; dateTo?: string },
   ) => Promise<StockTransactionListResult>;
 }

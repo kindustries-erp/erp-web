@@ -98,9 +98,21 @@ export const garageStockApi: InventoryMovementsApi = {
       extraData: data.extraData,
     };
   },
-  listTransactions: async (itemCode, page, pageSize) => {
+  listTransactions: async (
+    itemCode,
+    page,
+    pageSize,
+    _costingMethod,
+    dateRange,
+  ) => {
     const { data } = await v2HttpClient.get(`${LEDGER}/transactions`, {
-      params: { itemCode, page, pageSize },
+      params: {
+        itemCode,
+        page,
+        pageSize: Math.min(pageSize ?? 200, 200),
+        dateFrom: dateRange?.dateFrom,
+        dateTo: dateRange?.dateTo,
+      },
     });
     return { items: data.items, total: data.pagination.total };
   },
