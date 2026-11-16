@@ -32,6 +32,7 @@ export function useStockLedgerDrawer(props: StockLedgerDrawerProps) {
     itemCode,
     page: 1,
     pageSize: 200,
+    costingMethod,
   });
 
   const rawItems = data?.items ?? [];

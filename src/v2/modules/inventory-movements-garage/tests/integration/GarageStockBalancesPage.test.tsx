@@ -14,6 +14,7 @@ const api = vi.hoisted(() => ({
   voucherOptions: vi.fn(),
   getVoucher: vi.fn(),
   listBalances: vi.fn(),
+  balanceOptions: vi.fn(),
   listTransactions: vi.fn(),
 }));
 vi.mock("../../api/garageStockApi", () => ({ garageStockApi: api }));

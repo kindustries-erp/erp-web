@@ -29,12 +29,31 @@ describe("buildStockBalanceColumns", () => {
       expect.arrayContaining([
         "itemCode",
         "itemName",
+        "unit",
         "qtyReceived",
         "qtyIssued",
         "qtyAdjusted",
         "qtyOnHand",
       ]),
     );
+  });
+
+  it("cấu hình filter SELECT cho cột unit", () => {
+    const unitCol = columns.find((c) => c.key === "unit");
+    expect(unitCol?.filter).toEqual({
+      valueType: "select",
+    });
+  });
+
+  it("cấu hình filter NUMBER cho cột inventoryValue và qtyOnHand", () => {
+    const valueCol = columns.find((c) => c.key === "inventoryValue");
+    expect(valueCol?.filter).toEqual({
+      valueType: "number",
+    });
+    const qtyCol = columns.find((c) => c.key === "qtyOnHand");
+    expect(qtyCol?.filter).toEqual({
+      valueType: "number",
+    });
   });
 
   it("hiển thị số nhập, xuất và điều chỉnh của dòng", () => {

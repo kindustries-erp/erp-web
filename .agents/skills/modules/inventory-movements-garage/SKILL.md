@@ -42,7 +42,7 @@ src/v2/modules/inventory-movements-garage/
 - Cột: Mã hàng, Tên hàng, ĐVT, Nhập, Xuất, Điều chỉnh (có dấu), Tồn kho, Giá vốn BQ, Giá trị tồn. Nhập/Xuất/Điều chỉnh là cộng dồn toàn thời gian từ `garage_stock_transactions` (API `qtyReceived/qtyIssued/qtyAdjusted`, tổng `totalReceived/totalIssued/totalAdjusted`).
 - Dải tab: `tabVariant={STATUS_CHIP}` (`V2TabBarVariant.STATUS_CHIP`: thẻ KPI, tab chọn có nền teal nhẹ + gạch chân teal, số 0 vẫn hiển thị; không có icon), `tabBarClassName="pb-0"`. Trước đây là SEGMENTED (`V2TabBarVariant.SUB`), đã đổi để nhẹ hơn. Icon của tab (`TabBarPillItem`) không còn dùng ở đây: Tồn kho `LayoutGrid`/`PackageCheck`/`PackageX`/`AlertTriangle`; Chứng từ `LayoutGrid` + icon theo loại khai báo ở `garageVoucherTypes` (`icon`). Badge số mã từng tab lấy từ `useStockTabCountsQuery` (API `extraData.tabCounts`, bỏ qua lọc tab), không hiện khi bằng 0. Danh sách tab tồn kho nằm ở `pages/GarageStockBalancesPage.tabs.ts` (`GARAGE_STOCK_BALANCE_TABS`), page chỉ dựng `V2ModuleTab`.
 - `tableId` = `inventory-movements-balances-garage-table`.
-
+- Bộ lọc và Tùy chọn cột: Hỗ trợ `column_filters` và `column_operators` gửi lên Backend lọc chính xác qua `applyTableFilters` (`itemCode`, `itemName`, `unit`, `branchId`, `qtyOnHand`, `inventoryValue`, `avgCost`). Endpoint `GET /api/v2/inventory-movements-garage-ledger/column-options` cung cấp danh sách phân biệt (distinct) cho cột (ĐVT `unit`, `qtyOnHand`, `inventoryValue`...); đối với các cột tính toán động (`qtyReceived`, `qtyIssued`, `qtyAdjusted`), API trả trang rỗng (200) thay vì ném lỗi 400. Frontend nối qua `garageStockApi.balanceOptions` và `fetchOptions` của `V2StandardTable`.
 - `GET .../inventory-movements-garage-ledger/balances` (tab `stockTab` ALL/IN_STOCK/OUT_OF_STOCK/NEGATIVE, mặc định Còn hàng) và `/transactions?itemCode=` cho thẻ kho (drawer đa tầng, hỗ trợ switch `costingMethod` WEIGHTED_AVG vs FIFO, KPI stat cards, xuất Excel, mở chứng từ gốc).
 - API trả đúng hợp đồng list v2: `{ items, pagination, summaries, extraData: { tabCounts } }`. `summaries` cùng shape với chứng từ (`qtyOnHand`, `inventoryValue`, `qtyReceived`, `qtyIssued`, `qtyAdjusted`, mỗi key `{ total, pageSubtotal, cumulative }`; cumulative = total). `useStockBalancesQuery` trả thẳng `summaries` và `tabCounts` lấy từ `extraData`. Không còn `totals`/`itemCount`.
 - Quyền: `garage_stock_ledger:read`.
@@ -52,10 +52,10 @@ src/v2/modules/inventory-movements-garage/
   - `StockLedgerDrawer.tsx` (118 LoC) & `StockLedgerDrawer.hook.ts` (110 LoC): Drawer layout 2 cột gọn gàng (Size XL) theo chuẩn V2. Cột trái là bảng thẻ kho phẳng 9 cột, cột phải là Panel thông tin phụ tùng + 3 thẻ KPI lớn (Tổng Nhập, Tổng Xuất, Tồn Cuối).
   - `StockLedgerToolbar.tsx`: Tích hợp Switcher `V2TabBar` (`variant={V2TabBarVariant.BUTTON_GROUP}`) chuyển đổi `Bình quân gia quyền` / `FIFO` và nút Xuất Excel.
   - `StockLedgerTableSkeleton.tsx`: Hiển thị Skeleton loading nhẹ trong vùng bảng khi chuyển tab hoặc đang tải dữ liệu (không re-render toàn Drawer).
-  - `StockLedgerTable.tsx`, `StockLedgerTableHeader.tsx`, `StockLedgerTableRow.tsx`, `StockLedgerTableFooter.tsx`, `StockLedgerPagination.tsx`: Bảng 9 cột tinh gọn, phân trang 50 dòng/trang, nhãn nghiệp vụ tiếng Việt chuẩn.
+  - `StockLedgerTable.tsx`, `StockLedgerTableHeader.tsx`, `StockLedgerTableRow.tsx`, `StockLedgerTableFooter.tsx`, `StockLedgerPagination.tsx`: Bảng 9 cột tinh gọn, phân trang 50 dòng/trang, nhãn nghiệp vụ tiếng Việt chuẩn. Cột Ngày hiển thị 2 dòng: dòng trên Ngày (`dd/MM/yyyy`), dòng dưới Thời gian (`HH:mm:ss` font-mono) từ `createdAt`.
   - `StockLedgerItemInfoPanel.tsx`: Cột phải hiển thị chi tiết mã, tên, đơn vị tính, đơn giá vốn hiện hành và 3 thẻ KPI.
-  - `stockLedgerCalculator.ts`: Pure engine tính toán running balance và FIFO layers tức thì trên Client, giúp Frontend không cần gửi `costingMethod` lên API transactions (tương thích ngược hoàn toàn).
-  - `stockLedgerExcel.ts`: Tiện ích xuất file `.xlsx` Thẻ kho.
+  - `stockLedgerCalculator.ts`: Pure engine tính toán running balance và FIFO layers tức thì trên Client. Nhận mảng DESC từ Backend, đảo ngược thành chronological ASC, dùng `createdAt` timestamp làm tie-breaker khi cùng ngày (tránh đảo lộn do random UUID); nhận diện đúng nghiệp vụ `ADJUSTMENT_CANCEL` vào cột Điều chỉnh; sau đó đảo ngược lại về DESC để hiển thị dòng mới nhất lên đầu.
+  - `stockLedgerExcel.ts`: Tiện ích xuất file `.xlsx` Thẻ kho (cột Ngày có định dạng đầy đủ `dd/MM/yyyy HH:mm:ss`).
 
 ## 4. Phiếu nhập mua hàng: quy chuẩn V2 đã đáp ứng
 

@@ -40,6 +40,9 @@ export function GarageStockBalancesPage() {
           columns: state.columns,
           getRowKey: (row) => row.id,
           mode: "server" as const,
+          fetchOptions: config.api.balanceOptions
+            ? (params) => config.api.balanceOptions!(params)
+            : undefined,
           preferencesStorage: v2ColumnPreferencesStorage,
           viewPresetStorage: v2ViewPresetStorage,
           emptyLabel: t(
@@ -48,6 +51,7 @@ export function GarageStockBalancesPage() {
           ),
           toolbar: {
             search: {},
+            filterPanel: {},
             enableFullscreen: true,
             viewModes: {
               items: [

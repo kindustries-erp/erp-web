@@ -40,6 +40,7 @@ describe("StockLedgerDrawer", () => {
         {
           id: "t1",
           transactionDate: "2026-01-02T00:00:00Z",
+          createdAt: "2026-01-02T14:30:25Z",
           transactionType: "RECEIPT",
           documentType: "PURCHASE_RECEIPT",
           documentId: "d1",
@@ -56,6 +57,7 @@ describe("StockLedgerDrawer", () => {
     expect(screen.getByText("Nhập kho")).toBeTruthy();
     expect(screen.getByText("Tổng Nhập")).toBeTruthy();
     expect(screen.getByText("Tồn Cuối")).toBeTruthy();
+    expect(screen.getByText("02/01/2026")).toBeTruthy();
     expect(listTransactions).toHaveBeenCalledWith(
       "SKU-01",
       1,

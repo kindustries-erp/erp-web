@@ -58,9 +58,11 @@ export function exportStockLedgerToExcel(
 
     return [
       idx + 1,
-      r.transactionDate
-        ? format(new Date(r.transactionDate), "dd/MM/yyyy")
-        : "",
+      r.createdAt
+        ? format(new Date(r.createdAt), "dd/MM/yyyy HH:mm:ss")
+        : r.transactionDate
+          ? format(new Date(r.transactionDate), "dd/MM/yyyy")
+          : "",
       r.transactionType || "",
       r.documentNo || "",
       r.qtyIn > 0 ? r.qtyIn : "",

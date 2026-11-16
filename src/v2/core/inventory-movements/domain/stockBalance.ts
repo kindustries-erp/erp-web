@@ -53,6 +53,7 @@ export interface StockTransactionRow {
   totalAmount?: number;
   balanceQty?: number;
   balanceValue?: number;
+  createdAt?: string;
 }
 
 export interface StockTransactionListResult {

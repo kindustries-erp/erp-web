@@ -48,6 +48,10 @@ export function StockLedgerTableRow({
     ? format(new Date(row.transactionDate), "dd/MM/yyyy")
     : "—";
 
+  const formattedTime = row.createdAt
+    ? format(new Date(row.createdAt), "HH:mm:ss")
+    : null;
+
   const displayType =
     TRANSACTION_TYPE_LABELS[row.transactionType] || row.transactionType;
 
@@ -61,8 +65,15 @@ export function StockLedgerTableRow({
       </TableCell>
 
       {/* 2. Ngày */}
-      <TableCell className={`${cellBase} text-center text-foreground text-xs`}>
-        {formattedDate}
+      <TableCell
+        className={`${cellBase} text-center text-foreground text-xs whitespace-nowrap`}
+      >
+        <div className="font-medium">{formattedDate}</div>
+        {formattedTime && (
+          <div className="text-[10px] text-muted-foreground font-mono leading-none mt-0.5">
+            {formattedTime}
+          </div>
+        )}
       </TableCell>
 
       {/* 3. Nghiệp vụ */}

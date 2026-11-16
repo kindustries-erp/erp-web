@@ -5,6 +5,7 @@ export type CostingMethod = "WEIGHTED_AVG" | "FIFO";
 export interface StockLedgerDisplayRow {
   id: string;
   transactionDate: string;
+  createdAt?: string;
   transactionType: string;
   documentType: string;
   documentId: string;
@@ -74,13 +75,19 @@ export function calculateStockLedger(
     };
   }
 
-  // Sắp xếp thời gian tăng dần (ASC) để tính lũy kế chính xác
-  const sortedAsc = [...rawTransactions].sort((a, b) => {
+  // Backend trả về mảng DESC (mới nhất trước), đảo ngược để có thứ tự phát sinh ASC chuẩn xác
+  const reversed = [...rawTransactions].reverse();
+  const sortedAsc = reversed.sort((a, b) => {
     const diff =
       new Date(a.transactionDate).getTime() -
       new Date(b.transactionDate).getTime();
     if (diff !== 0) return diff;
-    return a.id.localeCompare(b.id);
+    if (a.createdAt && b.createdAt) {
+      const createdDiff =
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      if (createdDiff !== 0) return createdDiff;
+    }
+    return 0;
   });
 
   const displayRowsAsc: StockLedgerDisplayRow[] = [];
@@ -97,6 +104,7 @@ export function calculateStockLedger(
 
     const isAdjustment =
       tx.transactionType === "ADJUSTMENT" ||
+      tx.transactionType === "ADJUSTMENT_CANCEL" ||
       tx.transactionType === "INVENTORY_COUNT";
 
     let qtyIn = 0;
@@ -215,6 +223,7 @@ export function calculateStockLedger(
     displayRowsAsc.push({
       id: tx.id,
       transactionDate: tx.transactionDate,
+      createdAt: tx.createdAt,
       transactionType: tx.transactionType,
       documentType: tx.documentType,
       documentId: tx.documentId,

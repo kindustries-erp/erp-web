@@ -54,6 +54,7 @@ export const buildStockBalanceColumns = (
     size: 90,
     enableResizing: true,
     mobileSlot: "hidden",
+    filter: { valueType: ColumnValueType.SELECT },
     cell: (row) => row.unit,
   },
   {
@@ -125,6 +126,7 @@ export const buildStockBalanceColumns = (
     enableResizing: true,
     align: TableColumnAlign.RIGHT,
     mobileSlot: "meta",
+    filter: { valueType: ColumnValueType.NUMBER },
     summary: { variant: "qty" },
     cell: (row) => numberCell(row.inventoryValue),
   },

@@ -31,7 +31,7 @@ export const STOCK_LEDGER_COLUMNS: StockLedgerHeaderColumn[] = [
     headerKey: "v2.inventoryMovements.ledger.date",
     headerDefault: "Ngày",
     align: "center",
-    className: `${CELL_BASE} text-center bg-slate-50 dark:bg-zinc-900/90 text-slate-600 dark:text-zinc-400 w-[100px] ${SHADOW}`,
+    className: `${CELL_BASE} text-center bg-slate-50 dark:bg-zinc-900/90 text-slate-600 dark:text-zinc-400 w-[105px] ${SHADOW}`,
   },
   {
     id: "transactionType",
