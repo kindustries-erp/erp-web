@@ -26,7 +26,7 @@ describe("V2TabBar variant STATUS_CHIP", () => {
       "aria-selected",
       "true",
     );
-    expect(screen.getByText("69")).toBeInTheDocument();
+    expect(screen.getByText("(69)")).toBeInTheDocument();
   });
 
   it("selects a tab on click and renders extra actions", () => {

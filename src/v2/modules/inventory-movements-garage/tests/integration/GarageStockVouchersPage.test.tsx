@@ -121,7 +121,7 @@ describe("GarageStockVouchersPage", () => {
     const tabsWithBadge = (n: string) =>
       screen
         .getAllByRole("tab")
-        .filter((el) => within(el).queryByText(n) !== null);
+        .filter((el) => within(el).queryByText(`(${n})`) !== null);
     await waitFor(() => expect(tabsWithBadge("8")).toHaveLength(1));
     expect(tabsWithBadge("5")).toHaveLength(1);
     expect(tabsWithBadge("3")).toHaveLength(1);

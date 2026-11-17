@@ -61,15 +61,12 @@ describe("GarageStockBalancesPage", () => {
       </QueryClientProvider>,
     );
     expect(await screen.findByText("Lọc dầu")).toBeTruthy();
-    const tabNames = screen
-      .getAllByRole("tab")
-      .map((el) => el.textContent?.trim());
-    expect(tabNames.slice(0, 4)).toEqual([
-      "Tất cả",
-      "Còn hàng",
-      "Hết hàng",
-      "Tồn âm",
-    ]);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs[0]).toHaveTextContent("Tất cả");
+    expect(tabs[1]).toHaveTextContent("Còn hàng");
+    expect(tabs[2]).toHaveTextContent("Hết hàng");
+    expect(tabs[3]).toHaveTextContent("Tồn âm");
+    expect(tabs[0]).toHaveTextContent("500 ₫");
     expect(api.listBalances).toHaveBeenCalledWith(expect.anything(), "ALL");
     fireEvent.click(screen.getAllByRole("button", { name: "Xem chi tiết" })[0]);
     await waitFor(() =>
@@ -104,10 +101,10 @@ describe("GarageStockBalancesPage", () => {
     const tab = (name: string) =>
       screen.getAllByRole("tab").find((el) => el.textContent?.includes(name))!;
     await waitFor(() =>
-      expect(within(tab("Tất cả")).getByText("6")).toBeTruthy(),
+      expect(within(tab("Tất cả")).getByText("(6)")).toBeTruthy(),
     );
-    expect(within(tab("Còn hàng")).getByText("4")).toBeTruthy();
-    expect(within(tab("Hết hàng")).getByText("2")).toBeTruthy();
-    expect(within(tab("Tồn âm")).getByText("0")).toBeTruthy();
+    expect(within(tab("Còn hàng")).getByText("(4)")).toBeTruthy();
+    expect(within(tab("Hết hàng")).getByText("(2)")).toBeTruthy();
+    expect(within(tab("Tồn âm")).getByText("(0)")).toBeTruthy();
   });
 });

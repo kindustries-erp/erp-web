@@ -47,3 +47,19 @@ export function useStockTabCountsQuery({
   });
   return result.data?.extraData?.tabCounts ?? {};
 }
+
+/** Tổng quan tồn kho toàn bộ (số đếm từng tab và summaries tồn/trị giá) */
+export function useStockBalancesOverviewQuery({
+  api,
+  keys,
+}: UseStockCountsQueryParams) {
+  const result = useQuery({
+    queryKey: keys.counts("balances"),
+    queryFn: () => api.listBalances(COUNT_QUERY, "ALL"),
+    staleTime: 30_000,
+  });
+  return {
+    tabCounts: result.data?.extraData?.tabCounts ?? {},
+    summaries: result.data?.summaries,
+  };
+}
