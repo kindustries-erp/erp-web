@@ -233,17 +233,26 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
 
     // 1. Dashboard
     if (canReadDashboard) {
+      const dashboardItems: V2SidebarItem[] = [
+        {
+          id: "dashboard",
+          label: t("nav.items.dashboard", "Tổng quan"),
+          icon: LayoutDashboard,
+          href: "/dashboard",
+        },
+      ];
+      if (isAdminEmail) {
+        dashboardItems.push({
+          id: "admin-dashboard-v2",
+          label: t("nav.items.adminDashboardV2", "Tổng quan Quản trị (v2)"),
+          icon: LayoutDashboard,
+          href: "/admin-dashboard-v2",
+        });
+      }
       sections.push({
         id: "sec-dashboard",
         label: undefined,
-        items: [
-          {
-            id: "dashboard",
-            label: t("nav.items.dashboard", "Tổng quan"),
-            icon: LayoutDashboard,
-            href: "/dashboard",
-          },
-        ],
+        items: dashboardItems,
       });
     }
 
@@ -273,6 +282,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           icon: Users,
           href: "/erp-customers",
         });
+        if (isAdminEmail) {
+          items.push({
+            id: "customers-v2",
+            label: t("nav.items.customersV2", "Khách hàng (v2)"),
+            icon: Users,
+            href: "/customers-v2",
+          });
+        }
       }
       if (canReadSalesOrders) {
         items.push({
@@ -317,6 +334,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           icon: Building2,
           href: "/erp-suppliers",
         });
+        if (isAdminEmail) {
+          items.push({
+            id: "suppliers-v2",
+            label: t("nav.items.suppliersV2", "Nhà cung cấp (v2)"),
+            icon: Building2,
+            href: "/suppliers-v2",
+          });
+        }
       }
       if (items.length > 0) {
         sections.push({
@@ -507,6 +532,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           icon: ReceiptText,
           href: "/erp-invoices",
         });
+        if (isAdminEmail) {
+          items.push({
+            id: "invoices-v2",
+            label: t("nav.items.invoicesV2", "Hóa đơn điện tử (v2)"),
+            icon: ReceiptText,
+            href: "/invoices-v2",
+          });
+        }
       }
       if (canReadDebts) {
         items.push({
@@ -637,6 +670,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           icon: FileText,
           href: "/erp-activity-logs",
         });
+        if (isAdminEmail) {
+          accessChildren.push({
+            id: "audit-logs-v2",
+            label: t("nav.items.auditLogsV2", "Nhật ký hoạt động (v2)"),
+            icon: FileText,
+            href: "/audit-logs-v2",
+          });
+        }
       }
       if (accessChildren.length > 0) {
         items.push({

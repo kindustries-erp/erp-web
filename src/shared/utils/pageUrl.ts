@@ -70,9 +70,20 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "vinfast-parts-oto-stock",
   "vinfast-parts-xemay-stock",
   "custom-fields",
+  "customers-v2",
+  "suppliers-v2",
+  "invoices-v2",
+  "audit-logs-v2",
+  "admin-dashboard-v2",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
+  // Alias tiện ích cho các module V2
+  "erp-customers-v2": "customers-v2",
+  "erp-suppliers-v2": "suppliers-v2",
+  "erp-invoices-v2": "invoices-v2",
+  "erp-activity-logs-v2": "audit-logs-v2",
+  "admin-audit-logs": "audit-logs-v2",
   // URL cũ của trang người dùng V1, đã thay bằng module V2 users-management
   "erp-users": "users-management",
   // URL cũ của trang nhân viên V1, đã thay bằng module V2 employees-management

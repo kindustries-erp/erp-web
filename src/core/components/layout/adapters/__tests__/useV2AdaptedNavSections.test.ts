@@ -31,9 +31,11 @@ vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: vi.fn(),
 }));
 
+let mockEmployeeEmail = "user@example.com";
+
 vi.mock("@/modules/auth/domain/authStore", () => ({
   useAuthStore: () => ({
-    employee: { email: "user@example.com" },
+    employee: { email: mockEmployeeEmail },
   }),
 }));
 
@@ -407,5 +409,66 @@ describe("useV2AdaptedNavSections - sec-tools RBAC (loans)", () => {
 
     const { result } = renderHook(() => useV2AdaptedNavSections());
     expect(result.current.find((s) => s.id === "sec-tools")).toBeUndefined();
+  });
+});
+
+describe("useV2AdaptedNavSections - V2 items visibility for admin@liouni.com", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockEmployeeEmail = "user@example.com";
+  });
+
+  it("does not show (v2) items for regular users", () => {
+    mockEmployeeEmail = "user@example.com";
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+
+    const allItems = result.current.flatMap((s) => s.items);
+    const customersV2 = findNavChild(allItems, "customers-v2");
+    const suppliersV2 = findNavChild(allItems, "suppliers-v2");
+    const invoicesV2 = findNavChild(allItems, "invoices-v2");
+    const auditLogsV2 = findNavChild(allItems, "audit-logs-v2");
+    const adminDashboardV2 = findNavChild(allItems, "admin-dashboard-v2");
+
+    expect(customersV2).toBeUndefined();
+    expect(suppliersV2).toBeUndefined();
+    expect(invoicesV2).toBeUndefined();
+    expect(auditLogsV2).toBeUndefined();
+    expect(adminDashboardV2).toBeUndefined();
+  });
+
+  it("shows (v2) items with proper label and href only for admin@liouni.com", () => {
+    mockEmployeeEmail = "admin@liouni.com";
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+
+    const allItems = result.current.flatMap((s) => s.items);
+    const customersV2 = findNavChild(allItems, "customers-v2");
+    const suppliersV2 = findNavChild(allItems, "suppliers-v2");
+    const invoicesV2 = findNavChild(allItems, "invoices-v2");
+    const auditLogsV2 = findNavChild(allItems, "audit-logs-v2");
+    const adminDashboardV2 = findNavChild(allItems, "admin-dashboard-v2");
+
+    expect(customersV2).toBeDefined();
+    expect(customersV2?.label).toContain("(v2)");
+    expect(customersV2?.href).toBe("/customers-v2");
+
+    expect(suppliersV2).toBeDefined();
+    expect(suppliersV2?.label).toContain("(v2)");
+    expect(suppliersV2?.href).toBe("/suppliers-v2");
+
+    expect(invoicesV2).toBeDefined();
+    expect(invoicesV2?.label).toContain("(v2)");
+    expect(invoicesV2?.href).toBe("/invoices-v2");
+
+    expect(auditLogsV2).toBeDefined();
+    expect(auditLogsV2?.label).toContain("(v2)");
+    expect(auditLogsV2?.href).toBe("/audit-logs-v2");
+
+    expect(adminDashboardV2).toBeDefined();
+    expect(adminDashboardV2?.label).toContain("(v2)");
+    expect(adminDashboardV2?.href).toBe("/admin-dashboard-v2");
   });
 });

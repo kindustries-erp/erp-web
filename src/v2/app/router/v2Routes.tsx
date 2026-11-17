@@ -98,6 +98,8 @@ export const V2RouterView: React.FC = () => {
           userName={userName}
           userRole={userRole}
           onNavigate={handleNavigate}
+          hideSidebar
+          hideBottomNav
         >
           {renderContent()}
         </V2AdminLayout>
@@ -111,6 +113,8 @@ export const V2RouterView: React.FC = () => {
       userName={userName}
       userRole={userRole}
       onNavigate={handleNavigate}
+      hideSidebar
+      hideBottomNav
     >
       {renderContent()}
     </V2AppLayout>
