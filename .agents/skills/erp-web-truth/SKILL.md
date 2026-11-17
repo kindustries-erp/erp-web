@@ -33,7 +33,11 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 - Alias `@/v2/*` → `src/v2/*`, `@/*` → `src/*`.
 - Module V2 và shared V2 không import V1, ngoại trừ auth store dùng chung (`@/modules/auth/domain/authStore`).
 - Key i18n trong V2 phải có prefix `v2.`.
-- **URL chính không có `v2`**: URL chính thức của mọi trang luôn là `/<slug>` (ví dụ `/file-attachments`, `/employees-management`), không bao giờ `/v2/...` hay `/v3/...`. `/v2/*` chỉ để demo/test song song với V1. Khi một module V2 sẵn sàng, nối vào shell chính: thêm PageKey `<slug>` (`shared/types`, `shared/utils/pageUrl.ts`, `core/config/appStore/constants.ts`, nav/sidebar, `V2ShellLayout` breadcrumb), đăng ký component V2 trong `App.tsx` (map PageKey → trang V2), và giữ slug cũ của V1 làm `LEGACY_SLUGS` trỏ về PageKey mới. Mẫu: `employees-management`, `file-attachments`.
+- **URL chính không có `v2`**: URL chính thức của mọi trang luôn là `/<slug>` (ví dụ `/file-attachments`, `/employees-management`), không bao giờ `/v2/...` hay `/v3/...`.
+  - **Module dùng chung component giữa `/*` và `/v2/*`**: Xóa bỏ URL `/v2/*` tương ứng trong cấu hình route; `App.tsx` tự động redirect các URL `/v2/*` cũ về URL chính `/<slug>`.
+  - **Module có 2 component khác biệt giữa V1 và V2** (ví dụ: `customers`, `suppliers`, `invoices`, `audit-logs`, `admin-dashboard`): Hiển thị trực tiếp trong **Sidebar Menu Gốc** (`V2ShellLayout`), nhãn có hậu tố ` (v2)` (ví dụ: *Khách hàng (v2)*, *Nhà cung cấp (v2)*), URL dạng `/<slug>-v2` trong root shell, và **chỉ hiển thị/cho phép duy nhất tài khoản `admin@liouni.com` truy cập**. Người dùng khác bị chặn bởi guard và trả về `NotFound`.
+  - **Phân vùng `/v2/*` không có sidemenu**: Loại bỏ hoàn toàn `V2Sidebar` và bottom nav khi truy cập `/v2/*`. Nội dung trang mở rộng toàn màn hình (full width).
+  - Khi một module V2 sẵn sàng thay thế hoàn toàn V1, nối vào shell chính: thêm PageKey `<slug>` (`shared/types`, `shared/utils/pageUrl.ts`, `core/config/appStore/constants.ts`, nav/sidebar, `V2ShellLayout` breadcrumb), đăng ký component V2 trong `App.tsx` (map PageKey → trang V2), và giữ slug cũ của V1 làm `LEGACY_SLUGS` trỏ về PageKey mới. Mẫu: `employees-management`, `file-attachments`.
 - Migrate V1 → V2 chỉ làm khi user ra lệnh (rolling migration). Chi tiết: skill `erp-ui-structure`.
 
 ## 5. Tooling

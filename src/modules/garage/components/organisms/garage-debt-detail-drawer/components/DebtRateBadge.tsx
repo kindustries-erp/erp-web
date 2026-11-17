@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge } from "@/shared/components/ui/badge";
+import { Badge } from "@/v2/shared/ui/badge";
 import { cn } from "@/shared/utils";
 import { Wallet, Truck } from "lucide-react";
 

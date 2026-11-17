@@ -40,4 +40,5 @@ export interface V2AppLayoutProps extends V2BaseProps {
   bottomNavVariant?: V2BottomNavVariantType;
   bottomNavIndicator?: V2NavIndicatorType;
   hideBottomNav?: boolean;
+  hideSidebar?: boolean;
 }

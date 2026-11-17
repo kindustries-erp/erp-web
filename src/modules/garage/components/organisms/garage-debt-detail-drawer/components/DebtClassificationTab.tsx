@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { DrawerSection } from "@/shared/components/DrawerModal";
+import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { MonthClassificationTable } from "../../garage-month-detail-drawer/components/MonthClassificationTable";
 import type { MonthClassificationRow } from "../../garage-month-detail-drawer/components/MonthClassificationTable.type";
 

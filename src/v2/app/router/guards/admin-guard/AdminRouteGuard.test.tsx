@@ -48,6 +48,26 @@ describe("AdminRouteGuard", () => {
     expect(screen.getByText("Admin Protected Content")).toBeDefined();
   });
 
+  it("renders children when user has admin_users read permission", () => {
+    mockUseAuthStore.mockImplementation((selector: any) =>
+      selector({
+        profile: { email: "manager@liouni.com" },
+        employee: { email: "manager@liouni.com" },
+        effectivePermissions: [
+          { collection: "admin_users", actions: ["read"] },
+        ],
+      }),
+    );
+
+    render(
+      <AdminRouteGuard>
+        <div>Admin Protected Content</div>
+      </AdminRouteGuard>,
+    );
+
+    expect(screen.getByText("Admin Protected Content")).toBeDefined();
+  });
+
   it("renders forbidden screen when user is not admin@liouni.com", () => {
     mockUseAuthStore.mockImplementation((selector: any) =>
       selector({

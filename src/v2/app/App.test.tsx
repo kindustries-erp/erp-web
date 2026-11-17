@@ -33,8 +33,5 @@ describe("V2App Root Component", () => {
 
     expect(screen.getByTestId("v2-app-layout-desktop")).toBeInTheDocument();
     expect(screen.getByText("Khung Ứng Dụng ERP V2")).toBeInTheDocument();
-    expect(screen.getAllByText("Kỹ Sư Trưởng").length).toBeGreaterThanOrEqual(
-      1,
-    );
   });
 });

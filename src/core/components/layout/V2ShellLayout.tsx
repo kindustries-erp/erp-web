@@ -119,6 +119,10 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
     switch (currentPage) {
       case "dashboard":
         return [{ label: t("nav.items.dashboard", "Tổng quan") }];
+      case "admin-dashboard-v2":
+        return [
+          { label: t("nav.items.adminDashboardV2", "Tổng quan Quản trị (v2)") },
+        ];
       case "sales-report-dashboard":
         return [
           { label: t("nav.sections.sales", "Bán hàng") },
@@ -134,6 +138,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.sales", "Bán hàng") },
           { label: t("nav.items.customers", "Khách hàng") },
         ];
+      case "customers-v2":
+        return [
+          { label: t("nav.sections.sales", "Bán hàng") },
+          { label: t("nav.items.customersV2", "Khách hàng (v2)") },
+        ];
       case "after-sales":
         return [
           { label: t("nav.sections.sales", "Bán hàng") },
@@ -148,6 +157,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         return [
           { label: t("nav.sections.purchasing", "Mua hàng") },
           { label: t("nav.items.suppliers", "Nhà cung cấp") },
+        ];
+      case "suppliers-v2":
+        return [
+          { label: t("nav.sections.purchasing", "Mua hàng") },
+          { label: t("nav.items.suppliersV2", "Nhà cung cấp (v2)") },
         ];
       case "inventory-dashboard":
         return [
@@ -237,6 +251,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.accounting", "Kế toán") },
           { label: t("nav.items.invoices", "Hóa đơn") },
         ];
+      case "invoices-v2":
+        return [
+          { label: t("nav.sections.accounting", "Kế toán") },
+          { label: t("nav.items.invoicesV2", "Hóa đơn điện tử (v2)") },
+        ];
       case "invoice-debts":
         return [
           { label: t("nav.sections.accounting", "Kế toán") },
@@ -277,6 +296,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         return [
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.activitylog", "Nhật ký hoạt động") },
+        ];
+      case "audit-logs-v2":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("nav.items.auditLogsV2", "Nhật ký hoạt động (v2)") },
         ];
       case "loans":
         return [

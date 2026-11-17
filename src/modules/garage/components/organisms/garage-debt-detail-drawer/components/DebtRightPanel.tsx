@@ -1,9 +1,9 @@
 import React from "react";
 import { AlertTriangle } from "lucide-react";
-import { DrawerSection } from "@/shared/components/DrawerModal";
+import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { useTranslation } from "react-i18next";
-import { MonthPayerKpiGrid } from "../../garage-month-detail-drawer/components/MonthPayerKpiGrid";
-import { MonthCostPayableKpiCard } from "../../garage-month-detail-drawer/components/MonthCostPayableKpiCard";
+import { DebtPayerKpiGrid } from "./DebtPayerKpiGrid";
+import { DebtCostPayableKpiCard } from "./DebtCostPayableKpiCard";
 import type {
   GarageTrendItem,
   MonthlyReceivablesSummary,
@@ -27,17 +27,15 @@ export const DebtRightPanel: React.FC<DebtRightPanelProps> = ({
   const { t } = useTranslation(["garage", "common"]);
 
   return (
-    <div className="flex flex-col gap-3.5 w-full">
+    <div className="flex flex-col gap-2.5 w-full">
       {vatWarningInfo?.hasVatWithoutInvoice && (
-        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs shadow-sm">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="flex flex-col gap-0.5">
-            <span className="font-bold">Cảnh báo hóa đơn VAT:</span>
-            <span>
-              Có <strong>{vatWarningInfo.casesWithVatNoInvoiceCount}</strong> vụ
-              việc chưa xuất hoặc đính kèm hóa đơn điện tử.
-            </span>
-          </div>
+        <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <span className="leading-tight">
+            <strong>Cảnh báo VAT:</strong> Có{" "}
+            <strong>{vatWarningInfo.casesWithVatNoInvoiceCount}</strong> vụ việc
+            chưa xuất hoặc đính kèm HĐĐT.
+          </span>
         </div>
       )}
 
@@ -50,7 +48,7 @@ export const DebtRightPanel: React.FC<DebtRightPanelProps> = ({
           collapsible
           defaultCollapsed={false}
         >
-          <MonthPayerKpiGrid summary={breakdownSummary} />
+          <DebtPayerKpiGrid summary={breakdownSummary} />
         </DrawerSection>
       )}
 
@@ -62,7 +60,7 @@ export const DebtRightPanel: React.FC<DebtRightPanelProps> = ({
         collapsible
         defaultCollapsed={false}
       >
-        <MonthCostPayableKpiCard item={item} />
+        <DebtCostPayableKpiCard item={item} />
       </DrawerSection>
     </div>
   );

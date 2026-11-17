@@ -30,6 +30,7 @@ import { VinfastPartsMotoStockPage } from "@/pages/VinfastPartsMotoStockPage";
 import { PageKey } from "@/shared/types";
 import { AppProviders } from "@/v2/app/providers";
 import { resolvePublicTool } from "@/v2/app/router/publicTools.config";
+import { resolvePublicDeckKey } from "@/v2/app/router/publicDecks.config";
 
 type PageLoader = () => Promise<unknown>;
 
@@ -50,15 +51,62 @@ const LoansListPage = lazy(() =>
   })),
 );
 
-const PUBLIC_DECK_ROUTES: Record<string, string> = {
-  "/imotorbike": "imotorbike",
+const BusinessPartnersCustomersV2Page = lazy(() =>
+  import("@/v2/modules/business-partners-customers").then((m) => ({
+    default: m.BusinessPartnersCustomersPage,
+  })),
+);
+const BusinessPartnersSuppliersV2Page = lazy(() =>
+  import("@/v2/modules/business-partners-suppliers").then((m) => ({
+    default: m.BusinessPartnersSuppliersPage,
+  })),
+);
+const InvoicesV2Page = lazy(() =>
+  import("@/v2/modules/finance-invoice").then((m) => ({
+    default: m.InvoiceShapePage,
+  })),
+);
+const AuditLogsV2Page = lazy(() =>
+  import("@/v2/modules/audit-logs").then((m) => ({
+    default: m.AuditLogsGuarded,
+  })),
+);
+const AdminDashboardV2Page = lazy(() =>
+  import("@/v2/modules/admin-dashboard").then((m) => ({
+    default: m.V2AdminDashboardPage,
+  })),
+);
+
+function AdminOnlyRoute({ children }: { children: React.ReactNode }) {
+  const email = useAuthStore((s) => s.employee?.email || s.profile?.email);
+  if (email !== "admin@liouni.com") {
+    return <NotFound />;
+  }
+  return <>{children}</>;
+}
+
+const V2_REDIRECT_MAP: Record<string, string> = {
+  "/v2/users-management": "/users-management",
+  "/v2/admin/users": "/users-management",
+  "/v2/employees-management": "/employees-management",
+  "/v2/file-attachments-management": "/file-attachments",
+  "/v2/file-attachments": "/file-attachments",
+  "/v2/garage-stock-vouchers": "/garage-stock-vouchers",
+  "/v2/garage-goods-receipts": "/garage-stock-vouchers",
+  "/v2/garage-stock-balances": "/garage-stock-balances",
+  "/v2/garage-procurement": "/garage-procurement",
+  "/v2/loans": "/loans-tool",
+  "/v2/permission": "/permission",
+  "/v2/erp-permissions-core": "/permission",
 };
 
-function resolvePublicDeckKey(): string | null {
-  if (typeof window === "undefined") return null;
-  const normalized = location.pathname.replace(/\/+$/, "") || "/";
-  return PUBLIC_DECK_ROUTES[normalized] ?? null;
-}
+const V2_DIFF_ADMIN_REDIRECT_MAP: Record<string, string> = {
+  "/v2/customers": "/customers-v2",
+  "/v2/suppliers": "/suppliers-v2",
+  "/v2/invoices": "/invoices-v2",
+  "/v2/admin/audit-logs": "/audit-logs-v2",
+  "/v2/admin/dashboard": "/admin-dashboard-v2",
+};
 
 const loadDashboard = () =>
   import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard }));
@@ -363,6 +411,31 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "vinfast-parts-oto-stock": VinfastPartsOtoStockPage,
   "vinfast-parts-xemay-stock": VinfastPartsMotoStockPage,
   "purchasing-report-dashboard": PurchasingReportDashboardPage,
+  "customers-v2": () => (
+    <AdminOnlyRoute>
+      <BusinessPartnersCustomersV2Page />
+    </AdminOnlyRoute>
+  ),
+  "suppliers-v2": () => (
+    <AdminOnlyRoute>
+      <BusinessPartnersSuppliersV2Page />
+    </AdminOnlyRoute>
+  ),
+  "invoices-v2": () => (
+    <AdminOnlyRoute>
+      <InvoicesV2Page />
+    </AdminOnlyRoute>
+  ),
+  "audit-logs-v2": () => (
+    <AdminOnlyRoute>
+      <AuditLogsV2Page />
+    </AdminOnlyRoute>
+  ),
+  "admin-dashboard-v2": () => (
+    <AdminOnlyRoute>
+      <AdminDashboardV2Page />
+    </AdminOnlyRoute>
+  ),
 };
 
 const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
@@ -446,6 +519,44 @@ export default function App() {
         }
         return;
       }
+      const normalizedPath = location.pathname.replace(/\/+$/, "");
+      const sameComponentRedirect = V2_REDIRECT_MAP[normalizedPath];
+      if (sameComponentRedirect) {
+        window.history.replaceState(
+          null,
+          "",
+          sameComponentRedirect + location.search,
+        );
+        const parsed = pathToPage(sameComponentRedirect, location.search);
+        if (parsed) {
+          syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
+        }
+        return;
+      }
+      const diffComponentRedirect = V2_DIFF_ADMIN_REDIRECT_MAP[normalizedPath];
+      if (diffComponentRedirect) {
+        const isAdmin =
+          useAuthStore.getState().employee?.email === "admin@liouni.com" ||
+          useAuthStore.getState().profile?.email === "admin@liouni.com";
+        const target = isAdmin
+          ? diffComponentRedirect
+          : normalizedPath === "/v2/customers"
+            ? "/erp-customers"
+            : normalizedPath === "/v2/suppliers"
+              ? "/erp-suppliers"
+              : normalizedPath === "/v2/invoices"
+                ? "/erp-invoices"
+                : normalizedPath === "/v2/admin/audit-logs"
+                  ? "/erp-activity-logs"
+                  : "/dashboard";
+        window.history.replaceState(null, "", target + location.search);
+        const parsed = pathToPage(target, location.search);
+        if (parsed) {
+          syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
+        }
+        return;
+      }
+
       if (
         location.pathname.startsWith("/v2") ||
         resolvePublicDeckKey() ||
@@ -540,7 +651,14 @@ export default function App() {
     );
   }
 
-  if (typeof window !== "undefined" && location.pathname.startsWith("/v2")) {
+  const currentPathNorm =
+    typeof window !== "undefined" ? location.pathname.replace(/\/+$/, "") : "";
+  if (
+    typeof window !== "undefined" &&
+    location.pathname.startsWith("/v2") &&
+    !V2_REDIRECT_MAP[currentPathNorm] &&
+    !V2_DIFF_ADMIN_REDIRECT_MAP[currentPathNorm]
+  ) {
     return (
       <Suspense fallback={PAGE_FALLBACK}>
         <V2App />

@@ -25,7 +25,7 @@ export function useGarageCaseDetailsTab(props: GarageCaseDetailsTabProps) {
       if (controlledViewMode === undefined) {
         setInternalViewMode(mode);
       }
-      onViewModeChange?.(mode);
+      onViewModeChange?.(mode as any);
     },
     [controlledViewMode, onViewModeChange],
   );

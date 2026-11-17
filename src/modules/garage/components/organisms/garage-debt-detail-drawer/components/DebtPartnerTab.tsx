@@ -1,12 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { PillTabs } from "@/shared/components/PillTabs";
-import { CustomerDetailDebtSwitch } from "../../garage-customer-detail-drawer/components/CustomerDetailDebtSwitch";
+import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import { V2TabBarVariant } from "@/v2/shared/components/molecules/v2-tab-bar/V2TabBar.type";
+import { V2SearchInput } from "@/v2/shared/components/molecules/v2-search-input";
 import { MonthPartnerCategorizedSection } from "../../garage-month-detail-drawer/components/MonthPartnerCategorizedSection";
 import type {
   MonthlyReceivablesGroupCategorized,
   MonthlyReceivablesGroupItem,
 } from "@/modules/garage/api/garageDashboardApi";
+import { DebtDetailTypeSwitch } from "./DebtDetailTypeSwitch";
+import {
+  buildCombinedCategorized,
+  getActivePartnerSectionConfig,
+  filterPartnerCategorized,
+  type PartnerTypeFilter,
+} from "./DebtPartnerTab.helper";
 
 export interface DebtPartnerTabProps {
   safeCategorized: {
@@ -21,8 +29,6 @@ export interface DebtPartnerTabProps {
   onOpenCaseDetail?: (code: string) => void;
 }
 
-type PartnerTypeFilter = "all" | "enterprise" | "individual" | "insurance";
-
 /** Tab "Phân loại theo đối tượng": KH doanh nghiệp, KH cá nhân, bảo hiểm. Dùng chung cho tháng và mốc. */
 export const DebtPartnerTab: React.FC<DebtPartnerTabProps> = ({
   safeCategorized,
@@ -35,124 +41,109 @@ export const DebtPartnerTab: React.FC<DebtPartnerTabProps> = ({
   const { t } = useTranslation(["garage", "common"]);
   const [partnerTypeFilter, setPartnerTypeFilter] =
     useState<PartnerTypeFilter>("all");
+  const [search, setSearch] = useState("");
 
   const { enterprise, individual, insurance } = safeCategorized;
   const totalPartnerCount =
     enterprise.all.length + individual.all.length + insurance.all.length;
   const isPayableBreakdown = partnerDebtType === "payables";
-  const showAll = partnerTypeFilter === "all";
+
+  const allCombinedCategorized = useMemo(
+    () => buildCombinedCategorized(enterprise, individual, insurance),
+    [enterprise, individual, insurance],
+  );
+
+  const activeSectionConfig = useMemo(
+    () =>
+      getActivePartnerSectionConfig(
+        partnerTypeFilter,
+        isPayableBreakdown,
+        enterprise,
+        individual,
+        insurance,
+        allCombinedCategorized,
+        t,
+      ),
+    [
+      partnerTypeFilter,
+      isPayableBreakdown,
+      enterprise,
+      individual,
+      insurance,
+      allCombinedCategorized,
+      t,
+    ],
+  );
+
+  const displayedCategorized = useMemo(
+    () => filterPartnerCategorized(activeSectionConfig.categorized, search),
+    [activeSectionConfig.categorized, search],
+  );
 
   return (
     <div className="flex flex-col gap-3.5">
-      <div className="flex items-center justify-between gap-3 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
         <div className="flex items-center overflow-x-auto scrollbar-none min-w-0">
-          <PillTabs<PartnerTypeFilter>
-            size="sm"
-            className="w-auto"
-            headerClassName="flex-nowrap"
-            items={[
+          <V2TabBar
+            variant={V2TabBarVariant.SUB}
+            tabs={[
               {
-                value: "all",
+                key: "all",
                 label: t("progress.partnerFilterTabs.all", "Tất cả đối tượng"),
-                badge: totalPartnerCount,
+                badgeCount: totalPartnerCount,
               },
               {
-                value: "enterprise",
+                key: "enterprise",
                 label: t(
                   "progress.partnerFilterTabs.enterprise",
                   "KH Doanh nghiệp",
                 ),
-                badge: enterprise.all.length,
+                badgeCount: enterprise.all.length,
               },
               {
-                value: "individual",
+                key: "individual",
                 label: t("progress.partnerFilterTabs.individual", "KH Cá nhân"),
-                badge: individual.all.length,
+                badgeCount: individual.all.length,
               },
               {
-                value: "insurance",
+                key: "insurance",
                 label: t("progress.partnerFilterTabs.insurance", "Bảo hiểm"),
-                badge: insurance.all.length,
+                badgeCount: insurance.all.length,
               },
             ]}
-            value={partnerTypeFilter}
-            onValueChange={setPartnerTypeFilter}
+            activeTabKey={partnerTypeFilter}
+            onTabChange={(key) =>
+              setPartnerTypeFilter(key as PartnerTypeFilter)
+            }
           />
         </div>
-        <div className="shrink-0 flex items-center">
-          <CustomerDetailDebtSwitch
-            className="w-auto"
+        <div className="flex items-center gap-2 shrink-0">
+          <V2SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder={t("common.searchPartner", "Tìm đối tượng, MST, xe...")}
+            debounceMs={150}
+            className="w-36 sm:w-48"
+          />
+          <DebtDetailTypeSwitch
             value={partnerDebtType}
             onChange={onPartnerDebtTypeChange}
           />
         </div>
       </div>
 
-      {(showAll || partnerTypeFilter === "enterprise") && (
-        <MonthPartnerCategorizedSection
-          title={
-            isPayableBreakdown
-              ? t(
-                  "progress.sections.enterprisePayment",
-                  "Chi Khách hàng Doanh nghiệp",
-                )
-              : t(
-                  "progress.sections.enterpriseCollection",
-                  "Thu Khách hàng Doanh nghiệp",
-                )
-          }
-          categorized={enterprise}
-          tableIdPrefix="garage-debt-detail-enterprise"
-          totalBilled={effectiveBreakdownTotal}
-          debtType={partnerDebtType}
-          isAllTab={showAll}
-          onSelectGroup={onSelectGroup}
-          onOpenCaseDetail={onOpenCaseDetail}
-          defaultCollapsed={false}
-        />
-      )}
-
-      {(showAll || partnerTypeFilter === "individual") && (
-        <MonthPartnerCategorizedSection
-          title={
-            isPayableBreakdown
-              ? t(
-                  "progress.sections.individualPayment",
-                  "Chi Khách hàng Cá nhân",
-                )
-              : t(
-                  "progress.sections.individualCollection",
-                  "Thu Khách hàng Cá nhân",
-                )
-          }
-          categorized={individual}
-          tableIdPrefix="garage-debt-detail-individual"
-          totalBilled={effectiveBreakdownTotal}
-          debtType={partnerDebtType}
-          isAllTab={showAll}
-          onSelectGroup={onSelectGroup}
-          onOpenCaseDetail={onOpenCaseDetail}
-          defaultCollapsed={false}
-        />
-      )}
-
-      {(showAll || partnerTypeFilter === "insurance") && (
-        <MonthPartnerCategorizedSection
-          title={
-            isPayableBreakdown
-              ? t("progress.sections.insurancePayment", "Chi bảo hiểm")
-              : t("progress.sections.insuranceCollection", "Thu bảo hiểm")
-          }
-          categorized={insurance}
-          tableIdPrefix="garage-debt-detail-insurance"
-          totalBilled={effectiveBreakdownTotal}
-          debtType={partnerDebtType}
-          isAllTab={showAll}
-          onSelectGroup={onSelectGroup}
-          onOpenCaseDetail={onOpenCaseDetail}
-          defaultCollapsed={false}
-        />
-      )}
+      {/* Render duy nhất 1 component section tương ứng với tab đang chọn */}
+      <MonthPartnerCategorizedSection
+        title={activeSectionConfig.title}
+        categorized={displayedCategorized}
+        tableIdPrefix={activeSectionConfig.tableIdPrefix}
+        totalBilled={effectiveBreakdownTotal}
+        debtType={partnerDebtType}
+        isAllTab={activeSectionConfig.isAllTab}
+        onSelectGroup={onSelectGroup}
+        onOpenCaseDetail={onOpenCaseDetail}
+        defaultCollapsed={false}
+      />
     </div>
   );
 };

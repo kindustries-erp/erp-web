@@ -193,9 +193,21 @@ Resource RBAC: `garage`
 2. **Backend Unit Tests**: Chạy `bunx jest src/kgara-api-core/ --forceExit` (bắt buộc pass 100%).
 3. **Web Build**: Chạy `bun run build` trong `erp-web/` (bắt buộc pass 100%).
 
-## 7. Garage Month Detail Drawer - Debt Tables (2026-10)
+## 7. Garage Cases & Debt Detail Drawers - Chuẩn Hóa V2 (2026-11)
 
-- **Một drawer cho tháng và mốc tuổi nợ (2026-11)**: `GarageMonthDetailDrawer` (bấm dòng tháng) và `GarageTimeHorizonDetailDrawer` (bấm thẻ tuổi nợ) đều là wrapper mỏng của `GarageDebtDetailDrawer` (`organisms/garage-debt-detail-drawer/`), nhận `scope` `{kind:"month", item}` hoặc `{kind:"horizon", horizon, branchId, dateFrom, dateTo}`. Hook `useGarageDebtDetailDrawer` lấy số liệu từ `trendItem` (tháng) hoặc breakdown theo mốc (mốc). Tab, right panel, badge tỷ lệ và drill-down giống nhau. Drawer mốc không còn tab "Danh sách vụ việc" và khối "Đánh giá rủi ro mốc thời gian".
+- **Organism lõi dùng chung `GarageCasesDetailDrawer` (2026-11 - Chuẩn hóa V2)**:
+  - Tách thành component lõi `GarageCasesDetailDrawer` (`src/modules/garage/components/organisms/garage-cases-detail-drawer/`) dùng chung cho cả Doanh thu / Kỳ hoàn tất (Checkpoint) và Công nợ (Tuổi nợ / Tháng).
+  - Sử dụng `V2StandardDrawer` (`size="xl"`, `layout="2-columns"`, `collapsibleRightPanel={true}`), hỗ trợ nút phóng to full-screen.
+  - Left Panel: Danh sách vụ việc dùng `V2StandardTable` bọc trong `DrawerSection`, có toolbar lọc (`V2TabBar`, `V2SearchInput`, Switch), chân bảng có summary row tự động tính tổng tiền.
+  - Điều khiển cột hiển thị qua prop `showProfitMetrics`:
+    - Khi `true`: Kích hoạt thêm 3 cột **Doanh thu thuần**, **Chi phí (Giá vốn)**, **Lợi nhuận gộp** (màu semantic token, font mono tabular-nums, không dùng blue).
+    - Khi `false`: Ẩn 3 cột P&L để tập trung vào số liệu công nợ.
+  - Right Panel: `GarageCasesRightPanel` tự động hiển thị Section **Hiệu quả kinh doanh (P&L)** (Doanh thu thuần, Giá vốn, Lãi gộp & Biên LN) + **Tiến độ thu tiền & công nợ** (khi ở Checkpoint), hoặc **Cơ cấu Thu KH vs BH & Chi phí nợ** (khi ở Công nợ).
+  - Bọc ngoài bởi 2 wrapper chuẩn ngữ nghĩa nghiệp vụ:
+    - `GarageCheckpointDrawer`: Wrapper mỏng (35 LoC) bọc `GarageCasesDetailDrawer` với `scope: checkpoint` và `showProfitMetrics={true}`. Thay thế hoàn toàn file monolith 662 LoC cũ dùng HTML trần.
+    - `GarageDebtDetailDrawer`: Wrapper mỏng (22 LoC) bọc `GarageCasesDetailDrawer` với `showProfitMetrics={false}`. Giữ nguyên 100% interface cho các caller cũ (`GarageTimeHorizonDetailDrawer` và `GarageMonthDetailDrawer`).
+  - Toàn bộ các file trong cụm đều tuân thủ No Blue Mandate và khống chế 100% file code $< 250\text{ LoC}$.
+
 - Drill-down mốc: `GarageMonthClassificationCasesDrawer` và `GaragePartnerMonthDetailDrawer` nhận prop `horizon`. Danh sách phân loại lọc `agingHorizon=[horizon]` và `ngayHoanThanhCongViec=["2026-07-01.."]`; đối tác dùng `initialCases` từ breakdown, không lọc theo tháng. Test: `*.horizon.test.tsx` cạnh hai drawer.
 - `GarageMonthDetailDrawer` hiển thị đồng thời hai bảng `DataTable` chuẩn spreadsheet cho Phải thu và Phải trả; mỗi bảng có state/filter độc lập và các table ID `garage-month-detail-receivables-table` và `garage-month-detail-payables-table`.
 - Tab Đối tượng HĐ hiển thị riêng hai bảng Thu khách hàng và Thu bảo hiểm, dùng lần lượt `customerPartners` và `insuranceCompanies`, với table ID `garage-month-detail-customer-partners-table` và `garage-month-detail-insurance-companies-table`.

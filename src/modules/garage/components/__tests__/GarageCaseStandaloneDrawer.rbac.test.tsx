@@ -43,6 +43,29 @@ vi.mock("../garage-case-details-tab/GarageCaseDetailsTab", () => ({
   GarageCaseDetailsTab: () => null,
 }));
 
+vi.mock("../GarageCasePartnerTab", () => ({
+  GarageCasePartnerTab: () => null,
+}));
+
+vi.mock("../GarageCaseFinancialsTab", () => ({
+  GarageCaseFinancialsTab: () => null,
+  GarageCaseFinancialsRightPanel: () => null,
+  GarageCaseFinancialsProvider: ({ children }: any) => children,
+}));
+
+vi.mock("@/shared/components/drawer/DrawerDocumentTraceability", () => ({
+  DrawerDocumentTraceability: () => null,
+}));
+
+vi.mock("../../api/garageApi", () => ({
+  garageApi: {
+    getCasesByCustomer: vi.fn().mockResolvedValue([]),
+    getCaseTraceabilityGraph: vi
+      .fn()
+      .mockResolvedValue({ nodes: [], edges: [] }),
+  },
+}));
+
 vi.mock("../drawer/hooks/useGarageCaseDrawerLogic", () => ({
   useGarageCaseDrawerLogic: vi.fn(),
 }));
@@ -181,5 +204,38 @@ describe("GarageCaseStandaloneDrawer RBAC Guard", () => {
         defaultAttributesSectionSpy.mock.calls.length - 1
       ]?.[0];
     expect(lastAttrsCall.onStartEdit).toBeUndefined();
+  });
+
+  it("renders exactly 3 Main Tabs: 'quote_details', 'customer_details', and 'sync_history'", () => {
+    vi.mocked(drawerLogicModule.useGarageCaseDrawerLogic).mockReturnValue({
+      ...baseLogicMock,
+      canUpdateGarage: true,
+      editMode: false,
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCaseStandaloneDrawer
+          isOpen={true}
+          caseCode="CASE-001"
+          onClose={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    const mainDrawerCall = standardFormDrawerSpy.mock.calls
+      .map((c: any) => c[0])
+      .find(
+        (p: any) =>
+          typeof p?.title === "string" && p.title.includes("Sổ báo giá"),
+      );
+    expect(mainDrawerCall).toBeDefined();
+    expect(mainDrawerCall.tabs).toHaveLength(3);
+    const tabKeys = mainDrawerCall.tabs.map((t: any) => t.key);
+    expect(tabKeys).toEqual([
+      "quote_details",
+      "customer_details",
+      "sync_history",
+    ]);
   });
 });

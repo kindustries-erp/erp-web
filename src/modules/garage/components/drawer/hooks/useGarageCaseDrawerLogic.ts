@@ -176,31 +176,44 @@ export function useGarageCaseDrawerLogic({
     startEdit();
   }, [canUpdateGarage, startEdit, t]);
 
+  const resolveInitialTabs = useCallback(
+    (tabKey?: string, subTabKey?: GarageCaseDetailViewMode) => {
+      if (tabKey === "financials" || tabKey === "linked_docs") {
+        return {
+          mainTab: "quote_details",
+          subTab: tabKey as GarageCaseDetailViewMode,
+        };
+      }
+      if (tabKey === "partner_details" || tabKey === "customer_details") {
+        return {
+          mainTab: "customer_details",
+          subTab: "details" as GarageCaseDetailViewMode,
+        };
+      }
+      return {
+        mainTab: tabKey || "quote_details",
+        subTab: subTabKey || "details",
+      };
+    },
+    [],
+  );
+
+  const initialResolved = resolveInitialTabs(initialTabKey, initialSubTabKey);
+
   const [activeTabKey, setActiveTabKey] = useState<string>(
-    initialTabKey === "partner_details"
-      ? "quote_details"
-      : initialTabKey || "quote_details",
+    initialResolved.mainTab,
   );
 
   const [detailsSubTab, setDetailsSubTab] = useState<GarageCaseDetailViewMode>(
-    initialTabKey === "partner_details"
-      ? "partner"
-      : initialSubTabKey || "details",
+    initialResolved.subTab,
   );
 
   useEffect(() => {
     if (isOpen) {
-      if (initialTabKey === "partner_details") {
-        setActiveTabKey("quote_details");
-        setDetailsSubTab("partner");
-      } else {
-        if (initialTabKey) {
-          setActiveTabKey(initialTabKey);
-        } else {
-          setActiveTabKey("quote_details");
-        }
-        setDetailsSubTab(initialSubTabKey || "details");
-      }
+      const resolved = resolveInitialTabs(initialTabKey, initialSubTabKey);
+      setActiveTabKey(resolved.mainTab);
+      setDetailsSubTab(resolved.subTab);
+
       if (initialEditMode && canUpdateGarage) {
         startEdit();
       } else {
@@ -216,6 +229,7 @@ export function useGarageCaseDrawerLogic({
     initialEditMode,
     initialTabKey,
     initialSubTabKey,
+    resolveInitialTabs,
     cancelEdit,
     startEdit,
     canUpdateGarage,
@@ -812,17 +826,9 @@ export function useGarageCaseDrawerLogic({
         queryKey: ["garage-case-by-code", newCaseCode],
       });
 
-      if (options?.tabKey) {
-        setActiveTabKey(options.tabKey);
-      } else {
-        setActiveTabKey("quote_details");
-      }
-
-      if (options?.subTabKey) {
-        setDetailsSubTab(options.subTabKey);
-      } else if (!options?.tabKey || options.tabKey === "quote_details") {
-        setDetailsSubTab("details");
-      }
+      const resolved = resolveInitialTabs(options?.tabKey, options?.subTabKey);
+      setActiveTabKey(resolved.mainTab);
+      setDetailsSubTab(resolved.subTab);
 
       if (options?.editMode && canUpdateGarage) {
         startEdit();
@@ -830,7 +836,7 @@ export function useGarageCaseDrawerLogic({
         cancelEdit();
       }
     },
-    [queryClient, startEdit, cancelEdit, canUpdateGarage],
+    [queryClient, startEdit, cancelEdit, canUpdateGarage, resolveInitialTabs],
   );
 
   return {

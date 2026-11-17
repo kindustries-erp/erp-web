@@ -505,7 +505,11 @@ export const garageEn = {
     drawer: {
       caseDetails: "Quotation Sheet:",
       tabDetails: "Details",
+      tabCustomerDetails: "Customer Details",
       subTabDetails: "Details",
+      subTabQuoteDetails: "Quotation Details",
+      subTabFinancials: "Financials & Settlement",
+      subTabLinkedDocs: "Linked Documents",
       subTabObjectDetails: "Partner Details",
       quoteDetails: "Details",
       partnerDetails: "Partner Details",
