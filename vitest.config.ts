@@ -7,9 +7,10 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     globals: true,
     testTimeout: 15000,
-    include: ["src/v2/**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/e2e/**"],
-    include: ["src/v2/**/*.{test,spec}.{ts,tsx}"],
+    include: [
+      "src/v2/**/*.{test,spec}.{ts,tsx}",
+      "src/core/components/layout/**/*.{test,spec}.{ts,tsx}",
+    ],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",

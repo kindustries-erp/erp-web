@@ -414,30 +414,6 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/garage-cases",
         });
       }
-      if (canReadGarageProcurementRequests || canReadGaragePurchaseOrders) {
-        items.push({
-          id: "garage-procurement",
-          label: t("nav.items.garageProcurement", "Mua hàng Garage"),
-          icon: ClipboardList,
-          href: "/garage-procurement?tab=requests",
-        });
-      }
-      if (canReadGarageStockVouchers) {
-        items.push({
-          id: "garage-stock-vouchers",
-          label: t("nav.items.garageStockVouchers", "Chứng từ kho Garage"),
-          icon: Package,
-          href: "/garage-stock-vouchers",
-        });
-      }
-      if (canReadGarageStockLedger) {
-        items.push({
-          id: "garage-stock-balances",
-          label: t("nav.items.garageStockBalances", "Tồn kho Garage"),
-          icon: Warehouse,
-          href: "/garage-stock-balances",
-        });
-      }
       if (canReadGarageCashflow) {
         items.push({
           id: "garage-cashflow",
@@ -460,6 +436,30 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           label: t("nav.items.garageOpex", "Chi phí vận hành Garage"),
           icon: Receipt,
           href: "/garage-opex",
+        });
+      }
+      if (canReadGarageProcurementRequests || canReadGaragePurchaseOrders) {
+        items.push({
+          id: "garage-procurement",
+          label: t("nav.items.garageProcurement", "Mua hàng Garage"),
+          icon: ClipboardList,
+          href: "/garage-procurement?tab=requests",
+        });
+      }
+      if (canReadGarageStockVouchers) {
+        items.push({
+          id: "garage-stock-vouchers",
+          label: t("nav.items.garageStockVouchers", "Chứng từ kho Garage"),
+          icon: Package,
+          href: "/garage-stock-vouchers",
+        });
+      }
+      if (canReadGarageStockLedger) {
+        items.push({
+          id: "garage-stock-balances",
+          label: t("nav.items.garageStockBalances", "Tồn kho Garage"),
+          icon: Warehouse,
+          href: "/garage-stock-balances",
         });
       }
       if (items.length > 0) {

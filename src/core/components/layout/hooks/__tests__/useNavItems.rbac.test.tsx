@@ -96,6 +96,23 @@ describe("useNavItems RBAC Guard", () => {
     expect(prItem?.keywords).toContain("pr garage");
   });
 
+  it("arranges garage items in order: cases, cashflow, debts, opex, procurement", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const { result } = renderHook(() => useNavItems());
+    const garageKeys = result.current
+      .filter((item) => item.section === "GARAGE")
+      .map((item) => item.key);
+
+    expect(garageKeys).toEqual([
+      "garage-cases",
+      "garage-cashflow",
+      "garage-debts",
+      "garage-opex",
+      "garage-procurement",
+    ]);
+  });
+
   it("includes journal-entry only when user has JOURNAL_ENTRIES permission", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       return resource === ErpResource.JOURNAL_ENTRIES;

@@ -355,26 +355,6 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Car className="w-4 h-4" />,
       });
     }
-    if (canReadGarageProcurementRequests) {
-      items.push({
-        key: "garage-procurement",
-        label: t("nav.items.garageProcurement", "Mua hàng Garage"),
-        section: garageSection,
-        keywords: [
-          "garage",
-          "de nghi mua hang",
-          "đề nghị mua hàng",
-          "de nghi mua hang garage",
-          "đề nghị mua hàng garage",
-          "pr garage",
-          "mua hang garage",
-          "mua hàng garage",
-          "phu tung",
-          "phụ tùng",
-        ],
-        icon: <ClipboardList className="w-4 h-4" />,
-      });
-    }
     if (canReadGarageCashflow) {
       items.push({
         key: "garage-cashflow",
@@ -427,6 +407,26 @@ export function useNavItems(): NavSearchItem[] {
           "chi phi",
         ],
         icon: <ReceiptText className="w-4 h-4" />,
+      });
+    }
+    if (canReadGarageProcurementRequests) {
+      items.push({
+        key: "garage-procurement",
+        label: t("nav.items.garageProcurement", "Mua hàng Garage"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "de nghi mua hang",
+          "đề nghị mua hàng",
+          "de nghi mua hang garage",
+          "đề nghị mua hàng garage",
+          "pr garage",
+          "mua hang garage",
+          "mua hàng garage",
+          "phu tung",
+          "phụ tùng",
+        ],
+        icon: <ClipboardList className="w-4 h-4" />,
       });
     }
 
