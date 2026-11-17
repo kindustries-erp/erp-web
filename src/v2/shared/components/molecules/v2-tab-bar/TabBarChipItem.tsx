@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { V2Button, V2Divider, V2Text } from "@/v2/shared/components/atoms";
 import type { V2TabItemData } from "./V2TabBar.type";
 import { TabBarChipComfortable } from "./TabBarChipComfortable";
 import { TabBarChipHeader } from "./TabBarChipHeader";
@@ -68,7 +68,7 @@ export const TabBarChipItem: React.FC<TabBarChipItemProps> = ({
         "group relative flex h-auto shrink-0 snap-start flex-col justify-center rounded-none text-left font-normal transition-colors duration-150 select-none cursor-pointer",
         "px-3 py-2 sm:px-3.5 sm:py-2.5",
         equalWidth
-          ? "w-[136px] sm:w-[150px]"
+          ? "w-[136px] sm:w-[156px]"
           : "w-auto min-w-[120px] sm:min-w-[136px]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
         isActive
@@ -87,16 +87,24 @@ export const TabBarChipItem: React.FC<TabBarChipItemProps> = ({
         badgeCount={tab.badgeCount !== undefined ? count : undefined}
       />
 
-      {/* Hàng 2: Số liệu bên dưới với khoảng cách mt-2 sm:mt-2.5 bằng đúng padding py-2 sm:py-2.5 */}
+      {/* Hàng 2: Số liệu bên dưới căn giữa với divider ngăn cách giữa các metric */}
       <div className="mt-2 sm:mt-2.5 min-w-0 w-full">
         {tab.metrics && tab.metrics.length > 0 && (
-          <span className="flex items-center gap-2 min-w-0 flex-nowrap overflow-hidden">
+          <span className="flex items-center justify-center gap-1.5 sm:gap-2 min-w-0 w-full flex-nowrap overflow-hidden">
             {tab.metrics.map((m, idx) => (
-              <TabBarChipMetric
-                key={idx}
-                metric={m}
-                showIconOnly={metricMode === "icon"}
-              />
+              <React.Fragment key={idx}>
+                {idx > 0 && (
+                  <V2Divider
+                    orientation="vertical"
+                    data-testid="tab-chip-metric-divider"
+                    className="h-2.5 shrink-0 bg-muted-fg opacity-35"
+                  />
+                )}
+                <TabBarChipMetric
+                  metric={m}
+                  showIconOnly={metricMode === "icon"}
+                />
+              </React.Fragment>
             ))}
           </span>
         )}

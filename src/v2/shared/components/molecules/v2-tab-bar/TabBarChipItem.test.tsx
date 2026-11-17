@@ -125,6 +125,31 @@ describe("TabBarChipItem", () => {
       />,
     );
     expect(screen.getByText("Trị giá: 500k ₫")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("tab-chip-metric-divider"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders multiple metrics centered with vertical divider in between", () => {
+    const { container } = render(
+      <TabBarChipItem
+        tab={{
+          ...tab,
+          metrics: [
+            { label: "Tồn", value: "257" },
+            { label: "Trị giá", value: "99.28M ₫" },
+          ],
+        }}
+        isActive={false}
+        total={69}
+        onSelect={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("Tồn: 257")).toBeInTheDocument();
+    expect(screen.getByText("Trị giá: 99.28M ₫")).toBeInTheDocument();
+    expect(screen.getByTestId("tab-chip-metric-divider")).toBeInTheDocument();
+    const metricsContainer = container.querySelector(".justify-center");
+    expect(metricsContainer).not.toBeNull();
   });
 
   it("renders percentage and supports comfortable density", () => {
