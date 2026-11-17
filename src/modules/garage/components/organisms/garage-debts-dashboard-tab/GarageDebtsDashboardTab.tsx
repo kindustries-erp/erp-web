@@ -57,15 +57,15 @@ export const GarageDebtsDashboardTab: React.FC<
         onSelectHorizon={setSelectedHorizon}
       />
 
-      {/* 3. Hàng 3 Biểu đồ Phân tích */}
+      {/* 3. Tiến độ Dòng tiền & Công nợ Dịch vụ */}
+      <GaragePaymentProgressCard />
+
+      {/* 4. Biến động & Phân tích Công nợ */}
       <GarageDebtsAnalyticsCharts
         cashTrend={cashTrend}
         agingComparison={agingComparison}
         isLoading={isLoading}
       />
-
-      {/* 4. Tiến độ Dòng tiền & Công nợ Dịch vụ */}
-      <GaragePaymentProgressCard />
 
       {/* 5. Time Horizon Detail Drawer */}
       <GarageTimeHorizonDetailDrawer

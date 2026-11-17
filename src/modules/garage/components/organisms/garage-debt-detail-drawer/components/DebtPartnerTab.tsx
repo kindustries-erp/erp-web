@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PillTabs } from "@/shared/components/PillTabs";
-import { CustomerDetailDebtSwitch } from "@/modules/garage/components/organisms/garage-customer-detail-drawer/components/CustomerDetailDebtSwitch";
-import { MonthPartnerCategorizedSection } from "@/modules/garage/components/organisms/garage-month-detail-drawer/components/MonthPartnerCategorizedSection";
+import { CustomerDetailDebtSwitch } from "../../garage-customer-detail-drawer/components/CustomerDetailDebtSwitch";
+import { MonthPartnerCategorizedSection } from "../../garage-month-detail-drawer/components/MonthPartnerCategorizedSection";
 import type {
   MonthlyReceivablesGroupCategorized,
   MonthlyReceivablesGroupItem,
 } from "@/modules/garage/api/garageDashboardApi";
 
-export interface TimeHorizonPartnerTabProps {
+export interface DebtPartnerTabProps {
   safeCategorized: {
     enterprise: MonthlyReceivablesGroupCategorized;
     individual: MonthlyReceivablesGroupCategorized;
@@ -21,7 +21,10 @@ export interface TimeHorizonPartnerTabProps {
   onOpenCaseDetail?: (code: string) => void;
 }
 
-export const TimeHorizonPartnerTab: React.FC<TimeHorizonPartnerTabProps> = ({
+type PartnerTypeFilter = "all" | "enterprise" | "individual" | "insurance";
+
+/** Tab "Phân loại theo đối tượng": KH doanh nghiệp, KH cá nhân, bảo hiểm. Dùng chung cho tháng và mốc. */
+export const DebtPartnerTab: React.FC<DebtPartnerTabProps> = ({
   safeCategorized,
   partnerDebtType,
   onPartnerDebtTypeChange,
@@ -30,21 +33,20 @@ export const TimeHorizonPartnerTab: React.FC<TimeHorizonPartnerTabProps> = ({
   onOpenCaseDetail,
 }) => {
   const { t } = useTranslation(["garage", "common"]);
-  const [partnerTypeFilter, setPartnerTypeFilter] = useState<
-    "all" | "enterprise" | "individual" | "insurance"
-  >("all");
+  const [partnerTypeFilter, setPartnerTypeFilter] =
+    useState<PartnerTypeFilter>("all");
 
   const { enterprise, individual, insurance } = safeCategorized;
   const totalPartnerCount =
     enterprise.all.length + individual.all.length + insurance.all.length;
   const isPayableBreakdown = partnerDebtType === "payables";
+  const showAll = partnerTypeFilter === "all";
 
   return (
     <div className="flex flex-col gap-3.5">
-      {/* Top Toolbar Filter by Partner Group & Debt Switch */}
       <div className="flex items-center justify-between gap-3 w-full">
         <div className="flex items-center overflow-x-auto scrollbar-none min-w-0">
-          <PillTabs<"all" | "enterprise" | "individual" | "insurance">
+          <PillTabs<PartnerTypeFilter>
             size="sm"
             className="w-auto"
             headerClassName="flex-nowrap"
@@ -86,8 +88,7 @@ export const TimeHorizonPartnerTab: React.FC<TimeHorizonPartnerTabProps> = ({
         </div>
       </div>
 
-      {/* 1. Khách hàng Doanh nghiệp */}
-      {(partnerTypeFilter === "all" || partnerTypeFilter === "enterprise") && (
+      {(showAll || partnerTypeFilter === "enterprise") && (
         <MonthPartnerCategorizedSection
           title={
             isPayableBreakdown
@@ -101,18 +102,17 @@ export const TimeHorizonPartnerTab: React.FC<TimeHorizonPartnerTabProps> = ({
                 )
           }
           categorized={enterprise}
-          tableIdPrefix="garage-horizon-detail-enterprise"
+          tableIdPrefix="garage-debt-detail-enterprise"
           totalBilled={effectiveBreakdownTotal}
           debtType={partnerDebtType}
-          isAllTab={partnerTypeFilter === "all"}
+          isAllTab={showAll}
           onSelectGroup={onSelectGroup}
           onOpenCaseDetail={onOpenCaseDetail}
           defaultCollapsed={false}
         />
       )}
 
-      {/* 2. Khách hàng Cá nhân */}
-      {(partnerTypeFilter === "all" || partnerTypeFilter === "individual") && (
+      {(showAll || partnerTypeFilter === "individual") && (
         <MonthPartnerCategorizedSection
           title={
             isPayableBreakdown
@@ -126,18 +126,17 @@ export const TimeHorizonPartnerTab: React.FC<TimeHorizonPartnerTabProps> = ({
                 )
           }
           categorized={individual}
-          tableIdPrefix="garage-horizon-detail-individual"
+          tableIdPrefix="garage-debt-detail-individual"
           totalBilled={effectiveBreakdownTotal}
           debtType={partnerDebtType}
-          isAllTab={partnerTypeFilter === "all"}
+          isAllTab={showAll}
           onSelectGroup={onSelectGroup}
           onOpenCaseDetail={onOpenCaseDetail}
           defaultCollapsed={false}
         />
       )}
 
-      {/* 3. Bảo hiểm */}
-      {(partnerTypeFilter === "all" || partnerTypeFilter === "insurance") && (
+      {(showAll || partnerTypeFilter === "insurance") && (
         <MonthPartnerCategorizedSection
           title={
             isPayableBreakdown
@@ -145,10 +144,10 @@ export const TimeHorizonPartnerTab: React.FC<TimeHorizonPartnerTabProps> = ({
               : t("progress.sections.insuranceCollection", "Thu bảo hiểm")
           }
           categorized={insurance}
-          tableIdPrefix="garage-horizon-detail-insurance"
+          tableIdPrefix="garage-debt-detail-insurance"
           totalBilled={effectiveBreakdownTotal}
           debtType={partnerDebtType}
-          isAllTab={partnerTypeFilter === "all"}
+          isAllTab={showAll}
           onSelectGroup={onSelectGroup}
           onOpenCaseDetail={onOpenCaseDetail}
           defaultCollapsed={false}

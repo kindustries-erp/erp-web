@@ -195,6 +195,8 @@ Resource RBAC: `garage`
 
 ## 7. Garage Month Detail Drawer - Debt Tables (2026-10)
 
+- **Một drawer cho tháng và mốc tuổi nợ (2026-11)**: `GarageMonthDetailDrawer` (bấm dòng tháng) và `GarageTimeHorizonDetailDrawer` (bấm thẻ tuổi nợ) đều là wrapper mỏng của `GarageDebtDetailDrawer` (`organisms/garage-debt-detail-drawer/`), nhận `scope` `{kind:"month", item}` hoặc `{kind:"horizon", horizon, branchId, dateFrom, dateTo}`. Hook `useGarageDebtDetailDrawer` lấy số liệu từ `trendItem` (tháng) hoặc breakdown theo mốc (mốc). Tab, right panel, badge tỷ lệ và drill-down giống nhau. Drawer mốc không còn tab "Danh sách vụ việc" và khối "Đánh giá rủi ro mốc thời gian".
+- Drill-down mốc: `GarageMonthClassificationCasesDrawer` và `GaragePartnerMonthDetailDrawer` nhận prop `horizon`. Danh sách phân loại lọc `agingHorizon=[horizon]` và `ngayHoanThanhCongViec=["2026-07-01.."]`; đối tác dùng `initialCases` từ breakdown, không lọc theo tháng. Test: `*.horizon.test.tsx` cạnh hai drawer.
 - `GarageMonthDetailDrawer` hiển thị đồng thời hai bảng `DataTable` chuẩn spreadsheet cho Phải thu và Phải trả; mỗi bảng có state/filter độc lập và các table ID `garage-month-detail-receivables-table` và `garage-month-detail-payables-table`.
 - Tab Đối tượng HĐ hiển thị riêng hai bảng Thu khách hàng và Thu bảo hiểm, dùng lần lượt `customerPartners` và `insuranceCompanies`, với table ID `garage-month-detail-customer-partners-table` và `garage-month-detail-insurance-companies-table`.
 - `CustomerDetailDebtSwitch` không còn được dùng trong hai khu vực bảng; click row vẫn mở classification hoặc partner detail drawer như trước.
@@ -294,4 +296,6 @@ Resource RBAC: `garage`
 - **Không đổi contract**: không thay đổi DB/API; quyền dùng `GARAGE_CASHFLOW:READ` sẵn có.
 - "Quyển số" để trống (chấm dòng); chỉ in `Số: {voucherCode}`. Field "Địa chỉ" để trống vì voucher không có dữ liệu.
 
+## 13. Nhãn thẻ tuổi nợ garage (2026-11)
 
+- Thẻ tuổi nợ và ma trận tuổi nợ garage ghi tổng "Phải thu" (`debts:dashboard.garageReceivableTotal`), vì giá trị là tổng KH + BH theo công thức chung của erp-api (`kgara-case-remaining`). Nhãn "Phải thu (KH)" vẫn dùng ở dự báo dòng tiền (`debts:dashboard.expectedIn`) và dashboard hóa đơn.

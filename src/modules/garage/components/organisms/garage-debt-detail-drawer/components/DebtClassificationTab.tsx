@@ -1,10 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { DrawerSection } from "@/shared/components/DrawerModal";
-import { MonthClassificationTable } from "@/modules/garage/components/organisms/garage-month-detail-drawer/components/MonthClassificationTable";
-import type { MonthClassificationRow } from "@/modules/garage/components/organisms/garage-month-detail-drawer/components/MonthClassificationTable.type";
+import { MonthClassificationTable } from "../../garage-month-detail-drawer/components/MonthClassificationTable";
+import type { MonthClassificationRow } from "../../garage-month-detail-drawer/components/MonthClassificationTable.type";
 
-export interface TimeHorizonClassificationTabProps {
+export interface DebtClassificationTabProps {
   receivableRows: MonthClassificationRow[];
   payableRows: MonthClassificationRow[];
   totalBilled: number;
@@ -12,9 +12,8 @@ export interface TimeHorizonClassificationTabProps {
   onSelectClassification: (row: MonthClassificationRow) => void;
 }
 
-export const TimeHorizonClassificationTab: React.FC<
-  TimeHorizonClassificationTabProps
-> = ({
+/** Tab "Phân loại Nghiệp vụ": bảng phải thu và bảng phải trả theo phân loại. Dùng chung cho tháng và mốc. */
+export const DebtClassificationTab: React.FC<DebtClassificationTabProps> = ({
   receivableRows,
   payableRows,
   totalBilled,
@@ -25,7 +24,6 @@ export const TimeHorizonClassificationTab: React.FC<
 
   return (
     <div className="space-y-4">
-      {/* 1. Bảng Phải thu theo nghiệp vụ */}
       <DrawerSection
         title={t(
           "progress.sections.receivableClassification",
@@ -39,12 +37,10 @@ export const TimeHorizonClassificationTab: React.FC<
           rows={receivableRows}
           debtType="receivables"
           totalBilled={totalBilled}
-          tableId="garage-horizon-detail-receivables-table"
+          tableId="garage-debt-detail-receivables-table"
           onSelectClassification={onSelectClassification}
         />
       </DrawerSection>
-
-      {/* 2. Bảng Phải trả theo chi phí */}
       <DrawerSection
         title={t(
           "progress.sections.payableClassification",
@@ -58,7 +54,7 @@ export const TimeHorizonClassificationTab: React.FC<
           rows={payableRows}
           debtType="payables"
           totalBilled={totalCost}
-          tableId="garage-horizon-detail-payables-table"
+          tableId="garage-debt-detail-payables-table"
           onSelectClassification={onSelectClassification}
         />
       </DrawerSection>
