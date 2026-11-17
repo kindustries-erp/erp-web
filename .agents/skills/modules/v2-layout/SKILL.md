@@ -287,6 +287,7 @@ Hệ thống Layout V2 hỗ trợ 100% đa ngôn ngữ (Tiếng Việt 🇻🇳 
 ### 5.3. Động Hóa Danh Mục Điều Hướng ([`v2Navigation.ts`](erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.ts))
 - Menu Sidebar và Mobile BottomNav được động hóa hoàn toàn thông qua `getV2NavigationSections(t)` và `getV2NavItems(t)`.
 - Tách bạch cấu hình thô sang [`v2Navigation.config.ts`](erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.config.ts), bảo đảm tuân thủ nghiêm ngặt ngưỡng kích thước file < 180 LoC.
+- **Lọc Phân Quyền RBAC**: Danh mục Sections được lọc qua `filterV2NavSections(..., can)` kết hợp hook `useV2PermissionChecker()`. Mỗi item trong `NAV_DEFS` đối chiếu với `V2_ROUTES` (`v2RouteConfig.ts`) theo `route.id === item.id` để lấy `permission`. Các item thiếu quyền sẽ bị ẩn; nếu một section không còn item nào hợp lệ thì tự động loại bỏ cả section đó. Hoạt động đồng bộ trên cả Desktop và Mobile.
 
 ---
 

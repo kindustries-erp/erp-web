@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ShieldX } from "lucide-react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Text, V2Button } from "@/v2/shared/components";
 import type { AdminRouteGuardProps } from "./AdminRouteGuard.type";
@@ -12,11 +13,16 @@ export const AdminRouteGuard: React.FC<AdminRouteGuardProps> = ({
   const { t } = useV2Translation();
   const profileEmail = useAuthStore((s) => s.profile?.email);
   const employeeEmail = useAuthStore((s) => s.employee?.email);
+  const hasAdminPermission = useV2HasPermission({
+    collection: "admin_users",
+    action: "read",
+  });
 
   const isSuperAdmin =
     profileEmail === "admin@liouni.com" || employeeEmail === "admin@liouni.com";
+  const canAccessAdmin = isSuperAdmin || hasAdminPermission;
 
-  if (isSuperAdmin) return <>{children}</>;
+  if (canAccessAdmin) return <>{children}</>;
   if (fallback !== undefined) return <>{fallback}</>;
 
   const handleBackToOps = () => {

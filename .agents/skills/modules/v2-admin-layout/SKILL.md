@@ -22,12 +22,12 @@ Hệ thống ERP V2 phân tách thành **2 không gian làm việc độc lập*
      - `/v2/admin/roles-permissions`: Phân quyền & Ma trận vai trò (RBAC).
      - `/v2/admin/audit-logs`: Nhật ký hoạt động & Giám sát truy cập (trang chỉ đọc, xem skill `audit-logs`).
      - `/v2/admin/settings`: Cấu hình hệ thống, chi nhánh & công ty.
-   - **Bố cục**: Sử dụng `V2AdminLayout` (Menu quản trị phân nhóm ĐIỀU HÀNH - BÁO CÁO - BẢO MẬT - HỆ THỐNG).
-   - **Bảo vệ**: Bọc bởi `AdminRouteGuard` (chặn 100% người dùng không phải Super Admin).
+   - **Bố cục**: Sử dụng `V2AdminLayout` (Menu quản trị phân nhóm ĐIỀU HÀNH - BÁO CÁO - BẢO MẬT - HỆ THỐNG). Menu tự động lọc theo RBAC thông qua `filterV2NavSections` và `useV2PermissionChecker`.
+   - **Bảo vệ**: Bọc bởi `AdminRouteGuard` (cho phép Super Admin `admin@liouni.com` hoặc tài khoản có quyền `admin_users:read`).
 
 3. **Nút chuyển đổi Cổng Quản trị (`V2WorkspaceModeToggle`)**:
    - **Vị trí**: Đặt tại TopBar (cạnh ô tìm kiếm nhanh / avatar người dùng) dạng Toggle Pill rõ ràng.
-   - **Đặc quyền hiển thị**: **CHỈ DUY NHẤT** tài khoản `admin@liouni.com` (`profile?.email === 'admin@liouni.com' || employee?.email === 'admin@liouni.com'`) mới nhìn thấy nút chuyển và truy cập được vào Cổng Quản trị. Loại bỏ hoàn toàn kiểm tra `DASHBOARD.READ` để tránh rò rỉ quyền.
+   - **Đặc quyền hiển thị**: Tài khoản `admin@liouni.com` (`profile?.email === 'admin@liouni.com' || employee?.email === 'admin@liouni.com'`) hoặc tài khoản có quyền `admin_users:read` mới nhìn thấy nút chuyển và truy cập được vào Cổng Quản trị.
    - **V2 Primitives**: Tận dụng triệt để `Button` (`@/v2/shared/ui/button`) và `Badge` (`@/v2/shared/ui/badge`), không dùng thẻ HTML button thô.
    - Khi ở `/v2`: Hiển thị "🛡️ Cổng Quản trị" -> click chuyển sang `/v2/admin/dashboard`.
    - Khi ở `/v2/admin`: Hiển thị "💼 Không gian Nhập liệu" -> click chuyển sang `/v2`.

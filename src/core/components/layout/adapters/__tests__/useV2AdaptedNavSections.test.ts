@@ -226,7 +226,7 @@ describe("useV2AdaptedNavSections - garage stock items in sec-garage", () => {
     expect(item?.icon).toBe(Package);
   });
 
-  it("includes garage-stock-vouchers via fallback when user has GARAGE permission", () => {
+  it("excludes garage-stock-vouchers when user only has GARAGE permission (no fallback)", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       return resource === ErpResource.GARAGE;
     });
@@ -235,8 +235,7 @@ describe("useV2AdaptedNavSections - garage stock items in sec-garage", () => {
     const garageSec = result.current.find((s) => s.id === "sec-garage");
     const item = findNavChild(garageSec?.items, "garage-stock-vouchers");
 
-    expect(item).toBeDefined();
-    expect(item?.href).toBe("/garage-stock-vouchers");
+    expect(item).toBeUndefined();
   });
 
   it("shows garage-stock-balances only with GARAGE_STOCK_LEDGER permission", () => {

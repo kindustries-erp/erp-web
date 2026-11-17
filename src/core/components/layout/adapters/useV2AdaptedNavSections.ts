@@ -111,12 +111,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpAction.READ,
   );
   const canReadGarageOpex = canReadGarageCases;
-  const canReadGarageStockVouchers =
-    useHasPermission(ErpResource.GARAGE_STOCK_VOUCHERS, ErpAction.READ) ||
-    canReadGarageCases;
-  const canReadGarageStockLedger =
-    useHasPermission(ErpResource.GARAGE_STOCK_LEDGER, ErpAction.READ) ||
-    canReadGarageCases;
+  const canReadGarageStockVouchers = useHasPermission(
+    ErpResource.GARAGE_STOCK_VOUCHERS,
+    ErpAction.READ,
+  );
+  const canReadGarageStockLedger = useHasPermission(
+    ErpResource.GARAGE_STOCK_LEDGER,
+    ErpAction.READ,
+  );
   const canReadGaragePurchaseOrders = useHasPermission(
     ErpResource.GARAGE_PROCUREMENT_ORDERS,
     ErpAction.READ,

@@ -5,6 +5,11 @@ import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { useV2MobileNavStore } from "@/v2/shared/stores/useV2MobileNavStore";
 import { V2AppLayout } from "./V2AppLayout";
 
+vi.mock("@/v2/shared/hooks/useV2HasPermission", () => ({
+  useV2PermissionChecker: () => () => true,
+  useV2HasPermission: () => true,
+}));
+
 describe("V2AppLayout Switcher", () => {
   const originalInnerWidth = window.innerWidth;
 

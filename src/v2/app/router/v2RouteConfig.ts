@@ -23,6 +23,7 @@ export const V2_ROUTES: V2RouteDef[] = [
     id: "sales-orders",
     path: "/v2/sales-orders",
     title: "Đơn bán hàng (Sales Orders)",
+    permission: { collection: "sales_orders", action: "read" },
   },
   {
     id: "customers",
@@ -31,9 +32,22 @@ export const V2_ROUTES: V2RouteDef[] = [
     permission: { collection: "business_partners", action: "read" },
   },
   {
+    id: "after-sales",
+    path: "/v2/after-sales",
+    title: "Sau bán hàng & Bảo hành",
+    permission: { collection: "sales_orders", action: "read" },
+  },
+  {
     id: "purchasing",
     path: "/v2/purchasing",
     title: "Quản lý mua hàng (Purchasing)",
+    permission: { collection: "purchase_orders", action: "read" },
+  },
+  {
+    id: "purchasing-orders",
+    path: "/v2/purchasing",
+    title: "Đơn mua hàng",
+    permission: { collection: "purchase_orders", action: "read" },
   },
   {
     id: "suppliers",
@@ -42,10 +56,46 @@ export const V2_ROUTES: V2RouteDef[] = [
     permission: { collection: "business_partners", action: "read" },
   },
   {
+    id: "inventory",
+    path: "/v2/inventory",
+    title: "Kho vận (Inventory)",
+    permission: { collection: "inventory_items", action: "read" },
+  },
+  {
+    id: "inventory-stock",
+    path: "/v2/inventory",
+    title: "Tồn kho thực tế",
+    permission: { collection: "inventory_items", action: "read" },
+  },
+  {
+    id: "inventory-vouchers",
+    path: "/v2/inventory-vouchers",
+    title: "Chứng từ kho",
+    permission: { collection: "inventory_vouchers", action: "read" },
+  },
+  {
+    id: "bom",
+    path: "/v2/bom",
+    title: "Định mức BOM",
+    permission: { collection: "bom", action: "read" },
+  },
+  {
+    id: "production",
+    path: "/v2/production",
+    title: "Lệnh sản xuất",
+    permission: { collection: "production", action: "read" },
+  },
+  {
     id: "invoices",
     path: "/v2/invoices",
     title: "Hóa đơn điện tử",
     permission: { collection: "invoices", action: "read" },
+  },
+  {
+    id: "cashflow",
+    path: "/v2/cashflow",
+    title: "Sổ quỹ & Sao kê",
+    permission: { collection: "garage_cashflow", action: "read" },
   },
   {
     id: "loans",
@@ -59,11 +109,15 @@ export const V2_ROUTES: V2RouteDef[] = [
     title: "Khoản vay & Dòng tiền",
     permission: { collection: "loans", action: "read" },
   },
-  { id: "inventory", path: "/v2/inventory", title: "Kho vận (Inventory)" },
   {
     id: "settings",
     path: "/v2/settings",
     title: "Cài đặt cá nhân & phân hệ",
+  },
+  {
+    id: "settings-app",
+    path: "/v2/settings",
+    title: "Cài đặt chung",
   },
 
   // --- Admin / Management Routes (Dưới tiền tố /v2/admin) ---
