@@ -17,6 +17,13 @@ describe("toInvoiceRow", () => {
     expect(toInvoiceRow(row, "OUT")).toMatchObject({ partner: "Buyer" });
   });
 
+  it("maps pdfSource and pdfError for the original PDF column", () => {
+    expect(
+      toInvoiceRow({ id: "1", pdfSource: "failed", pdfError: "timeout" }, "IN"),
+    ).toMatchObject({ pdfSource: "failed", pdfError: "timeout" });
+    expect(toInvoiceRow({ id: "2" }, "IN").pdfSource).toBeNull();
+  });
+
   it("converts decimal string amounts into numbers", () => {
     const row = toInvoiceRow(
       {

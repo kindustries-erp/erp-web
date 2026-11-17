@@ -1,19 +1,36 @@
 import axiosInstance from "./axiosInstance";
 
-export type NotificationType = "INFO" | "WARNING" | "ERROR" | "SUCCESS";
+/**
+ * Loại thông báo hệ thống chuẩn ERP (khớp contract backend).
+ * Tuân thủ chuẩn Phần D của /erp-ui-structure.
+ */
+export enum NotificationType {
+  INFO = "INFO",
+  WARNING = "WARNING",
+  ERROR = "ERROR",
+  SUCCESS = "SUCCESS",
+}
+
+/**
+ * Hành động điều hướng tương tác của chứng từ liên kết.
+ */
+export enum NotificationTargetAction {
+  APPROVE = "APPROVE",
+  VIEW = "VIEW",
+}
 
 /** Chứng từ liên quan để bấm thông báo mở đúng drawer/modal. */
 export interface NotificationTarget {
   module: string;
   id: string;
-  action: string | null;
+  action: NotificationTargetAction | string | null;
 }
 
 export interface CoreNotification {
   id: string;
   title: string;
   message: string;
-  type: NotificationType;
+  type: NotificationType | `${NotificationType}`;
   isRead: boolean;
   readAt: string | null;
   createdAt: string;
@@ -35,6 +52,11 @@ interface NotificationListResponse {
   extraData: { unreadCount: number };
 }
 
+export interface NotificationInboxResult {
+  items: CoreNotification[];
+  unreadCount: number;
+}
+
 const BASE_URL = "/api/v2/notifications-inbox";
 const LIST_PAGE_SIZE = 50;
 
@@ -44,6 +66,21 @@ export const notificationsApi = {
       params: { page: 1, pageSize: LIST_PAGE_SIZE },
     });
     return res.data.items;
+  },
+  findInbox: async (): Promise<NotificationInboxResult> => {
+    const res = await axiosInstance.get<NotificationListResponse>(BASE_URL, {
+      params: { page: 1, pageSize: LIST_PAGE_SIZE },
+    });
+    return {
+      items: res.data.items,
+      unreadCount: res.data.extraData?.unreadCount ?? 0,
+    };
+  },
+  getUnreadCount: async (): Promise<number> => {
+    const res = await axiosInstance.get<{ unreadCount: number }>(
+      `${BASE_URL}/unread-count`,
+    );
+    return res.data.unreadCount;
   },
   markAsRead: async (id: string): Promise<void> => {
     const res = await axiosInstance.patch(`${BASE_URL}/${id}/read`, undefined, {

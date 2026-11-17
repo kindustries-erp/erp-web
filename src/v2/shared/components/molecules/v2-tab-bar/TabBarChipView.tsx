@@ -11,12 +11,18 @@ export interface TabBarChipViewProps {
   extra?: React.ReactNode;
   className?: string;
   ariaLabel?: string;
+  density?: "compact" | "comfortable";
+  metricMode?: "stacked" | "inline" | "icon";
+  equalWidth?: boolean;
+  indicator?: "active-bar" | "progress";
 }
 
 /**
  * Dải thẻ KPI bấm được (V2TabBarVariant.STATUS_CHIP).
  * Các thẻ nằm trong một khung chung có viền; khung chỉ rộng bằng nội dung (ít tab thì gọn,
  * không kéo full width). Khi số tab vượt chiều rộng thì cuộn ngang có snap; extra xuống hàng khi hẹp.
+ * Mặc định mật độ `compact` cao ~48px tinh gọn; hỗ trợ `comfortable` cho thẻ KPI lớn.
+ * Width các card mặc định bằng nhau 100% (`equalWidth = true`).
  * Tổng = số của tab đầu tiên ("Tất cả").
  */
 export const TabBarChipView: React.FC<TabBarChipViewProps> = ({
@@ -26,6 +32,10 @@ export const TabBarChipView: React.FC<TabBarChipViewProps> = ({
   extra,
   className,
   ariaLabel,
+  density = "compact",
+  metricMode = "stacked",
+  equalWidth = true,
+  indicator = "active-bar",
 }) => {
   const { t } = useV2Translation();
   const total = tabs[0]?.badgeCount ?? 0;
@@ -42,7 +52,10 @@ export const TabBarChipView: React.FC<TabBarChipViewProps> = ({
         aria-label={
           ariaLabel || t("v2.tabBar.statusChipAriaLabel", "Lọc theo trạng thái")
         }
-        className="inline-flex max-w-full min-w-0 snap-x snap-proximity items-stretch overflow-x-auto scrollbar-none touch-pan-x [-webkit-overflow-scrolling:touch] divide-x divide-border rounded-xl border border-border bg-surface shadow-xs"
+        className={cn(
+          "inline-flex max-w-full min-w-0 snap-x snap-proximity items-stretch overflow-x-auto scrollbar-none touch-pan-x [-webkit-overflow-scrolling:touch] divide-x divide-border border border-border bg-surface shadow-xs",
+          density === "compact" ? "rounded-lg" : "rounded-xl",
+        )}
       >
         {tabs.map((tab: V2TabItemData) => {
           const tabKey = (tab.key ?? tab.id) || "";
@@ -51,6 +64,10 @@ export const TabBarChipView: React.FC<TabBarChipViewProps> = ({
               key={tabKey}
               tab={tab}
               total={total}
+              density={density}
+              metricMode={metricMode}
+              equalWidth={equalWidth}
+              indicator={indicator}
               isActive={activeKey === tabKey}
               onSelect={onSelect}
             />

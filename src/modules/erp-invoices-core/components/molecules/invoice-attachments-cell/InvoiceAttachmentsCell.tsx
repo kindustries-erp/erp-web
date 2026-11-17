@@ -3,7 +3,6 @@ import { Eye, FileCode, FileText } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Popover } from "@/core/components/ui/Popover";
 import { Button } from "@/shared/components/ui/Button";
-import { getFileViewUrl } from "@/modules/system/api/attachmentsApi";
 import type { InvoiceAttachmentsCellProps } from "./InvoiceAttachmentsCell.type";
 import { getPdfAttachments } from "./InvoiceAttachmentsCell.helper";
 
@@ -15,7 +14,6 @@ export const InvoiceAttachmentsCell = React.memo(
     setOpenPopoverId,
     handleDownload,
     handlePreviewPdf,
-    setPreviewPdf,
   }: InvoiceAttachmentsCellProps) {
     const hasPdf =
       Boolean(inv.pdfFileKey) ||
@@ -114,15 +112,11 @@ export const InvoiceAttachmentsCell = React.memo(
                         onClick={(e) => {
                           e.stopPropagation();
                           setOpenPopoverId(null);
-                          const url = getFileViewUrl(pdf.attachment?.id);
-                          setPreviewPdf({
-                            url,
-                            filename:
-                              pdf.attachment?.fileName || "document.pdf",
-                            fileKey: pdf.attachment?.id,
-                            invoiceId: inv.id,
-                            isAttachment: true,
-                          });
+                          void handlePreviewPdf(
+                            inv.id,
+                            pdf.attachment?.fileKey ?? "",
+                            pdf.attachment?.fileName || "document.pdf",
+                          );
                         }}
                       >
                         <Eye className="w-4 h-4" />

@@ -37,7 +37,7 @@ Source of truth for this repo (`./erp-web`).
 
 ### 5. Strict Pre-push Hook
 
-- Commit: pre-commit tự chạy lint-staged (eslint, prettier, `vitest related` trên file staged). Không chạy full test thủ công.
+- Commit: pre-commit tự chạy lint-staged (eslint, prettier; `vitest related` chỉ chạy trên file staged thuộc `src/v2/**/*.{ts,tsx}`). Không chạy full test thủ công.
 - Push: pre-push chạy `bun run type:check`. Do NOT push if it fails.
 - Full test / build / check:ci chạy trên GitHub CI. Không push tiếp khi CI của nhánh đang đỏ.
 
@@ -112,7 +112,7 @@ Source of truth for this repo (`./erp-web`).
 
 2. When asked to **commit code**, you MUST execute the following in order:
    - Ensure current branch is `erp-master`
-   - `git commit` (pre-commit tự chạy lint-staged và `vitest related` trên file staged; không chạy full test thủ công)
+   - `git commit` (pre-commit tự chạy lint-staged và `vitest related` trên file staged thuộc `src/v2/**/*.{ts,tsx}`; không chạy full test thủ công)
 
 3. When asked to **pull code**, you MUST execute the following in order:
    - If there are uncommitted changes, you MUST execute the full **commit code** sequence first.

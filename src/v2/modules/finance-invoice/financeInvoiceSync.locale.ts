@@ -3,6 +3,7 @@ import { registerV2ModuleLocale } from "@/v2/shared/locales";
 export const financeInvoiceSyncLocale = {
   vi: {
     title: "Đồng bộ hóa đơn",
+    detail: { tabInfo: "Thông tin", tabDocuments: "Tài liệu" },
     conditions: {
       title: "Điều kiện đồng bộ",
     },
@@ -47,6 +48,7 @@ export const financeInvoiceSyncLocale = {
   },
   en: {
     title: "Sync invoices",
+    detail: { tabInfo: "Information", tabDocuments: "Documents" },
     conditions: {
       title: "Sync conditions",
     },

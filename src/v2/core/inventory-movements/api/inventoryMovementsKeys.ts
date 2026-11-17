@@ -9,8 +9,22 @@ export const createInventoryMovementsKeys = (base: readonly string[]) => ({
     [...base, "voucher", type, id] as const,
   balances: (query: V2TableQuery, tab: string) =>
     [...base, "balances", tab, query] as const,
-  transactions: (itemCode: string, page: number) =>
-    [...base, "transactions", itemCode, page] as const,
+  transactions: (
+    itemCode: string,
+    page: number,
+    costingMethod?: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ) =>
+    [
+      ...base,
+      "transactions",
+      itemCode,
+      page,
+      costingMethod ?? "WEIGHTED_AVG",
+      dateFrom ?? "",
+      dateTo ?? "",
+    ] as const,
   counts: (scope: "vouchers" | "balances") =>
     [...base, "counts", scope] as const,
 });

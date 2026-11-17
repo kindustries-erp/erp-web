@@ -9,7 +9,7 @@ Skill này là nguồn tri thức cho việc tạo và migrate module sang V2. C
 
 | # | Nguyên tắc | Thực tế hiện tại |
 | :--- | :--- | :--- |
-| 1 | **Dual-Run `/v2/`** | `/v2/*` và `/` (V1) chạy song song trên cùng bundle. V2 dùng chung session qua `useAuthStore` (V1). |
+| 1 | **Dual-Run `/v2/`** | `/v2/*` và `/` (V1) chạy song song trên cùng bundle. V2 dùng chung session qua `useAuthStore` (V1). **`/v2/*` chỉ để demo/test; URL chính luôn là `/<slug>` không có `v2`/`v3`**: module V2 hoàn chỉnh phải được nối vào shell chính (PageKey + `App.tsx` + nav + breadcrumb; slug V1 cũ vào `LEGACY_SLUGS`). Mẫu: `employees-management`, `file-attachments`. |
 | 2 | **Không import V1** | Module và shared V2 không import `@/core`, `@/shared`, `@/modules` (trừ `@/modules/auth/domain/authStore`, session dùng chung). Kiểm bằng audit mục 7. |
 | 3 | **Key i18n `v2.*`** | Mọi `t()` dùng key có tiền tố `v2.`. Key không có tiền tố trả fallback, không đi sang V1. |
 | 4 | **Atomic** | `components/molecules/` và `components/organisms/`, mỗi thư mục kebab-case có `index.ts` và test co-located. |

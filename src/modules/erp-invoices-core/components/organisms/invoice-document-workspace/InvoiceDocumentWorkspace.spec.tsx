@@ -10,25 +10,25 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
-  erpInvoicesCoreApi: {
-    getPdfDownloadUrl: vi
+vi.mock("@/modules/erp-invoices-core/api/invoiceFilesV2Api", () => ({
+  invoiceFilesV2Api: {
+    downloadUrl: vi
       .fn()
-      .mockResolvedValue({ url: "https://example.com/mock.pdf" }),
-    downloadPdfsZip: vi.fn().mockResolvedValue(new Blob(["zip"])),
-    deletePdf: vi.fn().mockResolvedValue({ success: true }),
-    unlinkAttachment: vi.fn().mockResolvedValue({ success: true }),
+      .mockResolvedValue({ url: "https://example.com/x.pdf" }),
+    downloadZip: vi.fn().mockResolvedValue(new Blob(["zip"])),
+    upload: vi.fn().mockResolvedValue([]),
+    remove: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
-vi.mock("@/modules/system/api/attachmentsApi", () => ({
-  getAttachmentDownloadUrlApi: vi
-    .fn()
-    .mockResolvedValue({ url: "https://example.com/att.pdf" }),
-  getFileViewUrl: vi.fn((id) => `https://example.com/view/${id}`),
-  uploadAttachmentApi: vi
-    .fn()
-    .mockResolvedValue({ success: true, attachments: [] }),
+const mockFiles = vi.hoisted(() => ({ current: [] as any[] }));
+vi.mock("@/modules/erp-invoices-core/hooks/useInvoiceFilesV2", () => ({
+  useInvoiceFilesV2: () => ({
+    files: mockFiles.current,
+    policy: null,
+    loading: false,
+    reload: vi.fn(),
+  }),
 }));
 
 vi.mock("react-hot-toast", () => ({
@@ -40,26 +40,25 @@ vi.mock("react-hot-toast", () => ({
 }));
 
 describe("InvoiceDocumentWorkspace", () => {
-  const mockInvoice: any = {
-    id: "inv-123",
-    invoiceNo: "0001234",
-    pdfFileKey: "invoices/2026/inv-123.pdf",
-    attachments: [
-      {
-        attachmentId: "att-1",
-        attachment: {
-          id: "att-1",
-          fileName: "contract.pdf",
-          mimeType: "application/pdf",
-          documentType: "HOP_DONG",
-          fileSize: 102400,
-        },
-      },
-    ],
-  };
+  const mockInvoice: any = { id: "inv-123", invoiceNo: "0001234" };
+  const v2 = (over: Record<string, unknown>) => ({
+    id: "f",
+    category: "HOA_DON",
+    isOriginal: false,
+    fileName: "f.pdf",
+    fileSize: 1024,
+    mimeType: "application/pdf",
+    origin: "V2",
+    createdAt: "2026-10-19T00:00:00Z",
+    ...over,
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFiles.current = [
+      v2({ id: "a", fileName: "inv-123.pdf", isOriginal: true }),
+      v2({ id: "b", fileName: "contract.pdf", category: "HOP_DONG" }),
+    ];
   });
 
   it("renders document list, badge counts and toolbar", () => {
@@ -76,11 +75,8 @@ describe("InvoiceDocumentWorkspace", () => {
   });
 
   it("displays empty state when no files exist", () => {
-    const emptyInvoice: any = {
-      id: "inv-empty",
-      invoiceNo: "0009999",
-      attachments: [],
-    };
+    mockFiles.current = [];
+    const emptyInvoice: any = { id: "inv-empty", invoiceNo: "0009999" };
 
     render(
       <InvoiceDocumentWorkspace
@@ -130,39 +126,22 @@ describe("InvoiceDocumentWorkspace", () => {
     expect(screen.getByText("Chờ lưu")).toBeInTheDocument();
   });
 
-  it("deduplicates files when pdfFileKey matches an attachment fileKey", () => {
-    const dedupeInvoice: any = {
-      id: "inv-dedupe",
-      invoiceNo: "0005555",
-      pdfFileKey: "invoices/pdf/duplicate-uuid.pdf",
-      attachments: [
-        {
-          attachmentId: "att-match",
-          attachment: {
-            id: "att-match",
-            fileName: "2026-10-02_C26MHD_65114302.pdf",
-            fileKey: "invoices/pdf/duplicate-uuid.pdf",
-            mimeType: "application/pdf",
-            documentType: "HOA_DON",
-            fileSize: 280145,
-          },
-        },
-      ],
-    };
-
+  it("hiện 1 tệp với nhãn PDF gốc và dung lượng", () => {
+    mockFiles.current = [
+      v2({
+        id: "m",
+        fileName: "2026-10-02_C26MHD_65114302.pdf",
+        isOriginal: true,
+        fileSize: 280145,
+      }),
+    ];
     render(
       <InvoiceDocumentWorkspace
-        detailInvoice={dedupeInvoice}
+        detailInvoice={{ id: "inv-x", invoiceNo: "5" } as any}
         editMode={false}
       />,
     );
-
-    // Should only render 1 file item with the friendly name, size, and original badge
     expect(screen.getByText("1 tệp")).toBeInTheDocument();
-    expect(
-      screen.getByText("2026-10-02_C26MHD_65114302.pdf"),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("duplicate-uuid.pdf")).not.toBeInTheDocument();
     expect(screen.getByText("PDF gốc")).toBeInTheDocument();
     expect(screen.getByText("• 274 KB")).toBeInTheDocument();
   });

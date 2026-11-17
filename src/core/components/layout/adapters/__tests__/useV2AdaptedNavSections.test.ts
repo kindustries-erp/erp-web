@@ -301,4 +301,112 @@ describe("useV2AdaptedNavSections - garage-procurement in sec-garage", () => {
 
     expect(item).toBeUndefined();
   });
+
+  it("renders garage section items in the expected sequence when all permissions are granted", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const garageSec = result.current.find((s) => s.id === "sec-garage");
+    const itemIds = garageSec?.items.map((item) => item.id);
+
+    expect(itemIds).toEqual([
+      "garage-cases",
+      "garage-cashflow",
+      "garage-debts",
+      "garage-opex",
+      "garage-procurement",
+      "garage-stock-vouchers",
+      "garage-stock-balances",
+    ]);
+  });
+});
+
+describe("useV2AdaptedNavSections - accounting RBAC (journal-entry, settings-accounts)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("includes journal-entry when user has JOURNAL_ENTRIES permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.JOURNAL_ENTRIES;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const sec = result.current.find((s) => s.id === "sec-accounting");
+    const item = findNavChild(sec?.items, "journal-entry");
+
+    expect(sec).toBeDefined();
+    expect(item).toBeDefined();
+    expect(item?.href).toBe("/journal-entry");
+    expect(findNavChild(sec?.items, "settings-accounts")).toBeUndefined();
+  });
+
+  it("includes settings-accounts when user has ACCOUNTING_CONFIGS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ACCOUNTING_CONFIGS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const sec = result.current.find((s) => s.id === "sec-accounting");
+    const item = findNavChild(sec?.items, "settings-accounts");
+
+    expect(sec).toBeDefined();
+    expect(item).toBeDefined();
+    expect(item?.href).toBe("/settings-accounts");
+    expect(findNavChild(sec?.items, "journal-entry")).toBeUndefined();
+  });
+
+  it("excludes journal-entry and settings-accounts when user only has INVOICES permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.INVOICES;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const sec = result.current.find((s) => s.id === "sec-accounting");
+
+    expect(sec).toBeDefined();
+    expect(findNavChild(sec?.items, "erp-invoices")).toBeDefined();
+    expect(findNavChild(sec?.items, "journal-entry")).toBeUndefined();
+    expect(findNavChild(sec?.items, "settings-accounts")).toBeUndefined();
+  });
+
+  it("hides sec-accounting entirely when user lacks all accounting permissions", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ADMIN_USERS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    expect(
+      result.current.find((s) => s.id === "sec-accounting"),
+    ).toBeUndefined();
+  });
+});
+
+describe("useV2AdaptedNavSections - sec-tools RBAC (loans)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows loans in sec-tools when user has LOANS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.LOANS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const toolsSec = result.current.find((s) => s.id === "sec-tools");
+    const loansItem = findNavChild(toolsSec?.items, "loans");
+
+    expect(toolsSec).toBeDefined();
+    expect(loansItem).toBeDefined();
+    expect(loansItem?.href).toBe("/loans-tool");
+  });
+
+  it("hides sec-tools entirely when user lacks LOANS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ADMIN_USERS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    expect(result.current.find((s) => s.id === "sec-tools")).toBeUndefined();
+  });
 });

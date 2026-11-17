@@ -18,7 +18,7 @@ export const GarageDebtsForecastCardsGrid: React.FC<
   const { t } = useTranslation(["garage", "debts", "common"]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
       <DebtTimeHorizonCard
         title={t(
           "debts:dashboard.forecast7Title",

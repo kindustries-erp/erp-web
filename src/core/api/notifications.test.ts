@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import axiosInstance from "./axiosInstance";
-import { notificationsApi } from "./notifications";
+import {
+  notificationsApi,
+  NotificationType,
+  NotificationTargetAction,
+} from "./notifications";
 
 vi.mock("./axiosInstance", () => ({
   default: {
@@ -14,7 +18,7 @@ const ITEM = {
   id: "n-1",
   title: "Đơn mua chờ duyệt",
   message: "PO-0001 đang chờ duyệt",
-  type: "WARNING",
+  type: NotificationType.WARNING,
   isRead: false,
   readAt: null,
   createdAt: "2026-11-09T08:30:00.000Z",
@@ -22,7 +26,7 @@ const ITEM = {
   target: {
     module: "PROCUREMENT_ORDER_GARAGE",
     id: "PO-0001",
-    action: "APPROVE",
+    action: NotificationTargetAction.APPROVE,
   },
 };
 
@@ -49,6 +53,39 @@ describe("notificationsApi (v2)", () => {
       },
     );
     expect(result).toEqual([ITEM]);
+  });
+
+  it("findInbox gọi /api/v2/notifications-inbox và trả về cả items lẫn unreadCount", async () => {
+    vi.mocked(axiosInstance.get).mockResolvedValue({
+      data: {
+        items: [ITEM],
+        pagination: { page: 1, pageSize: 50, total: 1, totalPages: 1 },
+        extraData: { unreadCount: 5 },
+      },
+    } as any);
+
+    const result = await notificationsApi.findInbox();
+
+    expect(axiosInstance.get).toHaveBeenCalledWith(
+      "/api/v2/notifications-inbox",
+      {
+        params: { page: 1, pageSize: 50 },
+      },
+    );
+    expect(result).toEqual({ items: [ITEM], unreadCount: 5 });
+  });
+
+  it("getUnreadCount gọi /api/v2/notifications-inbox/unread-count", async () => {
+    vi.mocked(axiosInstance.get).mockResolvedValue({
+      data: { unreadCount: 12 },
+    } as any);
+
+    const count = await notificationsApi.getUnreadCount();
+
+    expect(axiosInstance.get).toHaveBeenCalledWith(
+      "/api/v2/notifications-inbox/unread-count",
+    );
+    expect(count).toBe(12);
   });
 
   it("markAsRead gọi PATCH /:id/read với _silentSuccess: true", async () => {

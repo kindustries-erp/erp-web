@@ -201,6 +201,13 @@ export const V2_ROUTES: V2RouteDef[] = [
     permission: { collection: "employees", action: "read" },
   },
   // v2-module:users-management:routes
+  {
+    id: "file-attachments-management",
+    path: "/v2/file-attachments-management",
+    title: "Quản lý tài liệu",
+    permission: { collection: "attachments", action: "read" },
+  },
+  // v2-module:file-attachments-management:routes
   // plop:v2-routes
 ];
 

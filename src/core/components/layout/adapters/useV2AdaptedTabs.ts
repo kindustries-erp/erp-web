@@ -64,7 +64,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "journal-entry": FileText,
   "settings-accounts": Layers,
   "employees-management": UserSquare2,
-  attachments: Paperclip,
+  "file-attachments": Paperclip,
   "email-inbox": Mail,
   "users-management": Users,
   permission: Shield,
@@ -147,7 +147,7 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.accounts", "Hệ thống tài khoản");
       case "employees-management":
         return t("nav.items.erpEmployees", "Nhân sự");
-      case "attachments":
+      case "file-attachments":
         return t("nav.items.attachments", "Tệp đính kèm");
       case "email-inbox":
         return t("nav.items.emailInbox", "Hòm thư");

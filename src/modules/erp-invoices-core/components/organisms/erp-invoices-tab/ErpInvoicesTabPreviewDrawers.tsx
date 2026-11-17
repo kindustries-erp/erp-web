@@ -5,10 +5,7 @@ import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesC
 import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/organisms/voucher-netoff-selection-modal";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { InvoiceExportDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-export-drawer";
-import {
-  getAttachmentContentBlobApi,
-  getAttachmentDownloadUrlApi,
-} from "@/modules/system/api/attachmentsApi";
+import { invoiceFilesV2Api } from "@/modules/erp-invoices-core/api/invoiceFilesV2Api";
 import { type InvoiceDrawersProps } from "./ErpInvoicesTab.drawers.type";
 
 type PreviewDrawersProps = Pick<
@@ -52,31 +49,15 @@ export function ErpInvoicesTabPreviewDrawers({
         onClose={() => setPreviewPdf(null)}
         previewUrl={previewPdf?.url}
         fileName={previewPdf?.filename}
-        fetchBlobFn={
-          previewPdf
-            ? () =>
-                previewPdf.isAttachment
-                  ? getAttachmentContentBlobApi(previewPdf.fileKey)
-                  : erpInvoicesCoreApi.getPdfBlob(
-                      previewPdf.invoiceId,
-                      previewPdf.fileKey,
-                    )
-            : undefined
-        }
         onDownload={
           previewPdf
             ? async () => {
                 try {
-                  const url = previewPdf.isAttachment
-                    ? (await getAttachmentDownloadUrlApi(previewPdf.fileKey))
-                        .url
-                    : (
-                        await erpInvoicesCoreApi.getPdfDownloadUrl(
-                          previewPdf.invoiceId,
-                          previewPdf.fileKey,
-                          false,
-                        )
-                      ).url;
+                  const { url } = await invoiceFilesV2Api.downloadUrl(
+                    previewPdf.invoiceId,
+                    previewPdf.fileKey,
+                    false,
+                  );
                   const a = document.createElement("a");
                   a.href = url;
                   a.download = previewPdf.filename || "document.pdf";

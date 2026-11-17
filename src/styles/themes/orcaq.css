@@ -9,6 +9,12 @@
   --surface-hover: #f4f4f5;
   --border: #e4e4e7;
   --border-light: #f4f4f5;
+  --item-border: rgba(0, 0, 0, 0.06);
+  --item-border-subtle: rgba(0, 0, 0, 0.04);
+  --item-border-unread: color-mix(in srgb, var(--primary) 28%, var(--border));
+  --item-bg-unread: rgba(24, 24, 27, 0.05);
+  --item-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.02);
+  --item-shadow-hover: 0 3px 8px rgba(0, 0, 0, 0.08);
   --foreground: #18181b;
   --muted: #fafafa;
   --muted-fg: #71717a;

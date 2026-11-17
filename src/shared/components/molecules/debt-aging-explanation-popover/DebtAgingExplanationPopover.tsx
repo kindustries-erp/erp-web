@@ -11,7 +11,7 @@ import {
 
 export const DebtAgingExplanationPopover: React.FC<
   DebtAgingExplanationPopoverProps
-> = ({ className, context = "garage", title, subtitle }) => {
+> = ({ className, context = "garage", aging5 = false, title, subtitle }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const [activeTab, setActiveTab] = useState<"buckets" | "algorithms">(
     "buckets",
@@ -86,7 +86,9 @@ export const DebtAgingExplanationPopover: React.FC<
               >
                 <Clock className="w-3 h-3 text-emerald-600" />
                 <span>
-                  {t("debts:agingExplanation.tabBuckets", "4 Nhóm Tuổi Nợ")}
+                  {aging5
+                    ? t("debts:agingExplanation.tabBuckets5", "5 Nhóm Tuổi Nợ")
+                    : t("debts:agingExplanation.tabBuckets", "4 Nhóm Tuổi Nợ")}
                 </span>
               </button>
               <button
@@ -113,7 +115,7 @@ export const DebtAgingExplanationPopover: React.FC<
           {/* Body */}
           <div className="p-3 overflow-y-auto space-y-2.5 scrollbar-thin">
             {activeTab === "buckets" ? (
-              <AgingBucketsContent context={context} />
+              <AgingBucketsContent context={context} aging5={aging5} />
             ) : (
               <AgingAlgorithmsContent />
             )}

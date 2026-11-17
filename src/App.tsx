@@ -7,6 +7,7 @@ import { SlidePanel } from "@/shared/components/SlidePanel";
 import { SerialGenerationProgress } from "@/shared/components/SerialGenerationProgress";
 import { useSerialGenerationProgress } from "@/modules/goods-receipts-core/hooks/useSerialGenerationProgress";
 import { V2Toaster } from "@/v2/shared/components";
+import { V2PageFallback } from "@/v2/shared/components/atoms/v2-loading";
 import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
@@ -183,8 +184,10 @@ const ErpInvoicesPage = lazy(() =>
 const SysTagsPage = lazy(() =>
   import("@/pages/SysTagsPage").then((m) => ({ default: m.SysTagsPage })),
 );
-const AttachmentsPage = lazy(() =>
-  import("@/pages/Attachments").then((m) => ({ default: m.DinhKemChungTu })),
+const FileAttachmentsPage = lazy(() =>
+  import("@/v2/modules/file-attachments-management").then((m) => ({
+    default: m.FileAttachmentsPage,
+  })),
 );
 const BankStatementPage = lazy(() =>
   import("@/pages/BankStatementPage").then((m) => ({
@@ -327,7 +330,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-invoices-draft": () => <ErpInvoicesPage initialTab="draft" />,
   "invoice-dashboard": () => <ErpInvoicesPage initialTab="overview" />,
   "sys-tags": SysTagsPage,
-  attachments: AttachmentsPage,
+  "file-attachments": FileAttachmentsPage,
   "bank-statement": () => <BankStatementPage initialTab="bank" />,
   "cash-statement": () => <BankStatementPage initialTab="cash" />,
   "journal-entry": GeneralJournalPage,
@@ -407,11 +410,7 @@ function scheduleOnIdle(task: () => void) {
   return () => globalThis.clearTimeout(timer);
 }
 
-const PAGE_FALLBACK = (
-  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-    Đang tải trang...
-  </div>
-);
+const PAGE_FALLBACK = <V2PageFallback />;
 
 export default function App() {
   const { currentPage, currentInstanceId, isLoggedIn, syncFromUrl, openTabs } =

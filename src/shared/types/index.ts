@@ -6,7 +6,7 @@ export type PageKey =
   | "cashflow-vouchers"
   | "cash-fund"
   | "bank-deposit"
-  | "attachments"
+  | "file-attachments"
   | "email-inbox"
   | "settings-cash-fund"
   | "settings-bank"

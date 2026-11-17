@@ -13,6 +13,8 @@ description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard H�
 
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn. Giao diện được cấu trúc theo chuẩn **Atomic Design (Atoms -> Molecules -> Organisms)** đáp ứng quy chuẩn No Blue Mandate, Tabular Numbers và Multi-tab Navigation.
 
+- **Tài liệu đính kèm (V2)**: drawer chi tiết hóa đơn V2 (`/v2/invoices`, `InvoiceShapeDetailDrawer`) có tab "Tài liệu" dùng `V2AttachmentsPanel` qua `/api/v2/invoices/:id/attachments` (xem module skill `file-attachments`). Màn V1 `/erp-invoices` đã cutover (Phase 5): workspace tài liệu, đếm file ở tab đối tác, form lưu file chờ (`hooks/flushInvoiceFileChanges.ts`) và ghép PDF tay khi import XML đều gọi V2 qua `api/invoiceFilesV2Api.ts` + `hooks/useInvoiceFilesV2.ts`; danh sách file lấy từ V2 (file XML thuần ẩn, `isOriginal` → nhãn "PDF gốc"). Trang V1 "Quản lý tài liệu" redirect sang `/v2/file-attachments` (`pages/AttachmentsRedirect.tsx`).
+- **Cột "PDF gốc" (V2 `/v2/invoices`)**: key `pdfSource` (`provider_original`, `manual_upload`, `failed`, `__BLANK__` = chưa có) trong `invoiceColumns.audit.tsx`; API V1 và V2 đều lọc/sắp xếp theo `column_filters.pdfSource`.
 - **PageKeys**:
   - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 6 Tabs (`overview`, `in`, `in-lines`, `out`, `out-lines`, `draft`).
   - `erp-invoices-in`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=in`.

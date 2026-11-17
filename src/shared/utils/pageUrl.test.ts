@@ -206,3 +206,18 @@ describe("URL nhân viên (employees-management)", () => {
     expect(pathToPage("/erp-employees", "")?.page).toBe("employees-management");
   });
 });
+
+describe("file-attachments URL", () => {
+  it("/file-attachments là URL chuẩn", () => {
+    expect(pathToPage("/file-attachments", "")?.page).toBe("file-attachments");
+    expect(pageToPath("file-attachments")).toBe("/file-attachments");
+  });
+  it("slug module file-attachments-management trỏ về /file-attachments", () => {
+    expect(pathToPage("/file-attachments-management", "")?.page).toBe(
+      "file-attachments",
+    );
+  });
+  it("/attachments cũ vẫn trỏ về trang file-attachments", () => {
+    expect(pathToPage("/attachments", "")?.page).toBe("file-attachments");
+  });
+});

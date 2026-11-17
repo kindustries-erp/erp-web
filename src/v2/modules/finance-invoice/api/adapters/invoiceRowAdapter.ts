@@ -52,6 +52,8 @@ export function toInvoiceRow(
     remainingAmount: toAmount(inv.remainingAmount),
     settlementOrder: inv.settlementOrder ?? null,
     licensePlate: inv.licensePlate ?? null,
+    pdfSource: inv.pdfSource ?? null,
+    pdfError: inv.pdfError ?? null,
   };
 }
 

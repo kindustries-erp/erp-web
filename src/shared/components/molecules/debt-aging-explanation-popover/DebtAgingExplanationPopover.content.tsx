@@ -9,11 +9,15 @@ import {
   Calculator,
   Brain,
 } from "lucide-react";
+import { GarageAgingBucketsContent } from "./DebtAgingExplanationPopover.garage";
 
 export const AgingBucketsContent: React.FC<{
   context?: "garage" | "invoice";
-}> = ({ context = "garage" }) => {
+  aging5?: boolean;
+}> = ({ context = "garage", aging5 = false }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
+
+  if (aging5) return <GarageAgingBucketsContent />;
 
   return (
     <div className="space-y-2">

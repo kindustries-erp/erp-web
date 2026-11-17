@@ -14,6 +14,8 @@ export interface GarageCashflowVoucher {
   paymentStatus?: "PENDING" | "APPROVED" | "PAID" | "EXPECTED" | null;
   referenceNumber?: string;
   caseId?: string;
+  /** Bên thanh toán của khoản thu gắn phiếu dịch vụ (từ settlement). */
+  payerType?: "KH" | "BH" | null;
   erpBankTransactionId?: string;
   erpCashVoucherId?: string; // backend is erpCashVoucherId not erp_cash_transaction_id
   createdAt: string;
@@ -57,6 +59,8 @@ export interface CreateGarageCashflowVoucherDto {
   paymentStatus?: "PENDING" | "APPROVED" | "PAID" | "EXPECTED";
   referenceNumber?: string;
   caseId?: string;
+  /** Bỏ trống để API tự gán theo số tiền. */
+  payerType?: "KH" | "BH";
   erpBankTransactionId?: string;
   erpCashVoucherId?: string;
   transDate?: string;

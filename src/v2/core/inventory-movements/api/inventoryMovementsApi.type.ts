@@ -35,9 +35,14 @@ export interface InventoryMovementsApi {
     query: V2TableQuery,
     stockTab: StockTab,
   ) => Promise<StockBalanceListResult>;
+  balanceOptions?: (
+    params: V2FetchOptionsParams,
+  ) => Promise<V2FetchOptionsResult>;
   listTransactions: (
     itemCode: string,
     page: number,
     pageSize: number,
+    costingMethod?: "WEIGHTED_AVG" | "FIFO",
+    dateRange?: { dateFrom?: string; dateTo?: string },
   ) => Promise<StockTransactionListResult>;
 }
