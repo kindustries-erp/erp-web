@@ -10,13 +10,10 @@ export default defineConfig({
     include: [
       "src/v2/**/*.{test,spec}.{ts,tsx}",
       "src/core/components/layout/**/*.{test,spec}.{ts,tsx}",
+      "src/modules/garage/components/organisms/garage-debt-detail-drawer/**/*.{test,spec}.{ts,tsx}",
+      "src/modules/garage/components/organisms/garage-month-detail-drawer/**/*.{test,spec}.{ts,tsx}",
     ],
-    exclude: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/.git/**",
-      "**/e2e/**",
-    ],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/e2e/**"],
   },
   resolve: {
     alias: {

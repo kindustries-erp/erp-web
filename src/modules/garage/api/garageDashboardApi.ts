@@ -400,6 +400,7 @@ export interface MonthlyReceivablesCaseItem {
   invoiceId?: string;
   buyerName?: string;
   vatWarning: boolean;
+  ngayHoanThanh?: string;
 }
 
 export type ReceivablesPartnerCategory =

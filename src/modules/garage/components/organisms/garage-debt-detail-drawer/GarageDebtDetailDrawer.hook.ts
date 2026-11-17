@@ -4,6 +4,7 @@ import type {
   GarageTrendItem,
   MonthlyReceivablesGroupItem,
 } from "@/modules/garage/api/garageDashboardApi";
+import type { DebtRemainingCaseRow } from "./components/DebtRemainingCasesTab.type";
 import { buildMonthClassificationRows } from "../garage-month-detail-drawer/utils/buildMonthClassificationRows";
 import type { MonthClassificationRow } from "../garage-month-detail-drawer/components/MonthClassificationTable.type";
 import type { DebtDetailScope } from "./GarageDebtDetailDrawer.type";
@@ -114,6 +115,60 @@ export function useGarageDebtDetailDrawer({
     safeCategorized.individual.all.length +
     safeCategorized.insurance.all.length;
 
+  // Trích xuất toàn bộ phiếu còn nợ từ các nhóm đối tác
+  const unpaidCases = useMemo<DebtRemainingCaseRow[]>(() => {
+    const list: DebtRemainingCaseRow[] = [];
+    const seen = new Set<string>();
+
+    const collectFromGroups = (
+      groups: MonthlyReceivablesGroupItem[],
+      payerType: "KH" | "BH",
+      partnerType: "insurance" | "enterprise" | "individual",
+    ) => {
+      groups.forEach((g) => {
+        if (!g.cases) return;
+        g.cases.forEach((c) => {
+          const rowKey = `${c.id}_${payerType}_${g.key}`;
+          if (seen.has(rowKey)) return;
+          seen.add(rowKey);
+
+          list.push({
+            rowKey,
+            id: c.id,
+            soChungTu: c.soChungTu,
+            ngayHoanThanh: c.ngayHoanThanh,
+            bienSoXe: c.bienSoXe,
+            khachHangName: c.khachHangName,
+            khachHangCode: c.khachHangCode,
+            payerType,
+            partnerType,
+            debtorName: c.buyerName || g.title,
+            invoiceNo: c.invoiceNo,
+            vatWarning: c.vatWarning,
+            billed: c.amount,
+            paid: c.paid,
+            remaining: c.remaining,
+            cost: c.cost ?? 0,
+            paidCost: c.paidCost ?? 0,
+            remainingCost: c.remainingCost ?? 0,
+          });
+        });
+      });
+    };
+
+    collectFromGroups(safeCategorized.insurance.all, "BH", "insurance");
+    collectFromGroups(safeCategorized.enterprise.all, "KH", "enterprise");
+    collectFromGroups(safeCategorized.individual.all, "KH", "individual");
+
+    return list;
+  }, [safeCategorized]);
+
+  const unpaidCasesCount = useMemo(() => {
+    return unpaidCases.filter((c) =>
+      partnerDebtType === "payables" ? c.remainingCost > 0 : c.remaining > 0,
+    ).length;
+  }, [unpaidCases, partnerDebtType]);
+
   // Drill-down: danh sách phiếu theo phân loại, theo đối tượng, và chi tiết phiếu
   const [classificationDrawer, setClassificationDrawer] = useState<{
     open: boolean;
@@ -173,6 +228,8 @@ export function useGarageDebtDetailDrawer({
     payableClassificationRows,
     classificationCount,
     totalPartnerCount,
+    unpaidCases,
+    unpaidCasesCount,
     classificationDrawer,
     setClassificationDrawer,
     partnerDrawer,
