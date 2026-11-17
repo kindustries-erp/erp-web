@@ -75,49 +75,68 @@ describe("GarageCaseDetailsTab Component", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders both sub-tabs 'Chi tiết' and 'Chi tiết theo đối tượng'", async () => {
+  it("renders the 3 sub-tabs 'Chi tiết báo giá', 'Tài chính' and 'Chứng từ liên kết'", async () => {
     renderComponent();
 
-    expect(screen.getByText("Chi tiết")).toBeInTheDocument();
-    expect(screen.getByText("Chi tiết theo đối tượng")).toBeInTheDocument();
+    expect(screen.getByText("Chi tiết báo giá")).toBeInTheDocument();
+    expect(screen.getByText("Tài chính")).toBeInTheDocument();
+    expect(screen.getByText("Chứng từ liên kết")).toBeInTheDocument();
   });
 
   it("renders GarageCasePreview by default in 'details' mode", () => {
     renderComponent();
 
     expect(screen.getByTestId("garage-case-preview")).toBeInTheDocument();
-    expect(screen.queryByTestId("garage-case-partner-tab")).toBeNull();
   });
 
-  it("displays badge count on 'Chi tiết theo đối tượng' tab from query cache", async () => {
-    renderComponent();
-
-    await waitFor(() => {
-      expect(garageApi.getCasesByCustomer).toHaveBeenCalledWith(
-        "branch-dt",
-        "CUST-001",
-      );
+  it("displays badge counts on 'Tài chính' and 'Chứng từ liên kết' tabs", () => {
+    renderComponent({
+      financialsBadgeCount: 4,
+      linkedDocsBadgeCount: 2,
     });
 
-    // Badge count 3 should be displayed
-    await waitFor(() => {
-      expect(screen.getByText("3")).toBeInTheDocument();
-    });
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
   });
 
-  it("switches to 'Chi tiết theo đối tượng' when clicked in uncontrolled mode", async () => {
+  it("switches to 'Tài chính' when clicked in uncontrolled mode and renders financialsSlot", async () => {
     const onViewModeChange = vi.fn();
-    renderComponent({ onViewModeChange });
+    renderComponent({
+      onViewModeChange,
+      financialsSlot: (
+        <div data-testid="mock-financials-slot">Financials Slot</div>
+      ),
+    });
 
-    const partnerTabTrigger = screen.getByText("Chi tiết theo đối tượng");
-    fireEvent.click(partnerTabTrigger);
+    const finTabTrigger = screen.getByText("Tài chính");
+    fireEvent.click(finTabTrigger);
 
     await waitFor(() => {
-      expect(screen.getByTestId("garage-case-partner-tab")).toBeInTheDocument();
+      expect(screen.getByTestId("mock-financials-slot")).toBeInTheDocument();
       expect(screen.queryByTestId("garage-case-preview")).toBeNull();
     });
 
-    expect(onViewModeChange).toHaveBeenCalledWith("partner");
+    expect(onViewModeChange).toHaveBeenCalledWith("financials");
+  });
+
+  it("switches to 'Chứng từ liên kết' when clicked and renders linkedDocsSlot", async () => {
+    const onViewModeChange = vi.fn();
+    renderComponent({
+      onViewModeChange,
+      linkedDocsSlot: (
+        <div data-testid="mock-linked-docs-slot">Linked Docs Slot</div>
+      ),
+    });
+
+    const linkTabTrigger = screen.getByText("Chứng từ liên kết");
+    fireEvent.click(linkTabTrigger);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("mock-linked-docs-slot")).toBeInTheDocument();
+      expect(screen.queryByTestId("garage-case-preview")).toBeNull();
+    });
+
+    expect(onViewModeChange).toHaveBeenCalledWith("linked_docs");
   });
 
   it("renders controlled viewMode correctly when viewMode='partner'", () => {

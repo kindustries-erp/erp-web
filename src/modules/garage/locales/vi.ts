@@ -505,7 +505,11 @@ export const garageVi = {
     drawer: {
       caseDetails: "Sổ báo giá:",
       tabDetails: "Chi tiết",
+      tabCustomerDetails: "Chi tiết theo Khách hàng",
       subTabDetails: "Chi tiết",
+      subTabQuoteDetails: "Chi tiết báo giá",
+      subTabFinancials: "Tài chính & Quyết toán",
+      subTabLinkedDocs: "Chứng từ liên kết",
       subTabObjectDetails: "Chi tiết theo đối tượng",
       quoteDetails: "Chi tiết",
       partnerDetails: "Chi tiết theo đối tượng",
