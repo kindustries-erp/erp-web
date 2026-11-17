@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Search } from "lucide-react";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { V2TabBarVariant } from "@/v2/shared/components/molecules/v2-tab-bar/V2TabBar.type";
 import { V2StandardTable } from "@/v2/shared/components/organisms/v2-standard-table";
-import { DrawerSection } from "@/shared/components/DrawerModal";
-import { Badge } from "@/shared/components/ui/badge";
+import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
+import { Badge } from "@/v2/shared/ui/badge";
+import { V2SearchInput } from "@/v2/shared/components/molecules/v2-search-input";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import { CustomerDetailDebtSwitch } from "../../garage-customer-detail-drawer/components/CustomerDetailDebtSwitch";
+import { DebtDetailTypeSwitch } from "./DebtDetailTypeSwitch";
+import { filterDebtRemainingCases } from "./DebtRemainingCasesTab.helper";
 import { createDebtRemainingCasesColumns } from "./DebtRemainingCasesTab.columns";
 import type {
   DebtRemainingCasesTabProps,
@@ -31,41 +32,10 @@ export const DebtRemainingCasesTab: React.FC<DebtRemainingCasesTabProps> = ({
 
   const isPayable = debtType === "payables";
 
-  // Lọc theo trạng thái nợ còn lại
-  const debtActiveCases = useMemo(() => {
-    return cases.filter((c) =>
-      isPayable ? c.remainingCost > 0 : c.remaining > 0,
-    );
-  }, [cases, isPayable]);
-
-  // Đếm số lượng theo nhóm đối tượng
-  const counts = useMemo(() => {
-    return {
-      all: debtActiveCases.length,
-      enterprise: debtActiveCases.filter((c) => c.partnerType === "enterprise")
-        .length,
-      individual: debtActiveCases.filter((c) => c.partnerType === "individual")
-        .length,
-      insurance: debtActiveCases.filter((c) => c.partnerType === "insurance")
-        .length,
-    };
-  }, [debtActiveCases]);
-
-  // Lọc theo partnerFilter và từ khóa tìm kiếm
-  const filteredCases = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return debtActiveCases.filter((c) => {
-      if (partnerFilter !== "all" && c.partnerType !== partnerFilter)
-        return false;
-      if (!q) return true;
-      return (
-        c.soChungTu?.toLowerCase().includes(q) ||
-        c.bienSoXe?.toLowerCase().includes(q) ||
-        c.khachHangName?.toLowerCase().includes(q) ||
-        c.debtorName?.toLowerCase().includes(q)
-      );
-    });
-  }, [debtActiveCases, partnerFilter, search]);
+  const { counts, filteredCases, totalRemaining } = useMemo(
+    () => filterDebtRemainingCases(cases, isPayable, partnerFilter, search),
+    [cases, isPayable, partnerFilter, search],
+  );
 
   const columns = useMemo(
     () =>
@@ -76,13 +46,6 @@ export const DebtRemainingCasesTab: React.FC<DebtRemainingCasesTabProps> = ({
       }),
     [isPayable, onOpenCaseDetail, t],
   );
-
-  const totalRemaining = useMemo(() => {
-    return filteredCases.reduce(
-      (sum, c) => sum + (isPayable ? c.remainingCost : c.remaining),
-      0,
-    );
-  }, [filteredCases, isPayable]);
 
   const filterTabs = useMemo(
     () => [
@@ -124,25 +87,18 @@ export const DebtRemainingCasesTab: React.FC<DebtRemainingCasesTabProps> = ({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder={t("common.search", "Tìm số phiếu, xe...")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 pr-3 text-xs rounded-md border border-input bg-background focus:outline-hidden focus:ring-1 focus:ring-ring w-36 sm:w-44"
-            />
-          </div>
-          <CustomerDetailDebtSwitch
-            className="w-auto"
-            value={debtType}
-            onChange={setDebtType}
+          <V2SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder={t("common.search", "Tìm số phiếu, xe...")}
+            debounceMs={150}
+            className="w-36 sm:w-48"
           />
+          <DebtDetailTypeSwitch value={debtType} onChange={setDebtType} />
         </div>
       </div>
 
-      {/* Bọc bảng trong DrawerSection đồng bộ với các tab khác */}
+      {/* Bọc bảng trong DrawerSection V2 */}
       <DrawerSection
         title={
           isPayable

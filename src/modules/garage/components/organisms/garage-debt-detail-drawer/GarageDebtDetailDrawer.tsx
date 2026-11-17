@@ -1,24 +1,21 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  StandardFormDrawer,
-  type DrawerTopTabItem,
-} from "@/shared/components/StandardFormDrawer";
-import { Table as TableIcon, ShieldCheck, Clock } from "lucide-react";
+  V2StandardDrawer,
+  type DrawerAction,
+} from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { GarageMonthClassificationCasesDrawer } from "../../GarageMonthClassificationCasesDrawer";
 import { GaragePartnerMonthDetailDrawer } from "../garage-partner-month-detail-drawer";
 import { GarageCaseStandaloneDrawer } from "../../GarageCaseStandaloneDrawer";
-import { DebtClassificationTab } from "./components/DebtClassificationTab";
-import { DebtPartnerTab } from "./components/DebtPartnerTab";
-import { DebtRemainingCasesTab } from "./components/DebtRemainingCasesTab";
 import { DebtRightPanel } from "./components/DebtRightPanel";
 import { DebtRateBadge } from "./components/DebtRateBadge";
 import { useGarageDebtDetailDrawer } from "./GarageDebtDetailDrawer.hook";
+import { useGarageDebtDrawerTabs } from "./GarageDebtDetailDrawer.tabs";
 import type { GarageDebtDetailDrawerProps } from "./GarageDebtDetailDrawer.type";
 
 /**
- * Drawer chi tiết công nợ dùng chung cho tháng (xu hướng) và mốc tuổi nợ (thẻ).
- * Gồm 3 tabs: Phân loại nghiệp vụ, Phân loại theo đối tượng, và Phiếu còn công nợ.
+ * Drawer chi tiết công nợ thế hệ mới chuẩn V2 dùng chung cho tháng và mốc tuổi nợ.
+ * Gồm 3 tabs: Phiếu còn công nợ, Phân loại theo đối tượng, và Phân loại nghiệp vụ.
  */
 export const GarageDebtDetailDrawer: React.FC<GarageDebtDetailDrawerProps> = ({
   open,
@@ -35,109 +32,36 @@ export const GarageDebtDetailDrawer: React.FC<GarageDebtDetailDrawerProps> = ({
     safeItem,
     breakdownSummary,
     vatWarningInfo,
-    safeCategorized,
-    totalBilled,
-    totalCost,
-    effectiveBreakdownTotal,
-    receivableClassificationRows,
-    payableClassificationRows,
-    classificationCount,
-    totalPartnerCount,
-    unpaidCases,
-    unpaidCasesCount,
-    partnerDebtType,
-    setPartnerDebtType,
     classificationDrawer,
     setClassificationDrawer,
     partnerDrawer,
     setPartnerDrawer,
     selectedCaseCode,
     setSelectedCaseCode,
-    handleSelectClassification,
-    handleSelectPartnerGroup,
     horizon,
     branchId,
     currentTab,
   } = logic;
 
-  const drawerTabs = useMemo<DrawerTopTabItem[]>(
+  const drawerTabs = useGarageDebtDrawerTabs(logic);
+
+  const drawerActions = useMemo<DrawerAction[]>(
     () => [
       {
-        key: "unpaid_cases",
-        label: t("debts.detailDrawer.tabRemainingCases", "Phiếu còn công nợ"),
-        icon: <Clock className="w-3.5 h-3.5" />,
-        badgeCount: unpaidCasesCount,
-        content: (
-          <DebtRemainingCasesTab
-            cases={unpaidCases}
-            initialDebtType={partnerDebtType}
-            onOpenCaseDetail={setSelectedCaseCode}
-          />
-        ),
-      },
-      {
-        key: "partner_breakdown",
-        label: t(
-          "progress.tabs.partnerClassification",
-          "Phân loại theo đối tượng",
-        ),
-        icon: <ShieldCheck className="w-3.5 h-3.5" />,
-        badgeCount: totalPartnerCount,
-        content: (
-          <DebtPartnerTab
-            safeCategorized={safeCategorized}
-            partnerDebtType={partnerDebtType}
-            onPartnerDebtTypeChange={setPartnerDebtType}
-            effectiveBreakdownTotal={effectiveBreakdownTotal}
-            onSelectGroup={handleSelectPartnerGroup}
-            onOpenCaseDetail={setSelectedCaseCode}
-          />
-        ),
-      },
-      {
-        key: "classification",
-        label: isReceipt
-          ? t("progress.tabs.businessClassification", "Phân loại Nghiệp vụ")
-          : t("progress.tabs.costClassification", "Phân loại Chi phí"),
-        icon: <TableIcon className="w-3.5 h-3.5" />,
-        badgeCount: classificationCount,
-        content: (
-          <DebtClassificationTab
-            receivableRows={receivableClassificationRows}
-            payableRows={payableClassificationRows}
-            totalBilled={totalBilled}
-            totalCost={totalCost}
-            onSelectClassification={handleSelectClassification}
-          />
-        ),
+        label: t("common.close", "Đóng"),
+        variant: "outline",
+        onClick: onClose,
       },
     ],
-    [
-      isReceipt,
-      classificationCount,
-      receivableClassificationRows,
-      payableClassificationRows,
-      totalBilled,
-      totalCost,
-      handleSelectClassification,
-      totalPartnerCount,
-      safeCategorized,
-      partnerDebtType,
-      setPartnerDebtType,
-      effectiveBreakdownTotal,
-      handleSelectPartnerGroup,
-      setSelectedCaseCode,
-      unpaidCases,
-      unpaidCasesCount,
-      t,
-    ],
+    [t, onClose],
   );
 
   if (!scope) return null;
 
   return (
     <>
-      <StandardFormDrawer
+      <V2StandardDrawer
+        id="garage-debt-detail-drawer"
         open={open}
         mode="view"
         onClose={onClose}
@@ -159,7 +83,6 @@ export const GarageDebtDetailDrawer: React.FC<GarageDebtDetailDrawerProps> = ({
         tabs={drawerTabs}
         defaultTabKey="unpaid_cases"
         collapsibleRightPanel={true}
-        rightPanelDefaultCollapsed={false}
         rightPanel={
           <DebtRightPanel
             item={safeItem}
@@ -168,13 +91,7 @@ export const GarageDebtDetailDrawer: React.FC<GarageDebtDetailDrawerProps> = ({
             isReceipt={isReceipt}
           />
         }
-        actions={[
-          {
-            label: t("common.close", "Đóng"),
-            variant: "outline",
-            onClick: onClose,
-          },
-        ]}
+        actions={drawerActions}
       />
 
       <GarageMonthClassificationCasesDrawer

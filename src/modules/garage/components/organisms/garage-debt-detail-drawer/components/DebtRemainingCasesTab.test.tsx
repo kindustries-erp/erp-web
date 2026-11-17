@@ -114,9 +114,16 @@ describe("DebtRemainingCasesTab", () => {
 
     const searchInput = screen.getByPlaceholderText("Tìm số phiếu, xe...");
     fireEvent.change(searchInput, { target: { value: "30A-11111" } });
+    fireEvent.keyDown(searchInput, { key: "Enter" });
 
     expect(screen.getByText("SC-001")).toBeInTheDocument();
     expect(screen.queryByText("SC-002")).not.toBeInTheDocument();
+
+    // Bấm nút clear "Xóa tìm kiếm" thì hiển thị lại cả 2 phiếu
+    const clearBtn = screen.getByRole("button", { name: "Xóa tìm kiếm" });
+    fireEvent.click(clearBtn);
+    expect(screen.getByText("SC-001")).toBeInTheDocument();
+    expect(screen.getByText("SC-002")).toBeInTheDocument();
   });
 
   it("bọc bảng trong DrawerSection với tiêu đề và badge tổng nợ", () => {

@@ -100,4 +100,30 @@ describe("DebtPartnerTab", () => {
     expect(screen.queryByText("CN Đối tác 1")).not.toBeInTheDocument();
     expect(screen.queryByText("BH Đối tác 1")).not.toBeInTheDocument();
   });
+
+  it("tìm kiếm lọc đúng đối tượng và xóa từ khóa bằng nút clear", () => {
+    renderComponent();
+
+    const searchInput = screen.getByPlaceholderText(
+      "Tìm đối tượng, MST, xe...",
+    );
+    expect(searchInput).toBeInTheDocument();
+
+    // Tìm kiếm "DN Đối tác"
+    fireEvent.change(searchInput, { target: { value: "DN Đối tác" } });
+    fireEvent.keyDown(searchInput, { key: "Enter" });
+
+    expect(screen.getAllByText("DN Đối tác 1").length).toBeGreaterThan(0);
+    expect(screen.queryByText("CN Đối tác 1")).not.toBeInTheDocument();
+    expect(screen.queryByText("BH Đối tác 1")).not.toBeInTheDocument();
+
+    // Click nút clear (X)
+    const clearBtn = screen.getByRole("button", { name: "Xóa tìm kiếm" });
+    fireEvent.click(clearBtn);
+
+    // Phục hồi lại tất cả
+    expect(screen.getAllByText("DN Đối tác 1").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("CN Đối tác 1").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("BH Đối tác 1").length).toBeGreaterThan(0);
+  });
 });

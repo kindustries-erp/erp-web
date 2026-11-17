@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGarageMonthReceivablesBreakdown } from "@/modules/garage/hooks/useGarageMonthReceivablesBreakdown";
-import type {
-  GarageTrendItem,
-  MonthlyReceivablesGroupItem,
-} from "@/modules/garage/api/garageDashboardApi";
+import type { GarageTrendItem } from "@/modules/garage/api/garageDashboardApi";
 import type { DebtRemainingCaseRow } from "./components/DebtRemainingCasesTab.type";
 import { buildMonthClassificationRows } from "../garage-month-detail-drawer/utils/buildMonthClassificationRows";
-import type { MonthClassificationRow } from "../garage-month-detail-drawer/components/MonthClassificationTable.type";
 import type { DebtDetailScope } from "./GarageDebtDetailDrawer.type";
+import { useDebtDetailDrillDown } from "./GarageDebtDetailDrawer.drillDown.hook";
 import {
   EMPTY_CATEGORIZED,
   EMPTY_TREND,
   formatDebtMonth,
+  extractUnpaidCases,
+  countActiveUnpaidCases,
+  calculateDebtMetrics,
 } from "./GarageDebtDetailDrawer.helper";
 
 interface UseGarageDebtDetailDrawerArgs {
@@ -24,7 +24,6 @@ interface UseGarageDebtDetailDrawerArgs {
  * Dữ liệu và trạng thái của drawer công nợ dùng chung cho hai scope:
  * - tháng: dữ liệu lấy từ dòng xu hướng đã chọn;
  * - mốc tuổi nợ: dữ liệu lấy từ breakdown theo mốc.
- * Phần còn lại (tab, panel phải, drill-down) giống nhau.
  */
 export function useGarageDebtDetailDrawer({
   open,
@@ -79,20 +78,16 @@ export function useGarageDebtDetailDrawer({
     [insuranceCategorized, enterpriseCategorized, individualCategorized],
   );
 
-  const totalBilled = safeItem.tienCoThue ?? safeItem.totalBilled ?? 0;
-  const totalCost = safeItem.cost ?? 0;
-  const collectionRate =
-    safeItem.collectionRate ??
-    (totalBilled > 0 ? ((safeItem.paid ?? 0) / totalBilled) * 100 : 0);
-  const costPaymentRate =
-    safeItem.costPaymentRate ??
-    (totalCost > 0 ? ((safeItem.paidCost ?? 0) / totalCost) * 100 : 0);
-  const mainRate = isReceipt ? collectionRate : costPaymentRate;
-  const mainBilled = isReceipt ? totalBilled : totalCost;
-  const effectiveBreakdownTotal =
-    partnerDebtType === "payables"
-      ? totalCost
-      : (breakdownSummary?.totalBilled ?? mainBilled);
+  const { totalBilled, totalCost, mainRate, effectiveBreakdownTotal } = useMemo(
+    () =>
+      calculateDebtMetrics(
+        safeItem,
+        isReceipt,
+        partnerDebtType,
+        breakdownSummary?.totalBilled,
+      ),
+    [safeItem, isReceipt, partnerDebtType, breakdownSummary?.totalBilled],
+  );
 
   const receivableClassificationRows = useMemo(
     () => buildMonthClassificationRows(safeItem, "receivables"),
@@ -115,96 +110,17 @@ export function useGarageDebtDetailDrawer({
     safeCategorized.individual.all.length +
     safeCategorized.insurance.all.length;
 
-  // Trích xuất toàn bộ phiếu còn nợ từ các nhóm đối tác
-  const unpaidCases = useMemo<DebtRemainingCaseRow[]>(() => {
-    const list: DebtRemainingCaseRow[] = [];
-    const seen = new Set<string>();
-
-    const collectFromGroups = (
-      groups: MonthlyReceivablesGroupItem[],
-      payerType: "KH" | "BH",
-      partnerType: "insurance" | "enterprise" | "individual",
-    ) => {
-      groups.forEach((g) => {
-        if (!g.cases) return;
-        g.cases.forEach((c) => {
-          const rowKey = `${c.id}_${payerType}_${g.key}`;
-          if (seen.has(rowKey)) return;
-          seen.add(rowKey);
-
-          list.push({
-            rowKey,
-            id: c.id,
-            soChungTu: c.soChungTu,
-            ngayHoanThanh: c.ngayHoanThanh,
-            bienSoXe: c.bienSoXe,
-            khachHangName: c.khachHangName,
-            khachHangCode: c.khachHangCode,
-            payerType,
-            partnerType,
-            debtorName: c.buyerName || g.title,
-            invoiceNo: c.invoiceNo,
-            vatWarning: c.vatWarning,
-            billed: c.amount,
-            paid: c.paid,
-            remaining: c.remaining,
-            cost: c.cost ?? 0,
-            paidCost: c.paidCost ?? 0,
-            remainingCost: c.remainingCost ?? 0,
-          });
-        });
-      });
-    };
-
-    collectFromGroups(safeCategorized.insurance.all, "BH", "insurance");
-    collectFromGroups(safeCategorized.enterprise.all, "KH", "enterprise");
-    collectFromGroups(safeCategorized.individual.all, "KH", "individual");
-
-    return list;
-  }, [safeCategorized]);
-
-  const unpaidCasesCount = useMemo(() => {
-    return unpaidCases.filter((c) =>
-      partnerDebtType === "payables" ? c.remainingCost > 0 : c.remaining > 0,
-    ).length;
-  }, [unpaidCases, partnerDebtType]);
-
-  // Drill-down: danh sách phiếu theo phân loại, theo đối tượng, và chi tiết phiếu
-  const [classificationDrawer, setClassificationDrawer] = useState<{
-    open: boolean;
-    filterKey: string;
-    filterLabel: string;
-  }>({ open: false, filterKey: "", filterLabel: "" });
-  const [partnerDrawer, setPartnerDrawer] = useState<{
-    open: boolean;
-    customerCode?: string | null;
-    customerName?: string | null;
-    taxCode?: string | null;
-    initialCases?: any[];
-  }>({ open: false });
-  const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
-
-  const handleSelectClassification = useCallback(
-    (row: MonthClassificationRow) =>
-      setClassificationDrawer({
-        open: true,
-        filterKey: row.key,
-        filterLabel: row.name,
-      }),
-    [],
+  const unpaidCases = useMemo<DebtRemainingCaseRow[]>(
+    () => extractUnpaidCases(safeCategorized),
+    [safeCategorized],
   );
 
-  const handleSelectPartnerGroup = useCallback(
-    (group: MonthlyReceivablesGroupItem) =>
-      setPartnerDrawer({
-        open: true,
-        customerCode: group.taxCode || group.key,
-        customerName: group.title,
-        taxCode: group.taxCode,
-        initialCases: group.cases,
-      }),
-    [],
+  const unpaidCasesCount = useMemo(
+    () => countActiveUnpaidCases(unpaidCases, partnerDebtType),
+    [unpaidCases, partnerDebtType],
   );
+
+  const drillDown = useDebtDetailDrillDown();
 
   const title = monthScope
     ? formatDebtMonth(safeItem.label)
@@ -230,14 +146,7 @@ export function useGarageDebtDetailDrawer({
     totalPartnerCount,
     unpaidCases,
     unpaidCasesCount,
-    classificationDrawer,
-    setClassificationDrawer,
-    partnerDrawer,
-    setPartnerDrawer,
-    selectedCaseCode,
-    setSelectedCaseCode,
-    handleSelectClassification,
-    handleSelectPartnerGroup,
+    ...drillDown,
     horizon: horizonScope?.horizon,
     branchId: horizonScope?.branchId,
   };
