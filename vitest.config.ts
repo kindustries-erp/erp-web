@@ -12,6 +12,8 @@ export default defineConfig({
       "src/core/components/layout/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/organisms/garage-debt-detail-drawer/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/organisms/garage-month-detail-drawer/**/*.{test,spec}.{ts,tsx}",
+      "src/shared/utils/pageUrl.test.ts",
+      "src/__tests__/App.imotorbike.test.tsx",
     ],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/e2e/**"],
   },

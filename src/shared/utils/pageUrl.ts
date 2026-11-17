@@ -3,6 +3,8 @@ import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 
 /** URL chuẩn của module khoản vay, thống nhất với API `api/v2/loans-tool`. */
 export const LOANS_TOOL_PATH = "/loans-tool";
+/** URL public chuẩn của công cụ khoản vay khi chưa đăng nhập. */
+export const PUBLIC_LOANS_TOOL_PATH = "/public/loans-tool";
 
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
@@ -319,7 +321,13 @@ export function pathToPage(
     page = "garage-cases";
   } else if (slug === "garage-cashflow") {
     page = "garage-cashflow";
-  } else if (slug === "loans-tool" || slug === "tools/loans") {
+  } else if (
+    slug === "loans-tool" ||
+    slug === "tools/loans" ||
+    slug === "loans" ||
+    slug === "public/loans-tool" ||
+    slug === "public/loans"
+  ) {
     page = "loans";
   } else if (
     slug === "permission" ||

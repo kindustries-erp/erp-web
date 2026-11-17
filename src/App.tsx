@@ -30,6 +30,7 @@ import { VinfastPartsMotoStockPage } from "@/pages/VinfastPartsMotoStockPage";
 import { PageKey } from "@/shared/types";
 import { AppProviders } from "@/v2/app/providers";
 import { resolvePublicTool } from "@/v2/app/router/publicTools.config";
+import { resolvePublicDeckKey } from "@/v2/app/router/publicDecks.config";
 
 type PageLoader = () => Promise<unknown>;
 
@@ -106,16 +107,6 @@ const V2_DIFF_ADMIN_REDIRECT_MAP: Record<string, string> = {
   "/v2/admin/audit-logs": "/audit-logs-v2",
   "/v2/admin/dashboard": "/admin-dashboard-v2",
 };
-
-const PUBLIC_DECK_ROUTES: Record<string, string> = {
-  "/imotorbike": "imotorbike",
-};
-
-function resolvePublicDeckKey(): string | null {
-  if (typeof window === "undefined") return null;
-  const normalized = location.pathname.replace(/\/+$/, "") || "/";
-  return PUBLIC_DECK_ROUTES[normalized] ?? null;
-}
 
 const loadDashboard = () =>
   import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard }));
