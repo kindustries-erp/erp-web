@@ -13,10 +13,11 @@ export interface V2TraceNodeCategoryHeaderProps {
   docType: TraceabilityNodeType;
 }
 
-interface StageTheme {
+export interface StageTheme {
   barCls: string;
   textCls: string;
   numCls: string;
+  borderLeftCls: string;
   icon: React.ReactNode;
 }
 
@@ -26,6 +27,7 @@ const STAGE_THEMES: Record<TraceabilityStageKey, StageTheme> = {
       "bg-emerald-500/10 dark:bg-emerald-950/40 border-b border-emerald-500/20 dark:border-emerald-800/40",
     textCls: "text-emerald-800 dark:text-emerald-300",
     numCls: "text-emerald-700/80 dark:text-emerald-400/80",
+    borderLeftCls: "border-l-emerald-500 dark:border-l-emerald-400",
     icon: (
       <Package className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
     ),
@@ -35,6 +37,7 @@ const STAGE_THEMES: Record<TraceabilityStageKey, StageTheme> = {
       "bg-purple-500/10 dark:bg-purple-950/40 border-b border-purple-500/20 dark:border-purple-800/40",
     textCls: "text-purple-800 dark:text-purple-300",
     numCls: "text-purple-700/80 dark:text-purple-400/80",
+    borderLeftCls: "border-l-purple-500 dark:border-l-purple-400",
     icon: (
       <Receipt className="h-3 w-3 shrink-0 text-purple-600 dark:text-purple-400" />
     ),
@@ -44,6 +47,7 @@ const STAGE_THEMES: Record<TraceabilityStageKey, StageTheme> = {
       "bg-amber-500/10 dark:bg-amber-950/40 border-b border-amber-500/20 dark:border-amber-800/40",
     textCls: "text-amber-800 dark:text-amber-300",
     numCls: "text-amber-700/80 dark:text-amber-400/80",
+    borderLeftCls: "border-l-amber-500 dark:border-l-amber-400",
     icon: (
       <CreditCard className="h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400" />
     ),
@@ -53,11 +57,16 @@ const STAGE_THEMES: Record<TraceabilityStageKey, StageTheme> = {
       "bg-sky-500/10 dark:bg-sky-950/40 border-b border-sky-500/20 dark:border-sky-800/40",
     textCls: "text-sky-800 dark:text-sky-300",
     numCls: "text-sky-700/80 dark:text-sky-400/80",
+    borderLeftCls: "border-l-sky-500 dark:border-l-sky-400",
     icon: (
       <BookOpen className="h-3 w-3 shrink-0 text-sky-600 dark:text-sky-400" />
     ),
   },
 };
+
+export function getStageTheme(stageKey: TraceabilityStageKey): StageTheme {
+  return STAGE_THEMES[stageKey] ?? STAGE_THEMES.ORDER_STOCK;
+}
 
 /** Dải Header phân loại trên đỉnh thẻ chứng từ theo chuẩn Foundry AI Node Editor */
 export const V2TraceNodeCategoryHeader = React.memo(
@@ -66,7 +75,7 @@ export const V2TraceNodeCategoryHeader = React.memo(
   }: V2TraceNodeCategoryHeaderProps) {
     const { t } = useV2Translation();
     const stage = getStageForDocType(docType);
-    const theme = STAGE_THEMES[stage.key] ?? STAGE_THEMES.ORDER_STOCK;
+    const theme = getStageTheme(stage.key);
     const stageTitle = t(stage.shortTitleKey);
 
     return (

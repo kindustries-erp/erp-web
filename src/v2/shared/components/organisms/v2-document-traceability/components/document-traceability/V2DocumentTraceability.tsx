@@ -17,7 +17,7 @@ import { V2TraceTable } from "../trace-table";
 import { V2TraceToolbar } from "../trace-toolbar";
 import type { V2DocumentTraceabilityProps } from "./V2DocumentTraceability.type";
 
-const CANVAS_HEIGHT = "h-[480px]";
+const CANVAS_HEIGHT = "h-[calc(100vh-275px)] min-h-[500px]";
 /** Toàn màn hình: sơ đồ chiếm phần còn lại của modal (trừ thanh công cụ và tiêu đề) */
 const FULLSCREEN_HEIGHT = "h-[calc(94vh-170px)]";
 
@@ -69,7 +69,7 @@ export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
   };
 
   const content = (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 flex-1 min-h-0">
       <V2TraceToolbar
         linkedCount={linkedCount}
         canLink={canLink}

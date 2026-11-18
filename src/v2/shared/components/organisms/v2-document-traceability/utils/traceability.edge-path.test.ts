@@ -44,4 +44,19 @@ describe("computeEdgeGeometry", () => {
     expect(g.labelY).toBe(250);
     expect(g.path.startsWith("M50 0")).toBe(true);
   });
+
+  it("steps vertically at the first gap when connecting multi-column with different Y", () => {
+    const g = computeEdgeGeometry({
+      sourceX: 300,
+      sourceY: 270,
+      targetX: 920,
+      targetY: 540,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    });
+    // First gap is at sourceX + 60 = 360
+    expect(g.labelX).toBe(360);
+    expect(g.labelY).toBe((270 + 540) / 2);
+    expect(g.path.includes("360")).toBe(true);
+  });
 });

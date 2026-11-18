@@ -15,7 +15,11 @@ import {
 } from "../../utils/traceability.format";
 import { V2TraceNodeHandles } from "./V2TraceNodeHandles";
 import { V2TraceNodeHeader } from "./V2TraceNodeHeader";
-import { V2TraceNodeCategoryHeader } from "./V2TraceNodeCategoryHeader";
+import {
+  V2TraceNodeCategoryHeader,
+  getStageTheme,
+} from "./V2TraceNodeCategoryHeader";
+import { getStageForDocType } from "../../utils/traceability.helper";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { getPartnerIcon } from "./traceNode.helper";
 
@@ -80,24 +84,27 @@ export const V2TraceNode = React.memo(
         : "text-foreground font-semibold");
 
     const partner = node.partnerName || node.title || "—";
+    const prefix = meta.isInvoiceIn
+      ? t("v2.traceability.node.supplierPrefix")
+      : meta.isInvoiceOut
+        ? t("v2.traceability.node.customerPrefix")
+        : "";
     const subtitle =
-      meta.isInvoiceIn && node.partnerName
-        ? `${t("v2.traceability.node.supplierPrefix")} ${partner}`
-        : meta.isInvoiceOut && node.partnerName
-          ? `${t("v2.traceability.node.customerPrefix")} ${partner}`
-          : partner;
+      prefix && node.partnerName ? `${prefix} ${partner}` : partner;
 
     const isActive = Boolean(node.isCurrent || selected);
+    const stage = getStageForDocType(node.docType);
+    const stageTheme = getStageTheme(stage.key);
 
     return (
       <div
         onDoubleClick={handleOpen}
         className={cn(
-          "group relative z-10 w-[300px] cursor-pointer overflow-hidden rounded-2xl bg-surface text-left",
+          "group relative z-10 w-[300px] cursor-pointer overflow-hidden rounded-2xl bg-surface text-left border-l-4",
+          stageTheme.borderLeftCls,
           isActive
-            ? "border-2 border-primary border-l-4 border-l-primary shadow-md"
-            : (meta.cardBorderCls ??
-                "border border-border border-l-4 border-l-muted-fg/40 hover:border-border"),
+            ? "border-2 border-primary shadow-md"
+            : "border border-border hover:border-border",
           dragging
             ? "!transition-none shadow-none"
             : "transition-all duration-200 ease-out will-change-transform shadow-2xs hover:-translate-y-0.5 hover:shadow-md",

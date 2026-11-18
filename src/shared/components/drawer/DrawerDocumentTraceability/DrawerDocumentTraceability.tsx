@@ -62,6 +62,8 @@ export function DrawerDocumentTraceability(
         title={sectionTitle ?? "Chứng từ liên kết"}
         collapsible
         defaultCollapsed={false}
+        fitViewportHeight
+        bodyClassName="flex-1 min-h-0 flex flex-col"
       >
         {content}
       </DrawerSection>

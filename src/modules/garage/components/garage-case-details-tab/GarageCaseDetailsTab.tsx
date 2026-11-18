@@ -128,7 +128,7 @@ export const GarageCaseDetailsTab = React.memo(function GarageCaseDetailsTab(
 
       {/* ─── 4. SUB-TAB 3: CHỨNG TỪ LIÊN KẾT ─── */}
       {activeViewMode === "linked_docs" && (
-        <div className="space-y-4">
+        <div className="flex-1 min-h-0 flex flex-col space-y-4">
           {linkedDocsSlot ? (
             <DrawerSection
               title={
@@ -144,6 +144,8 @@ export const GarageCaseDetailsTab = React.memo(function GarageCaseDetailsTab(
               }
               collapsible
               defaultCollapsed={false}
+              fitViewportHeight
+              bodyClassName="flex-1 min-h-0 flex flex-col"
             >
               {linkedDocsSlot}
             </DrawerSection>
