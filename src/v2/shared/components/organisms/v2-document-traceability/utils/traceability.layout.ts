@@ -44,7 +44,6 @@ export function computeBaseTraceabilityLayout({
   graph,
   direction,
   allowEdit,
-  allowedDocTypes,
   actions,
 }: Omit<TraceabilityLayoutInput, "selectedNodeId">): TraceabilityLayout {
   const docsByStage = groupByStage(graph.nodes);
