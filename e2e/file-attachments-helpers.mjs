@@ -5,8 +5,8 @@ import { resolveApiUrl, resolveWebUrl } from "./e2e-ports.mjs";
 
 export const WEB = resolveWebUrl();
 export const API = resolveApiUrl();
-const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? process.env.E2E_PASSWORD;
-const ADMIN = process.env.E2E_ADMIN_EMAIL ?? "admin@liouni.com";
+const PASSWORD = process.env.E2E_PASSWORD;
+const ADMIN = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
 export const SHOTS = new URL("./.artifacts/", import.meta.url).pathname;
 
@@ -16,7 +16,7 @@ export const PDF = Buffer.from(
 
 export function requireEnv() {
   if (!PASSWORD) {
-    console.error("Thiếu E2E_ADMIN_PASSWORD hoặc E2E_PASSWORD.");
+    console.error("Thiếu E2E_PASSWORD.");
     process.exit(2);
   }
   mkdirSync(SHOTS, { recursive: true });

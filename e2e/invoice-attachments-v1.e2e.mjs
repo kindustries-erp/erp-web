@@ -1,5 +1,5 @@
 // E2E màn V1 hóa đơn (/erp-invoices-in) sau cutover: tab "Tài liệu & PDF" đọc/ghi qua API V2.
-// Admin seed (E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD hoặc E2E_PASSWORD). Chỉ staging/dev, KHÔNG production.
+// Dùng tài khoản ai-test-tao (E2E_TAO_EMAIL, E2E_PASSWORD). Chỉ staging/dev, KHÔNG production.
 // Dọn dữ liệu: file test tự xóa cứng qua API (PURGE). Chạy: bun run e2e:invoice-attachments-v1
 import {
   API,

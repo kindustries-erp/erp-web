@@ -1,16 +1,16 @@
 // E2E Nhật ký hoạt động: V1 (/erp-activity-logs, API v1) và V2 (/v2/admin/audit-logs, API v2, drawer chỉ xem).
-// Chỉ đọc. E2E_PASSWORD bắt buộc; E2E_ADMIN_EMAIL mặc định admin@liouni.com. KHÔNG chạy trên DB production.
+// Chỉ đọc. E2E_PASSWORD bắt buộc; E2E_TAO_EMAIL mặc định ai-test-tao@example.com. KHÔNG chạy trên DB production.
 // Chạy: bun run e2e:audit-logs
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
 import { resolveWebUrl } from "./e2e-ports.mjs";
 
 const WEB = resolveWebUrl();
-const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? process.env.E2E_PASSWORD;
-const ADMIN = process.env.E2E_ADMIN_EMAIL ?? "admin@liouni.com";
+const PASSWORD = process.env.E2E_PASSWORD;
+const ADMIN = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
 if (!PASSWORD) {
-  console.error("Thiếu E2E_PASSWORD hoặc E2E_ADMIN_PASSWORD.");
+  console.error("Thiếu E2E_PASSWORD.");
   process.exit(2);
 }
 const SHOTS = new URL("./.artifacts/", import.meta.url).pathname;

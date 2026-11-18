@@ -1,5 +1,5 @@
 // E2E tab "Tài liệu" ở drawer hóa đơn V2: tải lên, xem trước/tải, xóa mềm qua modal xác nhận.
-// Dùng admin seed (E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD hoặc E2E_PASSWORD). Chỉ staging/dev, KHÔNG production.
+// Dùng tài khoản ai-test-tao (E2E_TAO_EMAIL, E2E_PASSWORD). Chỉ staging/dev, KHÔNG production.
 // Dọn dữ liệu: file test tự xóa cứng qua API (PURGE). Chạy: bun run e2e:invoice-attachments
 import {
   PDF,
