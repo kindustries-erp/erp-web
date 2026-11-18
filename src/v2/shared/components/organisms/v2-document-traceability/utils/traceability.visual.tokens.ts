@@ -20,7 +20,7 @@ export const NEUTRAL_BORDER =
 
 /** Styling dành cho thẻ đang xem (Active / Current Node) theo chuẩn Dribbble Visual Editor */
 export const ACTIVE_NODE_CARD =
-  "border-2 border-primary border-l-4 border-l-primary shadow-md ring-2 ring-primary ring-offset-2 ring-offset-surface";
+  "border-2 border-primary border-l-4 border-l-primary shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background";
 export const ACTIVE_NODE_TAG = "bg-primary text-primary-fg font-bold";
 
 export interface TraceabilityVisualMeta {
