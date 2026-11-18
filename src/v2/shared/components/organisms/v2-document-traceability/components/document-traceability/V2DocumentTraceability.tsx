@@ -105,7 +105,6 @@ export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
             graph={graph}
             direction={direction}
             allowEdit={allowEdit}
-            allowedDocTypes={allowedDocTypes}
             isFullscreen={isFullscreen}
             onToggleDirection={trace.toggleDirection}
             onAddLink={canLink ? onAddLink : undefined}

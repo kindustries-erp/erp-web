@@ -1,4 +1,5 @@
 import type { TraceabilityNodeType } from "@/shared/types/traceability";
+import { openErpDocument } from "@/v2/shared/components/organisms/v2-document-traceability";
 import type { StageConfig } from "./types";
 
 export const STAGES_CONFIG: StageConfig[] = [
@@ -332,27 +333,10 @@ export function getNodeVisualMeta(node: {
   };
 }
 
+/** Mở chứng từ qua sự kiện toàn cục; dùng chung bảng ánh xạ với V2 (`openErpDocument`) */
 export function openGlobalErpDocument(
   docType: TraceabilityNodeType,
   id: string,
 ) {
-  let type = "";
-  if (docType === "INVOICE") type = "erp_invoice";
-  else if (docType === "BANK_TXN") type = "bank_transaction";
-  else if (docType === "PURCHASE_ORDER") type = "erp_purchase_order";
-  else if (docType === "SALES_ORDER") type = "erp_sales_order";
-  else if (docType === "GOODS_RECEIPT" || docType === "GOODS_ISSUE")
-    type = "inventory_voucher";
-  else if (docType === "GARAGE_CASE") type = "garage_case";
-  else if (docType === "INVENTORY_ITEM") type = "inventory_item";
-  else if (docType === "PRODUCTION_ORDER") type = "production_order";
-  else if (docType === "BOM") type = "bom";
-
-  if (type) {
-    window.dispatchEvent(
-      new CustomEvent("open_erp_document", {
-        detail: { type, id },
-      }),
-    );
-  }
+  openErpDocument(docType, id);
 }

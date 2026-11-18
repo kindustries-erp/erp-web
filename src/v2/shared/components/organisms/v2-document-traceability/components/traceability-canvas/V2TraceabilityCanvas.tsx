@@ -13,7 +13,6 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type {
   TraceabilityGraphData,
   TraceabilityLayoutDirection,
-  TraceabilityNodeType,
 } from "../../types/traceability.type";
 import type { TraceabilityCanvasActions } from "../../types/traceability.flow.type";
 import { V2TraceNode } from "../trace-node";
@@ -47,7 +46,6 @@ export interface V2TraceabilityCanvasProps extends TraceabilityCanvasActions {
   graph: TraceabilityGraphData;
   direction: TraceabilityLayoutDirection;
   allowEdit?: boolean;
-  allowedDocTypes?: TraceabilityNodeType[];
   isFullscreen?: boolean;
   onToggleDirection?: () => void;
 }
@@ -65,7 +63,6 @@ function CanvasInner({
   graph,
   direction,
   allowEdit = false,
-  allowedDocTypes,
   isFullscreen = false,
   onToggleDirection,
   onAddLink,
@@ -78,7 +75,6 @@ function CanvasInner({
     graph,
     direction,
     allowEdit,
-    allowedDocTypes,
     isFullscreen,
     actions: {
       onAddLink,

@@ -11,7 +11,6 @@ import {
 import type {
   TraceabilityGraphData,
   TraceabilityLayoutDirection,
-  TraceabilityNodeType,
 } from "../../types/traceability.type";
 import type {
   TraceabilityCanvasActions,
@@ -62,7 +61,6 @@ export interface UseTraceabilityCanvasOptions {
   graph: TraceabilityGraphData;
   direction: TraceabilityLayoutDirection;
   allowEdit: boolean;
-  allowedDocTypes?: TraceabilityNodeType[];
   isFullscreen: boolean;
   actions: TraceabilityCanvasActions;
 }
@@ -72,16 +70,12 @@ export function useTraceabilityCanvas({
   graph,
   direction,
   allowEdit,
-  allowedDocTypes,
   isFullscreen,
   actions,
 }: UseTraceabilityCanvasOptions) {
   const stableActions = useStableCanvasActions(actions);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const { fitView } = useReactFlow();
-
-  // Khóa chuỗi để mảng loại chứng từ tạo bởi cha (mỗi lần render một tham chiếu mới) không làm layout tính lại
-  const allowedKey = allowedDocTypes?.join(",") ?? "";
 
   // 1. Tầng hình học (Base Layout): chỉ tính toán tọa độ khi đồ thị, hướng hoặc quyền sửa thay đổi
   const baseLayout = useMemo(
@@ -90,12 +84,9 @@ export function useTraceabilityCanvas({
         graph,
         direction,
         allowEdit,
-        allowedDocTypes: allowedKey
-          ? (allowedKey.split(",") as TraceabilityNodeType[])
-          : undefined,
         actions: stableActions,
       }),
-    [graph, direction, allowEdit, allowedKey, stableActions],
+    [graph, direction, allowEdit, stableActions],
   );
 
   // 2. Tầng chọn (Selection State): cập nhật cờ selected/animated tức thì trong O(N) mà không tính lại Barycenter

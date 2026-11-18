@@ -4,7 +4,6 @@ import type {
   TraceabilityGraphData,
   TraceabilityLayoutDirection,
   TraceabilityNode,
-  TraceabilityNodeType,
   TraceabilityStageKey,
 } from "../types/traceability.type";
 import type {
@@ -27,7 +26,6 @@ export interface TraceabilityLayoutInput {
   graph: TraceabilityGraphData;
   direction: TraceabilityLayoutDirection;
   allowEdit: boolean;
-  allowedDocTypes?: TraceabilityNodeType[];
   selectedNodeId?: string | null;
   actions: TraceabilityCanvasActions;
 }

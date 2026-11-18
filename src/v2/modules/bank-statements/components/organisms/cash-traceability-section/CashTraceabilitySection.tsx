@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   V2DocumentTraceability,
+  openErpDocument,
   type TraceabilityNode,
 } from "@/v2/shared/components/organisms/v2-document-traceability";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -9,7 +10,6 @@ import { cashTransactionApi } from "../../../api/cashTransactionApi";
 import { useInvoiceNetOffMutations } from "../../../api/mutations/useInvoiceNetOffMutations";
 import { CashInvoiceNetOffModal } from "../cash-invoice-netoff-modal";
 import type { NetOffPayloadItem } from "../cash-invoice-netoff-modal";
-import { toOpenDocumentDetail } from "./cashTraceability.helper";
 
 export interface CashTraceabilitySectionProps {
   transactionId: string;
@@ -58,9 +58,7 @@ export function CashTraceabilitySection({
   };
 
   const handleOpenDocument = (node: TraceabilityNode) => {
-    const detail = toOpenDocumentDetail(node.docType, node.id);
-    if (detail)
-      window.dispatchEvent(new CustomEvent("open_erp_document", { detail }));
+    openErpDocument(node.docType, node.id);
   };
 
   return (
