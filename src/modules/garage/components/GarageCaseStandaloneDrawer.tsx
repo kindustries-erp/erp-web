@@ -33,6 +33,10 @@ import { GarageCaseDefaultAttributesSection } from "./drawer/sections/GarageCase
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
 import { GarageCaseBusinessPerformanceSection } from "./drawer/sections/GarageCaseBusinessPerformanceSection";
 import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
+import {
+  resolveGarageAddLink,
+  resolveGarageUnlink,
+} from "@/v2/core/garage-cases";
 
 export interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;
@@ -243,7 +247,6 @@ export function GarageCaseStandaloneDrawer(
                 rootId={selectedCase.id}
                 rootType="GARAGE_CASE"
                 graphData={mergedGraphData}
-                fetchGraph={(id) => garageApi.getCaseTraceabilityGraph(id)}
                 editMode={editMode}
                 allowedDocTypes={[
                   "BANK_TXN",
@@ -253,66 +256,43 @@ export function GarageCaseStandaloneDrawer(
                 ]}
                 onEditManualSettlement={handleEditSettlementNode}
                 onAddLink={(stageKey, docType) => {
-                  if (docType === "INVOICE" || stageKey === "INVOICE") {
-                    handleOpenAddInvoice();
-                  } else if (docType === "BANK_TXN" || stageKey === "PAYMENT") {
+                  const action = resolveGarageAddLink(stageKey, docType);
+                  if (action === "ADD_INVOICE") handleOpenAddInvoice();
+                  else if (action === "ADD_SETTLEMENT")
                     handleOpenAddSettlement("RECEIPT");
-                  } else if (
-                    docType === "PURCHASE_ORDER" ||
-                    stageKey === "ORDER_STOCK"
-                  ) {
+                  else
                     toast(
-                      "Tính năng ghép nối Đơn mua hàng PO đang được cập nhật.",
+                      action === "PO_UNSUPPORTED"
+                        ? t(
+                            "cases.drawer.linkPoSoon",
+                            "Tính năng ghép nối Đơn mua hàng PO đang được cập nhật.",
+                          )
+                        : t(
+                            "cases.drawer.linkSoSoon",
+                            "Tính năng ghép nối Đơn bán hàng SO đang được cập nhật.",
+                          ),
                       { icon: "ℹ️" },
                     );
-                  } else if (docType === "SALES_ORDER") {
-                    toast(
-                      "Tính năng ghép nối Đơn bán hàng SO đang được cập nhật.",
-                      { icon: "ℹ️" },
-                    );
-                  } else {
-                    handleOpenAddSettlement("RECEIPT");
-                  }
                 }}
-                onUnlinkNode={async (node) => {
-                  try {
-                    if (editMode) {
-                      if (node.docType === "INVOICE") {
-                        const target = activeLinkedInvoices.find(
-                          (l: any) =>
-                            l.invoiceId === node.id ||
-                            l.id === node.id ||
-                            l.invoice?.id === node.id,
-                        );
-                        if (target) {
-                          removeLinkedInvoice(target.id || target.tempId);
-                        }
-                      } else if (node.docType === "BANK_TXN") {
-                        const target = activeSettlements.find(
-                          (s: any) =>
-                            s.bank_transaction_id === node.id ||
-                            s.bankTransactionId === node.id ||
-                            s.id === node.id ||
-                            s.tempId === node.id ||
-                            `manual-${s.id}` === node.id,
-                        );
-                        if (target) {
-                          removeSettlement(target.id || target.tempId);
-                        }
-                      }
-                    } else {
-                      toast.error(
-                        t(
-                          "cases.drawer.enterEditToUnlink",
-                          "Vui lòng chuyển sang chế độ Chỉnh sửa trước khi gỡ liên kết chứng từ.",
-                        ),
-                      );
-                    }
-                  } catch (err: any) {
+                onUnlinkNode={(node) => {
+                  if (!editMode) {
                     toast.error(
-                      err?.response?.data?.message || "Lỗi khi hủy liên kết",
+                      t(
+                        "cases.drawer.enterEditToUnlink",
+                        "Vui lòng chuyển sang chế độ Chỉnh sửa trước khi gỡ liên kết chứng từ.",
+                      ),
                     );
+                    return;
                   }
+                  const target = resolveGarageUnlink(
+                    node as never,
+                    activeSettlements as never,
+                    activeLinkedInvoices as never,
+                  );
+                  if (target?.kind === "INVOICE")
+                    removeLinkedInvoice(target.id);
+                  else if (target?.kind === "SETTLEMENT")
+                    removeSettlement(target.id);
                 }}
               />
             }

@@ -45,6 +45,7 @@ export interface GarageCaseSettlement {
 /** Hóa đơn gắn với phiếu (dạng phẳng hoặc lồng trong `invoice`) */
 export interface GarageCaseLinkedInvoice {
   id?: string;
+  tempId?: string;
   invoiceId?: string;
   linkType?: string;
   direction?: string;

@@ -34,7 +34,8 @@ export function resolveGarageUnlink(
 ): GarageUnlinkTarget | null {
   if (node.docType === "INVOICE") {
     const found = invoices.find((inv) => invoiceIdOf(inv) === node.id);
-    return found ? { kind: "INVOICE", id: node.id } : null;
+    const id = found?.id ?? found?.tempId;
+    return id ? { kind: "INVOICE", id } : null;
   }
   if (node.docType === "BANK_TXN") {
     const found = settlements.find((s) =>

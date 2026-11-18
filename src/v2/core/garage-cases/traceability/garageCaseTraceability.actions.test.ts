@@ -23,8 +23,12 @@ describe("resolveGarageAddLink", () => {
 describe("resolveGarageUnlink", () => {
   it("gỡ hóa đơn đang gắn", () => {
     expect(
-      resolveGarageUnlink(n("i1", "INVOICE"), [], [{ invoiceId: "i1" }]),
-    ).toEqual({ kind: "INVOICE", id: "i1" });
+      resolveGarageUnlink(
+        n("i1", "INVOICE"),
+        [],
+        [{ id: "link-1", invoiceId: "i1" }],
+      ),
+    ).toEqual({ kind: "INVOICE", id: "link-1" });
   });
   it("gỡ khoản thu/chi theo id node thủ công và theo giao dịch ngân hàng", () => {
     const s = [{ id: "s1" }, { id: "s2", bank_transaction_id: "bt" }];
