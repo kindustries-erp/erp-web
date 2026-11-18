@@ -16,7 +16,7 @@ import type {
 import { getStageForDocType } from "./traceability.helper";
 import { collectConnectedSelection } from "./traceability.layout.selection";
 import { buildTraceEdge, pickEdgeHandles } from "./traceability.layout.edges";
-import { placeStage, stageNodeId } from "./traceability.layout.placement";
+import { placeStage } from "./traceability.layout.placement";
 import {
   barycenterSortStages,
   type StageNodeGroup,
@@ -68,32 +68,22 @@ export function computeBaseTraceabilityLayout({
     direction,
   );
 
-  const nodes: TraceFlowNode[] = [];
+  const nodes: TraceDocFlowNode[] = [];
   activeStages.forEach((stage, stageIndex) => {
     const sortedGroup = sortedStages.find((s) => s.stageKey === stage.key);
     const docs = sortedGroup?.nodes ?? [];
     const dims = stageDimensions.get(stage.key);
     const frame = placeStage(direction, stageIndex, docs.length, maxDocs, dims);
 
-    nodes.push({
-      id: stageNodeId(stage),
-      type: "stageGroupNode",
-      position: { x: frame.x, y: frame.y },
-      style: { width: frame.width, height: frame.height },
-      selectable: false,
-      draggable: false,
-      zIndex: -1,
-      data: { stage, count: docs.length, allowEdit, allowedDocTypes, actions },
-    });
-
     docs.forEach((doc) => {
       const pos = nodePositions.get(doc.id) ?? { x: 0, y: 0 };
       nodes.push({
         id: doc.id,
         type: "traceabilityNode",
-        parentId: stageNodeId(stage),
-        extent: "parent",
-        position: pos,
+        position: {
+          x: frame.x + pos.x,
+          y: frame.y + pos.y,
+        },
         selected: false,
         draggable: false,
         zIndex: 10,
@@ -102,12 +92,9 @@ export function computeBaseTraceabilityLayout({
     });
   });
 
-  const docNodes = nodes.filter(
-    (n): n is TraceDocFlowNode => n.type === "traceabilityNode",
-  );
   const edges = graph.edges.map((edge) => {
-    const source = docNodes.find((n) => n.id === edge.source);
-    const target = docNodes.find((n) => n.id === edge.target);
+    const source = nodes.find((n) => n.id === edge.source);
+    const target = nodes.find((n) => n.id === edge.target);
     return buildTraceEdge(
       edge,
       pickEdgeHandles(direction, source, target),
@@ -118,23 +105,18 @@ export function computeBaseTraceabilityLayout({
   return { nodes, edges };
 }
 
-/**
- * Cập nhật trạng thái chọn (Selection State) siêu tốc O(N) mà không tính lại vị trí hình học.
- * Đạt chuẩn hiệu năng 60 FPS cho React Flow.
- */
+/** Cập nhật trạng thái chọn (Selection State) siêu tốc O(N) đạt chuẩn 60 FPS */
 export function applySelectionToLayout(
   baseLayout: TraceabilityLayout,
   graph: TraceabilityGraphData,
   selectedNodeId?: string | null,
 ): TraceabilityLayout {
-  if (!selectedNodeId) {
-    const hasActive = baseLayout.nodes.some((n) => n.selected);
-    if (!hasActive) return baseLayout;
+  if (!selectedNodeId && !baseLayout.nodes.some((n) => n.selected)) {
+    return baseLayout;
   }
   const selection = collectConnectedSelection(graph, selectedNodeId);
 
   const nodes = baseLayout.nodes.map((node) => {
-    if (node.type !== "traceabilityNode") return node;
     const isSelected = selectedNodeId === node.id;
     if (
       node.selected === isSelected &&
@@ -175,9 +157,7 @@ export function applySelectionToLayout(
   return { nodes, edges };
 }
 
-/**
- * Tính vị trí node và cạnh cho React Flow (hỗ trợ tương thích ngược).
- */
+/** Tính vị trí node và cạnh cho React Flow (hỗ trợ tương thích ngược) */
 export function computeTraceabilityLayout(
   input: TraceabilityLayoutInput,
 ): TraceabilityLayout {

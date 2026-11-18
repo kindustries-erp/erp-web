@@ -7,8 +7,8 @@ import type { StageNodeGroup } from "./traceability.layout.barycenter";
 import { CARD_WIDTH } from "./traceability.layout.placement";
 
 export const HORIZONTAL_METRICS = {
-  columnWidth: 330,
-  headerHeight: 20,
+  columnWidth: 300,
+  headerHeight: 0,
   rowGap: 180,
   minColumnHeight: 220,
   bottomPadding: 24,

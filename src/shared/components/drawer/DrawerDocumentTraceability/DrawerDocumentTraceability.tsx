@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/shared/utils";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 import type { DrawerDocumentTraceabilityProps } from "./types";
 import { openGlobalErpDocument } from "./constants";
 import { V2DocumentTraceability } from "@/v2/shared/components/organisms/v2-document-traceability";
@@ -23,9 +24,11 @@ export function DrawerDocumentTraceability(
     onUnlinkNode,
     onEditManualSettlement,
     className,
+    wrapInSection = false,
+    sectionTitle,
   } = props;
 
-  return (
+  const content = (
     <div className={cn("w-full transition-all", className)}>
       <V2DocumentTraceability
         rootId={rootId}
@@ -52,4 +55,18 @@ export function DrawerDocumentTraceability(
       />
     </div>
   );
+
+  if (wrapInSection) {
+    return (
+      <DrawerSection
+        title={sectionTitle ?? "Chứng từ liên kết"}
+        collapsible
+        defaultCollapsed={false}
+      >
+        {content}
+      </DrawerSection>
+    );
+  }
+
+  return content;
 }

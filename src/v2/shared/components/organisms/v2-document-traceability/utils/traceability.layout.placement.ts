@@ -7,10 +7,10 @@ export const CARD_WIDTH = 300;
 
 /** Bố cục ngang: mỗi giai đoạn là một cột, chứng từ xếp dọc */
 export const HORIZONTAL = {
-  columnWidth: 330,
-  columnGap: 170,
+  columnWidth: 300,
+  columnGap: 160,
   stageStartY: 36,
-  headerHeight: 20,
+  headerHeight: 0,
   rowGap: 180,
   minColumnHeight: 180,
   bottomPadding: 30,

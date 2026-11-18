@@ -84,25 +84,20 @@ describe("collectConnectedSelection", () => {
 });
 
 describe("computeTraceabilityLayout", () => {
-  it("draws only the stages that contain documents", () => {
+  it("creates only traceability document nodes without stage group nodes", () => {
     const layout = computeTraceabilityLayout({
       graph,
       direction: "horizontal",
       allowEdit: false,
       actions,
     });
-    const stages = layout.nodes
-      .filter((n) => n.type === "stageGroupNode")
-      .map((n) => n.id);
-    expect(stages).toEqual([
-      "stage-group-ORDER_STOCK",
-      "stage-group-INVOICE",
-      "stage-group-PAYMENT",
-      "stage-group-GENERAL_LEDGER",
-    ]);
+    const stageGroups = layout.nodes.filter((n) => n.type === "stageGroupNode");
+    expect(stageGroups).toHaveLength(0);
+    expect(layout.nodes).toHaveLength(4);
+    expect(layout.nodes.every((n) => n.type === "traceabilityNode")).toBe(true);
   });
 
-  it("places each document inside its stage with a parentId", () => {
+  it("places each document directly on the canvas with absolute coordinates", () => {
     const layout = computeTraceabilityLayout({
       graph,
       direction: "horizontal",
@@ -110,9 +105,11 @@ describe("computeTraceabilityLayout", () => {
       actions,
     });
     const root = layout.nodes.find((n) => n.id === "root");
-    expect(root?.parentId).toBe("stage-group-INVOICE");
+    const po = layout.nodes.find((n) => n.id === "po");
+    expect((root as any)?.parentId).toBeUndefined();
     expect(root?.type).toBe("traceabilityNode");
     expect(root?.draggable).toBe(false);
+    expect(root!.position.x).toBeGreaterThan(po!.position.x);
   });
 
   it("ensures all nodes have draggable disabled", () => {
@@ -157,19 +154,6 @@ describe("computeTraceabilityLayout", () => {
     expect(first.edges.map((e) => e.id)).toEqual(second.edges.map((e) => e.id));
   });
 
-  it("equalizes stage column heights and centers cards vertically in horizontal layout", () => {
-    const layout = computeTraceabilityLayout({
-      graph,
-      direction: "horizontal",
-      allowEdit: false,
-      actions,
-    });
-    const stageNodes = layout.nodes.filter((n) => n.type === "stageGroupNode");
-    const heights = stageNodes.map((s) => s.style?.height);
-    const uniqueHeights = new Set(heights);
-    expect(uniqueHeights.size).toBe(1);
-  });
-
   it("returns no nodes for an empty graph", () => {
     const empty = { ...graph, nodes: [], edges: [] };
     expect(
@@ -202,31 +186,25 @@ describe("computeTraceabilityLayout", () => {
 });
 
 describe("pickEdgeHandles", () => {
-  const node = (x: number, y: number, parent?: string) =>
-    ({ id: "n", parentId: parent, position: { x, y } }) as never;
+  const node = (x: number, y: number) =>
+    ({ id: "n", position: { x, y } }) as never;
 
   it("connects different stages left to right in horizontal layout", () => {
-    expect(
-      pickEdgeHandles("horizontal", node(0, 0, "a"), node(0, 0, "b")),
-    ).toEqual({
+    expect(pickEdgeHandles("horizontal", node(0, 0), node(400, 0))).toEqual({
       sourceHandle: "right",
       targetHandle: "left",
     });
   });
 
   it("connects the same stage top to bottom in horizontal layout", () => {
-    expect(
-      pickEdgeHandles("horizontal", node(0, 0, "a"), node(0, 200, "a")),
-    ).toEqual({
+    expect(pickEdgeHandles("horizontal", node(0, 0), node(0, 200))).toEqual({
       sourceHandle: "bottom",
       targetHandle: "top",
     });
   });
 
   it("connects the same row right to left in vertical layout", () => {
-    expect(
-      pickEdgeHandles("vertical", node(300, 0, "a"), node(0, 0, "a")),
-    ).toEqual({
+    expect(pickEdgeHandles("vertical", node(300, 0), node(0, 0))).toEqual({
       sourceHandle: "left",
       targetHandle: "right",
     });

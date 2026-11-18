@@ -15,6 +15,7 @@ import {
 } from "../../utils/traceability.format";
 import { V2TraceNodeHandles } from "./V2TraceNodeHandles";
 import { V2TraceNodeHeader } from "./V2TraceNodeHeader";
+import { V2TraceNodeCategoryHeader } from "./V2TraceNodeCategoryHeader";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { getPartnerIcon } from "./traceNode.helper";
 
@@ -105,6 +106,7 @@ export const V2TraceNode = React.memo(
         )}
       >
         <V2TraceNodeHandles />
+        <V2TraceNodeCategoryHeader docType={node.docType} />
         <V2TraceNodeHeader
           meta={meta}
           docNo={node.docNo}
