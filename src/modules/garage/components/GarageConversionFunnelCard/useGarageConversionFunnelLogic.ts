@@ -45,8 +45,10 @@ export function useGarageConversionFunnelLogic(
     dateFrom: string;
     dateTo: string;
     periodLabel: string;
-    classification: string;
-    classificationName: string;
+    classification?: string;
+    classificationName?: string;
+    initialStatus?: string;
+    isFunnel?: boolean;
     branchId?: string;
   }>({
     open: false,
@@ -55,43 +57,64 @@ export function useGarageConversionFunnelLogic(
     periodLabel: "",
     classification: "",
     classificationName: "",
+    initialStatus: "ALL",
+    isFunnel: false,
   });
 
-  const handleClassificationClick = (
-    classificationKey: string,
-    classificationName: string,
-  ) => {
-    let dateFrom: string;
-    let dateTo: string;
-    let periodLabel: string;
-
+  const getDateRange = () => {
     if (selectedMonth === "ALL") {
       const oldestMonth =
         availableMonths[availableMonths.length - 1] ||
         format(subMonths(new Date(), 5), "yyyy-MM");
       const newestMonth = availableMonths[0] || format(new Date(), "yyyy-MM");
-      dateFrom = `${oldestMonth}-01`;
       const [newestY, newestM] = newestMonth.split("-").map(Number);
-      dateTo = format(
-        endOfMonth(new Date(newestY, newestM - 1, 1)),
-        "yyyy-MM-dd",
-      );
-      periodLabel = `${t("dashboard.funnel.allSixMonthsView", "Toàn bộ 6 tháng")} · ${classificationName}`;
-    } else {
-      const [year, month] = selectedMonth.split("-").map(Number);
-      const monthDate = new Date(year, month - 1, 1);
-      dateFrom = format(startOfMonth(monthDate), "yyyy-MM-dd");
-      dateTo = format(endOfMonth(monthDate), "yyyy-MM-dd");
-      periodLabel = `${formatMonthLabel(selectedMonth)} · ${classificationName}`;
+      return {
+        dateFrom: `${oldestMonth}-01`,
+        dateTo: format(
+          endOfMonth(new Date(newestY, newestM - 1, 1)),
+          "yyyy-MM-dd",
+        ),
+        periodPrefix: t("dashboard.funnel.allSixMonthsView", "Toàn bộ 6 tháng"),
+      };
     }
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const monthDate = new Date(year, month - 1, 1);
+    return {
+      dateFrom: format(startOfMonth(monthDate), "yyyy-MM-dd"),
+      dateTo: format(endOfMonth(monthDate), "yyyy-MM-dd"),
+      periodPrefix: formatMonthLabel(selectedMonth),
+    };
+  };
 
+  const handleClassificationClick = (
+    classificationKey: string,
+    classificationName: string,
+  ) => {
+    const { dateFrom, dateTo, periodPrefix } = getDateRange();
     setClassificationDrawer({
       open: true,
       dateFrom,
       dateTo,
-      periodLabel,
+      periodLabel: `${periodPrefix} · ${classificationName}`,
       classification: classificationKey,
       classificationName,
+      initialStatus: "ALL",
+      isFunnel: true,
+      branchId: selectedBranchId,
+    });
+  };
+
+  const handleStageClick = (stageKey: string, stageTitle: string) => {
+    const { dateFrom, dateTo, periodPrefix } = getDateRange();
+    setClassificationDrawer({
+      open: true,
+      dateFrom,
+      dateTo,
+      periodLabel: `${periodPrefix} · ${stageTitle}`,
+      classification: undefined,
+      classificationName: undefined,
+      initialStatus: stageKey,
+      isFunnel: true,
       branchId: selectedBranchId,
     });
   };
@@ -245,6 +268,7 @@ export function useGarageConversionFunnelLogic(
     tableRows,
     classificationDrawer,
     handleClassificationClick,
+    handleStageClick,
     closeClassificationDrawer,
   };
 }

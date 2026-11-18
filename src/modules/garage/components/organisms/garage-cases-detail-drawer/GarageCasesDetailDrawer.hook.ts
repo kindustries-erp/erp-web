@@ -59,12 +59,14 @@ export function useGarageCasesDetailDrawer({
       checkpointScope?.dateTo,
       checkpointScope?.branchId,
       checkpointScope?.classification,
+      checkpointScope?.isFunnel,
     ],
     queryFn: () =>
       garageDashboardApi.getCheckpointCases({
         date_from: checkpointScope!.dateFrom,
         date_to: checkpointScope!.dateTo,
         classification: checkpointScope?.classification,
+        is_funnel: checkpointScope?.isFunnel,
         page: 1,
         pageSize: 500,
       }),
@@ -237,5 +239,7 @@ export function useGarageCasesDetailDrawer({
     showProfitMetrics,
     classification: checkpointScope?.classification,
     classificationName: checkpointScope?.classificationName,
+    isFunnel: checkpointScope?.isFunnel,
+    initialStatus: checkpointScope?.initialStatus,
   };
 }

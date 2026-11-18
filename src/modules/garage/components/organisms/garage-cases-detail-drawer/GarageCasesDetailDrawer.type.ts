@@ -16,6 +16,8 @@ export type GarageCasesScope =
       branchId?: string;
       classification?: string;
       classificationName?: string;
+      initialStatus?: string;
+      isFunnel?: boolean;
     }
   | {
       kind: "horizon";

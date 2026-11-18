@@ -194,5 +194,35 @@ describe("Funnel Data Calculators: Donut Item Aggregation", () => {
         "Ký gửi / Nội bộ",
       );
     });
+
+    it("opens drawer with initialStatus and isFunnel when handleStageClick is called", () => {
+      const { result } = renderHook(() =>
+        useGarageConversionFunnelLogic({
+          availableMonths: ["2026-11", "2026-10"],
+        }),
+      );
+
+      act(() => {
+        result.current.setSelectedMonth("2026-11");
+      });
+
+      act(() => {
+        result.current.handleStageClick("QUOTATION", "2. Báo Giá");
+      });
+
+      expect(result.current.classificationDrawer.open).toBe(true);
+      expect(result.current.classificationDrawer.dateFrom).toBe("2026-11-01");
+      expect(result.current.classificationDrawer.dateTo).toBe("2026-11-30");
+      expect(
+        result.current.classificationDrawer.classification,
+      ).toBeUndefined();
+      expect(result.current.classificationDrawer.initialStatus).toBe(
+        "QUOTATION",
+      );
+      expect(result.current.classificationDrawer.isFunnel).toBe(true);
+      expect(result.current.classificationDrawer.periodLabel).toContain(
+        "2. Báo Giá",
+      );
+    });
   });
 });

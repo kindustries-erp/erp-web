@@ -350,6 +350,7 @@ export const garageDashboardApi = {
     status?: string;
     sort_by?: string;
     sort_order?: "ASC" | "DESC";
+    is_funnel?: boolean;
   }): Promise<GarageCheckpointCasesResponse> => {
     const { data } = await axiosInstance.get<GarageCheckpointCasesResponse>(
       `${BASE}/checkpoint-cases`,

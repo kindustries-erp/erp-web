@@ -42,6 +42,7 @@ export function GarageConversionFunnelCard(
     tableRows,
     classificationDrawer,
     handleClassificationClick,
+    handleStageClick,
     closeClassificationDrawer,
   } = useGarageConversionFunnelLogic(props);
 
@@ -105,7 +106,7 @@ export function GarageConversionFunnelCard(
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {/* CARD 1: 4 Cards Phễu Chuyển Đổi & Thanh Tỷ Lệ */}
+          {/* CARD 1: 5 Cards Phễu Chuyển Đổi & Bảng Chi Tiết Phễu */}
           <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
             <FunnelOverviewCards
               totalIntake={totalIntake}
@@ -115,6 +116,16 @@ export function GarageConversionFunnelCard(
               cancelled={cancelled}
               projectedToday={projectedToday}
               projectedMonth={projectedMonth}
+              onStageClick={handleStageClick}
+            />
+            <FunnelSpreadsheetTable
+              tableRows={tableRows}
+              totalIntake={totalIntake}
+              quotation={quotation}
+              inProgress={inProgress}
+              completed={completed}
+              cancelled={cancelled}
+              onClassificationClick={handleClassificationClick}
             />
           </div>
 
@@ -138,19 +149,6 @@ export function GarageConversionFunnelCard(
               onClassificationClick={handleClassificationClick}
             />
           </div>
-
-          {/* CARD 3: Chi Tiết Phễu Chuyển Đổi theo 4 Phân Loại ERP (Bảng Spreadsheet) */}
-          <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
-            <FunnelSpreadsheetTable
-              tableRows={tableRows}
-              totalIntake={totalIntake}
-              quotation={quotation}
-              inProgress={inProgress}
-              completed={completed}
-              cancelled={cancelled}
-              onClassificationClick={handleClassificationClick}
-            />
-          </div>
         </div>
       )}
 
@@ -162,6 +160,8 @@ export function GarageConversionFunnelCard(
         periodLabel={classificationDrawer.periodLabel}
         classification={classificationDrawer.classification}
         classificationName={classificationDrawer.classificationName}
+        initialStatus={classificationDrawer.initialStatus}
+        isFunnel={classificationDrawer.isFunnel}
         branchId={classificationDrawer.branchId}
       />
     </div>

@@ -32,9 +32,12 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     setSelectedCaseCode,
     cases,
     casesCount,
+    isFunnel,
+    initialStatus,
   } = logic;
 
   return useMemo<V2TabItemData[]>(() => {
+    const isFunnelScope = Boolean(isCheckpoint && (classification || isFunnel));
     const mainTab: V2TabItemData = {
       key: "cases",
       label: isCheckpoint
@@ -50,6 +53,8 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
           showProfitMetrics={showProfitMetrics}
           classification={classification}
           funnelCounts={checkpointSummary?.funnelCounts}
+          isFunnelScope={isFunnelScope}
+          initialCategoryFilter={initialStatus}
         />
       ),
     };
@@ -99,6 +104,9 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     ];
   }, [
     isCheckpoint,
+    classification,
+    isFunnel,
+    initialStatus,
     showProfitMetrics,
     cases,
     casesCount,

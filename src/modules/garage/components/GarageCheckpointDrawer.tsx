@@ -10,6 +10,8 @@ export interface GarageCheckpointDrawerProps {
   branchId?: string;
   classification?: string;
   classificationName?: string;
+  initialStatus?: string;
+  isFunnel?: boolean;
 }
 
 /**
@@ -25,6 +27,8 @@ export function GarageCheckpointDrawer({
   branchId,
   classification,
   classificationName,
+  initialStatus,
+  isFunnel,
 }: GarageCheckpointDrawerProps) {
   if (!open) return null;
   return (
@@ -39,6 +43,8 @@ export function GarageCheckpointDrawer({
         branchId,
         classification,
         classificationName,
+        initialStatus,
+        isFunnel,
       }}
       showProfitMetrics={true}
     />

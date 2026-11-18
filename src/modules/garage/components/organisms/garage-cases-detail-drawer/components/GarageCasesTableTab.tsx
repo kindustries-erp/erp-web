@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { V2TabBarVariant } from "@/v2/shared/components/molecules/v2-tab-bar/V2TabBar.type";
@@ -23,12 +23,22 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
   showProfitMetrics = false,
   classification,
   funnelCounts,
+  isFunnelScope,
+  initialCategoryFilter,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
-  const isFunnelMode = Boolean(classification && classification !== "ALL");
-  const [categoryFilter, setCategoryFilter] = useState<string>(
-    showProfitMetrics ? "ALL" : "all",
+  const isFunnelMode = Boolean(
+    isFunnelScope || (classification && classification !== "ALL"),
   );
+  const [categoryFilter, setCategoryFilter] = useState<string>(
+    initialCategoryFilter || (showProfitMetrics ? "ALL" : "all"),
+  );
+
+  useEffect(() => {
+    if (initialCategoryFilter) {
+      setCategoryFilter(initialCategoryFilter);
+    }
+  }, [initialCategoryFilter]);
   const [search, setSearch] = useState("");
 
   const funnelStatusCounts = useMemo(

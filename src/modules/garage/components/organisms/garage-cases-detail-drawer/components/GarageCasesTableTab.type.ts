@@ -51,4 +51,6 @@ export interface GarageCasesTableTabProps {
     completed: number;
     cancelled: number;
   };
+  isFunnelScope?: boolean;
+  initialCategoryFilter?: string;
 }
