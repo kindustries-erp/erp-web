@@ -37,6 +37,14 @@ export interface GarageCaseDetailRow {
   serviceStatus?: string;
 }
 
+export interface FunnelStageCounts {
+  total: number;
+  quotation: number;
+  inProgress: number;
+  completed: number;
+  cancelled: number;
+}
+
 export interface GarageCasesTableTabProps {
   cases: GarageCaseDetailRow[];
   initialDebtType?: "receivables" | "payables";
@@ -44,13 +52,7 @@ export interface GarageCasesTableTabProps {
   showProfitMetrics?: boolean;
   filterMode?: "partner" | "classification";
   classification?: string;
-  funnelCounts?: {
-    total: number;
-    quotation: number;
-    inProgress: number;
-    completed: number;
-    cancelled: number;
-  };
+  funnelCounts?: FunnelStageCounts;
   isFunnelScope?: boolean;
   initialCategoryFilter?: string;
 }
