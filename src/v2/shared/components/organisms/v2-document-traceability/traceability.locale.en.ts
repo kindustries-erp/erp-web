@@ -2,6 +2,7 @@ import type { V2ModuleLocale } from "@/v2/shared/locales";
 
 /** Bản tiếng Anh của nhãn sơ đồ chứng từ liên kết */
 export const traceabilityLocaleEn: V2ModuleLocale["en"] = {
+  sectionTitle: "Linked documents",
   docType: {
     invoice: "VAT invoice",
     bankTxn: "Bank statement / Cash book",

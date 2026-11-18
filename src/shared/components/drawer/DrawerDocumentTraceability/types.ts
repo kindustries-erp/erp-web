@@ -2,7 +2,7 @@ import type {
   TraceabilityGraphData,
   TraceabilityNode,
   TraceabilityNodeType,
-} from "@/shared/types/traceability";
+} from "@/v2/shared/components/organisms/v2-document-traceability";
 
 export type BusinessStageKey =
   | "ORDER_STOCK"
