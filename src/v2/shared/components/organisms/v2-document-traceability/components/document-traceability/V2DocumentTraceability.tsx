@@ -137,6 +137,8 @@ export function V2DocumentTraceability(props: V2DocumentTraceabilityProps) {
         open={Boolean(unlinkingNode)}
         onOpenChange={(open) => !open && trace.cancelUnlink()}
         variant="danger"
+        className="z-[700]"
+        overlayClassName="z-[699]"
         title={t("v2.traceability.unlink.title")}
         message={t("v2.traceability.unlink.message", {
           docNo: unlinkingNode?.docNo ?? "",
