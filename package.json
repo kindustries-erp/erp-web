@@ -13,6 +13,7 @@
   },
   "scripts": {
     "dev": "NODE_OPTIONS=\"--max-old-space-size=384\" vite --host 0.0.0.0 --port ${PORT:-5173}",
+    "dev:safe": "bash bin/dev-guard.sh --default-port 5173 -- bun run dev",
     "build": "NODE_OPTIONS=\"--max-old-space-size=3072\" tsc && NODE_OPTIONS=\"--max-old-space-size=3072\" vite build",
     "preview": "vite preview",
     "test": "vitest --run",
