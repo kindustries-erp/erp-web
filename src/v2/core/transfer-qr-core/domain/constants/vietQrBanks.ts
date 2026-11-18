@@ -1,6 +1,8 @@
 /**
  * Danh sách ngân hàng cho VietQR (mã BIN Napas 247).
- * CHƯA XÁC MINH: đối chiếu với danh sách chính thức của Napas/VietQR trước khi đưa lên production (plan task 1.3.1).
+ * Đã đối chiếu 37 BIN với API công khai https://api.vietqr.io/v2/banks (2026-11-18):
+ * BIN khớp 100%; mã viết tắt và tên ngắn theo VietQR. Tên cũ vẫn nằm trong aliases để khớp dữ liệu cũ.
+ * Khi Napas đổi BIN hoặc thêm ngân hàng, đối chiếu lại với cùng API.
  */
 export interface VietQrBank {
   /** Mã viết tắt, ví dụ VCB */
@@ -24,9 +26,9 @@ export const VIETQR_BANKS: readonly VietQrBank[] = [
     aliases: ["Vietcombank", "Ngoai thuong"],
   },
   {
-    code: "CTG",
+    code: "ICB",
     shortName: "VietinBank",
-    name: "Ngân hàng TMCP Công Thương Việt Nam",
+    name: "Ngân hàng TMCP Công thương Việt Nam",
     bin: "970415",
     aliases: ["VietinBank", "Cong thuong"],
   },
@@ -144,10 +146,10 @@ export const VIETQR_BANKS: readonly VietQrBank[] = [
   },
   {
     code: "LPB",
-    shortName: "LienVietPostBank",
-    name: "Ngân hàng TMCP Bưu điện Liên Việt",
+    shortName: "LPBank",
+    name: "Ngân hàng TMCP Lộc Phát Việt Nam",
     bin: "970449",
-    aliases: ["LienVietPostBank", "Buu dien lien viet"],
+    aliases: ["LPBank", "LienVietPostBank", "Buu dien lien viet"],
   },
   {
     code: "PVCB",
@@ -158,10 +160,10 @@ export const VIETQR_BANKS: readonly VietQrBank[] = [
   },
   {
     code: "NAB",
-    shortName: "Nam A Bank",
+    shortName: "NamABank",
     name: "Ngân hàng TMCP Nam Á",
     bin: "970428",
-    aliases: ["Nam A Bank", "Nam A"],
+    aliases: ["NamABank", "Nam A Bank", "Nam A"],
   },
   {
     code: "BAB",
@@ -185,11 +187,11 @@ export const VIETQR_BANKS: readonly VietQrBank[] = [
     aliases: ["Kienlongbank", "Kien long"],
   },
   {
-    code: "OJB",
-    shortName: "Oceanbank",
-    name: "Ngân hàng Thương mại TNHH MTV Đại Dương",
+    code: "MBV",
+    shortName: "MBV",
+    name: "Ngân hàng TNHH MTV Việt Nam Hiện Đại",
     bin: "970414",
-    aliases: ["Oceanbank", "Dai duong"],
+    aliases: ["MBV", "Oceanbank", "Dai duong", "Viet Nam Hien Dai"],
   },
   {
     code: "GPB",
@@ -234,11 +236,11 @@ export const VIETQR_BANKS: readonly VietQrBank[] = [
     aliases: ["Quoc dan"],
   },
   {
-    code: "SGB",
-    shortName: "Saigonbank",
+    code: "SGICB",
+    shortName: "SaigonBank",
     name: "Ngân hàng TMCP Sài Gòn Công Thương",
     bin: "970400",
-    aliases: ["Saigonbank", "Sai gon Cong thuong"],
+    aliases: ["SaigonBank", "Saigonbank", "Sai gon Cong thuong"],
   },
   {
     code: "IVB",
@@ -249,30 +251,30 @@ export const VIETQR_BANKS: readonly VietQrBank[] = [
   },
   {
     code: "PBVN",
-    shortName: "Public Bank",
+    shortName: "PublicBank",
     name: "Ngân hàng TNHH MTV Public Việt Nam",
     bin: "970439",
-    aliases: ["Public Bank"],
+    aliases: ["PublicBank", "Public Bank"],
   },
   {
     code: "SHBVN",
-    shortName: "Shinhan Bank",
+    shortName: "ShinhanBank",
     name: "Ngân hàng TNHH MTV Shinhan Việt Nam",
     bin: "970424",
-    aliases: ["Shinhan"],
+    aliases: ["ShinhanBank", "Shinhan Bank", "Shinhan"],
   },
   {
     code: "WVN",
-    shortName: "Woori Bank",
+    shortName: "Woori",
     name: "Ngân hàng TNHH MTV Woori Việt Nam",
     bin: "970457",
-    aliases: ["Woori"],
+    aliases: ["Woori", "Woori Bank"],
   },
   {
     code: "UOB",
-    shortName: "UOB",
-    name: "Ngân hàng United Overseas Bank Việt Nam",
+    shortName: "UnitedOverseas",
+    name: "Ngân hàng United Overseas - Chi nhánh TP. Hồ Chí Minh",
     bin: "970458",
-    aliases: ["UOB"],
+    aliases: ["UOB", "UnitedOverseas", "United Overseas"],
   },
 ];

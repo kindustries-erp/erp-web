@@ -27,7 +27,7 @@ describe("resolveBankBin", () => {
       resolveBankBin({
         bankName: "Ngân hàng TMCP Sài Gòn Công Thương",
       })?.code,
-    ).toBe("SGB");
+    ).toBe("SGICB");
     expect(resolveBankBin({ bankName: "Sai gon" })?.code).toBe("SCB");
     expect(
       resolveBankBin({ bankName: "Ngân hàng TMCP Sài Gòn Thương Tín" })?.code,

@@ -31,7 +31,7 @@ description: Tri thức frontend cho drawer tạo mã QR chuyển khoản VietQR
 
 ## Khớp ngân hàng (`domain/rules/resolveBankBin.ts`)
 - `bank_code` của `erp_bank_accounts` là chuỗi tự do. `resolveBankBin` khớp theo mã, tên ngắn, BIN, alias (không phân biệt dấu, hoa thường). Không khớp chính xác thì thử khớp chứa alias dài ≥ 4 ký tự, lấy alias dài nhất (ví dụ tên đầy đủ của Saigonbank không bị nhầm sang SCB). Nếu hai ngân hàng khác nhau cùng có alias dài nhất bằng nhau thì trả null, không đoán. Không khớp trả null.
-- Danh sách BIN: `domain/constants/vietQrBanks.ts`. **Chưa đối chiếu với danh sách chính thức Napas/VietQR**; phải kiểm tra trước khi dùng production.
+- Danh sách BIN: `domain/constants/vietQrBanks.ts` (37 ngân hàng). Đã đối chiếu 2026-11-18 với `https://api.vietqr.io/v2/banks`: BIN khớp 100%, mã viết tắt và tên ngắn theo VietQR; tên cũ nằm trong `aliases`. Khi Napas đổi BIN hoặc thêm ngân hàng, đối chiếu lại với cùng API.
 
 ## Quy tắc
 - QR tạo hoàn toàn trên trình duyệt bằng thư viện `qrcode`. Không gọi `img.vietqr.io` hay dịch vụ ngoài, không log số tài khoản.
@@ -42,7 +42,6 @@ description: Tri thức frontend cho drawer tạo mã QR chuyển khoản VietQR
 - Module `bank-statements` không chứa code QR; chỉ có hai dòng nối ở drawers và dropdown.
 
 ## Còn lại
-- Chưa đối chiếu danh sách BIN với nguồn chính thức.
 - E2E `e2e/transfer-qr-bank-statements.e2e.mjs` đã PASS trên dev (một lệnh, batch dán 3 dòng, ZIP, PDF, không request ra ngoài). Chạy bằng `bun run e2e:transfer-qr-bank-statements`.
 - Chưa có "người nhận gần đây" (task 2.4.1, P2, chưa làm).
 - Chưa có QR theo từng dòng sao kê.
