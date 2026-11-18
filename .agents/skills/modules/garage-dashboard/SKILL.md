@@ -37,8 +37,9 @@ Module `garage-dashboard` (được hiện thực tại `src/kgara-api-core/` v�
   - `revenue`, `cost`, `profit`, `margin`: Chỉ số tài chính lãi gộp.
   - `paid`, `receivable`, `collectionRate`: Tiền khách đã thanh toán, công nợ phải thu và tỷ lệ hoàn tất thu tiền (%).
   - `paidCost`, `payableCost`, `costPaymentRate`: Tiền đã chi trả chi phí/NCC, công nợ phải trả NCC và tỷ lệ chi trả (%).
-- **Chỉ số KPI Sparklines theo Chu kỳ (`getCheckpointKpis`)**:
-  - Phân tích 3 chu kỳ: **Tháng này** (Sparkline 6 tháng), **Tuần này** (Sparkline 4 tuần), **Hôm nay** (Sparkline 7 ngày) theo Ngày hoàn thành.
+- **Chỉ số KPI theo Chu kỳ (`getCheckpointKpis` & `GarageStatsCards.tsx`)**:
+  - Phân tích 3 chu kỳ: **Tháng này**, **Tuần này**, **Hôm nay** theo Ngày hoàn thành.
+  - Hiển thị 2 Donut chart song song (Phân loại xe & Tiến độ thu tiền), icon đặt ngang hàng với nhãn tiêu đề (`[Icon] XE THÁNG NÀY`), và lưới 4 card giai đoạn tiếp nhận (Tiếp nhận, Báo giá, Đang sửa, Hoàn tất) hiển thị số lượng xe kèm số tiền phát sinh trong ngoặc đơn (ví dụ: `11 (124tr)`).
   - Hỗ trợ click-to-drilldown xem danh sách phiếu dịch vụ chi tiết hoàn thành trong kỳ (`getCheckpointCases`).
 - **Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (`GarageConversionFunnelCard.tsx`)**:
   - Hub phân tích 3 tầng tích hợp toàn diện:

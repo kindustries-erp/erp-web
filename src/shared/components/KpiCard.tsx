@@ -4,12 +4,14 @@ import React from "react";
 
 interface KpiCardProps {
   label: string;
-  value: string;
+  value: React.ReactNode;
   sub?: string;
   icon?: React.ReactNode;
   badge?: React.ReactNode;
   warn?: boolean;
   loading?: boolean;
+  inlineIcon?: boolean;
+  middleNode?: React.ReactNode;
   rightNode?: React.ReactNode;
   bottomNode?: React.ReactNode;
   active?: boolean;
@@ -25,6 +27,7 @@ export function KpiCard({
   warn,
   compact,
   loading,
+  inlineIcon,
   rightNode,
   bottomNode,
   active,
@@ -34,7 +37,7 @@ export function KpiCard({
     <div
       className={cn(
         "bg-surface border rounded-xl card-shadow flex flex-col relative transition-all duration-200",
-        compact ? "p-3 max-[480px]:p-2" : "p-4 max-[480px]:p-3",
+        compact ? "p-3 max-[480px]:p-2" : "p-3.5 max-[480px]:p-2.5",
         warn
           ? "border-[#f59e0b] border-[1.5px]"
           : active
@@ -67,42 +70,75 @@ export function KpiCard({
           </svg>
         </button>
       )}
-      <div className="flex flex-row justify-between items-center flex-1">
+
+      {/* Hàng trên: Thông tin KPI bên trái & Widget/Donut bên phải */}
+      <div className="flex flex-row justify-between items-center flex-1 gap-3 min-w-0">
         <div className="flex-1 min-w-0">
-          {(icon || badge) && (
+          {inlineIcon ? (
             <div
               className={cn(
-                "flex items-center justify-between",
-                compact ? "mb-1" : "mb-[10px]",
+                "flex items-center gap-1.5 min-w-0",
+                compact ? "mb-1" : "mb-1.5",
               )}
             >
               {icon && (
                 <div
                   className={cn(
-                    "flex items-center justify-center bg-[color:var(--muted)] rounded-[7px]",
-                    compact ? "w-5 h-5" : "w-7 h-7",
+                    "flex items-center justify-center bg-[color:var(--muted)] rounded-[6px] shrink-0 text-muted-foreground",
+                    compact ? "w-4 h-4 text-xs" : "w-5 h-5 text-xs",
                   )}
                 >
                   {icon}
                 </div>
               )}
-              {badge}
+              <div
+                className={cn(
+                  "text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] truncate",
+                  compact ? "text-[9px]" : "text-[10px]",
+                )}
+              >
+                {label}
+              </div>
+              {badge && <div className="ml-auto">{badge}</div>}
             </div>
+          ) : (
+            <>
+              {(icon || badge) && (
+                <div
+                  className={cn(
+                    "flex items-center justify-between",
+                    compact ? "mb-1" : "mb-1.5",
+                  )}
+                >
+                  {icon && (
+                    <div
+                      className={cn(
+                        "flex items-center justify-center bg-[color:var(--muted)] rounded-[7px]",
+                        compact ? "w-5 h-5" : "w-6 h-6",
+                      )}
+                    >
+                      {icon}
+                    </div>
+                  )}
+                  {badge}
+                </div>
+              )}
+              <div
+                className={cn(
+                  "text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-0.5 truncate",
+                  compact ? "text-[9px]" : "text-[10px]",
+                )}
+              >
+                {label}
+              </div>
+            </>
           )}
-          <div
-            className={cn(
-              "text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-1 truncate",
-              compact ? "text-[9px]" : "text-[10px]",
-            )}
-          >
-            {label}
-          </div>
           <div
             className={cn(
               "font-semibold text-foreground truncate",
               compact
                 ? "text-[16px] max-[480px]:text-[14px]"
-                : "text-[22px] max-[480px]:text-[18px]",
+                : "text-[20px] max-[480px]:text-[17px]",
             )}
           >
             {loading ? (
@@ -117,18 +153,21 @@ export function KpiCard({
             )}
           </div>
           {sub && (
-            <div className="text-[11px] text-[color:var(--faint)] mt-[3px] truncate">
+            <div className="text-[11px] text-[color:var(--faint)] mt-[2px] truncate">
               {sub}
             </div>
           )}
         </div>
+
         {rightNode && (
-          <div className="ml-4 w-[100px] h-[60px] flex-shrink-0 flex items-center justify-center relative">
+          <div className="shrink-0 flex items-center justify-center relative">
             {rightNode}
           </div>
         )}
       </div>
-      {bottomNode && <div className="mt-3 w-full">{bottomNode}</div>}
+
+      {/* Hàng dưới: Khối tiến độ liền mạch hoặc các thành phần mở rộng */}
+      {bottomNode && <div className="mt-2.5 w-full">{bottomNode}</div>}
     </div>
   );
 }
@@ -139,13 +178,17 @@ interface BadgeProps {
 }
 
 export function KpiBadge({ variant, children }: BadgeProps) {
+  const styles = {
+    up: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
+    down: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800",
+    warn: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+  };
+
   return (
     <span
       className={cn(
-        "text-[10px] px-2 py-[3px] rounded-[20px] font-medium",
-        variant === "up" && "bg-up-bg text-up-fg",
-        variant === "down" && "bg-down-bg text-down-fg",
-        variant === "warn" && "bg-warn-bg text-warn-fg",
+        "inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium border",
+        styles[variant],
       )}
     >
       {children}

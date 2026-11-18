@@ -31,15 +31,26 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
   const isFunnelMode = Boolean(
     isFunnelScope || (classification && classification !== "ALL"),
   );
-  const [categoryFilter, setCategoryFilter] = useState<string>(
-    initialCategoryFilter || (showProfitMetrics ? "ALL" : "all"),
-  );
+
+  const normalizedInitial = useMemo(() => {
+    if (!initialCategoryFilter) return showProfitMetrics ? "ALL" : "all";
+    return isFunnelMode
+      ? initialCategoryFilter.toUpperCase()
+      : initialCategoryFilter;
+  }, [initialCategoryFilter, showProfitMetrics, isFunnelMode]);
+
+  const [categoryFilter, setCategoryFilter] =
+    useState<string>(normalizedInitial);
 
   useEffect(() => {
     if (initialCategoryFilter) {
-      setCategoryFilter(initialCategoryFilter);
+      setCategoryFilter(
+        isFunnelMode
+          ? initialCategoryFilter.toUpperCase()
+          : initialCategoryFilter,
+      );
     }
-  }, [initialCategoryFilter]);
+  }, [initialCategoryFilter, isFunnelMode]);
   const [search, setSearch] = useState("");
 
   const funnelStatusCounts = useMemo(

@@ -194,6 +194,34 @@ export interface GarageDashboardStatsResponse {
   availableMonths?: string[];
 }
 
+export interface GarageStageClassifications {
+  suaChua: number;
+  kyGui: number;
+  oj: number;
+  khac: number;
+}
+
+export interface GarageIntakeStages {
+  totalIntake: number;
+  intake: number;
+  intakeAmount?: number;
+  quotation: number;
+  quotationAmount?: number;
+  inProgress: number;
+  inProgressAmount?: number;
+  completed: number;
+  completedAmount?: number;
+  cancelled: number;
+  cancelledAmount?: number;
+  classifications?: GarageStageClassifications;
+  byStage?: {
+    intake: GarageStageClassifications;
+    quotation: GarageStageClassifications;
+    inProgress: GarageStageClassifications;
+    completed: GarageStageClassifications;
+  };
+}
+
 export interface GarageKpiPeriod {
   totalRevenue: number;
   totalCost: number;
@@ -203,6 +231,7 @@ export interface GarageKpiPeriod {
   totalReceivable?: number;
   collectionRate?: number;
   totalCount: number;
+  stages?: GarageIntakeStages;
   revenueChart: number[];
   costChart: number[];
   profitChart: number[];
