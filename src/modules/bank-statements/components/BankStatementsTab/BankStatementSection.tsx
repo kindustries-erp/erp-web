@@ -62,6 +62,8 @@ export function BankStatementSection(props: BankStatementSectionProps) {
     handleClearAllFilters,
     isExportOpen,
     setIsExportOpen,
+    isQrOpen,
+    setIsQrOpen,
     isOriginalFilesOpen,
     setIsOriginalFilesOpen,
     isImportOpen,
@@ -87,6 +89,7 @@ export function BankStatementSection(props: BankStatementSectionProps) {
     setIsCreateOpen,
     setIsExportOpen,
     setIsOriginalFilesOpen,
+    setIsQrOpen,
   });
 
   const viewTabsNode = (
@@ -196,6 +199,8 @@ export function BankStatementSection(props: BankStatementSectionProps) {
         accountsData={accountsData}
         isExportOpen={isExportOpen}
         setIsExportOpen={setIsExportOpen}
+        isQrOpen={isQrOpen}
+        setIsQrOpen={setIsQrOpen}
         isOriginalFilesOpen={isOriginalFilesOpen}
         setIsOriginalFilesOpen={setIsOriginalFilesOpen}
         isImportOpen={isImportOpen}
