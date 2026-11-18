@@ -89,7 +89,36 @@ for (const { code, g, pageNo } of cases) {
     await page.screenshot({ path: `${SHOTS}garage-trace-${code}.png` }).catch(() => {});
     check(`${tag} canvas: số node = backend`, nodes === g.nodes.length, `${nodes}/${g.nodes.length}`);
     check(`${tag} canvas: số cạnh = backend (không nhân đôi)`, edges === g.edges.length, `${edges}/${g.edges.length}`);
+    // Chế độ sửa (không lưu: gỡ/ghép chỉ đổi trạng thái trên màn hình, rồi đóng drawer)
+    if (!process.env.E2E_SKIP_EDIT) {
+      await page.getByRole("button", { name: "Chỉnh sửa", exact: true }).first().click();
+      await page.waitForTimeout(800);
+      const linkBtn = page.getByRole("button", { name: /Ghép nối chứng từ/ }).first();
+      check(`${tag} sửa: có nút Ghép nối chứng từ`, await linkBtn.isVisible().catch(() => false));
+      const unlink = page.locator('[title="Gỡ liên kết chứng từ này"]');
+      const unlinkCount = await unlink.count();
+      check(`${tag} sửa: node có nút gỡ liên kết`, unlinkCount > 0, `${unlinkCount} nút`);
+      if (unlinkCount > 0) {
+        await page.locator(".react-flow__node", { hasText: "HÓA ĐƠN VAT" }).locator('[title="Gỡ liên kết chứng từ này"]').first().click();
+        await page.waitForTimeout(600);
+        await page.getByRole("button", { name: "Gỡ liên kết", exact: true }).click();
+        await page.waitForTimeout(1200);
+        const after = await page.locator(".react-flow__node").count();
+        check(`${tag} sửa: gỡ node thì canvas giảm node`, after < nodes, `${nodes} → ${after}`);
+        await page.screenshot({ path: `${SHOTS}garage-trace-${code}-edit.png` }).catch(() => {});
+      }
+      await linkBtn.click();
+      await page.getByText("Hóa đơn VAT", { exact: true }).click();
+      const picker = page.getByText("Liên kết Hóa đơn VAT", { exact: true }).first();
+      const pickerOpen = await picker.waitFor({ timeout: 15000 }).then(() => true).catch(() => false);
+      check(`${tag} sửa: chọn loại Hóa đơn mở ngăn chọn hóa đơn`, pickerOpen);
+      await page.screenshot({ path: `${SHOTS}garage-trace-${code}-add.png` }).catch(() => {});
+    }
+    // Hủy mọi thay đổi trên màn hình: không lưu, không ghi DB
     await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+    await page.getByRole("button", { name: "Hủy", exact: true }).first().click({ timeout: 4000 }).catch(() => {});
+    await page.getByRole("button", { name: "Đóng", exact: true }).last().click({ timeout: 4000 }).catch(() => {});
   } catch (e) {
     check(`${tag} (exception)`, false, e.message);
     await page.screenshot({ path: `${SHOTS}garage-trace-${code}-fail.png` }).catch(() => {});
