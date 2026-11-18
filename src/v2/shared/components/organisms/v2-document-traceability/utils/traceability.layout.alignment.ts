@@ -8,17 +8,16 @@ import { CARD_WIDTH } from "./traceability.layout.placement";
 
 export const HORIZONTAL_METRICS = {
   columnWidth: 330,
-  headerHeight: 48,
-  rowGap: 185,
-  minColumnHeight: 180,
-  bottomPadding: 30,
+  headerHeight: 20,
+  rowGap: 180,
+  minColumnHeight: 220,
+  bottomPadding: 24,
 };
-
 export const VERTICAL_METRICS = {
   minRowWidth: 780,
   rowHeight: 190,
   cardGap: 30,
-  headerHeight: 48,
+  headerHeight: 20,
   edgePadding: 20,
 };
 
@@ -29,7 +28,7 @@ export interface AlignedStageResult {
 
 /**
  * Tính toán vị trí x, y gióng hàng cho các node chứng từ trong từng stage,
- * ưu tiên các cặp node có liên kết nằm ngang hàng nhau (đường nối thẳng).
+ * ưu tiên các cặp node có liên kết nằm ngang hàng nhau và căn giữa cân đối.
  */
 export function computeAlignedStagePositions(
   stages: StageNodeGroup[],
@@ -42,20 +41,17 @@ export function computeAlignedStagePositions(
     { width: number; height: number }
   >();
 
-  // Bản đồ stage của từng node
   const nodeStageMap = new Map<string, number>();
-  stages.forEach((stage, idx) => {
-    stage.nodes.forEach((n) => nodeStageMap.set(n.id, idx));
-  });
+  stages.forEach((stage, idx) =>
+    stage.nodes.forEach((n) => nodeStageMap.set(n.id, idx)),
+  );
 
-  // Bản đồ các node cha ở stage trước
   const upstreamNeighbors = new Map<string, string[]>();
   for (const edge of edges) {
     const sStage = nodeStageMap.get(edge.source);
     const tStage = nodeStageMap.get(edge.target);
     if (sStage === undefined || tStage === undefined || sStage === tStage)
       continue;
-
     const [parent, child] =
       sStage < tStage ? [edge.source, edge.target] : [edge.target, edge.source];
     if (!upstreamNeighbors.has(child)) upstreamNeighbors.set(child, []);
@@ -67,8 +63,21 @@ export function computeAlignedStagePositions(
   } else {
     alignVertical(stages, upstreamNeighbors, nodePositions, stageDimensions);
   }
-
   return { nodePositions, stageDimensions };
+}
+
+function buildDownstreamMap(
+  upstream: Map<string, string[]>,
+): Map<string, string[]> {
+  const downstream = new Map<string, string[]>();
+  upstream.forEach((parents, child) =>
+    parents.forEach((p) => {
+      const list = downstream.get(p) ?? [];
+      list.push(child);
+      downstream.set(p, list);
+    }),
+  );
+  return downstream;
 }
 
 function alignHorizontal(
@@ -91,34 +100,59 @@ function alignHorizontal(
       return;
     }
 
-    // 1. Tính targetY lý tưởng
     const ys = docs.map((doc, idx) => {
       const parents = upstream.get(doc.id)?.filter((p) => positions.has(p));
       if (parents && parents.length > 0) {
-        const sumY = parents.reduce((acc, p) => acc + positions.get(p)!.y, 0);
-        return sumY / parents.length;
+        return (
+          parents.reduce((acc, p) => acc + positions.get(p)!.y, 0) /
+          parents.length
+        );
       }
       return headerHeight + idx * rowGap;
     });
 
-    // 2. Chống va chạm: đảm bảo y[i+1] >= y[i] + rowGap
     if (ys[0] < headerHeight) ys[0] = headerHeight;
     for (let i = 0; i < ys.length - 1; i++) {
-      if (ys[i + 1] < ys[i] + rowGap) {
-        ys[i + 1] = ys[i] + rowGap;
-      }
+      if (ys[i + 1] < ys[i] + rowGap) ys[i + 1] = ys[i] + rowGap;
     }
 
-    // 3. Gán vị trí và tính chiều cao khung stage
-    let maxY = 0;
-    docs.forEach((doc, idx) => {
-      positions.set(doc.id, { x: nodeX, y: ys[idx] });
-      if (ys[idx] > maxY) maxY = ys[idx];
-    });
-
-    const height = Math.max(minColumnHeight, maxY + 140 + bottomPadding);
-    dimensions.set(stage.stageKey, { width: columnWidth, height });
+    docs.forEach((doc, idx) => positions.set(doc.id, { x: nodeX, y: ys[idx] }));
   });
+
+  // Backward pass: căn giữa node cha đơn lẻ theo trung bình con downstream
+  const downstream = buildDownstreamMap(upstream);
+  for (let s = stages.length - 2; s >= 0; s--) {
+    const docs = stages[s].nodes;
+    if (docs.length === 1) {
+      const children = downstream
+        .get(docs[0].id)
+        ?.filter((c) => positions.has(c));
+      if (children && children.length > 1) {
+        const avgY =
+          children.reduce((acc, c) => acc + positions.get(c)!.y, 0) /
+          children.length;
+        positions.set(docs[0].id, {
+          x: nodeX,
+          y: Math.max(headerHeight, avgY),
+        });
+      }
+    }
+  }
+
+  // Đồng bộ chiều cao các cột swimlane
+  let maxHeight = minColumnHeight;
+  stages.forEach((stage) => {
+    let maxY = 0;
+    stage.nodes.forEach((doc) => {
+      const p = positions.get(doc.id);
+      if (p && p.y > maxY) maxY = p.y;
+    });
+    const h = Math.max(minColumnHeight, maxY + 140 + bottomPadding);
+    if (h > maxHeight) maxHeight = h;
+  });
+  stages.forEach((stage) =>
+    dimensions.set(stage.stageKey, { width: columnWidth, height: maxHeight }),
+  );
 }
 
 function alignVertical(
@@ -141,8 +175,10 @@ function alignVertical(
     const xs = docs.map((doc, idx) => {
       const parents = upstream.get(doc.id)?.filter((p) => positions.has(p));
       if (parents && parents.length > 0) {
-        const sumX = parents.reduce((acc, p) => acc + positions.get(p)!.x, 0);
-        return sumX / parents.length;
+        return (
+          parents.reduce((acc, p) => acc + positions.get(p)!.x, 0) /
+          parents.length
+        );
       }
       return edgePadding + idx * (CARD_WIDTH + cardGap);
     });
@@ -154,13 +190,36 @@ function alignVertical(
       }
     }
 
-    let maxX = 0;
-    docs.forEach((doc, idx) => {
-      positions.set(doc.id, { x: xs[idx], y: nodeY });
-      if (xs[idx] > maxX) maxX = xs[idx];
-    });
-
-    const width = Math.max(minRowWidth, maxX + CARD_WIDTH + edgePadding);
-    dimensions.set(stage.stageKey, { width, height: rowHeight });
+    docs.forEach((doc, idx) => positions.set(doc.id, { x: xs[idx], y: nodeY }));
   });
+
+  const downstream = buildDownstreamMap(upstream);
+  for (let s = stages.length - 2; s >= 0; s--) {
+    const docs = stages[s].nodes;
+    if (docs.length === 1) {
+      const children = downstream
+        .get(docs[0].id)
+        ?.filter((c) => positions.has(c));
+      if (children && children.length > 1) {
+        const avgX =
+          children.reduce((acc, c) => acc + positions.get(c)!.x, 0) /
+          children.length;
+        positions.set(docs[0].id, { x: Math.max(edgePadding, avgX), y: nodeY });
+      }
+    }
+  }
+
+  let maxWidth = minRowWidth;
+  stages.forEach((stage) => {
+    let maxX = 0;
+    stage.nodes.forEach((doc) => {
+      const p = positions.get(doc.id);
+      if (p && p.x > maxX) maxX = p.x;
+    });
+    const w = Math.max(minRowWidth, maxX + CARD_WIDTH + edgePadding);
+    if (w > maxWidth) maxWidth = w;
+  });
+  stages.forEach((stage) =>
+    dimensions.set(stage.stageKey, { width: maxWidth, height: rowHeight }),
+  );
 }

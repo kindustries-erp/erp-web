@@ -106,28 +106,43 @@ export function useTraceabilityCanvas({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setNodes(layout.nodes);
     setEdges(layout.edges);
   }, [layout, setNodes, setEdges]);
 
-  // Căn khung nhìn khi đổi đồ thị, hướng bố cục, hoặc chuyển toàn màn hình
-  useEffect(() => {
-    const timer = setTimeout(
-      () => fitView({ duration: 400, padding: 0.2 }),
-      60,
-    );
-    return () => clearTimeout(timer);
-  }, [graph.rootId, direction, fitView]);
-
+  // Căn khung nhìn khi đổi đồ thị, hướng bố cục, chuyển toàn màn hình hoặc container resize
   useEffect(() => {
     const timer = setTimeout(
       () => fitView({ duration: 350, padding: 0.2 }),
-      120,
+      60,
     );
     return () => clearTimeout(timer);
-  }, [isFullscreen, fitView]);
+  }, [graph.rootId, direction, isFullscreen, fitView]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let timer: ReturnType<typeof setTimeout>;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (
+        entry &&
+        entry.contentRect.width > 50 &&
+        entry.contentRect.height > 50
+      ) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fitView({ duration: 250, padding: 0.2 }), 100);
+      }
+    });
+    observer.observe(el);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [fitView]);
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     if (node.type === "stageGroupNode") return;
@@ -148,6 +163,7 @@ export function useTraceabilityCanvas({
   return {
     nodes,
     edges,
+    containerRef,
     onNodesChange,
     onEdgesChange,
     onNodeClick,

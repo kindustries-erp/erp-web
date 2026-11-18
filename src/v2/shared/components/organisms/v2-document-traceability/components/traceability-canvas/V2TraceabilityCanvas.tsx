@@ -94,7 +94,7 @@ function CanvasInner({
       : t("v2.traceability.canvas.toHorizontal");
 
   return (
-    <div className="relative h-full w-full">
+    <div ref={canvas.containerRef} className="relative h-full w-full">
       <ReactFlow
         nodes={canvas.nodes}
         edges={canvas.edges}

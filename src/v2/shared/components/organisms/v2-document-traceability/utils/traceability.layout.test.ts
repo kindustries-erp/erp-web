@@ -157,6 +157,19 @@ describe("computeTraceabilityLayout", () => {
     expect(first.edges.map((e) => e.id)).toEqual(second.edges.map((e) => e.id));
   });
 
+  it("equalizes stage column heights and centers cards vertically in horizontal layout", () => {
+    const layout = computeTraceabilityLayout({
+      graph,
+      direction: "horizontal",
+      allowEdit: false,
+      actions,
+    });
+    const stageNodes = layout.nodes.filter((n) => n.type === "stageGroupNode");
+    const heights = stageNodes.map((s) => s.style?.height);
+    const uniqueHeights = new Set(heights);
+    expect(uniqueHeights.size).toBe(1);
+  });
+
   it("returns no nodes for an empty graph", () => {
     const empty = { ...graph, nodes: [], edges: [] };
     expect(

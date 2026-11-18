@@ -94,7 +94,7 @@ export const V2TraceNode = React.memo(
         className={cn(
           "group relative z-10 w-[300px] cursor-pointer overflow-hidden rounded-2xl bg-surface text-left",
           isActive
-            ? "border-2 border-primary border-l-4 border-l-primary shadow-md ring-2 ring-primary ring-offset-2 ring-offset-surface"
+            ? "border-2 border-primary border-l-4 border-l-primary shadow-md"
             : (meta.cardBorderCls ??
                 "border border-border border-l-4 border-l-muted-fg/40 hover:border-border"),
           dragging
@@ -128,10 +128,13 @@ export const V2TraceNode = React.memo(
               getPartnerIcon(meta.isInvoiceIn, meta.isInvoiceOut)}
             <V2Text as="span" className="line-clamp-1 truncate">
               {node.restricted ? (
-                <span className="flex items-center gap-1 italic text-muted-fg">
+                <V2Text
+                  as="span"
+                  className="flex items-center gap-1 italic text-muted-fg"
+                >
                   <Lock className="h-3 w-3" />{" "}
                   {t("v2.traceability.node.restricted")}
-                </span>
+                </V2Text>
               ) : (
                 subtitle
               )}

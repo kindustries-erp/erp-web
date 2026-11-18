@@ -49,7 +49,7 @@ export function computeBaseTraceabilityLayout({
 }: Omit<TraceabilityLayoutInput, "selectedNodeId">): TraceabilityLayout {
   const docsByStage = groupByStage(graph.nodes);
   const activeStages = TRACEABILITY_STAGES.filter(
-    (stage) => (docsByStage.get(stage.key)?.length ?? 0) > 0,
+    (s) => (docsByStage.get(s.key)?.length ?? 0) > 0,
   );
   const maxDocs = Math.max(
     1,
@@ -191,10 +191,8 @@ function groupByStage(
   nodes: TraceabilityNode[],
 ): Map<TraceabilityStageKey, TraceabilityNode[]> {
   const groups = new Map<TraceabilityStageKey, TraceabilityNode[]>(
-    TRACEABILITY_STAGES.map((stage) => [stage.key, []]),
+    TRACEABILITY_STAGES.map((s) => [s.key, []]),
   );
-  for (const node of nodes) {
-    groups.get(getStageForDocType(node.docType).key)?.push(node);
-  }
+  nodes.forEach((n) => groups.get(getStageForDocType(n.docType).key)?.push(n));
   return groups;
 }
