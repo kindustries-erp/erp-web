@@ -63,10 +63,18 @@ export const traceabilityLocaleEn: V2ModuleLocale["en"] = {
   canvas: {
     toVertical: "Switch to vertical layout",
     toHorizontal: "Switch to horizontal layout",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    fitView: "Fit to screen",
+    stageEmpty: "No documents in this stage",
     legend: {
+      title: "Canvas Legend",
+      compact: "Legend",
       receipt: "Cash Inflow",
       payment: "Cash Outflow",
       current: "Current Document",
+      offBook: "Off-ERP (Internal)",
+      toggle: "Toggle legend visibility",
     },
   },
   pipeline: { empty: "No documents" },

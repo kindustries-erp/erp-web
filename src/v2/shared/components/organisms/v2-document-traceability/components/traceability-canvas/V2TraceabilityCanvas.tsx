@@ -128,7 +128,7 @@ function CanvasInner({
         />
         <Controls
           showInteractive={false}
-          className="!m-3.5 !overflow-hidden !rounded-lg !border-border !bg-surface !shadow-sm"
+          className="!m-3.5 !overflow-hidden !rounded-full !border-border !bg-surface !shadow-md !p-0.5 [&_button]:!rounded-full"
         >
           {onToggleDirection && (
             <ControlButton

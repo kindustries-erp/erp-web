@@ -1,3 +1,4 @@
+import { MarkerType } from "@xyflow/react";
 import { TRACEABILITY_STAGES } from "../constants/traceability.constants";
 import type {
   TraceabilityGraphData,
@@ -37,18 +38,15 @@ export interface TraceabilityLayout {
 }
 
 /**
- * Tính vị trí node và cạnh cho React Flow.
- * Tích hợp thuật toán Barycenter Sweep và Alignment để triệt tiêu giao cắt và gióng hàng các chứng từ liên kết.
+ * Tính toán hình học cơ sở (Base Geometry): tọa độ các cột và node (memo hóa cố định).
  */
-export function computeTraceabilityLayout({
+export function computeBaseTraceabilityLayout({
   graph,
   direction,
   allowEdit,
   allowedDocTypes,
-  selectedNodeId,
   actions,
-}: TraceabilityLayoutInput): TraceabilityLayout {
-  const selection = collectConnectedSelection(graph, selectedNodeId);
+}: Omit<TraceabilityLayoutInput, "selectedNodeId">): TraceabilityLayout {
   const docsByStage = groupByStage(graph.nodes);
   const activeStages = TRACEABILITY_STAGES.filter(
     (stage) => (docsByStage.get(stage.key)?.length ?? 0) > 0,
@@ -58,16 +56,12 @@ export function computeTraceabilityLayout({
     ...activeStages.map((s) => docsByStage.get(s.key)?.length ?? 0),
   );
 
-  // 1. Chuẩn bị danh sách StageNodeGroup cho Barycenter Sweep
   const stageGroups: StageNodeGroup[] = activeStages.map((stage) => ({
     stageKey: stage.key,
     nodes: docsByStage.get(stage.key) ?? [],
   }));
 
-  // 2. Chạy Barycenter Sweep để giảm thiểu việc cắt chéo dây nối
   const sortedStages = barycenterSortStages(stageGroups, graph.edges);
-
-  // 3. Tính toán vị trí x, y gióng hàng cho các node và kích thước stage
   const { nodePositions, stageDimensions } = computeAlignedStagePositions(
     sortedStages,
     graph.edges,
@@ -93,7 +87,6 @@ export function computeTraceabilityLayout({
     });
 
     docs.forEach((doc) => {
-      const isSelected = selectedNodeId === doc.id;
       const pos = nodePositions.get(doc.id) ?? { x: 0, y: 0 };
       nodes.push({
         id: doc.id,
@@ -101,9 +94,9 @@ export function computeTraceabilityLayout({
         parentId: stageNodeId(stage),
         extent: "parent",
         position: pos,
-        selected: isSelected,
-        draggable: false, // Node cố định, người dùng không thể kéo rê
-        zIndex: isSelected ? 30 : 10,
+        selected: false,
+        draggable: false,
+        zIndex: 10,
         data: { node: doc, allowEdit, actions },
       });
     });
@@ -118,11 +111,80 @@ export function computeTraceabilityLayout({
     return buildTraceEdge(
       edge,
       pickEdgeHandles(direction, source, target),
-      selection.edgeIds.has(edge.id),
+      false,
     );
   });
 
   return { nodes, edges };
+}
+
+/**
+ * Cập nhật trạng thái chọn (Selection State) siêu tốc O(N) mà không tính lại vị trí hình học.
+ * Đạt chuẩn hiệu năng 60 FPS cho React Flow.
+ */
+export function applySelectionToLayout(
+  baseLayout: TraceabilityLayout,
+  graph: TraceabilityGraphData,
+  selectedNodeId?: string | null,
+): TraceabilityLayout {
+  if (!selectedNodeId) {
+    const hasActive = baseLayout.nodes.some((n) => n.selected);
+    if (!hasActive) return baseLayout;
+  }
+  const selection = collectConnectedSelection(graph, selectedNodeId);
+
+  const nodes = baseLayout.nodes.map((node) => {
+    if (node.type !== "traceabilityNode") return node;
+    const isSelected = selectedNodeId === node.id;
+    if (
+      node.selected === isSelected &&
+      node.zIndex === (isSelected ? 30 : 10)
+    ) {
+      return node;
+    }
+    return { ...node, selected: isSelected, zIndex: isSelected ? 30 : 10 };
+  });
+
+  const edges = baseLayout.edges.map((edge) => {
+    const inSelection = selection.edgeIds.has(edge.id);
+    if (
+      edge.animated === inSelection &&
+      edge.zIndex === (inSelection ? 40 : 30)
+    ) {
+      return edge;
+    }
+    const strokeColor = inSelection ? "var(--primary)" : "var(--muted-fg)";
+    return {
+      ...edge,
+      animated: inSelection,
+      zIndex: inSelection ? 40 : 30,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 14,
+        height: 14,
+        color: strokeColor,
+      },
+      style: {
+        ...edge.style,
+        stroke: strokeColor,
+        strokeWidth: inSelection ? 2.2 : 1.8,
+      },
+    };
+  });
+
+  return { nodes, edges };
+}
+
+/**
+ * Tính vị trí node và cạnh cho React Flow (hỗ trợ tương thích ngược).
+ */
+export function computeTraceabilityLayout(
+  input: TraceabilityLayoutInput,
+): TraceabilityLayout {
+  const base = computeBaseTraceabilityLayout(input);
+  return input.selectedNodeId
+    ? applySelectionToLayout(base, input.graph, input.selectedNodeId)
+    : base;
 }
 
 function groupByStage(

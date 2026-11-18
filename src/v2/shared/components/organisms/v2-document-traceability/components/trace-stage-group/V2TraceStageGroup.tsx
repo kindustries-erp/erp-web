@@ -10,90 +10,105 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 function getStageIcon(key: string) {
   switch (key) {
     case "ORDER_STOCK":
-      return <Package className="h-3 w-3 opacity-80" />;
+      return <Package className="h-3 w-3 opacity-90" />;
     case "INVOICE":
-      return <Receipt className="h-3 w-3 opacity-80" />;
+      return <Receipt className="h-3 w-3 opacity-90" />;
     case "PAYMENT":
-      return <CreditCard className="h-3 w-3 opacity-80" />;
+      return <CreditCard className="h-3 w-3 opacity-90" />;
     case "GENERAL_LEDGER":
-      return <BookOpen className="h-3 w-3 opacity-80" />;
+      return <BookOpen className="h-3 w-3 opacity-90" />;
     default:
       return null;
   }
 }
 
-/** Khung nền một giai đoạn trên canvas, kèm nút thêm liên kết khi được phép sửa */
-export const V2TraceStageGroup = React.memo(function V2TraceStageGroup({
-  data,
-}: NodeProps<TraceStageFlowNode>) {
-  const { t } = useV2Translation();
-  const { stage, count, allowEdit, allowedDocTypes, actions } = data;
-  const stageName = t(stage.titleKey);
-  const stepStr = String(stage.stageNo).padStart(2, "0");
+/** Khung nền một giai đoạn trên canvas theo chuẩn Swimlane phân kênh Dribbble */
+export const V2TraceStageGroup = React.memo(
+  function V2TraceStageGroup({ data }: NodeProps<TraceStageFlowNode>) {
+    const { t } = useV2Translation();
+    const { stage, count, allowEdit, allowedDocTypes, actions } = data;
+    const stageName = t(stage.titleKey);
+    const stepStr = String(stage.stageNo).padStart(2, "0");
 
-  const addableTypes = useMemo(
-    () =>
-      allowedDocTypes
-        ? stage.types.filter((type) => allowedDocTypes.includes(type))
-        : stage.types,
-    [stage.types, allowedDocTypes],
-  );
-  const canAdd = Boolean(
-    allowEdit && actions.onAddLink && addableTypes.length > 0,
-  );
+    const addableTypes = useMemo(
+      () =>
+        allowedDocTypes
+          ? stage.types.filter((type) => allowedDocTypes.includes(type))
+          : stage.types,
+      [stage.types, allowedDocTypes],
+    );
+    const canAdd = Boolean(
+      allowEdit && actions.onAddLink && addableTypes.length > 0,
+    );
 
-  return (
-    <div
-      className={cn(
-        "relative h-full w-full rounded-2xl border border-border/70 bg-gradient-to-b from-surface/40 via-surface/10 to-transparent pointer-events-none shadow-2xs",
-        stage.accentBorder,
-      )}
-    >
-      <div className="pointer-events-auto absolute left-3.5 right-3.5 top-2.5 flex items-center justify-between">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <V2Text
-            as="span"
-            className="flex h-4 w-4 items-center justify-center rounded-full bg-surface border border-border/80 font-mono text-[9px] font-bold text-muted-fg shadow-2xs"
-          >
-            {stepStr}
-          </V2Text>
-          <V2Text
-            as="span"
-            className={cn(
-              "flex items-center gap-1 rounded-md border px-2 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider",
-              stage.badgeCls,
-            )}
-          >
-            {getStageIcon(stage.key)}
-            {t(stage.shortTitleKey)}
-          </V2Text>
-          <V2Text
-            as="span"
-            className="font-mono text-[11px] font-medium text-muted-fg"
-          >
-            ({count})
-          </V2Text>
+    return (
+      <div
+        className={cn(
+          "relative h-full w-full rounded-2xl border border-border/70 bg-gradient-to-b from-surface/40 via-surface/10 to-transparent pointer-events-none shadow-2xs transition-colors",
+          stage.accentBorder,
+        )}
+      >
+        <div className="pointer-events-auto absolute left-3.5 right-3.5 top-2.5 flex items-center justify-between">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <V2Text
+              as="span"
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-surface border border-border font-mono text-[9px] font-bold text-muted-fg shadow-2xs"
+            >
+              {stepStr}
+            </V2Text>
+            <V2Text
+              as="span"
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg border px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider shadow-2xs",
+                stage.badgeCls,
+              )}
+            >
+              {getStageIcon(stage.key)}
+              {t(stage.shortTitleKey)}
+            </V2Text>
+            <V2Text
+              as="span"
+              className="font-mono text-[11px] font-medium text-muted-fg"
+            >
+              ({count})
+            </V2Text>
+          </div>
+
+          {canAdd && (
+            <V2Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              className="h-6 gap-1 border border-border bg-surface px-2.5 text-[11px] text-muted-fg shadow-2xs hover:bg-surface-hover hover:text-foreground"
+              title={t("v2.traceability.stage.addLinkTo", { stage: stageName })}
+              onClick={() =>
+                actions.onAddLink?.(
+                  stage.key,
+                  addableTypes.length === 1 ? addableTypes[0] : undefined,
+                )
+              }
+            >
+              <Plus className="h-3 w-3" />
+              <V2Text as="span">{t("v2.traceability.stage.addLink")}</V2Text>
+            </V2Button>
+          )}
         </div>
 
-        {canAdd && (
-          <V2Button
-            type="button"
-            variant="ghost"
-            size="xs"
-            className="h-6 gap-1 border border-border/80 bg-surface/90 px-2 text-[11px] text-muted-fg shadow-2xs hover:bg-surface hover:text-foreground"
-            title={t("v2.traceability.stage.addLinkTo", { stage: stageName })}
-            onClick={() =>
-              actions.onAddLink?.(
-                stage.key,
-                addableTypes.length === 1 ? addableTypes[0] : undefined,
-              )
-            }
-          >
-            <Plus className="h-3 w-3" />
-            <V2Text as="span">{t("v2.traceability.stage.addLink")}</V2Text>
-          </V2Button>
+        {count === 0 && (
+          <div className="flex h-full w-full items-center justify-center p-6">
+            <div className="flex flex-col items-center gap-1 text-center border border-dashed border-border/80 rounded-xl px-4 py-8 max-w-[240px]">
+              <V2Text as="span" className="text-xs text-muted-fg/70">
+                {t("v2.traceability.canvas.stageEmpty")}
+              </V2Text>
+            </div>
+          </div>
         )}
       </div>
-    </div>
-  );
-});
+    );
+  },
+  (prev, next) =>
+    prev.data.count === next.data.count &&
+    prev.data.allowEdit === next.data.allowEdit &&
+    prev.data.stage === next.data.stage &&
+    prev.data.allowedDocTypes === next.data.allowedDocTypes,
+);

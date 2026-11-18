@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { computeTraceabilityLayout } from "./traceability.layout";
+import {
+  applySelectionToLayout,
+  computeBaseTraceabilityLayout,
+  computeTraceabilityLayout,
+} from "./traceability.layout";
 import { collectConnectedSelection } from "./traceability.layout.selection";
 import { pickEdgeHandles } from "./traceability.layout.edges";
 import type {
@@ -166,6 +170,21 @@ describe("computeTraceabilityLayout", () => {
       nodes: [],
       edges: [],
     });
+  });
+
+  it("applies selection to base layout without altering node coordinates", () => {
+    const base = computeBaseTraceabilityLayout({
+      graph,
+      direction: "horizontal",
+      allowEdit: false,
+      actions,
+    });
+    const withSelection = applySelectionToLayout(base, graph, "root");
+    const rootBase = base.nodes.find((n) => n.id === "root");
+    const rootSelected = withSelection.nodes.find((n) => n.id === "root");
+    expect(rootSelected?.selected).toBe(true);
+    expect(rootSelected?.position).toEqual(rootBase?.position);
+    expect(withSelection.edges.find((e) => e.id === "e1")?.animated).toBe(true);
   });
 });
 

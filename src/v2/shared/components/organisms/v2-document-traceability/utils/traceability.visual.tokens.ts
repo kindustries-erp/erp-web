@@ -1,15 +1,27 @@
 import type { TraceabilityNodeType } from "../types/traceability.type";
 
-/** Màu chuẩn: Thu (emerald) và Chi (orange) theo Cashflow Dashboard & Theme Harmonization */
-export const RECEIPT_BADGE = "bg-success-bg text-success border-success/30";
+/**
+ * Màu chuẩn: Thu (success) và Chi (warning) theo Cashflow Dashboard & Theme Harmonization.
+ * Tuân thủ chuẩn V2 Token: không dùng slash opacity trên CSS variables hex (--border, --surface, --approve-fg).
+ */
+export const RECEIPT_BADGE = "bg-success-bg text-success border-border";
 export const RECEIPT_BORDER =
-  "border border-success/30 border-l-[3px] border-l-success hover:border-success/60";
-export const RECEIPT_AMOUNT = "text-success font-bold";
-export const PAYMENT_BADGE = "bg-warning-bg text-warning border-warning/30";
+  "border border-border border-l-4 border-l-success hover:border-border";
+export const RECEIPT_AMOUNT = "text-success font-semibold";
+
+export const PAYMENT_BADGE = "bg-warning-bg text-warning border-border";
 export const PAYMENT_BORDER =
-  "border border-warning/30 border-l-[3px] border-l-warning hover:border-warning/60";
-export const PAYMENT_AMOUNT = "text-warning font-bold";
+  "border border-border border-l-4 border-l-warning hover:border-warning";
+export const PAYMENT_AMOUNT = "text-warning font-semibold";
+
 export const NEUTRAL_BADGE = "bg-muted text-muted-fg border-border";
+export const NEUTRAL_BORDER =
+  "border border-border border-l-4 border-l-muted-fg/40 hover:border-border";
+
+/** Styling dành cho thẻ đang xem (Active / Current Node) theo chuẩn Dribbble Visual Editor */
+export const ACTIVE_NODE_CARD =
+  "border-2 border-primary border-l-4 border-l-primary shadow-md ring-2 ring-primary ring-offset-2 ring-offset-surface";
+export const ACTIVE_NODE_TAG = "bg-primary text-primary-fg font-bold";
 
 export interface TraceabilityVisualMeta {
   /** Mã ngắn hiển thị (HĐ MUA, UNC, GBC...) */

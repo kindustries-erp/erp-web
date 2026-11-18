@@ -17,7 +17,10 @@ import type {
   TraceabilityCanvasActions,
   TraceFlowEdge,
 } from "../../types/traceability.flow.type";
-import { computeTraceabilityLayout } from "../../utils/traceability.layout";
+import {
+  applySelectionToLayout,
+  computeBaseTraceabilityLayout,
+} from "../../utils/traceability.layout";
 
 /**
  * Bọc các callback của cha bằng hàm có tham chiếu ổn định: layout không tính lại
@@ -80,19 +83,25 @@ export function useTraceabilityCanvas({
   // Khóa chuỗi để mảng loại chứng từ tạo bởi cha (mỗi lần render một tham chiếu mới) không làm layout tính lại
   const allowedKey = allowedDocTypes?.join(",") ?? "";
 
-  const layout = useMemo(
+  // 1. Tầng hình học (Base Layout): chỉ tính toán tọa độ khi đồ thị, hướng hoặc quyền sửa thay đổi
+  const baseLayout = useMemo(
     () =>
-      computeTraceabilityLayout({
+      computeBaseTraceabilityLayout({
         graph,
         direction,
         allowEdit,
         allowedDocTypes: allowedKey
           ? (allowedKey.split(",") as TraceabilityNodeType[])
           : undefined,
-        selectedNodeId,
         actions: stableActions,
       }),
-    [graph, direction, allowEdit, allowedKey, selectedNodeId, stableActions],
+    [graph, direction, allowEdit, allowedKey, stableActions],
+  );
+
+  // 2. Tầng chọn (Selection State): cập nhật cờ selected/animated tức thì trong O(N) mà không tính lại Barycenter
+  const layout = useMemo(
+    () => applySelectionToLayout(baseLayout, graph, selectedNodeId),
+    [baseLayout, graph, selectedNodeId],
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
