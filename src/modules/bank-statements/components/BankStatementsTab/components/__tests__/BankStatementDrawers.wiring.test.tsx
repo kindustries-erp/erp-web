@@ -1,11 +1,18 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { v2Cash, v2Bank } = vi.hoisted(() => ({
+const { v2Cash, v2Bank, v2Qr } = vi.hoisted(() => ({
   v2Cash: vi.fn(),
   v2Bank: vi.fn(),
+  v2Qr: vi.fn(),
 }));
 
+vi.mock("@/v2/modules/transfer-qr-bank-statements", () => ({
+  TransferQrBankStatementsDrawer: (props: unknown) => {
+    v2Qr(props);
+    return null;
+  },
+}));
 vi.mock("@/v2/modules/bank-statements", () => ({
   CashTransactionDetailDrawer: (props: unknown) => {
     v2Cash(props);
@@ -39,6 +46,8 @@ const baseProps = {
   accountsData: [],
   isExportOpen: false,
   setIsExportOpen: vi.fn(),
+  isQrOpen: false,
+  setIsQrOpen: vi.fn(),
   isOriginalFilesOpen: false,
   setIsOriginalFilesOpen: vi.fn(),
   isImportOpen: false,
@@ -59,6 +68,7 @@ describe("BankStatementDrawers: chọn drawer chi tiết theo loại sao kê", (
   beforeEach(() => {
     v2Cash.mockReset();
     v2Bank.mockReset();
+    v2Qr.mockReset();
   });
 
   it("tab tiền mặt dùng drawer V2 và nối chọn dòng, lưu, mode", () => {
@@ -89,5 +99,29 @@ describe("BankStatementDrawers: chọn drawer chi tiết theo loại sao kê", (
         onSaved: expect.any(Function),
       }),
     );
+  });
+
+  it("drawer QR chỉ mount ở tab ngân hàng và nhận đúng trạng thái mở", () => {
+    render(
+      <BankStatementDrawers
+        {...(baseProps as any)}
+        type="bank"
+        isQrOpen={true}
+      />,
+    );
+    expect(v2Qr).toHaveBeenCalledWith(
+      expect.objectContaining({ open: true, accounts: [] }),
+    );
+  });
+
+  it("tab tiền mặt không mount drawer QR", () => {
+    render(
+      <BankStatementDrawers
+        {...(baseProps as any)}
+        type="cash"
+        isQrOpen={true}
+      />,
+    );
+    expect(v2Qr).not.toHaveBeenCalled();
   });
 });

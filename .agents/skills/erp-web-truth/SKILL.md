@@ -88,7 +88,7 @@ Tài liệu chi tiết của từng module nằm tại `.agents/skills/modules/<
 - **Phụ tùng VinFast**: `vinfast-parts-stock`, `vinfast-parts-dashboard`
 - **Garage**: `garage-cases`, `garage-dashboard`, `inventory-movements-garage` (chứng từ kho và tồn kho Garage, thay trang Nhập kho Garage; lõi `inventory-movements` và `goods-receipts`; lõi PO dùng chung ở `src/v2/core/purchase-orders/`)
 - **Đối tác & nhà cung cấp**: `business-partners`, `erp-suppliers`
-- **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`
+- **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`, `transfer-qr` (QR chuyển khoản VietQR, lõi `transfer-qr-core`, module `transfer-qr-bank-statements`, nối dropdown Thao tác của tab Ngân hàng)
 - **File đính kèm dùng chung**: `file-attachments` (client `src/v2/shared/files`, organism `V2AttachmentsPanel`, tab Tài liệu ở drawer hóa đơn V2, trang `src/v2/modules/file-attachments-management`, URL chính `/file-attachments`)
 - **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`, `users-management` (lõi `src/v2/core/users`, module `src/v2/modules/users-management`, route `/v2/users-management`), `employees-core` (lõi `src/v2/core/employees`, module `src/v2/modules/employees-management`, route `/v2/employees-management`), `audit-logs` (lõi `src/v2/core/audit`, module `src/v2/modules/audit-logs`, route `/v2/admin/audit-logs`)
 - **Layout và thành phần chuẩn V2**: `v2-layout`, `v2-foundation`, `v2-auth`, `v2-admin-layout`; bảng và drawer V2 nằm trong skill `standardize-table` (`standardize-table/references/v2-table.md`) và `standardize-drawer` (`standardize-drawer/references/v2-drawer.md`)

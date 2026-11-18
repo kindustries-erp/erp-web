@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "transfer-qr",
+  "entity": "TransferQr",
+  "barrel": "src/v2/core/transfer-qr-core/index.ts",
+  "localeNamespace": "transferQr",
+  "exports": {
+    "accountOption": "TransferQrAccountOption",
+    "controller": "useTransferQrController",
+    "batchController": "useTransferQrBatchController",
+    "batchRows": "MAX_BATCH_ROWS",
+    "pasteRows": "parsePastedRows",
+    "drawer": "TransferQrDrawer",
+    "banks": "VIETQR_BANKS",
+    "resolveBankBin": "resolveBankBin",
+    "buildPayload": "buildVietQrPayload",
+    "mode": "TransferQrMode",
+    "drawerTab": "TransferQrDrawerTab",
+    "modeLabelKey": "TRANSFER_QR_MODE_LABEL_KEY"
+  }
+}

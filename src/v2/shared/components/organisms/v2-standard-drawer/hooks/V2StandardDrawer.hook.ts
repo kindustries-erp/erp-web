@@ -10,7 +10,7 @@ import {
 } from "../V2StandardDrawer.type";
 
 export function useStandardDrawer(props: V2StandardDrawerProps) {
-  const { open, mode = "view", tabs, confirmOnClose = false, onClose } = props;
+  const { open, tabs, confirmOnClose = false, onClose } = props;
   const size =
     props.size ??
     (props.layout === "1-column" ? V2DrawerSize.SM : V2DrawerSize.XL);
@@ -86,9 +86,9 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
 
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const requestClose = useCallback(() => {
-    if (confirmOnClose && mode === "edit") setShowConfirmClose(true);
+    if (confirmOnClose) setShowConfirmClose(true);
     else onClose();
-  }, [confirmOnClose, mode, onClose]);
+  }, [confirmOnClose, onClose]);
 
   // Esc Key Handler: Only topmost active drawer listens & closes on Escape
   useEffect(() => {

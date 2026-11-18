@@ -82,3 +82,6 @@ description: Tri thức frontend cho drawer xuất Excel sao kê ngân hàng / s
 ## Lõi `src/v2/core/export-jobs` (job xuất nền dùng chung)
 - API client (`createExportJobApi`), hook SSE (`useExportJobProgress`), store (`createExportProgressStore`), `saveBlob`, `readBlobErrorMessage` nằm ở lõi; `useBankStatementExportProgress` và `bankStatementExportApi` chỉ khai báo cấu hình (đường dẫn, `processId`, key i18n). Import qua barrel `@/v2/core/export-jobs`.
 - Giữ nguyên đường dẫn và tên export của hook/api/store trong module (test mock theo đường dẫn). Chuỗi i18n không đổi.
+
+## Điểm nối QR chuyển khoản
+- Dropdown "Thao tác" của tab Ngân hàng có mục "Tạo mã QR chuyển khoản" (chỉ `type === "bank"`). Drawer là `TransferQrBankStatementsDrawer` của module `transfer-qr-bank-statements`, nhận `accountsData`. Chi tiết: skill `transfer-qr-web`.
