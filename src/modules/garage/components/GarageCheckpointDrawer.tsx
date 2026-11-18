@@ -8,10 +8,14 @@ export interface GarageCheckpointDrawerProps {
   dateTo: string;
   periodLabel: string;
   branchId?: string;
+  classification?: string;
+  classificationName?: string;
+  initialStatus?: string;
+  isFunnel?: boolean;
 }
 
 /**
- * Wrapper dành riêng cho mảng Doanh thu / P&L theo kỳ (Tháng này, Tuần này, Hôm nay).
+ * Wrapper dành riêng cho mảng Doanh thu / P&L theo kỳ (Tháng này, Tuần này, Hôm nay hoặc theo Phân loại ERP).
  * Bọc component lõi GarageCasesDetailDrawer với scope checkpoint và showProfitMetrics={true}.
  */
 export function GarageCheckpointDrawer({
@@ -21,6 +25,10 @@ export function GarageCheckpointDrawer({
   dateTo,
   periodLabel,
   branchId,
+  classification,
+  classificationName,
+  initialStatus,
+  isFunnel,
 }: GarageCheckpointDrawerProps) {
   if (!open) return null;
   return (
@@ -33,6 +41,10 @@ export function GarageCheckpointDrawer({
         dateTo,
         periodLabel,
         branchId,
+        classification,
+        classificationName,
+        initialStatus,
+        isFunnel,
       }}
       showProfitMetrics={true}
     />

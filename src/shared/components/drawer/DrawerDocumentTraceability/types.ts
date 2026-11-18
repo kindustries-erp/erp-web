@@ -2,7 +2,7 @@ import type {
   TraceabilityGraphData,
   TraceabilityNode,
   TraceabilityNodeType,
-} from "@/shared/types/traceability";
+} from "@/v2/shared/components/organisms/v2-document-traceability";
 
 export type BusinessStageKey =
   | "ORDER_STOCK"
@@ -41,6 +41,10 @@ export interface DrawerDocumentTraceabilityProps {
   /** Callback mở modal / drawer chỉnh sửa chi tiết giao dịch thu chi ngoài (số tiền, ngày, nội dung) */
   onEditManualSettlement?: (node: TraceabilityNode) => void;
   className?: string;
+  /** Tùy chọn bọc nội dung trong DrawerSection chuẩn */
+  wrapInSection?: boolean;
+  /** Tiêu đề DrawerSection tùy biến */
+  sectionTitle?: React.ReactNode;
 }
 
 export interface NodeCardCustomData

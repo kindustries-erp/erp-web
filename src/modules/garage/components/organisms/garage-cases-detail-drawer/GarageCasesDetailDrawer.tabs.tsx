@@ -15,6 +15,8 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     isReceipt,
     isCheckpoint,
     showProfitMetrics,
+    classification,
+    checkpointSummary,
     classificationCount,
     receivableClassificationRows,
     payableClassificationRows,
@@ -30,13 +32,16 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     setSelectedCaseCode,
     cases,
     casesCount,
+    isFunnel,
+    initialStatus,
   } = logic;
 
   return useMemo<V2TabItemData[]>(() => {
+    const isFunnelScope = Boolean(isCheckpoint && (classification || isFunnel));
     const mainTab: V2TabItemData = {
       key: "cases",
       label: isCheckpoint
-        ? t("cases.tabs.list", "Danh sách vụ việc")
+        ? t("cases.tabs.carList", "Danh sách xe")
         : t("debts.detailDrawer.tabRemainingCases", "Phiếu còn công nợ"),
       icon: <Clock className="w-3.5 h-3.5" />,
       badgeCount: casesCount,
@@ -46,6 +51,10 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
           initialDebtType={partnerDebtType}
           onOpenCaseDetail={setSelectedCaseCode}
           showProfitMetrics={showProfitMetrics}
+          classification={classification}
+          funnelCounts={checkpointSummary?.funnelCounts}
+          isFunnelScope={isFunnelScope}
+          initialCategoryFilter={initialStatus}
         />
       ),
     };
@@ -95,6 +104,9 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     ];
   }, [
     isCheckpoint,
+    classification,
+    isFunnel,
+    initialStatus,
     showProfitMetrics,
     cases,
     casesCount,

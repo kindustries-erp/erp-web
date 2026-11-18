@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { FileSpreadsheet, Landmark, Link2, Users } from "lucide-react";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 import {
   V2TabBar,
   V2TabBarVariant,
@@ -32,48 +33,7 @@ export const GarageCaseDetailsTab = React.memo(function GarageCaseDetailsTab(
     useGarageCaseDetailsTab(props);
 
   const subTabs: V2TabItemData[] = React.useMemo(() => {
-    if (activeViewMode === "partner") {
-      return [
-        {
-          key: "details",
-          label: t("cases.drawer.subTabQuoteDetails", "Chi tiết báo giá"),
-          icon: FileSpreadsheet,
-          alwaysShowIcon: true,
-        },
-        {
-          key: "financials",
-          label: t("cases.drawer.subTabFinancials", "Tài chính"),
-          icon: Landmark,
-          badgeCount:
-            financialsBadgeCount && financialsBadgeCount > 0
-              ? financialsBadgeCount
-              : undefined,
-          alwaysShowIcon: true,
-        },
-        {
-          key: "linked_docs",
-          label: t("cases.drawer.subTabLinkedDocs", "Chứng từ liên kết"),
-          icon: Link2,
-          badgeCount:
-            linkedDocsBadgeCount && linkedDocsBadgeCount > 0
-              ? linkedDocsBadgeCount
-              : undefined,
-          alwaysShowIcon: true,
-        },
-        {
-          key: "partner",
-          label: t(
-            "cases.drawer.subTabObjectDetails",
-            "Chi tiết theo đối tượng",
-          ),
-          icon: Users,
-          badgeCount: partnerCasesCount > 0 ? partnerCasesCount : undefined,
-          alwaysShowIcon: true,
-        },
-      ];
-    }
-
-    return [
+    const tabs: V2TabItemData[] = [
       {
         key: "details",
         label: t("cases.drawer.subTabQuoteDetails", "Chi tiết báo giá"),
@@ -101,6 +61,18 @@ export const GarageCaseDetailsTab = React.memo(function GarageCaseDetailsTab(
         alwaysShowIcon: true,
       },
     ];
+
+    if (activeViewMode === "partner") {
+      tabs.push({
+        key: "partner",
+        label: t("cases.drawer.subTabObjectDetails", "Chi tiết theo đối tượng"),
+        icon: Users,
+        badgeCount: partnerCasesCount > 0 ? partnerCasesCount : undefined,
+        alwaysShowIcon: true,
+      });
+    }
+
+    return tabs;
   }, [
     t,
     financialsBadgeCount,
@@ -156,8 +128,28 @@ export const GarageCaseDetailsTab = React.memo(function GarageCaseDetailsTab(
 
       {/* ─── 4. SUB-TAB 3: CHỨNG TỪ LIÊN KẾT ─── */}
       {activeViewMode === "linked_docs" && (
-        <div className="space-y-4">
-          {linkedDocsSlot || (
+        <div className="flex-1 min-h-0 flex flex-col space-y-4">
+          {linkedDocsSlot ? (
+            <DrawerSection
+              title={
+                <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                  <Link2 className="w-3.5 h-3.5 text-primary" />
+                  {t("cases.drawer.subTabLinkedDocs", "Chứng từ liên kết")}
+                  {linkedDocsBadgeCount && linkedDocsBadgeCount > 0 ? (
+                    <span className="text-xs font-normal text-muted-foreground ml-1">
+                      ({linkedDocsBadgeCount})
+                    </span>
+                  ) : null}
+                </span>
+              }
+              collapsible
+              defaultCollapsed={false}
+              fitViewportHeight
+              bodyClassName="flex-1 min-h-0 flex flex-col"
+            >
+              {linkedDocsSlot}
+            </DrawerSection>
+          ) : (
             <div className="p-8 text-center text-xs text-muted-foreground">
               {t(
                 "cases.drawer.noLinkedDocsContent",

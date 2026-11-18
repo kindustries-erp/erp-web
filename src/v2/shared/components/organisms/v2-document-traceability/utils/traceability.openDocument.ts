@@ -1,6 +1,9 @@
-import type { TraceabilityNodeType } from "@/v2/shared/components/organisms/v2-document-traceability";
+import type { TraceabilityNodeType } from "../types/traceability.type";
 
-/** Loại chứng từ → tên sự kiện mở chứng từ toàn cục (cùng hợp đồng với shell V1 đang lắng nghe) */
+/** Tên sự kiện toàn cục mà shell đang lắng nghe để mở drawer chứng từ */
+export const OPEN_ERP_DOCUMENT_EVENT = "open_erp_document";
+
+/** Loại chứng từ → loại drawer mà shell mở (cùng hợp đồng với shell V1) */
 const DOCUMENT_EVENT_TYPE: Partial<Record<TraceabilityNodeType, string>> = {
   INVOICE: "erp_invoice",
   BANK_TXN: "bank_transaction",
@@ -22,3 +25,14 @@ export const toOpenDocumentDetail = (
   const type = DOCUMENT_EVENT_TYPE[docType];
   return type ? { type, id } : null;
 };
+
+/** Mở chứng từ qua sự kiện toàn cục; trả false khi loại chứng từ không có màn hình mở */
+export function openErpDocument(
+  docType: TraceabilityNodeType,
+  id: string,
+): boolean {
+  const detail = toOpenDocumentDetail(docType, id);
+  if (!detail) return false;
+  window.dispatchEvent(new CustomEvent(OPEN_ERP_DOCUMENT_EVENT, { detail }));
+  return true;
+}

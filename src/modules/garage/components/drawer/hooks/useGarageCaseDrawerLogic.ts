@@ -16,11 +16,9 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { SettlementSubmissionItem } from "@/modules/garage/components/GarageCaseSettlementDrawerModal";
 import type { DrawerAuditLogItem } from "@/shared/components/StandardFormDrawer";
-import type {
-  TraceabilityGraphData,
-  TraceabilityNode,
-  TraceabilityEdge,
-} from "@/shared/types/traceability";
+import type { TraceabilityGraphData } from "@/shared/types/traceability";
+import { buildGarageCaseTraceabilityGraph } from "@/v2/core/garage-cases";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { money } from "@/shared/utils/format";
 import type { GarageCaseDetailViewMode } from "../../garage-case-details-tab/GarageCaseDetailsTab.type";
 
@@ -43,6 +41,7 @@ export function useGarageCaseDrawerLogic({
   onSuccess,
 }: UseGarageCaseDrawerLogicOptions) {
   const { t } = useTranslation(["garage", "common"]);
+  const { t: tTrace } = useV2Translation();
   const queryClient = useQueryClient();
   const { selectedBranchId } = useGarageStore();
   const canUpdateGarage = useHasPermission(
@@ -352,267 +351,23 @@ export function useGarageCaseDrawerLogic({
     activeSettlements,
   );
 
-  // Real-time Reactive Graph Data
+  // Sơ đồ chứng từ liên kết: gộp đồ thị server với thay đổi đang sửa (logic ở core garage-cases)
   const mergedGraphData = useMemo<TraceabilityGraphData | null>(() => {
     if (!selectedCase) return null;
-
-    const rootId = selectedCase.id;
-    const nodesMap = new Map<string, TraceabilityNode>();
-    const edgesMap = new Map<string, TraceabilityEdge>();
-
-    if (serverGraph) {
-      for (const node of serverGraph.nodes) {
-        if (node.id === rootId) {
-          nodesMap.set(node.id, node);
-        } else if (node.docType === "INVOICE") {
-          const isStillActive = activeLinkedInvoices.some(
-            (inv: any) =>
-              inv.invoiceId === node.id ||
-              inv.id === node.id ||
-              inv.invoice?.id === node.id,
-          );
-          if (isStillActive) {
-            nodesMap.set(node.id, node);
-          }
-        } else if (node.docType === "BANK_TXN") {
-          const isStillActive = activeSettlements.some(
-            (s: any) =>
-              s.id === node.id ||
-              `manual-${s.id}` === node.id ||
-              s.tempId === node.id ||
-              s.bank_transaction_id === node.id ||
-              s.bankTransactionId === node.id,
-          );
-          if (isStillActive) {
-            nodesMap.set(node.id, node);
-          }
-        } else {
-          nodesMap.set(node.id, node);
-        }
-      }
-
-      for (const edge of serverGraph.edges) {
-        if (nodesMap.has(edge.source) && nodesMap.has(edge.target)) {
-          edgesMap.set(edge.id, edge);
-        }
-      }
-    }
-
-    if (!nodesMap.has(rootId)) {
-      nodesMap.set(rootId, {
-        id: rootId,
-        docType: "GARAGE_CASE",
-        docNo: selectedCase.soChungTu || `PDV-${selectedCase.id.slice(0, 8)}`,
-        title:
-          `Sổ báo giá ${selectedCase.bienSoXe ? "(" + selectedCase.bienSoXe + ")" : ""}`.trim(),
-        date: selectedCase.ngayPhatSinh
-          ? new Date(selectedCase.ngayPhatSinh).toISOString().slice(0, 10)
-          : null,
-        amount: Number(
-          selectedCase.tienCoThue ||
-            selectedCase.rawData?.TongTienThanhToan ||
-            selectedCase.doanhThu ||
-            0,
-        ),
-        status: selectedCase.tenTinhTrangDichVu || "Đang xử lý",
-        statusVariant:
-          selectedCase.tinhTrangDichVu === 3 ? "default" : "secondary",
-        partnerName: selectedCase.khachHangName,
-        depth: 0,
-        isCurrent: true,
-        hasPermission: true,
-        restricted: false,
-        requiredResource: "garage",
-      });
-    }
-
-    for (const inv of activeLinkedInvoices || []) {
-      const invId = inv.invoiceId || inv.id || inv.invoice?.id;
-      if (!invId) continue;
-      const isOut = inv.linkType === "OUT" || inv.direction === "OUT";
-      const invNo = inv.invoiceNo || inv.invoice?.invoiceNo || "HĐ";
-      const serial = inv.serialNo || inv.invoice?.serialNo;
-      const totalAmt = Number(inv.totalAmount || inv.invoice?.totalAmount || 0);
-
-      if (!nodesMap.has(invId)) {
-        nodesMap.set(invId, {
-          id: invId,
-          docType: "INVOICE",
-          docNo: invNo,
-          title:
-            `HĐ ${isOut ? "đầu ra" : "đầu vào"} ${serial ? "(" + serial + ")" : ""}`.trim(),
-          date:
-            inv.invoiceDate ||
-            inv.invoice?.invoiceDate ||
-            inv.createdAt ||
-            null,
-          amount: totalAmt,
-          status: inv.status || inv.invoice?.status || "CONFIRMED",
-          statusVariant: "default",
-          partnerName:
-            inv.partnerName ||
-            inv.sellerName ||
-            inv.buyerName ||
-            inv.invoice?.sellerName ||
-            inv.invoice?.buyerName ||
-            "",
-          depth: 1,
-          isCurrent: false,
-          hasPermission: true,
-          restricted: false,
-          requiredResource: "invoices",
-        });
-      }
-
-      const edgeId = `e-case-${rootId}-${invId}`;
-      if (!edgesMap.has(edgeId)) {
-        edgesMap.set(edgeId, {
-          id: edgeId,
-          source: rootId,
-          target: invId,
-          relationType: "CASE_ATTACHED",
-          label: isOut ? "HĐ Bán ra" : "HĐ Mua vào",
-          isTransitive: false,
-        });
-      }
-    }
-
-    for (const s of activeSettlements || []) {
-      const manualId = s.id || s.tempId || `manual-${Date.now()}`;
-      const isReceipt =
-        s.settlement_type === "RECEIPT" || s.settlementType === "RECEIPT";
-      const isOnSystem =
-        s.source_channel === "ON_SYSTEM" || s.sourceChannel === "ON_SYSTEM";
-      const sAmt = Number(s.amount || 0);
-      const category = s.category || "TIEN_MAT_NGOAI";
-
-      if (isOnSystem) {
-        const txnId = s.bank_transaction_id || s.bankTransactionId || manualId;
-        if (!nodesMap.has(txnId)) {
-          nodesMap.set(txnId, {
-            id: txnId,
-            docType: "BANK_TXN",
-            docNo:
-              s.referenceNumber ||
-              s.reference_number ||
-              `TXN-${txnId.slice(0, 8)}`,
-            title: `${isReceipt ? "Thu ngân hàng" : "Chi ngân hàng"} (${s.bankName || "ERP"})`,
-            date:
-              s.trans_date ||
-              s.transDate ||
-              s.created_at ||
-              s.createdAt ||
-              null,
-            amount: sAmt,
-            netOffAmount: sAmt,
-            status: "CLEARED",
-            statusVariant: "default",
-            partnerName:
-              s.partner_name ||
-              s.partnerName ||
-              s.correspondentName ||
-              "Đối tác",
-            depth: 1,
-            isCurrent: false,
-            hasPermission: true,
-            restricted: false,
-            requiredResource: "bank_statements",
-          });
-        }
-
-        const edgeId = `e-case-${rootId}-${txnId}`;
-        if (!edgesMap.has(edgeId)) {
-          edgesMap.set(edgeId, {
-            id: edgeId,
-            source: rootId,
-            target: txnId,
-            relationType: "NET_OFF",
-            label: `${isReceipt ? "Cấn trừ Thu" : "Cấn trừ Chi"}: ${sAmt.toLocaleString("vi-VN")} ₫`,
-            amount: sAmt,
-            isTransitive: false,
-          });
-        }
-      } else {
-        if (!nodesMap.has(manualId)) {
-          nodesMap.set(manualId, {
-            id: manualId,
-            docType: "BANK_TXN",
-            docNo: `NOTE-${category}`,
-            title: `${isReceipt ? "Khoản thu ngoài ERP" : "Khoản chi ngoài ERP"} (${s.partner_name || s.partnerName || "Nội bộ"})`,
-            date: s.trans_date || s.transDate || s.createdAt || null,
-            amount: sAmt,
-            netOffAmount: sAmt,
-            status: "MANUAL_NOTE",
-            statusVariant: "outline",
-            partnerName: s.partner_name || s.partnerName || "Nội bộ",
-            depth: 1,
-            isCurrent: false,
-            hasPermission: true,
-            restricted: false,
-            requiredResource: "bank_statements",
-            metadata: {
-              isOffSystem: true,
-              note: s.note,
-              category: s.category,
-            },
-          });
-        }
-
-        const edgeId = `e-case-${rootId}-${manualId}`;
-        if (!edgesMap.has(edgeId)) {
-          edgesMap.set(edgeId, {
-            id: edgeId,
-            source: rootId,
-            target: manualId,
-            relationType: "NET_OFF",
-            label: `${isReceipt ? "Thu ngoài ERP" : "Chi ngoài ERP"}: ${sAmt.toLocaleString("vi-VN")} ₫`,
-            amount: sAmt,
-            isTransitive: false,
-          });
-        }
-      }
-    }
-
-    const nodes = Array.from(nodesMap.values());
-    const edges = Array.from(edgesMap.values());
-
-    const totalAmount = Number(
-      selectedCase.tienCoThue ||
-        selectedCase.rawData?.TongTienThanhToan ||
-        selectedCase.doanhThu ||
-        0,
-    );
-    let directCount = 0;
-    let transitiveCount = 0;
-    for (const n of nodes) {
-      if (n.id === rootId) continue;
-      if (n.depth === 1) directCount++;
-      else transitiveCount++;
-    }
-
-    const totalNetOffAmount = edges
-      .filter((e) => e.relationType === "NET_OFF")
-      .reduce((sum, e) => sum + Number(e.amount || 0), 0);
-
-    const summary = {
-      totalAmount,
-      totalNetOffAmount,
-      matchRatio:
-        totalAmount > 0
-          ? Math.min(100, Math.round((totalNetOffAmount / totalAmount) * 100))
-          : 0,
-      directCount,
-      transitiveCount,
-    };
-
-    return {
-      rootId,
-      rootType: "GARAGE_CASE" as const,
-      nodes,
-      edges,
-      summary,
-    };
-  }, [selectedCase, activeSettlements, activeLinkedInvoices, serverGraph]);
+    return buildGarageCaseTraceabilityGraph({
+      caseInfo: selectedCase as never,
+      serverGraph: (serverGraph ?? null) as never,
+      settlements: activeSettlements as never,
+      linkedInvoices: activeLinkedInvoices as never,
+      t: tTrace,
+    }) as TraceabilityGraphData;
+  }, [
+    selectedCase,
+    activeSettlements,
+    activeLinkedInvoices,
+    serverGraph,
+    tTrace,
+  ]);
 
   // Audit items
   const auditItems = useMemo<DrawerAuditLogItem[]>(() => {

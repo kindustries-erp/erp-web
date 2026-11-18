@@ -60,6 +60,7 @@ export const GarageCasesDetailDrawer: React.FC<
     currentTab,
     dateFrom,
     dateTo,
+    classificationName,
   } = logic;
 
   const drawerTabs = useGarageCasesDrawerTabs(logic);
@@ -88,7 +89,7 @@ export const GarageCasesDetailDrawer: React.FC<
         subtitle={
           isCheckpoint
             ? dateFrom && dateTo
-              ? `Khoảng thời gian: ${dateFrom} đến ${dateTo}`
+              ? `Khoảng thời gian: ${dateFrom} đến ${dateTo}${classificationName ? ` · Phân loại: ${classificationName}` : ""}`
               : undefined
             : isReceipt
               ? t(

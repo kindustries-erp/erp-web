@@ -32,7 +32,7 @@ export interface V2TraceNodeHeaderProps {
   t: (key: string, options?: Record<string, unknown>) => string;
 }
 
-/** Hàng đầu thẻ: nhãn loại, trạng thái thuế, số chứng từ, và các nút thao tác */
+/** Hàng đầu thẻ: nhãn loại chứng từ, trạng thái thuế, số chứng từ và khay action hover */
 export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
   const {
     meta,
@@ -47,15 +47,16 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
     t,
   } = props;
   const stopDrag = (e: React.SyntheticEvent) => e.stopPropagation();
-  const actionClass = "h-6 w-6 nodrag nopan transition-colors";
+  const actionClass =
+    "h-6 w-6 nodrag nopan opacity-70 group-hover:opacity-100 transition-opacity";
 
   return (
-    <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2 ">
+    <div className="flex items-center justify-between gap-2 border-b border-border/80 bg-surface/50 px-3 py-2">
       <div className="flex min-w-0 items-center gap-1.5">
         <V2Text
           as="span"
           className={cn(
-            "flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider",
+            "flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider shadow-2xs",
             meta.badgeCls,
           )}
           title={t(meta.fullTitleKey)}
@@ -69,6 +70,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
           )}
           {meta.label}
         </V2Text>
+
         {statusLabel && (
           <V2Text
             as="span"
@@ -80,12 +82,14 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             {statusLabel}
           </V2Text>
         )}
+
         <V2Text
           as="span"
-          className="truncate font-mono text-xs font-bold text-foreground "
+          className="truncate font-mono text-xs font-bold text-foreground"
         >
           {docNo}
         </V2Text>
+
         {docNo !== "***" && (
           <V2Button
             type="button"
@@ -94,7 +98,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             onClick={props.onCopy}
             onPointerDown={stopDrag}
             onMouseDown={stopDrag}
-            className="nodrag nopan h-5 w-5 text-muted-fg transition-colors hover:text-muted-fg "
+            className="nodrag nopan h-5 w-5 text-muted-fg transition-colors hover:text-foreground"
             title={
               copied
                 ? t("v2.traceability.node.copied")
@@ -114,11 +118,12 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
         {isCurrent && (
           <V2Text
             as="span"
-            className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-semibold text-foreground  "
+            className="rounded-full bg-primary/10 border border-primary/30 px-2 py-0.5 font-mono text-[9px] font-bold tracking-wider text-primary shadow-2xs"
           >
             {t("v2.traceability.node.current")}
           </V2Text>
         )}
+
         {canUnlink && (
           <V2Button
             type="button"
@@ -126,7 +131,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             size="icon-xs"
             className={cn(
               actionClass,
-              "text-muted-fg hover:bg-destructive/10 hover:text-destructive ",
+              "text-muted-fg hover:bg-destructive/10 hover:text-destructive",
             )}
             title={t("v2.traceability.node.unlink")}
             onClick={props.onUnlink}
@@ -136,6 +141,7 @@ export function V2TraceNodeHeader(props: V2TraceNodeHeaderProps) {
             <Trash2 className="h-3.5 w-3.5" />
           </V2Button>
         )}
+
         {restricted ? (
           <div
             className="cursor-not-allowed rounded p-1 text-muted-fg"

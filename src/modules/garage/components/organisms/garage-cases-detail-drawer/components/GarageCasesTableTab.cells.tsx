@@ -15,53 +15,82 @@ export const CLASSIFICATION_CONFIG: Record<
   {
     label: string;
     icon: React.ComponentType<{ className?: string }>;
-    color: string;
+    dot: string;
   }
 > = {
   SUA_CHUA_CHUNG: {
     label: "Sửa chữa chung",
     icon: Wrench,
-    color: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20",
+    dot: "#059669",
   },
   KY_GUI_NOI_BO: {
     label: "Ký gửi / Nội bộ",
     icon: Building2,
-    color:
-      "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
+    dot: "#0D9488",
   },
   OJ_NGOAI: {
     label: "OJ Ngoài",
     icon: Zap,
-    color:
-      "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20",
+    dot: "#EA580C",
   },
   KHAC: {
     label: "Khác",
     icon: HelpCircle,
-    color:
-      "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20",
+    dot: "#475569",
   },
 };
+
+export function normalizeClassificationKey(key?: string | null): string {
+  if (!key) return "KHAC";
+  const upper = key.trim().toUpperCase();
+  if (upper === "SUA_CHUA_CHUNG" || upper === "SỬA CHỮA CHUNG") {
+    return "SUA_CHUA_CHUNG";
+  }
+  if (
+    [
+      "KY_GUI_NOI_BO",
+      "KY_GUI",
+      "NOI_BO",
+      "KÝ GỬI / NỘI BỘ",
+      "KÝ GỬI/ NỘI BỘ",
+    ].includes(upper)
+  ) {
+    return "KY_GUI_NOI_BO";
+  }
+  if (
+    [
+      "OJ",
+      "OJ_NGOAI",
+      "XE NGOÀI (OJ)",
+      "XE NGOAI (OJ)",
+      "OMODA",
+      "JAECOO",
+    ].includes(upper)
+  ) {
+    return "OJ_NGOAI";
+  }
+  return "KHAC";
+}
 
 export function renderClassificationOrDebtorCell(
   row: GarageCaseDetailRow,
   showProfitMetrics?: boolean,
 ) {
-  if (showProfitMetrics && row.classification) {
-    const cfg =
-      CLASSIFICATION_CONFIG[row.classification] || CLASSIFICATION_CONFIG.KHAC;
+  if (showProfitMetrics) {
+    const key = normalizeClassificationKey(row.classification);
+    const cfg = CLASSIFICATION_CONFIG[key] || CLASSIFICATION_CONFIG.KHAC;
     const Icon = cfg.icon;
     return (
-      <Badge
-        variant="outline"
-        className={cn(
-          "text-[10px] px-1.5 py-0.5 font-medium inline-flex items-center gap-1",
-          cfg.color,
-        )}
-      >
-        <Icon className="w-2.5 h-2.5" />
-        <span>{cfg.label}</span>
-      </Badge>
+      <div className="flex items-center gap-2 min-w-0">
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ backgroundColor: cfg.dot }}
+        />
+        <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        <span className="font-medium text-foreground truncate text-xs">
+          {cfg.label}
+        </span>
+      </div>
     );
   }
 

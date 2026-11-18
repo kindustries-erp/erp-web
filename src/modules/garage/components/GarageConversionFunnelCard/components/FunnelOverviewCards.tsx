@@ -1,25 +1,21 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, Clock, FileText, Inbox, XCircle } from "lucide-react";
-import { money, shortMoney } from "@/shared/utils/format";
+import { money } from "@/shared/utils/format";
 import type { GarageProjectedPipeline } from "../../../api/garageDashboardApi";
-import { FunnelRateProgressBar } from "./FunnelRateProgressBar";
+import type { FunnelStageData } from "../types";
 import { FunnelStageCard } from "./FunnelStageCard";
-
-interface Stage {
-  count: number;
-  amount: number;
-  rate?: number;
-}
+import { FunnelProjectedStats } from "./FunnelProjectedStats";
 
 interface FunnelOverviewCardsProps {
-  totalIntake: Stage;
-  quotation: Stage;
-  inProgress: Stage;
-  completed: Stage;
-  cancelled: Stage;
+  totalIntake: FunnelStageData;
+  quotation: FunnelStageData;
+  inProgress: FunnelStageData;
+  completed: FunnelStageData;
+  cancelled: FunnelStageData;
   projectedToday?: GarageProjectedPipeline;
   projectedMonth?: GarageProjectedPipeline;
+  onStageClick?: (stageKey: string, stageTitle: string) => void;
 }
 
 const SUB_CLASS = "text-[11px] text-muted-foreground";
@@ -32,9 +28,25 @@ export function FunnelOverviewCards({
   cancelled,
   projectedToday,
   projectedMonth,
+  onStageClick,
 }: FunnelOverviewCardsProps) {
   const { t } = useTranslation("garage");
   const unit = t("dashboard.funnel.casesUnit", "phiếu");
+
+  const intakeTitle = t("dashboard.funnel.stageIntake", "1. Tổng Tiếp Nhận");
+  const quotationTitle = t("dashboard.funnel.stageQuotation", "2. Báo Giá");
+  const inProgressTitle = t(
+    "dashboard.funnel.stageInProgress",
+    "3. Đang Xử Lý (Dự thu)",
+  );
+  const completedTitle = t(
+    "dashboard.funnel.stageCompleted",
+    "4. Đã Hoàn Thành (Doanh thu)",
+  );
+  const cancelledTitle = t(
+    "dashboard.funnel.stageCancelled",
+    "5. Hủy / Từ Chối",
+  );
 
   return (
     <>
@@ -54,11 +66,14 @@ export function FunnelOverviewCards({
         <FunnelStageCard
           tone="teal"
           icon={<Inbox className="w-4 h-4" />}
-          title={t("dashboard.funnel.stageIntake", "1. Tổng Tiếp Nhận")}
+          title={intakeTitle}
           badge="100%"
           count={totalIntake.count}
           unit={unit}
           amount={money(totalIntake.amount)}
+          onClick={
+            onStageClick ? () => onStageClick("ALL", intakeTitle) : undefined
+          }
         >
           <div className={SUB_CLASS}>
             {t(
@@ -71,11 +86,16 @@ export function FunnelOverviewCards({
         <FunnelStageCard
           tone="violet"
           icon={<FileText className="w-4 h-4" />}
-          title={t("dashboard.funnel.stageQuotation", "2. Báo Giá")}
+          title={quotationTitle}
           badge={`${quotation.rate ?? 0}%`}
           count={quotation.count}
           unit={unit}
           amount={money(quotation.amount)}
+          onClick={
+            onStageClick
+              ? () => onStageClick("QUOTATION", quotationTitle)
+              : undefined
+          }
         >
           <div className={SUB_CLASS}>
             {t(
@@ -88,52 +108,38 @@ export function FunnelOverviewCards({
         <FunnelStageCard
           tone="slate"
           icon={<Clock className="w-4 h-4" />}
-          title={t(
-            "dashboard.funnel.stageInProgress",
-            "3. Đang Xử Lý (Dự thu)",
-          )}
+          title={inProgressTitle}
           badge={`${inProgress.rate ?? 0}%`}
           count={inProgress.count}
           unit={unit}
           amount={money(inProgress.amount)}
+          onClick={
+            onStageClick
+              ? () => onStageClick("IN_PROGRESS", inProgressTitle)
+              : undefined
+          }
         >
-          <div className="flex flex-col gap-1 text-[10.5px]">
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>
-                • {t("dashboard.funnel.todayProjected", "Hôm nay")}:{" "}
-                <strong className="text-foreground">
-                  {projectedToday?.totalCount || 0} xe
-                </strong>
-              </span>
-              <span className="font-mono text-slate-600 dark:text-slate-400 font-medium">
-                {shortMoney(projectedToday?.totalAmount || 0)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-muted-foreground">
-              <span>
-                • {t("dashboard.funnel.monthProjected", "Tháng này")}:{" "}
-                <strong className="text-foreground">
-                  {projectedMonth?.totalCount || inProgress.count} xe
-                </strong>
-              </span>
-              <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">
-                {shortMoney(projectedMonth?.totalAmount || inProgress.amount)}
-              </span>
-            </div>
-          </div>
+          <FunnelProjectedStats
+            projectedToday={projectedToday}
+            projectedMonth={projectedMonth}
+            fallbackCount={inProgress.count}
+            fallbackAmount={inProgress.amount}
+          />
         </FunnelStageCard>
 
         <FunnelStageCard
           tone="emerald"
           icon={<CheckCircle2 className="w-4 h-4" />}
-          title={t(
-            "dashboard.funnel.stageCompleted",
-            "4. Đã Hoàn Thành (Doanh thu)",
-          )}
+          title={completedTitle}
           badge={`${completed.rate ?? 0}%`}
           count={completed.count}
           unit={unit}
           amount={money(completed.amount)}
+          onClick={
+            onStageClick
+              ? () => onStageClick("COMPLETED", completedTitle)
+              : undefined
+          }
         >
           <div className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80">
             {t(
@@ -146,11 +152,16 @@ export function FunnelOverviewCards({
         <FunnelStageCard
           tone="rose"
           icon={<XCircle className="w-4 h-4" />}
-          title={t("dashboard.funnel.stageCancelled", "5. Hủy / Từ Chối")}
+          title={cancelledTitle}
           badge={`${cancelled.rate ?? 0}%`}
           count={cancelled.count}
           unit={unit}
           amount={money(cancelled.amount)}
+          onClick={
+            onStageClick
+              ? () => onStageClick("CANCELLED", cancelledTitle)
+              : undefined
+          }
         >
           <div className={SUB_CLASS}>
             {t(
@@ -160,15 +171,6 @@ export function FunnelOverviewCards({
           </div>
         </FunnelStageCard>
       </div>
-
-      {/* Visual Progress Ratio Bar */}
-      <FunnelRateProgressBar
-        totalCount={totalIntake.count}
-        completed={completed}
-        quotation={quotation}
-        inProgress={inProgress}
-        cancelled={cancelled}
-      />
     </>
   );
 }

@@ -20,31 +20,37 @@ vi.mock("@/v2/modules/finance-invoice/api/financeInvoiceV2Api", () => ({
 }));
 
 // Sơ đồ thật cần canvas; ở đây chỉ kiểm tra các tay cầm được nối đúng
-vi.mock("@/v2/shared/components/organisms/v2-document-traceability", () => ({
-  V2DocumentTraceability: (props: {
-    onAddLink: () => void;
-    onUnlinkNode: (n: unknown) => void;
-    onOpenDocument: (n: unknown) => void;
-  }) => (
-    <div>
-      <button type="button" onClick={() => props.onAddLink()}>
-        mock-add
-      </button>
-      <button
-        type="button"
-        onClick={() => props.onUnlinkNode({ id: "n1", docType: "INVOICE" })}
-      >
-        mock-unlink
-      </button>
-      <button
-        type="button"
-        onClick={() => props.onOpenDocument({ id: "i1", docType: "INVOICE" })}
-      >
-        mock-open
-      </button>
-    </div>
-  ),
-}));
+vi.mock(
+  "@/v2/shared/components/organisms/v2-document-traceability",
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import("@/v2/shared/components/organisms/v2-document-traceability")
+    >()),
+    V2DocumentTraceability: (props: {
+      onAddLink: () => void;
+      onUnlinkNode: (n: unknown) => void;
+      onOpenDocument: (n: unknown) => void;
+    }) => (
+      <div>
+        <button type="button" onClick={() => props.onAddLink()}>
+          mock-add
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onUnlinkNode({ id: "n1", docType: "INVOICE" })}
+        >
+          mock-unlink
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onOpenDocument({ id: "i1", docType: "INVOICE" })}
+        >
+          mock-open
+        </button>
+      </div>
+    ),
+  }),
+);
 
 import { CashTraceabilitySection } from "./CashTraceabilitySection";
 

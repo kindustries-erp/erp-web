@@ -225,11 +225,16 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
       true,
     );
 
-    // Tiêu đề checkpoint
+    // Tiêu đề checkpoint & tab Danh sách xe
     expect(
       screen.getByText("Vụ việc Dịch vụ Garage · Tháng 11/2026"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Danh sách xe")).toBeInTheDocument();
     expect(screen.getByText("Xuất Excel")).toBeInTheDocument();
+
+    // Đã xóa nút Phải thu / Phải trả theo yêu cầu
+    expect(screen.queryByText("Phải thu")).not.toBeInTheDocument();
+    expect(screen.queryByText("Phải trả")).not.toBeInTheDocument();
 
     // Right panel P&L
     expect(screen.getByText("Hiệu quả kinh doanh (P&L)")).toBeInTheDocument();
@@ -242,6 +247,42 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
     expect(screen.getAllByText("Chi phí").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Lợi nhuận gộp").length).toBeGreaterThanOrEqual(
       1,
+    );
+  });
+
+  it("render đúng checkpoint mode khi có phân loại ERP (gọi API kèm classification và hiện subtitle)", async () => {
+    const { garageDashboardApi } =
+      await import("@/modules/garage/api/garageDashboardApi");
+
+    renderCasesScope(
+      {
+        kind: "checkpoint",
+        dateFrom: "2026-11-01",
+        dateTo: "2026-11-30",
+        periodLabel: "Tháng 11/2026 · Sửa chữa chung",
+        classification: "SUA_CHUA_CHUNG",
+        classificationName: "Sửa chữa chung",
+      },
+      true,
+    );
+
+    expect(
+      screen.getByText(
+        "Vụ việc Dịch vụ Garage · Tháng 11/2026 · Sửa chữa chung",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Khoảng thời gian: 2026-11-01 đến 2026-11-30 · Phân loại: Sửa chữa chung",
+      ),
+    ).toBeInTheDocument();
+
+    expect(garageDashboardApi.getCheckpointCases).toHaveBeenCalledWith(
+      expect.objectContaining({
+        date_from: "2026-11-01",
+        date_to: "2026-11-30",
+        classification: "SUA_CHUA_CHUNG",
+      }),
     );
   });
 });

@@ -14,6 +14,10 @@ export type GarageCasesScope =
       dateTo: string;
       periodLabel?: string;
       branchId?: string;
+      classification?: string;
+      classificationName?: string;
+      initialStatus?: string;
+      isFunnel?: boolean;
     }
   | {
       kind: "horizon";

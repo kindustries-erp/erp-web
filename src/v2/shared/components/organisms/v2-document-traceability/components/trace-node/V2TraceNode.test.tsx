@@ -48,6 +48,15 @@ describe("V2TraceNode", () => {
     expect(screen.getByText("UNC")).toBeInTheDocument();
   });
 
+  it("renders the stage category header on top of the card", () => {
+    renderNode({ node: node() });
+    expect(
+      screen.getByTestId("v2-trace-node-category-header"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("#3")).toBeInTheDocument();
+    expect(screen.getByText("DÒNG TIỀN")).toBeInTheDocument();
+  });
+
   it("opens the document on double click", () => {
     const onOpenDocument = vi.fn();
     renderNode({ node: node(), actions: { onOpenDocument } });

@@ -70,7 +70,9 @@ export function createGarageCasesColumns({
     {
       key: "debtorOrClassification",
       label: showProfitMetrics
-        ? "Phân loại ERP"
+        ? isPayable
+          ? "Nhà cung cấp / Đối tác"
+          : "Phân loại"
         : isPayable
           ? "Nhà cung cấp / Đối tác"
           : "Đối tượng chịu nợ",

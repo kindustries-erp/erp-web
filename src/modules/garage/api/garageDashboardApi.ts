@@ -194,6 +194,34 @@ export interface GarageDashboardStatsResponse {
   availableMonths?: string[];
 }
 
+export interface GarageStageClassifications {
+  suaChua: number;
+  kyGui: number;
+  oj: number;
+  khac: number;
+}
+
+export interface GarageIntakeStages {
+  totalIntake: number;
+  intake: number;
+  intakeAmount?: number;
+  quotation: number;
+  quotationAmount?: number;
+  inProgress: number;
+  inProgressAmount?: number;
+  completed: number;
+  completedAmount?: number;
+  cancelled: number;
+  cancelledAmount?: number;
+  classifications?: GarageStageClassifications;
+  byStage?: {
+    intake: GarageStageClassifications;
+    quotation: GarageStageClassifications;
+    inProgress: GarageStageClassifications;
+    completed: GarageStageClassifications;
+  };
+}
+
 export interface GarageKpiPeriod {
   totalRevenue: number;
   totalCost: number;
@@ -203,6 +231,7 @@ export interface GarageKpiPeriod {
   totalReceivable?: number;
   collectionRate?: number;
   totalCount: number;
+  stages?: GarageIntakeStages;
   revenueChart: number[];
   costChart: number[];
   profitChart: number[];
@@ -243,6 +272,7 @@ export interface GarageCheckpointCaseItem {
   bienSoXe: string;
   khachHangCode: string;
   khachHangName: string;
+  tinhTrangDichVu?: number;
   tenTinhTrangDichVu: string;
   classification?: string;
   doanhThu: number;
@@ -268,6 +298,13 @@ export interface GarageCheckpointSummary {
   paidCount: number;
   remainingCount: number;
   unpaidCount: number;
+  funnelCounts?: {
+    total: number;
+    quotation: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+  };
 }
 
 export interface GarageClassificationSummaryItem {
@@ -339,8 +376,10 @@ export const garageDashboardApi = {
     search?: string;
     payment_status?: "all" | "remaining" | "paid" | "unpaid";
     classification?: string;
+    status?: string;
     sort_by?: string;
     sort_order?: "ASC" | "DESC";
+    is_funnel?: boolean;
   }): Promise<GarageCheckpointCasesResponse> => {
     const { data } = await axiosInstance.get<GarageCheckpointCasesResponse>(
       `${BASE}/checkpoint-cases`,

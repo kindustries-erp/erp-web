@@ -3,7 +3,7 @@ import { Position } from "@xyflow/react";
 import { computeEdgeGeometry } from "./traceability.edge-path";
 
 describe("computeEdgeGeometry", () => {
-  it("uses a smooth path and centres the label for a near horizontal edge", () => {
+  it("uses a straight horizontal path and centres the label when Y is aligned", () => {
     const g = computeEdgeGeometry({
       sourceX: 0,
       sourceY: 100,
@@ -17,7 +17,7 @@ describe("computeEdgeGeometry", () => {
     expect(g.labelX).toBe(100);
   });
 
-  it("detours below the stages when the target is far to the right", () => {
+  it("takes the shortest direct path without detour even when target is far to the right", () => {
     const g = computeEdgeGeometry({
       sourceX: 0,
       sourceY: 100,
@@ -26,11 +26,12 @@ describe("computeEdgeGeometry", () => {
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
     });
-    expect(g.labelY).toBe(165);
-    expect(g.path.startsWith("M 0 100")).toBe(true);
+    expect(g.labelY).toBe(100);
+    expect(g.labelX).toBe(450);
+    expect(g.path.startsWith("M0 100")).toBe(true);
   });
 
-  it("detours to the right of the stages when the target is far below", () => {
+  it("takes the shortest direct vertical path without detour when X is aligned", () => {
     const g = computeEdgeGeometry({
       sourceX: 50,
       sourceY: 0,
@@ -39,7 +40,23 @@ describe("computeEdgeGeometry", () => {
       sourcePosition: Position.Bottom,
       targetPosition: Position.Top,
     });
-    expect(g.labelX).toBe(230);
-    expect(g.path.startsWith("M 50 0")).toBe(true);
+    expect(g.labelX).toBe(50);
+    expect(g.labelY).toBe(250);
+    expect(g.path.startsWith("M50 0")).toBe(true);
+  });
+
+  it("steps vertically at the first gap when connecting multi-column with different Y", () => {
+    const g = computeEdgeGeometry({
+      sourceX: 300,
+      sourceY: 270,
+      targetX: 920,
+      targetY: 540,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    });
+    // First gap is at sourceX + 60 = 360
+    expect(g.labelX).toBe(360);
+    expect(g.labelY).toBe((270 + 540) / 2);
+    expect(g.path.includes("360")).toBe(true);
   });
 });

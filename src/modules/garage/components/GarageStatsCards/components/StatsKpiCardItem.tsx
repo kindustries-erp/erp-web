@@ -1,161 +1,197 @@
 import React from "react";
-import { Eye, Receipt, TrendingUp, Wallet } from "lucide-react";
 import { KpiCard } from "@/shared/components/KpiCard";
-import { KpiSparkline } from "@/shared/components/KpiSparkline";
-import { money } from "@/shared/utils/format";
-import { Badge } from "@/shared/components/ui/badge";
-import { cn } from "@/shared/utils";
+import { money, shortMoney } from "@/shared/utils/format";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { PeriodStatsData } from "../types";
+import { CollectionDonutChart } from "./CollectionDonutChart";
+import { VehicleClassificationDonutChart } from "./VehicleClassificationDonutChart";
+import { StageCardItem } from "./StageCardItem";
 
-interface StatsKpiCardItemProps {
+export interface StatsKpiCardItemProps {
+  /** Tiêu đề của thẻ KPI (ví dụ: Xe Tháng này, Xe Tuần này, Xe Hôm nay) */
   label: string;
+  /** Icon hiển thị góc trên bên trái thẻ */
   icon?: React.ReactNode;
+  /** Dữ liệu số liệu thanh toán & các giai đoạn tiếp nhận theo kỳ */
   data?: PeriodStatsData;
+  /** Trạng thái đang tải dữ liệu */
   loading?: boolean;
-  defaultChartLength?: number;
-  revenueNetLabel: string;
-  grossProfitShortLabel: string;
-  vehiclesCompletedLabel: string;
+  /** Sự kiện click vào thẻ để mở drawer toàn bộ vụ việc trong kỳ */
   onCardClick: () => void;
-  onSparklineClick: (index: number) => void;
+  /** Sự kiện click vào từng giai đoạn tiếp nhận cụ thể để mở drawer lọc theo trạng thái */
+  onStageClick?: (stageKey: string, stageLabel: string) => void;
 }
 
+/**
+ * Component hiển thị 1 thẻ thống kê Xe theo kỳ (Tháng / Tuần / Hôm nay):
+ * - Tầng Trên: Icon đặt ngang hàng với nhãn tiêu đề ([Icon] XE THÁNG NÀY) loại bỏ khoảng trống thừa,
+ *   bên dưới là Số lượng xe to rõ kèm Số tiền rút gọn (chữ xám dịu mắt, không border trắng, hover App Tooltip full số),
+ *   cùng 2 Donut Chart song song (Phân loại xe & Tiến độ thu tiền) nằm góc phải cân xứng.
+ * - Tầng Dưới: 4 Card Tiến Độ kiểu cũ riêng biệt (Tiếp nhận, Báo giá, Đang sửa, Hoàn tất),
+ *   mỗi card hiển thị số lượng xe kèm số tiền phát sinh trong ngoặc đơn (ví dụ: 11 (124tr)),
+ *   chuẩn style /erp-ui-structure, màu sắc dịu nhẹ theo từng giai đoạn, đồng bộ với theme tối và không có viền trắng.
+ */
 export function StatsKpiCardItem({
   label,
   icon,
   data,
   loading,
-  defaultChartLength = 6,
-  revenueNetLabel,
-  grossProfitShortLabel,
-  vehiclesCompletedLabel,
   onCardClick,
-  onSparklineClick,
+  onStageClick,
 }: StatsKpiCardItemProps) {
+  // 1. Trích xuất thông số thanh toán
   const rev = data?.totalRevenue || 0;
-  const cost = data?.totalCost || 0;
-  const profit = data?.totalProfit || rev - cost;
   const billed = data?.totalTienCoThue || rev;
   const paid = data?.totalPaid || 0;
   const receivable = data?.totalReceivable || 0;
   const rate = data?.collectionRate || (billed > 0 ? (paid / billed) * 100 : 0);
-  const margin = rev > 0 ? ((profit / rev) * 100).toFixed(1) : "0.0";
-  const defaultChart = Array(defaultChartLength).fill(0);
+
+  // 2. Trích xuất thông số các giai đoạn tiếp nhận xe
+  const stages = data?.stages;
+  const totalVehicles =
+    stages?.totalIntake && stages.totalIntake > 0
+      ? stages.totalIntake
+      : data?.totalCount || 0;
+
+  const completedCount =
+    stages?.completed && stages.completed > 0
+      ? stages.completed
+      : data?.totalCount || 0;
+
+  const byStage = stages?.byStage;
+
+  // 3. Trích xuất số tiền phát sinh theo từng giai đoạn
+  const intakeAmt = stages?.intakeAmount || 0;
+  const quotationAmt = stages?.quotationAmount || 0;
+  const inProgressAmt = stages?.inProgressAmount || 0;
+  const completedAmt = stages?.completedAmount || 0;
+
+  // 4. Giá trị hiển thị số lượng xe + số tiền rút gọn (dịu mắt, không border trắng) kèm App Tooltip
+  const valueNode = (
+    <div className="flex items-baseline gap-2 flex-wrap">
+      <span>{totalVehicles} xe</span>
+      {billed > 0 && (
+        <Tooltip content={`Tổng phát sinh: ${money(billed)}`} side="top">
+          <span
+            className="text-xs font-normal text-muted-foreground/80 hover:text-foreground transition-colors cursor-help"
+            data-testid="compact-money-badge"
+          >
+            ({shortMoney(billed)})
+          </span>
+        </Tooltip>
+      )}
+    </div>
+  );
+
+  // 5. Cụm 2 Donut chart góc trên bên phải
+  const rightNode = (
+    <div className="flex items-center gap-2 shrink-0">
+      <VehicleClassificationDonutChart
+        classifications={stages?.classifications}
+        total={totalVehicles}
+        size={46}
+      />
+      <CollectionDonutChart
+        paid={paid}
+        billed={billed}
+        receivable={receivable}
+        rate={rate}
+        size={46}
+      />
+    </div>
+  );
+
+  // 6. Lưới 4 Card Tiến Độ kiểu cũ kèm Số tiền rút gọn trong ngoặc đơn
+  const bottomNode = (
+    <div className="w-full grid grid-cols-4 gap-1.5 sm:gap-2">
+      <StageCardItem
+        stageKey="intake"
+        stageName="Tiếp nhận"
+        count={stages?.intake ?? 0}
+        amount={intakeAmt}
+        classifications={byStage?.intake}
+        testId="card-stage-intake"
+        moneyTestId="stage-money-intake"
+        colorScheme={{
+          container:
+            "bg-teal-500/10 border border-teal-500/20 hover:border-teal-500/40 hover:bg-teal-500/15",
+          textTitle: "text-teal-700 dark:text-teal-300",
+          textCount: "text-teal-600 dark:text-teal-400",
+          textAmount: "text-teal-700/80 dark:text-teal-300/80",
+        }}
+        onClick={() => onStageClick?.("intake", "Tiếp nhận")}
+      />
+
+      <StageCardItem
+        stageKey="quotation"
+        stageName="Báo giá"
+        count={stages?.quotation ?? 0}
+        amount={quotationAmt}
+        classifications={byStage?.quotation}
+        testId="card-stage-quotation"
+        moneyTestId="stage-money-quotation"
+        colorScheme={{
+          container:
+            "bg-violet-500/10 border border-violet-500/20 hover:border-violet-500/40 hover:bg-violet-500/15",
+          textTitle: "text-violet-700 dark:text-violet-300",
+          textCount: "text-violet-600 dark:text-violet-400",
+          textAmount: "text-violet-700/80 dark:text-violet-300/80",
+        }}
+        onClick={() => onStageClick?.("quotation", "Báo giá")}
+      />
+
+      <StageCardItem
+        stageKey="in_progress"
+        stageName="Đang sửa"
+        count={stages?.inProgress ?? 0}
+        amount={inProgressAmt}
+        classifications={byStage?.inProgress}
+        testId="card-stage-in-progress"
+        moneyTestId="stage-money-in-progress"
+        colorScheme={{
+          container:
+            "bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/15",
+          textTitle: "text-amber-700 dark:text-amber-300",
+          textCount: "text-amber-600 dark:text-amber-400",
+          textAmount: "text-amber-700/80 dark:text-amber-300/80",
+        }}
+        onClick={() => onStageClick?.("in_progress", "Đang sửa")}
+      />
+
+      <StageCardItem
+        stageKey="completed"
+        stageName="Hoàn tất"
+        count={completedCount}
+        amount={completedAmt}
+        classifications={byStage?.completed}
+        testId="card-stage-completed"
+        moneyTestId="stage-money-completed"
+        colorScheme={{
+          container:
+            "bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15",
+          textTitle: "text-emerald-700 dark:text-emerald-300",
+          textCount: "text-emerald-600 dark:text-emerald-400",
+          textAmount: "text-emerald-700/80 dark:text-emerald-300/80",
+        }}
+        onClick={() => onStageClick?.("completed", "Hoàn tất")}
+      />
+    </div>
+  );
 
   return (
     <div
       onClick={onCardClick}
       className="cursor-pointer transition-transform hover:-translate-y-0.5 group"
+      data-testid="stats-kpi-card-item"
     >
       <KpiCard
         loading={loading}
+        inlineIcon={true}
         label={label}
         icon={icon}
-        value={money(rev)}
-        badge={
-          <div className="flex items-center gap-1.5">
-            <Badge
-              variant="outline"
-              className="text-[10px] px-1.5 py-0 font-medium border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60"
-            >
-              {data?.totalCount || 0} {vehiclesCompletedLabel}
-            </Badge>
-            <Eye className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-          </div>
-        }
-        rightNode={
-          <KpiSparkline
-            data={data?.revenueChart || defaultChart}
-            customTooltipItems={[
-              {
-                label: revenueNetLabel,
-                data: data?.revenueChart || [],
-              },
-              {
-                label: "Tổng phải thu (VAT)",
-                data: data?.tienCoThueChart || [],
-              },
-              {
-                label: "Đã thu",
-                data: data?.paidChart || [],
-              },
-              {
-                label: grossProfitShortLabel,
-                data: data?.profitChart || [],
-              },
-            ]}
-            labels={data?.labels || []}
-            onClick={onSparklineClick}
-          />
-        }
-        bottomNode={
-          <div className="mt-1 pt-2 border-t border-border/60 flex flex-col gap-2">
-            {/* Realized Payment Progress */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Wallet className="w-3 h-3 text-slate-500" />
-                  Tổng phải thu:{" "}
-                  <strong className="text-foreground font-mono">
-                    {money(billed)}
-                  </strong>
-                </span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
-                  Đã thu: {rate.toFixed(1)}%
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                <div
-                  className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[10.5px] text-muted-foreground">
-                <span>
-                  Đã thu:{" "}
-                  <strong className="text-emerald-600 font-mono">
-                    {money(paid)}
-                  </strong>
-                </span>
-                <span>
-                  Còn nợ:{" "}
-                  <strong
-                    className={cn(
-                      "font-mono",
-                      receivable > 0
-                        ? "text-amber-600 font-bold"
-                        : "text-emerald-600",
-                    )}
-                  >
-                    {money(receivable)}
-                  </strong>
-                </span>
-              </div>
-            </div>
-
-            {/* Profit & Margin */}
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/40 text-[11px]">
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Receipt className="w-3 h-3 text-slate-500" />
-                <span>
-                  Giá vốn:{" "}
-                  <strong className="text-foreground font-mono">
-                    {money(cost)}
-                  </strong>
-                </span>
-              </div>
-              <div className="flex items-center justify-end gap-1 text-emerald-700 dark:text-emerald-400">
-                <TrendingUp className="w-3 h-3 text-emerald-600" />
-                <span>
-                  Lãi gộp:{" "}
-                  <strong className="font-mono">
-                    {money(profit)} ({margin}%)
-                  </strong>
-                </span>
-              </div>
-            </div>
-          </div>
-        }
+        value={valueNode}
+        rightNode={rightNode}
+        bottomNode={bottomNode}
       />
     </div>
   );
