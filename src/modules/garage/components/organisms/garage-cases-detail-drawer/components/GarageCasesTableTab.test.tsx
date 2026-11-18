@@ -187,4 +187,27 @@ describe("GarageCasesTableTab: Sub-tab trạng thái phễu và phân loại ERP
 
     expect(screen.getByText("51K-12345")).toBeInTheDocument();
   });
+
+  it("hiển thị tiêu đề cột Phân loại và nhận diện đúng phân loại alias OJ", () => {
+    const testCases: GarageCaseDetailRow[] = [
+      {
+        ...mockCases[0],
+        rowKey: "row-oj",
+        id: "case-oj",
+        soChungTu: "GN-PDV2611-0001",
+        classification: "OJ",
+      },
+    ];
+
+    render(<GarageCasesTableTab cases={testCases} showProfitMetrics={true} />, {
+      wrapper: createWrapper(),
+    });
+
+    // Cột Phân loại (không còn Phân loại ERP)
+    expect(screen.getByText("Phân loại")).toBeInTheDocument();
+    expect(screen.queryByText("Phân loại ERP")).not.toBeInTheDocument();
+
+    // Hiển thị OJ Ngoài
+    expect(screen.getAllByText("OJ Ngoài").length).toBeGreaterThanOrEqual(1);
+  });
 });

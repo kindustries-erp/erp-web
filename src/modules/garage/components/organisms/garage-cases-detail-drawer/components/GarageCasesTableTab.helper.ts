@@ -1,4 +1,5 @@
 import type { GarageCaseDetailRow } from "./GarageCasesTableTab.type";
+import { normalizeClassificationKey } from "./GarageCasesTableTab.cells";
 
 export interface FilterGarageCasesOptions {
   showProfitMetrics?: boolean;
@@ -93,7 +94,8 @@ export function filterGarageCases(
       if (!matchFunnelStatus(c, categoryFilter)) return false;
     } else if (categoryFilter !== "all" && categoryFilter !== "ALL") {
       if (showProfitMetrics) {
-        if ((c.classification || "KHAC") !== categoryFilter) return false;
+        if (normalizeClassificationKey(c.classification) !== categoryFilter)
+          return false;
       } else {
         if (c.partnerType !== categoryFilter) return false;
       }

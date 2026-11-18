@@ -22,7 +22,7 @@ export function getFunnelTableColumns(
     },
     {
       key: "name",
-      header: t("dashboard.funnel.colClassification", "Phân Loại ERP"),
+      header: t("dashboard.funnel.colClassification", "Phân loại"),
       size: 180,
       cell: (row) => {
         const Icon = row.icon;

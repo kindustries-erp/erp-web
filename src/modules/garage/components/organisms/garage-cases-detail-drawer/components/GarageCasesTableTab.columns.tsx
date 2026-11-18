@@ -72,7 +72,7 @@ export function createGarageCasesColumns({
       label: showProfitMetrics
         ? isPayable
           ? "Nhà cung cấp / Đối tác"
-          : "Phân loại ERP"
+          : "Phân loại"
         : isPayable
           ? "Nhà cung cấp / Đối tác"
           : "Đối tượng chịu nợ",

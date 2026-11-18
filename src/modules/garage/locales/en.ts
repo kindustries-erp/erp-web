@@ -249,7 +249,7 @@ export const garageEn = {
       tableTitle: "Conversion Funnel Details by 4 ERP Classifications",
       tableDesc:
         "Standard classifications: General Repair • Consignment/Internal • External OJ • Others",
-      colClassification: "ERP Classification",
+      colClassification: "Classification",
       colIntake: "Total Intake",
       colQuotation: "Quotation",
       colInProgress: "In Progress (Pipeline)",

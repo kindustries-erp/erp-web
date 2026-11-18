@@ -249,7 +249,7 @@ export const garageVi = {
       tableTitle: "Chi tiết Phễu Chuyển Đổi theo 4 Phân Loại ERP",
       tableDesc:
         "Phân loại chuẩn: Sửa chữa chung • Ký gửi/Nội bộ • OJ Ngoài • Khác",
-      colClassification: "Phân Loại ERP",
+      colClassification: "Phân loại",
       colIntake: "Tổng Tiếp Nhận",
       colQuotation: "Báo Giá",
       colInProgress: "Đang Làm (Dự Thu)",
