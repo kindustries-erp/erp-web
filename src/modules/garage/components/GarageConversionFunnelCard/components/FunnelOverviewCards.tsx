@@ -3,21 +3,16 @@ import { useTranslation } from "react-i18next";
 import { CheckCircle2, Clock, FileText, Inbox, XCircle } from "lucide-react";
 import { money } from "@/shared/utils/format";
 import type { GarageProjectedPipeline } from "../../../api/garageDashboardApi";
+import type { FunnelStageData } from "../types";
 import { FunnelStageCard } from "./FunnelStageCard";
 import { FunnelProjectedStats } from "./FunnelProjectedStats";
 
-interface Stage {
-  count: number;
-  amount: number;
-  rate?: number;
-}
-
 interface FunnelOverviewCardsProps {
-  totalIntake: Stage;
-  quotation: Stage;
-  inProgress: Stage;
-  completed: Stage;
-  cancelled: Stage;
+  totalIntake: FunnelStageData;
+  quotation: FunnelStageData;
+  inProgress: FunnelStageData;
+  completed: FunnelStageData;
+  cancelled: FunnelStageData;
   projectedToday?: GarageProjectedPipeline;
   projectedMonth?: GarageProjectedPipeline;
   onStageClick?: (stageKey: string, stageTitle: string) => void;

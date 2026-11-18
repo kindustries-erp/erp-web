@@ -11,6 +11,7 @@ import {
   filterGarageCases,
   calculateFunnelStatusCounts,
 } from "./GarageCasesTableTab.helper";
+import { buildGarageCaseFilterTabs } from "./GarageCasesTableTab.subtabs";
 import { createGarageCasesColumns } from "./GarageCasesTableTab.columns";
 import type {
   GarageCasesTableTabProps,
@@ -69,106 +70,25 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
     [onOpenCaseDetail, showProfitMetrics, t],
   );
 
-  const filterTabs = useMemo(() => {
-    if (isFunnelMode) {
-      return [
-        {
-          key: "ALL",
-          label: t("dashboard.funnel.colIntake", "Tổng tiếp nhận"),
-          badgeCount: funnelCounts?.total ?? funnelStatusCounts.total,
-        },
-        {
-          key: "QUOTATION",
-          label: t("dashboard.funnel.colQuotation", "Báo giá"),
-          badgeCount: funnelCounts?.quotation ?? funnelStatusCounts.quotation,
-        },
-        {
-          key: "IN_PROGRESS",
-          label: t("dashboard.funnel.colInProgress", "Đang làm (Dự thu)"),
-          badgeCount: funnelCounts?.inProgress ?? funnelStatusCounts.inProgress,
-        },
-        {
-          key: "COMPLETED",
-          label: t("dashboard.funnel.colCompleted", "Hoàn thành (Doanh thu)"),
-          badgeCount: funnelCounts?.completed ?? funnelStatusCounts.completed,
-        },
-        {
-          key: "CANCELLED",
-          label: t("dashboard.funnel.colCancelled", "Đã hủy"),
-          badgeCount: funnelCounts?.cancelled ?? funnelStatusCounts.cancelled,
-        },
-      ];
-    }
-
-    if (showProfitMetrics) {
-      const getCount = (key: string) =>
-        key === "ALL"
-          ? cases.length
-          : cases.filter((c) => (c.classification || "KHAC") === key).length;
-
-      return [
-        {
-          key: "ALL",
-          label: t("cases.classification.all", "Tất cả"),
-          badgeCount: getCount("ALL"),
-        },
-        {
-          key: "SUA_CHUA_CHUNG",
-          label: t("cases.classification.repair", "Sửa chữa chung"),
-          badgeCount: getCount("SUA_CHUA_CHUNG"),
-        },
-        {
-          key: "KY_GUI_NOI_BO",
-          label: t("cases.classification.consignment", "Ký gửi / Nội bộ"),
-          badgeCount: getCount("KY_GUI_NOI_BO"),
-        },
-        {
-          key: "OJ_NGOAI",
-          label: t("cases.classification.outsource", "OJ Ngoài"),
-          badgeCount: getCount("OJ_NGOAI"),
-        },
-        {
-          key: "KHAC",
-          label: t("cases.classification.other", "Khác"),
-          badgeCount: getCount("KHAC"),
-        },
-      ];
-    }
-
-    const debtCases = cases.filter((c) => c.remaining > 0);
-    return [
-      {
-        key: "all",
-        label: t("progress.partnerFilterTabs.all", "Tất cả"),
-        badgeCount: debtCases.length,
-      },
-      {
-        key: "enterprise",
-        label: t("progress.partnerFilterTabs.enterprise", "Doanh nghiệp"),
-        badgeCount: debtCases.filter((c) => c.partnerType === "enterprise")
-          .length,
-      },
-      {
-        key: "individual",
-        label: t("progress.partnerFilterTabs.individual", "Cá nhân"),
-        badgeCount: debtCases.filter((c) => c.partnerType === "individual")
-          .length,
-      },
-      {
-        key: "insurance",
-        label: t("progress.partnerFilterTabs.insurance", "Bảo hiểm"),
-        badgeCount: debtCases.filter((c) => c.partnerType === "insurance")
-          .length,
-      },
-    ];
-  }, [
-    isFunnelMode,
-    funnelCounts,
-    funnelStatusCounts,
-    showProfitMetrics,
-    cases,
-    t,
-  ]);
+  const filterTabs = useMemo(
+    () =>
+      buildGarageCaseFilterTabs({
+        isFunnelMode,
+        showProfitMetrics,
+        cases,
+        t,
+        funnelCounts,
+        funnelStatusCounts,
+      }),
+    [
+      isFunnelMode,
+      showProfitMetrics,
+      cases,
+      t,
+      funnelCounts,
+      funnelStatusCounts,
+    ],
+  );
 
   const sectionTitle = showProfitMetrics
     ? t("cases.title.periodCases", "Danh sách vụ việc dịch vụ trong kỳ")
