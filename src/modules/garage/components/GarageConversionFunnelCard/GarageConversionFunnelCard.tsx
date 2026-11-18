@@ -8,6 +8,7 @@ import { useGarageConversionFunnelLogic } from "./useGarageConversionFunnelLogic
 import { FunnelOverviewCards } from "./components/FunnelOverviewCards";
 import { FunnelChartsGrid } from "./components/FunnelChartsGrid";
 import { FunnelSpreadsheetTable } from "./components/FunnelSpreadsheetTable";
+import { GarageCheckpointDrawer } from "../GarageCheckpointDrawer";
 
 export function GarageConversionFunnelCard(
   props: GarageConversionFunnelCardProps,
@@ -39,6 +40,9 @@ export function GarageConversionFunnelCard(
     statusDonutItems,
     totalStatusVal,
     tableRows,
+    classificationDrawer,
+    handleClassificationClick,
+    closeClassificationDrawer,
   } = useGarageConversionFunnelLogic(props);
 
   const hasData =
@@ -131,6 +135,7 @@ export function GarageConversionFunnelCard(
               totalStatusVal={totalStatusVal}
               gridColor={gridColor}
               tickColor={tickColor}
+              onClassificationClick={handleClassificationClick}
             />
           </div>
 
@@ -143,10 +148,22 @@ export function GarageConversionFunnelCard(
               inProgress={inProgress}
               completed={completed}
               cancelled={cancelled}
+              onClassificationClick={handleClassificationClick}
             />
           </div>
         </div>
       )}
+
+      <GarageCheckpointDrawer
+        open={classificationDrawer.open}
+        onClose={closeClassificationDrawer}
+        dateFrom={classificationDrawer.dateFrom}
+        dateTo={classificationDrawer.dateTo}
+        periodLabel={classificationDrawer.periodLabel}
+        classification={classificationDrawer.classification}
+        classificationName={classificationDrawer.classificationName}
+        branchId={classificationDrawer.branchId}
+      />
     </div>
   );
 }

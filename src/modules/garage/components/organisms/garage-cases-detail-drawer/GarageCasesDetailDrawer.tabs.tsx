@@ -15,6 +15,8 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     isReceipt,
     isCheckpoint,
     showProfitMetrics,
+    classification,
+    checkpointSummary,
     classificationCount,
     receivableClassificationRows,
     payableClassificationRows,
@@ -36,7 +38,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     const mainTab: V2TabItemData = {
       key: "cases",
       label: isCheckpoint
-        ? t("cases.tabs.list", "Danh sách vụ việc")
+        ? t("cases.tabs.carList", "Danh sách xe")
         : t("debts.detailDrawer.tabRemainingCases", "Phiếu còn công nợ"),
       icon: <Clock className="w-3.5 h-3.5" />,
       badgeCount: casesCount,
@@ -46,6 +48,8 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
           initialDebtType={partnerDebtType}
           onOpenCaseDetail={setSelectedCaseCode}
           showProfitMetrics={showProfitMetrics}
+          classification={classification}
+          funnelCounts={checkpointSummary?.funnelCounts}
         />
       ),
     };

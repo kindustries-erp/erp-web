@@ -243,6 +243,7 @@ export interface GarageCheckpointCaseItem {
   bienSoXe: string;
   khachHangCode: string;
   khachHangName: string;
+  tinhTrangDichVu?: number;
   tenTinhTrangDichVu: string;
   classification?: string;
   doanhThu: number;
@@ -268,6 +269,13 @@ export interface GarageCheckpointSummary {
   paidCount: number;
   remainingCount: number;
   unpaidCount: number;
+  funnelCounts?: {
+    total: number;
+    quotation: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+  };
 }
 
 export interface GarageClassificationSummaryItem {
@@ -339,6 +347,7 @@ export const garageDashboardApi = {
     search?: string;
     payment_status?: "all" | "remaining" | "paid" | "unpaid";
     classification?: string;
+    status?: string;
     sort_by?: string;
     sort_order?: "ASC" | "DESC";
   }): Promise<GarageCheckpointCasesResponse> => {

@@ -12,6 +12,7 @@ interface DonutItem {
   label: string;
   value: number;
   color: string;
+  key?: string;
 }
 
 interface FunnelChartsGridProps {
@@ -29,6 +30,7 @@ interface FunnelChartsGridProps {
   totalStatusVal: number;
   gridColor?: string;
   tickColor?: string;
+  onClassificationClick?: (key: string, name: string) => void;
 }
 
 export function FunnelChartsGrid({
@@ -45,6 +47,7 @@ export function FunnelChartsGrid({
   totalStatusVal,
   gridColor,
   tickColor,
+  onClassificationClick,
 }: FunnelChartsGridProps) {
   const { t } = useTranslation("garage");
 
@@ -120,6 +123,7 @@ export function FunnelChartsGrid({
           items={classificationDonutItems}
           totalValue={totalClassificationVal}
           isAmount={isAmount}
+          onClassificationClick={onClassificationClick}
         />
 
         {/* CỘT 3 (3 cols): DONUT CHART PHÂN BỔ TRẠNG THÁI DV */}

@@ -284,6 +284,7 @@ export const garageEn = {
       quotation: "Quotation",
       inProgress: "In Progress",
       completed: "Completed",
+      carList: "Vehicle List",
     },
     viewMode: "View Mode",
     viewModeOverview: "Overview",

@@ -17,6 +17,7 @@ export default defineConfig({
       "src/__tests__/App.imotorbike.test.tsx",
       "src/modules/garage/components/garage-case-details-tab/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/__tests__/**/*.{test,spec}.{ts,tsx}",
+      "src/modules/garage/components/GarageConversionFunnelCard/**/*.{test,spec}.{ts,tsx}",
     ],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/e2e/**"],
   },

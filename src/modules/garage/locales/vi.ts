@@ -285,6 +285,7 @@ export const garageVi = {
       quotation: "Báo giá",
       inProgress: "Đang làm",
       completed: "Kết thúc",
+      carList: "Danh sách xe",
     },
     viewMode: "Chế độ xem",
     viewModeOverview: "Tổng quan",

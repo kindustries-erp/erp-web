@@ -33,6 +33,7 @@ export interface GarageCaseDetailRow {
   revenue?: number;
   profit?: number;
   classification?: string;
+  tinhTrangDichVu?: number;
   serviceStatus?: string;
 }
 
@@ -42,4 +43,12 @@ export interface GarageCasesTableTabProps {
   onOpenCaseDetail?: (caseCode: string) => void;
   showProfitMetrics?: boolean;
   filterMode?: "partner" | "classification";
+  classification?: string;
+  funnelCounts?: {
+    total: number;
+    quotation: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+  };
 }

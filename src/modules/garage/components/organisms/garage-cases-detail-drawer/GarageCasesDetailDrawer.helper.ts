@@ -121,6 +121,7 @@ export function extractCheckpointCases(
     revenue: c.doanhThu || 0,
     profit: c.loiNhuan || 0,
     classification: c.classification,
+    tinhTrangDichVu: c.tinhTrangDichVu,
     serviceStatus: c.tenTinhTrangDichVu,
   }));
 }

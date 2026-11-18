@@ -7,9 +7,10 @@ import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-sectio
 import { Badge } from "@/v2/shared/ui/badge";
 import { V2SearchInput } from "@/v2/shared/components/molecules/v2-search-input";
 import { money } from "@/shared/utils/format";
-import { cn } from "@/shared/utils";
-import { DebtDetailTypeSwitch } from "../../garage-debt-detail-drawer/components/DebtDetailTypeSwitch";
-import { filterGarageCases } from "./GarageCasesTableTab.helper";
+import {
+  filterGarageCases,
+  calculateFunnelStatusCounts,
+} from "./GarageCasesTableTab.helper";
 import { createGarageCasesColumns } from "./GarageCasesTableTab.columns";
 import type {
   GarageCasesTableTabProps,
@@ -18,44 +19,77 @@ import type {
 
 export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
   cases,
-  initialDebtType = "receivables",
   onOpenCaseDetail,
   showProfitMetrics = false,
+  classification,
+  funnelCounts,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
-  const [debtType, setDebtType] = useState<"receivables" | "payables">(
-    initialDebtType,
-  );
+  const isFunnelMode = Boolean(classification && classification !== "ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>(
     showProfitMetrics ? "ALL" : "all",
   );
   const [search, setSearch] = useState("");
 
-  const isPayable = debtType === "payables";
+  const funnelStatusCounts = useMemo(
+    () => calculateFunnelStatusCounts(cases),
+    [cases],
+  );
 
   const { filteredCases, totalRemaining, totalBilled } = useMemo(
     () =>
       filterGarageCases(cases, {
         showProfitMetrics,
-        isPayable,
+        isPayable: false,
         categoryFilter,
         search,
+        isFunnelStatusFilter: isFunnelMode,
       }),
-    [cases, showProfitMetrics, isPayable, categoryFilter, search],
+    [cases, showProfitMetrics, categoryFilter, search, isFunnelMode],
   );
 
   const columns = useMemo(
     () =>
       createGarageCasesColumns({
-        isPayable,
+        isPayable: false,
         onOpenCaseDetail,
         showProfitMetrics,
         t,
       }),
-    [isPayable, onOpenCaseDetail, showProfitMetrics, t],
+    [onOpenCaseDetail, showProfitMetrics, t],
   );
 
   const filterTabs = useMemo(() => {
+    if (isFunnelMode) {
+      return [
+        {
+          key: "ALL",
+          label: t("dashboard.funnel.colIntake", "Tổng tiếp nhận"),
+          badgeCount: funnelCounts?.total ?? funnelStatusCounts.total,
+        },
+        {
+          key: "QUOTATION",
+          label: t("dashboard.funnel.colQuotation", "Báo giá"),
+          badgeCount: funnelCounts?.quotation ?? funnelStatusCounts.quotation,
+        },
+        {
+          key: "IN_PROGRESS",
+          label: t("dashboard.funnel.colInProgress", "Đang làm (Dự thu)"),
+          badgeCount: funnelCounts?.inProgress ?? funnelStatusCounts.inProgress,
+        },
+        {
+          key: "COMPLETED",
+          label: t("dashboard.funnel.colCompleted", "Hoàn thành (Doanh thu)"),
+          badgeCount: funnelCounts?.completed ?? funnelStatusCounts.completed,
+        },
+        {
+          key: "CANCELLED",
+          label: t("dashboard.funnel.colCancelled", "Đã hủy"),
+          badgeCount: funnelCounts?.cancelled ?? funnelStatusCounts.cancelled,
+        },
+      ];
+    }
+
     if (showProfitMetrics) {
       const getCount = (key: string) =>
         key === "ALL"
@@ -91,9 +125,7 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
       ];
     }
 
-    const debtCases = cases.filter((c) =>
-      isPayable ? c.remainingCost > 0 : c.remaining > 0,
-    );
+    const debtCases = cases.filter((c) => c.remaining > 0);
     return [
       {
         key: "all",
@@ -119,19 +151,21 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
           .length,
       },
     ];
-  }, [showProfitMetrics, cases, isPayable, t]);
+  }, [
+    isFunnelMode,
+    funnelCounts,
+    funnelStatusCounts,
+    showProfitMetrics,
+    cases,
+    t,
+  ]);
 
   const sectionTitle = showProfitMetrics
     ? t("cases.title.periodCases", "Danh sách vụ việc dịch vụ trong kỳ")
-    : isPayable
-      ? t(
-          "debts.detailDrawer.unpaidPayableCases",
-          "Danh sách phiếu còn phải chi",
-        )
-      : t(
-          "debts.detailDrawer.unpaidReceivableCases",
-          "Danh sách phiếu còn phải thu",
-        );
+    : t(
+        "debts.detailDrawer.unpaidReceivableCases",
+        "Danh sách phiếu còn phải thu",
+      );
 
   return (
     <div className="flex flex-col gap-3">
@@ -151,11 +185,8 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
             onChange={setSearch}
             placeholder={t("common.search", "Tìm số phiếu, xe...")}
             debounceMs={150}
-            className="w-36 sm:w-48"
+            className="w-48 sm:w-64"
           />
-          {!showProfitMetrics && (
-            <DebtDetailTypeSwitch value={debtType} onChange={setDebtType} />
-          )}
         </div>
       </div>
 
@@ -166,28 +197,35 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
             <span className="text-xs font-semibold text-muted-foreground">
               {filteredCases.length} {t("common.cases", "phiếu")}
             </span>
-            {showProfitMetrics
-              ? totalBilled > 0 && (
+            {showProfitMetrics ? (
+              <>
+                {totalBilled > 0 && (
                   <Badge
                     variant="outline"
                     className="text-[11px] font-mono font-bold bg-primary/10 text-primary border-primary/20"
                   >
                     {money(totalBilled)}
                   </Badge>
-                )
-              : totalRemaining > 0 && (
+                )}
+                {totalRemaining > 0 && (
                   <Badge
                     variant="outline"
-                    className={cn(
-                      "text-[11px] font-mono font-bold",
-                      isPayable
-                        ? "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/30"
-                        : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30",
-                    )}
+                    className="text-[11px] font-mono font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
                   >
                     {money(totalRemaining)}
                   </Badge>
                 )}
+              </>
+            ) : (
+              totalRemaining > 0 && (
+                <Badge
+                  variant="outline"
+                  className="text-[11px] font-mono font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                >
+                  {money(totalRemaining)}
+                </Badge>
+              )
+            )}
           </div>
         }
         collapsible

@@ -48,6 +48,11 @@ Module `garage-dashboard` (được hiện thực tại `src/kgara-api-core/` v�
       - Donut Chart Cơ Cấu Nghiệp Vụ (ERP) (4 nhóm ERP: Sửa chữa chung, Ký gửi/Nội bộ, OJ Ngoài, Khác).
       - Donut Chart Phân Bổ Trạng Thái Phiếu DV (Hoàn tất, Đang xử lý, Báo giá, Tiếp nhận, Hủy).
     - **Tầng 3**: Bảng `<DataTable variant="spreadsheet">` chi tiết 4 phân loại ERP chuẩn `/standardize-table` (STT `#` 40px center, No Blue Mandate, SubtotalSummaryCell footer).
+    - **Tương tác Click-to-Drilldown Phân Loại ERP & Card Doanh Thu**:
+      - Click vào hàng trên bảng Phân loại ERP (hoặc lát cắt Donut Cơ Cấu Nghiệp Vụ) sẽ mở `GarageCheckpointDrawer` (`GarageCasesDetailDrawer`) với `classification` tương ứng, hiển thị toàn bộ phiếu dịch vụ thuộc phân loại đó trong kỳ (tất cả các giai đoạn phễu tiếp nhận: Báo giá, Đang làm, Hoàn thành, Đã hủy).
+      - Sub-tab trên thanh công cụ chuyển thành **5 Trạng thái Phễu Chuyển Đổi**: `Tổng tiếp nhận`, `Báo giá`, `Đang làm (Dự thu)`, `Hoàn thành (Doanh thu)`, `Đã hủy` kèm badge đếm số lượng phiếu tương ứng cho từng trạng thái.
+      - Khi click Card Doanh thu (`classification` không truyền hoặc là `ALL`): drawer giữ nguyên 100% cơ chế cũ theo Quy tắc Hoàn Thành Nghiêm Ngặt (`c.ngay_hoan_thanh_cong_viec IS NOT NULL`), sub-tab hiển thị 5 phân loại ERP (`Tất cả`, `Sửa chữa chung`, `Ký gửi / Nội bộ`, `OJ Ngoài`, `Khác`).
+      - Nút chuyển trạng thái `[ ↙ Phải thu | ↗ Phải trả ]` đã được lược bỏ khỏi drawer này để giao diện tinh gọn, tập trung hoàn toàn vào theo dõi vụ việc và trạng thái tiến độ dịch vụ.
   - Dữ liệu tính toán độc lập tại `conversionFunnel` & `conversionFunnelByMonth` trong `garage-dashboard.service.ts`, phản hồi tức thì theo kỳ tháng được chọn.
 - **2 chart P&L 12 tháng trên Dashboard (cập nhật 2026-10-17)**:
   - `GaragePnlSection` render `GaragePnlChartsCard` (`components/GaragePnlCharts/`): chart "Báo cáo lợi nhuận" (cột Doanh thu/Chi phí/Lợi nhuận gộp + đường `% Lợi nhuận gộp` trên trục phụ) và chart "Tỷ trọng các chỉ số trên 100% doanh thu" (7 cột chồng `/ DT`), giống sheet Excel cùng tên; màu `PNL_CHART_PALETTE` khớp `CHART_PALETTE` của API.

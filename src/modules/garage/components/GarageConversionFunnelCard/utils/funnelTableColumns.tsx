@@ -27,13 +27,15 @@ export function getFunnelTableColumns(
       cell: (row) => {
         const Icon = row.icon;
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 group/cell">
             <span
               className="w-2 h-2 rounded-full shrink-0"
               style={{ backgroundColor: row.dot }}
             />
-            <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="font-medium text-foreground">{row.name}</span>
+            <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <span className="font-medium text-foreground group-hover:text-primary transition-colors">
+              {row.name}
+            </span>
           </div>
         );
       },
