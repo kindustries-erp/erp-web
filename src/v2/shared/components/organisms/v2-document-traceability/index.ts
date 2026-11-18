@@ -1,6 +1,10 @@
 import "./traceability.locale";
 
 export * from "./types/traceability.type";
+export type {
+  TraceabilityCanvasActions,
+  TranslateFn,
+} from "./types/traceability.flow.type";
 export * from "./constants/traceability.constants";
 export * from "./utils/traceability.helper";
 export * from "./utils/traceability.link";
