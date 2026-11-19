@@ -22,4 +22,4 @@ Backend: module skill `file-attachments` của erp-api (hợp đồng, xóa cứ
 
 ## 3. Kiểm thử
 - Vitest: `src/v2/shared/files`, `v2-attachments-panel`, `src/v2/modules/file-attachments-management`, `src/modules/erp-invoices-core/invoiceFilesV1Guard.test.ts` (guard: web không gọi lại route V1 file hóa đơn; fail nếu tái phạm).
-- E2E (staging/dev, admin seed qua `E2E_ADMIN_EMAIL`/`E2E_ADMIN_PASSWORD`): `bun run e2e:invoice-attachments` (11 kiểm tra: tab, upload, xem trước, xóa có modal, xóa mềm) và `bun run e2e:file-attachments` (12 kiểm tra: lọc Đã xóa, xóa vĩnh viễn qua modal, cài đặt lưu giữ; tự khôi phục cài đặt). Helper chung `e2e/file-attachments-helpers.mjs`.
+- E2E (staging/dev, dùng `E2E_PASSWORD` với `E2E_TAO_EMAIL` mặc định `ai-test-tao`): `bun run e2e:invoice-attachments` (11 kiểm tra: tab, upload, xem trước, xóa có modal, xóa mềm) và `bun run e2e:file-attachments` (12 kiểm tra: lọc Đã xóa, xóa vĩnh viễn qua modal, cài đặt lưu giữ; tự khôi phục cài đặt). Helper chung `e2e/file-attachments-helpers.mjs`.

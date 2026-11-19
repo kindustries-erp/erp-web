@@ -1,7 +1,7 @@
 // E2E Auth V2 (/api/v2/auth-sessions): đăng nhập từ UI gọi API v2, 401 tự refresh qua v2 và gọi lại thành công,
 // refresh token bị thu hồi thì UI đưa về màn hình đăng nhập, đổi mật khẩu thu hồi phiên cũ.
-// Biến môi trường như users-management.e2e.mjs (xem erp-e2e-playwright/SKILL.md): E2E_PASSWORD hoặc E2E_ADMIN_PASSWORD bắt buộc,
-// E2E_ADMIN_EMAIL mặc định admin@liouni.com. Tạo tài khoản `e2e-auth-<tag>@example.com`; dọn bằng SQL sau khi chạy.
+// Biến môi trường như users-management.e2e.mjs (xem erp-e2e-playwright/SKILL.md): E2E_PASSWORD bắt buộc,
+// E2E_TAO_EMAIL mặc định ai-test-tao@example.com. Tạo tài khoản `e2e-auth-<tag>@example.com`; dọn bằng SQL sau khi chạy.
 // KHÔNG chạy trên DB production. Chạy: bun run e2e:auth-sessions
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
@@ -9,11 +9,11 @@ import { resolveApiUrl, resolveWebUrl } from "./e2e-ports.mjs";
 
 const API = resolveApiUrl();
 const WEB = resolveWebUrl();
-const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? process.env.E2E_PASSWORD;
-const ADMIN = process.env.E2E_ADMIN_EMAIL ?? "admin@liouni.com";
+const PASSWORD = process.env.E2E_PASSWORD;
+const ADMIN = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
 if (!PASSWORD) {
-  console.error("Thiếu E2E_PASSWORD hoặc E2E_ADMIN_PASSWORD.");
+  console.error("Thiếu E2E_PASSWORD.");
   process.exit(2);
 }
 const SHOTS = new URL("./.artifacts/", import.meta.url).pathname;

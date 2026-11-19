@@ -1,5 +1,5 @@
 // E2E trang V2 "Quản lý tài liệu": bộ lọc Đã xóa, xóa vĩnh viễn qua modal, cài đặt lưu giữ.
-// Dùng admin seed (E2E_ADMIN_EMAIL/E2E_ADMIN_PASSWORD hoặc E2E_PASSWORD). Chỉ staging/dev, KHÔNG production.
+// Dùng tài khoản ai-test-tao (E2E_TAO_EMAIL, E2E_PASSWORD). Chỉ staging/dev, KHÔNG production.
 // Dữ liệu test: tạo file qua API rồi xóa mềm; cài đặt lưu giữ được khôi phục về giá trị ban đầu.
 // Chạy: bun run e2e:file-attachments
 import {

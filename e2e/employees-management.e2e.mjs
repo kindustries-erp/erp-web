@@ -1,6 +1,6 @@
 // E2E Quản lý nhân viên V2 (/employees-management, /v2/employees-management): bảng gọi API v2, tạo, sửa, CCCD, đổi trạng thái, xóa, liên kết tài khoản.
 // Biến môi trường như garage-procurement.e2e.mjs (xem erp-e2e-playwright/SKILL.md): E2E_PASSWORD bắt buộc.
-// E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD (mặc định E2E_PASSWORD): tài khoản có quyền employees:read/create/update/delete và admin_users:manage.
+// E2E_TAO_EMAIL (mặc định ai-test-tao@example.com), E2E_PASSWORD: tài khoản cần quyền employees:read/create/update/delete và admin_users:manage (nếu thiếu, bước đó FAIL đúng nghĩa thiếu quyền).
 // Nhân viên test mã `E2E<tag>` được xóa mềm cuối bài; tài khoản `e2e-emp-*` cần dọn bằng SQL. KHÔNG chạy trên DB production.
 // Chạy: bun run e2e:employees-management
 import { chromium } from "playwright-core";
@@ -9,11 +9,11 @@ import { resolveApiUrl, resolveWebUrl } from "./e2e-ports.mjs";
 
 const API = resolveApiUrl();
 const WEB = resolveWebUrl();
-const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? process.env.E2E_PASSWORD;
-const ADMIN = process.env.E2E_ADMIN_EMAIL ?? "admin@liouni.com";
+const PASSWORD = process.env.E2E_PASSWORD;
+const ADMIN = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
 if (!PASSWORD) {
-  console.error("Thiếu E2E_PASSWORD hoặc E2E_ADMIN_PASSWORD.");
+  console.error("Thiếu E2E_PASSWORD.");
   process.exit(2);
 }
 const SHOTS = new URL("./.artifacts/", import.meta.url).pathname;
