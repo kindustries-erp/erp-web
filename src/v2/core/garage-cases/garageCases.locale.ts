@@ -28,6 +28,13 @@ export const garageCasesLocale: V2ModuleLocale = {
       manualReceiptEdge: "Thu ngoài ERP",
       manualPaymentEdge: "Chi ngoài ERP",
     },
+    vehicle: {
+      soKhung: "Số khung",
+      hangXe: "Hãng xe",
+      dongXe: "Dòng xe",
+      namSanXuat: "Năm SX",
+      doiTuongThanhToan: "Đối tượng thanh toán",
+    },
   },
   en: {
     traceability: {
@@ -48,6 +55,13 @@ export const garageCasesLocale: V2ModuleLocale = {
       netOffPayment: "Payment net-off",
       manualReceiptEdge: "Off-ERP receipt",
       manualPaymentEdge: "Off-ERP payment",
+    },
+    vehicle: {
+      soKhung: "VIN",
+      hangXe: "Make",
+      dongXe: "Model",
+      namSanXuat: "Model year",
+      doiTuongThanhToan: "Payer",
     },
   },
 };

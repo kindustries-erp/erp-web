@@ -26,6 +26,11 @@ export const GARAGE_CASE_STATUS_TABS: GarageCaseStatusTabDef[] = [
 ];
 
 export const DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
+  soKhung: false,
+  hangXe: false,
+  dongXe: false,
+  namSanXuat: false,
+  doiTuongThanhToan: false,
   caseDate: true,
   ngayHoanThanhCongViec: true,
   caseCode: true,
@@ -51,6 +56,11 @@ export const DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
 };
 
 export const AUDIT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
+  soKhung: false,
+  hangXe: false,
+  dongXe: false,
+  namSanXuat: false,
+  doiTuongThanhToan: false,
   caseDate: true,
   ngayHoanThanhCongViec: true,
   caseCode: true,
@@ -77,6 +87,11 @@ export const AUDIT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
 };
 
 export const ALL_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
+  soKhung: true,
+  hangXe: true,
+  dongXe: true,
+  namSanXuat: true,
+  doiTuongThanhToan: true,
   caseDate: true,
   ngayHoanThanhCongViec: true,
   caseCode: true,
@@ -195,6 +210,36 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "exclusionRules",
         labelKey: "cases.columns.exclusionRules",
         defaultLabel: "Quy tắc loại trừ",
+        defaultVisible: false,
+      },
+      {
+        key: "soKhung",
+        labelKey: "cases.columns.soKhung",
+        defaultLabel: "Số khung",
+        defaultVisible: false,
+      },
+      {
+        key: "hangXe",
+        labelKey: "cases.columns.hangXe",
+        defaultLabel: "Hãng xe",
+        defaultVisible: false,
+      },
+      {
+        key: "dongXe",
+        labelKey: "cases.columns.dongXe",
+        defaultLabel: "Dòng xe",
+        defaultVisible: false,
+      },
+      {
+        key: "namSanXuat",
+        labelKey: "cases.columns.namSanXuat",
+        defaultLabel: "Năm SX",
+        defaultVisible: false,
+      },
+      {
+        key: "doiTuongThanhToan",
+        labelKey: "cases.columns.doiTuongThanhToan",
+        defaultLabel: "Đối tượng thanh toán",
         defaultVisible: false,
       },
       {

@@ -34,6 +34,7 @@ export function GarageCasesExportColumnSelector({
       receivable: [],
       payable: [],
       profit: [],
+      vehicle: [],
       system: [],
     };
     for (const col of ALL_GARAGE_CASES_EXPORT_COLUMNS) {

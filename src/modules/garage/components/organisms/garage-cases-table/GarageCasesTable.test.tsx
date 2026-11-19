@@ -162,7 +162,7 @@ describe("GarageCasesTable Organism", () => {
       activeColumnPresetKey: "overview",
     };
     const cols = buildGarageCasesColumns(ctx);
-    expect(cols.length).toBe(23);
+    expect(cols.length).toBe(28);
     const keys = cols.map((c) => c.key);
     const expectedKeys = [
       "index",
@@ -188,6 +188,11 @@ describe("GarageCasesTable Organism", () => {
       "tienConPhaiThanhToan",
       "costProgress",
       "tienConPhaiChi",
+      "soKhung",
+      "hangXe",
+      "dongXe",
+      "namSanXuat",
+      "doiTuongThanhToan",
     ];
     expectedKeys.forEach((key) => {
       expect(keys).toContain(key);
@@ -231,7 +236,7 @@ describe("GarageCasesTable Organism", () => {
       activeColumnPresetKey: "audit",
     };
     const cols = buildGarageCasesColumns(ctx);
-    expect(cols.length).toBe(23);
+    expect(cols.length).toBe(28);
     const keys = cols.map((c) => c.key);
 
     // In audit preset: receivables must be positioned BEFORE revenue, cost, profit, and hasInvoice is right before doanhThu
@@ -267,7 +272,7 @@ describe("GarageCasesTable Organism", () => {
       activeColumnPresetKey: "all_columns",
     };
     const cols = buildGarageCasesColumns(ctx);
-    expect(cols.length).toBe(23);
+    expect(cols.length).toBe(28);
     const keys = cols.map((c) => c.key);
     const collectionProgressIdx = keys.indexOf("collectionProgress");
     const tienConPhaiThanhToanIdx = keys.indexOf("tienConPhaiThanhToan");
