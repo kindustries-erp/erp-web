@@ -232,3 +232,4 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
 ### Cột xe & đối tượng thanh toán (KINDU-1433)
 - Phần dùng chung nằm ở `src/v2/core/garage-cases/vehicle/` (`GARAGE_CASE_VEHICLE_COLUMNS`, `buildVehicleInfoRows`, `formatVehicleBrand/Model/Payer/ModelYear`, `GarageCaseVehicleCell`, `GarageCasePayerCell`, locale `v2.garageCases.vehicle.*`). Bảng V1 (`GarageCasesTable.vehicle-columns.tsx`) và drawer (`GarageCaseGeneralInfoSection`) chỉ ghép; khi migrate V2 chỉ cần đọc lại cấu hình này.
 - Khóa cột = khóa lọc/sắp xếp API: `soKhung`, `hangXe`, `dongXe`, `namSanXuat`, `doiTuongThanhToan`. Mặc định ẩn ở view Tổng quan và Đối soát, bật ở "Tất cả cột". Xuất Excel chưa có 5 cột này.
+- Xuất Excel: `garageCasesExportColumns.ts` có nhóm `vehicle` (5 cột trên), nằm ngoài bộ mặc định (`OPTIONAL_GARAGE_CASES_EXPORT_KEYS`); nhãn locale `exportReport.casesColumns.*`. Tổng cột chọn được: 39 (mặc định 30).
