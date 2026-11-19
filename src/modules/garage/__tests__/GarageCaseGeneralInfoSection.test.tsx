@@ -59,4 +59,27 @@ describe("GarageCaseGeneralInfoSection", () => {
     fireEvent.change(textarea, { target: { value: "Ghi chú mới 2026" } });
     expect(onNotesChange).toHaveBeenCalledWith("Ghi chú mới 2026");
   });
+
+  it("hiển thị thông tin xe và đối tượng thanh toán, rỗng thì hiện —", () => {
+    const { rerender } = render(
+      <GarageCaseGeneralInfoSection
+        caseData={{
+          ...mockCaseData,
+          soKhung: "RLV123456",
+          hangXeName: "VinFast",
+          hangXeCode: "VF",
+          dongXeName: "VF8",
+          namSanXuat: 2024,
+          doiTuongThanhToanName: "Cty Bảo hiểm A",
+          doiTuongThanhToanCode: "BH01",
+        }}
+      />,
+    );
+    expect(screen.getByText("RLV123456")).toBeDefined();
+    expect(screen.getByText("2024")).toBeDefined();
+    expect(screen.getByText("BH01")).toBeDefined();
+
+    rerender(<GarageCaseGeneralInfoSection caseData={mockCaseData} />);
+    expect(screen.queryByText("RLV123456")).toBeNull();
+  });
 });
