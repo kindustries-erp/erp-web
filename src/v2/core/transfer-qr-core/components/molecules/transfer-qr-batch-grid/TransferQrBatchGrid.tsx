@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Download } from "lucide-react";
-import { V2Text } from "@/v2/shared/components/atoms";
+import { V2Badge, V2Button, V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { TransferQrBatchRowView } from "../../../hooks/useTransferQrBatchController";
 import "../../../transferQr.locale";
@@ -38,12 +38,20 @@ export function TransferQrBatchGrid({
         >
           {/* Header thẻ: Số thứ tự lệnh & Tên người nhận */}
           <div className="flex items-center justify-between gap-1 pb-1.5 border-b border-border/50">
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold border border-amber-300 shrink-0 whitespace-nowrap">
+            <V2Badge
+              variant="warning"
+              size="xs"
+              className="px-1.5 py-0.5 text-[10px] font-bold border-amber-300 dark:border-amber-700 shrink-0 whitespace-nowrap"
+            >
               #{view.index} {t("v2.transferQr.batch.badgePay")}
-            </span>
-            <span className="font-bold text-xs uppercase text-foreground truncate max-w-[150px]">
+            </V2Badge>
+            <V2Text
+              variant="body-sm"
+              weight="bold"
+              className="uppercase truncate max-w-[150px]"
+            >
               {view.row.accountName || "-"}
-            </span>
+            </V2Text>
           </div>
 
           {/* Body thẻ: QR bên trái (nền trắng chuẩn quét), thông tin ngân hàng/tài khoản/tiền bên phải */}
@@ -56,37 +64,53 @@ export function TransferQrBatchGrid({
               />
             </div>
             <div className="min-w-0 flex-1 space-y-0.5 text-xs">
-              <p className="text-[11px] font-semibold text-muted-foreground truncate">
+              <V2Text
+                variant="caption"
+                weight="semibold"
+                color="muted"
+                className="truncate block"
+              >
                 {view.row.bankCode}
-              </p>
-              <p className="font-mono font-bold text-foreground truncate tracking-tight">
+              </V2Text>
+              <V2Text
+                variant="numeric"
+                weight="bold"
+                className="truncate block tracking-tight"
+              >
                 {view.row.accountNumber}
-              </p>
-              <p className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">
+              </V2Text>
+              <V2Text
+                variant="currency"
+                weight="bold"
+                className="text-emerald-600 dark:text-emerald-400 block"
+              >
                 {view.row.amount == null
                   ? t("v2.transferQr.batch.amountFree")
                   : `${new Intl.NumberFormat("vi-VN").format(view.row.amount)} ₫`}
-              </p>
+              </V2Text>
               {view.caption.content && (
-                <p
-                  className="text-[10px] font-mono text-muted-foreground truncate"
+                <V2Text
+                  variant="caption"
+                  color="muted"
+                  className="font-mono truncate block"
                   title={view.caption.content}
                 >
                   {view.caption.content}
-                </p>
+                </V2Text>
               )}
             </div>
           </div>
 
-          {/* Footer thẻ: Nút tải ảnh PNG chuẩn theme */}
-          <button
-            type="button"
+          {/* Footer thẻ: Nút tải ảnh PNG chuẩn V2Button */}
+          <V2Button
+            variant="outline"
+            size="xs"
+            fullWidth
             onClick={() => onDownloadRow(view)}
-            className="w-full flex items-center justify-center gap-1.5 py-1 px-2.5 rounded-lg border border-border bg-background hover:bg-muted active:bg-muted/80 text-[11px] font-semibold text-foreground transition-colors"
+            leftIcon={<Download className="h-3 w-3 text-muted-foreground" />}
           >
-            <Download className="h-3 w-3 text-muted-foreground" />
-            <span>{t("v2.transferQr.batch.downloadRow")}</span>
-          </button>
+            {t("v2.transferQr.batch.downloadRow")}
+          </V2Button>
         </div>
       ))}
     </div>

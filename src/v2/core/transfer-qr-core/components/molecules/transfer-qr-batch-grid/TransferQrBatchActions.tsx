@@ -1,4 +1,5 @@
 import * as React from "react";
+import { V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import "../../../transferQr.locale";
 
@@ -18,22 +19,26 @@ export function TransferQrBatchActions({
 
   return (
     <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-card border border-border text-card-foreground shadow-2xs">
-      <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="font-medium text-muted-foreground">
+      <div className="flex items-center justify-between gap-2">
+        <V2Text variant="body-sm" color="muted" weight="medium">
           {t("v2.transferQr.batch.summaryValid")}
-        </span>
-        <span className="font-bold text-foreground">
+        </V2Text>
+        <V2Text variant="body-sm" weight="bold">
           {validCount}/{totalCount} {t("v2.transferQr.batch.orderCount")}
-        </span>
+        </V2Text>
       </div>
       {totalAmount > 0 && (
-        <div className="flex items-center justify-between gap-2 text-xs border-t border-border/60 pt-1.5">
-          <span className="font-medium text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-1.5">
+          <V2Text variant="body-sm" color="muted" weight="medium">
             {t("v2.transferQr.batch.totalBatchAmount")}
-          </span>
-          <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+          </V2Text>
+          <V2Text
+            variant="currency"
+            weight="bold"
+            className="text-emerald-600 dark:text-emerald-400"
+          >
             {new Intl.NumberFormat("vi-VN").format(totalAmount)} ₫
-          </span>
+          </V2Text>
         </div>
       )}
     </div>
