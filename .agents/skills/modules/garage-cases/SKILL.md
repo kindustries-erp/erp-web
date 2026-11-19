@@ -31,6 +31,7 @@ src/modules/garage/
 │   │   │   ├── GarageCasesTable.columns.tsx # Aggregator kết hợp các nhóm cột
 │   │   │   ├── GarageCasesTable.date-columns.tsx # Nhóm 5 cột ngày tháng
 │   │   │   ├── GarageCasesTable.general-columns.tsx # Nhóm 11 cột thông tin chung (tích hợp Exclamation Tooltip phân loại KGara trong cột ERP)
+│   │   │   ├── GarageCasesTable.vehicle-columns.tsx # 5 cột Số khung, Hãng xe, Dòng xe, Năm SX, Đối tượng thanh toán (mặc định ẩn), dựng từ cấu hình core
 │   │   │   ├── GarageCasesTable.progress-columns.tsx # Nhóm 4 cột tiến độ thu/chi
 │   │   │   ├── GarageCasesTable.financial-columns.tsx # Nhóm 10 cột tài chính P&L
 │   │   │   └── GarageCasesTable.test.tsx # Unit tests kiểm tra 23 cột khớp view presets
@@ -227,3 +228,7 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
   - Tách sub-component phân tầng `GarageCaseViewTabs` (`GarageCasesTable.view-tabs.tsx`, 33 LoC) quản lý cụm view presets combobox & status tabs.
   - Tách hàm tính toán nhãn tổng hợp `resolveTotalLabelCol` vào `GarageCasesTable.summary.tsx`.
   - Tuân thủ No Blue Mandate: loại bỏ hoàn toàn các class `blue-*` khỏi bảng và summary row.
+
+### Cột xe & đối tượng thanh toán (KINDU-1433)
+- Phần dùng chung nằm ở `src/v2/core/garage-cases/vehicle/` (`GARAGE_CASE_VEHICLE_COLUMNS`, `buildVehicleInfoRows`, `formatVehicleBrand/Model/Payer/ModelYear`, `GarageCaseVehicleCell`, `GarageCasePayerCell`, locale `v2.garageCases.vehicle.*`). Bảng V1 (`GarageCasesTable.vehicle-columns.tsx`) và drawer (`GarageCaseGeneralInfoSection`) chỉ ghép; khi migrate V2 chỉ cần đọc lại cấu hình này.
+- Khóa cột = khóa lọc/sắp xếp API: `soKhung`, `hangXe`, `dongXe`, `namSanXuat`, `doiTuongThanhToan`. Mặc định ẩn ở view Tổng quan và Đối soát, bật ở "Tất cả cột". Xuất Excel chưa có 5 cột này.

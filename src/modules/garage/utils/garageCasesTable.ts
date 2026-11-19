@@ -193,6 +193,19 @@ function getCellValue(item: Record<string, any>, key: string) {
       if (paidCost <= 0 && cost > 0) return "UNPAID";
       return "";
     }
+    // Cột xe và đối tượng thanh toán: khóa khớp với API (lọc/sắp xếp server theo cột tên/mã)
+    case "soKhung":
+      return item.soKhung || "";
+    case "hangXe":
+      return item.hangXeName || "";
+    case "dongXe":
+      return item.dongXeName || "";
+    case "namSanXuat":
+      return item.namSanXuat ?? "";
+    case "doiTuongThanhToan":
+      return item.doiTuongThanhToanName || "";
+    case "doiTuongThanhToanCode":
+      return item.doiTuongThanhToanCode || "";
     case "hasLinkedInvoice":
       return Number(item.linkedInvoiceCount || 0) > 0 ? "YES" : "NO";
     default:

@@ -8,6 +8,9 @@
   "exports": {
     "traceabilityGraph": "buildGarageCaseTraceabilityGraph",
     "addLinkResolver": "resolveGarageAddLink",
-    "unlinkResolver": "resolveGarageUnlink"
+    "unlinkResolver": "resolveGarageUnlink",
+    "vehicleColumns": "GARAGE_CASE_VEHICLE_COLUMNS",
+    "vehicleInfoRows": "buildVehicleInfoRows",
+    "cells": "GarageCaseVehicleCell, GarageCasePayerCell"
   }
 }
