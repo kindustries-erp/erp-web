@@ -28,3 +28,4 @@ export * from "./v2-badge";
 export * from "./v2-chat-bubble";
 export * from "./v2-typing-indicator";
 export * from "./v2-floating-action-button";
+export * from "./v2-image";

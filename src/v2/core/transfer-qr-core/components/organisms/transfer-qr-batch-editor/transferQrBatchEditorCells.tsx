@@ -5,15 +5,19 @@ import {
   V2NumberInput,
   V2Text,
 } from "@/v2/shared/components/atoms";
-import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
+import {
+  V2Combobox,
+  type V2ComboboxOption,
+} from "@/v2/shared/components/molecules/v2-combobox";
 import type { V2DrawerLinesColumn } from "@/v2/shared/components/organisms/v2-drawer-lines-table";
 import type { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { TransferQrBatchColumn } from "../../../transferQr.enum";
 import type { TransferQrBatchRowView } from "../../../domain/rules/batchRowView";
 import {
   bankFieldsFromBin,
   type TransferQrBatchRow,
 } from "../../../domain/rules/batchRows";
-import { VIETQR_BANKS } from "../../../domain/constants/vietQrBanks";
+import { DEFAULT_BANK_OPTIONS } from "../../../domain/constants/defaultBankOptions";
 import {
   MAX_VND_AMOUNT,
   sanitizeTransferContent,
@@ -26,11 +30,6 @@ export interface BatchEditorCellHandlers {
   onRemove: (id: string) => void;
 }
 
-const BANK_OPTIONS = VIETQR_BANKS.map((bank) => ({
-  value: bank.bin,
-  label: `${bank.code} - ${bank.shortName}`,
-}));
-
 const invalid = (flag: boolean) => (flag ? "border-destructive" : undefined);
 
 /** Nội dung một ô của bảng lệnh thanh toán. */
@@ -39,16 +38,17 @@ export function renderBatchEditorCell(
   view: TransferQrBatchRowView,
   { onPatch, onRemove }: BatchEditorCellHandlers,
   t: Translate,
+  bankOptions: V2ComboboxOption[] = DEFAULT_BANK_OPTIONS,
 ): React.ReactNode {
   const { row, errors } = view;
   const id = row.id;
   switch (column.id) {
-    case "index":
+    case TransferQrBatchColumn.INDEX:
       return view.index;
-    case "bank":
+    case TransferQrBatchColumn.BANK:
       return (
         <V2Combobox
-          options={BANK_OPTIONS}
+          options={bankOptions}
           value={row.bin}
           onValueChange={(bin) => onPatch(id, bankFieldsFromBin(bin))}
           placeholder={t("v2.transferQr.placeholders.bank")}
@@ -56,7 +56,7 @@ export function renderBatchEditorCell(
           className={invalid(!!errors.bin)}
         />
       );
-    case "accountNumber":
+    case TransferQrBatchColumn.ACCOUNT_NUMBER:
       return (
         <V2Input
           value={row.accountNumber}
@@ -68,7 +68,7 @@ export function renderBatchEditorCell(
           className={invalid(!!errors.accountNumber)}
         />
       );
-    case "accountName":
+    case TransferQrBatchColumn.ACCOUNT_NAME:
       return (
         <V2Input
           value={row.accountName}
@@ -78,7 +78,7 @@ export function renderBatchEditorCell(
           className={invalid(!!errors.accountName)}
         />
       );
-    case "amount":
+    case TransferQrBatchColumn.AMOUNT:
       return (
         <V2NumberInput
           value={row.amount}
@@ -91,7 +91,7 @@ export function renderBatchEditorCell(
           className={invalid(!!errors.amount)}
         />
       );
-    case "content": {
+    case TransferQrBatchColumn.CONTENT: {
       const contentOnQr = sanitizeTransferContent(row.content);
       return (
         <div className="flex flex-col gap-1">
@@ -109,7 +109,7 @@ export function renderBatchEditorCell(
         </div>
       );
     }
-    case "remove":
+    case TransferQrBatchColumn.REMOVE:
       return (
         <V2Button
           variant="ghost"

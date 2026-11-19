@@ -15,7 +15,16 @@ export interface VietQrBank {
   bin: string;
   /** Tên gọi khác để khớp dữ liệu tự do (không phân biệt dấu, hoa thường) */
   aliases: readonly string[];
+  /** Link ảnh logo ngân hàng */
+  logoUrl?: string | null;
 }
+
+/** URL gốc tải ảnh logo từ CDN VietQR */
+export const VIETQR_CDN_IMAGE_BASE_URL = "https://api.vietqr.io/img";
+
+/** Hàm helper tạo URL ảnh logo VietQR từ mã ngân hàng */
+export const getVietQrCdnLogoUrl = (code: string): string =>
+  `${VIETQR_CDN_IMAGE_BASE_URL}/${code.trim().toUpperCase()}.png`;
 
 export const VIETQR_BANKS: readonly VietQrBank[] = [
   {

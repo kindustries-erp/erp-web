@@ -1,9 +1,11 @@
 import * as React from "react";
 import { ChevronDown, X } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
-import { V2Icon } from "@/v2/shared/components/atoms/v2-icon";
-import { V2Input } from "@/v2/shared/components/atoms/v2-input";
-import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import {
+  V2Button,
+  V2Icon,
+  V2Input,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -35,7 +37,20 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
 }) => {
   const { t } = useV2Translation();
   const { isMobile } = useViewport();
-  const c = useV2Combobox({ options, value, searchable, onValueChange });
+  const hint = placeholder ?? t("v2.form.selectPlaceholder", "Chọn...");
+  const searchHint =
+    searchPlaceholder ?? t("v2.form.searchPlaceholder", "Tìm kiếm...");
+
+  const c = useV2Combobox({
+    options,
+    value,
+    searchable,
+    onValueChange,
+    onScrollBottom,
+    loading,
+    emptyLabel: emptyLabel ?? t("v2.form.noResults", "Không có kết quả"),
+    loadingText: t("v2.form.searching", "Đang tìm..."),
+  });
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   useV2PopoverDismiss({
@@ -45,9 +60,6 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
     panelSelector: "[data-v2-combobox-panel]",
   });
 
-  const hint = placeholder ?? t("v2.form.selectPlaceholder", "Chọn...");
-  const searchHint =
-    searchPlaceholder ?? t("v2.form.searchPlaceholder", "Tìm kiếm...");
   const canClear = clearable && value !== null && !disabled;
   const displayLabel =
     c.selected?.label ?? (value && fallbackLabel ? fallbackLabel : hint);
@@ -56,24 +68,6 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
   const handleQueryChange = (next: string) => {
     c.setQuery(next);
     onSearchChange?.(next);
-  };
-
-  const handleListScroll = (e: React.UIEvent<HTMLUListElement>) => {
-    if (!onScrollBottom || loading) return;
-    const { scrollHeight, scrollTop, clientHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop <= clientHeight + 15) onScrollBottom();
-  };
-
-  const listProps = {
-    options: c.filtered,
-    value,
-    activeIndex: c.activeIndex,
-    loading,
-    emptyLabel: emptyLabel ?? t("v2.form.noResults", "Không có kết quả"),
-    loadingText: t("v2.form.searching", "Đang tìm..."),
-    onSelect: c.select,
-    onHoverIndex: c.setActiveIndex,
-    onScroll: handleListScroll,
   };
 
   const trigger = (
@@ -93,6 +87,11 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
         "disabled:cursor-not-allowed disabled:opacity-50",
       )}
     >
+      {c.selected?.icon && (
+        <span className="shrink-0 flex items-center justify-center">
+          {c.selected.icon}
+        </span>
+      )}
       <V2Text
         as="span"
         truncate
@@ -102,26 +101,6 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
         {displayLabel}
       </V2Text>
     </V2Button>
-  );
-
-  const desktopContent = (
-    <div
-      className="flex flex-col gap-1"
-      data-v2-combobox-panel=""
-      onKeyDown={c.onKeyDown}
-    >
-      {searchable && (
-        <V2Input
-          sizeVariant="sm"
-          autoFocus
-          value={c.query}
-          placeholder={searchHint}
-          aria-label={searchHint}
-          onChange={(e) => handleQueryChange(e.target.value)}
-        />
-      )}
-      <V2ComboboxList {...listProps} />
-    </div>
   );
 
   return (
@@ -138,13 +117,31 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
             query={c.query}
             onQueryChange={handleQueryChange}
             onKeyDown={c.onKeyDown}
-            {...listProps}
+            {...c.listProps}
           />
         </>
       ) : (
         <V2Popover
           trigger={trigger}
-          content={desktopContent}
+          content={
+            <div
+              className="flex flex-col gap-1"
+              data-v2-combobox-panel=""
+              onKeyDown={c.onKeyDown}
+            >
+              {searchable && (
+                <V2Input
+                  sizeVariant="sm"
+                  autoFocus
+                  value={c.query}
+                  placeholder={searchHint}
+                  aria-label={searchHint}
+                  onChange={(e) => handleQueryChange(e.target.value)}
+                />
+              )}
+              <V2ComboboxList {...c.listProps} />
+            </div>
+          }
           open={c.open}
           onOpenChange={c.setOpen}
           align="start"
@@ -164,7 +161,6 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
             variant="ghost"
             size="icon-xs"
             aria-label={t("v2.form.clearSelection", "Bỏ lựa chọn")}
-            title={t("v2.form.clearSelection", "Bỏ lựa chọn")}
             className="pointer-events-auto h-5 w-5 p-0 text-muted-fg hover:text-foreground"
             onClick={() => onValueChange(null)}
           >

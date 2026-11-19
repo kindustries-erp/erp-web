@@ -8,6 +8,10 @@ interface UseV2ComboboxParams {
   value: string | null;
   searchable: boolean;
   onValueChange: (value: string | null) => void;
+  onScrollBottom?: () => void;
+  loading?: boolean;
+  emptyLabel?: string;
+  loadingText?: string;
 }
 
 export function useV2Combobox({
@@ -15,6 +19,10 @@ export function useV2Combobox({
   value,
   searchable,
   onValueChange,
+  onScrollBottom,
+  loading,
+  emptyLabel,
+  loadingText,
 }: UseV2ComboboxParams) {
   const [open, setOpenState] = useState(false);
   const [query, setQueryState] = useState("");
@@ -72,6 +80,29 @@ export function useV2Combobox({
     [filtered, activeIndex, select],
   );
 
+  const onListScroll = useCallback(
+    (e: React.UIEvent<HTMLUListElement>) => {
+      if (!onScrollBottom || loading) return;
+      const el = e.currentTarget;
+      if (el.scrollHeight - el.scrollTop <= el.clientHeight + 15) {
+        onScrollBottom();
+      }
+    },
+    [onScrollBottom, loading],
+  );
+
+  const listProps = {
+    options: filtered,
+    value,
+    activeIndex,
+    loading: !!loading,
+    emptyLabel: emptyLabel ?? "Không có kết quả",
+    loadingText: loadingText ?? "Đang tìm...",
+    onSelect: select,
+    onHoverIndex: setActiveIndex,
+    onScroll: onListScroll,
+  };
+
   return {
     open,
     setOpen,
@@ -83,5 +114,7 @@ export function useV2Combobox({
     setActiveIndex,
     select,
     onKeyDown,
+    onListScroll,
+    listProps,
   };
 }

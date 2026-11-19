@@ -1,5 +1,6 @@
 import {
   resolveBankBin,
+  getVietQrCdnLogoUrl,
   type TransferQrAccountOption,
 } from "@/v2/core/transfer-qr-core";
 
@@ -25,6 +26,8 @@ export function toTransferQrAccountOptions(
       bankName: account.bankName,
     });
     const bankCode = bank?.code ?? account.bankCode;
+    const logoUrl =
+      bank?.logoUrl ?? (bankCode ? getVietQrCdnLogoUrl(bankCode) : null);
     return {
       id: account.id,
       label: `${bankCode} - ${account.accountNumber}`,
@@ -32,6 +35,7 @@ export function toTransferQrAccountOptions(
       bin: bank?.bin ?? null,
       accountNumber: account.accountNumber,
       accountName: account.accountName,
+      logoUrl,
     };
   });
 }
