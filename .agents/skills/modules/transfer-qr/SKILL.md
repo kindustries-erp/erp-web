@@ -7,9 +7,9 @@ description: Tri thức frontend cho drawer tạo mã QR chuyển khoản VietQR
 
 ## Phạm vi
 - Lõi họ: `src/v2/core/transfer-qr-core/` (barrel `@/v2/core/transfer-qr-core`, manifest `core.manifest.json`).
-- Module: `src/v2/modules/transfer-qr-bank-statements/` (lớp ghép: map tài khoản ERP sang kiểu lõi, drawer bọc).
+- Module: `src/v2/modules/transfer-qr-bank-statements/` (lớp ghép: map tài khoản ERP sang kiểu lõi, drawer bọc, API client `banksCatalogApi.ts` và hook `useBanksCatalog.tsx` hỗ trợ infinite scroll và tìm kiếm từ `GET /api/v2/banks-management` lưu trong DB nội bộ).
 - Điểm nối V1: dropdown "Thao tác" của tab Ngân hàng `/cashflow?tab=bank`, mục "Tạo mã QR chuyển khoản", chỉ khi `type === "bank"`. Nối tại `modules/bank-statements/components/BankStatementsTab/` (`hooks/useBankStatementActions.tsx`, `useBankStatementsTabLogic.tsx`, `BankStatementSection.tsx`, `components/BankStatementDrawers.tsx`).
-- Không có API, không có DB, không có route riêng.
+- Điểm nối Settings: `BankAccountDrawer.tsx` dùng `useBanksCatalog` cho phép chọn ngân hàng trực tiếp từ Combobox có sẵn logo icon, tự động điền mã và tên ngân hàng.
 
 ## Hai luồng
 - **Trả tiền nhà cung cấp** (`TransferQrMode.PAY_TO_SUPPLIER`): chọn ngân hàng, nhập số tài khoản, tên chủ tài khoản (chỉ để đối chiếu, không nằm trong QR), số tiền, nội dung.

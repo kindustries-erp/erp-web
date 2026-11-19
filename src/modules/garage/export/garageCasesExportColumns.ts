@@ -4,6 +4,7 @@ export const GARAGE_CASES_EXPORT_GROUP_KEYS = [
   "receivable",
   "payable",
   "profit",
+  "vehicle",
   "system",
 ] as const;
 
@@ -64,6 +65,17 @@ export const ALL_GARAGE_CASES_EXPORT_COLUMNS: GarageCasesExportColumnItem[] = [
     defaultLabel: "Hóa đơn VAT liên kết",
   },
 
+  // Nhóm xe và đối tượng thanh toán: cột tùy chọn, khóa trùng khóa cột của bảng và API.
+  { key: "soKhung", group: "vehicle", defaultLabel: "Số khung" },
+  { key: "hangXe", group: "vehicle", defaultLabel: "Hãng xe" },
+  { key: "dongXe", group: "vehicle", defaultLabel: "Dòng xe" },
+  { key: "namSanXuat", group: "vehicle", defaultLabel: "Năm SX" },
+  {
+    key: "doiTuongThanhToan",
+    group: "vehicle",
+    defaultLabel: "Đối tượng thanh toán",
+  },
+
   // Cột tùy chọn: không nằm trong mặc định, chỉ có khi người dùng chọn.
   { key: "exclusionRules", group: "system", defaultLabel: "Quy tắc loại trừ" },
   { key: "createdAt", group: "system", defaultLabel: "Ngày tạo" },
@@ -73,6 +85,11 @@ export const ALL_GARAGE_CASES_EXPORT_COLUMNS: GarageCasesExportColumnItem[] = [
 
 /** Các cột nằm ngoài bộ mặc định 30 cột (chỉ xuất khi người dùng chọn). */
 const OPTIONAL_GARAGE_CASES_EXPORT_KEYS = new Set([
+  "soKhung",
+  "hangXe",
+  "dongXe",
+  "namSanXuat",
+  "doiTuongThanhToan",
   "exclusionRules",
   "createdAt",
   "updatedAt",

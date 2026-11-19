@@ -3,8 +3,8 @@ import { V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import "../../../transferQr.locale";
 import { TransferQrPaymentCard } from "../transfer-qr-payment-card";
+import { TransferQrMode } from "../../../transferQr.enum";
 import {
-  TransferQrMode,
   type TransferQrCompanyInfo,
   type TransferQrAccountOption,
 } from "../../../transferQr.types";
@@ -14,7 +14,7 @@ export interface TransferQrPreviewProps {
   companyInfo?: TransferQrCompanyInfo;
   target?: Pick<
     TransferQrAccountOption,
-    "bin" | "bankCode" | "accountNumber" | "accountName"
+    "bin" | "bankCode" | "accountNumber" | "accountName" | "logoUrl"
   > | null;
   amount?: number | null;
   content?: string;
@@ -29,7 +29,7 @@ export function TransferQrPreview({
   target = null,
   amount,
   content,
-  mode,
+  mode = TransferQrMode.PAY_TO_SUPPLIER,
   cardRef,
 }: TransferQrPreviewProps) {
   const { t } = useV2Translation();

@@ -5,6 +5,7 @@ import {
   toTransferQrAccountOptions,
   type TransferQrBankStatementsAccount,
 } from "../transferQrBankStatements.config";
+import { useBanksCatalog } from "../hooks/useBanksCatalog";
 
 export interface TransferQrBankStatementsDrawerProps {
   open: boolean;
@@ -19,6 +20,8 @@ export function TransferQrBankStatementsDrawer({
   accounts,
 }: TransferQrBankStatementsDrawerProps) {
   const { data: companyProfile } = useCompanyProfile();
+  const { bankOptions, onScrollBottom, onSearchChange, loading } =
+    useBanksCatalog();
 
   const options = React.useMemo(
     () => toTransferQrAccountOptions(accounts),
@@ -40,6 +43,10 @@ export function TransferQrBankStatementsDrawer({
       onClose={onClose}
       accounts={options}
       companyInfo={companyInfo}
+      bankOptions={bankOptions}
+      onBankScrollBottom={onScrollBottom}
+      onBankSearchChange={onSearchChange}
+      isBanksLoading={loading}
     />
   );
 }

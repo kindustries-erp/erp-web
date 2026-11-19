@@ -5,8 +5,10 @@ import {
   type V2DrawerLinesColumn,
 } from "@/v2/shared/components/organisms/v2-drawer-lines-table";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { TransferQrBatchColumn } from "../../../transferQr.enum";
 import type { TransferQrBatchRowView } from "../../../domain/rules/batchRowView";
 import type { TransferQrBatchRow } from "../../../domain/rules/batchRows";
+import type { V2ComboboxOption } from "@/v2/shared/components/molecules/v2-combobox";
 import { renderBatchEditorCell } from "./transferQrBatchEditorCells";
 
 export interface TransferQrBatchEditorProps {
@@ -16,6 +18,7 @@ export interface TransferQrBatchEditorProps {
   onRemove: (id: string) => void;
   onPatch: (id: string, patch: Partial<Omit<TransferQrBatchRow, "id">>) => void;
   onClear: () => void;
+  bankOptions?: V2ComboboxOption[];
 }
 
 /** Bảng các lệnh thanh toán: mỗi dòng là một mã QR. */
@@ -26,39 +29,50 @@ export function TransferQrBatchEditor({
   onRemove,
   onPatch,
   onClear,
+  bankOptions,
 }: TransferQrBatchEditorProps) {
   const { t } = useV2Translation();
   const columns: V2DrawerLinesColumn[] = [
-    { id: "index", header: "#", width: 40, align: "center" },
     {
-      id: "bank",
+      id: TransferQrBatchColumn.INDEX,
+      header: "#",
+      width: 40,
+      align: "center",
+    },
+    {
+      id: TransferQrBatchColumn.BANK,
       header: t("v2.transferQr.batch.columns.bank"),
       width: 180,
     },
     {
-      id: "accountNumber",
+      id: TransferQrBatchColumn.ACCOUNT_NUMBER,
       header: t("v2.transferQr.batch.columns.accountNumber"),
       width: 140,
     },
     {
-      id: "accountName",
+      id: TransferQrBatchColumn.ACCOUNT_NAME,
       header: t("v2.transferQr.batch.columns.accountName"),
       grow: true,
       minWidth: 160,
     },
     {
-      id: "amount",
+      id: TransferQrBatchColumn.AMOUNT,
       header: t("v2.transferQr.batch.columns.amount"),
       width: 140,
       align: "right",
     },
     {
-      id: "content",
+      id: TransferQrBatchColumn.CONTENT,
       header: t("v2.transferQr.batch.columns.content"),
       grow: true,
       minWidth: 180,
     },
-    { id: "remove", header: "", width: 44, align: "center" },
+    {
+      id: TransferQrBatchColumn.REMOVE,
+      header: "",
+      width: 44,
+      align: "center",
+    },
   ];
 
   return (
@@ -84,7 +98,13 @@ export function TransferQrBatchEditor({
         rows={[...views]}
         getRowKey={(view) => view.row.id}
         renderCell={(column, view) =>
-          renderBatchEditorCell(column, view, { onPatch, onRemove }, t)
+          renderBatchEditorCell(
+            column,
+            view,
+            { onPatch, onRemove },
+            t,
+            bankOptions,
+          )
         }
         emptyLabel={t("v2.transferQr.batch.emptyRows")}
         maxHeight="50vh"

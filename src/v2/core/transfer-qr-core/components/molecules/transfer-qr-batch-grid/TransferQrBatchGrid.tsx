@@ -1,6 +1,12 @@
 import * as React from "react";
 import { Download } from "lucide-react";
-import { V2Badge, V2Button, V2Text } from "@/v2/shared/components/atoms";
+import {
+  V2Badge,
+  V2Button,
+  V2Icon,
+  V2Image,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { TransferQrBatchRowView } from "../../../hooks/useTransferQrBatchController";
 import "../../../transferQr.locale";
@@ -57,7 +63,7 @@ export function TransferQrBatchGrid({
           {/* Body thẻ: QR bên trái (nền trắng chuẩn quét), thông tin ngân hàng/tài khoản/tiền bên phải */}
           <div className="flex items-center gap-3">
             <div className="h-20 w-20 shrink-0 rounded-lg bg-white p-1 border border-border/40 shadow-2xs flex items-center justify-center">
-              <img
+              <V2Image
                 src={view.qrDataUrl}
                 alt={view.fileName}
                 className="h-18 w-18 object-contain"
@@ -107,7 +113,13 @@ export function TransferQrBatchGrid({
             size="xs"
             fullWidth
             onClick={() => onDownloadRow(view)}
-            leftIcon={<Download className="h-3 w-3 text-muted-foreground" />}
+            leftIcon={
+              <V2Icon
+                icon={Download}
+                size={12}
+                className="text-muted-foreground"
+              />
+            }
           >
             {t("v2.transferQr.batch.downloadRow")}
           </V2Button>

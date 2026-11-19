@@ -1,20 +1,16 @@
-/** Hai luồng QR: trả tiền nhà cung cấp, hoặc nhận tiền từ khách vào tài khoản công ty. */
-export enum TransferQrMode {
-  PAY_TO_SUPPLIER = "payToSupplier",
-  RECEIVE_FROM_CUSTOMER = "receiveFromCustomer",
-}
+import {
+  TransferQrMode,
+  TransferQrDrawerTab,
+  TransferQrBatchColumn,
+} from "./transferQr.enum";
+
+export { TransferQrMode, TransferQrDrawerTab, TransferQrBatchColumn };
 
 /** Nhãn i18n của từng chế độ; một nguồn duy nhất cho tab trái của drawer. */
 export const TRANSFER_QR_MODE_LABEL_KEY: Record<TransferQrMode, string> = {
   [TransferQrMode.PAY_TO_SUPPLIER]: "v2.transferQr.modes.pay",
   [TransferQrMode.RECEIVE_FROM_CUSTOMER]: "v2.transferQr.modes.receive",
 };
-
-/** Hai tab đầu drawer: một mã QR hoặc nhiều lệnh thanh toán. */
-export enum TransferQrDrawerTab {
-  SINGLE = "single",
-  BATCH = "batch",
-}
 
 /**
  * Tài khoản đưa vào lõi. Lõi không biết dữ liệu ERP:
@@ -30,6 +26,8 @@ export interface TransferQrAccountOption {
   bin: string | null;
   accountNumber: string;
   accountName: string;
+  /** Link ảnh logo ngân hàng */
+  logoUrl?: string | null;
 }
 
 export interface TransferQrFormState {

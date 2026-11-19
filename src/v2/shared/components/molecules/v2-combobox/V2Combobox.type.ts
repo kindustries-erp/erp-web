@@ -6,6 +6,8 @@ export interface V2ComboboxOption {
   disabled?: boolean;
   /** Dòng phụ nhỏ bên dưới nhãn (ví dụ mã số thuế) */
   description?: string;
+  /** Biểu tượng hoặc ảnh logo hiển thị bên cạnh nhãn */
+  icon?: ReactNode;
   /**
    * Nội dung giải thích thêm (ví dụ chi tiết kỳ đã trả).
    * Desktop: hiện khi hover qua V2Tooltip. Mobile: hiện thành dòng phụ dưới nhãn.

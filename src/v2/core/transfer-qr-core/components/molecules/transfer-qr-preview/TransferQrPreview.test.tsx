@@ -133,4 +133,25 @@ describe("TransferQrPreview", () => {
     fireEvent.click(copyBtn);
     expect(writeTextMock).toHaveBeenCalledWith("0123456789");
   });
+
+  it("hiển thị logo ngân hàng cạnh tên ngân hàng dưới mã QR", () => {
+    const { container } = render(
+      <TransferQrPreview
+        qrDataUrl="data:image/png;base64,mockqr"
+        target={{
+          bin: "970436",
+          bankCode: "VCB",
+          accountNumber: "0123456789",
+          accountName: "CONG TY ABC",
+          logoUrl: "https://api.vietqr.io/img/VCB.png",
+        }}
+      />,
+    );
+
+    const bankLogo = container.querySelector('img[alt="Vietcombank"]');
+    expect(bankLogo).not.toBeNull();
+    expect(bankLogo?.getAttribute("src")).toBe(
+      "https://api.vietqr.io/img/VCB.png",
+    );
+  });
 });
