@@ -1,50 +1,56 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
-import {
-  V2Button,
-  V2Progress,
-  V2Text,
-  type V2ProgressTone,
-} from "@/v2/shared/components/atoms";
-import type { V2StatusChipTone, V2TabItemData } from "./V2TabBar.type";
+import { V2Button, V2Divider, V2Text } from "@/v2/shared/components/atoms";
+import type { V2TabItemData } from "./V2TabBar.type";
+import { TabBarChipComfortable } from "./TabBarChipComfortable";
+import { TabBarChipHeader } from "./TabBarChipHeader";
+import { TabBarChipMetric } from "./TabBarChipMetric";
+import { TabBarChipProgress } from "./TabBarChipProgress";
 
 interface TabBarChipItemProps {
   tab: V2TabItemData;
   isActive: boolean;
-  /** Tổng để tính tỷ lệ thanh tiến độ (thường là số của tab "Tất cả") */
   total: number;
   onSelect: (key: string) => void;
+  density?: "compact" | "comfortable";
+  metricMode?: "stacked" | "inline" | "icon";
+  equalWidth?: boolean;
+  indicator?: "active-bar" | "progress";
 }
 
-/** Chấm nhãn: trang trí, không có atom chấm sẵn nên giữ span */
-const DOT_CLASS: Record<V2StatusChipTone, string> = {
-  neutral: "bg-faint",
-  success: "bg-up-fg",
-  muted: "bg-faint opacity-70",
-  warning: "bg-warn-fg",
-};
-
-/** Map tone chip sang tone của V2Progress (atom dùng chung) */
-const PROGRESS_TONE: Record<V2StatusChipTone, V2ProgressTone> = {
-  neutral: "neutral",
-  success: "emerald",
-  muted: "neutral",
-  warning: "amber",
-};
-
-const numberFormatter = new Intl.NumberFormat("vi-VN");
-
-/** Thẻ KPI bấm được: nhãn + chấm, số lớn, thanh tỷ lệ so với tổng, gạch chân khi đang chọn */
+/** Thẻ trạng thái bấm được (V2TabBarVariant.STATUS_CHIP), 2 hàng tinh gọn, count trong ngoặc đơn */
 export const TabBarChipItem: React.FC<TabBarChipItemProps> = ({
   tab,
   isActive,
   total,
   onSelect,
+  density = "compact",
+  metricMode = "stacked",
+  equalWidth = true,
+  indicator = "active-bar",
 }) => {
   const tabKey = (tab.key ?? tab.id) || "";
   const tone = tab.tone ?? "neutral";
   const count = tab.badgeCount ?? 0;
-  const pct = total > 0 ? Math.min(100, Math.round((count / total) * 100)) : 0;
+  const pct =
+    tab.percentage !== undefined
+      ? tab.percentage
+      : total > 0
+        ? Math.min(100, Math.round((count / total) * 100))
+        : 0;
+
+  if (density === "comfortable") {
+    return (
+      <TabBarChipComfortable
+        tab={tab}
+        isActive={isActive}
+        total={total}
+        onSelect={onSelect}
+      />
+    );
+  }
+
+  const showProgressBar = indicator === "progress" && !tab.hideProgress;
 
   return (
     <V2Button
@@ -59,47 +65,77 @@ export const TabBarChipItem: React.FC<TabBarChipItemProps> = ({
       id={`status-chip-tab-${tabKey}`}
       onClick={() => !tab.disabled && onSelect(tabKey)}
       className={cn(
-        "group relative flex h-auto w-[148px] shrink-0 snap-start flex-col items-stretch gap-2 rounded-none px-4 py-3 text-left font-normal whitespace-normal transition-colors duration-150 select-none cursor-pointer sm:w-[164px]",
+        "group relative flex h-auto shrink-0 snap-start flex-col justify-center rounded-none text-left font-normal transition-colors duration-150 select-none cursor-pointer",
+        "px-3 py-2 sm:px-3.5 sm:py-2.5",
+        equalWidth
+          ? "w-[136px] sm:w-[156px]"
+          : "w-auto min-w-[120px] sm:min-w-[136px]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
-        isActive ? "bg-surface-hover" : "bg-transparent hover:bg-surface-hover",
+        isActive
+          ? "bg-surface-hover shadow-xs"
+          : "bg-transparent hover:bg-surface-hover",
         tab.disabled && "opacity-50 cursor-not-allowed",
       )}
     >
-      <span className="flex items-center gap-1.5">
-        <span
-          aria-hidden="true"
-          data-tone={tone}
-          className={cn("h-1.5 w-1.5 shrink-0 rounded-full", DOT_CLASS[tone])}
-        />
-        <V2Text
-          as="span"
-          variant="tab-pill"
-          color="inherit"
-          className={cn(
-            "text-xs leading-none",
-            isActive
-              ? "font-semibold text-foreground"
-              : "font-medium text-muted-fg group-hover:text-foreground",
-          )}
-        >
-          {tab.label}
-        </V2Text>
-      </span>
+      {/* Hàng 1: Dot + Tên trạng thái (Count) bên trái; Tỷ trọng % bên phải */}
+      <TabBarChipHeader
+        label={tab.label}
+        tone={tone}
+        pct={pct}
+        total={total}
+        isActive={isActive}
+        badgeCount={tab.badgeCount !== undefined ? count : undefined}
+      />
 
-      {tab.badgeCount !== undefined && (
-        <V2Text
-          as="span"
-          variant="tab-pill"
-          color="inherit"
-          className="font-mono text-2xl font-semibold leading-none tabular-nums text-foreground"
-        >
-          {numberFormatter.format(count)}
-        </V2Text>
+      {/* Hàng 2: Số liệu bên dưới căn giữa với divider ngăn cách giữa các metric */}
+      <div className="mt-2 sm:mt-2.5 min-w-0 w-full">
+        {tab.metrics && tab.metrics.length > 0 && (
+          <span className="flex items-center justify-center gap-1.5 sm:gap-2 min-w-0 w-full flex-nowrap overflow-hidden">
+            {tab.metrics.map((m, idx) => (
+              <React.Fragment key={idx}>
+                {idx > 0 && (
+                  <V2Divider
+                    orientation="vertical"
+                    data-testid="tab-chip-metric-divider"
+                    className="h-2.5 shrink-0 bg-muted-fg opacity-35"
+                  />
+                )}
+                <TabBarChipMetric
+                  metric={m}
+                  showIconOnly={metricMode === "icon"}
+                />
+              </React.Fragment>
+            ))}
+          </span>
+        )}
+        {(!tab.metrics || tab.metrics.length === 0) && tab.subValue && (
+          <span className="flex items-baseline gap-1.5 min-w-0">
+            <V2Text
+              as="span"
+              variant="tab-pill"
+              color="inherit"
+              className="font-mono text-[11px] leading-tight text-muted-fg truncate"
+            >
+              {tab.subLabel ? `${tab.subLabel} ${tab.subValue}` : tab.subValue}
+            </V2Text>
+          </span>
+        )}
+      </div>
+
+      {/* Progress bar tùy chọn nếu cần dùng (mặc định tắt khi dùng active-bar) */}
+      {showProgressBar && (
+        <div className="mt-2 sm:mt-2.5 w-full">
+          <TabBarChipProgress
+            pct={pct}
+            tone={tone}
+            hide={tab.hideProgress}
+            label={tab.label}
+          />
+        </div>
       )}
 
-      <V2Progress value={pct} tone={PROGRESS_TONE[tone]} />
-
-      {isActive && (
+      {/* Active Tab Bar: Thanh tím ở mép chân tab chỉ xuất hiện khi tab đang active */}
+      {isActive && indicator === "active-bar" && (
         <span
           aria-hidden="true"
           className="absolute inset-x-0 bottom-0 h-0.5 bg-primary"

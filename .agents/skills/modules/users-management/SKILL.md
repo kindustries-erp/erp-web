@@ -54,7 +54,7 @@ src/v2/modules/users-management/        # thin module: api client, config, page,
 
 - Vitest: `bunx vitest --run src/v2/core/users src/v2/modules/users-management`.
 - E2E: `e2e/users-management.e2e.mjs` (`bun run e2e:users-management`), 17 kiểm tra: bảng gọi API v2, tạo qua drawer (chặn mật khẩu ngắn), tài khoản mới đăng nhập được, tìm, ngưng/kích hoạt, đặt lại mật khẩu, `/erp-users` mở trang V2 và không gọi API V1, tab Lịch sử có dòng audit, đăng nhập dưới quyền rồi quay lại, `/v2/admin/users` hiện bảng thật.
-  - Cần `E2E_ADMIN_PASSWORD` (mật khẩu admin, đọc `SEED_ADMIN_PASSWORD` trong `erp-api/.env`, không in ra) hoặc `E2E_PASSWORD`; `E2E_ADMIN_EMAIL` mặc định `admin@liouni.com`.
+  - Cần `E2E_PASSWORD` (đọc từ `erp-api/.env`, không in ra); `E2E_TAO_EMAIL` mặc định `ai-test-tao@example.com`, tài khoản cần quyền `admin_users:manage`.
   - Tạo dữ liệu email `e2e-users-*@example.com`; không có API xóa nên dọn bằng SQL (xóa `core_refresh_tokens`, `core_users`, `users_management` theo email) sau khi xác nhận `SELECT current_database();`. Không chạy trên DB production.
 
 ## 5. Còn lại và lưu ý

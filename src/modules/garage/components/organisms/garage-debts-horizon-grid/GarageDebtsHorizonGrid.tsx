@@ -52,7 +52,7 @@ export const GarageDebtsHorizonGrid: React.FC<GarageDebtsHorizonGridProps> = ({
             ]}
             className="w-auto"
           />
-          <DebtAgingExplanationPopover context="garage" />
+          <DebtAgingExplanationPopover context="garage" aging5 />
         </div>
       </div>
 

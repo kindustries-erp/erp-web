@@ -7,6 +7,7 @@ import {
   Settings,
   Eye,
   Pencil,
+  QrCode,
 } from "lucide-react";
 
 export function useBankStatementActions({
@@ -17,6 +18,7 @@ export function useBankStatementActions({
   setIsCreateOpen,
   setIsExportOpen,
   setIsOriginalFilesOpen,
+  setIsQrOpen,
 }: {
   type: "bank" | "cash";
   t: (key: string, options?: any) => string;
@@ -25,6 +27,7 @@ export function useBankStatementActions({
   setIsCreateOpen: (v: boolean) => void;
   setIsExportOpen: (v: boolean) => void;
   setIsOriginalFilesOpen: (v: boolean) => void;
+  setIsQrOpen: (v: boolean) => void;
 }) {
   const rowActions = useMemo(
     () => (row: any) => [
@@ -102,6 +105,17 @@ export function useBankStatementActions({
             icon: <FileSpreadsheet className="w-4 h-4 text-green-600" />,
             onClick: () => setIsExportOpen(true),
           },
+          ...(type === "bank"
+            ? [
+                {
+                  label: t("bankStatement.transferQr", {
+                    defaultValue: "Tạo mã QR chuyển khoản",
+                  }),
+                  icon: <QrCode className="w-4 h-4 text-emerald-600" />,
+                  onClick: () => setIsQrOpen(true),
+                },
+              ]
+            : []),
           {
             label: t("bankStatement.originalFiles", {
               defaultValue: "Quản lý file gốc",
@@ -134,6 +148,7 @@ export function useBankStatementActions({
       setIsCreateOpen,
       setIsExportOpen,
       setIsOriginalFilesOpen,
+      setIsQrOpen,
       openCustomFieldsDrawer,
     ],
   );

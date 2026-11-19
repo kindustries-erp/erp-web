@@ -63,6 +63,7 @@ interface FunnelStageCardProps {
   amount: string;
   /** Nội dung chân thẻ (mô tả hoặc dòng dự thu). */
   children: React.ReactNode;
+  onClick?: () => void;
 }
 
 export function FunnelStageCard({
@@ -74,11 +75,30 @@ export function FunnelStageCard({
   unit,
   amount,
   children,
+  onClick,
 }: FunnelStageCardProps) {
   const c = TONES[tone];
+  const isClickable = Boolean(onClick);
   return (
     <div
-      className={`p-3.5 rounded-xl border flex flex-col justify-between ${c.card}`}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        isClickable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
+      className={`p-3.5 rounded-xl border flex flex-col justify-between ${c.card} ${
+        isClickable
+          ? "cursor-pointer hover:shadow-md hover:scale-[1.01] transition-all select-none"
+          : ""
+      }`}
     >
       <div className="flex items-center justify-between">
         <span

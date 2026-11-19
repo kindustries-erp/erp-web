@@ -36,6 +36,7 @@ Chọn generator web: họ mới → `v2-core`; họ đã có lõi → `v2-thin-
 
 ## Bước 2. UI bảng
 
+- **URL**: `/v2/<module>` chỉ để demo/test. URL chính là `/<module>` (không `v2`): sau khi plop `wire=true`, nối thêm vào shell chính (PageKey, `pageUrl.ts`, nav/sidebar, breadcrumb ở `V2ShellLayout`, map trang trong `App.tsx`, slug V1 cũ vào `LEGACY_SLUGS`). Xem `erp-ui-structure` Phần B.
 - Chạy plop `v2-module` hoặc `v2-thin-module` (xem `references/plop-commands.md`), `wire=true`.
 - Hoàn thiện theo `standardize-table/references/v2-table.md`:
   - Column selector: ẩn/hiện, thứ tự, độ rộng; giữ `tableInput` id.

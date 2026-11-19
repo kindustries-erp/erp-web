@@ -159,7 +159,7 @@ export function calculateClassificationDonutItems(
 ) {
   const itemMap = new Map<
     string,
-    { label: string; value: number; color: string }
+    { label: string; value: number; color: string; key: string }
   >();
   data.forEach((d) => {
     const label = d.classificationName || "Khác";
@@ -172,6 +172,7 @@ export function calculateClassificationDonutItems(
         label,
         value: val,
         color: CLASSIFICATION_CONFIG[d.classificationKey]?.dot || "#64748b",
+        key: d.classificationKey,
       });
     }
   });

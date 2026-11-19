@@ -3,6 +3,8 @@ import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 
 /** URL chuẩn của module khoản vay, thống nhất với API `api/v2/loans-tool`. */
 export const LOANS_TOOL_PATH = "/loans-tool";
+/** URL public chuẩn của công cụ khoản vay khi chưa đăng nhập. */
+export const PUBLIC_LOANS_TOOL_PATH = "/public/loans-tool";
 
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
@@ -49,7 +51,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-goods-issues",
   "employees-management",
   "sys-tags",
-  "attachments",
+  "file-attachments",
   "garage-dashboard",
   "garage-cases",
   "garage-stock-vouchers",
@@ -70,13 +72,28 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "vinfast-parts-oto-stock",
   "vinfast-parts-xemay-stock",
   "custom-fields",
+  "customers-v2",
+  "suppliers-v2",
+  "invoices-v2",
+  "audit-logs-v2",
+  "admin-dashboard-v2",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
+  // Alias tiện ích cho các module V2
+  "erp-customers-v2": "customers-v2",
+  "erp-suppliers-v2": "suppliers-v2",
+  "erp-invoices-v2": "invoices-v2",
+  "erp-activity-logs-v2": "audit-logs-v2",
+  "admin-audit-logs": "audit-logs-v2",
   // URL cũ của trang người dùng V1, đã thay bằng module V2 users-management
   "erp-users": "users-management",
   // URL cũ của trang nhân viên V1, đã thay bằng module V2 employees-management
   "erp-employees": "employees-management",
+  // URL cũ của trang tài liệu V1, đã thay bằng module V2 file-attachments
+  attachments: "file-attachments",
+  // slug module V2 (trước đây /v2/file-attachments) cũng về URL chính
+  "file-attachments-management": "file-attachments",
   "cashflow-dashboard": "cashflow",
   "mua-hang": "purchasing",
   kho: "erp-inventory-stock",
@@ -304,7 +321,13 @@ export function pathToPage(
     page = "garage-cases";
   } else if (slug === "garage-cashflow") {
     page = "garage-cashflow";
-  } else if (slug === "loans-tool" || slug === "tools/loans") {
+  } else if (
+    slug === "loans-tool" ||
+    slug === "tools/loans" ||
+    slug === "loans" ||
+    slug === "public/loans-tool" ||
+    slug === "public/loans"
+  ) {
     page = "loans";
   } else if (
     slug === "permission" ||

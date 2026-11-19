@@ -50,4 +50,4 @@ Nếu bạn cần tạo một Modal để xác nhận xoá:
   />;
   ```
 
-- Trong code **V2**, dùng bản V2 tương ứng thay vì bản V1 (ví dụ `V2ConfirmModal` tại `@/v2/shared/components/molecules/v2-confirm-modal`, `V2FormField` tại `@/v2/shared/components/molecules/v2-form-field`). Key i18n của V2 có prefix `v2.`.
+- Trong code **V2**, dùng bản V2 tương ứng thay vì bản V1 (ví dụ `V2ConfirmModal` tại `@/v2/shared/components/molecules/v2-confirm-modal`, `V2FormField` tại `@/v2/shared/components/molecules/v2-form-field`, `V2Loading` / `V2PageFallback` tại `@/v2/shared/components/atoms/v2-loading`). Key i18n của V2 có prefix `v2.`.

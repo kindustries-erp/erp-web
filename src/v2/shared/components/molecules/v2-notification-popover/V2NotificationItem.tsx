@@ -1,15 +1,15 @@
 import * as React from "react";
 import { formatDistanceToNow } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
-import { CheckCheck, Trash2 } from "lucide-react";
+import { ArrowUpRight, CheckCheck, Trash2 } from "lucide-react";
 import { V2Button, V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
-import type { CoreNotification } from "@/core/api/notifications";
-import {
-  DEFAULT_NOTIFICATION_META,
-  NOTIFICATION_TYPE_META,
-} from "./V2NotificationItem.config";
+import type {
+  CoreNotification,
+  NotificationTarget,
+} from "@/core/api/notifications";
+import { resolveNotificationIconMeta } from "./V2NotificationItem.config";
 
 export interface V2NotificationItemProps {
   notification: CoreNotification;
@@ -18,19 +18,31 @@ export interface V2NotificationItemProps {
   onClick?: (notification: CoreNotification) => void;
 }
 
-const renderNotificationIcon = (type: string, isRead: boolean) => {
-  const { Icon, iconClass, badgeClass } =
-    NOTIFICATION_TYPE_META[type] ?? DEFAULT_NOTIFICATION_META;
+const renderNotificationIcon = (
+  type: string,
+  target: NotificationTarget | null | undefined,
+  isRead: boolean,
+) => {
+  const { Icon, iconClass, badgeClass } = resolveNotificationIconMeta(
+    type,
+    target,
+  );
 
   return (
     <div
       className={cn(
-        "w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 transition-opacity",
-        badgeClass,
-        isRead && "opacity-75 dark:opacity-100",
+        "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-all",
+        isRead
+          ? "bg-transparent text-muted-fg opacity-60"
+          : cn(badgeClass, "shadow-2xs"),
       )}
     >
-      <Icon className={cn("w-4 h-4 shrink-0", iconClass)} />
+      <Icon
+        className={cn(
+          "w-[19px] h-[19px] shrink-0",
+          isRead ? "text-muted-fg" : iconClass,
+        )}
+      />
     </div>
   );
 };
@@ -68,11 +80,15 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
       className={cn(
         "group flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all relative border",
         notification.isRead
-          ? "bg-slate-50/75 border-slate-200/75 hover:bg-slate-100/85 hover:border-slate-300/70 dark:bg-transparent dark:border-transparent dark:opacity-60 dark:hover:bg-[color:var(--popup-bg-hover)]"
-          : "bg-teal-50/70 border-teal-500/25 shadow-2xs hover:bg-teal-50 hover:border-teal-500/35 dark:shadow-none dark:border-[color:color-mix(in_srgb,var(--primary)_20%,transparent)] dark:bg-[color:color-mix(in_srgb,var(--primary)_5%,transparent)] dark:hover:bg-[color:var(--popup-bg-hover)]",
+          ? "bg-surface-hover/25 border-item-border hover:bg-surface-hover/60 hover:border-item-border text-muted-fg opacity-75 hover:opacity-100"
+          : "bg-item-bg-unread border-item-border-unread border-l-[3px] border-l-primary shadow-card-item hover:shadow-card-item-hover hover:bg-surface-hover/60 text-foreground",
       )}
     >
-      {renderNotificationIcon(notification.type, notification.isRead)}
+      {renderNotificationIcon(
+        notification.type,
+        notification.target,
+        notification.isRead,
+      )}
 
       <div
         className={cn(
@@ -87,8 +103,8 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
           className={cn(
             "mb-1 truncate block",
             notification.isRead
-              ? "text-slate-700 font-medium dark:text-slate-400 dark:font-normal"
-              : "text-slate-900 dark:text-zinc-100",
+              ? "text-muted-fg font-medium"
+              : "text-foreground font-semibold",
           )}
         >
           {notification.title}
@@ -96,32 +112,27 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
         <V2Text
           variant="caption"
           color="muted"
-          className={cn(
-            "mb-2 line-clamp-2 block leading-relaxed",
-            notification.isRead
-              ? "text-slate-500 dark:text-muted-fg"
-              : "text-slate-600 dark:text-muted-fg",
-          )}
+          className="mb-2 line-clamp-2 block leading-relaxed text-muted-fg"
         >
           {notification.message}
         </V2Text>
-        <V2Text
-          variant="caption"
-          className={cn(
-            "text-[10px] font-medium block",
-            notification.isRead
-              ? "text-slate-400 dark:text-slate-500"
-              : "text-slate-500 dark:text-slate-400",
+        <div className="flex items-center gap-1.5">
+          <V2Text
+            variant="caption"
+            className="text-[10px] text-faint block font-medium"
+          >
+            {formatDistanceToNow(new Date(notification.createdAt), {
+              addSuffix: true,
+              locale: dateLocale,
+            })}
+          </V2Text>
+          {Boolean(notification.target?.id) && (
+            <ArrowUpRight className="w-3 h-3 text-faint group-hover:text-primary transition-colors shrink-0" />
           )}
-        >
-          {formatDistanceToNow(new Date(notification.createdAt), {
-            addSuffix: true,
-            locale: dateLocale,
-          })}
-        </V2Text>
+        </div>
       </div>
 
-      <div className="absolute top-2 right-2 flex items-center gap-0.5">
+      <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
         {!notification.isRead && (
           <V2Button
             type="button"
@@ -131,7 +142,7 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
             title={markAsReadLabel}
             onClick={handleMarkAsRead}
             data-testid="mark-as-read-button"
-            className="h-11 w-11 md:h-7 md:w-7 p-0 rounded-md text-teal-600 hover:text-teal-700 hover:bg-teal-500/15 dark:text-primary dark:hover:text-teal-300 dark:hover:bg-primary/10 transition-colors border-none shadow-none flex items-center justify-center"
+            className="h-11 w-11 md:h-7 md:w-7 p-0 rounded-md text-primary hover:text-primary-hover hover:bg-primary/15 transition-colors border-none shadow-none flex items-center justify-center shrink-0"
           >
             <CheckCheck className="w-4 h-4" />
           </V2Button>
@@ -144,16 +155,16 @@ export const V2NotificationItem: React.FC<V2NotificationItemProps> = ({
           aria-label={deleteLabel}
           title={deleteLabel}
           onClick={handleDelete}
-          className="h-11 w-11 md:h-7 md:w-7 p-0 rounded-md text-slate-400 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 hover:bg-rose-500/10 hover:text-rose-600 dark:text-muted-fg dark:hover:bg-white/[0.08] dark:hover:text-rose-400 transition-all border-none shadow-none flex items-center justify-center"
+          className="h-11 md:h-7 p-0 rounded-md text-faint hover:bg-destructive/10 hover:text-destructive border-none shadow-none flex items-center justify-center shrink-0 overflow-hidden transition-all duration-200 w-11 md:w-0 md:opacity-0 md:pointer-events-none md:group-hover:w-7 md:group-hover:opacity-100 md:group-hover:pointer-events-auto"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-4 h-4 shrink-0" />
         </V2Button>
       </div>
 
       {!notification.isRead && (
         <div
           data-testid="unread-indicator"
-          className="w-2 h-2 rounded-full bg-teal-600 ring-2 ring-white dark:ring-0 dark:bg-teal-400 dark:shadow-[0_0_6px_rgba(45,212,191,0.6)] shrink-0 absolute bottom-3 right-3"
+          className="w-2 h-2 rounded-full bg-primary ring-2 ring-background shrink-0 absolute bottom-3 right-3 shadow-[0_0_6px_rgba(var(--primary-rgb),0.5)]"
         />
       )}
     </div>

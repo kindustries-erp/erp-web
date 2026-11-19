@@ -29,8 +29,14 @@ import {
 } from "lucide-react";
 
 export interface GarageCasePartnerActionOptions {
-  tabKey?: "quote_details" | "financials" | "linked_docs" | "sync_history";
-  subTabKey?: "details" | "partner";
+  tabKey?:
+    | "quote_details"
+    | "customer_details"
+    | "partner_details"
+    | "financials"
+    | "linked_docs"
+    | "sync_history";
+  subTabKey?: "details" | "financials" | "linked_docs" | "partner";
   editMode?: boolean;
 }
 

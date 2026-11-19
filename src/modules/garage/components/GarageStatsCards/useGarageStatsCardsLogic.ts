@@ -29,6 +29,15 @@ export function useGarageStatsCardsLogic() {
     queryFn: () => garageDashboardApi.getCheckpointKpis(),
   });
 
+  // Bảng ánh xạ mã giai đoạn sang key của tab trong Drawer
+  const STAGE_TAB_MAP: Record<string, string> = {
+    intake: "ALL",
+    quotation: "QUOTATION",
+    in_progress: "IN_PROGRESS",
+    completed: "COMPLETED",
+  };
+
+  // Mở drawer toàn bộ vụ việc trong tháng hiện tại
   const openMonthCheckpoint = () => {
     const date = new Date();
     const startStr = format(startOfMonth(date), "yyyy-MM-dd");
@@ -38,9 +47,27 @@ export function useGarageStatsCardsLogic() {
       dateFrom: startStr,
       dateTo: endStr,
       periodLabel: `Tháng ${format(date, "MM/yyyy")}`,
+      initialStatus: "ALL",
+      isFunnel: true,
     });
   };
 
+  // Mở drawer lọc theo giai đoạn tiếp nhận cụ thể trong tháng (Tiếp nhận, Báo giá, Đang sửa, Hoàn tất)
+  const openMonthCheckpointStage = (stageKey: string, stageLabel: string) => {
+    const date = new Date();
+    const startStr = format(startOfMonth(date), "yyyy-MM-dd");
+    const endStr = format(endOfMonth(date), "yyyy-MM-dd");
+    setCheckpointDrawer({
+      open: true,
+      dateFrom: startStr,
+      dateTo: endStr,
+      periodLabel: `Tháng ${format(date, "MM/yyyy")} • ${stageLabel}`,
+      initialStatus: STAGE_TAB_MAP[stageKey] || stageKey.toUpperCase(),
+      isFunnel: true,
+    });
+  };
+
+  // Mở drawer toàn bộ vụ việc trong tuần hiện tại
   const openWeekCheckpoint = () => {
     const date = new Date();
     const start = startOfWeek(date, { weekStartsOn: 1 });
@@ -52,9 +79,29 @@ export function useGarageStatsCardsLogic() {
       dateFrom: startStr,
       dateTo: endStr,
       periodLabel: `Tuần ${format(start, "dd/MM")} - ${format(end, "dd/MM")}`,
+      initialStatus: "ALL",
+      isFunnel: true,
     });
   };
 
+  // Mở drawer lọc theo giai đoạn tiếp nhận cụ thể trong tuần
+  const openWeekCheckpointStage = (stageKey: string, stageLabel: string) => {
+    const date = new Date();
+    const start = startOfWeek(date, { weekStartsOn: 1 });
+    const end = endOfWeek(date, { weekStartsOn: 1 });
+    const startStr = format(start, "yyyy-MM-dd");
+    const endStr = format(end, "yyyy-MM-dd");
+    setCheckpointDrawer({
+      open: true,
+      dateFrom: startStr,
+      dateTo: endStr,
+      periodLabel: `Tuần ${format(start, "dd/MM")} - ${format(end, "dd/MM")} • ${stageLabel}`,
+      initialStatus: STAGE_TAB_MAP[stageKey] || stageKey.toUpperCase(),
+      isFunnel: true,
+    });
+  };
+
+  // Mở drawer toàn bộ vụ việc trong ngày hôm nay
   const openDayCheckpoint = () => {
     const date = new Date();
     const dateStr = format(date, "yyyy-MM-dd");
@@ -63,6 +110,22 @@ export function useGarageStatsCardsLogic() {
       dateFrom: dateStr,
       dateTo: dateStr,
       periodLabel: `Hôm nay (${format(date, "dd/MM/yyyy")})`,
+      initialStatus: "ALL",
+      isFunnel: true,
+    });
+  };
+
+  // Mở drawer lọc theo giai đoạn tiếp nhận cụ thể trong ngày hôm nay
+  const openDayCheckpointStage = (stageKey: string, stageLabel: string) => {
+    const date = new Date();
+    const dateStr = format(date, "yyyy-MM-dd");
+    setCheckpointDrawer({
+      open: true,
+      dateFrom: dateStr,
+      dateTo: dateStr,
+      periodLabel: `Hôm nay (${format(date, "dd/MM/yyyy")}) • ${stageLabel}`,
+      initialStatus: STAGE_TAB_MAP[stageKey] || stageKey.toUpperCase(),
+      isFunnel: true,
     });
   };
 
@@ -116,8 +179,11 @@ export function useGarageStatsCardsLogic() {
     statsLoading,
     checkpointDrawer,
     openMonthCheckpoint,
+    openMonthCheckpointStage,
     openWeekCheckpoint,
+    openWeekCheckpointStage,
     openDayCheckpoint,
+    openDayCheckpointStage,
     handleMonthClick,
     handleWeekClick,
     handleDayClick,

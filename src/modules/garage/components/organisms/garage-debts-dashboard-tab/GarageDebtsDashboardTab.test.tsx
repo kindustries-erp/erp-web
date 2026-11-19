@@ -84,4 +84,26 @@ describe("GarageDebtsDashboardTab Organism", () => {
     fireEvent.click(exportButton);
     expect(onExportClick).toHaveBeenCalledTimes(1);
   });
+
+  it("đặt Tiến độ Dòng tiền trước Biến động & Phân tích (thứ tự section)", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebtsDashboardTab onExportClick={vi.fn()} />
+      </QueryClientProvider>,
+    );
+
+    const order = [
+      "kpi-grid",
+      "horizon-grid",
+      "payment-progress",
+      "analytics-charts",
+    ].map((id) => screen.getByTestId(id));
+
+    for (let i = 0; i < order.length - 1; i++) {
+      expect(
+        order[i].compareDocumentPosition(order[i + 1]) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  });
 });

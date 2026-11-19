@@ -17,7 +17,11 @@ import {
 } from "lucide-react";
 import { shouldShowLookupAction } from "./lookupAction.helper";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { invoiceFilesV2Api } from "@/modules/erp-invoices-core/api/invoiceFilesV2Api";
+import {
+  resolveInvoiceFileUrl,
+  saveBlobAs,
+} from "@/modules/erp-invoices-core/utils/invoiceFileV2Resolve";
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
 import {
@@ -78,7 +82,6 @@ export interface InvoiceHeaderSectionProps {
       filename: string;
       fileKey: string;
       invoiceId: string;
-      isAttachment?: boolean;
     } | null,
   ) => void;
   handlePreviewPdf: (
@@ -328,15 +331,8 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
                   title: "Đang nén file PDF...",
                   variant: "default",
                 });
-                const blob = await erpInvoicesCoreApi.downloadPdfsZip(inv.id);
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `hoadon_${inv.id}_pdfs.zip`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
+                const blob = await invoiceFilesV2Api.downloadZip(inv.id);
+                saveBlobAs(blob, `hoadon_${inv.id}_pdfs.zip`);
               } catch {
                 showToast({
                   title: "Không thể tải file PDF",
@@ -346,14 +342,14 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
             } else if (inv.attachments && inv.attachments.length === 1) {
               const f = inv.attachments[0];
               try {
-                const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
+                const file = await resolveInvoiceFileUrl(
                   inv.id,
-                  f.attachment?.fileKey,
+                  { fileName: f.attachment?.fileName },
                   false,
                 );
                 const a = document.createElement("a");
-                a.href = url;
-                a.download = f.attachment?.fileName || "document.pdf";
+                a.href = file.url;
+                a.download = file.fileName || "document.pdf";
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);

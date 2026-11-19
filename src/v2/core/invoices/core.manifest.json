@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "invoices",
+  "entity": "Invoice",
+  "barrel": "src/v2/core/invoices/index.ts",
+  "exports": {
+    "addLinkResolver": "resolveInvoiceAddLink",
+    "pendingChange": "toPendingDocumentChange"
+  }
+}

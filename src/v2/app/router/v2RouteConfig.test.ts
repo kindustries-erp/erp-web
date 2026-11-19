@@ -14,16 +14,16 @@ describe("resolveV2Route", () => {
   it("matches admin routes under /v2/admin", () => {
     expect(resolveV2Route("/v2/admin/dashboard")?.id).toBe("admin-dashboard");
     expect(resolveV2Route("/v2/admin/dashboard")?.isAdmin).toBe(true);
-    expect(resolveV2Route("/v2/admin/users")?.id).toBe("admin-users");
+    expect(resolveV2Route("/v2/admin/audit-logs")?.id).toBe("admin-audit-logs");
   });
 
-  it("mục Người dùng của admin dùng trang users thật và quyền manage", () => {
-    const route = resolveV2Route("/v2/admin/users");
+  it("mục Nhật ký hoạt động của admin dùng trang audit thật và quyền read", () => {
+    const route = resolveV2Route("/v2/admin/audit-logs");
     expect(route?.permission).toEqual({
       collection: "admin_users",
-      action: "manage",
+      action: "read",
     });
-    expect(V2_PAGE_REGISTRY["admin-users"]).toBeTypeOf("function");
+    expect(V2_PAGE_REGISTRY["admin-audit-logs"]).toBeTypeOf("function");
   });
 
   it("identifies admin paths correctly with isAdminPath", () => {

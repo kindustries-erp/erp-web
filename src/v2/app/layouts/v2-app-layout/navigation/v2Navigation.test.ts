@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { V2_ROUTES } from "@/v2/app/router/v2RouteConfig";
+import { NAV_DEFS } from "./v2Navigation.config";
 import {
   getV2NavItems,
   getV2NavigationSections,
@@ -67,5 +69,14 @@ describe("v2Navigation", () => {
     expect(DEFAULT_V2_NAV_ITEMS.length).toBeGreaterThan(0);
     expect(DEFAULT_V2_SECTIONS.length).toBe(9);
     expect(DEFAULT_V2_SECTIONS[0].items[0].id).toBe("dashboard");
+  });
+
+  it("ensures every nav item in NAV_DEFS maps to a valid route in V2_ROUTES", () => {
+    const routeIds = new Set(V2_ROUTES.map((r) => r.id));
+    routeIds.add("dashboard"); // Trang chủ mặc định
+
+    NAV_DEFS.forEach((navItem) => {
+      expect(routeIds.has(navItem.id)).toBe(true);
+    });
   });
 });

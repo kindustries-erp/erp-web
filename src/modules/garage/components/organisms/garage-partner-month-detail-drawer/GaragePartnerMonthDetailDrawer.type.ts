@@ -1,9 +1,14 @@
 import type { ReactNode } from "react";
+import type { GarageTimeHorizonKey } from "@/modules/garage/api/garageDebtsAnalyticsApi";
 
 export interface GaragePartnerMonthDetailDrawerProps {
   open: boolean;
   onClose: () => void;
-  month: string; // "2026-10" hoặc "10/2026"
+  month: string; // "2026-10" hoặc "10/2026"; bỏ trống khi xem theo mốc
+  /** Khi có, lọc theo mốc tuổi nợ: dùng đúng `initialCases` đã lọc ở breakdown, không lọc theo tháng. */
+  horizon?: GarageTimeHorizonKey;
+  /** Nhãn kỳ hiển thị trên tiêu đề (ví dụ nhãn mốc); mặc định là "Tháng MM/YYYY" từ `month`. */
+  periodLabel?: string;
   customerCode?: string | null;
   customerName?: string | null;
   taxCode?: string | null;

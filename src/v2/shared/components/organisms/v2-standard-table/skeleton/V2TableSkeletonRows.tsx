@@ -27,9 +27,21 @@ export function V2TableSkeletonRows<T>({
   return (
     <>
       {Array.from({ length: count }, (_, rowIndex) => (
-        <TableRow key={rowIndex} className="h-[38px] hover:bg-transparent">
+        <TableRow
+          key={rowIndex}
+          className="h-[38px] border-b border-[color:var(--border-light)] hover:bg-transparent"
+        >
           {columns.map((column, columnIndex) => (
-            <TableCell key={column.id} className="py-2">
+            <TableCell
+              key={column.id}
+              style={{ width: column.getSize() }}
+              className={cn(
+                "border-r border-border py-1 px-2 text-xs",
+                (column.id === V2_INDEX_COLUMN_ID ||
+                  column.id === V2_SELECTION_COLUMN_ID) &&
+                  "px-1 text-center",
+              )}
+            >
               {rowIndex === 0 && columnIndex === 0 && (
                 <span role="status" className="sr-only">
                   {loadingLabel}
@@ -41,7 +53,7 @@ export function V2TableSkeletonRows<T>({
                   className={cn(
                     "h-4",
                     column.id === V2_INDEX_COLUMN_ID
-                      ? "w-6"
+                      ? "mx-auto w-6"
                       : BAR_WIDTHS[
                           (rowIndex + columnIndex) % BAR_WIDTHS.length
                         ],
@@ -50,6 +62,7 @@ export function V2TableSkeletonRows<T>({
               )}
             </TableCell>
           ))}
+          <TableCell aria-hidden className="border-r border-border p-0" />
         </TableRow>
       ))}
     </>

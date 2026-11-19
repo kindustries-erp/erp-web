@@ -1,7 +1,9 @@
 import React from "react";
 import { cn } from "@/shared/utils";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 import type { DrawerDocumentTraceabilityProps } from "./types";
 import { openGlobalErpDocument } from "./constants";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2DocumentTraceability } from "@/v2/shared/components/organisms/v2-document-traceability";
 
 /**
@@ -23,28 +25,32 @@ export function DrawerDocumentTraceability(
     onUnlinkNode,
     onEditManualSettlement,
     className,
+    wrapInSection = false,
+    sectionTitle,
   } = props;
 
-  return (
+  const { t } = useV2Translation();
+
+  const content = (
     <div className={cn("w-full transition-all", className)}>
       <V2DocumentTraceability
         rootId={rootId}
-        fetchGraph={fetchGraph as never}
-        graphData={graphData as never}
+        fetchGraph={fetchGraph}
+        graphData={graphData}
         editMode={Boolean(editMode ?? allowEdit)}
-        allowedDocTypes={allowedDocTypes as never}
-        onAddLink={onAddLink as never}
+        allowedDocTypes={allowedDocTypes}
+        onAddLink={onAddLink}
         onUnlinkNode={
           onUnlinkNode
             ? (node) => {
-                void onUnlinkNode(node as never);
+                void onUnlinkNode(node);
               }
             : undefined
         }
         onEditManualSettlement={
           onEditManualSettlement
             ? (node) => {
-                onEditManualSettlement(node as never);
+                onEditManualSettlement(node);
               }
             : undefined
         }
@@ -52,4 +58,20 @@ export function DrawerDocumentTraceability(
       />
     </div>
   );
+
+  if (wrapInSection) {
+    return (
+      <DrawerSection
+        title={sectionTitle ?? t("v2.traceability.sectionTitle")}
+        collapsible
+        defaultCollapsed={false}
+        fitViewportHeight
+        bodyClassName="flex-1 min-h-0 flex flex-col"
+      >
+        {content}
+      </DrawerSection>
+    );
+  }
+
+  return content;
 }

@@ -48,6 +48,8 @@ export const v2Vi = {
         usersManagement: "Quản lý tài khoản",
         employeesManagement: "Quản lý nhân viên",
         // v2-module:users-management:locale-vi
+        fileAttachments: "Quản lý tài liệu",
+        // v2-module:file-attachments-management:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",
@@ -68,6 +70,7 @@ export const v2Vi = {
       done: "Xong",
       reset: "Mặc định",
       loading: "Đang tải...",
+      loadingPage: "Đang tải trang...",
       error: "Đã xảy ra lỗi",
       actions: "Thao tác",
       overview: "Tổng quan",
@@ -91,6 +94,8 @@ export const v2Vi = {
       markAllAsRead: "Đánh dấu đã đọc tất cả",
       markAsRead: "Đánh dấu đã đọc",
       deleteItem: "Xóa thông báo",
+      markAsReadSuccess: "Đã đánh dấu thông báo là đã đọc",
+      markAllAsReadSuccess: "Đã đánh dấu tất cả thông báo là đã đọc",
     },
     topbar: {
       quickSearchPlaceholder: "Tìm kiếm menu, chứng từ (Ctrl K)...",

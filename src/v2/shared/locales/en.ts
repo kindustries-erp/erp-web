@@ -48,6 +48,8 @@ export const v2En: V2Dictionary = {
         usersManagement: "User management",
         employeesManagement: "Employee management",
         // v2-module:users-management:locale-en
+        fileAttachments: "File management",
+        // v2-module:file-attachments-management:locale-en
         // plop:v2-nav-items
       },
       searchPlaceholder: "Search modules...",
@@ -68,6 +70,7 @@ export const v2En: V2Dictionary = {
       done: "Done",
       reset: "Reset",
       loading: "Loading...",
+      loadingPage: "Loading page...",
       error: "An error occurred",
       actions: "Actions",
       overview: "Overview",
@@ -91,6 +94,8 @@ export const v2En: V2Dictionary = {
       markAllAsRead: "Mark all as read",
       markAsRead: "Mark as read",
       deleteItem: "Delete notification",
+      markAsReadSuccess: "Notification marked as read",
+      markAllAsReadSuccess: "All notifications marked as read",
     },
     topbar: {
       quickSearchPlaceholder: "Search menus, documents (Ctrl K)...",

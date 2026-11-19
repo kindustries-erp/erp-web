@@ -11,15 +11,17 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 
 - Script: `erp/erp-web/e2e/*.e2e.mjs`. Hiện có `garage-procurement.e2e.mjs` (PR/PO garage và phiếu nhập garage, 87 kiểm tra; mục A–D PR/PO, E nhập kho từ PO, F–G hóa đơn/NCC và nhập nhiều đợt, H xóa vĩnh viễn, I phiếu nhập gắn PO).
 - Script `garage-save-and-act.e2e.mjs` (27 kiểm tra): PR Tạo mới/Cập nhật qua modal người duyệt, PO Tạo mới từ PR không còn 409, phiếu nhập Nhập kho một bước và Hoàn nhập. Chạy: `bun run e2e:garage-save-and-act`.
-- Script `users-management.e2e.mjs` (11 kiểm tra): Quản lý tài khoản V2 (tạo qua drawer, ngưng/kích hoạt, đặt lại mật khẩu, kiểm đăng nhập qua auth v1). Chạy: `bun run e2e:users-management`. Dùng `E2E_ADMIN_PASSWORD` (admin) thay cho `E2E_PASSWORD`; dọn dữ liệu `e2e-users-*` bằng SQL. Xem skill `users-management`.
-- Script `employees-management.e2e.mjs` (23 kiểm tra): Quản lý nhân viên V2 (URL `/employees-management`, URL cũ `/erp-employees`, `/v2/employees-management`; tạo/sửa qua drawer, CCCD chỉ hiện bản che, đổi trạng thái, ẩn Xóa khi còn tài khoản liên kết, xóa mềm). Chạy: `bun run e2e:employees-management`. Dùng tài khoản admin seed (`E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`); nhân viên test tự xóa mềm, dọn tài khoản `e2e-emp-*` bằng SQL. Xem skill `employees-core`.
-- Script `auth-sessions.e2e.mjs`: Auth V2 (đăng nhập từ UI gọi `/api/v2/auth-sessions/login`, 401 tự refresh qua v2 và gọi lại thành công, refresh token được xoay vòng, đổi mật khẩu thu hồi phiên cũ, refresh token bị thu hồi thì UI về màn hình đăng nhập). Chạy: `bun run e2e:auth-sessions`. Dùng `E2E_ADMIN_PASSWORD`; dọn tài khoản `e2e-auth-*` bằng SQL. Xem skill `v2-auth`.
+- Script `garage-traceability.e2e.mjs` (chỉ đọc, không ghi DB): sơ đồ Chứng từ liên kết của phiếu garage (`/garage-cases?tab=cases`), tự tìm phiếu có ≥2 cạnh qua API, kiểm số node/cạnh trên canvas khớp đồ thị backend (không nhân đôi). Đăng nhập qua `/api/v2/auth-sessions/login`. Chế độ sửa: gỡ node (hộp xác nhận phải bấm được, nằm trên drawer), mở ngăn chọn hóa đơn, rồi Hủy, không lưu. Chạy: `bun run e2e:garage-traceability`.
+- Script `invoice-traceability.e2e.mjs` (chỉ đọc): drawer hóa đơn `/erp-invoices-out`, tab Chứng từ liên kết, so node/cạnh canvas với phản hồi `traceability-graph`, kiểm hộp xác nhận gỡ liên kết ở chế độ sửa rồi hủy. Chạy: `bun run e2e:invoice-traceability` (`E2E_INVOICE_ROWS` mặc định 45 dòng đầu để gặp hóa đơn có liên kết).
+- Script `users-management.e2e.mjs` (11 kiểm tra): Quản lý tài khoản V2 (tạo qua drawer, ngưng/kích hoạt, đặt lại mật khẩu, kiểm đăng nhập qua auth v1). Chạy: `bun run e2e:users-management`. Dùng `E2E_PASSWORD` với `E2E_TAO_EMAIL` (ai-test-tao); tài khoản cần quyền `admin_users:manage`, thiếu quyền thì bước quản trị FAIL đúng nghĩa thiếu quyền. Dọn dữ liệu `e2e-users-*` bằng SQL. Xem skill `users-management`.
+- Script `employees-management.e2e.mjs` (23 kiểm tra): Quản lý nhân viên V2 (URL `/employees-management`, URL cũ `/erp-employees`, `/v2/employees-management`; tạo/sửa qua drawer, CCCD chỉ hiện bản che, đổi trạng thái, ẩn Xóa khi còn tài khoản liên kết, xóa mềm). Chạy: `bun run e2e:employees-management`. Dùng `E2E_PASSWORD` với `E2E_TAO_EMAIL` (ai-test-tao), cần quyền `employees:*` và `admin_users:manage`; nhân viên test tự xóa mềm, dọn tài khoản `e2e-emp-*` bằng SQL. Xem skill `employees-core`.
+- Script `auth-sessions.e2e.mjs`: Auth V2 (đăng nhập từ UI gọi `/api/v2/auth-sessions/login`, 401 tự refresh qua v2 và gọi lại thành công, refresh token được xoay vòng, đổi mật khẩu thu hồi phiên cũ, refresh token bị thu hồi thì UI về màn hình đăng nhập). Chạy: `bun run e2e:auth-sessions`. Dùng `E2E_PASSWORD` với `E2E_TAO_EMAIL` (ai-test-tao); dọn tài khoản `e2e-auth-*` bằng SQL. Xem skill `v2-auth`.
 - Chạy: `bun run e2e:garage-procurement` (thêm script mới trong `package.json` theo cùng mẫu).
 - Biến môi trường (không hardcode mật khẩu hay URL trong repo):
   - `E2E_PASSWORD`: BẮT BUỘC, mật khẩu tài khoản test. Script thoát mã 2 nếu thiếu.
     - Nguồn: dòng `E2E_PASSWORD=` trong `erp/erp-api/.env`. Mỗi lần chạy, nếu shell chưa có biến này thì tự đọc từ file đó, không hỏi người dùng. Không in giá trị, không ghi vào repo hay log.
-  - `E2E_WEB_URL` (mặc định `http://127.0.0.1:5173`), `E2E_API_URL` (mặc định `http://localhost:10003`).
-  - `E2E_TAO_EMAIL`, `E2E_DUYET_EMAIL`: tài khoản người tạo và người duyệt.
+  - `E2E_WEB_URL`, `E2E_API_URL`: suy từ `PORT` trong `erp/erp-api/.env` theo bảng 10001→5171, 10002→5172, 10003→5173 (`e2e/e2e-ports.mjs`). Chỉ ghi đè khi cần. Không phụ thuộc workspace `repos-dev-0X`.
+  - `E2E_TAO_EMAIL` (mặc định `ai-test-tao@example.com`), `E2E_DUYET_EMAIL` (mặc định `ai-test-duyet@example.com`). Đây là tài khoản chuẩn của mọi E2E; không dùng tài khoản admin.
   - `E2E_CHROME_PATH` (mặc định `/usr/bin/google-chrome`).
 - Ví dụ (từ `erp-web/`, lấy mật khẩu từ API `.env`, không in ra):
   `E2E_PASSWORD="$(sed -n 's/^E2E_PASSWORD=//p' ../erp-api/.env | head -1 | tr -d "\"'")" bun run e2e:garage-procurement`.
@@ -27,8 +29,9 @@ Phạm vi: kiểm tra luồng thật trên trình duyệt với API đang chạy
 
 ## 2. Điều kiện trước khi chạy
 
-1. Vite dev server đang chạy ở `E2E_WEB_URL` (`bun run dev`, đọc `PORT` trong `erp-web/.env`). `PORT` của web phải khớp web port suy ra từ API. Không tự kill server đang có sẵn của phiên khác.
-2. API đang chạy ở `E2E_API_URL` với DB đúng. Trước khi ghi DB phải xác nhận DB bằng `SELECT current_database();` và báo cho người dùng (quy tắc chung của ERP).
+1. Vite dev server ở `E2E_WEB_URL`: nếu chưa nghe thì tự chạy nền `bun run dev` trong `erp/erp-web` và chờ trả HTTP 200 (tối đa khoảng 120 giây). Web port lấy theo bảng ở skill `erp-e2e-api-smoke` mục 2.
+2. API ở `E2E_API_URL`: nếu chưa nghe thì tự chạy nền `bun start:dev` trong `erp/erp-api` và chờ cổng nghe. API với DB đúng.
+   - Không kill tiến trình đang chạy của phiên khác. Cổng bị chiếm bởi tiến trình lạ thì dừng và báo người dùng. Trước khi ghi DB phải xác nhận DB bằng `SELECT current_database();` và báo cho người dùng (quy tắc chung của ERP).
 3. Tài khoản test có quyền cần thiết. Nếu thiếu quyền thì kiểm tra fail là đúng, không phải lỗi UI.
 4. Không chạy E2E trên DB production. Chỉ dùng staging hoặc dev.
 

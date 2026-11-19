@@ -4,6 +4,7 @@ import {
   erpInvoicesCoreApi,
   type ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { resolveInvoiceFileUrl } from "@/modules/erp-invoices-core/utils/invoiceFileV2Resolve";
 import { type useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
 import { type useErpInvoiceUrlSync } from "@/modules/erp-invoices-core/hooks/useErpInvoiceUrlSync";
 
@@ -31,7 +32,6 @@ export function useInvoiceModals({
     filename: string;
     fileKey: string;
     invoiceId: string;
-    isAttachment?: boolean;
   } | null>(null);
   const [netOffInvoice, setNetOffInvoice] = useState<any | null>(null);
 
@@ -102,18 +102,18 @@ export function useInvoiceModals({
   );
 
   const handlePreviewPdf = useCallback(
-    async (id: string, key: string, filename: string) => {
+    async (id: string, _key: string, filename: string) => {
       try {
         showToast({ title: "Đang mở PDF...", variant: "default" });
-        const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
+        const file = await resolveInvoiceFileUrl(
           id,
-          key,
+          { fileName: filename, original: true },
           true,
         );
         setPreviewPdf({
-          url,
-          filename,
-          fileKey: key,
+          url: file.url,
+          filename: file.fileName || filename,
+          fileKey: file.id,
           invoiceId: id,
         });
       } catch {

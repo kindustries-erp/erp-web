@@ -31,9 +31,11 @@ vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: vi.fn(),
 }));
 
+let mockEmployeeEmail = "user@example.com";
+
 vi.mock("@/modules/auth/domain/authStore", () => ({
   useAuthStore: () => ({
-    employee: { email: "user@example.com" },
+    employee: { email: mockEmployeeEmail },
   }),
 }));
 
@@ -226,7 +228,7 @@ describe("useV2AdaptedNavSections - garage stock items in sec-garage", () => {
     expect(item?.icon).toBe(Package);
   });
 
-  it("includes garage-stock-vouchers via fallback when user has GARAGE permission", () => {
+  it("excludes garage-stock-vouchers when user only has GARAGE permission (no fallback)", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       return resource === ErpResource.GARAGE;
     });
@@ -235,8 +237,7 @@ describe("useV2AdaptedNavSections - garage stock items in sec-garage", () => {
     const garageSec = result.current.find((s) => s.id === "sec-garage");
     const item = findNavChild(garageSec?.items, "garage-stock-vouchers");
 
-    expect(item).toBeDefined();
-    expect(item?.href).toBe("/garage-stock-vouchers");
+    expect(item).toBeUndefined();
   });
 
   it("shows garage-stock-balances only with GARAGE_STOCK_LEDGER permission", () => {
@@ -300,5 +301,174 @@ describe("useV2AdaptedNavSections - garage-procurement in sec-garage", () => {
     const item = findNavChild(garageSec?.items, "garage-procurement");
 
     expect(item).toBeUndefined();
+  });
+
+  it("renders garage section items in the expected sequence when all permissions are granted", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const garageSec = result.current.find((s) => s.id === "sec-garage");
+    const itemIds = garageSec?.items.map((item) => item.id);
+
+    expect(itemIds).toEqual([
+      "garage-cases",
+      "garage-cashflow",
+      "garage-debts",
+      "garage-opex",
+      "garage-procurement",
+      "garage-stock-vouchers",
+      "garage-stock-balances",
+    ]);
+  });
+});
+
+describe("useV2AdaptedNavSections - accounting RBAC (journal-entry, settings-accounts)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("includes journal-entry when user has JOURNAL_ENTRIES permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.JOURNAL_ENTRIES;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const sec = result.current.find((s) => s.id === "sec-accounting");
+    const item = findNavChild(sec?.items, "journal-entry");
+
+    expect(sec).toBeDefined();
+    expect(item).toBeDefined();
+    expect(item?.href).toBe("/journal-entry");
+    expect(findNavChild(sec?.items, "settings-accounts")).toBeUndefined();
+  });
+
+  it("includes settings-accounts when user has ACCOUNTING_CONFIGS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ACCOUNTING_CONFIGS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const sec = result.current.find((s) => s.id === "sec-accounting");
+    const item = findNavChild(sec?.items, "settings-accounts");
+
+    expect(sec).toBeDefined();
+    expect(item).toBeDefined();
+    expect(item?.href).toBe("/settings-accounts");
+    expect(findNavChild(sec?.items, "journal-entry")).toBeUndefined();
+  });
+
+  it("excludes journal-entry and settings-accounts when user only has INVOICES permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.INVOICES;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const sec = result.current.find((s) => s.id === "sec-accounting");
+
+    expect(sec).toBeDefined();
+    expect(findNavChild(sec?.items, "erp-invoices")).toBeDefined();
+    expect(findNavChild(sec?.items, "journal-entry")).toBeUndefined();
+    expect(findNavChild(sec?.items, "settings-accounts")).toBeUndefined();
+  });
+
+  it("hides sec-accounting entirely when user lacks all accounting permissions", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ADMIN_USERS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    expect(
+      result.current.find((s) => s.id === "sec-accounting"),
+    ).toBeUndefined();
+  });
+});
+
+describe("useV2AdaptedNavSections - sec-tools RBAC (loans)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows loans in sec-tools when user has LOANS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.LOANS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const toolsSec = result.current.find((s) => s.id === "sec-tools");
+    const loansItem = findNavChild(toolsSec?.items, "loans");
+
+    expect(toolsSec).toBeDefined();
+    expect(loansItem).toBeDefined();
+    expect(loansItem?.href).toBe("/loans-tool");
+  });
+
+  it("hides sec-tools entirely when user lacks LOANS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ADMIN_USERS;
+    });
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    expect(result.current.find((s) => s.id === "sec-tools")).toBeUndefined();
+  });
+});
+
+describe("useV2AdaptedNavSections - V2 items visibility for admin@liouni.com", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockEmployeeEmail = "user@example.com";
+  });
+
+  it("does not show (v2) items for regular users", () => {
+    mockEmployeeEmail = "user@example.com";
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+
+    const allItems = result.current.flatMap((s) => s.items);
+    const customersV2 = findNavChild(allItems, "customers-v2");
+    const suppliersV2 = findNavChild(allItems, "suppliers-v2");
+    const invoicesV2 = findNavChild(allItems, "invoices-v2");
+    const auditLogsV2 = findNavChild(allItems, "audit-logs-v2");
+    const adminDashboardV2 = findNavChild(allItems, "admin-dashboard-v2");
+
+    expect(customersV2).toBeUndefined();
+    expect(suppliersV2).toBeUndefined();
+    expect(invoicesV2).toBeUndefined();
+    expect(auditLogsV2).toBeUndefined();
+    expect(adminDashboardV2).toBeUndefined();
+  });
+
+  it("shows (v2) items with proper label and href only for admin@liouni.com", () => {
+    mockEmployeeEmail = "admin@liouni.com";
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+
+    const allItems = result.current.flatMap((s) => s.items);
+    const customersV2 = findNavChild(allItems, "customers-v2");
+    const suppliersV2 = findNavChild(allItems, "suppliers-v2");
+    const invoicesV2 = findNavChild(allItems, "invoices-v2");
+    const auditLogsV2 = findNavChild(allItems, "audit-logs-v2");
+    const adminDashboardV2 = findNavChild(allItems, "admin-dashboard-v2");
+
+    expect(customersV2).toBeDefined();
+    expect(customersV2?.label).toContain("(v2)");
+    expect(customersV2?.href).toBe("/customers-v2");
+
+    expect(suppliersV2).toBeDefined();
+    expect(suppliersV2?.label).toContain("(v2)");
+    expect(suppliersV2?.href).toBe("/suppliers-v2");
+
+    expect(invoicesV2).toBeDefined();
+    expect(invoicesV2?.label).toContain("(v2)");
+    expect(invoicesV2?.href).toBe("/invoices-v2");
+
+    expect(auditLogsV2).toBeDefined();
+    expect(auditLogsV2?.label).toContain("(v2)");
+    expect(auditLogsV2?.href).toBe("/audit-logs-v2");
+
+    expect(adminDashboardV2).toBeDefined();
+    expect(adminDashboardV2?.label).toContain("(v2)");
+    expect(adminDashboardV2?.href).toBe("/admin-dashboard-v2");
   });
 });

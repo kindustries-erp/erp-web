@@ -25,18 +25,27 @@ export function pickEdgeHandles(
   source: TraceDocFlowNode | undefined,
   target: TraceDocFlowNode | undefined,
 ): EdgeHandles {
-  const sameStage =
-    Boolean(source?.parentId) && source?.parentId === target?.parentId;
   const sourcePos = source?.position ?? { x: 0, y: 0 };
   const targetPos = target?.position ?? { x: 0, y: 0 };
 
   if (direction === "horizontal") {
-    if (!sameStage) return { sourceHandle: "right", targetHandle: "left" };
+    if (targetPos.x > sourcePos.x + 50) {
+      return { sourceHandle: "right", targetHandle: "left" };
+    }
+    if (targetPos.x < sourcePos.x - 50) {
+      return { sourceHandle: "left", targetHandle: "right" };
+    }
     return sourcePos.y <= targetPos.y
       ? { sourceHandle: "bottom", targetHandle: "top" }
       : { sourceHandle: "top", targetHandle: "bottom" };
   }
-  if (!sameStage) return { sourceHandle: "bottom", targetHandle: "top" };
+
+  if (targetPos.y > sourcePos.y + 50) {
+    return { sourceHandle: "bottom", targetHandle: "top" };
+  }
+  if (targetPos.y < sourcePos.y - 50) {
+    return { sourceHandle: "top", targetHandle: "bottom" };
+  }
   return sourcePos.x <= targetPos.x
     ? { sourceHandle: "right", targetHandle: "left" }
     : { sourceHandle: "left", targetHandle: "right" };

@@ -101,8 +101,8 @@ Repo-level workflows (e.g. `erp/erp-web/.agents/workflows/standardize-drawer.md`
 1. Trình plan theo `/erp-plan`, dùng cơ chế plan của agent (Claude Code: `/plan`; Antigravity: `implementation_plan.md`). Xem mục "Tầng Cơ Chế Plan Theo Agent" trong workflow.
 2. Execute **5 phases**: Discovery → Tech Plan → Task Breakdown (X.Y.Z) → Approval → Execution.
 3. Plan (DoD, lệnh verify) trình trong hội thoại; chỉ làm sau khi người dùng trả lời `OK`.
-4. Tạo Epic/Story/Task trên Plane (project KINDU) bằng skill `plane-work-items`.
-5. Cập nhật trạng thái task trên Plane theo thời gian thực.
+4. Ngay sau `OK` và TRƯỚC khi sửa file: tạo Epic/Story/Task con trên Plane (project KINDU) bằng skill `plane-work-items`. Không làm xong rồi mới tạo task.
+5. Trong khi làm: task bắt đầu thì `In Progress`, PASS verification thì `Done`; việc phát sinh thì tạo Task mới ngay.
 6. (Tùy chọn, khi chạy trong Antigravity) giữ `implementation_plan.md` / `walkthrough.md` trong Brain làm bản phụ.
 7. When done: update the Module Skill (`erp/erp-api/.agents/skills/modules/<module>/SKILL.md` or `erp/erp-web/.agents/skills/modules/<module>/SKILL.md`).
 
@@ -273,7 +273,7 @@ Source of truth for this repo (`./erp-web`).
 
 ### 5. Strict Pre-push Hook
 
-- Commit: pre-commit tự chạy lint-staged (eslint, prettier, `vitest related` trên file staged). Không chạy full test thủ công.
+- Commit: pre-commit tự chạy lint-staged (eslint, prettier; `vitest related` chỉ chạy trên file staged thuộc `src/v2/**/*.{ts,tsx}`). Không chạy full test thủ công.
 - Push: pre-push chạy `bun run type:check`. Do NOT push if it fails.
 - Full test / build / check:ci chạy trên GitHub CI. Không push tiếp khi CI của nhánh đang đỏ.
 
@@ -348,7 +348,7 @@ Source of truth for this repo (`./erp-web`).
 
 2. When asked to **commit code**, you MUST execute the following in order:
    - Ensure current branch is `erp-master`
-   - `git commit` (pre-commit tự chạy lint-staged và `vitest related` trên file staged; không chạy full test thủ công)
+   - `git commit` (pre-commit tự chạy lint-staged và `vitest related` trên file staged thuộc `src/v2/**/*.{ts,tsx}`; không chạy full test thủ công)
 
 3. When asked to **pull code**, you MUST execute the following in order:
    - If there are uncommitted changes, you MUST execute the full **commit code** sequence first.

@@ -7,6 +7,7 @@ import {
   CashTransactionDetailDrawer,
   BankTransactionDetailDrawer,
 } from "@/v2/modules/bank-statements";
+import { TransferQrBankStatementsDrawer } from "@/v2/modules/transfer-qr-bank-statements";
 import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
 
 export interface BankStatementDrawersProps {
@@ -15,6 +16,8 @@ export interface BankStatementDrawersProps {
   accountsData: any[];
   isExportOpen: boolean;
   setIsExportOpen: (open: boolean) => void;
+  isQrOpen: boolean;
+  setIsQrOpen: (open: boolean) => void;
   isOriginalFilesOpen: boolean;
   setIsOriginalFilesOpen: (open: boolean) => void;
   isImportOpen: boolean;
@@ -42,6 +45,8 @@ export function BankStatementDrawers({
   accountsData,
   isExportOpen,
   setIsExportOpen,
+  isQrOpen,
+  setIsQrOpen,
   isOriginalFilesOpen,
   setIsOriginalFilesOpen,
   isImportOpen,
@@ -73,6 +78,14 @@ export function BankStatementDrawers({
         buildBaseQuery={buildBaseQuery}
         currentFilterSummary={currentFilterSummary}
       />
+
+      {type === "bank" && (
+        <TransferQrBankStatementsDrawer
+          open={isQrOpen}
+          onClose={() => setIsQrOpen(false)}
+          accounts={accountsData}
+        />
+      )}
 
       <OriginalStatementFilesDrawer
         isOpen={isOriginalFilesOpen}

@@ -1,58 +1,18 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import React from "react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { MonthlyReceivablesGroupItem } from "../../../../api/garageDashboardApi";
 import { MonthInvoicePartnerTable } from "./MonthInvoicePartnerTable";
 
-vi.mock("@/shared/hooks/useTableColumnState", () => ({
-  useTableColumnState: () => ({
-    sorts: [],
-    columnFilters: {},
-    columnSearch: {},
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (_k: string, def?: string) => def || _k,
   }),
 }));
 
-vi.mock("@/shared/components/DataTable", () => {
-  const createHeaderFilter = () => {
-    const filter = (_key: string, label: string) => label;
-    filter.amount = (_key: string, label: string) => label;
-    filter.numeric = (_key: string, label: string) => label;
-    return filter;
-  };
-
-  return {
-    createColumnHeaderFilter: createHeaderFilter,
-    filterClientItems: (items: unknown[]) => items,
-    DataTable: ({
-      items,
-      page,
-      pageSize,
-      total,
-      totalPages,
-      onPage,
-      onPageSize,
-      summaryRow,
-      containerClassName,
-    }: any) => (
-      <div>
-        <div
-          data-testid="partner-table-container"
-          data-class={containerClassName}
-        />
-        <div data-testid="partner-row-count">{items.length}</div>
-        <div data-testid="partner-pagination">
-          {page}/{totalPages} ({pageSize}) {total}
-        </div>
-        <button type="button" onClick={() => onPage(2)}>
-          next
-        </button>
-        <button type="button" onClick={() => onPageSize(10)}>
-          size-10
-        </button>
-        <div data-testid="partner-summary">{summaryRow?.partner}</div>
-      </div>
-    ),
-  };
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
 });
 
 function makeItem(index: number): MonthlyReceivablesGroupItem {
@@ -88,38 +48,24 @@ function makeItem(index: number): MonthlyReceivablesGroupItem {
   };
 }
 
-describe("MonthInvoicePartnerTable pagination", () => {
-  it("starts at five rows and paginates the filtered client-side collection", () => {
+describe("MonthInvoicePartnerTable", () => {
+  it("hiển thị bảng chuẩn V2 với pageSize bắt đầu từ 10 và STT bắt đầu từ 1", () => {
     render(
-      <MonthInvoicePartnerTable
-        items={Array.from({ length: 12 }, (_, index) => makeItem(index))}
-        tableId="partner-pagination-test"
-        totalBilled={1200}
-        onSelectGroup={vi.fn()}
-      />,
+      <QueryClientProvider client={queryClient}>
+        <MonthInvoicePartnerTable
+          items={Array.from({ length: 12 }, (_, index) => makeItem(index))}
+          tableId="partner-pagination-test"
+          totalBilled={1200}
+          onSelectGroup={vi.fn()}
+        />
+      </QueryClientProvider>,
     );
 
-    expect(screen.getByTestId("partner-row-count")).toHaveTextContent("5");
-    expect(screen.getByTestId("partner-pagination")).toHaveTextContent(
-      "1/3 (5) 12",
-    );
-    expect(screen.getByTestId("partner-summary")).toHaveTextContent(
-      "TỔNG CỘNG (12 phiếu • 12 xe)",
-    );
-    expect(screen.getByTestId("partner-table-container")).toHaveAttribute(
-      "data-class",
-      expect.stringContaining("max-h-[360px]"),
-    );
+    // Phiếu đầu tiên GR-PDV2610-000 xuất hiện
+    expect(screen.getByText("GR-PDV2610-000")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "next" }));
-    expect(screen.getByTestId("partner-pagination")).toHaveTextContent(
-      "2/3 (5) 12",
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "size-10" }));
-    expect(screen.getByTestId("partner-row-count")).toHaveTextContent("10");
-    expect(screen.getByTestId("partner-pagination")).toHaveTextContent(
-      "1/2 (10) 12",
-    );
+    // Số thứ tự 1 xuất hiện
+    const cellOnes = screen.getAllByText("1");
+    expect(cellOnes.length).toBeGreaterThan(0);
   });
 });

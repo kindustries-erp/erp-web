@@ -1,6 +1,6 @@
 // E2E Quản lý tài khoản V2 (/v2/users-management): bảng gọi API v2, tạo, sửa, ngưng/kích hoạt, đặt lại mật khẩu.
 // Biến môi trường như garage-procurement.e2e.mjs (xem erp-e2e-playwright/SKILL.md): E2E_PASSWORD bắt buộc.
-// E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD (mặc định E2E_PASSWORD): tài khoản có quyền admin_users:manage (email mặc định admin@liouni.com).
+// E2E_TAO_EMAIL (mặc định ai-test-tao@example.com), E2E_PASSWORD: tài khoản cần quyền admin_users:manage.
 // Tạo dữ liệu có tiền tố email `e2e-users-`; không có API xóa nên dọn bằng SQL sau khi chạy. KHÔNG chạy trên DB production.
 // Bổ sung cutover: URL cũ /erp-users mở trang V2, tab Lịch sử (audit), đăng nhập dưới quyền rồi quay lại, mục admin nav.
 // Chạy: bun run e2e:users-management
@@ -10,11 +10,11 @@ import { resolveApiUrl, resolveWebUrl } from "./e2e-ports.mjs";
 
 const API = resolveApiUrl();
 const WEB = resolveWebUrl();
-const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? process.env.E2E_PASSWORD;
-const ADMIN = process.env.E2E_ADMIN_EMAIL ?? "admin@liouni.com";
+const PASSWORD = process.env.E2E_PASSWORD;
+const ADMIN = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
 if (!PASSWORD) {
-  console.error("Thiếu E2E_PASSWORD hoặc E2E_ADMIN_PASSWORD.");
+  console.error("Thiếu E2E_PASSWORD.");
   process.exit(2);
 }
 const SHOTS = new URL("./.artifacts/", import.meta.url).pathname;

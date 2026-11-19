@@ -37,8 +37,9 @@ Module `garage-dashboard` (được hiện thực tại `src/kgara-api-core/` v�
   - `revenue`, `cost`, `profit`, `margin`: Chỉ số tài chính lãi gộp.
   - `paid`, `receivable`, `collectionRate`: Tiền khách đã thanh toán, công nợ phải thu và tỷ lệ hoàn tất thu tiền (%).
   - `paidCost`, `payableCost`, `costPaymentRate`: Tiền đã chi trả chi phí/NCC, công nợ phải trả NCC và tỷ lệ chi trả (%).
-- **Chỉ số KPI Sparklines theo Chu kỳ (`getCheckpointKpis`)**:
-  - Phân tích 3 chu kỳ: **Tháng này** (Sparkline 6 tháng), **Tuần này** (Sparkline 4 tuần), **Hôm nay** (Sparkline 7 ngày) theo Ngày hoàn thành.
+- **Chỉ số KPI theo Chu kỳ (`getCheckpointKpis` & `GarageStatsCards.tsx`)**:
+  - Phân tích 3 chu kỳ: **Tháng này**, **Tuần này**, **Hôm nay** theo Ngày hoàn thành.
+  - Hiển thị 2 Donut chart song song (Phân loại xe & Tiến độ thu tiền), icon đặt ngang hàng với nhãn tiêu đề (`[Icon] XE THÁNG NÀY`), và lưới 4 card giai đoạn tiếp nhận (Tiếp nhận, Báo giá, Đang sửa, Hoàn tất) hiển thị số lượng xe kèm số tiền phát sinh trong ngoặc đơn (ví dụ: `11 (124tr)`).
   - Hỗ trợ click-to-drilldown xem danh sách phiếu dịch vụ chi tiết hoàn thành trong kỳ (`getCheckpointCases`).
 - **Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (`GarageConversionFunnelCard.tsx`)**:
   - Hub phân tích 3 tầng tích hợp toàn diện:
@@ -48,6 +49,11 @@ Module `garage-dashboard` (được hiện thực tại `src/kgara-api-core/` v�
       - Donut Chart Cơ Cấu Nghiệp Vụ (ERP) (4 nhóm ERP: Sửa chữa chung, Ký gửi/Nội bộ, OJ Ngoài, Khác).
       - Donut Chart Phân Bổ Trạng Thái Phiếu DV (Hoàn tất, Đang xử lý, Báo giá, Tiếp nhận, Hủy).
     - **Tầng 3**: Bảng `<DataTable variant="spreadsheet">` chi tiết 4 phân loại ERP chuẩn `/standardize-table` (STT `#` 40px center, No Blue Mandate, SubtotalSummaryCell footer).
+    - **Tương tác Click-to-Drilldown Phân Loại ERP & Card Doanh Thu**:
+      - Click vào hàng trên bảng Phân loại ERP (hoặc lát cắt Donut Cơ Cấu Nghiệp Vụ) sẽ mở `GarageCheckpointDrawer` (`GarageCasesDetailDrawer`) với `classification` tương ứng, hiển thị toàn bộ phiếu dịch vụ thuộc phân loại đó trong kỳ (tất cả các giai đoạn phễu tiếp nhận: Báo giá, Đang làm, Hoàn thành, Đã hủy).
+      - Sub-tab trên thanh công cụ chuyển thành **5 Trạng thái Phễu Chuyển Đổi**: `Tổng tiếp nhận`, `Báo giá`, `Đang làm (Dự thu)`, `Hoàn thành (Doanh thu)`, `Đã hủy` kèm badge đếm số lượng phiếu tương ứng cho từng trạng thái.
+      - Khi click Card Doanh thu (`classification` không truyền hoặc là `ALL`): drawer giữ nguyên 100% cơ chế cũ theo Quy tắc Hoàn Thành Nghiêm Ngặt (`c.ngay_hoan_thanh_cong_viec IS NOT NULL`), sub-tab hiển thị 5 phân loại ERP (`Tất cả`, `Sửa chữa chung`, `Ký gửi / Nội bộ`, `OJ Ngoài`, `Khác`).
+      - Nút chuyển trạng thái `[ ↙ Phải thu | ↗ Phải trả ]` đã được lược bỏ khỏi drawer này để giao diện tinh gọn, tập trung hoàn toàn vào theo dõi vụ việc và trạng thái tiến độ dịch vụ.
   - Dữ liệu tính toán độc lập tại `conversionFunnel` & `conversionFunnelByMonth` trong `garage-dashboard.service.ts`, phản hồi tức thì theo kỳ tháng được chọn.
 - **2 chart P&L 12 tháng trên Dashboard (cập nhật 2026-10-17)**:
   - `GaragePnlSection` render `GaragePnlChartsCard` (`components/GaragePnlCharts/`): chart "Báo cáo lợi nhuận" (cột Doanh thu/Chi phí/Lợi nhuận gộp + đường `% Lợi nhuận gộp` trên trục phụ) và chart "Tỷ trọng các chỉ số trên 100% doanh thu" (7 cột chồng `/ DT`), giống sheet Excel cùng tên; màu `PNL_CHART_PALETTE` khớp `CHART_PALETTE` của API.
@@ -193,8 +199,22 @@ Resource RBAC: `garage`
 2. **Backend Unit Tests**: Chạy `bunx jest src/kgara-api-core/ --forceExit` (bắt buộc pass 100%).
 3. **Web Build**: Chạy `bun run build` trong `erp-web/` (bắt buộc pass 100%).
 
-## 7. Garage Month Detail Drawer - Debt Tables (2026-10)
+## 7. Garage Cases & Debt Detail Drawers - Chuẩn Hóa V2 (2026-11)
 
+- **Organism lõi dùng chung `GarageCasesDetailDrawer` (2026-11 - Chuẩn hóa V2)**:
+  - Tách thành component lõi `GarageCasesDetailDrawer` (`src/modules/garage/components/organisms/garage-cases-detail-drawer/`) dùng chung cho cả Doanh thu / Kỳ hoàn tất (Checkpoint) và Công nợ (Tuổi nợ / Tháng).
+  - Sử dụng `V2StandardDrawer` (`size="xl"`, `layout="2-columns"`, `collapsibleRightPanel={true}`), hỗ trợ nút phóng to full-screen.
+  - Left Panel: Danh sách vụ việc dùng `V2StandardTable` bọc trong `DrawerSection`, có toolbar lọc (`V2TabBar`, `V2SearchInput`, Switch), chân bảng có summary row tự động tính tổng tiền.
+  - Điều khiển cột hiển thị qua prop `showProfitMetrics`:
+    - Khi `true`: Kích hoạt thêm 3 cột **Doanh thu thuần**, **Chi phí (Giá vốn)**, **Lợi nhuận gộp** (màu semantic token, font mono tabular-nums, không dùng blue).
+    - Khi `false`: Ẩn 3 cột P&L để tập trung vào số liệu công nợ.
+  - Right Panel: `GarageCasesRightPanel` tự động hiển thị Section **Hiệu quả kinh doanh (P&L)** (Doanh thu thuần, Giá vốn, Lãi gộp & Biên LN) + **Tiến độ thu tiền & công nợ** (khi ở Checkpoint), hoặc **Cơ cấu Thu KH vs BH & Chi phí nợ** (khi ở Công nợ).
+  - Bọc ngoài bởi 2 wrapper chuẩn ngữ nghĩa nghiệp vụ:
+    - `GarageCheckpointDrawer`: Wrapper mỏng (35 LoC) bọc `GarageCasesDetailDrawer` với `scope: checkpoint` và `showProfitMetrics={true}`. Thay thế hoàn toàn file monolith 662 LoC cũ dùng HTML trần.
+    - `GarageDebtDetailDrawer`: Wrapper mỏng (22 LoC) bọc `GarageCasesDetailDrawer` với `showProfitMetrics={false}`. Giữ nguyên 100% interface cho các caller cũ (`GarageTimeHorizonDetailDrawer` và `GarageMonthDetailDrawer`).
+  - Toàn bộ các file trong cụm đều tuân thủ No Blue Mandate và khống chế 100% file code $< 250\text{ LoC}$.
+
+- Drill-down mốc: `GarageMonthClassificationCasesDrawer` và `GaragePartnerMonthDetailDrawer` nhận prop `horizon`. Danh sách phân loại lọc `agingHorizon=[horizon]` và `ngayHoanThanhCongViec=["2026-07-01.."]`; đối tác dùng `initialCases` từ breakdown, không lọc theo tháng. Test: `*.horizon.test.tsx` cạnh hai drawer.
 - `GarageMonthDetailDrawer` hiển thị đồng thời hai bảng `DataTable` chuẩn spreadsheet cho Phải thu và Phải trả; mỗi bảng có state/filter độc lập và các table ID `garage-month-detail-receivables-table` và `garage-month-detail-payables-table`.
 - Tab Đối tượng HĐ hiển thị riêng hai bảng Thu khách hàng và Thu bảo hiểm, dùng lần lượt `customerPartners` và `insuranceCompanies`, với table ID `garage-month-detail-customer-partners-table` và `garage-month-detail-insurance-companies-table`.
 - `CustomerDetailDebtSwitch` không còn được dùng trong hai khu vực bảng; click row vẫn mở classification hoặc partner detail drawer như trước.
@@ -294,4 +314,6 @@ Resource RBAC: `garage`
 - **Không đổi contract**: không thay đổi DB/API; quyền dùng `GARAGE_CASHFLOW:READ` sẵn có.
 - "Quyển số" để trống (chấm dòng); chỉ in `Số: {voucherCode}`. Field "Địa chỉ" để trống vì voucher không có dữ liệu.
 
+## 13. Nhãn thẻ tuổi nợ garage (2026-11)
 
+- Thẻ tuổi nợ và ma trận tuổi nợ garage ghi tổng "Phải thu" (`debts:dashboard.garageReceivableTotal`), vì giá trị là tổng KH + BH theo công thức chung của erp-api (`kgara-case-remaining`). Nhãn "Phải thu (KH)" vẫn dùng ở dự báo dòng tiền (`debts:dashboard.expectedIn`) và dashboard hóa đơn.

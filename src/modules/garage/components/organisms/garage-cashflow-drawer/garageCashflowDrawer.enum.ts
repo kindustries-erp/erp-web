@@ -12,6 +12,7 @@ export enum GarageCashflowFieldKey {
   PAYMENT_CONTENT = "paymentContent",
   AMOUNT = "amount",
   CASE_ID = "caseId",
+  PAYER_TYPE = "payerType",
   PARTNER_NAME = "partnerName",
   LICENSE_PLATE = "licensePlate",
   NOTE = "note",

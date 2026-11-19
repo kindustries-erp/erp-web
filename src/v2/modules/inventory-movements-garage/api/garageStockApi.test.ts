@@ -51,4 +51,58 @@ describe("garageStockApi", () => {
       garageStockApi.getVoucher("PURCHASE_RECEIPT", "1"),
     ).rejects.toThrow();
   });
+
+  it("gửi column_filters và column_operators khi đọc danh sách tồn kho", async () => {
+    get.mockResolvedValueOnce({
+      data: {
+        items: [{ id: "b1", itemCode: "A" }],
+        pagination: { total: 1 },
+        summaries: {},
+        extraData: { tabCounts: {} },
+      },
+    });
+
+    const q = query({
+      columnFilters: { unit: ["Cái"] },
+      columnOperators: { qtyOnHand: { operator: "gt", value: "0" } },
+    });
+    await garageStockApi.listBalances(q as never, "ALL");
+
+    expect(get).toHaveBeenCalledWith(
+      "/api/v2/inventory-movements-garage-ledger/balances",
+      expect.objectContaining({
+        params: expect.objectContaining({
+          column_filters: '{"unit":["Cái"]}',
+          column_operators: '{"qtyOnHand":{"operator":"gt","value":"0"}}',
+        }),
+      }),
+    );
+  });
+
+  it("gọi balanceOptions lấy gợi ý cột", async () => {
+    get.mockResolvedValueOnce({
+      data: {
+        items: [{ label: "Cái", value: "Cái" }],
+        pagination: { total: 1, totalPages: 1 },
+      },
+    });
+
+    const res = await garageStockApi.balanceOptions!({
+      columnKey: "unit",
+      search: "C",
+      pageParam: 1,
+    });
+
+    expect(get).toHaveBeenCalledWith(
+      "/api/v2/inventory-movements-garage-ledger/column-options",
+      expect.objectContaining({
+        params: expect.objectContaining({
+          column: "unit",
+          search: "C",
+          page: 1,
+        }),
+      }),
+    );
+    expect(res.items).toEqual([{ label: "Cái", value: "Cái" }]);
+  });
 });

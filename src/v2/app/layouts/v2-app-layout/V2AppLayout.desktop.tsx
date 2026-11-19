@@ -38,6 +38,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   onClickLogo,
   collapsed,
   onToggleCollapse,
+  hideSidebar = false,
 }) => {
   const { t, locale } = useV2Translation();
   const can = useV2PermissionChecker();
@@ -75,25 +76,27 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
       className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-[#f4f4f4] dark:bg-[color:var(--app-shell-bg,#131418)] text-foreground"
     >
       {/* Card 1: Sidebar floating card */}
-      <V2Sidebar
-        sections={sections ?? (navItems ? undefined : dynamicSections)}
-        items={navItems}
-        activeId={activeNavId}
-        onNavigate={onNavigate}
-        appName={appName}
-        onClickLogo={onClickLogo}
-        collapsed={collapsed}
-        onToggleCollapse={onToggleCollapse}
-        userMenuNode={userMenuNode}
-        notificationNode={notificationNode}
-        user={{
-          displayName: effectiveUserName,
-          avatarInitials: effectiveUserName
-            ? effectiveUserName.substring(0, 2).toUpperCase()
-            : "AD",
-          unreadCount: 0,
-        }}
-      />
+      {!hideSidebar && (
+        <V2Sidebar
+          sections={sections ?? (navItems ? undefined : dynamicSections)}
+          items={navItems}
+          activeId={activeNavId}
+          onNavigate={onNavigate}
+          appName={appName}
+          onClickLogo={onClickLogo}
+          collapsed={collapsed}
+          onToggleCollapse={onToggleCollapse}
+          userMenuNode={userMenuNode}
+          notificationNode={notificationNode}
+          user={{
+            displayName: effectiveUserName,
+            avatarInitials: effectiveUserName
+              ? effectiveUserName.substring(0, 2).toUpperCase()
+              : "AD",
+            unreadCount: 0,
+          }}
+        />
+      )}
 
       {/* Card 2: Right Panel floating card with Topbar, Content & TabBar */}
       <V2RightPanel

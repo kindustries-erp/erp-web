@@ -33,6 +33,11 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 - Alias `@/v2/*` → `src/v2/*`, `@/*` → `src/*`.
 - Module V2 và shared V2 không import V1, ngoại trừ auth store dùng chung (`@/modules/auth/domain/authStore`).
 - Key i18n trong V2 phải có prefix `v2.`.
+- **URL chính không có `v2`**: URL chính thức của mọi trang luôn là `/<slug>` (ví dụ `/file-attachments`, `/employees-management`), không bao giờ `/v2/...` hay `/v3/...`.
+  - **Module dùng chung component giữa `/*` và `/v2/*`**: Xóa bỏ URL `/v2/*` tương ứng trong cấu hình route; `App.tsx` tự động redirect các URL `/v2/*` cũ về URL chính `/<slug>`.
+  - **Module có 2 component khác biệt giữa V1 và V2** (ví dụ: `customers`, `suppliers`, `invoices`, `audit-logs`, `admin-dashboard`): Hiển thị trực tiếp trong **Sidebar Menu Gốc** (`V2ShellLayout`), nhãn có hậu tố ` (v2)` (ví dụ: *Khách hàng (v2)*, *Nhà cung cấp (v2)*), URL dạng `/<slug>-v2` trong root shell, và **chỉ hiển thị/cho phép duy nhất tài khoản `admin@liouni.com` truy cập**. Người dùng khác bị chặn bởi guard và trả về `NotFound`.
+  - **Phân vùng `/v2/*` không có sidemenu**: Loại bỏ hoàn toàn `V2Sidebar` và bottom nav khi truy cập `/v2/*`. Nội dung trang mở rộng toàn màn hình (full width).
+  - Khi một module V2 sẵn sàng thay thế hoàn toàn V1, nối vào shell chính: thêm PageKey `<slug>` (`shared/types`, `shared/utils/pageUrl.ts`, `core/config/appStore/constants.ts`, nav/sidebar, `V2ShellLayout` breadcrumb), đăng ký component V2 trong `App.tsx` (map PageKey → trang V2), và giữ slug cũ của V1 làm `LEGACY_SLUGS` trỏ về PageKey mới. Mẫu: `employees-management`, `file-attachments`.
 - Migrate V1 → V2 chỉ làm khi user ra lệnh (rolling migration). Chi tiết: skill `erp-ui-structure`.
 
 ## 5. Tooling
@@ -42,18 +47,21 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
   - `type:check` = `tsc --noEmit`
   - `check:ci` = `tsc --noEmit` + eslint `--max-warnings=0` + `prettier --check`
   - `build` = `tsc` + `vite build`
-  - `test` = `vitest --run`
+  - `test` = `vitest --run` (chỉ chạy test trong V2: `src/v2/**/*.{test,spec}.{ts,tsx}`)
+  - `test:v2` = `vitest --run` (alias chỉ chạy V2)
+  - `test:all` = `vitest --run --include 'src/**/*.{test,spec}.{ts,tsx}'` (chạy toàn bộ khi audit thủ công)
+  - `e2e:*` = chạy các luồng E2E Playwright trong `e2e/*.e2e.mjs`
   - `lint` / `lint:check` / `check:style`
 - Storybook: `build-storybook`.
 - Generator: `bun run plop` (ví dụ `v2-module`, `v2-component`).
 
 ## 6. Git, hook và CI (đã đối chiếu với `.husky/` và `.github/workflows/`)
 
-- **pre-commit**: `bunx lint-staged`.
+- **pre-commit**: `bunx lint-staged` (chỉ kích hoạt `vitest related` với file staged thuộc `src/v2/**/*.{ts,tsx}`; ngoài v2 chỉ chạy eslint/prettier).
 - **pre-push**: `bun run type:check`. Chỉ bypass bằng `SKIP_TESTS=1` hoặc `HUSKY_SKIP_TESTS=1` khi đã verify thủ công.
 - **CI `pipeline-erp-master.yml`** (trigger vào `erp-master`):
   - Type, Lint & Format: `bun run check:ci`
-  - Unit tests: `bun run test`
+  - Unit tests: `bun run test` (chỉ chạy unit tests V2)
   - Build check (chỉ PR): `bun run build`
   - Build & push image
   - Deploy qua Komodo
@@ -80,7 +88,8 @@ Tài liệu chi tiết của từng module nằm tại `.agents/skills/modules/<
 - **Phụ tùng VinFast**: `vinfast-parts-stock`, `vinfast-parts-dashboard`
 - **Garage**: `garage-cases`, `garage-dashboard`, `inventory-movements-garage` (chứng từ kho và tồn kho Garage, thay trang Nhập kho Garage; lõi `inventory-movements` và `goods-receipts`; lõi PO dùng chung ở `src/v2/core/purchase-orders/`)
 - **Đối tác & nhà cung cấp**: `business-partners`, `erp-suppliers`
-- **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`
+- **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`, `transfer-qr` (QR chuyển khoản VietQR, lõi `transfer-qr-core`, module `transfer-qr-bank-statements`, nối dropdown Thao tác của tab Ngân hàng)
+- **File đính kèm dùng chung**: `file-attachments` (client `src/v2/shared/files`, organism `V2AttachmentsPanel`, tab Tài liệu ở drawer hóa đơn V2, trang `src/v2/modules/file-attachments-management`, URL chính `/file-attachments`)
 - **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`, `users-management` (lõi `src/v2/core/users`, module `src/v2/modules/users-management`, route `/v2/users-management`), `employees-core` (lõi `src/v2/core/employees`, module `src/v2/modules/employees-management`, route `/v2/employees-management`), `audit-logs` (lõi `src/v2/core/audit`, module `src/v2/modules/audit-logs`, route `/v2/admin/audit-logs`)
 - **Layout và thành phần chuẩn V2**: `v2-layout`, `v2-foundation`, `v2-auth`, `v2-admin-layout`; bảng và drawer V2 nằm trong skill `standardize-table` (`standardize-table/references/v2-table.md`) và `standardize-drawer` (`standardize-drawer/references/v2-drawer.md`)
 - **AI Hub V2**: `ai-hub` (core `src/v2/core/ai-hub`, chatbot nổi dùng chung `V2FloatingChat` trong `src/v2/shared`, trợ lý AI đọc hóa đơn gắn ở trang garage-procurement tab `requests`)

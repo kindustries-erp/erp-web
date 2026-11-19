@@ -7,8 +7,7 @@ import {
 } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { getAttachmentDownloadUrlApi } from "@/modules/system/api/attachmentsApi";
+import { invoiceFilesV2Api } from "@/modules/erp-invoices-core/api/invoiceFilesV2Api";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -21,14 +20,24 @@ vi.mock("@/core/config/appStore", () => ({
 }));
 
 vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
-  erpInvoicesCoreApi: {
-    getPdfDownloadUrl: vi.fn(),
-  },
+  erpInvoicesCoreApi: {},
 }));
 
-vi.mock("@/modules/system/api/attachmentsApi", () => ({
-  getAttachmentDownloadUrlApi: vi.fn(),
-  getFileViewUrl: vi.fn((id: string) => `http://mock-view-url/${id}`),
+const v2Files = vi.hoisted(() => ({ current: [] as any[] }));
+vi.mock("@/modules/erp-invoices-core/hooks/useInvoiceFilesV2", () => ({
+  useInvoiceFilesV2: () => ({
+    files: v2Files.current,
+    policy: null,
+    loading: false,
+    reload: vi.fn(),
+  }),
+}));
+vi.mock("@/modules/erp-invoices-core/api/invoiceFilesV2Api", () => ({
+  invoiceFilesV2Api: {
+    downloadUrl: vi.fn(),
+    upload: vi.fn(),
+    remove: vi.fn(),
+  },
 }));
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -61,6 +70,7 @@ function renderWithContext(
 describe("ErpInvoiceInternalMain", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    v2Files.current = [];
   });
 
   it("renders custom preview when provided in template mode", () => {
@@ -113,7 +123,19 @@ describe("ErpInvoiceInternalMain", () => {
   });
 
   it("loads and renders PDF iframe when pdfFileKey is null but attachments has a PDF file", async () => {
-    (getAttachmentDownloadUrlApi as any).mockResolvedValue({
+    v2Files.current = [
+      {
+        id: "att-1",
+        category: "HOA_DON",
+        isOriginal: false,
+        fileName: "Hoa_don_GTGT.pdf",
+        fileSize: 10,
+        mimeType: "application/pdf",
+        origin: "V2",
+        createdAt: "2026-10-01T00:00:00Z",
+      },
+    ];
+    (invoiceFilesV2Api.downloadUrl as any).mockResolvedValue({
       url: "https://r2.domain.com/signed-url/att-pdf-1.pdf",
     });
 
@@ -147,11 +169,27 @@ describe("ErpInvoiceInternalMain", () => {
       );
     });
 
-    expect(getAttachmentDownloadUrlApi).toHaveBeenCalledWith("att-1", true);
+    expect(invoiceFilesV2Api.downloadUrl).toHaveBeenCalledWith(
+      "inv-1",
+      "att-1",
+      true,
+    );
   });
 
   it("loads PDF from legacy pdfFileKey when available", async () => {
-    (erpInvoicesCoreApi.getPdfDownloadUrl as any).mockResolvedValue({
+    v2Files.current = [
+      {
+        id: "att-legacy",
+        category: "HOA_DON",
+        isOriginal: false,
+        fileName: "inv-legacy.pdf",
+        fileSize: 10,
+        mimeType: "application/pdf",
+        origin: "V2",
+        createdAt: "2026-10-01T00:00:00Z",
+      },
+    ];
+    (invoiceFilesV2Api.downloadUrl as any).mockResolvedValue({
       url: "https://r2.domain.com/signed-url/legacy.pdf",
     });
 
@@ -175,9 +213,9 @@ describe("ErpInvoiceInternalMain", () => {
       );
     });
 
-    expect(erpInvoicesCoreApi.getPdfDownloadUrl).toHaveBeenCalledWith(
+    expect(invoiceFilesV2Api.downloadUrl).toHaveBeenCalledWith(
       "inv-legacy",
-      "invoices/2026/09/inv-legacy.pdf",
+      "att-legacy",
       true,
     );
   });

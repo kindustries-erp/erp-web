@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   LOANS_TOOL_PATH,
+  PUBLIC_LOANS_TOOL_PATH,
   pageToPath,
   pathToPage,
   encodeStateParam,
@@ -8,8 +9,9 @@ import {
 } from "./pageUrl";
 
 describe("URL khoản vay (loans-tool)", () => {
-  it("LOANS_TOOL_PATH là /loans-tool", () => {
+  it("LOANS_TOOL_PATH là /loans-tool và PUBLIC_LOANS_TOOL_PATH là /public/loans-tool", () => {
     expect(LOANS_TOOL_PATH).toBe("/loans-tool");
+    expect(PUBLIC_LOANS_TOOL_PATH).toBe("/public/loans-tool");
   });
 
   it("pageToPath sinh /loans-tool kèm tab", () => {
@@ -17,10 +19,13 @@ describe("URL khoản vay (loans-tool)", () => {
     expect(pageToPath("loans")).toBe("/loans-tool");
   });
 
-  it("pathToPage nhận cả URL chuẩn và URL cũ /tools/loans", () => {
+  it("pathToPage nhận URL chuẩn, URL public và URL cũ", () => {
     expect(pathToPage("/loans-tool", "?tab=list")?.page).toBe("loans");
     expect(pathToPage("/loans-tool", "?tab=list")?.tab).toBe("list");
     expect(pathToPage("/tools/loans", "")?.page).toBe("loans");
+    expect(pathToPage("/loans", "")?.page).toBe("loans");
+    expect(pathToPage("/public/loans-tool", "")?.page).toBe("loans");
+    expect(pathToPage("/public/loans", "")?.page).toBe("loans");
   });
 });
 
@@ -204,5 +209,20 @@ describe("URL nhân viên (employees-management)", () => {
 
   it("URL cũ /erp-employees của trang V1 vẫn mở trang mới", () => {
     expect(pathToPage("/erp-employees", "")?.page).toBe("employees-management");
+  });
+});
+
+describe("file-attachments URL", () => {
+  it("/file-attachments là URL chuẩn", () => {
+    expect(pathToPage("/file-attachments", "")?.page).toBe("file-attachments");
+    expect(pageToPath("file-attachments")).toBe("/file-attachments");
+  });
+  it("slug module file-attachments-management trỏ về /file-attachments", () => {
+    expect(pathToPage("/file-attachments-management", "")?.page).toBe(
+      "file-attachments",
+    );
+  });
+  it("/attachments cũ vẫn trỏ về trang file-attachments", () => {
+    expect(pathToPage("/attachments", "")?.page).toBe("file-attachments");
   });
 });
