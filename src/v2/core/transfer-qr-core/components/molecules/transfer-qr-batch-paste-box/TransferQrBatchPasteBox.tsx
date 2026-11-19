@@ -28,7 +28,7 @@ export function TransferQrBatchPasteBox({
       <V2Textarea
         value={text}
         onChange={(event) => setText(event.target.value)}
-        rows={4}
+        rows={3}
         placeholder={t("v2.transferQr.batch.pastePlaceholder")}
         aria-label={t("v2.transferQr.batch.pasteTitle")}
       />

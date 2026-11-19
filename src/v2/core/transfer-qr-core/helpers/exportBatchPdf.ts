@@ -1,11 +1,10 @@
 import { formatBatchStamp, type BatchExportItem } from "./exportBatchZip";
+import { PDF_PER_PAGE, layoutBatchCell } from "./layoutBatchPage";
 import {
-  PDF_PER_PAGE,
-  fitTextLines,
-  layoutBatchCell,
-  lineHeightMm,
-  type BatchCellLayout,
-} from "./layoutBatchPage";
+  drawPageHeaderAndFooter,
+  drawBatchCardCell,
+  type PdfCanvas,
+} from "./batchPdfRender";
 
 export { PDF_COLUMNS, PDF_PER_PAGE, PDF_ROWS } from "./layoutBatchPage";
 
@@ -71,76 +70,8 @@ export function pageCountFor(itemCount: number): number {
   return Math.max(1, Math.ceil(itemCount / PDF_PER_PAGE));
 }
 
-type PdfDoc = {
-  addImage: (
-    data: string,
-    format: string,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-  ) => void;
-  rect: (x: number, y: number, w: number, h: number) => void;
-  text: (
-    text: string,
-    x: number,
-    y: number,
-    options?: { align?: "center" | "left" | "right" },
-  ) => void;
-  setFont: (family: string, style: string) => void;
-  setFontSize: (size: number) => void;
-  setDrawColor: (r: number, g?: number, b?: number) => void;
-  setTextColor: (r: number, g?: number, b?: number) => void;
-  splitTextToSize: (text: string, width: number) => string[];
-  getTextWidth: (text: string) => number;
-};
-
-function drawCell(
-  doc: PdfDoc,
-  cell: BatchCellLayout,
-  index: number,
-  item: BatchExportItem & { caption: BatchCaption },
-): void {
-  doc.setDrawColor(190, 190, 190);
-  doc.rect(cell.x, cell.y, cell.width, cell.height);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(120, 120, 120);
-  doc.text(String(index + 1), cell.x + 2, cell.y + 4);
-  doc.setTextColor(0, 0, 0);
-
-  doc.addImage(
-    item.qrDataUrl,
-    "PNG",
-    cell.qrX,
-    cell.qrY,
-    cell.qrSize,
-    cell.qrSize,
-  );
-
-  let top = cell.textTopY;
-  for (const block of buildCaptionBlocks(item.caption)) {
-    doc.setFont("helvetica", block.bold ? "bold" : "normal");
-    doc.setFontSize(block.size);
-    const lineHeight = lineHeightMm(block.size);
-    const lines = fitTextLines(
-      block.text,
-      block.maxLines,
-      cell.textWidth,
-      (text, width) => doc.splitTextToSize(text, width),
-      (text) => doc.getTextWidth(text),
-    );
-    for (const line of lines) {
-      doc.text(line, cell.centerX, top + lineHeight * 0.8, { align: "center" });
-      top += lineHeight;
-    }
-  }
-}
-
 /**
- * Xếp các mã QR thành PDF A4, lưới 2 cột x 3 hàng. QR canh giữa trong ô,
- * chữ canh giữa và ngắt dòng để không tràn sang ô bên cạnh.
+ * Xếp các mã QR thành PDF A4 chuẩn chuyên nghiệp (Header trang, Thẻ đóng khung 2 tầng, Footer).
  * `jspdf` được nạp động để không làm nặng bundle chính.
  */
 export async function buildBatchPdfBytes(
@@ -148,11 +79,38 @@ export async function buildBatchPdfBytes(
 ): Promise<ArrayBuffer> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const totalPages = pageCountFor(items.length);
+  const now = new Date();
+  const totalAmount = items.reduce(
+    (sum, item) => sum + (item.caption.amount || 0),
+    0,
+  );
+
+  let currentPage = 1;
+  drawPageHeaderAndFooter(
+    doc as unknown as PdfCanvas,
+    currentPage,
+    totalPages,
+    items.length,
+    totalAmount,
+    now,
+  );
 
   items.forEach((item, index) => {
-    if (index > 0 && index % PDF_PER_PAGE === 0) doc.addPage();
+    if (index > 0 && index % PDF_PER_PAGE === 0) {
+      doc.addPage();
+      currentPage++;
+      drawPageHeaderAndFooter(
+        doc as unknown as PdfCanvas,
+        currentPage,
+        totalPages,
+        items.length,
+        totalAmount,
+        now,
+      );
+    }
     const cell = layoutBatchCell(index % PDF_PER_PAGE);
-    drawCell(doc as unknown as PdfDoc, cell, index, item);
+    drawBatchCardCell(doc as unknown as PdfCanvas, cell, index, item);
   });
 
   return doc.output("arraybuffer");

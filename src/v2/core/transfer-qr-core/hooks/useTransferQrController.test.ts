@@ -166,6 +166,23 @@ describe("useTransferQrController", () => {
     expect(result.current.errors).toEqual({});
   });
 
+  it("hỗ trợ tải Thẻ thanh toán (downloadCard) và tải QR thô (downloadRaw)", async () => {
+    const { result } = renderHook(() =>
+      useTransferQrController({ open: true, accounts }),
+    );
+    act(() => {
+      result.current.patchForm({
+        mode: TransferQrMode.RECEIVE_FROM_CUSTOMER,
+        accountId: "acc-1",
+      });
+    });
+    await vi.waitFor(() => expect(result.current.canDownload).toBe(true));
+
+    expect(typeof result.current.downloadCard).toBe("function");
+    expect(typeof result.current.downloadRaw).toBe("function");
+    expect(result.current.cardRef).toBeDefined();
+  });
+
   it("đóng drawer thì reset form", () => {
     const { result, rerender } = renderHook(
       ({ open }: { open: boolean }) =>

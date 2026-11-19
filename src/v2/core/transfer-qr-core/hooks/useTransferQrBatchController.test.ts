@@ -12,6 +12,7 @@ vi.mock("qrcode", () => ({
 vi.mock("../helpers/batchDownloads", () => ({
   downloadBatchZip: vi.fn(async () => undefined),
   downloadBatchPdf: vi.fn(async () => undefined),
+  downloadRowCard: vi.fn(async () => undefined),
 }));
 
 const PASTE_OK = "VCB\t0123456789\tNGUYEN VAN A\t1.500.000\tHD001/2025";

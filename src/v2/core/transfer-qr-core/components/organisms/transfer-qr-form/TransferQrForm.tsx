@@ -59,7 +59,7 @@ export function TransferQrForm({
       <DrawerSection title={t("v2.transferQr.sections.recipient")}>
         {isReceive ? (
           <div className="flex flex-col gap-3">
-            <label className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               <V2Text variant="body-sm">
                 {t("v2.transferQr.fields.account")}
               </V2Text>
@@ -73,7 +73,7 @@ export function TransferQrForm({
                 placeholder={t("v2.transferQr.placeholders.account")}
                 searchable
               />
-            </label>
+            </div>
             {needsBankFallback && (
               <>
                 <V2Text variant="body-sm">
@@ -91,7 +91,7 @@ export function TransferQrForm({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <label className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1">
               <V2Text variant="body-sm">
                 {t("v2.transferQr.fields.bank")}
               </V2Text>
@@ -102,7 +102,7 @@ export function TransferQrForm({
                 placeholder={t("v2.transferQr.placeholders.bank")}
                 searchable
               />
-            </label>
+            </div>
             <V2Input
               value={form.accountNumber}
               onChange={(event) =>

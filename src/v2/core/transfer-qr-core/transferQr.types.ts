@@ -62,3 +62,13 @@ export type TransferQrErrorCode =
 export type TransferQrErrors = Partial<
   Record<TransferQrErrorField, TransferQrErrorCode>
 >;
+
+/**
+ * Thông tin doanh nghiệp hiển thị trên Thẻ thanh toán (Card).
+ * Nhận từ module ERP (ví dụ qua useCompanyProfile).
+ */
+export interface TransferQrCompanyInfo {
+  companyName?: string;
+  taxCode?: string;
+  logo?: string;
+}

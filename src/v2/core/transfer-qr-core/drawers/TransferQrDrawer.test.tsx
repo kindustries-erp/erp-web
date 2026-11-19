@@ -84,4 +84,30 @@ describe("TransferQrDrawer", () => {
       screen.getByRole("button", { name: "Tải ảnh QR (PNG)" }),
     ).toBeTruthy();
   });
+
+  it("chế độ nhận tiền hiển thị thông tin công ty và MST trên Thẻ thanh toán", async () => {
+    render(
+      <TransferQrDrawer
+        open
+        onClose={vi.fn()}
+        accounts={accounts}
+        companyInfo={{
+          companyName: "CÔNG TY TNHH GREENWAY",
+          taxCode: "0109998888",
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Nhận tiền từ khách"));
+    fireEvent.click(screen.getByText("Chọn tài khoản"));
+    fireEvent.click(screen.getByText("VCB - 0123456789"));
+
+    await vi.waitFor(() => {
+      expect(
+        screen.getAllByText("CÔNG TY TNHH GREENWAY").length,
+      ).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText(/0109998888/)).toBeTruthy();
+      expect(screen.getByText("0123456789")).toBeTruthy();
+    });
+  });
 });
