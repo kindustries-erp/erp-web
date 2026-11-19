@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
-import { V2Badge, V2Text } from "@/v2/shared/components/atoms";
+import { V2Badge, V2Icon, V2Image, V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { TransferQrCompanyInfo } from "../../../transferQr.types";
 import "../../../transferQr.locale";
@@ -28,7 +28,11 @@ export function TransferQrPaymentCardHeader({
             size="xs"
             className="bg-emerald-100 text-emerald-800 border-emerald-300 gap-1 px-2.5 py-0.5 text-[10px] font-bold tracking-wide shrink-0 whitespace-nowrap"
           >
-            <ArrowDownLeft className="h-3 w-3 text-emerald-700 shrink-0" />
+            <V2Icon
+              icon={ArrowDownLeft}
+              size={12}
+              className="text-emerald-700 shrink-0"
+            />
             <V2Text
               variant="caption"
               weight="bold"
@@ -43,7 +47,11 @@ export function TransferQrPaymentCardHeader({
             size="xs"
             className="bg-amber-100 text-amber-900 border-amber-300 gap-1 px-2.5 py-0.5 text-[10px] font-bold tracking-wide shrink-0 whitespace-nowrap"
           >
-            <ArrowUpRight className="h-3 w-3 text-amber-800 shrink-0" />
+            <V2Icon
+              icon={ArrowUpRight}
+              size={12}
+              className="text-amber-800 shrink-0"
+            />
             <V2Text
               variant="caption"
               weight="bold"
@@ -66,7 +74,7 @@ export function TransferQrPaymentCardHeader({
       {isReceive && (
         <div className="flex items-center gap-2.5 pt-3 pb-2 min-w-0 border-b border-slate-100">
           {companyInfo?.logo && (
-            <img
+            <V2Image
               src={companyInfo.logo}
               alt="Logo"
               className="h-10 w-10 shrink-0 rounded-lg object-contain bg-white p-0.5 border border-slate-200"

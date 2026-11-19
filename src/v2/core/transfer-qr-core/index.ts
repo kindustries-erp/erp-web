@@ -1,4 +1,5 @@
 export * from "./transferQr.locale";
+export * from "./transferQr.enum";
 export * from "./transferQr.types";
 
 // Domain

@@ -1,13 +1,14 @@
 import * as React from "react";
 import { QrCode } from "lucide-react";
-import { V2Text } from "@/v2/shared/components/atoms";
+import { V2Icon, V2Image, V2Text } from "@/v2/shared/components/atoms";
 import { VIETQR_BANKS } from "../../../domain/constants/vietQrBanks";
+import { getBankLogoUrl } from "../../../domain/constants/defaultBankOptions";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import "../../../transferQr.locale";
-import {
-  TransferQrMode,
-  type TransferQrCompanyInfo,
-  type TransferQrAccountOption,
+import { TransferQrMode } from "../../../transferQr.enum";
+import type {
+  TransferQrCompanyInfo,
+  TransferQrAccountOption,
 } from "../../../transferQr.types";
 import { TransferQrPaymentCardHeader } from "./TransferQrPaymentCardHeader";
 import { TransferQrPaymentCardDetails } from "./TransferQrPaymentCardDetails";
@@ -17,7 +18,7 @@ export interface TransferQrPaymentCardProps {
   companyInfo?: TransferQrCompanyInfo;
   target: Pick<
     TransferQrAccountOption,
-    "bin" | "bankCode" | "accountNumber" | "accountName"
+    "bin" | "bankCode" | "accountNumber" | "accountName" | "logoUrl"
   > | null;
   amount?: number | null;
   content?: string;
@@ -35,6 +36,7 @@ export function TransferQrPaymentCard({
   cardRef,
 }: TransferQrPaymentCardProps) {
   const { t } = useV2Translation();
+  const [imgFailed, setImgFailed] = React.useState(false);
   const isReceive = mode === TransferQrMode.RECEIVE_FROM_CUSTOMER;
 
   const bankInfo = React.useMemo(() => {
@@ -43,6 +45,19 @@ export function TransferQrPaymentCard({
       (b) => b.bin === target.bin || b.code === target.bankCode,
     );
   }, [target]);
+
+  const bankLogoUrl =
+    target?.logoUrl ||
+    bankInfo?.logoUrl ||
+    (bankInfo?.code
+      ? getBankLogoUrl(bankInfo.code)
+      : target?.bankCode
+        ? getBankLogoUrl(target.bankCode)
+        : null);
+
+  React.useEffect(() => {
+    setImgFailed(false);
+  }, [bankLogoUrl]);
 
   const formattedAmount =
     amount != null && amount > 0
@@ -67,21 +82,33 @@ export function TransferQrPaymentCard({
       {/* QR Code Canvas */}
       <div className="my-3 flex flex-col items-center">
         <div className="relative rounded-xl bg-white p-2.5 shadow-sm border border-slate-200">
-          <img
+          <V2Image
             src={qrDataUrl}
             alt="VietQR"
             className="h-44 w-44 object-contain"
           />
         </div>
-        <V2Text
-          variant="caption"
-          weight="semibold"
-          className="mt-1.5 text-center text-slate-600 block"
-        >
-          {bankInfo
-            ? `${bankInfo.shortName} (${bankInfo.code})`
-            : target?.bankCode || "NAPAS 247"}
-        </V2Text>
+        <div className="mt-1.5 flex items-center justify-center gap-1.5">
+          {bankLogoUrl && !imgFailed && (
+            <V2Image
+              src={bankLogoUrl}
+              alt={bankInfo?.shortName || "Bank Logo"}
+              className="h-4 w-auto max-w-[48px] object-contain"
+              crossOrigin="anonymous"
+              onError={() => setImgFailed(true)}
+              loading="lazy"
+            />
+          )}
+          <V2Text
+            variant="caption"
+            weight="semibold"
+            className="text-center text-slate-600 block"
+          >
+            {bankInfo
+              ? `${bankInfo.shortName} (${bankInfo.code})`
+              : target?.bankCode || "NAPAS 247"}
+          </V2Text>
+        </div>
       </div>
 
       <TransferQrPaymentCardDetails
@@ -94,7 +121,7 @@ export function TransferQrPaymentCard({
 
       {/* Footer hint */}
       <div className="mt-2.5 flex items-center justify-center gap-1 text-[10px] text-slate-500">
-        <QrCode className="h-3 w-3 text-emerald-600 shrink-0" />
+        <V2Icon icon={QrCode} size={12} className="text-emerald-600 shrink-0" />
         <V2Text
           variant="caption"
           className="truncate text-slate-500 text-[10px]"

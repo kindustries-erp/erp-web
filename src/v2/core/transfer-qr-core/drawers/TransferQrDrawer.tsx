@@ -5,6 +5,7 @@ import {
   V2DrawerSize,
   V2StandardDrawer,
 } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import type { V2ComboboxOption } from "@/v2/shared/components/molecules/v2-combobox";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { TransferQrForm } from "../components/organisms/transfer-qr-form/TransferQrForm";
@@ -29,6 +30,10 @@ export interface TransferQrDrawerProps {
   onClose: () => void;
   accounts: readonly TransferQrAccountOption[];
   companyInfo?: TransferQrCompanyInfo;
+  bankOptions?: V2ComboboxOption[];
+  onBankScrollBottom?: () => void;
+  onBankSearchChange?: (q: string) => void;
+  isBanksLoading?: boolean;
 }
 
 /** Chuỗi key của V2TabBar về enum; key lạ thì rơi về tab một mã. */
@@ -47,6 +52,10 @@ export function TransferQrDrawer({
   onClose,
   accounts,
   companyInfo,
+  bankOptions,
+  onBankScrollBottom,
+  onBankSearchChange,
+  isBanksLoading,
 }: TransferQrDrawerProps) {
   const { t } = useV2Translation();
   const vm = useTransferQrController({
@@ -81,6 +90,10 @@ export function TransferQrDrawer({
           errors={vm.errors}
           accounts={accounts}
           onPatch={vm.patchForm}
+          bankOptions={bankOptions}
+          onBankScrollBottom={onBankScrollBottom}
+          onBankSearchChange={onBankSearchChange}
+          isBanksLoading={isBanksLoading}
         />
       ),
       rightPanel: (
@@ -103,7 +116,9 @@ export function TransferQrDrawer({
     {
       key: TransferQrDrawerTab.BATCH,
       label: t("v2.transferQr.batch.tabBatch"),
-      content: <TransferQrBatchContent batch={batch} />,
+      content: (
+        <TransferQrBatchContent batch={batch} bankOptions={bankOptions} />
+      ),
       rightPanel: (
         <DrawerSection title={t("v2.transferQr.sections.qrPreview")}>
           <TransferQrBatchSidePanel batch={batch} companyInfo={companyInfo} />

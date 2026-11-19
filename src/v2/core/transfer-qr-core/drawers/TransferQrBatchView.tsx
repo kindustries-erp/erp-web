@@ -7,6 +7,7 @@ import { TransferQrBatchActions } from "../components/molecules/transfer-qr-batc
 import { TransferQrBatchGrid } from "../components/molecules/transfer-qr-batch-grid/TransferQrBatchGrid";
 import { TransferQrBatchPasteBox } from "../components/molecules/transfer-qr-batch-paste-box/TransferQrBatchPasteBox";
 import { TransferQrBatchEditor } from "../components/organisms/transfer-qr-batch-editor/TransferQrBatchEditor";
+import type { V2ComboboxOption } from "@/v2/shared/components/molecules/v2-combobox";
 import {
   TransferQrMode,
   type TransferQrCompanyInfo,
@@ -23,10 +24,14 @@ export type TransferQrBatchController = ReturnType<
 export interface TransferQrBatchViewProps {
   batch: TransferQrBatchController;
   companyInfo?: TransferQrCompanyInfo;
+  bankOptions?: V2ComboboxOption[];
 }
 
 /** Cột trái tab "Nhiều lệnh thanh toán": ô dán Excel và bảng dòng. */
-export function TransferQrBatchContent({ batch }: TransferQrBatchViewProps) {
+export function TransferQrBatchContent({
+  batch,
+  bankOptions,
+}: TransferQrBatchViewProps) {
   const { t } = useV2Translation();
   return (
     <div className="flex flex-col gap-4">
@@ -44,6 +49,7 @@ export function TransferQrBatchContent({ batch }: TransferQrBatchViewProps) {
           onRemove={batch.removeRow}
           onPatch={batch.patchRow}
           onClear={batch.clearRows}
+          bankOptions={bankOptions}
         />
       </DrawerSection>
     </div>
