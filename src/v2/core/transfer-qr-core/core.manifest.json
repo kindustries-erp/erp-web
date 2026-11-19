@@ -7,10 +7,12 @@
   "localeNamespace": "transferQr",
   "exports": {
     "accountOption": "TransferQrAccountOption",
+    "companyInfo": "TransferQrCompanyInfo",
     "controller": "useTransferQrController",
     "batchController": "useTransferQrBatchController",
     "batchRows": "MAX_BATCH_ROWS",
     "pasteRows": "parsePastedRows",
+    "paymentCard": "TransferQrPaymentCard",
     "drawer": "TransferQrDrawer",
     "banks": "VIETQR_BANKS",
     "resolveBankBin": "resolveBankBin",

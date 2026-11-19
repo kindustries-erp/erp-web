@@ -1,87 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { VIETQR_BANKS } from "../domain/constants/vietQrBanks";
 import {
   buildTransferQrFileName,
   buildVietQrPayload,
-  isValidAccountNumber,
-  isValidVndAmount,
 } from "../domain/rules/vietQrPayload";
 import {
-  TransferQrMode,
-  type TransferQrAccountOption,
-  type TransferQrErrors,
-  type TransferQrFormState,
+  EMPTY_TRANSFER_QR_FORM,
+  resolveTransferTarget,
+  validateTransferQrForm,
+} from "../domain/rules/transferQrFormRules";
+import {
+  buildPaymentCardFileName,
+  exportCardImage,
+} from "../helpers/exportCardImage";
+import type {
+  TransferQrAccountOption,
+  TransferQrFormState,
 } from "../transferQr.types";
 
-export const EMPTY_TRANSFER_QR_FORM: TransferQrFormState = {
-  mode: TransferQrMode.PAY_TO_SUPPLIER,
-  accountId: null,
-  bin: null,
-  accountNumber: "",
-  accountName: "",
-  amount: null,
-  content: "",
+export {
+  EMPTY_TRANSFER_QR_FORM,
+  resolveTransferTarget,
+  validateTransferQrForm,
 };
-
-interface ResolvedTarget {
-  bin: string | null;
-  bankCode: string;
-  accountNumber: string;
-  accountName: string;
-}
-
-/** Xác định người nhận và mã BIN theo chế độ đang chọn. */
-export function resolveTransferTarget(
-  form: TransferQrFormState,
-  accounts: readonly TransferQrAccountOption[],
-): ResolvedTarget | null {
-  if (form.mode === TransferQrMode.PAY_TO_SUPPLIER) {
-    const bankCode =
-      VIETQR_BANKS.find((bank) => bank.bin === form.bin)?.code ?? "";
-    return {
-      bin: form.bin,
-      bankCode,
-      accountNumber: form.accountNumber.trim(),
-      accountName: form.accountName.trim(),
-    };
-  }
-  const account = accounts.find((item) => item.id === form.accountId);
-  if (!account) return null;
-  // BIN dự phòng do người dùng chọn tay thì mã viết tắt phải theo BIN đó.
-  const fallbackCode = VIETQR_BANKS.find((bank) => bank.bin === form.bin)?.code;
-  return {
-    bin: account.bin ?? form.bin,
-    bankCode:
-      account.bin === null && fallbackCode ? fallbackCode : account.bankCode,
-    accountNumber: account.accountNumber.trim(),
-    accountName: account.accountName.trim(),
-  };
-}
-
-export function validateTransferQrForm(
-  form: TransferQrFormState,
-  target: ResolvedTarget | null,
-): TransferQrErrors {
-  const errors: TransferQrErrors = {};
-  if (form.amount !== null && !isValidVndAmount(form.amount))
-    errors.amount = "invalidAmount";
-
-  if (form.mode === TransferQrMode.RECEIVE_FROM_CUSTOMER) {
-    if (!target) errors.account = "required";
-    else if (!target.bin) errors.bin = "required";
-    else if (!isValidAccountNumber(target.accountNumber))
-      errors.accountNumber = "invalidAccountNumber";
-    return errors;
-  }
-
-  if (!target?.bin) errors.bin = "required";
-  if (!target?.accountNumber) errors.accountNumber = "required";
-  else if (!isValidAccountNumber(target.accountNumber))
-    errors.accountNumber = "invalidAccountNumber";
-  if (!target?.accountName) errors.accountName = "required";
-  return errors;
-}
 
 /**
  * Điều khiển toàn bộ drawer QR: giữ form, kiểm tra, tạo chuỗi VietQR,
@@ -90,12 +31,16 @@ export function validateTransferQrForm(
 export function useTransferQrController({
   open,
   accounts,
+  companyName,
 }: {
   open: boolean;
   accounts: readonly TransferQrAccountOption[];
+  companyName?: string;
 }) {
   const [form, setForm] = useState<TransferQrFormState>(EMPTY_TRANSFER_QR_FORM);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) setForm(EMPTY_TRANSFER_QR_FORM);
@@ -110,8 +55,8 @@ export function useTransferQrController({
     });
 
   const target = useMemo(
-    () => resolveTransferTarget(form, accounts),
-    [form, accounts],
+    () => resolveTransferTarget(form, accounts, companyName),
+    [form, accounts, companyName],
   );
   const errors = useMemo(
     () => validateTransferQrForm(form, target),
@@ -153,7 +98,7 @@ export function useTransferQrController({
     };
   }, [payload]);
 
-  const fileName =
+  const rawFileName =
     target && payload
       ? buildTransferQrFileName({
           bankCode: target.bankCode || target.bin || "BANK",
@@ -162,12 +107,45 @@ export function useTransferQrController({
         })
       : null;
 
-  const download = () => {
-    if (!qrDataUrl || !fileName) return;
+  const cardFileName =
+    target && payload
+      ? buildPaymentCardFileName({
+          bankCode: target.bankCode || target.bin || "BANK",
+          accountNumber: target.accountNumber,
+          amount: numericAmount,
+          mode: form.mode,
+        })
+      : null;
+
+  const downloadRaw = () => {
+    if (!qrDataUrl || !rawFileName) return;
     const anchor = document.createElement("a");
     anchor.href = qrDataUrl;
-    anchor.download = fileName;
+    anchor.download = rawFileName;
     anchor.click();
+  };
+
+  const downloadCard = async (el?: HTMLElement | null): Promise<boolean> => {
+    const targetEl = el ?? cardRef.current;
+    if (!targetEl || !cardFileName) return false;
+    setIsExporting(true);
+    try {
+      return await exportCardImage({
+        cardElement: targetEl,
+        fileName: cardFileName,
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const download = async (el?: HTMLElement | null) => {
+    const targetEl = el ?? cardRef.current;
+    if (targetEl) {
+      const ok = await downloadCard(targetEl);
+      if (ok) return;
+    }
+    downloadRaw();
   };
 
   return {
@@ -176,7 +154,11 @@ export function useTransferQrController({
     target,
     errors,
     qrDataUrl,
-    canDownload: !!qrDataUrl,
+    cardRef,
+    isExporting,
+    canDownload: !!qrDataUrl && !isExporting,
     download,
+    downloadCard,
+    downloadRaw,
   };
 }

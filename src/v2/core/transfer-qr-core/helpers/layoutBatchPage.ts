@@ -9,10 +9,13 @@ export const PDF_PER_PAGE = PDF_COLUMNS * PDF_ROWS;
 export const PAGE_WIDTH_MM = 210;
 export const PAGE_HEIGHT_MM = 297;
 export const PAGE_MARGIN_MM = 10;
+export const PAGE_TOP_MARGIN_MM = 19;
+export const PAGE_BOTTOM_MARGIN_MM = 12;
 export const CELL_GAP_MM = 4;
 export const CELL_PADDING_MM = 4;
-export const QR_SIZE_MM = 55;
-const QR_TOP_OFFSET_MM = 6;
+export const QR_SIZE_MM = 36;
+export const CARD_HEADER_HEIGHT_MM = 8;
+const QR_TOP_OFFSET_MM = 10.5;
 const TEXT_GAP_MM = 3;
 
 export interface BatchCellLayout {
@@ -29,6 +32,7 @@ export interface BatchCellLayout {
   textTopY: number;
   /** Chiều rộng tối đa cho một dòng chữ. */
   textWidth: number;
+  headerHeight: number;
 }
 
 export const cellWidthMm = (): number =>
@@ -36,7 +40,10 @@ export const cellWidthMm = (): number =>
   PDF_COLUMNS;
 
 export const cellHeightMm = (): number =>
-  (PAGE_HEIGHT_MM - PAGE_MARGIN_MM * 2 - CELL_GAP_MM * (PDF_ROWS - 1)) /
+  (PAGE_HEIGHT_MM -
+    PAGE_TOP_MARGIN_MM -
+    PAGE_BOTTOM_MARGIN_MM -
+    CELL_GAP_MM * (PDF_ROWS - 1)) /
   PDF_ROWS;
 
 /** Vị trí ô theo thứ tự trong trang (0..PDF_PER_PAGE-1). */
@@ -46,7 +53,7 @@ export function layoutBatchCell(slot: number): BatchCellLayout {
   const column = slot % PDF_COLUMNS;
   const row = Math.floor(slot / PDF_COLUMNS);
   const x = PAGE_MARGIN_MM + column * (width + CELL_GAP_MM);
-  const y = PAGE_MARGIN_MM + row * (height + CELL_GAP_MM);
+  const y = PAGE_TOP_MARGIN_MM + row * (height + CELL_GAP_MM);
   const centerX = x + width / 2;
   const qrY = y + QR_TOP_OFFSET_MM;
   return {
@@ -60,6 +67,7 @@ export function layoutBatchCell(slot: number): BatchCellLayout {
     centerX,
     textTopY: qrY + QR_SIZE_MM + TEXT_GAP_MM,
     textWidth: width - CELL_PADDING_MM * 2,
+    headerHeight: CARD_HEADER_HEIGHT_MM,
   };
 }
 

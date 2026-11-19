@@ -16,6 +16,7 @@ import {
   TransferQrDrawerTab,
   TransferQrMode,
   type TransferQrAccountOption,
+  type TransferQrCompanyInfo,
 } from "../transferQr.types";
 import {
   TransferQrBatchContent,
@@ -27,6 +28,7 @@ export interface TransferQrDrawerProps {
   open: boolean;
   onClose: () => void;
   accounts: readonly TransferQrAccountOption[];
+  companyInfo?: TransferQrCompanyInfo;
 }
 
 /** Chuỗi key của V2TabBar về enum; key lạ thì rơi về tab một mã. */
@@ -44,9 +46,14 @@ export function TransferQrDrawer({
   open,
   onClose,
   accounts,
+  companyInfo,
 }: TransferQrDrawerProps) {
   const { t } = useV2Translation();
-  const vm = useTransferQrController({ open, accounts });
+  const vm = useTransferQrController({
+    open,
+    accounts,
+    companyName: companyInfo?.companyName,
+  });
   const batch = useTransferQrBatchController({ open });
   const [tab, setTab] = React.useState<TransferQrDrawerTab>(
     TransferQrDrawerTab.SINGLE,
@@ -79,7 +86,15 @@ export function TransferQrDrawer({
       rightPanel: (
         <DrawerSection title={t("v2.transferQr.sections.qrPreview")}>
           <div className="flex flex-col items-center gap-3">
-            <TransferQrPreview qrDataUrl={vm.qrDataUrl} />
+            <TransferQrPreview
+              qrDataUrl={vm.qrDataUrl}
+              companyInfo={companyInfo}
+              target={vm.target}
+              amount={vm.form.amount}
+              content={vm.form.content}
+              mode={vm.form.mode}
+              cardRef={vm.cardRef}
+            />
             <V2Text variant="body-sm">{t("v2.transferQr.privacyNote")}</V2Text>
           </div>
         </DrawerSection>
@@ -89,7 +104,11 @@ export function TransferQrDrawer({
       key: TransferQrDrawerTab.BATCH,
       label: t("v2.transferQr.batch.tabBatch"),
       content: <TransferQrBatchContent batch={batch} />,
-      rightPanel: <TransferQrBatchSidePanel batch={batch} />,
+      rightPanel: (
+        <DrawerSection title={t("v2.transferQr.sections.qrPreview")}>
+          <TransferQrBatchSidePanel batch={batch} companyInfo={companyInfo} />
+        </DrawerSection>
+      ),
     },
   ];
 
@@ -118,7 +137,7 @@ export function TransferQrDrawer({
           label: t("v2.transferQr.actions.download"),
           primary: true,
           disabled: !vm.canDownload,
-          onClick: () => vm.download(),
+          onClick: () => void vm.download(),
         },
       ];
 

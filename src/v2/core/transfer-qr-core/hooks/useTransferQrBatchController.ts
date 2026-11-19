@@ -14,9 +14,9 @@ import { parsePastedRows } from "../domain/rules/parsePastedRows";
 import {
   downloadBatchPdf,
   downloadBatchZip,
+  downloadRowCard,
   type BatchDownloadItem,
 } from "../helpers/batchDownloads";
-import { downloadDataUrl } from "../helpers/downloadBlob";
 
 export type { TransferQrBatchRowView } from "../domain/rules/batchRowView";
 
@@ -49,6 +49,7 @@ export function useTransferQrBatchController({ open }: { open: boolean }) {
   const generationRef = useRef(0);
   // Payload đang chờ QRCode: không gọi lại khi views đổi trong lúc chờ.
   const inFlightRef = useRef<Set<string>>(new Set());
+  const cardElementsRef = useRef<Map<string, HTMLElement>>(new Map());
   const nextId = () => `batch-row-${++seqRef.current}`;
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export function useTransferQrBatchController({ open }: { open: boolean }) {
     generationRef.current += 1;
     inFlightRef.current = new Set();
     cacheRef.current = {};
+    cardElementsRef.current.clear();
     setRows([]);
     setQrCache({});
     setPasteNotice(null);
@@ -96,42 +98,35 @@ export function useTransferQrBatchController({ open }: { open: boolean }) {
   }, [views, open]);
 
   const canAddRow = rows.length < MAX_BATCH_ROWS;
-
   const addRow = () =>
     setRows((prev) =>
       prev.length >= MAX_BATCH_ROWS
         ? prev
         : [...prev, createBatchRow(nextId())],
     );
-
   const removeRow = (id: string) =>
-    setRows((prev) => prev.filter((row) => row.id !== id));
-
+    setRows((prev) => prev.filter((r) => r.id !== id));
   const patchRow = (
     id: string,
     patch: Partial<Omit<TransferQrBatchRow, "id">>,
   ) =>
-    setRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, ...patch } : row)),
-    );
-
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   const clearRows = () => setRows([]);
 
-  /** Dán thêm vào cuối danh sách; bỏ các dòng đang trống trước khi thêm. */
   const applyPaste = (text: string) => {
     const parsed = parsePastedRows(text);
-    const kept = rows.filter((row) => !isEmptyBatchRow(row));
+    const kept = rows.filter((r) => !isEmptyBatchRow(r));
     const room = MAX_BATCH_ROWS - kept.length;
     setPasteNotice({
       skippedHeader: parsed.skippedHeader,
       truncated: parsed.truncated || parsed.rows.length > room,
     });
     setRows((prev) => {
-      const base = prev.filter((row) => !isEmptyBatchRow(row));
+      const base = prev.filter((r) => !isEmptyBatchRow(r));
       const space = Math.max(0, MAX_BATCH_ROWS - base.length);
       const added = parsed.rows
         .slice(0, space)
-        .map((row) => createBatchRow(nextId(), row));
+        .map((r) => createBatchRow(nextId(), r));
       return [...base, ...added];
     });
   };
@@ -145,8 +140,10 @@ export function useTransferQrBatchController({ open }: { open: boolean }) {
     }));
 
   const downloadRow = (view: TransferQrBatchRowView) => {
-    if (!view.qrDataUrl) return;
-    downloadDataUrl(view.qrDataUrl, view.fileName);
+    void downloadRowCard(
+      { fileName: view.fileName, qrDataUrl: view.qrDataUrl ?? "" },
+      cardElementsRef.current.get(view.fileName),
+    );
   };
 
   /** Chạy một thao tác tải hàng loạt; lỗi được ghi nhận để hiện thông báo, không để rơi thành promise bị nuốt. */
@@ -170,8 +167,16 @@ export function useTransferQrBatchController({ open }: { open: boolean }) {
     patchRow,
     clearRows,
     applyPaste,
+    registerCardElement: (key: string, el: HTMLElement) =>
+      cardElementsRef.current.set(key, el),
+    unregisterCardElement: (key: string) => cardElementsRef.current.delete(key),
     downloadRow,
-    downloadZip: () => runBulkDownload(() => downloadBatchZip(readyItems)),
+    downloadZip: () =>
+      runBulkDownload(() =>
+        downloadBatchZip(readyItems, new Date(), (fn) =>
+          cardElementsRef.current.get(fn),
+        ),
+      ),
     downloadPdf: () => runBulkDownload(() => downloadBatchPdf(readyItems)),
   };
 }
