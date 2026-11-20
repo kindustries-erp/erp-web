@@ -1,3 +1,1 @@
-export * from "./types";
-export * from "./constants";
-export * from "./DrawerDocumentTraceability";
+export * from "@/v1/components/drawer/DrawerDocumentTraceability";

@@ -17,6 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/v2/*": ["./src/v2/*"],
+      "@/v1/*": ["./src/v1/*"],
       "@/*": ["./src/*"]
     },
     "types": ["vite-plugin-pwa/client"]

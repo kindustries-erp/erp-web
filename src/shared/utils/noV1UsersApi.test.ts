@@ -11,8 +11,8 @@ const SOURCES = import.meta.glob(
 ) as Record<string, string>;
 
 const LEGACY_V1_FILES = new Set([
-  "/src/pages/ErpUsersPage.tsx",
-  "/src/pages/ErpPermissionsCorePage.tsx",
+  "/src/v1/pages/ErpUsersPage.tsx",
+  "/src/v1/pages/ErpPermissionsCorePage.tsx",
   "/src/modules/system/hooks/useUsersAdminList.ts",
   "/src/modules/system/hooks/useCoreRoleUsers.ts",
   "/src/modules/system/api/usersCoreApi.ts",
@@ -25,6 +25,8 @@ const FORBIDDEN = [
   "api/v1/admin/users",
   "pages/ErpUsersPage",
   "pages/ErpPermissionsCorePage",
+  "v1/pages/ErpUsersPage",
+  "v1/pages/ErpPermissionsCorePage",
 ];
 
 describe("users V1 đã bị ngắt kết nối khỏi web", () => {
