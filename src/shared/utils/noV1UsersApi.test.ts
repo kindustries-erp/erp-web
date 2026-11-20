@@ -15,6 +15,7 @@ const LEGACY_V1_FILES = new Set([
   "/src/v1/pages/ErpPermissionsCorePage.tsx",
   "/src/modules/system/hooks/useUsersAdminList.ts",
   "/src/modules/system/hooks/useCoreRoleUsers.ts",
+  "/src/v1/modules/system-rbac/hooks/useCoreRoleUsers.ts",
   "/src/modules/system/api/usersCoreApi.ts",
 ]);
 

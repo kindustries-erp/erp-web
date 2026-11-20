@@ -29,6 +29,10 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 ## 4. Cấu trúc V1 và V2
 
 - `src/` chứa V1 (`src/core`, `src/modules`, `src/shared`).
+- `src/v1/` (`@/v1/*`) chứa mã nguồn V1 cũ đã được di chuyển có hệ thống khi V2 hoàn thành:
+  - `src/v1/pages/`: các trang V1 cũ (Users, Employees, Positions, Permissions, ActivityLog, Customers, Suppliers, Partners, EInvoice, WorkflowCanvas, CashflowVouchers, CashFlow, BankDeposit, CashFund, Login).
+  - `src/v1/components/`: các shared components V1 cũ (DataTable, StandardTable, SpreadsheetPageTemplate, SortTh, TablePagination, StandardFormDrawer, DrawerModal, drawer/, SlidePanel, Combobox, DatePicker, EmptyState, ConfirmModal, Toast, DrawerDocumentTraceability...). Tại `src/shared/components/*` duy trì hệ thống Facade Re-export mỏng trỏ về `@/v1/components/*` để bảo vệ 100% tính tương thích ngược.
+  - `src/v1/modules/`: các domain modules V1 cũ (users, hr-employees, hr, system-rbac, system-audit). Tại `src/modules/*` duy trì Facade Re-export trỏ về `@/v1/modules/*`.
 - `src/v2/` chứa V2, chạy song song tại `/v2/*` và dùng chung bundle với V1.
 - Alias `@/v2/*` → `src/v2/*`, `@/*` → `src/*`.
 - Module V2 và shared V2 không import V1, ngoại trừ auth store dùng chung (`@/modules/auth/domain/authStore`).

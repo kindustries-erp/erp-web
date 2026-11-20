@@ -19,6 +19,7 @@ const V1_AUDIT_TOKENS = [
   "api/v1/audit-logs-core",
   "system/api/usersCoreApi",
   "system/api/activityLogApi",
+  "v1/modules/system-audit",
 ];
 
 const V2_AUDIT_TOKENS = [
