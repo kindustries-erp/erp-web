@@ -65,7 +65,7 @@ describe("addBarrelExport", () => {
 });
 
 describe("v2-component generator", () => {
-  it("creates the molecule files without default test or stories and wires the barrel", async () => {
+  it("creates the molecule files with stories, no default test, and wires the barrel", async () => {
     const { dest, result } = await runGenerator();
     expect(result.failures).toEqual([]);
 
@@ -76,16 +76,14 @@ describe("v2-component generator", () => {
     for (const file of [
       "V2TraceabilityCanvas.tsx",
       "V2TraceabilityCanvas.type.ts",
+      "V2TraceabilityCanvas.stories.tsx",
       "index.ts",
     ]) {
       expect(existsSync(join(base, file)), file).toBe(true);
     }
-    for (const file of [
-      "V2TraceabilityCanvas.test.tsx",
-      "V2TraceabilityCanvas.stories.tsx",
-    ]) {
-      expect(existsSync(join(base, file)), file).toBe(false);
-    }
+    expect(existsSync(join(base, "V2TraceabilityCanvas.test.tsx")), "test").toBe(
+      false,
+    );
 
     const barrel = readFileSync(
       join(dest, "src/v2/shared/components/molecules/index.ts"),
