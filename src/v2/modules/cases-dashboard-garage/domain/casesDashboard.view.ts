@@ -10,6 +10,7 @@ import {
   type CasesDashboardFunnelBucket,
   type CasesDashboardPeriodKpi,
   type CasesDashboardProjected,
+  type CasesDashboardVehicleItem,
 } from "./casesDashboard.type";
 
 /** KPI kỳ (có số lệnh và tiền đã thu theo lệnh hoàn thành). */
@@ -56,4 +57,28 @@ export function toClassRows(
       amount: bucket.totalAmount,
     };
   });
+}
+
+/** Một dòng danh sách xe (drill-down): một xe, kèm số lệnh và các số phiếu. */
+export interface CasesDashboardVehicleRowView {
+  key: string;
+  licensePlate: string;
+  customerName: string;
+  caseCount: number;
+  caseCodes: string;
+  amount: number;
+}
+
+/** Mỗi xe một dòng; biển hoặc khách trống hiện "—", các số phiếu nối bằng dấu phẩy. */
+export function toVehicleRows(
+  items: CasesDashboardVehicleItem[],
+): CasesDashboardVehicleRowView[] {
+  return items.map((v) => ({
+    key: v.vehicleKey,
+    licensePlate: v.licensePlate || "—",
+    customerName: v.customerName || "—",
+    caseCount: v.caseCount,
+    caseCodes: v.caseCodes.join(", "),
+    amount: v.amount,
+  }));
 }

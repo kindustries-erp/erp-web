@@ -3,7 +3,9 @@ import type {
   MonthlyReceivablesGroupCategorized,
   MonthlyReceivablesGroupItem,
   GarageCheckpointCaseItem,
+  GarageCheckpointVehicleItem,
 } from "@/modules/garage/api/garageDashboardApi";
+import type { MonthClassificationRow } from "../garage-month-detail-drawer/components/MonthClassificationTable.type";
 import type { GarageCaseDetailRow } from "./components/GarageCasesTableTab.type";
 
 export const EMPTY_CATEGORIZED: MonthlyReceivablesGroupCategorized = {
@@ -111,6 +113,7 @@ export function extractCheckpointCases(
   return items.map((c) => ({
     rowKey: `${c.id}_${c.soChungTu}`,
     id: c.id,
+    vehicleKey: c.vehicleKey,
     soChungTu: c.soChungTu,
     ngayHoanThanh: c.ngayHoanThanhCongViec,
     bienSoXe: c.bienSoXe,
@@ -119,7 +122,7 @@ export function extractCheckpointCases(
     payerType: "KH",
     partnerType: "enterprise",
     debtorName: c.khachHangName,
-    invoiceNo: c.hasInvoice ? "Đã xuất" : undefined,
+    hasInvoice: Boolean(c.hasInvoice),
     vatWarning: !c.hasInvoice && (c.tienCoThue || 0) > (c.doanhThu || 0),
     billed: c.tienCoThue || c.doanhThu || 0,
     paid: c.tienDaThanhToan || 0,
@@ -133,6 +136,17 @@ export function extractCheckpointCases(
     tinhTrangDichVu: c.tinhTrangDichVu,
     serviceStatus: c.tenTinhTrangDichVu,
   }));
+}
+
+/** Làm phẳng danh sách xe (group_by=vehicle) thành các dòng lệnh, giữ `vehicleKey` để gom lại sau khi lọc. */
+export function extractCheckpointVehicleCases(
+  vehicles: GarageCheckpointVehicleItem[],
+): GarageCaseDetailRow[] {
+  return vehicles.flatMap((v) =>
+    extractCheckpointCases(
+      v.cases.map((c) => ({ ...c, vehicleKey: c.vehicleKey ?? v.vehicleKey })),
+    ),
+  );
 }
 
 /** Đếm số phiếu còn nợ */
@@ -175,4 +189,63 @@ export function calculateDebtMetrics(
     mainRate,
     effectiveBreakdownTotal,
   };
+}
+
+type CheckpointSummary = {
+  totalTienCoThue?: number;
+  totalPaid?: number;
+  totalRemaining?: number;
+  collectionRate?: number;
+  totalRevenue?: number;
+  totalCost?: number;
+  totalProfit?: number;
+  totalCases?: number;
+};
+
+/** Số liệu kỳ checkpoint dạng GarageTrendItem; `caseCount` là số LỆNH (totalCount là số xe). */
+export function buildCheckpointTrend(s?: CheckpointSummary): GarageTrendItem {
+  return {
+    ...EMPTY_TREND,
+    tienCoThue: s?.totalTienCoThue || 0,
+    paid: s?.totalPaid || 0,
+    receivable: s?.totalRemaining || 0,
+    collectionRate: s?.collectionRate || 0,
+    revenue: s?.totalRevenue || 0,
+    cost: s?.totalCost || 0,
+    profit: s?.totalProfit || 0,
+    caseCount: s?.totalCases || 0,
+  };
+}
+
+export function buildPnlSummary(s?: CheckpointSummary) {
+  const revenue = s?.totalRevenue || 0;
+  const profit = s?.totalProfit || 0;
+  return {
+    totalRevenue: revenue,
+    totalCost: s?.totalCost || 0,
+    totalProfit: profit,
+    margin: revenue > 0 ? (profit / revenue) * 100 : 0,
+  };
+}
+
+/** Số phân loại khác nhau trong cả hai nhóm phải thu và phải trả. */
+export function countClassificationKeys(
+  ...groups: MonthClassificationRow[][]
+): number {
+  return new Set(groups.flatMap((rows) => rows.map((r) => r.key))).size;
+}
+
+/** Tiêu đề drawer: checkpoint (kèm kỳ), tháng công nợ, hoặc mốc tuổi nợ. */
+export function buildDrawerTitle(args: {
+  checkpointLabel?: string;
+  monthLabel?: string;
+  fallback?: string;
+}): string {
+  if (args.checkpointLabel !== undefined) {
+    return args.checkpointLabel
+      ? `Vụ việc Dịch vụ Garage · ${args.checkpointLabel}`
+      : "Vụ việc Dịch vụ Garage";
+  }
+  if (args.monthLabel !== undefined) return formatDebtMonth(args.monthLabel);
+  return args.fallback || "Chi tiết mốc tuổi nợ";
 }

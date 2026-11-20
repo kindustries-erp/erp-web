@@ -129,10 +129,10 @@ export function CasesDashboardGaragePageBody({
 
       {vm.selectedStage ? (
         <CasesDashboardCasesList
-          title={`${t("v2.casesDashboardGarage.casesTitle", "Danh sách lệnh")} · ${selectedLabel}`}
-          items={vm.cases?.items ?? []}
-          pagination={vm.cases?.pagination}
-          loading={vm.casesLoading}
+          title={`${t("v2.casesDashboardGarage.vehiclesTitle", "Danh sách xe")} · ${selectedLabel}`}
+          items={vm.vehicles?.items ?? []}
+          pagination={vm.vehicles?.pagination}
+          loading={vm.vehiclesLoading}
           onPrevious={() => vm.setPage(Math.max(1, vm.page - 1))}
           onNext={() => vm.setPage(vm.page + 1)}
           onClose={vm.closeStage}

@@ -1,16 +1,19 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { V2TabBarVariant } from "@/v2/shared/components/molecules/v2-tab-bar/V2TabBar.type";
 import { V2StandardTable } from "@/v2/shared/components/organisms/v2-standard-table";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { Badge } from "@/v2/shared/ui/badge";
 import { V2SearchInput } from "@/v2/shared/components/molecules/v2-search-input";
-import { money } from "@/shared/utils/format";
 import {
   filterGarageCases,
   calculateFunnelStatusCounts,
+  groupCasesByVehicle,
+  countDistinctVehicles,
 } from "./GarageCasesTableTab.helper";
+import { useCategoryFilter } from "./GarageCasesTableTab.hook";
+import { GarageCasesTableTitleExtra } from "./GarageCasesTableTab.titleExtra";
+import { GarageVehicleCasesExpanded } from "./GarageVehicleCasesExpanded";
 import { buildGarageCaseFilterTabs } from "./GarageCasesTableTab.subtabs";
 import { createGarageCasesColumns } from "./GarageCasesTableTab.columns";
 import type {
@@ -26,31 +29,18 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
   funnelCounts,
   isFunnelScope,
   initialCategoryFilter,
+  vehicleTotal,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const isFunnelMode = Boolean(
     isFunnelScope || (classification && classification !== "ALL"),
   );
 
-  const normalizedInitial = useMemo(() => {
-    if (!initialCategoryFilter) return showProfitMetrics ? "ALL" : "all";
-    return isFunnelMode
-      ? initialCategoryFilter.toUpperCase()
-      : initialCategoryFilter;
-  }, [initialCategoryFilter, showProfitMetrics, isFunnelMode]);
-
-  const [categoryFilter, setCategoryFilter] =
-    useState<string>(normalizedInitial);
-
-  useEffect(() => {
-    if (initialCategoryFilter) {
-      setCategoryFilter(
-        isFunnelMode
-          ? initialCategoryFilter.toUpperCase()
-          : initialCategoryFilter,
-      );
-    }
-  }, [initialCategoryFilter, isFunnelMode]);
+  const { categoryFilter, setCategoryFilter } = useCategoryFilter({
+    initialCategoryFilter,
+    showProfitMetrics,
+    isFunnelMode,
+  });
   const [search, setSearch] = useState("");
 
   const funnelStatusCounts = useMemo(
@@ -68,6 +58,13 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
         isFunnelStatusFilter: isFunnelMode,
       }),
     [cases, showProfitMetrics, categoryFilter, search, isFunnelMode],
+  );
+
+  // Checkpoint: mỗi hàng một XE (gom các lệnh đã lọc); công nợ giữ nguyên hàng theo phiếu.
+  const rows = useMemo(
+    () =>
+      showProfitMetrics ? groupCasesByVehicle(filteredCases) : filteredCases,
+    [showProfitMetrics, filteredCases],
   );
 
   const columns = useMemo(
@@ -134,40 +131,16 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
       <DrawerSection
         title={sectionTitle}
         titleExtra={
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-semibold text-muted-foreground">
-              {filteredCases.length} {t("common.cases", "phiếu")}
-            </span>
-            {showProfitMetrics ? (
-              <>
-                {totalBilled > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="text-[11px] font-mono font-bold bg-primary/10 text-primary border-primary/20"
-                  >
-                    {money(totalBilled)}
-                  </Badge>
-                )}
-                {totalRemaining > 0 && (
-                  <Badge
-                    variant="outline"
-                    className="text-[11px] font-mono font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                  >
-                    {money(totalRemaining)}
-                  </Badge>
-                )}
-              </>
-            ) : (
-              totalRemaining > 0 && (
-                <Badge
-                  variant="outline"
-                  className="text-[11px] font-mono font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                >
-                  {money(totalRemaining)}
-                </Badge>
-              )
-            )}
-          </div>
+          <GarageCasesTableTitleExtra
+            showProfitMetrics={showProfitMetrics}
+            rowCount={rows.length}
+            caseCount={filteredCases.length}
+            loadedVehicles={countDistinctVehicles(cases)}
+            vehicleTotal={vehicleTotal}
+            totalBilled={totalBilled}
+            totalRemaining={totalRemaining}
+            t={t}
+          />
         }
         collapsible
         defaultCollapsed={false}
@@ -176,8 +149,17 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
           tableId="garage-cases-detail-table"
           mode="client"
           columns={columns}
-          items={filteredCases}
+          items={rows}
           getRowKey={(row) => row.rowKey}
+          canExpandRow={(row) => (row.childCases?.length ?? 0) > 1}
+          renderExpandedRow={(row) => (
+            <GarageVehicleCasesExpanded
+              row={row}
+              onOpenCaseDetail={onOpenCaseDetail}
+              showProfitMetrics={showProfitMetrics}
+              t={t}
+            />
+          )}
           initialQuery={{ pageSize: 10, page: 1 }}
           emptyLabel={t(
             "cases.emptyLabel",

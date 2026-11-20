@@ -111,25 +111,36 @@ vi.mock("@/modules/garage/hooks/useGarageMonthReceivablesBreakdown", () => ({
 
 vi.mock("@/modules/garage/api/garageDashboardApi", () => ({
   garageDashboardApi: {
-    getCheckpointCases: vi.fn().mockResolvedValue({
+    getCheckpointVehicles: vi.fn().mockResolvedValue({
       items: [
         {
-          id: "cp-1",
-          soChungTu: "GR-PDV2611-0002",
+          vehicleKey: "51H97732",
           bienSoXe: "51H97732",
-          khachHangCode: "KH001",
           khachHangName: "Anh Huỳnh Anh",
-          tenTinhTrangDichVu: "Kết thúc",
           classification: "KHAC",
-          doanhThu: 13800000,
-          chiPhi: 2000000,
-          loiNhuan: 11800000,
-          tienCoThue: 16800000,
-          tienDaThanhToan: 0,
-          tienConPhaiThanhToan: 16800000,
-          hasInvoice: false,
-          ngayHoanThanhCongViec: "2026-11-05",
-          ngayPhatSinh: "2026-11-01",
+          caseCount: 1,
+          soChungTus: ["GR-PDV2611-0002"],
+          cases: [
+            {
+              id: "cp-1",
+              vehicleKey: "51H97732",
+              soChungTu: "GR-PDV2611-0002",
+              bienSoXe: "51H97732",
+              khachHangCode: "KH001",
+              khachHangName: "Anh Huỳnh Anh",
+              tenTinhTrangDichVu: "Kết thúc",
+              classification: "KHAC",
+              doanhThu: 13800000,
+              chiPhi: 2000000,
+              loiNhuan: 11800000,
+              tienCoThue: 16800000,
+              tienDaThanhToan: 0,
+              tienConPhaiThanhToan: 16800000,
+              hasInvoice: false,
+              ngayHoanThanhCongViec: "2026-11-05",
+              ngayPhatSinh: "2026-11-01",
+            },
+          ],
         },
       ],
       total: 1,
@@ -283,7 +294,7 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
       "1 xe · 2 lệnh",
     );
 
-    expect(garageDashboardApi.getCheckpointCases).toHaveBeenCalledWith(
+    expect(garageDashboardApi.getCheckpointVehicles).toHaveBeenCalledWith(
       expect.objectContaining({
         date_from: "2026-11-01",
         date_to: "2026-11-30",

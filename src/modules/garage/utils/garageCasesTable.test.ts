@@ -421,6 +421,37 @@ describe("applyGarageCasesTableState", () => {
       expect(resFormatted[0].id).toBe("1");
     });
 
+    it("tìm biển số bằng chuẩn hóa chung: khác dấu câu, khoảng trắng, hoa thường", () => {
+      const run = (columnSearch: Record<string, string>) =>
+        applyGarageCasesTableState(items, {
+          sorts: [],
+          columnSearch,
+          columnFilters: {},
+        });
+
+      expect(run({ caseCode: "30a 11111" }).map((r) => r.id)).toEqual(["1"]);
+      expect(run({ caseCode: "30A.111-11" }).map((r) => r.id)).toEqual(["1"]);
+      expect(run({ caseCode: '"30a/22222"' }).map((r) => r.id)).toEqual(["2"]);
+    });
+
+    it("lọc composite code:::plate khớp biển viết khác dấu câu", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["A001:::30a 11111"] },
+      });
+      expect(res.map((r) => r.id)).toEqual(["1"]);
+    });
+
+    it("từ khóa chỉ gồm ký tự rác không khớp biển nào", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: { caseCode: "..--" },
+        columnFilters: {},
+      });
+      expect(res.map((r) => r.id)).not.toContain("1");
+    });
+
     it("handles columnSearch with semicolon multi-search and license plate", () => {
       const res = applyGarageCasesTableState(items, {
         sorts: [],

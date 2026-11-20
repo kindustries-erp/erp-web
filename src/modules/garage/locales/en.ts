@@ -290,6 +290,10 @@ export const garageEn = {
   cases: {
     title: "Garage Activities",
     desc: "Manage service cases & quotation logs",
+    vehicleTruncated: "Showing {{shown}} of {{total}} vehicles",
+    invoice: {
+      issued: "Issued",
+    },
     tabs: {
       all: "All",
       quotation: "Quotation",
@@ -332,6 +336,7 @@ export const garageEn = {
     columns: {
       caseDate: "Reception Date",
       caseCode: "Case Code",
+      caseCount: "Cases",
       licensePlate: "License Plate",
       customer: "Customer",
       customerCode: "Customer Code",

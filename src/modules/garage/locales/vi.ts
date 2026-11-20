@@ -291,6 +291,10 @@ export const garageVi = {
   cases: {
     title: "Hoạt động garage",
     desc: "Quản lý phiếu dịch vụ & sổ báo giá Garage",
+    vehicleTruncated: "Hiển thị {{shown}}/{{total}} xe",
+    invoice: {
+      issued: "Đã xuất",
+    },
     tabs: {
       all: "Tất cả",
       quotation: "Báo giá",
@@ -333,6 +337,7 @@ export const garageVi = {
     columns: {
       caseDate: "Ngày tiếp nhận",
       caseCode: "Số chứng từ",
+      caseCount: "Số lệnh",
       licensePlate: "Biển số xe",
       customer: "Khách hàng",
       customerCode: "Mã KH",

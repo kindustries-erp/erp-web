@@ -1,11 +1,10 @@
 import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import type { V2PaginatedResponse } from "@/v2/shared/types/v2-pagination";
 import type {
-  CasesDashboardCaseItem,
-  CasesDashboardCasesParams,
-  CasesDashboardFunnel,
-  CasesDashboardPeriodKpis,
-  CasesDashboardRangeParams,
+  CasesDashboardOverview,
+  CasesDashboardOverviewParams,
+  CasesDashboardVehicleItem,
+  CasesDashboardVehiclesParams,
 } from "../domain/casesDashboard.type";
 
 const BASE = "/api/v2/cases-dashboard-garage";
@@ -20,33 +19,24 @@ function compactParams<T extends object>(params: T): Partial<T> {
 }
 
 export const casesDashboardApi = {
-  /** KPI tháng/tuần/ngày và dự thu, quanh ngày gốc (mặc định hôm nay phía backend). */
-  getPeriodKpis: async (date?: string): Promise<CasesDashboardPeriodKpis> => {
-    const { data } = await v2HttpClient.get<CasesDashboardPeriodKpis>(
-      `${BASE}/period-kpis`,
-      { params: compactParams({ date }) },
-    );
-    return data;
-  },
-
-  /** Phễu giai đoạn theo khoảng ngày (mặc định tháng hiện tại phía backend). */
-  getFunnel: async (
-    params?: CasesDashboardRangeParams,
-  ): Promise<CasesDashboardFunnel> => {
-    const { data } = await v2HttpClient.get<CasesDashboardFunnel>(
-      `${BASE}/funnel`,
+  /** KPI tháng/tuần/ngày, dự thu và phễu giai đoạn (mặc định phía backend: hôm nay, tháng hiện tại). */
+  getOverview: async (
+    params?: CasesDashboardOverviewParams,
+  ): Promise<CasesDashboardOverview> => {
+    const { data } = await v2HttpClient.get<CasesDashboardOverview>(
+      `${BASE}/overview`,
       { params: compactParams(params ?? {}) },
     );
     return data;
   },
 
-  /** Danh sách lệnh (drill-down) có phân trang. */
-  listCases: async (
-    params?: CasesDashboardCasesParams,
-  ): Promise<V2PaginatedResponse<CasesDashboardCaseItem>> => {
+  /** Danh sách XE (drill-down) có phân trang; mỗi dòng một xe kèm các lệnh. */
+  listVehicles: async (
+    params?: CasesDashboardVehiclesParams,
+  ): Promise<V2PaginatedResponse<CasesDashboardVehicleItem>> => {
     const { data } = await v2HttpClient.get<
-      V2PaginatedResponse<CasesDashboardCaseItem>
-    >(`${BASE}/cases`, { params: compactParams(params ?? {}) });
+      V2PaginatedResponse<CasesDashboardVehicleItem>
+    >(BASE, { params: compactParams(params ?? {}) });
     return data;
   },
 };

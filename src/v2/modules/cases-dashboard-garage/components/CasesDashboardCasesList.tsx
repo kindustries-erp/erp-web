@@ -10,11 +10,12 @@ import {
   TableRow,
 } from "@/v2/shared/ui";
 import { formatAmount } from "@/v2/shared/utils/v2TableFormat";
-import type { CasesDashboardCaseItem } from "../domain/casesDashboard.type";
+import type { CasesDashboardVehicleItem } from "../domain/casesDashboard.type";
+import { toVehicleRows } from "../domain/casesDashboard.view";
 
 export interface CasesDashboardCasesListProps {
   title: string;
-  items: CasesDashboardCaseItem[];
+  items: CasesDashboardVehicleItem[];
   pagination?: V2PaginationMeta;
   loading: boolean;
   onPrevious: () => void;
@@ -22,7 +23,7 @@ export interface CasesDashboardCasesListProps {
   onClose: () => void;
 }
 
-/** Danh sách lệnh (drill-down) của một giai đoạn, có phân trang trước/sau. */
+/** Danh sách XE (drill-down) của một giai đoạn, mỗi xe một dòng, có phân trang trước/sau. */
 export function CasesDashboardCasesList({
   title,
   items,
@@ -49,34 +50,34 @@ export function CasesDashboardCasesList({
       {items.length === 0 && !loading ? (
         <V2Text variant="body-sm" color="muted">
           {t(
-            "v2.casesDashboardGarage.emptyCases",
-            "Không có lệnh nào trong giai đoạn này.",
+            "v2.casesDashboardGarage.emptyVehicles",
+            "Không có xe nào trong giai đoạn này.",
           )}
         </V2Text>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{c("caseCode", "Số lệnh")}</TableHead>
               <TableHead>{c("plate", "Biển số")}</TableHead>
+              <TableHead className="text-right">
+                {c("caseCount", "Số lệnh")}
+              </TableHead>
+              <TableHead>{c("caseCode", "Số phiếu")}</TableHead>
               <TableHead>{c("customer", "Khách hàng")}</TableHead>
-              <TableHead>{c("stage", "Giai đoạn")}</TableHead>
               <TableHead className="text-right">
                 {c("amount", "Tiền")}
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.caseCode}</TableCell>
-                <TableCell>{item.licensePlate ?? "—"}</TableCell>
-                <TableCell>{item.customerName ?? "—"}</TableCell>
-                <TableCell>
-                  {t(`v2.garageCasesDashboard.stage.${item.stage}`, item.stage)}
-                </TableCell>
+            {toVehicleRows(items).map((row) => (
+              <TableRow key={row.key}>
+                <TableCell>{row.licensePlate}</TableCell>
+                <TableCell className="text-right">{row.caseCount}</TableCell>
+                <TableCell>{row.caseCodes}</TableCell>
+                <TableCell>{row.customerName}</TableCell>
                 <TableCell className="text-right">
-                  {formatAmount(item.amount)}
+                  {formatAmount(row.amount)}
                 </TableCell>
               </TableRow>
             ))}

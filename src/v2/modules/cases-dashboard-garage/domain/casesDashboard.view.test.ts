@@ -4,6 +4,7 @@ import {
   toFunnelRows,
   toKpiView,
   toProjectedKpiView,
+  toVehicleRows,
 } from "./casesDashboard.view";
 import type {
   CasesDashboardFunnel,
@@ -87,5 +88,51 @@ describe("casesDashboard.view", () => {
       cases: 6,
       amount: 500,
     });
+  });
+});
+
+describe("toVehicleRows", () => {
+  it("mỗi xe một dòng, nối số phiếu và thay giá trị trống bằng dấu gạch", () => {
+    const rows = toVehicleRows([
+      {
+        vehicleKey: "51B75695",
+        licensePlate: "51B-756.95",
+        customerName: "Công ty A",
+        caseCount: 2,
+        caseCodes: ["GN-1", "GN-2"],
+        amount: 1500,
+        latestAt: null,
+        cases: [],
+      },
+      {
+        vehicleKey: "id-9",
+        licensePlate: null,
+        customerName: null,
+        caseCount: 1,
+        caseCodes: ["GN-3"],
+        amount: 0,
+        latestAt: null,
+        cases: [],
+      },
+    ]);
+
+    expect(rows).toEqual([
+      {
+        key: "51B75695",
+        licensePlate: "51B-756.95",
+        customerName: "Công ty A",
+        caseCount: 2,
+        caseCodes: "GN-1, GN-2",
+        amount: 1500,
+      },
+      {
+        key: "id-9",
+        licensePlate: "—",
+        customerName: "—",
+        caseCount: 1,
+        caseCodes: "GN-3",
+        amount: 0,
+      },
+    ]);
   });
 });

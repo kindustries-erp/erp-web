@@ -211,3 +211,60 @@ describe("GarageCasesTableTab: Sub-tab trạng thái phễu và phân loại ERP
     expect(screen.getAllByText("OJ Ngoài").length).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe("GarageCasesTableTab: gom hàng theo xe (checkpoint)", () => {
+  const twin = (id: string, code: string, billed: number) => ({
+    ...mockCases[0],
+    rowKey: id,
+    id,
+    soChungTu: code,
+    vehicleKey: "51B75695",
+    bienSoXe: "51B-756.95",
+    billed,
+  });
+  const cases: GarageCaseDetailRow[] = [
+    twin("a", "GN-0025", 100),
+    twin("b", "GN-0024", 250),
+    { ...mockCases[1], vehicleKey: "51L67890" },
+  ];
+
+  it("hai lệnh cùng xe là một hàng; tiêu đề đếm xe và lệnh", () => {
+    render(<GarageCasesTableTab cases={cases} showProfitMetrics={true} />, {
+      wrapper: createWrapper(),
+    });
+
+    expect(screen.getByText("2 xe · 3 lệnh")).toBeInTheDocument();
+    expect(screen.getByText("Số lệnh")).toBeInTheDocument();
+    expect(screen.getAllByText("GN-0025, GN-0024")).not.toHaveLength(0);
+  });
+
+  it("mở rộng hàng xe nhiều lệnh hiện từng lệnh", () => {
+    render(<GarageCasesTableTab cases={cases} showProfitMetrics={true} />, {
+      wrapper: createWrapper(),
+    });
+
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /Mở rộng dòng/i })[0],
+    );
+
+    expect(screen.getByTestId("vehicle-cases-expanded")).toBeInTheDocument();
+    expect(screen.getByText("GN-0024")).toBeInTheDocument();
+  });
+});
+
+describe("groupCasesByVehicle / calculateFunnelStatusCounts", () => {
+  it("cộng tiền theo lệnh và đếm xe distinct", async () => {
+    const { groupCasesByVehicle, calculateFunnelStatusCounts } =
+      await import("./GarageCasesTableTab.helper");
+    const rows = [
+      { ...mockCases[0], rowKey: "a", id: "a", vehicleKey: "K", billed: 100 },
+      { ...mockCases[0], rowKey: "b", id: "b", vehicleKey: "K", billed: 50 },
+    ];
+    const grouped = groupCasesByVehicle(rows);
+
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].billed).toBe(150);
+    expect(grouped[0].caseCount).toBe(2);
+    expect(calculateFunnelStatusCounts(rows).total).toBe(1);
+  });
+});

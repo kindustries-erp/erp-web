@@ -58,8 +58,8 @@ function hook(overrides: Record<string, unknown> = {}) {
     selectedStage: null,
     openStage: vi.fn(),
     closeStage: vi.fn(),
-    cases: undefined,
-    casesLoading: false,
+    vehicles: undefined,
+    vehiclesLoading: false,
     page: 1,
     setPage: vi.fn(),
     ...overrides,
@@ -112,19 +112,21 @@ describe("trang dashboard garage V2", () => {
     expect(h.openStage).toHaveBeenCalledWith("completed");
   });
 
-  it("khi đã chọn giai đoạn thì hiện danh sách lệnh", () => {
+  it("khi đã chọn giai đoạn thì hiện danh sách xe (mỗi xe một dòng)", () => {
     vi.mocked(useCasesDashboardGarage).mockReturnValue(
       hook({
         selectedStage: "completed",
-        cases: {
+        vehicles: {
           items: [
             {
-              id: "c1",
-              caseCode: "PH-001",
+              vehicleKey: "51A12345",
               licensePlate: "51A12345",
               customerName: "Khách A",
-              stage: "completed",
+              caseCount: 2,
+              caseCodes: ["PH-001", "PH-002"],
               amount: 600,
+              latestAt: null,
+              cases: [],
             },
           ],
           pagination: {
@@ -141,7 +143,8 @@ describe("trang dashboard garage V2", () => {
     render(<CasesDashboardGaragePage />);
 
     expect(screen.getByTestId("cases-dashboard-cases-list")).toBeTruthy();
-    expect(screen.getByText("PH-001")).toBeTruthy();
+    expect(screen.getByText("PH-001, PH-002")).toBeTruthy();
+    expect(screen.getByText("51A12345")).toBeTruthy();
   });
 
   it("lỗi tải thì hiện thông báo lỗi và không render số liệu", () => {

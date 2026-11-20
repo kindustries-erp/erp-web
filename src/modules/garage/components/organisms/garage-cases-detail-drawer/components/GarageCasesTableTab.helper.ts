@@ -47,26 +47,96 @@ export function matchFunnelStatus(
   }
 }
 
+/** Khóa xe của một dòng lệnh; dòng không có khóa xe tính là một xe riêng (theo id). */
+export function rowVehicleKey(c: GarageCaseDetailRow): string {
+  return c.vehicleKey ?? c.id;
+}
+
+/** Số xe khác nhau trong danh sách lệnh. */
+export function countDistinctVehicles(cases: GarageCaseDetailRow[]): number {
+  return new Set(cases.map(rowVehicleKey)).size;
+}
+
+/** Đếm XE theo từng giai đoạn: mỗi giai đoạn đếm riêng, xe có lệnh ở 2 giai đoạn tính ở cả hai. */
 export function calculateFunnelStatusCounts(cases: GarageCaseDetailRow[]) {
-  let quotation = 0;
-  let inProgress = 0;
-  let completed = 0;
-  let cancelled = 0;
+  const buckets = {
+    quotation: new Set<string>(),
+    inProgress: new Set<string>(),
+    completed: new Set<string>(),
+    cancelled: new Set<string>(),
+  };
 
   for (const c of cases) {
-    if (matchFunnelStatus(c, "QUOTATION")) quotation++;
-    else if (matchFunnelStatus(c, "IN_PROGRESS")) inProgress++;
-    else if (matchFunnelStatus(c, "COMPLETED")) completed++;
-    else if (matchFunnelStatus(c, "CANCELLED")) cancelled++;
+    const key = rowVehicleKey(c);
+    if (matchFunnelStatus(c, "QUOTATION")) buckets.quotation.add(key);
+    else if (matchFunnelStatus(c, "IN_PROGRESS")) buckets.inProgress.add(key);
+    else if (matchFunnelStatus(c, "COMPLETED")) buckets.completed.add(key);
+    else if (matchFunnelStatus(c, "CANCELLED")) buckets.cancelled.add(key);
   }
 
   return {
-    total: cases.length,
-    quotation,
-    inProgress,
-    completed,
-    cancelled,
+    total: countDistinctVehicles(cases),
+    quotation: buckets.quotation.size,
+    inProgress: buckets.inProgress.size,
+    completed: buckets.completed.size,
+    cancelled: buckets.cancelled.size,
   };
+}
+
+const sumBy = (
+  rows: GarageCaseDetailRow[],
+  pick: (r: GarageCaseDetailRow) => number | undefined,
+) => rows.reduce((total, r) => total + (pick(r) ?? 0), 0);
+
+/**
+ * Gom các dòng lệnh thành một dòng mỗi xe (theo khóa xe), giữ thứ tự xuất hiện đầu tiên.
+ * Tiền cộng theo lệnh; biển/khách/phân loại/trạng thái lấy từ lệnh đầu (mới nhất); `childCases` giữ từng lệnh.
+ */
+export function groupCasesByVehicle(
+  cases: GarageCaseDetailRow[],
+): GarageCaseDetailRow[] {
+  const groups = new Map<string, GarageCaseDetailRow[]>();
+  for (const c of cases) {
+    const key = rowVehicleKey(c);
+    const bucket = groups.get(key);
+    if (bucket) bucket.push(c);
+    else groups.set(key, [c]);
+  }
+
+  return [...groups.entries()].map(([key, rows]) => {
+    const first = rows[0];
+    const latestDone = rows
+      .map((r) => r.ngayHoanThanh)
+      .filter((d): d is string => Boolean(d))
+      .reduce<string | undefined>(
+        (acc, d) =>
+          !acc || new Date(d).getTime() > new Date(acc).getTime() ? d : acc,
+        undefined,
+      );
+    return {
+      ...first,
+      rowKey: `vehicle_${key}`,
+      vehicleKey: key,
+      soChungTu: rows.map((r) => r.soChungTu).join(", "),
+      ngayHoanThanh: latestDone,
+      bienSoXe: rows.find((r) => r.bienSoXe)?.bienSoXe ?? first.bienSoXe,
+      khachHangName:
+        rows.find((r) => r.khachHangName)?.khachHangName ?? first.khachHangName,
+      invoiceNo: rows.find((r) => r.invoiceNo)?.invoiceNo,
+      hasInvoice: rows.some((r) => r.hasInvoice || r.invoiceNo),
+      vatWarning: rows.some((r) => r.vatWarning),
+      billed: sumBy(rows, (r) => r.billed),
+      paid: sumBy(rows, (r) => r.paid),
+      remaining: sumBy(rows, (r) => r.remaining),
+      cost: sumBy(rows, (r) => r.cost),
+      paidCost: sumBy(rows, (r) => r.paidCost),
+      remainingCost: sumBy(rows, (r) => r.remainingCost),
+      revenue: sumBy(rows, (r) => r.revenue),
+      profit: sumBy(rows, (r) => r.profit),
+      caseCount: rows.length,
+      childCases: rows,
+    };
+  });
 }
 
 export function filterGarageCases(

@@ -32,6 +32,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     setSelectedCaseCode,
     cases,
     casesCount,
+    vehicleTotal,
     isFunnel,
     initialStatus,
   } = logic;
@@ -55,6 +56,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
           funnelCounts={checkpointSummary?.funnelCounts}
           isFunnelScope={isFunnelScope}
           initialCategoryFilter={initialStatus}
+          vehicleTotal={vehicleTotal}
         />
       ),
     };
@@ -110,6 +112,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     showProfitMetrics,
     cases,
     casesCount,
+    vehicleTotal,
     partnerDebtType,
     setSelectedCaseCode,
     totalPartnerCount,

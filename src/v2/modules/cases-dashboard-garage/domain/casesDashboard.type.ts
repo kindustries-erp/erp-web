@@ -114,13 +114,36 @@ export interface CasesDashboardCaseItem {
   amount: number;
 }
 
-/** Tham số khoảng ngày (YYYY-MM-DD) dùng cho phễu và danh sách lệnh. */
-export interface CasesDashboardRangeParams {
+/** Một dòng drill-down theo XE: gom các lệnh cùng biển số đã chuẩn hóa. */
+export interface CasesDashboardVehicleItem {
+  vehicleKey: string;
+  licensePlate: string | null;
+  customerName: string | null;
+  caseCount: number;
+  caseCodes: string[];
+  amount: number;
+  /** Mốc mới nhất trong các lệnh (hoàn thành, nếu không có thì tiếp nhận). */
+  latestAt: string | null;
+  cases: CasesDashboardCaseItem[];
+}
+
+/** `GET /overview`: KPI các kỳ và phễu giai đoạn trong một lần gọi. */
+export interface CasesDashboardOverview {
+  period: CasesDashboardPeriodKpis;
+  funnel: CasesDashboardFunnel;
+}
+
+/** Tham số `GET /overview`: `date` là ngày gốc KPI; khoảng ngày dành cho phễu. */
+export interface CasesDashboardOverviewParams {
+  date?: string;
   date_from?: string;
   date_to?: string;
 }
 
-export interface CasesDashboardCasesParams extends CasesDashboardRangeParams {
+/** Tham số `GET /`: khoảng ngày (YYYY-MM-DD), bộ lọc và phân trang theo xe. */
+export interface CasesDashboardVehiclesParams {
+  date_from?: string;
+  date_to?: string;
   stage?: CasesDashboardStage;
   classification?: CasesDashboardClass;
   page?: number;
