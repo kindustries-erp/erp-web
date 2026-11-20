@@ -1,4 +1,1 @@
-export * from "./DateRangeColumnSlot";
-export * from "./DateRangeColumnSlot.type";
-export * from "./DateRangeColumnSlot.helper";
-export * from "./DateRangeColumnSlot.hook";
+export * from "@/v1/components/DataTable/date-range-column-slot/index";

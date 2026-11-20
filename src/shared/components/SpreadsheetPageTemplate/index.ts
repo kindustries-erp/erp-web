@@ -1,2 +1,2 @@
-export * from "./types";
-export * from "./SpreadsheetPageTemplate";
+export * from "@/v1/components/SpreadsheetPageTemplate";
+export { SpreadsheetPageTemplate as default } from "@/v1/components/SpreadsheetPageTemplate";
