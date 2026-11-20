@@ -138,6 +138,7 @@ vi.mock("@/modules/garage/api/garageDashboardApi", () => ({
       totalPages: 1,
       summary: {
         totalCount: 1,
+        totalCases: 2,
         totalTienCoThue: 16800000,
         totalRevenue: 13800000,
         totalCost: 2000000,
@@ -276,6 +277,11 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
         "Khoảng thời gian: 2026-11-01 đến 2026-11-30 · Phân loại: Sửa chữa chung",
       ),
     ).toBeInTheDocument();
+    // 1 xe (distinct biển số) nhưng 2 lệnh: hai số phải hiển thị tách bạch.
+    // Số liệu checkpoint tải bất đồng bộ nên chờ nhãn xuất hiện.
+    expect((await screen.findByTestId("cases-drawer-counts")).textContent).toBe(
+      "1 xe · 2 lệnh",
+    );
 
     expect(garageDashboardApi.getCheckpointCases).toHaveBeenCalledWith(
       expect.objectContaining({

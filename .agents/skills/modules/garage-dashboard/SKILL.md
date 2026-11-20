@@ -39,7 +39,7 @@ Module `garage-dashboard` (được hiện thực tại `src/kgara-api-core/` v�
   - `paidCost`, `payableCost`, `costPaymentRate`: Tiền đã chi trả chi phí/NCC, công nợ phải trả NCC và tỷ lệ chi trả (%).
 - **Chỉ số KPI theo Chu kỳ (`getCheckpointKpis` & `GarageStatsCards.tsx`)**:
   - Phân tích 3 chu kỳ: **Tháng này**, **Tuần này**, **Hôm nay** theo Ngày hoàn thành.
-  - Hiển thị 2 Donut chart song song (Phân loại xe & Tiến độ thu tiền), icon đặt ngang hàng với nhãn tiêu đề (`[Icon] XE THÁNG NÀY`), và lưới 4 card giai đoạn tiếp nhận (Tiếp nhận, Báo giá, Đang sửa, Hoàn tất) hiển thị số lượng xe kèm số tiền phát sinh trong ngoặc đơn (ví dụ: `11 (124tr)`).
+  - Hiển thị 2 Donut chart song song (Phân loại xe & Tiến độ thu tiền), icon đặt ngang hàng với nhãn tiêu đề (`[Icon] XE THÁNG NÀY`), và lưới 4 card giai đoạn tiếp nhận (Tiếp nhận, Báo giá, Đang sửa, Hoàn tất) hiển thị **số xe khác nhau** (đếm theo biển số, không phải số phiếu) kèm số tiền phát sinh trong ngoặc đơn (ví dụ: `11 (124tr)`).
   - Hỗ trợ click-to-drilldown xem danh sách phiếu dịch vụ chi tiết hoàn thành trong kỳ (`getCheckpointCases`).
 - **Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (`GarageConversionFunnelCard.tsx`)**:
   - Hub phân tích 3 tầng tích hợp toàn diện:
@@ -317,3 +317,13 @@ Resource RBAC: `garage`
 ## 13. Nhãn thẻ tuổi nợ garage (2026-11)
 
 - Thẻ tuổi nợ và ma trận tuổi nợ garage ghi tổng "Phải thu" (`debts:dashboard.garageReceivableTotal`), vì giá trị là tổng KH + BH theo công thức chung của erp-api (`kgara-case-remaining`). Nhãn "Phải thu (KH)" vẫn dùng ở dự báo dòng tiền (`debts:dashboard.expectedIn`) và dashboard hóa đơn.
+
+## 14. Đếm theo XE và trang V2 `garage-cases-v2` (2026-11-20)
+
+- **Quy ước hiển thị**: mọi số "xe" là biển số khác nhau (một xe nhiều lệnh vẫn là 1). Thẻ "XE THÁNG/TUẦN/HÔM NAY" hiển thị `stages.totalIntake`; tiền trong ngoặc là `totalTienCoThue` (lệnh hoàn thành trong kỳ). Backend xem `erp-api` skill `garage-dashboard` mục 8.
+- **V1 (`src/modules/garage/`)**: `garageDashboardApi.ts` ghi rõ `count`/`totalCount` là số xe và thêm `totalCases?` tùy chọn (KPI kỳ, `GarageCheckpointSummary`, phễu). `FunnelOverviewCards` dùng đơn vị `dashboard.funnel.vehiclesUnit` ("xe") và chú thích `vehicleCountNote` (testid `funnel-vehicle-count-note`: tổng các giai đoạn có thể lớn hơn tổng xe). `StageCardItem` có prop `cases?`, tooltip "N xe · M lệnh" khi có (testid `stage-tooltip-count`). `GarageCasesDetailDrawer` hiển thị "N xe · M lệnh" (`cases-drawer-counts`), `caseCount` của checkpoint lấy từ `totalCases`; helper `formatVehiclesAndCases`.
+- **Chưa nối (cần backend)**: `conversionFunnel` của `/stats` chưa trả `totalCases` và số lệnh theo từng giai đoạn, nên `StageCardItem.cases` chưa được truyền; các field `caseCount*` của xu hướng tháng vẫn đếm phiếu.
+- **Trang V2** (PageKey `garage-cases-v2`, URL `/garage-cases-v2?tab=dashboard`, chỉ có tab `dashboard`): đăng ký ở `shared/types`, `shared/utils/pageUrl.ts` (`ALL_PAGE_KEYS`, tab mặc định `dashboard`), `core/config/appStore/constants.ts`, nav Garage (nhãn "Hoạt động garage (v2)", `useV2AdaptedNavSections`), `V2ShellLayout` (breadcrumb), `useV2AdaptedTabs` (icon, tiêu đề), `App.tsx` (lazy `CasesDashboardGaragePage` trong `AdminOnlyRoute`). **Chỉ `admin@liouni.com` thấy menu và vào được trang**; người khác thấy 404. Đây là quy ước chung của module có hai component khác nhau giữa V1 và V2 (xem `erp-web-truth` mục 4), không phải lỗi.
+- **Cấu trúc V2**: lõi UI `src/v2/core/garage-cases/dashboard/` (`CasesDashboardKpiCard`, `CasesDashboardFunnel`, `CasesDashboardClassificationTable`, `formatVehicleCaseCounts`, locale `garageCasesDashboard`); module `src/v2/modules/cases-dashboard-garage/` (api client `casesDashboardApi`, queries `useCasesDashboard*Query`, hook `useCasesDashboardGarage`, `CasesDashboardGaragePage` desktop/mobile, view-model `casesDashboard.view.ts`, locale `casesDashboardGarage`). API: `api/v2/cases-dashboard-garage` (erp-api).
+- **Chưa có**: bộ lọc ngày trên trang V2 (dùng mặc định backend: hôm nay/tuần/tháng; phễu tháng hiện tại).
+- **QC**: `bun run e2e:garage-dashboard` (V1 khớp API, guard V2 với tài khoản không phải admin; nội dung V2 chỉ kiểm bằng unit test vì admin-only). Đối chiếu V1 với V2 phía API: `bun run test:smoke:garage-dashboard` trong `erp-api`.

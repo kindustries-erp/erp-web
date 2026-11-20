@@ -11,6 +11,11 @@
     "unlinkResolver": "resolveGarageUnlink",
     "vehicleColumns": "GARAGE_CASE_VEHICLE_COLUMNS",
     "vehicleInfoRows": "buildVehicleInfoRows",
-    "cells": "GarageCaseVehicleCell, GarageCasePayerCell"
+    "cells": "GarageCaseVehicleCell, GarageCasePayerCell",
+    "dashboardCards": "CasesDashboardKpiCard",
+    "dashboardFunnel": "CasesDashboardFunnel",
+    "dashboardClassificationTable": "CasesDashboardClassificationTable",
+    "dashboardFormat": "formatVehicleCaseCounts, formatRatePercent",
+    "dashboardLocaleNamespace": "garageCasesDashboard"
   }
 }

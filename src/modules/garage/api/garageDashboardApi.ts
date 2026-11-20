@@ -149,7 +149,10 @@ export interface GarageConversionFunnelStage {
 
 export interface GarageConversionFunnelClassificationItem {
   name: string;
+  /** Số XE (distinct biển số) trong nhóm. */
   totalCount: number;
+  /** Số lệnh (phiếu) trong nhóm; chỉ có khi API trả về. */
+  totalCases?: number;
   totalAmount: number;
   quotationCount?: number;
   quotationAmount?: number;
@@ -164,7 +167,16 @@ export interface GarageConversionFunnelClassificationItem {
 }
 
 export interface GarageConversionFunnel {
+  /**
+   * Số XE toàn kỳ (distinct biển số) trong `count`. Không bằng tổng các giai đoạn
+   * vì một xe có thể nằm ở nhiều giai đoạn.
+   */
   totalIntake: GarageConversionFunnelStage;
+  /**
+   * Số lệnh (phiếu) toàn kỳ. Chưa có trên API `conversionFunnel` của V1
+   * (`garage-dashboard-stats.service.ts`); để optional cho đến khi backend bổ sung.
+   */
+  totalCases?: number;
   /** Phiếu báo giá (chưa hoàn thành, chưa hủy), tách khỏi `inProgress`. */
   quotation?: GarageConversionFunnelStage;
   inProgress: GarageConversionFunnelStage;
@@ -230,7 +242,10 @@ export interface GarageKpiPeriod {
   totalPaid?: number;
   totalReceivable?: number;
   collectionRate?: number;
+  /** Số XE (distinct biển số) trong kỳ. */
   totalCount: number;
+  /** Số lệnh (phiếu) trong kỳ. */
+  totalCases?: number;
   stages?: GarageIntakeStages;
   revenueChart: number[];
   costChart: number[];
@@ -287,7 +302,10 @@ export interface GarageCheckpointCaseItem {
 }
 
 export interface GarageCheckpointSummary {
+  /** Số XE (distinct biển số) trong danh sách lọc. */
   totalCount: number;
+  /** Số lệnh (phiếu) trong danh sách lọc. */
+  totalCases?: number;
   totalTienCoThue: number;
   totalRevenue: number;
   totalCost: number;

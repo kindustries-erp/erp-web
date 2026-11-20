@@ -32,6 +32,15 @@ export const EMPTY_TREND: GarageTrendItem = {
   costPaymentRateDiff: 0,
 };
 
+/** Nhãn "N xe · M lệnh"; đơn vị truyền vào từ i18n. */
+export function formatVehiclesAndCases(
+  vehicles: number,
+  cases: number,
+  units: { vehicles: string; cases: string },
+): string {
+  return `${vehicles} ${units.vehicles} · ${cases} ${units.cases}`;
+}
+
 export function formatDebtMonth(m?: string): string {
   if (!m) return "";
   const parts = m.split("-");

@@ -50,7 +50,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o storybook-static",
     "e2e:invoice-attachments-v1": "bun e2e/invoice-attachments-v1.e2e.mjs",
-    "e2e:invoice-pdf-source": "node e2e/invoice-pdf-source-filter.e2e.mjs"
+    "e2e:invoice-pdf-source": "node e2e/invoice-pdf-source-filter.e2e.mjs",
+    "e2e:garage-dashboard": "node e2e/garage-dashboard.e2e.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

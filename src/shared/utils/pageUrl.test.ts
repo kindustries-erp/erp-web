@@ -226,3 +226,17 @@ describe("file-attachments URL", () => {
     expect(pathToPage("/attachments", "")?.page).toBe("file-attachments");
   });
 });
+
+describe("garage-cases-v2 (dashboard V2)", () => {
+  it("pageToPath không tab mặc định ?tab=dashboard", () => {
+    expect(pageToPath("garage-cases-v2")).toBe(
+      "/garage-cases-v2?tab=dashboard",
+    );
+  });
+
+  it("/garage-cases-v2 phân tích ra page garage-cases-v2 và tab dashboard", () => {
+    const parsed = pathToPage("/garage-cases-v2", "");
+    expect(parsed?.page).toBe("garage-cases-v2");
+    expect(parsed?.tab).toBe("dashboard");
+  });
+});

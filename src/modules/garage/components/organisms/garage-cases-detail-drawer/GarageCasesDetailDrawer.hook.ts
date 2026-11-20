@@ -108,7 +108,8 @@ export function useGarageCasesDetailDrawer({
         revenue: s?.totalRevenue || 0,
         cost: s?.totalCost || 0,
         profit: s?.totalProfit || 0,
-        caseCount: s?.totalCount || 0,
+        // Số lệnh (phiếu): `totalCount` của checkpoint là số XE nên không dùng cho caseCount.
+        caseCount: s?.totalCases || 0,
       };
     }
     return monthScope?.item ?? breakdownTrend ?? EMPTY_TREND;

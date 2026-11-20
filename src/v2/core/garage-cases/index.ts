@@ -5,3 +5,4 @@ export * from "./traceability/garageCaseTraceability.type";
 export * from "./traceability/garageCaseTraceability.graph";
 export * from "./traceability/garageCaseTraceability.actions";
 export * from "./vehicle";
+export * from "./dashboard";

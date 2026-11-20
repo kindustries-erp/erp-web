@@ -265,6 +265,11 @@ export const garageEn = {
       noFunnelData: "No conversion funnel data available for this period",
       casesUnit: "cases",
       vehiclesUnit: "vehicles",
+      /** Unit for case count (service tickets), shown next to the vehicle unit in "N vehicles · M cases". */
+      casesCountUnit: "cases",
+      /** Note: vehicles are counted by distinct plate, so stage totals can exceed the total vehicle count. */
+      vehicleCountNote:
+        "Vehicles are counted by distinct license plate. A vehicle with several cases in several stages is counted in each stage, so stage totals can exceed the total vehicle count.",
     },
     recentCases: {
       title: "Recent Service Cases",
