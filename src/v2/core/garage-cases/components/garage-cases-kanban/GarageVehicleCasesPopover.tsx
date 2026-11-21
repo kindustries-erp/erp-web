@@ -40,9 +40,7 @@ export const GarageVehicleCasesPopover: React.FC<
         onWheel={(e) => e.stopPropagation()}
         className={cn(
           "w-[760px] max-w-[95vw] p-4 space-y-3 z-50 rounded-2xl",
-          "bg-popover dark:bg-zinc-900/98 backdrop-blur-md",
-          "border border-border/70 dark:border-zinc-700/80",
-          "shadow-2xl dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.08)]",
+          "bg-popover border border-border shadow-2xl",
         )}
       >
         {/* ── Popover Header ── */}

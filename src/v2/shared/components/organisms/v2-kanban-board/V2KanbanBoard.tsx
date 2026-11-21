@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import {
   DndContext,
   DragOverlay,
@@ -132,19 +133,29 @@ export function V2KanbanBoard<T = any>({
           ))}
         </div>
 
-        {/* ── Drag Overlay Preview (Card nổi khi đang kéo) ── */}
-        <DragOverlay
-          dropAnimation={{
-            duration: 180,
-            easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
-          }}
-        >
-          {activeItemInfo ? (
-            <div className="transform-gpu rotate-1.5 scale-102 opacity-95 shadow-2xl ring-2 ring-primary/50 rounded-xl cursor-grabbing pointer-events-none">
-              {renderCard(activeItemInfo.item, activeItemInfo.lane.id, true)}
-            </div>
-          ) : null}
-        </DragOverlay>
+        {/* ── Drag Overlay Preview (Card nổi khi đang kéo, portal ra body để khớp chuột 1:1 và tránh lag) ── */}
+        {typeof document !== "undefined"
+          ? createPortal(
+              <DragOverlay
+                zIndex={1000}
+                dropAnimation={{
+                  duration: 180,
+                  easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+                }}
+              >
+                {activeItemInfo ? (
+                  <div className="transform-gpu rotate-1 scale-[1.02] opacity-95 shadow-2xl rounded-xl cursor-grabbing pointer-events-none">
+                    {renderCard(
+                      activeItemInfo.item,
+                      activeItemInfo.lane.id,
+                      true,
+                    )}
+                  </div>
+                ) : null}
+              </DragOverlay>,
+              document.body,
+            )
+          : null}
       </DndContext>
     </div>
   );

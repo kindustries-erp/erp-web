@@ -16,7 +16,8 @@ const initialLanes: V2KanbanLaneData<DemoCard>[] = [
     id: "TODO",
     title: "Tiếp nhận",
     badgeCount: 2,
-    accentColor: "#0284c7",
+    accentColor: "#64748b",
+    accentClassName: "bg-muted-fg",
     items: [
       { id: "c-1", title: "Thay nhớt & lọc dầu", assignee: "KTV Nam" },
       { id: "c-2", title: "Kiểm tra hệ thống phanh", assignee: "KTV Hưng" },
@@ -27,6 +28,7 @@ const initialLanes: V2KanbanLaneData<DemoCard>[] = [
     title: "Đang sửa",
     badgeCount: 1,
     accentColor: "#f59e0b",
+    accentClassName: "bg-warning",
     items: [{ id: "c-3", title: "Sơn dặm cản trước", assignee: "KTV Tuấn" }],
   },
   {
@@ -34,6 +36,7 @@ const initialLanes: V2KanbanLaneData<DemoCard>[] = [
     title: "Hoàn tất",
     badgeCount: 1,
     accentColor: "#10b981",
+    accentClassName: "bg-success",
     items: [{ id: "c-4", title: "Rửa khoang máy", assignee: "KTV Long" }],
   },
 ];

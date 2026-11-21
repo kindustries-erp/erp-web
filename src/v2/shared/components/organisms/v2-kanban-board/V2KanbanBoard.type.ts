@@ -7,6 +7,7 @@ export interface V2KanbanLaneData<T = any> {
   badgeCount?: number;
   subtotalLabel?: string;
   accentColor?: string;
+  accentClassName?: string;
   headerClassName?: string;
   items: T[];
   isDropDisabled?: boolean;

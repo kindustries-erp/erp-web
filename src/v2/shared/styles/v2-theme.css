@@ -45,8 +45,23 @@
   --glass-chrome: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.6);
   --glass-blur: 8px;
-  --drawer-blur: 8px;
+  --drawer-blur: 0px;
   --drawer-section-blur: 0px;
+
+  /* ── Kanban & Drag-and-Drop Tokens (Light) ── */
+  --kanban-lane-bg: rgba(241, 245, 249, 0.65);
+  --kanban-lane-border: var(--border);
+  --kanban-card-bg: var(--surface);
+  --kanban-card-border: var(--item-border);
+  --kanban-card-drag-bg: #ffffff;
+  --kanban-card-drag-border: rgba(0, 0, 0, 0.12);
+  --kanban-card-drag-shadow:
+    0 20px 40px -10px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --kanban-lane-over-bg: var(--approve-bg);
+  --kanban-lane-over-border: var(--approve-fg);
+  --kanban-lane-over-ring: rgba(16, 185, 129, 0.25);
+  --kanban-placeholder-border: var(--border);
+  --kanban-placeholder-bg: rgba(0, 0, 0, 0.03);
 
   /* ── Popups, Dropdowns & Modals ── */
   --popup-bg: rgba(246, 248, 252, 0.96);
@@ -54,7 +69,7 @@
   --popup-border: rgba(226, 232, 240, 0.8);
   --popup-shadow:
     0 16px 40px -8px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
-  --modal-bg: rgba(246, 248, 252, 0.96);
+  --modal-bg: #f6f8fc;
   --tooltip-bg: #0f172a;
 
   /* ── Table Sticky ── */
@@ -65,15 +80,15 @@
   /* Overlay tắt. Khôi phục: --overlay-bg rgba(15,23,42,0.2), --overlay-blur 1px */
   --overlay-bg: transparent;
   --overlay-blur: 0px;
-  --drawer-bg: rgba(255, 255, 255, 0.96);
+  --drawer-bg: #ffffff;
   --drawer-shadow:
     0 0 32px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
   --drawer-border: rgba(255, 255, 255, 0.65);
-  --drawer-header-bg: rgba(246, 248, 252, 0.94);
-  --drawer-header-scrolled-bg: rgba(246, 248, 252, 0.98);
-  --drawer-footer-bg: rgba(246, 248, 252, 0.94);
-  --drawer-footer-scrolled-bg: rgba(246, 248, 252, 0.98);
-  --drawer-section-bg: rgba(255, 255, 255, 0.96);
+  --drawer-header-bg: #f6f8fc;
+  --drawer-header-scrolled-bg: #f6f8fc;
+  --drawer-footer-bg: #f6f8fc;
+  --drawer-footer-scrolled-bg: #f6f8fc;
+  --drawer-section-bg: #ffffff;
 
   /* ── Shell & Sidebar ── */
   --app-shell-bg: #1e1e1e;
@@ -125,11 +140,26 @@
   --glass-chrome: rgba(255, 255, 255, 0.48);
   --glass-border: rgba(255, 255, 255, 0.6);
   --glass-blur: 8px;
-  --drawer-blur: 8px;
+  --drawer-blur: 0px;
   --drawer-section-blur: 0px;
-  --drawer-bg: rgba(255, 255, 255, 0.96);
+  --drawer-bg: #ffffff;
   --drawer-shadow:
     0 0 32px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+
+  /* ── Kanban & Drag-and-Drop Tokens (Classic Light) ── */
+  --kanban-lane-bg: rgba(241, 245, 249, 0.65);
+  --kanban-lane-border: var(--border);
+  --kanban-card-bg: var(--surface);
+  --kanban-card-border: var(--item-border);
+  --kanban-card-drag-bg: #ffffff;
+  --kanban-card-drag-border: rgba(0, 0, 0, 0.12);
+  --kanban-card-drag-shadow:
+    0 20px 40px -10px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --kanban-lane-over-bg: var(--approve-bg);
+  --kanban-lane-over-border: var(--approve-fg);
+  --kanban-lane-over-ring: rgba(16, 185, 129, 0.25);
+  --kanban-placeholder-border: var(--border);
+  --kanban-placeholder-bg: rgba(0, 0, 0, 0.03);
 
   /* ── Popups & dropdowns ── */
   --popup-bg: rgba(246, 248, 252, 0.96);
@@ -139,7 +169,7 @@
     0 16px 40px -8px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(246, 248, 252, 0.96);
+  --modal-bg: #f6f8fc;
   --tooltip-bg: #0f172a;
 
   /* ── Table sticky glass ── */
@@ -148,11 +178,11 @@
 
   /* ── Drawer frosted glass & overlay ── */
   --drawer-border: rgba(255, 255, 255, 0.65);
-  --drawer-header-bg: rgba(246, 248, 252, 0.94);
-  --drawer-header-scrolled-bg: rgba(246, 248, 252, 0.98);
-  --drawer-footer-bg: rgba(246, 248, 252, 0.94);
-  --drawer-footer-scrolled-bg: rgba(246, 248, 252, 0.98);
-  --drawer-section-bg: rgba(255, 255, 255, 0.96);
+  --drawer-header-bg: #f6f8fc;
+  --drawer-header-scrolled-bg: #f6f8fc;
+  --drawer-footer-bg: #f6f8fc;
+  --drawer-footer-scrolled-bg: #f6f8fc;
+  --drawer-section-bg: #ffffff;
 
   --app-shell-bg: var(--background);
   --app-shell-border: transparent;
@@ -210,8 +240,23 @@
   --glass-chrome: rgba(22, 25, 31, 0.85);
   --glass-border: rgba(255, 255, 255, 0.06);
   --glass-blur: 8px;
-  --drawer-blur: 8px;
+  --drawer-blur: 0px;
   --drawer-section-blur: 0px;
+
+  /* ── Kanban & Drag-and-Drop Tokens (Classic Dark) ── */
+  --kanban-lane-bg: rgba(15, 18, 24, 0.6);
+  --kanban-lane-border: rgba(255, 255, 255, 0.07);
+  --kanban-card-bg: #1d2129;
+  --kanban-card-border: rgba(255, 255, 255, 0.06);
+  --kanban-card-drag-bg: #222731;
+  --kanban-card-drag-border: rgba(255, 255, 255, 0.16);
+  --kanban-card-drag-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --kanban-lane-over-bg: rgba(20, 184, 166, 0.08);
+  --kanban-lane-over-border: rgba(45, 212, 191, 0.6);
+  --kanban-lane-over-ring: rgba(20, 184, 166, 0.25);
+  --kanban-placeholder-border: rgba(255, 255, 255, 0.12);
+  --kanban-placeholder-bg: rgba(255, 255, 255, 0.02);
 
   /* ── Popups & dropdowns ── */
   --popup-bg: rgba(24, 28, 36, 0.97);
@@ -221,7 +266,7 @@
     0 24px 48px -8px rgba(0, 0, 0, 0.8), 0 8px 24px -4px rgba(0, 0, 0, 0.5);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(22, 26, 33, 0.96);
+  --modal-bg: #161a21;
   --tooltip-bg: #252b34;
 
   /* ── Table sticky glass ── */
@@ -229,14 +274,14 @@
   --table-footer-bg: rgba(26, 30, 38, 0.9);
 
   /* ── Drawer frosted glass & overlay (V2 Standard Drawer) ── */
-  --drawer-bg: rgba(26, 30, 38, 0.96);
+  --drawer-bg: #1a1e26;
   --drawer-shadow:
     0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --drawer-border: rgba(255, 255, 255, 0.08);
-  --drawer-header-bg: rgba(24, 28, 36, 0.96);
-  --drawer-header-scrolled-bg: rgba(24, 28, 36, 0.98);
-  --drawer-footer-bg: rgba(24, 28, 36, 0.96);
-  --drawer-footer-scrolled-bg: rgba(24, 28, 36, 0.98);
+  --drawer-header-bg: #181c24;
+  --drawer-header-scrolled-bg: #181c24;
+  --drawer-footer-bg: #181c24;
+  --drawer-footer-scrolled-bg: #181c24;
   --drawer-section-bg: #20242e;
 
   --app-shell-bg: #121417;
@@ -290,8 +335,22 @@
   --glass-chrome: #ffffff;
   --glass-border: #e4e4e7;
   --glass-blur: 0px;
-  --drawer-blur: 8px;
+  --drawer-blur: 0px;
   --drawer-section-blur: 0px;
+
+  /* ── Kanban & Drag-and-Drop Tokens (Orcaq) ── */
+  --kanban-lane-bg: rgba(24, 24, 27, 0.6);
+  --kanban-lane-border: #27272a;
+  --kanban-card-bg: #27272a;
+  --kanban-card-border: rgba(255, 255, 255, 0.08);
+  --kanban-card-drag-bg: #323238;
+  --kanban-card-drag-border: rgba(255, 255, 255, 0.18);
+  --kanban-card-drag-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --kanban-lane-over-bg: rgba(21, 128, 61, 0.12);
+  --kanban-lane-over-border: #22c55e;
+  --kanban-lane-over-ring: rgba(34, 197, 94, 0.25);
+  --kanban-placeholder-border: rgba(255, 255, 255, 0.12);
+  --kanban-placeholder-bg: rgba(255, 255, 255, 0.02);
 
   /* ── Popups & dropdowns ── */
   --popup-bg: rgba(24, 24, 27, 0.96);
@@ -301,7 +360,7 @@
     0 20px 44px -8px rgba(0, 0, 0, 0.6), 0 6px 18px rgba(0, 0, 0, 0.3);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(24, 24, 27, 0.96);
+  --modal-bg: #18181b;
   --tooltip-bg: #1e1e2e;
 
   /* ── Table sticky glass ── */
@@ -309,15 +368,15 @@
   --table-footer-bg: rgba(244, 244, 245, 0.72);
 
   /* ── Drawer frosted glass & overlay ── */
-  --drawer-bg: rgba(24, 24, 27, 0.96);
+  --drawer-bg: #18181b;
   --drawer-shadow:
     0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --drawer-border: rgba(255, 255, 255, 0.1);
-  --drawer-header-bg: rgba(28, 28, 32, 0.94);
-  --drawer-header-scrolled-bg: rgba(28, 28, 32, 0.98);
-  --drawer-footer-bg: rgba(28, 28, 32, 0.94);
-  --drawer-footer-scrolled-bg: rgba(28, 28, 32, 0.98);
-  --drawer-section-bg: rgba(39, 39, 42, 0.94);
+  --drawer-header-bg: #1c1c20;
+  --drawer-header-scrolled-bg: #1c1c20;
+  --drawer-footer-bg: #1c1c20;
+  --drawer-footer-scrolled-bg: #1c1c20;
+  --drawer-section-bg: #27272a;
 
   --sidebar-bg: #18181b;
   --sidebar-border: #27272a;
@@ -379,28 +438,42 @@
   --glass-chrome: rgba(18, 21, 30, 0.85);
   --glass-border: rgba(255, 255, 255, 0.07);
   --glass-blur: 8px;
-  --drawer-blur: 8px;
+  --drawer-blur: 0px;
   --drawer-section-blur: 0px;
+
+  /* ── Kanban & Drag-and-Drop Tokens (Midnight) ── */
+  --kanban-lane-bg: rgba(18, 21, 30, 0.6);
+  --kanban-lane-border: rgba(255, 255, 255, 0.08);
+  --kanban-card-bg: #181c26;
+  --kanban-card-border: rgba(255, 255, 255, 0.06);
+  --kanban-card-drag-bg: #222836;
+  --kanban-card-drag-border: rgba(255, 255, 255, 0.18);
+  --kanban-card-drag-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --kanban-lane-over-bg: rgba(16, 185, 129, 0.12);
+  --kanban-lane-over-border: #34d399;
+  --kanban-lane-over-ring: rgba(52, 211, 153, 0.25);
+  --kanban-placeholder-border: rgba(255, 255, 255, 0.12);
+  --kanban-placeholder-bg: rgba(255, 255, 255, 0.02);
 
   --popup-bg: rgba(22, 25, 35, 0.97);
   --popup-bg-hover: rgba(139, 92, 246, 0.1);
   --popup-border: transparent;
   --popup-shadow:
     0 24px 48px -8px rgba(0, 0, 0, 0.8), 0 8px 24px -4px rgba(0, 0, 0, 0.5);
-  --modal-bg: rgba(18, 21, 30, 0.96);
+  --modal-bg: #12151e;
   --tooltip-bg: #212634;
 
   --table-header-bg: rgba(22, 26, 36, 0.88);
   --table-footer-bg: rgba(22, 26, 36, 0.92);
 
-  --drawer-bg: rgba(22, 25, 34, 0.96);
+  --drawer-bg: #161922;
   --drawer-shadow:
     0 0 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --drawer-border: rgba(255, 255, 255, 0.08);
-  --drawer-header-bg: rgba(20, 23, 33, 0.96);
-  --drawer-header-scrolled-bg: rgba(20, 23, 33, 0.98);
-  --drawer-footer-bg: rgba(20, 23, 33, 0.96);
-  --drawer-footer-scrolled-bg: rgba(20, 23, 33, 0.98);
+  --drawer-header-bg: #141721;
+  --drawer-header-scrolled-bg: #141721;
+  --drawer-footer-bg: #141721;
+  --drawer-footer-scrolled-bg: #141721;
   --drawer-section-bg: #1c202c;
 
   --app-shell-bg: #12151e;

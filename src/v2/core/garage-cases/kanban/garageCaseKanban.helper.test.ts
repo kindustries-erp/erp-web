@@ -6,6 +6,7 @@ import {
   buildGarageKanbanLanes,
   moveVehicleToLane,
 } from "./garageCaseKanban.helper";
+import { getGarageKanbanLaneAccent } from "./garageCaseKanban.config";
 
 describe("garageCaseKanban.helper", () => {
   const mockCases: GarageCaseDetailRow[] = [
@@ -170,5 +171,33 @@ describe("garageCaseKanban.helper", () => {
     );
     expect(target).toBeDefined();
     expect(target?.id).toBe("30A-11111::COMPLETED");
+  });
+
+  it("getGarageKanbanLaneAccent trả về đúng semantic token và class cho 5 mốc", () => {
+    expect(getGarageKanbanLaneAccent("INTAKE")).toEqual({
+      token: "var(--muted-fg)",
+      className: "bg-muted-fg",
+      fallbackHex: "#64748b",
+    });
+    expect(getGarageKanbanLaneAccent("QUOTATION")).toEqual({
+      token: "var(--warn-fg)",
+      className: "bg-warning",
+      fallbackHex: "#eab308",
+    });
+    expect(getGarageKanbanLaneAccent("IN_PROGRESS")).toEqual({
+      token: "var(--amber-500, #f59e0b)",
+      className: "bg-amber-500",
+      fallbackHex: "#f59e0b",
+    });
+    expect(getGarageKanbanLaneAccent("COMPLETED")).toEqual({
+      token: "var(--approve-fg)",
+      className: "bg-success",
+      fallbackHex: "#10b981",
+    });
+    expect(getGarageKanbanLaneAccent("CANCELLED")).toEqual({
+      token: "var(--destructive)",
+      className: "bg-destructive",
+      fallbackHex: "#ef4444",
+    });
   });
 });

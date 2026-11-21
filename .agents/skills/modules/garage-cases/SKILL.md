@@ -251,9 +251,12 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
   - Nhúng trực tiếp tại `GarageCasesDetailDrawer.tabs.tsx` qua tab `"kanban"` kế bên tab `"cases"` ("Danh sách xe") khi mở ở chế độ checkpoint overview.
   - **Tối ưu kéo thả 60fps & Khắc phục kẹt cuộn**:
     - `GarageVehicleKanbanCard.tsx`, `V2KanbanCardWrapper.tsx`, `V2KanbanLane.tsx` được memo hóa, tắt transition CSS khi kéo (`transition: none` khi isDragging), áp dụng biến đổi dịch chuyển mượt mà `CSS.Translate.toString(transform)`.
+    - `<DragOverlay>` được render qua `createPortal(..., document.body)` với `zIndex={1000}` giải quyết triệt để lỗi lệch tọa độ Offset Y khi bọc trong Dialog/Drawer có `transform`/`backdrop-filter`.
     - Thuật toán va chạm 2 tầng `pointerWithin` -> `closestCorners` chống giật lag và nhảy lane bất thường khi kéo thẻ qua các ranh giới cột.
     - Khắc phục xung đột `react-remove-scroll` của Radix Dialog V2 khi có Drawer V1 hoặc Popover mở chồng lên bằng cờ `modal={!hasNestedOpenDrawer}` trên `V2StandardDrawer` và `modal={false}` trên `GarageVehicleCasesPopover`.
-  - **Chuẩn hóa UI `/erp-ui-structure`**:
+  - **Chuẩn hóa UI & Design Tokens `/erp-ui-structure`**:
+    - Màu accent các làn được quản lý tập trung qua `GARAGE_KANBAN_LANE_ACCENTS` (`garageCaseKanban.config.ts`), sử dụng design token chuẩn (`var(--kanban-*)`) và fallback semantic, tuyệt đối không hardcode mã hex.
+    - Tắt hoàn toàn `backdrop-blur` (`0px`) và khử kênh alpha (opacity 100% solid) trên toàn bộ Floating Surface (Drawer V2, Modal V2, Popover, Card) giúp GPU không phải chạy Gaussian blur / framebuffer readback liên tục khi kéo thả thẻ.
     - Bọc toàn bộ bảng Kanban trong `DrawerSection` chuẩn với `fillHeight={true}`, căn chỉnh fit 100% viewport drawer không sinh scroll ngoài.
     - Đồng bộ vị trí ô tìm kiếm `V2SearchInput` (`w-48 sm:w-64`) tại góc trên bên phải của cả 2 tab Danh sách xe và Tiến độ công việc.
     - Cải tiến Panel phải của Drawer bằng `GarageVehicleProgressRightPanel` thể hiện các chỉ số thực tế: Tiến độ xử lý xe (4 mốc), Cơ cấu Top Hãng xe vào xưởng, và Dòng tiền dịch vụ xe.

@@ -33,7 +33,7 @@ export const V2KanbanCardWrapper: React.FC<V2KanbanCardWrapperProps> =
             ? "cursor-default"
             : "cursor-grab active:cursor-grabbing",
           isDragging &&
-            "opacity-30 scale-[0.98] pointer-events-none ring-2 ring-primary/40",
+            "opacity-25 scale-[0.98] pointer-events-none border border-dashed border-kanban-placeholder-border bg-kanban-placeholder",
           className,
         )}
         {...(isDragDisabled ? {} : attributes)}
