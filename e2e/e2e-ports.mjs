@@ -35,5 +35,5 @@ export function resolveWebUrl() {
   if (!webPort) {
     throw new Error(`PORT API ${apiPort} không nằm trong bảng 10001/10002/10003. Đặt E2E_WEB_URL để chạy.`);
   }
-  return `http://127.0.0.1:${webPort}`;
+  return `http://localhost:${webPort}`;
 }

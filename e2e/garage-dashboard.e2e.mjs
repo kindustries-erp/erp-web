@@ -1,6 +1,6 @@
 // E2E dashboard garage: đối chiếu số trên màn hình V1 (`/garage-cases?tab=dashboard`) với API,
 // kiểm guard V2 (`/garage-cases-v2`, chỉ admin). Không ghi dữ liệu.
-// Biến môi trường: E2E_PASSWORD (bắt buộc), E2E_DUYET_EMAIL (mặc định ai-test-duyet).
+// Biến môi trường: E2E_PASSWORD (bắt buộc), E2E_ADMIN_EMAIL (mặc định ai-test-admin).
 // Chạy: bun run e2e:garage-dashboard
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
@@ -9,7 +9,7 @@ import { resolveApiUrl, resolveWebUrl } from "./e2e-ports.mjs";
 const API = resolveApiUrl();
 const WEB = resolveWebUrl();
 const PASSWORD = process.env.E2E_PASSWORD;
-const EMAIL = process.env.E2E_DUYET_EMAIL ?? "ai-test-duyet@example.com";
+const EMAIL = process.env.E2E_ADMIN_EMAIL ?? "ai-test-admin@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
 if (!PASSWORD) {
   console.error("Thiếu E2E_PASSWORD.");

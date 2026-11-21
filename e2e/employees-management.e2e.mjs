@@ -101,15 +101,17 @@ try {
     null,
     { timeout: 30000 },
   );
-  token = (
-    await (
-      await fetch(`${API}/api/v1/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: ADMIN, password: PASSWORD }),
-      })
-    ).json()
-  ).accessToken;
+  // Auth V1 đã ngừng (410): lấy token qua V2 và fail sớm nếu không có token.
+  const loginRes = await fetch(`${API}/api/v2/auth-sessions/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: ADMIN, password: PASSWORD }),
+  });
+  token = (await loginRes.json().catch(() => ({})))?.data?.accessToken ?? "";
+  if (!token) {
+    console.error(`Đăng nhập API thất bại: ${loginRes.status}`);
+    process.exit(2);
+  }
 
   await step("A. URL mới, URL cũ và trang V2 độc lập", async () => {
     await page.goto(`${WEB}/employees-management`, {
