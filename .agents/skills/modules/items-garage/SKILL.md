@@ -1,3 +1,8 @@
+---
+name: items-garage
+description: Gợi ý mã hàng từ danh mục garage cho bảng dòng chứng từ (PR, PO, phiếu nhận hàng) trong erp-web, gồm LineItemCodeFieldProvider và GarageItemCodeField.
+---
+
 # items-garage (web)
 
 Gợi ý mã hàng từ danh mục garage cho bảng dòng chứng từ. Ghi nhận 2026-11-12.
