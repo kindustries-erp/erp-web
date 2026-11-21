@@ -34,6 +34,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   bottomNavVariant = "floating",
   bottomNavIndicator = "pill",
   hideBottomNav = false,
+  hideSidebar = false,
 }) => {
   const {
     t,
@@ -118,13 +119,13 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
         tabIndex={-1}
         className={cn(
           "flex-1 overflow-y-auto px-2 py-2.5 focus:outline-none sm:px-4 sm:py-4",
-          hideBottomNav ? "pb-4" : "pb-16",
+          hideBottomNav || hideSidebar ? "pb-4" : "pb-16",
           contentClassName,
         )}
       >
         {children}
       </main>
-      {!hideBottomNav && (
+      {!hideBottomNav && !hideSidebar && (
         <>
           <V2BottomNav
             items={navItems ?? quick4Items}

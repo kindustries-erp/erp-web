@@ -101,7 +101,13 @@ export function buildMonthClassificationRows(
   return definitions
     .filter((row) => row.billed > 0 || row.caseCount > 0)
     .map((row) => {
-      const remaining = Math.max(0, row.billed - row.paid);
+      // Phải thu: API đã cộng còn nợ theo từng phiếu (có HĐ + không HĐ), không bù trừ thu dư
+      // giữa các phiếu cùng nhóm. Thiếu field thì rơi về phát sinh − đã thu của cả nhóm.
+      const groupDiff = Math.max(0, row.billed - row.paid);
+      const perCaseRemaining = row.withInvoice + row.withoutInvoice;
+      const remaining = isReceivable
+        ? Math.max(perCaseRemaining, groupDiff)
+        : groupDiff;
       // Ràng buộc kế toán: remainingWithInvoice + remainingNoInvoice luôn bằng remaining
       let remainingWithInvoice = 0;
       let remainingNoInvoice = 0;

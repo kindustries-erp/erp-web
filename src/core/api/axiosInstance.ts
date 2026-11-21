@@ -1,3 +1,4 @@
+import { refreshSession } from "@/v2/shared/api/authSessionsApi";
 import axios, {
   AxiosError,
   AxiosResponse,
@@ -284,18 +285,7 @@ axiosInstance.interceptors.response.use(
 
       if (actorRefreshToken) {
         try {
-          const { data } = await axios.post<{
-            access_token: string;
-            refresh_token: string;
-            expires: number;
-          }>(
-            `${API_BASE_URL}/api/v1/auth/refresh`,
-            { refresh_token: actorRefreshToken },
-            {
-              headers: { "Content-Type": "application/json" },
-              timeout: 15000,
-            },
-          );
+          const data = await refreshSession(API_BASE_URL, actorRefreshToken);
 
           const newExpiresAt = Date.now() + data.expires * 1000;
 
@@ -346,15 +336,7 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const { data } = await axios.post<{
-        access_token: string;
-        refresh_token: string;
-        expires: number;
-      }>(
-        `${API_BASE_URL}/api/v1/auth/refresh`,
-        { refresh_token: refreshToken },
-        { headers: { "Content-Type": "application/json" }, timeout: 15000 },
-      );
+      const data = await refreshSession(API_BASE_URL, refreshToken);
 
       const newExpiresAt = Date.now() + data.expires * 1000;
 

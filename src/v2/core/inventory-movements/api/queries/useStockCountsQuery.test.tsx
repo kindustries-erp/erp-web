@@ -6,6 +6,7 @@ import { createInventoryMovementsKeys } from "../inventoryMovementsKeys";
 import type { InventoryMovementsApi } from "../inventoryMovementsApi.type";
 import {
   useStockTabCountsQuery,
+  useStockBalancesOverviewQuery,
   useStockVoucherTypeCountsQuery,
 } from "./useStockCountsQuery";
 
@@ -80,5 +81,26 @@ describe("useStockTabCountsQuery", () => {
       expect(result.current).toEqual({ ALL: 6, IN_STOCK: 4 }),
     );
     expect(api.listBalances).toHaveBeenCalledWith(expect.anything(), "ALL");
+  });
+
+  it("trả về cả tabCounts và summaries qua useStockBalancesOverviewQuery", async () => {
+    const api = makeApi({});
+    api.listBalances.mockResolvedValue({
+      items: [],
+      total: 0,
+      summaries: {
+        qtyOnHand: { total: 95, pageSubtotal: 0, cumulative: 95 },
+        inventoryValue: { total: 500, pageSubtotal: 0, cumulative: 500 },
+      },
+      extraData: { tabCounts: { ALL: 6, IN_STOCK: 4 } },
+    });
+    const { result } = renderHook(
+      () => useStockBalancesOverviewQuery({ api, keys }),
+      { wrapper: wrap() },
+    );
+    await waitFor(() =>
+      expect(result.current.tabCounts).toEqual({ ALL: 6, IN_STOCK: 4 }),
+    );
+    expect(result.current.summaries?.qtyOnHand?.total).toBe(95);
   });
 });

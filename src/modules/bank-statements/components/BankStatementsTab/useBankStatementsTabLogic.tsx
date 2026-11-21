@@ -68,6 +68,7 @@ export function useBankStatementsTabLogic({
   // 2. Modal & Drawer States
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isQrOpen, setIsQrOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isOriginalFilesOpen, setIsOriginalFilesOpen] = useState(false);
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
@@ -368,6 +369,8 @@ export function useBankStatementsTabLogic({
     handleClearAllFilters,
     isExportOpen,
     setIsExportOpen,
+    isQrOpen,
+    setIsQrOpen,
     isOriginalFilesOpen,
     setIsOriginalFilesOpen,
     isImportOpen,

@@ -1,4 +1,5 @@
 import type {
+  CaseCostBreakdown,
   QuoteLineItem,
   QuoteProfitSummaryData,
 } from "./GarageCasePreview.type";
@@ -185,23 +186,14 @@ export const calculateProfitSummary = (
     grossProfit?.ChiPhiMuaNgoai ?? rawData?.ChiPhiPhuTungNgoaiPhieu ?? 0,
   );
 
-  const journalItems =
-    grossProfit?.journal_items || grossProfit?.rawData?.journal_items || [];
-  let journalOutsourceCost = 0;
-  let journalCommissionCost = 0;
-  let journalDiscountCost = 0;
-  let journalPartsCost = 0;
-
-  if (Array.isArray(journalItems) && journalItems.length > 0) {
-    for (const item of journalItems) {
-      const tkNo = String(item.TaiKhoanNoCode || item.TaiKhoanNo || "");
-      const val = Number(item.ChiPhi || item.ChiPhiVon || item.GiaTriTien || 0);
-      if (tkNo === "1541") journalPartsCost += val;
-      else if (tkNo === "1542") journalOutsourceCost += val;
-      else if (tkNo === "1543") journalCommissionCost += val;
-      else if (tkNo === "521") journalDiscountCost += val;
-    }
-  }
+  // Cơ cấu chi phí do backend phân loại (TK 1541/1542/1543, 521 là giảm trừ doanh thu).
+  // Không tự parse journal ở web để tránh lệch quy tắc với API.
+  const backendBreakdown: CaseCostBreakdown | undefined =
+    grossProfit?.costBreakdown;
+  const journalPartsCost = Number(backendBreakdown?.warehousePartsCost ?? 0);
+  const journalOutsourceCost = Number(backendBreakdown?.outsourceCost ?? 0);
+  const journalCommissionCost = Number(backendBreakdown?.commissionCost ?? 0);
+  const journalDiscountCost = Number(backendBreakdown?.discountCost ?? 0);
 
   const outsourceLaborCost = Number(
     caseData?.costBreakdown?.outsourceCost ??
@@ -226,17 +218,28 @@ export const calculateProfitSummary = (
 
   const hasData = rev > 0 || cost > 0 || grossProfit != null;
 
-  const costBreakdown: any = caseData?.costBreakdown ??
-    grossProfit?.costBreakdown ?? {
-      warehousePartsCost: effectivePartsInside,
-      inventoryPartCost: effectivePartsInside,
-      externalCost: partsCostOutside,
-      outsourceCost: outsourceLaborCost,
-      commissionCost: commissionMg + commissionGdv || journalCommissionCost,
-      discountCost: journalDiscountCost || discountAmount,
-      otherCost: 0,
-      totalCost: cost || totalEstimatedCost,
-    };
+  const storedBreakdown: CaseCostBreakdown | undefined =
+    backendBreakdown ?? caseData?.costBreakdown;
+  const costBreakdown: CaseCostBreakdown = storedBreakdown
+    ? {
+        ...storedBreakdown,
+        // Bản lưu ở phiếu dùng `externalCost`/`warehousePartsCost`; thẻ hiển thị đọc tên chuẩn.
+        inventoryPartCost:
+          storedBreakdown.inventoryPartCost ??
+          storedBreakdown.warehousePartsCost,
+        outsourceCost:
+          storedBreakdown.outsourceCost ?? storedBreakdown.externalCost,
+      }
+    : {
+        warehousePartsCost: effectivePartsInside,
+        inventoryPartCost: effectivePartsInside,
+        externalCost: partsCostOutside,
+        outsourceCost: outsourceLaborCost,
+        commissionCost: commissionMg + commissionGdv || journalCommissionCost,
+        discountCost: journalDiscountCost || discountAmount,
+        otherCost: 0,
+        totalCost: cost || totalEstimatedCost,
+      };
 
   return {
     revenue: rev,

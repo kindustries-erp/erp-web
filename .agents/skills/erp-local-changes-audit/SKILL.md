@@ -28,6 +28,9 @@ Nạp `erp-ui-structure` và `erp-web-truth` trước. Quy trình đầy đủ v
    - Chuỗi tiếng Việt hoặc Anh thô trong JSX (không qua `t()`) là FAIL.
    Lệnh: `grep -nE "t\(\s*\"v2\.[^\"]+\"" <file>` và đối chiếu từng key.
    Báo cáo bắt buộc một dòng: `i18n VI/EN đủ: PASS/FAIL`.
-5. Đối chiếu từng file với `erp-ui-structure`: tầng Atomic và import một chiều, folder-per-component, tên hook, core theo họ, i18n (prefix `v2.` cho V2), No Blue, selector Zustand, react-query, bảng và drawer chuẩn, test đi kèm.
-6. Ghi bảng tuân thủ: rule | file#dòng | PASS hoặc FAIL. Bảng phải có đủ các dòng: tái sử dụng atom V2 và màu theo token.
-7. Nếu có FAIL, đưa plan enhance và fix theo mẫu `/erp-plan`, rồi dừng chờ `OK`.
+5. Đối chiếu từng file với `erp-ui-structure`: tầng Atomic và import một chiều, folder-per-component, tên hook, core theo họ, i18n (prefix `v2.` cho V2), No Blue, selector Zustand, react-query, bảng và drawer chuẩn, drawer V2 view mode render thông tin bằng `V2DrawerRowList` (không `V2ReadValue`/`V2TextField viewing`), test đi kèm.
+5b. **Stories** (AC-1): với file component **mới** (`??` hoặc `A` trong `git status`, trừ `*.stories|test|spec.tsx`) ở atoms, molecules, organisms, templates, và component mới trong `src/v2/core/<họ>/` hoặc `src/v2/modules/<module>/`: kiểm `ls <thư mục>/*.stories.tsx`. Thiếu = FAIL. Page ghép (`*Page.tsx`) và hook thuần miễn, ghi lý do. Báo cáo: `Stories: PASS/FAIL`.
+5c. **V2 component chuẩn mọi tầng** (AC-2): trong `src/v2/**`, component con/liên quan phải dùng `V2StandardTable`, `V2StandardDrawer`, `V2DrawerRowList` và atom/molecule/organism sẵn có. Kiểm: `ls src/v2/shared/components/*/` và tìm import tương ứng. Tự dựng bảng/drawer/bộ điều khiển song song là FAIL; thiếu thì task tạo bằng `plop v2-component` đứng trước.
+5d. **Tách core/modules** (AC-3): `grep -rnE "from \"@/v2/modules/" src/v2/core/` (core import module = FAIL); `grep -rnE "from \"@/v2/(core|modules)/[^\"]+/[^\"]+/" <file đổi>` (import sâu = FAIL); tính năng mới nằm ở V2, không thêm vào `src/modules` (V1). Báo cáo: `Core/Modules: PASS/FAIL`.
+6. Ghi bảng tuân thủ: rule | file#dòng | PASS hoặc FAIL. Bảng phải có đủ các dòng: tái sử dụng atom V2, màu theo token, stories, V2 chuẩn mọi tầng, tách core/modules.
+7. Nếu có FAIL: quét Plane tiền lệ (skill `plane-work-items`, mục Quét tiền lệ) rồi đưa plan enhance và fix theo mẫu `/erp-plan`. Plan có bước tạo hoặc cập nhật Plane (Module, Cycle, Story, Task con) **trước** mọi sửa file, và báo cáo ghi `Plane: KINDU-xx`. Sau đó dừng chờ `OK`.

@@ -1,11 +1,15 @@
-import { headerFilter, type V2Column } from "@/v2/shared/components";
+import { headerFilter, V2Text, type V2Column } from "@/v2/shared/components";
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import {
   formatMoney,
   type FakeInvoice,
   type InvoiceDirection,
 } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
-import { VAT_RATE_OPTIONS } from "./invoiceColumns.constants";
+import { Badge } from "@/v2/shared/ui";
+import {
+  PDF_SOURCE_OPTIONS,
+  VAT_RATE_OPTIONS,
+} from "./invoiceColumns.constants";
 
 const money = (value?: number | null) => (
   <span className="tabular-nums">{formatMoney(value ?? 0)}</span>
@@ -81,6 +85,32 @@ export const getAuditInvoiceColumns = (
           (row.totalAmount ?? row.total) - (row.netOffAmount ?? row.paid),
       ),
     summary: { variant: "amount", metricTitle: "Còn lại" },
+  },
+  {
+    key: "pdfSource",
+    ...headerFilter.select("PDF gốc", PDF_SOURCE_OPTIONS),
+    size: 160,
+    mobileSlot: "hidden",
+    cell: (row) => {
+      if (!row.pdfSource)
+        return (
+          <V2Text as="span" variant="body-sm" color="muted">
+            -
+          </V2Text>
+        );
+      const opt = PDF_SOURCE_OPTIONS.find((o) => o.value === row.pdfSource);
+      const variant =
+        row.pdfSource === "failed"
+          ? "destructive"
+          : row.pdfSource === "provider_original"
+            ? "success"
+            : "outline";
+      return (
+        <Badge variant={variant} title={row.pdfError ?? undefined}>
+          {opt?.label ?? row.pdfSource}
+        </Badge>
+      );
+    },
   },
   {
     key: "note",

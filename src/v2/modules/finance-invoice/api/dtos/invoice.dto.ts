@@ -28,6 +28,8 @@ export interface InvoiceDto {
   remainingAmount?: number | string | null;
   settlementOrder?: string | null;
   licensePlate?: string | null;
+  pdfSource?: string | null;
+  pdfError?: string | null;
   postingStatus?: string | null;
   notes?: string | null;
   description?: string | null;

@@ -9,6 +9,12 @@
   --surface-hover: #f4f4f5;
   --border: #e4e4e7;
   --border-light: #f4f4f5;
+  --item-border: rgba(0, 0, 0, 0.06);
+  --item-border-subtle: rgba(0, 0, 0, 0.04);
+  --item-border-unread: color-mix(in srgb, var(--primary) 28%, var(--border));
+  --item-bg-unread: rgba(24, 24, 27, 0.05);
+  --item-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.02);
+  --item-shadow-hover: 0 3px 8px rgba(0, 0, 0, 0.08);
   --foreground: #18181b;
   --muted: #fafafa;
   --muted-fg: #71717a;
@@ -37,7 +43,21 @@
   --glass-chrome: #ffffff;
   --glass-border: #e4e4e7;
   --glass-blur: 0px;
-  --drawer-blur: 8px;
+  --drawer-blur: 0px;
+
+  /* ── Kanban Semantic Tokens (OrcaQ) ── */
+  --kanban-lane-bg: rgba(24, 24, 27, 0.6);
+  --kanban-lane-border: #27272a;
+  --kanban-card-bg: #27272a;
+  --kanban-card-border: rgba(255, 255, 255, 0.08);
+  --kanban-card-drag-bg: #323238;
+  --kanban-card-drag-border: rgba(255, 255, 255, 0.18);
+  --kanban-card-drag-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --kanban-lane-over-bg: rgba(21, 128, 61, 0.12);
+  --kanban-lane-over-border: #22c55e;
+  --kanban-lane-over-ring: rgba(34, 197, 94, 0.25);
+  --kanban-placeholder-border: rgba(255, 255, 255, 0.12);
+  --kanban-placeholder-bg: rgba(255, 255, 255, 0.02);
 
   /* ── Popups & dropdowns ── */
   --popup-bg: rgba(24, 24, 27, 0.96);
@@ -47,7 +67,7 @@
     0 16px 40px -8px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(24, 24, 27, 0.96);
+  --modal-bg: #18181b;
   --tooltip-bg: #1e1e2e;
 
   /* ── Table sticky glass ── */
@@ -56,14 +76,14 @@
 
   /* ── Drawer frosted glass & overlay ── */
   --drawer-overlay-bg: rgba(0, 0, 0, 0.2);
-  --drawer-bg: rgba(24, 24, 27, 0.96);
+  --drawer-bg: #18181b;
   --drawer-shadow: 0 14px 34px rgba(0, 0, 0, 0.32);
   --drawer-border: rgba(255, 255, 255, 0.1);
-  --drawer-header-bg: rgba(28, 28, 32, 0.94);
-  --drawer-header-scrolled-bg: rgba(28, 28, 32, 0.98);
-  --drawer-footer-bg: rgba(28, 28, 32, 0.94);
-  --drawer-footer-scrolled-bg: rgba(28, 28, 32, 0.98);
-  --drawer-section-bg: rgba(39, 39, 42, 0.94);
+  --drawer-header-bg: #1c1c20;
+  --drawer-header-scrolled-bg: #1c1c20;
+  --drawer-footer-bg: #1c1c20;
+  --drawer-footer-scrolled-bg: #1c1c20;
+  --drawer-section-bg: #27272a;
 
   /* ── App shell ── */
   --app-shell-bg: #18181b;

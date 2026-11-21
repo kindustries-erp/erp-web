@@ -12,9 +12,12 @@ export const V2AdminLayoutMobile: React.FC<V2AdminLayoutProps> = ({
   onNavigate,
   appName,
   contentClassName,
+  hideSidebar = false,
+  hideBottomNav = false,
 }) => {
   const { t } = useV2Translation();
   const effectiveAppName = appName ?? t("v2.admin.app.name", "ERP Admin");
+  const showNav = !hideSidebar && !hideBottomNav;
 
   return (
     <div
@@ -31,7 +34,8 @@ export const V2AdminLayoutMobile: React.FC<V2AdminLayoutProps> = ({
       {/* Main Content Area */}
       <main
         className={cn(
-          "flex-1 overflow-y-auto overflow-x-hidden p-3 pb-16 focus:outline-none",
+          "flex-1 overflow-y-auto overflow-x-hidden p-3 focus:outline-none",
+          showNav ? "pb-16" : "pb-3",
           contentClassName,
         )}
       >
@@ -39,7 +43,12 @@ export const V2AdminLayoutMobile: React.FC<V2AdminLayoutProps> = ({
       </main>
 
       {/* Standard V2 Admin Bottom Navigation */}
-      <V2AdminBottomNav activeId={activeNavId} onNavigate={onNavigate as any} />
+      {showNav && (
+        <V2AdminBottomNav
+          activeId={activeNavId}
+          onNavigate={onNavigate as any}
+        />
+      )}
     </div>
   );
 };

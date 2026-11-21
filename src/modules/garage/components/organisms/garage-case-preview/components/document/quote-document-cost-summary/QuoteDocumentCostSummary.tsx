@@ -22,10 +22,7 @@ export function QuoteDocumentCostSummary({
     return null;
   }
 
-  const gridColsClass =
-    discountCost > 0
-      ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
-      : "grid-cols-2 md:grid-cols-4";
+  const gridColsClass = "grid-cols-2 md:grid-cols-4";
 
   return (
     <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-3 text-xs">
@@ -72,16 +69,6 @@ export function QuoteDocumentCostSummary({
             {formatNumber(commissionCost)}
           </div>
         </div>
-        {discountCost > 0 && (
-          <div className="bg-white dark:bg-slate-800/60 p-2 rounded border border-slate-200/60 dark:border-slate-700/50">
-            <div className="text-[10px] text-rose-500 uppercase font-medium">
-              {t("cases.quotePreview.tk521", "4. Chiết khấu (521)")}
-            </div>
-            <div className="font-semibold tabular-nums text-rose-600 dark:text-rose-400 mt-0.5">
-              {formatNumber(discountCost)}
-            </div>
-          </div>
-        )}
         <div className="bg-white dark:bg-slate-800/60 p-2 rounded border border-slate-200/60 dark:border-slate-700/50">
           <div className="text-[10px] text-slate-500 uppercase font-medium text-slate-700 dark:text-slate-300">
             {t("cases.quotePreview.totalCostSummary", "Tổng chi phí")}
@@ -91,6 +78,22 @@ export function QuoteDocumentCostSummary({
           </div>
         </div>
       </div>
+      {discountCost > 0 && (
+        <div
+          data-testid="cost-summary-discount"
+          className="mt-2 flex items-center justify-between rounded border border-dashed border-rose-200 dark:border-rose-900/50 px-2 py-1.5"
+        >
+          <span className="text-[10px] uppercase font-medium text-rose-500">
+            {t(
+              "cases.quotePreview.tk521",
+              "Chiết khấu (giảm trừ doanh thu, TK 521)",
+            )}
+          </span>
+          <span className="font-semibold tabular-nums text-rose-600 dark:text-rose-400">
+            {formatNumber(discountCost)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

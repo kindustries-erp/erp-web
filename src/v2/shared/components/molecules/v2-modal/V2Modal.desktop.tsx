@@ -88,7 +88,7 @@ export const V2ModalDesktop: React.FC<V2ModalProps> = ({
         {footer && (
           <DialogFooter
             className={cn(
-              "px-6 py-3 border-t border-border/60 bg-surface/50 shrink-0",
+              "px-6 py-3 border-t border-border/60 bg-surface shrink-0",
               footerClassName,
             )}
           >

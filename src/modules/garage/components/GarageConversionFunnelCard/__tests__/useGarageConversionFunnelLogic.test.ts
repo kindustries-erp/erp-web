@@ -1,9 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { renderHook, act } from "@testing-library/react";
 import {
   calculateStatusDonutItems,
   calculateClassificationDonutItems,
 } from "../utils/funnelDataCalculators";
 import { getStatusColor } from "../utils/funnelConfig";
+import { useGarageConversionFunnelLogic } from "../useGarageConversionFunnelLogic";
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (_k: string, def?: string) => def || _k,
+  }),
+}));
 
 describe("Funnel Data Calculators: Donut Item Aggregation", () => {
   describe("calculateStatusDonutItems", () => {
@@ -97,7 +105,13 @@ describe("Funnel Data Calculators: Donut Item Aggregation", () => {
       expect(countItems.find((i) => i.label === "Sửa chữa chung")?.value).toBe(
         15,
       );
+      expect(countItems.find((i) => i.label === "Sửa chữa chung")?.key).toBe(
+        "SUA_CHUA_CHUNG",
+      );
       expect(countItems.find((i) => i.label === "OJ Ngoài")?.value).toBe(2);
+      expect(countItems.find((i) => i.label === "OJ Ngoài")?.key).toBe(
+        "OJ_NGOAI",
+      );
 
       const amountItems = calculateClassificationDonutItems(
         rawClassificationData,
@@ -108,8 +122,106 @@ describe("Funnel Data Calculators: Donut Item Aggregation", () => {
       expect(amountItems.find((i) => i.label === "Sửa chữa chung")?.value).toBe(
         20000000,
       );
+      expect(amountItems.find((i) => i.label === "Sửa chữa chung")?.key).toBe(
+        "SUA_CHUA_CHUNG",
+      );
       expect(amountItems.find((i) => i.label === "OJ Ngoài")?.value).toBe(
         3000000,
+      );
+    });
+  });
+
+  describe("useGarageConversionFunnelLogic: classification drill-down", () => {
+    it("opens classification drawer with month range when month is selected", () => {
+      const { result } = renderHook(() =>
+        useGarageConversionFunnelLogic({
+          availableMonths: ["2026-11", "2026-10"],
+        }),
+      );
+
+      act(() => {
+        result.current.setSelectedMonth("2026-11");
+      });
+
+      act(() => {
+        result.current.handleClassificationClick(
+          "SUA_CHUA_CHUNG",
+          "Sửa chữa chung",
+        );
+      });
+
+      expect(result.current.classificationDrawer.open).toBe(true);
+      expect(result.current.classificationDrawer.dateFrom).toBe("2026-11-01");
+      expect(result.current.classificationDrawer.dateTo).toBe("2026-11-30");
+      expect(result.current.classificationDrawer.classification).toBe(
+        "SUA_CHUA_CHUNG",
+      );
+      expect(result.current.classificationDrawer.periodLabel).toContain(
+        "Sửa chữa chung",
+      );
+
+      act(() => {
+        result.current.closeClassificationDrawer();
+      });
+
+      expect(result.current.classificationDrawer.open).toBe(false);
+    });
+
+    it("opens classification drawer with 6-month range when ALL is selected", () => {
+      const { result } = renderHook(() =>
+        useGarageConversionFunnelLogic({
+          availableMonths: ["2026-11", "2026-06"],
+        }),
+      );
+
+      act(() => {
+        result.current.setSelectedMonth("ALL");
+      });
+
+      act(() => {
+        result.current.handleClassificationClick(
+          "KY_GUI_NOI_BO",
+          "Ký gửi / Nội bộ",
+        );
+      });
+
+      expect(result.current.classificationDrawer.open).toBe(true);
+      expect(result.current.classificationDrawer.dateFrom).toBe("2026-06-01");
+      expect(result.current.classificationDrawer.classification).toBe(
+        "KY_GUI_NOI_BO",
+      );
+      expect(result.current.classificationDrawer.periodLabel).toContain(
+        "Ký gửi / Nội bộ",
+      );
+    });
+
+    it("opens drawer with initialStatus and isFunnel when handleStageClick is called", () => {
+      const { result } = renderHook(() =>
+        useGarageConversionFunnelLogic({
+          availableMonths: ["2026-11", "2026-10"],
+        }),
+      );
+
+      act(() => {
+        result.current.setSelectedMonth("2026-11");
+      });
+
+      act(() => {
+        result.current.handleStageClick("QUOTATION", "2. Báo Giá");
+      });
+
+      expect(result.current.classificationDrawer.open).toBe(true);
+      expect(result.current.classificationDrawer.dateFrom).toBe("2026-11-01");
+      expect(result.current.classificationDrawer.dateTo).toBe("2026-11-30");
+      expect(
+        result.current.classificationDrawer.classification,
+      ).toBeUndefined();
+      expect(result.current.classificationDrawer.initialStatus).toBe(
+        "QUOTATION",
+      );
+      expect(result.current.classificationDrawer.isFunnel).toBe(true);
+      expect(result.current.classificationDrawer.periodLabel).toContain(
+        "2. Báo Giá",
       );
     });
   });

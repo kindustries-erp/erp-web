@@ -3,6 +3,8 @@ import axiosInstance from "@/core/api/axiosInstance";
 export type GarageTimeHorizonKey =
   | "nextWeekDue"
   | "nextMonthDue"
+  | "overdue31To60"
+  | "overdue61To90"
   | "overdue30To90"
   | "criticalOverdue90Plus"
   | "forecastNext7Days"
@@ -39,6 +41,9 @@ export interface GarageTimeHorizonItem {
 export interface GarageTimeHorizonsOverview {
   nextWeekDue: GarageTimeHorizonItem;
   nextMonthDue: GarageTimeHorizonItem;
+  overdue31To60: GarageTimeHorizonItem;
+  overdue61To90: GarageTimeHorizonItem;
+  /** @deprecated Tương thích client cũ: bằng overdue31To60 + overdue61To90. */
   overdue30To90: GarageTimeHorizonItem;
   criticalOverdue90Plus: GarageTimeHorizonItem;
 }

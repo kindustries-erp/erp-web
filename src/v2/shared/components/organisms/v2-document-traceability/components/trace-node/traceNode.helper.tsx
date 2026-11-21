@@ -1,6 +1,7 @@
 import React from "react";
 import {
   BookOpen,
+  Building2,
   CreditCard,
   Factory,
   Layers,
@@ -10,6 +11,7 @@ import {
   Receipt,
   ShoppingBag,
   ShoppingCart,
+  User,
   Wrench,
 } from "lucide-react";
 import type { TraceabilityNodeType } from "../../types/traceability.type";
@@ -20,28 +22,42 @@ export function getDocTypeIcon(
 ): React.ReactNode {
   switch (docType) {
     case "INVOICE":
-      return <Receipt className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <Receipt className="h-3 w-3 shrink-0 opacity-90" />;
     case "BANK_TXN":
-      return <CreditCard className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <CreditCard className="h-3 w-3 shrink-0 opacity-90" />;
     case "PURCHASE_ORDER":
-      return <ShoppingCart className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <ShoppingCart className="h-3 w-3 shrink-0 opacity-90" />;
     case "SALES_ORDER":
-      return <ShoppingBag className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <ShoppingBag className="h-3 w-3 shrink-0 opacity-90" />;
     case "GOODS_RECEIPT":
-      return <PackageCheck className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <PackageCheck className="h-3 w-3 shrink-0 opacity-90" />;
     case "GOODS_ISSUE":
-      return <PackageMinus className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <PackageMinus className="h-3 w-3 shrink-0 opacity-90" />;
     case "GARAGE_CASE":
-      return <Wrench className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <Wrench className="h-3 w-3 shrink-0 opacity-90" />;
     case "INVENTORY_ITEM":
-      return <Package className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <Package className="h-3 w-3 shrink-0 opacity-90" />;
     case "PRODUCTION_ORDER":
-      return <Factory className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <Factory className="h-3 w-3 shrink-0 opacity-90" />;
     case "BOM":
-      return <Layers className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <Layers className="h-3 w-3 shrink-0 opacity-90" />;
     case "JOURNAL_ENTRY":
-      return <BookOpen className="h-2.5 w-2.5 shrink-0 opacity-90" />;
+      return <BookOpen className="h-3 w-3 shrink-0 opacity-90" />;
     default:
       return null;
   }
+}
+
+/** Icon phân biệt đối tác Nhà Cung Cấp hoặc Khách Hàng */
+export function getPartnerIcon(
+  isSupplier?: boolean,
+  isCustomer?: boolean,
+): React.ReactNode {
+  if (isSupplier) {
+    return <Building2 className="h-3 w-3 shrink-0 text-muted-fg" />;
+  }
+  if (isCustomer) {
+    return <User className="h-3 w-3 shrink-0 text-muted-fg" />;
+  }
+  return null;
 }

@@ -8,6 +8,12 @@
   --surface-hover: #f7f8fa;
   --border: #e4e7ec;
   --border-light: #f0f2f5;
+  --item-border: rgba(0, 0, 0, 0.06);
+  --item-border-subtle: rgba(0, 0, 0, 0.04);
+  --item-border-unread: color-mix(in srgb, var(--primary) 28%, var(--border));
+  --item-bg-unread: color-mix(in srgb, var(--primary) 5%, var(--surface));
+  --item-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 1px rgba(0, 0, 0, 0.02);
+  --item-shadow-hover: 0 3px 8px rgba(0, 0, 0, 0.08);
   --foreground: #0f172a;
   --muted: #f8fafc;
   --muted-fg: #64748b;
@@ -45,7 +51,7 @@
     0 16px 40px -8px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(246, 248, 252, 0.96);
+  --modal-bg: #f6f8fc;
   --tooltip-bg: #0f172a;
 
   /* ── Table sticky glass ── */
@@ -54,13 +60,29 @@
 
   /* ── Drawer frosted glass & overlay ── */
   --drawer-overlay-bg: rgba(15, 23, 42, 0.04);
-  --drawer-bg: rgba(255, 255, 255, 0.96);
+  --drawer-blur: 0px;
+
+  /* ── Kanban Semantic Tokens (Classic Light) ── */
+  --kanban-lane-bg: rgba(241, 245, 249, 0.65);
+  --kanban-lane-border: var(--border);
+  --kanban-card-bg: var(--surface);
+  --kanban-card-border: var(--item-border);
+  --kanban-card-drag-bg: #ffffff;
+  --kanban-card-drag-border: rgba(0, 0, 0, 0.12);
+  --kanban-card-drag-shadow:
+    0 20px 40px -10px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --kanban-lane-over-bg: var(--approve-bg);
+  --kanban-lane-over-border: var(--approve-fg);
+  --kanban-lane-over-ring: rgba(16, 185, 129, 0.25);
+  --kanban-placeholder-border: var(--border);
+  --kanban-placeholder-bg: rgba(0, 0, 0, 0.03);
+  --drawer-bg: #ffffff;
   --drawer-border: rgba(255, 255, 255, 0.65);
-  --drawer-header-bg: rgba(246, 248, 252, 0.94);
-  --drawer-header-scrolled-bg: rgba(246, 248, 252, 0.98);
-  --drawer-footer-bg: rgba(246, 248, 252, 0.94);
-  --drawer-footer-scrolled-bg: rgba(246, 248, 252, 0.98);
-  --drawer-section-bg: rgba(255, 255, 255, 0.95);
+  --drawer-header-bg: #f6f8fc;
+  --drawer-header-scrolled-bg: #f6f8fc;
+  --drawer-footer-bg: #f6f8fc;
+  --drawer-footer-scrolled-bg: #f6f8fc;
+  --drawer-section-bg: #ffffff;
   /* ── App shell (classic uses surface/border tokens) ── */
   --app-shell-bg: var(--background);
   --app-shell-border: transparent;
@@ -86,6 +108,13 @@
   --border: rgba(255, 255, 255, 0.07);
   --border-light: rgba(255, 255, 255, 0.04);
   --table-border: rgba(255, 255, 255, 0.04);
+  --item-border: rgba(255, 255, 255, 0.045);
+  --item-border-subtle: rgba(255, 255, 255, 0.03);
+  --item-border-unread: rgba(20, 184, 166, 0.35);
+  --item-bg-unread: rgba(20, 184, 166, 0.08);
+  --item-shadow:
+    0 2px 6px -1px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --item-shadow-hover: 0 4px 14px -2px rgba(0, 0, 0, 0.6);
   --foreground: #f4f5f7;
   --muted: #16191f;
   --muted-fg: #949aa8;
@@ -125,7 +154,7 @@
     0 18px 44px -8px rgba(0, 0, 0, 0.65), 0 6px 16px rgba(0, 0, 0, 0.4);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(22, 26, 33, 0.96);
+  --modal-bg: #161a21;
   --tooltip-bg: #252b34;
 
   /* ── Table sticky glass ── */
@@ -135,6 +164,22 @@
   /* ── Drawer frosted glass & overlay (V2 Standard Drawer) ── */
   --drawer-overlay-bg: rgba(0, 0, 0, 0.65);
   --drawer-bg: #1a1e26;
+  --drawer-blur: 0px;
+
+  /* ── Kanban Semantic Tokens (Classic Dark) ── */
+  --kanban-lane-bg: rgba(15, 18, 24, 0.6);
+  --kanban-lane-border: rgba(255, 255, 255, 0.07);
+  --kanban-card-bg: #1d2129;
+  --kanban-card-border: rgba(255, 255, 255, 0.045);
+  --kanban-card-drag-bg: #222731;
+  --kanban-card-drag-border: rgba(255, 255, 255, 0.16);
+  --kanban-card-drag-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --kanban-lane-over-bg: rgba(20, 184, 166, 0.08);
+  --kanban-lane-over-border: rgba(45, 212, 191, 0.6);
+  --kanban-lane-over-ring: rgba(20, 184, 166, 0.25);
+  --kanban-placeholder-border: rgba(255, 255, 255, 0.12);
+  --kanban-placeholder-bg: rgba(255, 255, 255, 0.02);
   --drawer-border: rgba(255, 255, 255, 0.08);
   --drawer-header-bg: rgba(24, 28, 36, 0.96);
   --drawer-header-scrolled-bg: rgba(24, 28, 36, 0.98);

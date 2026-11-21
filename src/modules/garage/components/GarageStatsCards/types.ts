@@ -1,8 +1,12 @@
+import type { GarageIntakeStages } from "../../api/garageDashboardApi";
+
 export interface CheckpointDrawerState {
   open: boolean;
   dateFrom: string;
   dateTo: string;
   periodLabel: string;
+  initialStatus?: string;
+  isFunnel?: boolean;
 }
 
 export interface PeriodStatsData {
@@ -14,6 +18,7 @@ export interface PeriodStatsData {
   totalReceivable?: number;
   collectionRate?: number;
   totalCount?: number;
+  stages?: GarageIntakeStages;
   revenueChart?: number[];
   tienCoThueChart?: number[];
   paidChart?: number[];

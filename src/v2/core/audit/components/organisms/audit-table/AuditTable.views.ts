@@ -1,0 +1,26 @@
+export const AUDIT_VIEW_VISIBILITY = {
+  overview: {
+    createdAt: true,
+    actorEmail: true,
+    module: true,
+    actionType: true,
+    entityType: true,
+    entityId: false,
+    status: true,
+    httpMethod: false,
+    uiScreen: false,
+    message: false,
+  },
+  all: {
+    createdAt: true,
+    actorEmail: true,
+    module: true,
+    actionType: true,
+    entityType: true,
+    entityId: true,
+    status: true,
+    httpMethod: true,
+    uiScreen: true,
+    message: true,
+  },
+} as const;

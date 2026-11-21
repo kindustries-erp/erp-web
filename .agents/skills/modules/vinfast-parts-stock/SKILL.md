@@ -171,3 +171,7 @@ export const vinfastPartsStockExportApi = {
 
 ## Theo dõi đồng bộ (giai đoạn 6)
 - `VinfastPartsSyncDrawer.tsx` dùng `useVinfastPartsSyncStatus` (polling `/vinfast-parts/sync/status`) và `reconcileSyncStatus` (`pages/hooks/vinfastSyncStatus.ts`) để gắn lại tiến trình khi đã có lượt đang chạy; xử lý 409 bằng cách theo dõi lượt đó.
+
+## Lõi `src/v2/core/export-jobs` (job xuất nền dùng chung)
+- API client (`createExportJobApi`), hook SSE (`useExportJobProgress`), store (`createExportProgressStore`), `saveBlob`, `readBlobErrorMessage` nằm ở lõi; `useVinfastStockExportProgress` và `vinfastStockExportApi` chỉ khai báo cấu hình (đường dẫn, `processId`, key i18n). Import qua barrel `@/v2/core/export-jobs`.
+- Giữ nguyên đường dẫn và tên export của hook/api/store trong module (test mock theo đường dẫn). Chuỗi i18n không đổi.

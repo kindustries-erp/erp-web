@@ -8,6 +8,7 @@ import { useGarageConversionFunnelLogic } from "./useGarageConversionFunnelLogic
 import { FunnelOverviewCards } from "./components/FunnelOverviewCards";
 import { FunnelChartsGrid } from "./components/FunnelChartsGrid";
 import { FunnelSpreadsheetTable } from "./components/FunnelSpreadsheetTable";
+import { GarageCheckpointDrawer } from "../GarageCheckpointDrawer";
 
 export function GarageConversionFunnelCard(
   props: GarageConversionFunnelCardProps,
@@ -39,6 +40,10 @@ export function GarageConversionFunnelCard(
     statusDonutItems,
     totalStatusVal,
     tableRows,
+    classificationDrawer,
+    handleClassificationClick,
+    handleStageClick,
+    closeClassificationDrawer,
   } = useGarageConversionFunnelLogic(props);
 
   const hasData =
@@ -101,7 +106,7 @@ export function GarageConversionFunnelCard(
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {/* CARD 1: 4 Cards Phễu Chuyển Đổi & Thanh Tỷ Lệ */}
+          {/* CARD 1: 5 Cards Phễu Chuyển Đổi & Bảng Chi Tiết Phễu */}
           <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
             <FunnelOverviewCards
               totalIntake={totalIntake}
@@ -111,6 +116,16 @@ export function GarageConversionFunnelCard(
               cancelled={cancelled}
               projectedToday={projectedToday}
               projectedMonth={projectedMonth}
+              onStageClick={handleStageClick}
+            />
+            <FunnelSpreadsheetTable
+              tableRows={tableRows}
+              totalIntake={totalIntake}
+              quotation={quotation}
+              inProgress={inProgress}
+              completed={completed}
+              cancelled={cancelled}
+              onClassificationClick={handleClassificationClick}
             />
           </div>
 
@@ -131,22 +146,24 @@ export function GarageConversionFunnelCard(
               totalStatusVal={totalStatusVal}
               gridColor={gridColor}
               tickColor={tickColor}
-            />
-          </div>
-
-          {/* CARD 3: Chi Tiết Phễu Chuyển Đổi theo 4 Phân Loại ERP (Bảng Spreadsheet) */}
-          <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
-            <FunnelSpreadsheetTable
-              tableRows={tableRows}
-              totalIntake={totalIntake}
-              quotation={quotation}
-              inProgress={inProgress}
-              completed={completed}
-              cancelled={cancelled}
+              onClassificationClick={handleClassificationClick}
             />
           </div>
         </div>
       )}
+
+      <GarageCheckpointDrawer
+        open={classificationDrawer.open}
+        onClose={closeClassificationDrawer}
+        dateFrom={classificationDrawer.dateFrom}
+        dateTo={classificationDrawer.dateTo}
+        periodLabel={classificationDrawer.periodLabel}
+        classification={classificationDrawer.classification}
+        classificationName={classificationDrawer.classificationName}
+        initialStatus={classificationDrawer.initialStatus}
+        isFunnel={classificationDrawer.isFunnel}
+        branchId={classificationDrawer.branchId}
+      />
     </div>
   );
 }

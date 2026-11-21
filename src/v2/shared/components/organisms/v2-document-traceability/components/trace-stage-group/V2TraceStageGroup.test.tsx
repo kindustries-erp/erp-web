@@ -26,6 +26,7 @@ const renderGroup = (
 describe("V2TraceStageGroup", () => {
   it("shows the stage label and document count", () => {
     renderGroup({ stage: invoiceStage, count: 3 });
+    expect(screen.getByText("#2")).toBeInTheDocument();
     expect(screen.getByText("HÓA ĐƠN VAT")).toBeInTheDocument();
     expect(screen.getByText("(3)")).toBeInTheDocument();
   });

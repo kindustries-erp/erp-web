@@ -124,6 +124,31 @@ describe("App public deck route (/imotorbike)", () => {
     expect(screen.queryByTestId("v2-login-page")).not.toBeInTheDocument();
   });
 
+  it("renders V2DeckViewerPage on /public/imotorbike without auth", async () => {
+    window.history.pushState({}, "", "/public/imotorbike");
+    render(<App />);
+
+    const iframe = await screen.findByTitle(
+      "iMotorbike Group – Phân tích tài chính đến 25/09/2026",
+    );
+    expect(iframe).toBeInTheDocument();
+    expect(iframe.tagName).toBe("IFRAME");
+    expect(iframe).toHaveAttribute("src", "/decks/imotorbike.html#1");
+    expect(screen.getByRole("button", { name: "Tải PDF" })).toBeInTheDocument();
+    expect(screen.queryByTestId("v2-login-page")).not.toBeInTheDocument();
+  });
+
+  it("renders V2DeckViewerPage on /public/imotorbike/ without auth", async () => {
+    window.history.pushState({}, "", "/public/imotorbike/");
+    render(<App />);
+
+    const iframe = await screen.findByTitle(
+      "iMotorbike Group – Phân tích tài chính đến 25/09/2026",
+    );
+    expect(iframe).toBeInTheDocument();
+    expect(screen.queryByTestId("v2-login-page")).not.toBeInTheDocument();
+  });
+
   it("still renders V2LoginPage on other routes when unauthenticated", () => {
     window.history.pushState({}, "", "/");
     render(<App />);

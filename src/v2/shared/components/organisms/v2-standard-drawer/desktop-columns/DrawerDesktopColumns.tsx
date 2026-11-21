@@ -65,6 +65,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
           aria-hidden={isRightCollapsed}
           className={cn(
             "shrink-0 sm:gap-4 transition-all duration-300 ease-in-out overflow-x-hidden",
+            props.fillHeight && "overflow-y-auto max-h-full scrollbar-thin",
             props.stickyRightPanel && "lg:sticky lg:top-0",
             isRightCollapsed
               ? "w-0 lg:w-0 opacity-0 overflow-hidden !p-0 !m-0 pointer-events-none"

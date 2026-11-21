@@ -12,7 +12,10 @@ Kiến trúc Layout V2 (`src/v2/app/layouts/` và `src/v2/shared/components/`) l
 - **Kiến trúc Floating 2-Cards (Desktop)**: Toàn bộ viewport nằm trên nền canvas xám dịu mắt `#f4f4f4` (dark mode: `bg-background`), có khoảng đệm mép `p-2` và khe hở `gap-2` (8px). Gồm 2 khối Card nổi song song độc lập bo tròn `rounded-2xl`, border mỏng và shadow mềm mại:
   - **Cột Trái (Sidebar)**: Chiều rộng `210px` (thu gọn `58px`), hiển thị Logo thương hiệu, tên app, các phân hệ điều hướng in hoa, và avatar user ở chân trang. Tích hợp **thanh cuộn tinh tế (slim scrollbar 6px)** bo tròn mềm mại khi mở rộng (tự động ẩn khi thu gọn), các mục menu được làm nổi bật với **highlight active pill background** (`bg-[color:var(--sidebar-active-bg)]`) chuẩn xác 1:1 theo V1.
   - **Cột Phải (Right Panel)**: Card co giãn linh hoạt (`flex-1 min-w-0`), sử dụng màu nền canvas `bg-background text-foreground` (`#f9fbfc` ở Classic / `#f4f6f8` ở Default) giúp các thẻ nội dung con (`bg-card`) nổi khối rõ rệt (Visual Depth & Layering). Bố cục **Absolute Overlay Scroll**: ôm trọn **Topbar (36px, Frosted Glass `bg-background/80 backdrop-blur-md` không viền divider, padding `px-4 sm:px-6`)** cố định ở đỉnh, **Vùng nội dung nghiệp vụ (`main`)** cuộn toàn dải trượt lướt mờ ảo ngầm phía sau Header/Footer (`pt-9 pb-9 px-4 sm:px-6`), và **Thanh TabBar đa nhiệm (36px, Frosted Glass `bg-background/80 backdrop-blur-md` không viền divider, padding `px-4 sm:px-6`)** cố định ở đáy, hòa quyện hoàn toàn vào nền canvas không để lại vạch kẻ ngăn cách thô cứng như V1.
-- **Cơ chế Dual-Run Song Song Tuyệt Đối**: Chạy độc lập tại tiền tố route `/v2/*` trên cùng một single bundle và dev server của Vite. Kế thừa trực tiếp `useAuthStore` của V1 mà không gây bất kỳ tác dụng phụ nào tới hệ thống V1 đang vận hành.
+- **Cơ chế Dual-Run Song Song Tuyệt Đối & Điều Hướng**: 
+  - `V2ShellLayout` (Shell gốc) đóng vai trò khung chính toàn app, truyền `sections` (qua `useV2AdaptedNavSections()`) hiển thị Sidebar hoàn chỉnh và thanh TabBar đa nhiệm.
+  - Phân vùng `/v2/*` truyền `hideSidebar={true}` và `hideBottomNav={true}`, loại bỏ sidemenu riêng biệt để nội dung trang mở rộng toàn màn hình (full width).
+  - Hỗ trợ prop `hideSidebar` trên `V2AppLayoutProps` và `V2AdminLayoutProps`. Kế thừa trực tiếp `useAuthStore` của V1 mà không gây bất kỳ tác dụng phụ nào tới hệ thống V1 đang vận hành.
 - **Platform Split Tự Động (`useViewport`)**: Tự động chuyển đổi giao diện dựa trên kích thước màn hình mà không bị giật lag layout:
   - Màn hình Desktop (>= 768px): Hiển thị kiến trúc Floating 2-Cards.
   - Màn hình Mobile (< 768px): Tối ưu thành thanh điều hướng dưới đáy (`V2BottomNav`) và Header gọn nhẹ.
@@ -287,6 +290,7 @@ Hệ thống Layout V2 hỗ trợ 100% đa ngôn ngữ (Tiếng Việt 🇻🇳 
 ### 5.3. Động Hóa Danh Mục Điều Hướng ([`v2Navigation.ts`](erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.ts))
 - Menu Sidebar và Mobile BottomNav được động hóa hoàn toàn thông qua `getV2NavigationSections(t)` và `getV2NavItems(t)`.
 - Tách bạch cấu hình thô sang [`v2Navigation.config.ts`](erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.config.ts), bảo đảm tuân thủ nghiêm ngặt ngưỡng kích thước file < 180 LoC.
+- **Lọc Phân Quyền RBAC**: Danh mục Sections được lọc qua `filterV2NavSections(..., can)` kết hợp hook `useV2PermissionChecker()`. Mỗi item trong `NAV_DEFS` đối chiếu với `V2_ROUTES` (`v2RouteConfig.ts`) theo `route.id === item.id` để lấy `permission`. Các item thiếu quyền sẽ bị ẩn; nếu một section không còn item nào hợp lệ thì tự động loại bỏ cả section đó. Hoạt động đồng bộ trên cả Desktop và Mobile.
 
 ---
 
@@ -431,6 +435,11 @@ cd erp/erp-web && bun run storybook
   - `V2PageHeaderVariant`: `FLAT` (`"flat"`, mặc định) | `CARD` (`"card"`, bọc thẻ `bg-card rounded-2xl border shadow-xs p-3 sm:p-6`, trên mobile `< sm` ẩn mô tả `description` bằng `hidden sm:line-clamp-2` để thu gọn chiều cao và vẫn giữ tiêu đề + `actions`, Desktop giữ nguyên `icon`, `description`, `actions`, `tabKeys`).
   - `V2TabBarVariant`: `APP` | `HEADER` | `SUB` | `BUTTON_GROUP` | `PAGE` | `PILL` (`"pill"`, render qua `TabBarPagePillView`: Desktop hiển thị pill active `bg-primary text-primary-fg` + inactive ghost kèm viền `border-b`; Mobile dùng `TabBarPageViewMobile` mở `V2BottomSheet` chọn tab).
   - `V2ModulePageVariant`: `DEFAULT` (`FLAT` + `PAGE`) | `CARD` (`CARD` + `PILL`). Có thể ghi đè từng phần qua `headerVariant={V2PageHeaderVariant.*}` hoặc `tabVariant={V2ModulePageTabVariant.*}`.
+
+### 7.4. Decommission V1 Shell & Bảo Toàn Nhận Diện Thương Hiệu
+- Toàn bộ layout V1 cũ (`src/core/components/layout/sidebar/*`, `Topbar.tsx`, `TabBar.tsx`, `UniversalSearchModal.tsx`) đã được loại bỏ hoàn toàn khỏi mã nguồn.
+- Hook cập nhật tiêu đề trang động và favicon canvas từ `companyProfile` được bảo toàn và đặt tại `src/core/components/layout/hooks/useFaviconEffect.ts`, được mount trực tiếp vào `V2ShellLayout`.
+- Cơ chế phân quyền RBAC trên menu điều hướng được kiểm soát chặt chẽ tại `useV2AdaptedNavSections.ts` và đồng bộ vào `useNavItems.tsx` (Ctrl+K search). Các mục đặc thù như `journal-entry` (`JOURNAL_ENTRIES:READ`), `settings-accounts` (`ACCOUNTING_CONFIGS:READ`), `loans` (`LOANS:READ`) và section `sec-tools` tự động ẩn khi không có quyền.
 
 ---
 

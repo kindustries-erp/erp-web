@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "users",
+  "entity": "User",
+  "barrel": "src/v2/core/users/index.ts",
+  "localeNamespace": "users",
+  "exports": {
+    "configType": "UserModuleConfig",
+    "apiType": "UserApi",
+    "keysFactory": "createUserKeys",
+    "recordType": "UserRecord",
+    "formValueType": "UserFormValue",
+    "listController": "useUserListController",
+    "query": "useUsersQuery",
+    "drawer": "UserDrawer",
+    "viewVisibility": "userViewVisibility"
+  }
+}

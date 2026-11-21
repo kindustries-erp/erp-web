@@ -111,12 +111,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpAction.READ,
   );
   const canReadGarageOpex = canReadGarageCases;
-  const canReadGarageStockVouchers =
-    useHasPermission(ErpResource.GARAGE_STOCK_VOUCHERS, ErpAction.READ) ||
-    canReadGarageCases;
-  const canReadGarageStockLedger =
-    useHasPermission(ErpResource.GARAGE_STOCK_LEDGER, ErpAction.READ) ||
-    canReadGarageCases;
+  const canReadGarageStockVouchers = useHasPermission(
+    ErpResource.GARAGE_STOCK_VOUCHERS,
+    ErpAction.READ,
+  );
+  const canReadGarageStockLedger = useHasPermission(
+    ErpResource.GARAGE_STOCK_LEDGER,
+    ErpAction.READ,
+  );
   const canReadGaragePurchaseOrders = useHasPermission(
     ErpResource.GARAGE_PROCUREMENT_ORDERS,
     ErpAction.READ,
@@ -154,9 +156,27 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpResource.CASH_STATEMENTS,
     ErpAction.READ,
   );
+  const canReadJournalEntries = useHasPermission(
+    ErpResource.JOURNAL_ENTRIES,
+    ErpAction.READ,
+  );
+  const canReadAccountingConfigs = useHasPermission(
+    ErpResource.ACCOUNTING_CONFIGS,
+    ErpAction.READ,
+  );
   const showCashflow = canReadBankStatements || canReadCashStatements;
   const showOpex = canReadBankStatements && isAdminEmail;
-  const showAccounting = canReadInvoices || canReadDebts || showCashflow;
+  const showAccounting =
+    canReadInvoices ||
+    canReadDebts ||
+    showCashflow ||
+    showOpex ||
+    canReadJournalEntries ||
+    canReadAccountingConfigs;
+
+  // Tools
+  const canReadLoans = useHasPermission(ErpResource.LOANS, ErpAction.READ);
+  const showTools = canReadLoans;
 
   // HR & Admin
   const canReadEmployees = useHasPermission(
@@ -170,6 +190,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
   const canReadAdminUsers = useHasPermission(
     ErpResource.ADMIN_USERS,
     ErpAction.READ,
+  );
+  const canManageAdminUsers = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.MANAGE,
   );
   const canReadActivityLogs = useHasPermission(
     ErpResource.ACTIVITY_LOGS,
@@ -209,17 +233,26 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
 
     // 1. Dashboard
     if (canReadDashboard) {
+      const dashboardItems: V2SidebarItem[] = [
+        {
+          id: "dashboard",
+          label: t("nav.items.dashboard", "Tổng quan"),
+          icon: LayoutDashboard,
+          href: "/dashboard",
+        },
+      ];
+      if (isAdminEmail) {
+        dashboardItems.push({
+          id: "admin-dashboard-v2",
+          label: t("nav.items.adminDashboardV2", "Tổng quan Quản trị (v2)"),
+          icon: LayoutDashboard,
+          href: "/admin-dashboard-v2",
+        });
+      }
       sections.push({
         id: "sec-dashboard",
         label: undefined,
-        items: [
-          {
-            id: "dashboard",
-            label: t("nav.items.dashboard", "Tổng quan"),
-            icon: LayoutDashboard,
-            href: "/dashboard",
-          },
-        ],
+        items: dashboardItems,
       });
     }
 
@@ -249,6 +282,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           icon: Users,
           href: "/erp-customers",
         });
+        if (isAdminEmail) {
+          items.push({
+            id: "customers-v2",
+            label: t("nav.items.customersV2", "Khách hàng (v2)"),
+            icon: Users,
+            href: "/customers-v2",
+          });
+        }
       }
       if (canReadSalesOrders) {
         items.push({
@@ -293,6 +334,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           icon: Building2,
           href: "/erp-suppliers",
         });
+        if (isAdminEmail) {
+          items.push({
+            id: "suppliers-v2",
+            label: t("nav.items.suppliersV2", "Nhà cung cấp (v2)"),
+            icon: Building2,
+            href: "/suppliers-v2",
+          });
+        }
       }
       if (items.length > 0) {
         sections.push({
@@ -392,28 +441,12 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/garage-cases",
         });
       }
-      if (canReadGarageProcurementRequests || canReadGaragePurchaseOrders) {
+      if (isAdminEmail) {
         items.push({
-          id: "garage-procurement",
-          label: t("nav.items.garageProcurement", "Mua hàng Garage"),
-          icon: ClipboardList,
-          href: "/garage-procurement?tab=requests",
-        });
-      }
-      if (canReadGarageStockVouchers) {
-        items.push({
-          id: "garage-stock-vouchers",
-          label: t("nav.items.garageStockVouchers", "Chứng từ kho Garage"),
-          icon: Package,
-          href: "/garage-stock-vouchers",
-        });
-      }
-      if (canReadGarageStockLedger) {
-        items.push({
-          id: "garage-stock-balances",
-          label: t("nav.items.garageStockBalances", "Tồn kho Garage"),
-          icon: Warehouse,
-          href: "/garage-stock-balances",
+          id: "garage-cases-v2",
+          label: t("nav.items.garageCasesV2", "Hoạt động garage (v2)"),
+          icon: Car,
+          href: "/garage-cases-v2",
         });
       }
       if (canReadGarageCashflow) {
@@ -438,6 +471,30 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           label: t("nav.items.garageOpex", "Chi phí vận hành Garage"),
           icon: Receipt,
           href: "/garage-opex",
+        });
+      }
+      if (canReadGarageProcurementRequests || canReadGaragePurchaseOrders) {
+        items.push({
+          id: "garage-procurement",
+          label: t("nav.items.garageProcurement", "Mua hàng Garage"),
+          icon: ClipboardList,
+          href: "/garage-procurement?tab=requests",
+        });
+      }
+      if (canReadGarageStockVouchers) {
+        items.push({
+          id: "garage-stock-vouchers",
+          label: t("nav.items.garageStockVouchers", "Chứng từ kho Garage"),
+          icon: Package,
+          href: "/garage-stock-vouchers",
+        });
+      }
+      if (canReadGarageStockLedger) {
+        items.push({
+          id: "garage-stock-balances",
+          label: t("nav.items.garageStockBalances", "Tồn kho Garage"),
+          icon: Warehouse,
+          href: "/garage-stock-balances",
         });
       }
       if (items.length > 0) {
@@ -483,6 +540,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           icon: ReceiptText,
           href: "/erp-invoices",
         });
+        if (isAdminEmail) {
+          items.push({
+            id: "invoices-v2",
+            label: t("nav.items.invoicesV2", "Hóa đơn điện tử (v2)"),
+            icon: ReceiptText,
+            href: "/invoices-v2",
+          });
+        }
       }
       if (canReadDebts) {
         items.push({
@@ -500,18 +565,22 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/opex",
         });
       }
-      items.push({
-        id: "journal-entry",
-        label: t("nav.items.journal", "Nhật ký chung"),
-        icon: FileText,
-        href: "/journal-entry",
-      });
-      items.push({
-        id: "settings-accounts",
-        label: t("nav.items.accounts", "Hệ thống tài khoản"),
-        icon: Layers,
-        href: "/settings-accounts",
-      });
+      if (canReadJournalEntries) {
+        items.push({
+          id: "journal-entry",
+          label: t("nav.items.journal", "Nhật ký chung"),
+          icon: FileText,
+          href: "/journal-entry",
+        });
+      }
+      if (canReadAccountingConfigs) {
+        items.push({
+          id: "settings-accounts",
+          label: t("nav.items.accounts", "Hệ thống tài khoản"),
+          icon: Layers,
+          href: "/settings-accounts",
+        });
+      }
 
       if (items.length > 0) {
         sections.push({
@@ -527,18 +596,18 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
       const items: V2SidebarItem[] = [];
       if (showHR) {
         items.push({
-          id: "erp-employees",
+          id: "employees-management",
           label: t("nav.items.erpEmployees", "Nhân sự"),
           icon: UserSquare2,
-          href: "/erp-employees",
+          href: "/employees-management",
         });
       }
       if (canReadAttachments) {
         items.push({
-          id: "attachments",
+          id: "file-attachments",
           label: t("nav.items.attachments", "Tệp đính kèm"),
           icon: Paperclip,
-          href: "/attachments",
+          href: "/file-attachments",
         });
       }
       if (items.length > 0) {
@@ -551,18 +620,24 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     }
 
     // 9.5 Công cụ
-    sections.push({
-      id: "sec-tools",
-      label: t("nav.sections.tools", "CÔNG CỤ"),
-      items: [
-        {
+    if (showTools) {
+      const items: V2SidebarItem[] = [];
+      if (canReadLoans) {
+        items.push({
           id: "loans",
           label: t("nav.items.loans", "Khoản vay & Lãi suất"),
           icon: Calculator,
           href: "/loans-tool",
-        },
-      ],
-    });
+        });
+      }
+      if (items.length > 0) {
+        sections.push({
+          id: "sec-tools",
+          label: t("nav.sections.tools", "CÔNG CỤ"),
+          items,
+        });
+      }
+    }
 
     // 10. Thiết lập
     if (showSettings) {
@@ -580,13 +655,15 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
 
       // 10.2 Sub-Group: Quản lý truy cập & bảo mật
       const accessChildren: V2SidebarItem[] = [];
-      if (canReadAdminUsers) {
+      if (canManageAdminUsers) {
         accessChildren.push({
-          id: "erp-users",
+          id: "users-management",
           label: t("nav.items.users", "Quản lý người dùng"),
           icon: Users,
-          href: "/erp-users",
+          href: "/users-management",
         });
+      }
+      if (canReadAdminUsers) {
         accessChildren.push({
           id: "permission",
           label: t("nav.items.phanquyen", "Phân quyền & Vai trò"),
@@ -601,13 +678,21 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           icon: FileText,
           href: "/erp-activity-logs",
         });
+        if (isAdminEmail) {
+          accessChildren.push({
+            id: "audit-logs-v2",
+            label: t("nav.items.auditLogsV2", "Nhật ký hoạt động (v2)"),
+            icon: FileText,
+            href: "/audit-logs-v2",
+          });
+        }
       }
       if (accessChildren.length > 0) {
         items.push({
           id: "sub-access-control",
           label: t("nav.items.erpAccessControl", "Quản lý truy cập"),
           icon: Shield,
-          href: accessChildren[0]?.href ?? "/erp-users",
+          href: accessChildren[0]?.href ?? "/users-management",
           children: accessChildren,
         });
       }
@@ -701,7 +786,11 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     showCashflow,
     canReadInvoices,
     canReadDebts,
+    canReadJournalEntries,
+    canReadAccountingConfigs,
     showOpex,
+    showTools,
+    canReadLoans,
     showAdmin,
     showHR,
     canReadAttachments,
@@ -709,6 +798,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     canReadEmailInbox,
     isAdminEmail,
     canReadAdminUsers,
+    canManageAdminUsers,
     canReadActivityLogs,
     canReadBankStatements,
     canReadCashStatements,

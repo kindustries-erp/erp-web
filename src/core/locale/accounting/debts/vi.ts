@@ -52,6 +52,13 @@ export const debtsVi = {
     netFlow: "Chênh lệch",
     freshBadge: "Mới",
     standardBadge: "Chuẩn",
+    garageReceivableTotal: "Phải thu",
+    garageFresh7: "Mới phát sinh (≤ 7 ngày)",
+    garageStandard8To30: "Trong hạn chuẩn (8–30 ngày)",
+    garageOverdue31To60: "Quá hạn 31-60 ngày",
+    garageOverdue61To90: "Quá hạn 61-90 ngày",
+    garageOverdueOver90: "Quá hạn >90 ngày",
+    riskBadge: "Nguy cơ",
     urgentBadge: "Đôn đốc",
     warningBadge: "Cảnh báo",
     forecastT7Badge: "T+7 (Lag)",
@@ -447,6 +454,29 @@ export const debtsVi = {
     subtitle:
       "Giải thích chi tiết 4 nhóm phân tầng tuổi nợ và các mô hình dự báo dòng tiền thông minh",
     tabBuckets: "1. Bản chất 4 Nhóm Tuổi Nợ",
+    tabBuckets5: "1. Bản chất 5 Nhóm Tuổi Nợ",
+    garage: {
+      fresh7Desc:
+        "Phiếu dịch vụ mới nghiệm thu bàn giao xe, còn trong chu kỳ thanh toán tiêu chuẩn.",
+      standard8To30Desc:
+        "Phiếu đã quá giai đoạn mới phát sinh nhưng còn trong 30 ngày kể từ ngày nghiệm thu.",
+      overdue31To60Desc:
+        "Quá hạn chu kỳ chuẩn. Kế toán gửi thư nhắc nợ hoặc đối chiếu sao kê với khách hàng.",
+      overdue61To90Desc:
+        "Nợ quá hạn kéo dài, cần phòng kế toán và thu hồi nợ liên hệ đôn đốc thanh toán sớm.",
+      over90Desc:
+        "Nợ quá hạn nặng có rủi ro khó đòi, yêu cầu kích hoạt biện pháp thu hồi nợ chuyên trách.",
+      fresh7Title: "Mới phát sinh (≤ 7 ngày)",
+      standard8To30Title: "Trong hạn chuẩn (8–30 ngày)",
+      overdue31To60Title: "Quá hạn 31-60 ngày",
+      overdue61To90Title: "Quá hạn 61-90 ngày",
+      over90Title: "Quá hạn >90 ngày",
+      fresh7Badge: "Mới",
+      standard8To30Badge: "Chuẩn",
+      overdue31To60Badge: "Đôn đốc",
+      overdue61To90Badge: "Nguy cơ",
+      over90Badge: "Cảnh báo",
+    },
     tabAlgorithms: "2. Thuật Toán Dự Báo Dòng Tiền",
     bucket1Title: "Mới phát sinh (≤ 7 ngày)",
     bucket1Desc:

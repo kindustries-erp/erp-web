@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "audit",
+  "entity": "AuditLog",
+  "barrel": "src/v2/core/audit/index.ts",
+  "localeNamespace": "audit",
+  "exports": {
+    "configType": "AuditModuleConfig",
+    "apiType": "AuditApi",
+    "keysFactory": "createAuditKeys",
+    "recordType": "AuditLogRow",
+    "listController": "useAuditListController",
+    "query": "useAuditLogsQuery",
+    "drawer": "AuditLogDrawer",
+    "viewVisibility": "auditViewVisibility"
+  }
+}

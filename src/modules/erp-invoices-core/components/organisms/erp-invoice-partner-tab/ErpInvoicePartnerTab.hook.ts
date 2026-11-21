@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { InvoiceDetailViewMode } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
+import { useInvoiceFilesV2 } from "@/modules/erp-invoices-core/hooks/useInvoiceFilesV2";
 import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { invoiceDebtsApi } from "@/modules/accounting/api/invoiceDebtsApi";
 import { DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
@@ -38,13 +39,14 @@ export function useErpInvoicePartnerTab({
       )),
   );
 
+  const { files: invoiceFiles } = useInvoiceFilesV2(detailInvoice?.id);
   const attachmentCount = useMemo(() => {
     return normalizeInvoiceDocuments(
-      detailInvoice,
+      invoiceFiles,
       form?.pendingAddedAttachments || [],
       form?.pendingDeletedPdfs || [],
     ).length;
-  }, [detailInvoice, form?.pendingAddedAttachments, form?.pendingDeletedPdfs]);
+  }, [invoiceFiles, form?.pendingAddedAttachments, form?.pendingDeletedPdfs]);
 
   const [detailViewMode, setDetailViewMode] =
     useState<InvoiceDetailViewMode>("template");

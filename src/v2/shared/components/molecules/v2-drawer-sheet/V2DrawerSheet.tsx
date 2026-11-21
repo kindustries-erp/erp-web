@@ -11,9 +11,14 @@ export const V2DrawerSheet: React.FC<V2DrawerSheetProps> = ({
   className,
   style,
   overlayStyle,
+  modal,
   children,
 }) => (
-  <Sheet open={open} onOpenChange={(v) => (!v ? onRequestClose() : undefined)}>
+  <Sheet
+    open={open}
+    modal={modal}
+    onOpenChange={(v) => (!v ? onRequestClose() : undefined)}
+  >
     <SheetContent
       side={side}
       hideCloseButton

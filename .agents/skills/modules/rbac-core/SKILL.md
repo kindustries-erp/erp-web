@@ -96,22 +96,23 @@ erp-api/src/auth/
     └── require-permissions.decorator.ts # Decorator khai báo { resource, action } trên endpoint
 ```
 
-### 3.3. Frontend Web (`erp-web/src/modules/system/`)
+### 3.3. Frontend Web V1 (`src/v1/modules/system-rbac/` kèm Facade tại `src/modules/system/`)
 ```text
 erp-web/src/
-├── modules/system/
+├── v1/modules/system-rbac/ (Mã nguồn thực thi V1; src/modules/system/ là Facade re-export)
 │   ├── api/
+│   │   ├── rbacApi.ts                # API client V1 cũ
 │   │   └── rbacCoreApi.ts            # API client: getCoreRolesApi, getCoreRolePermissionsApi, saveCoreRolePermissionsApi, etc.
 │   ├── components/
-│   │   └── CoreRoleDrawer.tsx        # StandardFormDrawer quản lý vai trò với View mode, Edit mode, Grouped Permission Matrix
-│   ├── hooks/
-│   │   ├── useCoreRoles.ts           # Hook danh sách vai trò, phân trang, lọc theo cột
-│   │   ├── useCorePermissionsEditor.ts # Hook quản lý matrix quyền (toggle, toggleRow, toggleColumn, toggleAll, save)
-│   │   └── useCoreRoleUsers.ts       # Hook gán và đồng bộ người dùng vào vai trò
-│   └── types/
-│       └── rbac.ts                   # Types Role, PermissionMap, PERMISSION_RESOURCE_GROUPS
-└── pages/
-    └── ErpPermissionsCorePage.tsx    # Trang Quản lý Phân quyền & Vai trò chuẩn SpreadsheetPageTemplate
+│   │   ├── RoleDrawer.tsx            # Drawer quản lý role V1 cũ
+│   │   ├── CoreRoleDrawer.tsx        # StandardFormDrawer quản lý vai trò với View mode, Edit mode, Grouped Permission Matrix
+│   │   └── PermissionMatrixDrawer.tsx # Drawer ma trận quyền V1 cũ
+│   └── hooks/
+│       ├── useCoreRoles.ts           # Hook danh sách vai trò, phân trang, lọc theo cột
+│       ├── useCorePermissionsEditor.ts # Hook quản lý matrix quyền (toggle, toggleRow, toggleColumn, toggleAll, save)
+│       └── useCoreRoleUsers.ts       # [V1, đã ngắt, giữ file] gán user vào vai trò; V2 dùng rolesV2Api.getAllUsers
+└── v1/pages/
+    └── ErpPermissionsCorePage.tsx    # [V1, đã ngắt, giữ file] App.tsx map `permission` sang RolesPage V2 (rbac-roles)
 ```
 
 ---

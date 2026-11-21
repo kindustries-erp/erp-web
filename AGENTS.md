@@ -101,8 +101,8 @@ Repo-level workflows (e.g. `erp/erp-web/.agents/workflows/standardize-drawer.md`
 1. Trình plan theo `/erp-plan`, dùng cơ chế plan của agent (Claude Code: `/plan`; Antigravity: `implementation_plan.md`). Xem mục "Tầng Cơ Chế Plan Theo Agent" trong workflow.
 2. Execute **5 phases**: Discovery → Tech Plan → Task Breakdown (X.Y.Z) → Approval → Execution.
 3. Plan (DoD, lệnh verify) trình trong hội thoại; chỉ làm sau khi người dùng trả lời `OK`.
-4. Tạo Epic/Story/Task trên Plane (project KINDU) bằng skill `plane-work-items`.
-5. Cập nhật trạng thái task trên Plane theo thời gian thực.
+4. Quét tiền lệ trên Plane trước khi chốt plan. Ngay sau `OK` và TRƯỚC khi sửa file: tạo Module, Cycle (tuần tự, không chồng lấn), Story và Task con trên Plane (project KINDU) bằng skill `plane-work-items`. Item tạo ở `Backlog`, gắn Cycle rồi chuyển `Todo`; tên `[<module>] X.Y.Z <tên>`; có `start_date` và `target_date`. Không làm xong rồi mới tạo task.
+5. Trong khi làm: task bắt đầu thì `In Progress` (không nhảy từ `Backlog`), PASS verification thì `Done`; việc phát sinh thì tạo Task mới ngay.
 6. (Tùy chọn, khi chạy trong Antigravity) giữ `implementation_plan.md` / `walkthrough.md` trong Brain làm bản phụ.
 7. When done: update the Module Skill (`erp/erp-api/.agents/skills/modules/<module>/SKILL.md` or `erp/erp-web/.agents/skills/modules/<module>/SKILL.md`).
 
@@ -273,7 +273,7 @@ Source of truth for this repo (`./erp-web`).
 
 ### 5. Strict Pre-push Hook
 
-- Commit: pre-commit tự chạy lint-staged (eslint, prettier, `vitest related` trên file staged). Không chạy full test thủ công.
+- Commit: pre-commit tự chạy lint-staged (eslint, prettier; `vitest related` chỉ chạy trên file staged thuộc `src/v2/**/*.{ts,tsx}`). Không chạy full test thủ công.
 - Push: pre-push chạy `bun run type:check`. Do NOT push if it fails.
 - Full test / build / check:ci chạy trên GitHub CI. Không push tiếp khi CI của nhánh đang đỏ.
 
@@ -296,6 +296,7 @@ Source of truth for this repo (`./erp-web`).
 - Mỗi lần chạy E2E: nếu shell chưa có `E2E_PASSWORD`, đọc dòng `E2E_PASSWORD=` trong `erp-api/.env` (nguồn chuẩn, từ workspace root: `erp/erp-api/.env`) và nạp vào tiến trình chạy script (xem skill `erp-e2e-playwright`). Không in giá trị ra log, không ghi vào repo, không hỏi lại người dùng nếu `.env` đã có.
 - Trước khi báo hoàn tất, chạy E2E trên môi trường đang chạy và báo PASS/FAIL theo lần chạy hiện tại.
 - Port E2E: lấy `PORT` API từ `erp/erp-api/.env`, web đi kèm theo API 10001→5171, 10002→5172, 10003→5173 (chi tiết trong skill `erp-e2e-playwright`). Không dùng port mặc định cố định.
+- Trước mỗi lần chạy E2E: dừng tiến trình đang nghe port API và port web (chỉ khi cwd đúng `erp/erp-api` / `erp/erp-web`), rồi chạy lại `bun start:dev` và `bun run dev` để đảm bảo code mới nhất (xem skill `erp-e2e-playwright` mục 2).
 
 ---
 
@@ -319,73 +320,35 @@ Source of truth for this repo (`./erp-web`).
 
 ### Order
 
-1. DB
-2. API
-3. UI
-4. QC
+`DB -> API -> UI -> QC`
 
 ### Rules
 
-- inspect before edits
+- inspect current state before edits; evidence-first (code state, build/test evidence, git state)
+- use repo-local context as default guidance
 - MUST use bun/bunx exclusively (do NOT use npm)
-- evidence-first
-- before commit/push, `cd` into the repo root (`./erp-web`)
-- **Strict Git Workflow**: You MUST follow the exact commit/push sequence defined below (test -> commit -> pull --rebase -> check:ci -> push, theo `erp-git-workflow`).
-- push this repo with `github-industries`
+- before commit/push, `cd` into the repo root (`./erp-web`); push with `github-industries`; always check the branch first (see Git Workflow Mandates)
 - when debugging and testing API locally, always start dev on the port defined by `PORT` in `erp/erp-api/.env`
 - by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
 - before any DB scan or write, run `SELECT current_database();` to confirm the actual DB and report it before writing; never infer the DB from a file name
-- reuse existing components/hooks/utils/helpers/functions/page patterns first
-- extend/adapt before forking parallel patterns
+- reuse existing components/hooks/utils/helpers/services/functions/page patterns first; extend/adapt before forking parallel patterns
 - cancel or delete actions must have modal confirm (e.g. ConfirmModal)
 - delete operations must be soft delete with `isDeleted` flag
+- plan trình trong hội thoại và chờ `OK`; theo dõi task trên Plane (project KINDU) bằng skill `plane-work-items`. Antigravity Brain chỉ là bản phụ.
+- keep task checklist updated in realtime
+- if task status in docs drifts from code reality, verify by code + build/test + git state before correcting the artifact
 
 ---
 
 ### Git Workflow Mandates
 
+Quy trình chi tiết (commit, pull, push, rebase, conflict) nằm trong skill `erp-git-workflow`. Phần bắt buộc:
+
 1. **Master-First Mandate**: ALL code modifications, features, bug fixes, UI enhancements, and refactoring **MUST** be performed and tested on `erp-master` FIRST. Direct commits to downstream branches (`erp-greenway-*`, `erp-klotus-*`) are strictly prohibited.
-
-2. When asked to **commit code**, you MUST execute the following in order:
-   - Ensure current branch is `erp-master`
-   - `git commit` (pre-commit tự chạy lint-staged và `vitest related` trên file staged; không chạy full test thủ công)
-
-3. When asked to **pull code**, you MUST execute the following in order:
-   - If there are uncommitted changes, you MUST execute the full **commit code** sequence first.
-   - `git pull --rebase github-industries erp-master` (and resolve conflicts if any)
-
-4. When asked to **push code**, you MUST execute the following in order:
-   - If there are uncommitted changes, you MUST execute the full **commit code** sequence first.
-   - `git pull --rebase github-industries erp-master` (and resolve conflicts if any)
-   - `git push github-industries erp-master` (pre-push chạy `bun run type:check`; full test/build/check:ci chạy trên GitHub CI, theo dõi CI sau khi push)
-
-5. When asked to **sync/deploy to downstream branches** (`erp-greenway-production`, `erp-greenway-staging`, `erp-klotus-*`):
-   - First ensure `erp-master` is committed, tested, and pushed to `github-industries erp-master`.
-   - Run `../.agents/scripts/sync-branch.sh <target-branch> --push` or follow `erp-git-workflow.md` Scenario 4.
-   - Always return back to `erp-master` after syncing.
+2. **Commit / pull / push order**: commit (on `erp-master`; pre-commit hook runs lint-staged and `vitest related` on staged `src/v2/**/*.{ts,tsx}`) → `git pull --rebase github-industries erp-master` (resolve conflicts per mandate 7) → `git push github-industries erp-master` (pre-push hook and CI per mandate 5; theo dõi CI sau khi push). If there are uncommitted changes, ALWAYS commit before pull or push.
+3. **Sync/deploy to downstream branches** (`erp-greenway-production`, `erp-greenway-staging`, `erp-klotus-*`): first ensure `erp-master` is committed, tested, and pushed to `github-industries erp-master`; run `../.agents/scripts/sync-branch.sh <target-branch> --push` or follow `erp-git-workflow.md` Scenario 4; always return back to `erp-master` after syncing.
 
 **Git Execution Context**: You MUST perform all Git operations (add, commit, pull, push) exclusively inside the `erp-web` directory. NEVER run git commands from the workspace root. When pulling or pushing, ALWAYS specify the remote `github-industries` (e.g., `git push github-industries erp-master`).
-
-### Required behavior
-
-- load `@.agents/skills/erp-web-truth/SKILL.md`
-- use repo-local context as default guidance
-- MUST use bun/bunx exclusively (do NOT use npm)
-- when debugging and testing API locally, always start dev on the port defined by `PORT` in `erp/erp-api/.env`
-- by default, work on the `DATABASE_URL` in `.env` (master; luôn đọc `.env` để xác nhận DB thực tế); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly (a bare `.env` may point at a production DB)
-- before any DB scan or write, run `SELECT current_database();` to confirm the actual DB and report it before writing; never infer the DB from a file name
-- follow DB -> API -> UI -> QC
-- inspect current state before edits
-- use evidence-first wording
-- before push/commit, `cd` vào root của repo hiện tại (`./erp-web` từ workspace root)
-- **Strict Git Workflow**: You MUST follow the `Git Workflow Mandates` defined above for all commits and pushes (Master-First).
-- push with `github-industries`
-- always check branch 1st when push. All modifications must be developed and pushed on `erp-master` 1st, then merged/synced downstream to other branches.
-- reuse existing components/hooks/utils/helpers/services/functions/page patterns first
-- extend/adapt before duplicating
-- plan trình trong hội thoại và chờ `OK`; theo dõi task trên Plane (project KINDU) bằng skill `plane-work-items`. Antigravity Brain chỉ là bản phụ.
-- keep task checklist updated in realtime
-- if task status in docs drifts from code reality, verify by code + build/test + git state before correcting the artifact
 
 ### Architecture & Development Standards
 

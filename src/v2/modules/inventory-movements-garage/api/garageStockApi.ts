@@ -32,6 +32,13 @@ const toColumnFilters = (query: V2TableQuery, skip?: string) => {
   return Object.keys(filters).length ? JSON.stringify(filters) : undefined;
 };
 
+const toColumnOperators = (query: V2TableQuery, skip?: string) => {
+  const ops = Object.fromEntries(
+    Object.entries(query.columnOperators).filter(([key]) => key !== skip),
+  );
+  return Object.keys(ops).length ? JSON.stringify(ops) : undefined;
+};
+
 /** Tham số danh sách chứng từ gộp; chỉ gửi những tham số API hỗ trợ (API từ chối tham số lạ) */
 export const toGarageVoucherListParams = (
   query: V2TableQuery,
@@ -89,6 +96,8 @@ export const garageStockApi: InventoryMovementsApi = {
         search: query.search?.trim() || undefined,
         sort: toSort(query),
         stockTab,
+        column_filters: toColumnFilters(query),
+        column_operators: toColumnOperators(query),
       },
     });
     return {
@@ -98,9 +107,36 @@ export const garageStockApi: InventoryMovementsApi = {
       extraData: data.extraData,
     };
   },
-  listTransactions: async (itemCode, page, pageSize) => {
+  balanceOptions: async (
+    params: V2FetchOptionsParams,
+  ): Promise<V2FetchOptionsResult> => {
+    const { data } = await v2HttpClient.get(`${LEDGER}/column-options`, {
+      params: {
+        column: params.columnKey,
+        search: params.search,
+        page: params.pageParam,
+        pageSize: OPTIONS_PAGE_SIZE,
+        filters: params.filtersStr,
+      },
+    });
+    return toFetchOptionsResult(data);
+  },
+  listTransactions: async (
+    itemCode,
+    page,
+    pageSize,
+    costingMethod,
+    dateRange,
+  ) => {
     const { data } = await v2HttpClient.get(`${LEDGER}/transactions`, {
-      params: { itemCode, page, pageSize },
+      params: {
+        itemCode,
+        page,
+        pageSize: Math.min(pageSize ?? 200, 200),
+        costingMethod,
+        dateFrom: dateRange?.dateFrom,
+        dateTo: dateRange?.dateTo,
+      },
     });
     return { items: data.items, total: data.pagination.total };
   },

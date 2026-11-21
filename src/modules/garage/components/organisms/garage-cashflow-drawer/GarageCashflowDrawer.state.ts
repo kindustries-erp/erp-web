@@ -27,6 +27,7 @@ export function buildInitialFormData(
       paymentContent: voucher.paymentContent || "",
       referenceNumber: voucher.referenceNumber || "",
       caseId: voucher.caseId || "",
+      payerType: voucher.payerType || undefined,
       erpBankTransactionId: voucher.erpBankTransactionId || "",
       erpCashVoucherId: voucher.erpCashVoucherId || "",
       paymentStatus:
@@ -79,9 +80,22 @@ export function buildCreatePayload(
         : formData.paymentStatus || "PAID",
     referenceNumber: formData.referenceNumber?.trim() || undefined,
     caseId: formData.caseId?.trim() || undefined,
+    payerType: resolvePayerTypePayload(formData),
     erpBankTransactionId: formData.erpBankTransactionId?.trim() || undefined,
     erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,
   };
+}
+
+/** Chỉ gửi payerType cho phiếu thu gắn phiếu dịch vụ; bỏ trống để API tự gán. */
+function resolvePayerTypePayload(
+  formData: Partial<CreateGarageCashflowVoucherDto>,
+): "KH" | "BH" | undefined {
+  const isReceipt =
+    (formData.voucherType || "RECEIPT").toUpperCase() === "RECEIPT";
+  if (!isReceipt || !formData.caseId?.trim()) return undefined;
+  return formData.payerType === "KH" || formData.payerType === "BH"
+    ? formData.payerType
+    : undefined;
 }
 
 export function buildUpdatePayload(
@@ -107,6 +121,7 @@ export function buildUpdatePayload(
           : formData.paymentStatus,
     referenceNumber: formData.referenceNumber?.trim() || undefined,
     caseId: formData.caseId?.trim() || undefined,
+    payerType: resolvePayerTypePayload(formData),
     erpBankTransactionId: formData.erpBankTransactionId?.trim() || undefined,
     erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,
   };

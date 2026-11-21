@@ -6,7 +6,7 @@ export type PageKey =
   | "cashflow-vouchers"
   | "cash-fund"
   | "bank-deposit"
-  | "attachments"
+  | "file-attachments"
   | "email-inbox"
   | "settings-cash-fund"
   | "settings-bank"
@@ -49,8 +49,8 @@ export type PageKey =
   | "erp-inventory-item-types"
   | "erp-suppliers"
   | "erp-customers"
-  | "erp-employees"
-  | "erp-users"
+  | "employees-management"
+  | "users-management"
   | "erp-activity-logs"
   | "permission"
   | "erp-permissions-core"
@@ -65,6 +65,7 @@ export type PageKey =
   | "cash-statement"
   | "garage-dashboard"
   | "garage-cases"
+  | "garage-cases-v2"
   | "garage-stock-vouchers"
   | "garage-stock-balances"
   | "garage-procurement"
@@ -83,7 +84,12 @@ export type PageKey =
   | "vinfast-parts-oto-stock"
   | "vinfast-parts-xemay-stock"
   | "inventory-dashboard"
-  | "custom-fields";
+  | "custom-fields"
+  | "customers-v2"
+  | "suppliers-v2"
+  | "invoices-v2"
+  | "audit-logs-v2"
+  | "admin-dashboard-v2";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

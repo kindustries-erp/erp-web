@@ -1,1 +1,1 @@
-export * from "./date-range-column-slot";
+export * from "@/v1/components/DataTable/DateRangeColumnSlot";

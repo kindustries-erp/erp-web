@@ -5,6 +5,8 @@ import { V2ColumnHeaderFilter } from "@/v2/shared/components/molecules/v2-column
 import { TableHead, TableHeader, TableRow } from "@/v2/shared/ui";
 import { cn } from "@/v2/shared/utils/cn";
 import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
+import { ColumnValueType } from "@/v2/shared/types/v2-table";
+import { formatNumberOptionLabel } from "@/v2/shared/utils/v2TableFormat";
 import type { V2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import type { V2TableState } from "../hooks/V2StandardTable.state.hook";
 import type { V2Column } from "../V2StandardTable.type";
@@ -55,7 +57,12 @@ function V2TableHeaderCell<T>({
           filters.onOpenChange(key, open, query.columnSearch[key] ?? "")
         }
         onOptionsSearchChange={filters.onOptionsSearchChange}
-        formatOptionLabel={spec.formatOptionLabel}
+        formatOptionLabel={
+          spec.formatOptionLabel ??
+          (spec.valueType === ColumnValueType.NUMBER
+            ? formatNumberOptionLabel
+            : undefined)
+        }
         align={column.align}
       />
     ) : (

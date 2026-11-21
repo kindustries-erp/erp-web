@@ -1,14 +1,13 @@
 import { renderHook, act } from "@testing-library/react";
 import { useErpInvoiceForm } from "./useErpInvoiceForm";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
+import { invoiceFilesV2Api } from "../api/invoiceFilesV2Api";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
     update: vi.fn(),
-    deletePdf: vi.fn(),
     get: vi.fn(),
-    linkAttachment: vi.fn(),
   },
 }));
 
@@ -18,11 +17,11 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
   },
 }));
 
-vi.mock("@/modules/system/api/attachmentsApi", () => ({
-  uploadAttachmentApi: vi.fn().mockResolvedValue({
-    success: true,
-    attachments: [{ id: "att-1" }],
-  }),
+vi.mock("../api/invoiceFilesV2Api", () => ({
+  invoiceFilesV2Api: {
+    upload: vi.fn().mockResolvedValue([]),
+    remove: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 vi.mock("react-i18next", () => ({
@@ -64,9 +63,6 @@ describe("useErpInvoiceForm", () => {
       id: "inv-1",
       invoiceNo: "INV-1",
     } as any);
-    vi.mocked(erpInvoicesCoreApi.deletePdf).mockResolvedValue({
-      success: true,
-    } as any);
     vi.mocked(erpInvoicesCoreApi.get).mockResolvedValue({
       id: "inv-1",
       invoiceNo: "INV-1",
@@ -106,10 +102,16 @@ describe("useErpInvoiceForm", () => {
     expect(payload.pendingAddedAttachments).toBeUndefined();
     expect(payload.invoiceNo).toBe("INV-1");
 
-    // Assert deletePdf was called with the pending file
-    expect(erpInvoicesCoreApi.deletePdf).toHaveBeenCalledWith(
+    // File chờ xóa đi qua V2
+    expect(invoiceFilesV2Api.remove).toHaveBeenCalledWith(
       "inv-1",
       "delete-me.pdf",
+    );
+    // File chờ thêm đi qua V2 theo loại tài liệu
+    expect(invoiceFilesV2Api.upload).toHaveBeenCalledWith(
+      "inv-1",
+      [expect.any(File)],
+      "HOA_DON",
     );
   });
 });

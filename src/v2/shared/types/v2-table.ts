@@ -51,7 +51,7 @@ export enum DateFilterOperator {
 export const V2_BLANK_VALUE = "__BLANK__";
 export const V2_ALL_MATCHING_VALUE = "__ALL_MATCHING__";
 export const V2_COMPOSITE_SEPARATOR = ":::";
-export const V2_PAGE_SIZE_OPTIONS = [20, 50, 100, 200] as const;
+export const V2_PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200] as const;
 
 export interface V2FilterOption {
   label: string;

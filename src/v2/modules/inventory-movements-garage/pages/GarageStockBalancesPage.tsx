@@ -5,8 +5,8 @@ import type { V2ModuleTab } from "@/v2/shared/components";
 import {
   StockLedgerDrawer,
   useStockBalanceListController,
+  useStockBalancesOverviewQuery,
   useStockBalancesQuery,
-  useStockTabCountsQuery,
 } from "@/v2/core/inventory-movements";
 import type { StockBalanceRow } from "@/v2/core/inventory-movements";
 import {
@@ -15,15 +15,21 @@ import {
 } from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import { inventoryMovementsGarageConfig as config } from "../inventoryMovementsGarage.config";
 import "../inventoryMovementsGarage.locale";
-import { GARAGE_STOCK_BALANCE_TABS } from "./GarageStockBalancesPage.tabs";
+import {
+  GARAGE_STOCK_BALANCE_TABS,
+  buildGarageStockTabMetrics,
+} from "./GarageStockBalancesPage.tabs";
 
 export function GarageStockBalancesPage() {
   const state = useStockBalanceListController(config);
   const { t } = state;
-  const counts = useStockTabCountsQuery({
+  const overview = useStockBalancesOverviewQuery({
     api: config.api,
     keys: config.keys,
   });
+  const counts = overview.tabCounts;
+  const totalQty = overview.summaries?.qtyOnHand?.total;
+  const totalValue = overview.summaries?.inventoryValue?.total;
 
   const tabs = React.useMemo<V2ModuleTab<StockBalanceRow>[]>(
     () =>
@@ -33,6 +39,8 @@ export function GarageStockBalancesPage() {
         icon,
         tone,
         badgeCount: counts[tab],
+        badgeCountSuffix: t("v2.inventoryMovements.balance.itemsSuffix", "mã"),
+        metrics: buildGarageStockTabMetrics(tab, totalQty, totalValue),
         kind: "list" as const,
         resetKey: `${state.tableId}-${tab}-${state.tableKey}`,
         table: {
@@ -40,6 +48,9 @@ export function GarageStockBalancesPage() {
           columns: state.columns,
           getRowKey: (row) => row.id,
           mode: "server" as const,
+          fetchOptions: config.api.balanceOptions
+            ? (params) => config.api.balanceOptions!(params)
+            : undefined,
           preferencesStorage: v2ColumnPreferencesStorage,
           viewPresetStorage: v2ViewPresetStorage,
           emptyLabel: t(
@@ -48,6 +59,7 @@ export function GarageStockBalancesPage() {
           ),
           toolbar: {
             search: {},
+            filterPanel: {},
             enableFullscreen: true,
             viewModes: {
               items: [
@@ -94,6 +106,7 @@ export function GarageStockBalancesPage() {
             config={config}
             itemCode={state.ledger.itemCode}
             itemName={state.ledger.itemName}
+            itemInfo={state.ledger}
             onClose={state.closeLedger}
           />
         )

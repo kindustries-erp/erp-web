@@ -2,6 +2,7 @@ import type { V2ModuleLocale } from "@/v2/shared/locales";
 
 /** Bản tiếng Việt của nhãn sơ đồ chứng từ liên kết */
 export const traceabilityLocaleVi: V2ModuleLocale["vi"] = {
+  sectionTitle: "Chứng từ liên kết",
   docType: {
     invoice: "Hóa đơn VAT",
     bankTxn: "Sao kê / Sổ quỹ",
@@ -60,10 +61,18 @@ export const traceabilityLocaleVi: V2ModuleLocale["vi"] = {
   canvas: {
     toVertical: "Đổi sang bố cục Dọc",
     toHorizontal: "Đổi sang bố cục Ngang",
+    zoomIn: "Phóng to",
+    zoomOut: "Thu nhỏ",
+    fitView: "Vừa khung nhìn",
+    stageEmpty: "Chưa có chứng từ trong phân đoạn này",
     legend: {
+      title: "Chú thích sơ đồ",
+      compact: "Chú thích",
       receipt: "Dòng tiền thu",
       payment: "Dòng tiền chi",
       current: "Chứng từ đang xem",
+      offBook: "Ngoài ERP (Nội bộ)",
+      toggle: "Ẩn / hiện bảng chú thích",
     },
   },
   pipeline: { empty: "Không có chứng từ" },

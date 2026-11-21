@@ -2,6 +2,10 @@
 // ERP CORE auth API — gọi BE local auth Postgres, không dùng Directus
 // ─────────────────────────────────────────────────────────────────────────────
 import axiosInstance from "@/core/api/axiosInstance";
+import {
+  AUTH_SESSIONS_PATH,
+  type AuthSessionsEnvelope,
+} from "@/v2/shared/api/authSessionsApi";
 
 export interface UserPreferencesPayload {
   theme?: string;
@@ -71,61 +75,75 @@ export interface CoreChangePasswordRequest {
   newPassword: string;
 }
 
+/** Gọi auth V2 (`/api/v2/auth-sessions`); bóc `{ message, data }` về đúng kiểu cũ để `authStore` không đổi. */
 export async function loginApi(payload: {
   email: string;
   password: string;
 }): Promise<CoreLoginResponse> {
-  const { data } = await axiosInstance.post<CoreLoginResponse>(
-    "/api/v1/auth/login",
-    payload,
-    { _silentSuccess: true },
-  );
-  return data;
+  const { data } = await axiosInstance.post<
+    AuthSessionsEnvelope<CoreLoginResponse>
+  >(`${AUTH_SESSIONS_PATH}/login`, payload, { _silentSuccess: true });
+  return data.data;
 }
 
 export async function getProfileApi(): Promise<CoreProfileResponse> {
-  const { data } = await axiosInstance.get<CoreProfileResponse>(
-    "/api/v1/auth/profile",
-    {
-      _silentError: true,
-    },
-  );
-  return data;
+  const { data } = await axiosInstance.get<
+    AuthSessionsEnvelope<CoreProfileResponse>
+  >(`${AUTH_SESSIONS_PATH}/profile`, { _silentError: true });
+  return data.data;
 }
 
 export async function impersonateApi(
   targetUserId: string,
 ): Promise<CoreLoginResponse> {
-  const { data } = await axiosInstance.post<CoreLoginResponse>(
-    "/api/v1/auth/impersonate",
-    { targetUserId },
-  );
-  return data;
+  const { data } = await axiosInstance.post<
+    AuthSessionsEnvelope<CoreLoginResponse>
+  >(`${AUTH_SESSIONS_PATH}/impersonate`, { targetUserId });
+  return data.data;
 }
 
+/** Phải gọi V2: session V2 chỉ bị thu hồi khi đăng xuất qua V2. */
 export async function logoutApi(refreshToken: string): Promise<void> {
   await axiosInstance.post(
-    "/api/v1/auth/logout",
-    { refresh_token: refreshToken },
+    `${AUTH_SESSIONS_PATH}/logout`,
+    { refreshToken },
     { _silentSuccess: true, _silentError: true },
   );
 }
 
+/** V2 dùng camelCase (`fullName`); giữ kiểu snake_case cũ ở đây để UI hiện có không đổi. */
 export async function selfUpdateProfileApi(
   payload: CoreSelfUpdateProfileRequest,
 ): Promise<CoreSelfUpdateProfileData> {
-  const { data } = await axiosInstance.patch<{
-    message: string;
-    data: CoreSelfUpdateProfileData;
-  }>("/api/v1/auth/profile", payload);
-  return data.data;
+  const { data } = await axiosInstance.patch<
+    AuthSessionsEnvelope<{
+      id: string;
+      email: string;
+      fullName: string | null;
+      phone: string | null;
+      notes: string | null;
+    }>
+  >(`${AUTH_SESSIONS_PATH}/profile`, {
+    email: payload.email,
+    fullName: payload.full_name,
+    phone: payload.phone,
+    notes: payload.notes,
+  });
+  const result = data.data;
+  return {
+    id: result.id,
+    email: result.email,
+    full_name: result.fullName,
+    phone: result.phone,
+    notes: result.notes,
+  };
 }
 
 export async function changePasswordApi(
   payload: CoreChangePasswordRequest,
 ): Promise<{ message: string }> {
   const { data } = await axiosInstance.post<{ message: string }>(
-    "/api/v1/auth/change-password",
+    `${AUTH_SESSIONS_PATH}/change-password`,
     payload,
   );
   return data;

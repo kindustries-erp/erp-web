@@ -15,6 +15,7 @@ import {
 } from "../utils/garageCaseViewPresets";
 import { GarageCasesTable } from "../components/organisms/garage-cases-table";
 import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
+import type { GarageCaseDetailViewMode } from "../components/garage-case-details-tab";
 import { GarageCaseViewConfigDrawer } from "../components/GarageCaseViewConfigDrawer";
 import {
   GarageHeaderActionDrawers,
@@ -76,6 +77,8 @@ export function GarageCases({
   const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
   const [drawerInitialTab, setDrawerInitialTab] =
     useState<string>("quote_details");
+  const [drawerInitialSubTab, setDrawerInitialSubTab] =
+    useState<GarageCaseDetailViewMode>("details");
   const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
   const [editingViewPreset, setEditingViewPreset] =
     useState<TableViewPreset | null>(null);
@@ -188,11 +191,13 @@ export function GarageCases({
         onOpenDetail={(code) => {
           setDrawerEditMode(false);
           setDrawerInitialTab("quote_details");
+          setDrawerInitialSubTab("details");
           setSelectedCaseId(code);
         }}
         onOpenFinancials={(code, editMode = true) => {
           setDrawerEditMode(canUpdateGarage ? editMode : false);
-          setDrawerInitialTab("financials");
+          setDrawerInitialTab("quote_details");
+          setDrawerInitialSubTab("financials");
           setSelectedCaseId(code);
         }}
         onOpenEditNotes={(item) => {
@@ -221,6 +226,7 @@ export function GarageCases({
         caseCode={selectedCaseId}
         initialEditMode={drawerEditMode}
         initialTabKey={drawerInitialTab}
+        initialSubTabKey={drawerInitialSubTab}
         onClose={() => {
           setSelectedCaseId(null);
           setDrawerEditMode(false);

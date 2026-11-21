@@ -47,4 +47,32 @@ describe("V2TableSkeletonRows", () => {
     );
     expect(screen.getAllByRole("status")).toHaveLength(1);
   });
+
+  it("applies border-b border-[color:var(--border-light)] and cell vertical borders", () => {
+    const { container } = render(
+      <TableHarness data={[]} columns={columns}>
+        {(table) => (
+          <tbody>
+            <V2TableSkeletonRows
+              table={table}
+              loadingLabel="Đang tải..."
+              count={1}
+            />
+          </tbody>
+        )}
+      </TableHarness>,
+    );
+    const row = container.querySelector("tr");
+    expect(row).toBeInTheDocument();
+    expect(row?.className).toContain("border-b");
+    expect(row?.className).toContain("border-[color:var(--border-light)]");
+
+    const cells = container.querySelectorAll("td");
+    // columns (3) + trailing action cell (1) = 4 cells
+    expect(cells).toHaveLength(4);
+    cells.forEach((cell) => {
+      expect(cell.className).toContain("border-r");
+      expect(cell.className).toContain("border-border");
+    });
+  });
 });

@@ -22,6 +22,7 @@ export const V2AdminLayoutDesktop: React.FC<V2AdminLayoutProps> = ({
   notificationNode,
   collapsed,
   onToggleCollapse,
+  hideSidebar = false,
 }) => {
   const {
     effectiveAppName,
@@ -45,22 +46,24 @@ export const V2AdminLayoutDesktop: React.FC<V2AdminLayoutProps> = ({
       data-testid="v2-admin-layout-desktop"
       className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-background dark:bg-[color:var(--app-shell-bg,#131418)] text-foreground select-none"
     >
-      <V2Sidebar
-        sections={dynamicSections}
-        activeId={activeNavId}
-        onNavigate={handleNavigate}
-        appName={effectiveAppName}
-        collapsed={collapsed}
-        onToggleCollapse={onToggleCollapse}
-        notificationNode={notificationNode}
-        user={{
-          displayName: effectiveUserName,
-          avatarInitials: effectiveUserName
-            ? effectiveUserName.substring(0, 2).toUpperCase()
-            : "AD",
-          unreadCount: 0,
-        }}
-      />
+      {!hideSidebar && (
+        <V2Sidebar
+          sections={dynamicSections}
+          activeId={activeNavId}
+          onNavigate={handleNavigate}
+          appName={effectiveAppName}
+          collapsed={collapsed}
+          onToggleCollapse={onToggleCollapse}
+          notificationNode={notificationNode}
+          user={{
+            displayName: effectiveUserName,
+            avatarInitials: effectiveUserName
+              ? effectiveUserName.substring(0, 2).toUpperCase()
+              : "AD",
+            unreadCount: 0,
+          }}
+        />
+      )}
 
       <V2RightPanel
         breadcrumbs={breadcrumbs ?? fallbackBreadcrumbs}
