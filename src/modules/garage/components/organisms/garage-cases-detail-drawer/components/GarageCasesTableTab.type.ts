@@ -17,6 +17,12 @@ export interface GarageCaseDetailRow {
   soChungTu: string;
   ngayHoanThanh?: string;
   bienSoXe: string;
+  soKhung?: string | null;
+  hangXeCode?: string | null;
+  hangXeName?: string | null;
+  dongXeCode?: string | null;
+  dongXeName?: string | null;
+  namSanXuat?: number | null;
   khachHangName: string;
   khachHangCode?: string | null;
   payerType: "KH" | "BH";

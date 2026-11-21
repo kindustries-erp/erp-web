@@ -237,25 +237,26 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
       true,
     );
 
-    // Tiêu đề checkpoint & tab Danh sách xe
+    // Tiêu đề checkpoint & tab Danh sách xe & tab Tiến độ công việc
     expect(
       screen.getByText("Vụ việc Dịch vụ Garage · Tháng 11/2026"),
     ).toBeInTheDocument();
     expect(screen.getByText("Danh sách xe")).toBeInTheDocument();
+    expect(screen.getByText("Tiến độ công việc")).toBeInTheDocument();
     expect(screen.getByText("Xuất Excel")).toBeInTheDocument();
 
     // Đã xóa nút Phải thu / Phải trả theo yêu cầu
     expect(screen.queryByText("Phải thu")).not.toBeInTheDocument();
     expect(screen.queryByText("Phải trả")).not.toBeInTheDocument();
 
-    // Right panel P&L
-    expect(screen.getByText("Hiệu quả kinh doanh (P&L)")).toBeInTheDocument();
-    expect(screen.getByText("Tiến độ Thu tiền & Công nợ")).toBeInTheDocument();
+    // Right panel Tiến độ Dịch vụ Xe & Dòng tiền Dịch vụ Xe
+    expect(screen.getByText("Tiến độ Dịch vụ Xe")).toBeInTheDocument();
+    expect(screen.getByText("Dòng tiền Dịch vụ Xe")).toBeInTheDocument();
 
-    // Cả header bảng và Right Panel đều có các nhãn P&L
+    // Header bảng có các nhãn P&L
     expect(
       screen.getAllByText("Doanh thu thuần").length,
-    ).toBeGreaterThanOrEqual(2);
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Chi phí").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Lợi nhuận gộp").length).toBeGreaterThanOrEqual(
       1,
@@ -301,5 +302,26 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
         classification: "SUA_CHUA_CHUNG",
       }),
     );
+  });
+
+  it("chuyển sang tab Tiến độ công việc và hiển thị Kanban khi click", async () => {
+    const { fireEvent } = await import("@testing-library/react");
+    renderCasesScope(
+      {
+        kind: "checkpoint",
+        dateFrom: "2026-11-01",
+        dateTo: "2026-11-30",
+        periodLabel: "Tháng 11/2026",
+      },
+      true,
+    );
+
+    const kanbanTabBtn = screen.getByText("Tiến độ công việc");
+    fireEvent.click(kanbanTabBtn);
+
+    // Kiểm tra các cột kanban xuất hiện
+    expect(screen.getByText("Tiếp nhận")).toBeInTheDocument();
+    expect(screen.getAllByText("Đang làm").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Hoàn thành").length).toBeGreaterThanOrEqual(1);
   });
 });

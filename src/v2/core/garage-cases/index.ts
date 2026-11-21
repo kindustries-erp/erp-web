@@ -6,3 +6,5 @@ export * from "./traceability/garageCaseTraceability.graph";
 export * from "./traceability/garageCaseTraceability.actions";
 export * from "./vehicle";
 export * from "./dashboard";
+export * from "./kanban";
+export * from "./components/garage-cases-kanban";

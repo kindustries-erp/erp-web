@@ -55,6 +55,7 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
     <>
       <V2DrawerSheet
         open={props.open}
+        modal={props.modal}
         onRequestClose={h.requestClose}
         side="bottom"
         title={drawerTitle}

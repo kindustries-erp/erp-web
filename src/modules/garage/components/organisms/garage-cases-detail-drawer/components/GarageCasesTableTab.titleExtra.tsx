@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge } from "@/v2/shared/ui/badge";
+import { V2Badge } from "@/v2/shared/components/atoms/v2-badge";
 import { money } from "@/shared/utils/format";
 
 export interface GarageCasesTableTitleExtraProps {
@@ -18,7 +18,7 @@ export interface GarageCasesTableTitleExtraProps {
 }
 
 const AMOUNT_BADGE =
-  "text-[11px] font-mono font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30";
+  "h-6 px-2.5 rounded-full text-[11px] font-mono font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30";
 
 export const GarageCasesTableTitleExtra: React.FC<
   GarageCasesTableTitleExtraProps
@@ -44,29 +44,29 @@ export const GarageCasesTableTitleExtra: React.FC<
           : `${caseCount} ${t("common.cases", "phiếu")}`}
       </span>
       {truncated && (
-        <Badge
+        <V2Badge
           data-testid="cases-table-truncated"
           variant="outline"
-          className="text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
+          className="h-6 px-2 rounded-full text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
         >
           {t("cases.vehicleTruncated", "Hiển thị {{shown}}/{{total}} xe", {
             shown: loadedVehicles,
             total: vehicleTotal,
           })}
-        </Badge>
+        </V2Badge>
       )}
       {showProfitMetrics && totalBilled > 0 && (
-        <Badge
+        <V2Badge
           variant="outline"
-          className="text-[11px] font-mono font-bold bg-primary/10 text-primary border-primary/20"
+          className="h-6 px-2.5 rounded-full text-[11px] font-mono font-bold bg-primary/10 text-primary border-primary/20 dark:border-primary/30"
         >
           {money(totalBilled)}
-        </Badge>
+        </V2Badge>
       )}
       {totalRemaining > 0 && (
-        <Badge variant="outline" className={AMOUNT_BADGE}>
+        <V2Badge variant="outline" className={AMOUNT_BADGE}>
           {money(totalRemaining)}
-        </Badge>
+        </V2Badge>
       )}
     </div>
   );

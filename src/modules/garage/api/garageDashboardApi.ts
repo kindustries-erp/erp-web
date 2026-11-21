@@ -287,6 +287,12 @@ export interface GarageCheckpointCaseItem {
   vehicleKey?: string;
   soChungTu: string;
   bienSoXe: string;
+  soKhung?: string | null;
+  hangXeCode?: string | null;
+  hangXeName?: string | null;
+  dongXeCode?: string | null;
+  dongXeName?: string | null;
+  namSanXuat?: number | null;
   khachHangCode: string;
   khachHangName: string;
   tinhTrangDichVu?: number;

@@ -50,6 +50,7 @@ export const GarageCasesDetailDrawer: React.FC<
     checkpointSummary,
     breakdownSummary,
     vatWarningInfo,
+    cases,
     classificationDrawer,
     setClassificationDrawer,
     partnerDrawer,
@@ -91,11 +92,21 @@ export const GarageCasesDetailDrawer: React.FC<
 
   if (!scope) return null;
 
+  // Khi có bất kỳ Drawer V1 con nào mở đè lên (Chi tiết phiếu, Xuất excel, Phân loại, Đối tác):
+  // Hạ cấp modal={false} để giải phóng react-remove-scroll của Radix Dialog V2, giúp Drawer V1 con cuộn chuột 100% mượt mà!
+  const hasNestedOpenDrawer = Boolean(
+    selectedCaseCode ||
+    classificationDrawer.open ||
+    partnerDrawer.open ||
+    exportOpen,
+  );
+
   return (
     <>
       <V2StandardDrawer
         id="garage-cases-detail-drawer"
         open={open}
+        modal={!hasNestedOpenDrawer}
         mode="view"
         onClose={onClose}
         title={title}
@@ -140,12 +151,15 @@ export const GarageCasesDetailDrawer: React.FC<
         }
         size="xl"
         layout="2-columns"
+        fillHeight={true}
+        bodyClassName="overflow-hidden p-3 sm:p-4 md:p-[18px]"
         tabs={drawerTabs}
         defaultTabKey="cases"
         collapsibleRightPanel={true}
         rightPanel={
           <GarageCasesRightPanel
             item={safeItem}
+            cases={cases}
             pnlSummary={pnlSummary}
             checkpointSummary={checkpointSummary}
             breakdownSummary={breakdownSummary}

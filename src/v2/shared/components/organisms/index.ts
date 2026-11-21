@@ -18,3 +18,4 @@ export * from "./v2-mobile-catalog-section-list";
 export * from "./v2-export-excel-drawer";
 export * from "./v2-document-traceability";
 export * from "./v2-floating-chat";
+export * from "./v2-kanban-board";

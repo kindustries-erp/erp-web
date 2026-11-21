@@ -233,3 +233,29 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
 - Phần dùng chung nằm ở `src/v2/core/garage-cases/vehicle/` (`GARAGE_CASE_VEHICLE_COLUMNS`, `buildVehicleInfoRows`, `formatVehicleBrand/Model/Payer/ModelYear`, `GarageCaseVehicleCell`, `GarageCasePayerCell`, locale `v2.garageCases.vehicle.*`). Bảng V1 (`GarageCasesTable.vehicle-columns.tsx`) và drawer (`GarageCaseGeneralInfoSection`) chỉ ghép; khi migrate V2 chỉ cần đọc lại cấu hình này.
 - Khóa cột = khóa lọc/sắp xếp API: `soKhung`, `hangXe`, `dongXe`, `namSanXuat`, `doiTuongThanhToan`. Mặc định ẩn ở view Tổng quan và Đối soát, bật ở "Tất cả cột". Xuất Excel chưa có 5 cột này.
 - Xuất Excel: `garageCasesExportColumns.ts` có nhóm `vehicle` (5 cột trên), nằm ngoài bộ mặc định (`OPTIONAL_GARAGE_CASES_EXPORT_KEYS`); nhãn locale `exportReport.casesColumns.*`. Tổng cột chọn được: 39 (mặc định 30).
+
+---
+
+## 9. Tab Tiến độ công việc (Kanban Board) trong Drawer Chi Tiết Vụ Việc (KINDU-1598)
+
+- **V2 Shared Organism `v2-kanban-board`** (`src/v2/shared/components/organisms/v2-kanban-board/`):
+  - Tái sử dụng chung cho toàn bộ dự án ERP, hỗ trợ kéo thả thẻ qua `@dnd-kit/core` và `@dnd-kit/sortable`.
+  - Hỗ trợ cuộn ngang giữa các cột, cuộn dọc bên trong cột, header có icon, tiêu đề, badge đếm, subtotal và `DragOverlay`.
+  - Cấu hình cảm biến an toàn `PointerSensor({ activationConstraint: { distance: 5 } })` chống drag nhầm khi click xem chi tiết hoặc Popover.
+- **V2 Core Garage Cases Kanban** (`src/v2/core/garage-cases/kanban/` và `components/garage-cases-kanban/`):
+  - 5 làn tiến độ: Tiếp nhận (`INTAKE`), Báo giá (`QUOTATION`), Đang làm (`IN_PROGRESS`), Hoàn thành (`COMPLETED`), Hủy (`CANCELLED`).
+  - Mỗi card đại diện cho **1 xe** (gom nhóm theo `bienSoXe`). Xe có nhiều phiếu trong kỳ được thể hiện bằng nút Popover (`GarageVehicleCasesPopover`), click mở popover xem danh sách phiếu đầy đủ, click số phiếu gọi `onOpenCaseDetail`.
+  - Card hiển thị biển số xe phong cách dập nổi (`bg-amber-400/10`), tên khách hàng, mã phiếu, ngày hoàn thành/phát sinh, doanh thu phát sinh và nợ còn lại (hoặc badge "Đã thu đủ").
+  - Kéo thả xe giữa các cột cập nhật mốc tiến độ trực quan, bắn toast thông báo kèm i18n đầy đủ.
+- **Tích hợp Drawer**:
+  - Nhúng trực tiếp tại `GarageCasesDetailDrawer.tabs.tsx` qua tab `"kanban"` kế bên tab `"cases"` ("Danh sách xe") khi mở ở chế độ checkpoint overview.
+  - **Tối ưu kéo thả 60fps & Khắc phục kẹt cuộn**:
+    - `GarageVehicleKanbanCard.tsx`, `V2KanbanCardWrapper.tsx`, `V2KanbanLane.tsx` được memo hóa, tắt transition CSS khi kéo (`transition: none` khi isDragging), áp dụng biến đổi dịch chuyển mượt mà `CSS.Translate.toString(transform)`.
+    - Thuật toán va chạm 2 tầng `pointerWithin` -> `closestCorners` chống giật lag và nhảy lane bất thường khi kéo thẻ qua các ranh giới cột.
+    - Khắc phục xung đột `react-remove-scroll` của Radix Dialog V2 khi có Drawer V1 hoặc Popover mở chồng lên bằng cờ `modal={!hasNestedOpenDrawer}` trên `V2StandardDrawer` và `modal={false}` trên `GarageVehicleCasesPopover`.
+  - **Chuẩn hóa UI `/erp-ui-structure`**:
+    - Bọc toàn bộ bảng Kanban trong `DrawerSection` chuẩn với `fillHeight={true}`, căn chỉnh fit 100% viewport drawer không sinh scroll ngoài.
+    - Đồng bộ vị trí ô tìm kiếm `V2SearchInput` (`w-48 sm:w-64`) tại góc trên bên phải của cả 2 tab Danh sách xe và Tiến độ công việc.
+    - Cải tiến Panel phải của Drawer bằng `GarageVehicleProgressRightPanel` thể hiện các chỉ số thực tế: Tiến độ xử lý xe (4 mốc), Cơ cấu Top Hãng xe vào xưởng, và Dòng tiền dịch vụ xe.
+
+
