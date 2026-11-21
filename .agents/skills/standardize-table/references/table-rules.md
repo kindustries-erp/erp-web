@@ -881,9 +881,9 @@ Nhằm tối ưu hóa trải nghiệm tra cứu, đối soát dữ liệu lớn 
   - **Top Fullscreen Header Bar**: Hiển thị icon bảng, tiêu đề chứng từ/bảng (`tableTitle`), Badge tổng số dòng (`total`), và toàn bộ hàng nút hành động/tabs (`fullscreenHeaderExtra` chứa toàn bộ `TableActionGroup`: tabs trạng thái/thuế, dropdown kiểm toán, filter, search, ColumnToggle, Minimize2, Refresh, Sync/Create).
   - Toàn bộ chiều cao màn hình được tận dụng 100% (`flex-1 min-h-0`), sticky header và pagination cuộn mượt mà không bị giới hạn bởi layout cha.
 
-### Kiến trúc Atomic Component (`src/shared/components/DataTable/`):
+### Kiến trúc Atomic Component (`src/v1/components/DataTable/` kèm Facade tại `src/shared/components/DataTable/`):
 
-Core DataTable tuân thủ cấu trúc Atomic Refactor chuẩn:
+Core DataTable V1 tuân thủ cấu trúc Atomic Refactor chuẩn, mã nguồn gốc đặt tại `src/v1/components/DataTable/`:
 - `DataTable/types.ts`: Toàn bộ TypeScript interfaces & types.
 - `DataTable/utils.ts`: Pure helper functions (`getNestedValue`, `sanitizeActionColumnSizing`).
 - `DataTable/hooks/`:
@@ -899,7 +899,7 @@ Core DataTable tuân thủ cấu trúc Atomic Refactor chuẩn:
   - `FullscreenModal.tsx`: Fullscreen Portal Container & in-place placeholder.
 - `DataTable/DataTable.tsx`: Main Component gọn gàng kết nối hooks và UI layout.
 - `DataTable/index.ts`: Barrel export cho toàn bộ module.
-- `src/shared/components/DataTable.tsx`: Re-export wrapper tương thích ngược 100%.
+- `src/shared/components/DataTable.tsx` & `src/shared/components/DataTable/`: Re-export Facades tương thích ngược 100%.
 
 ### Hướng dẫn sử dụng:
 

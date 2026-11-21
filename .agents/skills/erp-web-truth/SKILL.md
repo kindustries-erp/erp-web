@@ -16,7 +16,6 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 ## 2. Lane và trạng thái
 
 - Lane giao hàng chính: branch `erp-master`. Repo `erp/erp-web` đang ở `erp-master`.
-- Thứ tự giao hàng: DB → API → UI → QC.
 - UI phải tiêu thụ đúng API contract thật. Trước khi viết hoặc sửa hook/API client, đối chiếu DTO với code API hoặc với module skill tương ứng.
 - Không suy đoán từ note cũ. Trước khi sửa status, đối chiếu code + build/test + git state.
 
@@ -29,6 +28,10 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 ## 4. Cấu trúc V1 và V2
 
 - `src/` chứa V1 (`src/core`, `src/modules`, `src/shared`).
+- `src/v1/` (`@/v1/*`) chứa mã nguồn V1 cũ đã được di chuyển có hệ thống khi V2 hoàn thành:
+  - `src/v1/pages/`: các trang V1 cũ (Users, Employees, Positions, Permissions, ActivityLog, Customers, Suppliers, Partners, EInvoice, WorkflowCanvas, CashflowVouchers, CashFlow, BankDeposit, CashFund, Login).
+  - `src/v1/components/`: các shared components V1 cũ (DataTable, StandardTable, SpreadsheetPageTemplate, SortTh, TablePagination, StandardFormDrawer, DrawerModal, drawer/, SlidePanel, Combobox, DatePicker, EmptyState, ConfirmModal, Toast, DrawerDocumentTraceability...). Tại `src/shared/components/*` duy trì hệ thống Facade Re-export mỏng trỏ về `@/v1/components/*` để bảo vệ 100% tính tương thích ngược.
+  - `src/v1/modules/`: các domain modules V1 cũ (users, hr-employees, hr, system-rbac, system-audit). Tại `src/modules/*` duy trì Facade Re-export trỏ về `@/v1/modules/*`.
 - `src/v2/` chứa V2, chạy song song tại `/v2/*` và dùng chung bundle với V1.
 - Alias `@/v2/*` → `src/v2/*`, `@/*` → `src/*`.
 - Module V2 và shared V2 không import V1, ngoại trừ auth store dùng chung (`@/modules/auth/domain/authStore`).
@@ -70,32 +73,15 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 
 ## 7. Quy tắc làm việc
 
-- Plan theo `/erp-plan` (cơ chế plan của agent). Chỉ làm sau khi user xác nhận `OK`. Theo dõi task trên Plane bằng skill `plane-work-items`.
+- Plan theo `/erp-plan`. Mandate (kích thước file, i18n, reuse, Definition of done) nằm ở `.agents/AGENTS.md`, không lặp lại ở đây.
 - Cấu trúc page: page → domain hook/query → domain components → shared primitives.
-- Mọi file React trên 180 dòng phải tách, trừ file V1 cũ không được chạm trong task.
-- i18n đầy đủ VI/EN, không hardcode chuỗi hiển thị.
 - Không dùng màu `blue-*` (No Blue Mandate). Dùng token ngữ cảnh.
-- Dùng `must` cho chuẩn đã được enforce trong repo, `prefer` cho hướng đi mục tiêu.
-- Nếu tạo component hoặc helper mới thay vì dùng lại, ghi lý do vào task.
-- Task chỉ xong khi có bằng chứng validate và trạng thái commit/push.
 
 ## 8. Bản đồ module
 
-Tài liệu chi tiết của từng module nằm tại `.agents/skills/modules/<module>/SKILL.md` (routing, PageKey, cột bảng, drawer, modal, API client, UX).
+Trước khi sửa hoặc thêm module, đọc `references/module-map.md` (cùng thư mục skill này) để tìm module, rồi đọc tiếp `../modules/<module>/SKILL.md` của module đó (routing, PageKey, cột bảng, drawer, modal, API client, UX). Bản đồ là file tự sinh từ `description` trong frontmatter của từng module, không sửa tay; module mới hoặc đổi phạm vi thì sửa `description` rồi chạy `/sync-agents`.
 
-- **Sản xuất & BOM**: `production-core`, `bom-core`
-- **Kho & tồn kho**: `inventory-dashboard`, `erp-inventory-items`, `erp-inventory-stock`, `erp-inventory-tracking`, `erp-inventory-transactions`, `erp-inventory-adjustments`, `erp-inventory-vouchers`
-- **Phụ tùng VinFast**: `vinfast-parts-stock`, `vinfast-parts-dashboard`
-- **Garage**: `garage-cases`, `garage-dashboard`, `inventory-movements-garage` (chứng từ kho và tồn kho Garage, thay trang Nhập kho Garage; lõi `inventory-movements` và `goods-receipts`; lõi PO dùng chung ở `src/v2/core/purchase-orders/`)
-- **Đối tác & nhà cung cấp**: `business-partners`, `erp-suppliers`
-- **Tài chính & hóa đơn**: `erp-invoice`, `bank-statements`, `cash-vouchers`, `transfer-qr` (QR chuyển khoản VietQR, lõi `transfer-qr-core`, module `transfer-qr-bank-statements`, nối dropdown Thao tác của tab Ngân hàng)
-- **File đính kèm dùng chung**: `file-attachments` (client `src/v2/shared/files`, organism `V2AttachmentsPanel`, tab Tài liệu ở drawer hóa đơn V2, trang `src/v2/modules/file-attachments-management`, URL chính `/file-attachments`)
-- **Quản trị, cấu hình, core store**: `rbac-core`, `app-store`, `users-management` (lõi `src/v2/core/users`, module `src/v2/modules/users-management`, route `/v2/users-management`), `employees-core` (lõi `src/v2/core/employees`, module `src/v2/modules/employees-management`, route `/v2/employees-management`), `audit-logs` (lõi `src/v2/core/audit`, module `src/v2/modules/audit-logs`, route `/v2/admin/audit-logs`)
-- **Layout và thành phần chuẩn V2**: `v2-layout`, `v2-foundation`, `v2-auth`, `v2-admin-layout`; bảng và drawer V2 nằm trong skill `standardize-table` (`standardize-table/references/v2-table.md`) và `standardize-drawer` (`standardize-drawer/references/v2-drawer.md`)
-- **AI Hub V2**: `ai-hub` (core `src/v2/core/ai-hub`, chatbot nổi dùng chung `V2FloatingChat` trong `src/v2/shared`, trợ lý AI đọc hóa đơn gắn ở trang garage-procurement tab `requests`)
-- **Shell và điều hướng**: xem `references/ui-shell-and-theme.md`
-
-Khi cần quét mới hoặc cập nhật tài liệu module: skill `scan-module-knowledge`.
+Bảng và drawer V2: skill `standardize-table` (`../standardize-table/references/v2-table.md`) và `standardize-drawer` (`../standardize-drawer/references/v2-drawer.md`). Shell và điều hướng: `references/ui-shell-and-theme.md`. Quét mới hoặc cập nhật tài liệu module: skill `scan-module-knowledge`.
 
 ## 9. Bằng chứng cần có
 

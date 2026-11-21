@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { Login } from "@/pages/Login";
+import { Login } from "@/v1/pages/Login";
 import { vi as viLocale } from "@/core/locale/vi";
 
 // -- Mocks --------------------------------------------------------------------

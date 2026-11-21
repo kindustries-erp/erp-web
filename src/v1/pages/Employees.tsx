@@ -35,8 +35,8 @@ import {
 import { usePermissionsEditor } from "@/modules/system/hooks/usePermissionsEditor";
 import { PermissionMatrixDrawer } from "@/modules/system/components/PermissionMatrixDrawer";
 import type { Role } from "@/modules/system/types/rbac";
-import { EmployeeDrawer } from "@/modules/hr/components/Employees/EmployeeDrawer";
-import { buildEmployeeColumns } from "@/modules/hr/components/Employees/employeeColumns";
+import { EmployeeDrawer } from "@/v1/modules/hr-employees/EmployeeDrawer";
+import { buildEmployeeColumns } from "@/v1/modules/hr-employees/employeeColumns";
 import {
   buildForm,
   emptyForm,
@@ -45,7 +45,7 @@ import {
   IconRefresh,
   STATUS_FILTER_FETCH_LIMIT,
   type EmpForm,
-} from "@/modules/hr/components/Employees/shared";
+} from "@/v1/modules/hr-employees/shared";
 
 export function NhanSu() {
   const t = useT();

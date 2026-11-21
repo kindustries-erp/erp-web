@@ -9,6 +9,7 @@ export default defineConfig({
     testTimeout: 15000,
     include: [
       "src/v2/**/*.{test,spec}.{ts,tsx}",
+      "src/shared/utils/*.test.ts",
       "src/core/components/layout/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/organisms/garage-debt-detail-drawer/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/organisms/garage-cases-detail-drawer/**/*.{test,spec}.{ts,tsx}",
@@ -23,6 +24,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      "@/v2": path.resolve(__dirname, "./src/v2"),
+      "@/v1": path.resolve(__dirname, "./src/v1"),
       "@": path.resolve(__dirname, "./src"),
     },
   },

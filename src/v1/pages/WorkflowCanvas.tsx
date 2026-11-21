@@ -8,8 +8,8 @@ import {
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { getWorkflowGraphApi } from "../modules/system/api/workflowGraphApi";
-import type { WorkflowNode } from "../modules/system/api/workflowGraphApi";
+import { getWorkflowGraphApi } from "@/modules/system/api/workflowGraphApi";
+import type { WorkflowNode } from "@/modules/system/api/workflowGraphApi";
 
 import {
   computeLayout,

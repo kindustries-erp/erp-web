@@ -111,25 +111,36 @@ vi.mock("@/modules/garage/hooks/useGarageMonthReceivablesBreakdown", () => ({
 
 vi.mock("@/modules/garage/api/garageDashboardApi", () => ({
   garageDashboardApi: {
-    getCheckpointCases: vi.fn().mockResolvedValue({
+    getCheckpointVehicles: vi.fn().mockResolvedValue({
       items: [
         {
-          id: "cp-1",
-          soChungTu: "GR-PDV2611-0002",
+          vehicleKey: "51H97732",
           bienSoXe: "51H97732",
-          khachHangCode: "KH001",
           khachHangName: "Anh Huỳnh Anh",
-          tenTinhTrangDichVu: "Kết thúc",
           classification: "KHAC",
-          doanhThu: 13800000,
-          chiPhi: 2000000,
-          loiNhuan: 11800000,
-          tienCoThue: 16800000,
-          tienDaThanhToan: 0,
-          tienConPhaiThanhToan: 16800000,
-          hasInvoice: false,
-          ngayHoanThanhCongViec: "2026-11-05",
-          ngayPhatSinh: "2026-11-01",
+          caseCount: 1,
+          soChungTus: ["GR-PDV2611-0002"],
+          cases: [
+            {
+              id: "cp-1",
+              vehicleKey: "51H97732",
+              soChungTu: "GR-PDV2611-0002",
+              bienSoXe: "51H97732",
+              khachHangCode: "KH001",
+              khachHangName: "Anh Huỳnh Anh",
+              tenTinhTrangDichVu: "Kết thúc",
+              classification: "KHAC",
+              doanhThu: 13800000,
+              chiPhi: 2000000,
+              loiNhuan: 11800000,
+              tienCoThue: 16800000,
+              tienDaThanhToan: 0,
+              tienConPhaiThanhToan: 16800000,
+              hasInvoice: false,
+              ngayHoanThanhCongViec: "2026-11-05",
+              ngayPhatSinh: "2026-11-01",
+            },
+          ],
         },
       ],
       total: 1,
@@ -138,6 +149,7 @@ vi.mock("@/modules/garage/api/garageDashboardApi", () => ({
       totalPages: 1,
       summary: {
         totalCount: 1,
+        totalCases: 2,
         totalTienCoThue: 16800000,
         totalRevenue: 13800000,
         totalCost: 2000000,
@@ -276,8 +288,13 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
         "Khoảng thời gian: 2026-11-01 đến 2026-11-30 · Phân loại: Sửa chữa chung",
       ),
     ).toBeInTheDocument();
+    // 1 xe (distinct biển số) nhưng 2 lệnh: hai số phải hiển thị tách bạch.
+    // Số liệu checkpoint tải bất đồng bộ nên chờ nhãn xuất hiện.
+    expect((await screen.findByTestId("cases-drawer-counts")).textContent).toBe(
+      "1 xe · 2 lệnh",
+    );
 
-    expect(garageDashboardApi.getCheckpointCases).toHaveBeenCalledWith(
+    expect(garageDashboardApi.getCheckpointVehicles).toHaveBeenCalledWith(
       expect.objectContaining({
         date_from: "2026-11-01",
         date_to: "2026-11-30",

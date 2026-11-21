@@ -4,6 +4,7 @@ import type {
   FunnelStageCounts,
 } from "./GarageCasesTableTab.type";
 import { normalizeClassificationKey } from "./GarageCasesTableTab.cells";
+import { countDistinctVehicles } from "./GarageCasesTableTab.helper";
 
 export interface BuildFilterTabsOptions {
   isFunnelMode: boolean;
@@ -55,10 +56,12 @@ export function buildGarageCaseFilterTabs({
   if (showProfitMetrics) {
     const getCount = (key: string) =>
       key === "ALL"
-        ? cases.length
-        : cases.filter(
-            (c) => normalizeClassificationKey(c.classification) === key,
-          ).length;
+        ? countDistinctVehicles(cases)
+        : countDistinctVehicles(
+            cases.filter(
+              (c) => normalizeClassificationKey(c.classification) === key,
+            ),
+          );
 
     return [
       {

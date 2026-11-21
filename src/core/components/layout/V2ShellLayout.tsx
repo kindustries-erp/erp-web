@@ -198,6 +198,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.manufacturing", "Sản xuất") },
           { label: t("nav.items.erpProduction", "Lệnh sản xuất") },
         ];
+      case "garage-cases-v2":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          { label: t("nav.items.garageCasesV2", "Hoạt động garage (v2)") },
+        ];
       case "garage-dashboard":
       case "garage-cases":
         return [

@@ -65,6 +65,7 @@ export type PageKey =
   | "cash-statement"
   | "garage-dashboard"
   | "garage-cases"
+  | "garage-cases-v2"
   | "garage-stock-vouchers"
   | "garage-stock-balances"
   | "garage-procurement"

@@ -31,7 +31,8 @@ export function FunnelOverviewCards({
   onStageClick,
 }: FunnelOverviewCardsProps) {
   const { t } = useTranslation("garage");
-  const unit = t("dashboard.funnel.casesUnit", "phiếu");
+  // Số trên thẻ là số XE (distinct biển số), không phải số phiếu.
+  const unit = t("dashboard.funnel.vehiclesUnit", "xe");
 
   const intakeTitle = t("dashboard.funnel.stageIntake", "1. Tổng Tiếp Nhận");
   const quotationTitle = t("dashboard.funnel.stageQuotation", "2. Báo Giá");
@@ -57,6 +58,12 @@ export function FunnelOverviewCards({
           {t(
             "dashboard.funnel.stageOverviewTitle",
             "Tổng Quan Các Giai Đoạn Phễu Tiếp Nhận",
+          )}
+        </span>
+        <span className={SUB_CLASS} data-testid="funnel-vehicle-count-note">
+          {t(
+            "dashboard.funnel.vehicleCountNote",
+            "Số xe đếm theo biển số khác nhau. Một xe có nhiều lệnh ở nhiều giai đoạn sẽ được đếm ở từng giai đoạn, nên tổng các giai đoạn có thể lớn hơn tổng xe.",
           )}
         </span>
       </div>

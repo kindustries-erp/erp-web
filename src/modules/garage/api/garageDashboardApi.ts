@@ -149,7 +149,10 @@ export interface GarageConversionFunnelStage {
 
 export interface GarageConversionFunnelClassificationItem {
   name: string;
+  /** Số XE (distinct biển số) trong nhóm. */
   totalCount: number;
+  /** Số lệnh (phiếu) trong nhóm; chỉ có khi API trả về. */
+  totalCases?: number;
   totalAmount: number;
   quotationCount?: number;
   quotationAmount?: number;
@@ -164,7 +167,16 @@ export interface GarageConversionFunnelClassificationItem {
 }
 
 export interface GarageConversionFunnel {
+  /**
+   * Số XE toàn kỳ (distinct biển số) trong `count`. Không bằng tổng các giai đoạn
+   * vì một xe có thể nằm ở nhiều giai đoạn.
+   */
   totalIntake: GarageConversionFunnelStage;
+  /**
+   * Số lệnh (phiếu) toàn kỳ. Chưa có trên API `conversionFunnel` của V1
+   * (`garage-dashboard-stats.service.ts`); để optional cho đến khi backend bổ sung.
+   */
+  totalCases?: number;
   /** Phiếu báo giá (chưa hoàn thành, chưa hủy), tách khỏi `inProgress`. */
   quotation?: GarageConversionFunnelStage;
   inProgress: GarageConversionFunnelStage;
@@ -230,7 +242,10 @@ export interface GarageKpiPeriod {
   totalPaid?: number;
   totalReceivable?: number;
   collectionRate?: number;
+  /** Số XE (distinct biển số) trong kỳ. */
   totalCount: number;
+  /** Số lệnh (phiếu) trong kỳ. */
+  totalCases?: number;
   stages?: GarageIntakeStages;
   revenueChart: number[];
   costChart: number[];
@@ -268,6 +283,8 @@ export interface GarageCheckpointKpisResponse {
 
 export interface GarageCheckpointCaseItem {
   id: string;
+  /** Khóa xe (biển số chuẩn hóa; phiếu không biển khóa theo id). */
+  vehicleKey?: string;
   soChungTu: string;
   bienSoXe: string;
   khachHangCode: string;
@@ -286,8 +303,31 @@ export interface GarageCheckpointCaseItem {
   ngayPhatSinh: string;
 }
 
+/** Một xe trong danh sách checkpoint gom theo xe (`group_by=vehicle`). */
+export interface GarageCheckpointVehicleItem {
+  vehicleKey: string;
+  bienSoXe: string | null;
+  khachHangName: string | null;
+  classification: string;
+  caseCount: number;
+  soChungTus: string[];
+  doanhThu: number;
+  chiPhi: number;
+  loiNhuan: number;
+  tienCoThue: number;
+  tienDaThanhToan: number;
+  tienConPhaiThanhToan: number;
+  hasInvoice: boolean;
+  ngayHoanThanhCongViec?: string | null;
+  ngayPhatSinh?: string | null;
+  cases: GarageCheckpointCaseItem[];
+}
+
 export interface GarageCheckpointSummary {
+  /** Số XE (distinct biển số) trong danh sách lọc. */
   totalCount: number;
+  /** Số lệnh (phiếu) trong danh sách lọc. */
+  totalCases?: number;
   totalTienCoThue: number;
   totalRevenue: number;
   totalCost: number;
@@ -323,6 +363,15 @@ export interface GarageCheckpointCasesResponse {
   totalPages: number;
   summary?: GarageCheckpointSummary;
   classificationSummary?: Record<string, GarageClassificationSummaryItem>;
+  groupBy?: "case" | "vehicle";
+}
+
+/** Phản hồi checkpoint-cases khi `group_by=vehicle`: mỗi item là một xe, `total` = số xe. */
+export interface GarageCheckpointVehiclesResponse extends Omit<
+  GarageCheckpointCasesResponse,
+  "items"
+> {
+  items: GarageCheckpointVehicleItem[];
 }
 
 export interface GarageCustomerDebtInfo {
@@ -384,6 +433,27 @@ export const garageDashboardApi = {
     const { data } = await axiosInstance.get<GarageCheckpointCasesResponse>(
       `${BASE}/checkpoint-cases`,
       { params },
+    );
+    return data;
+  },
+
+  /** Danh sách checkpoint gom theo XE (mỗi xe kèm các lệnh của nó). */
+  getCheckpointVehicles: async (params: {
+    date_from: string;
+    date_to: string;
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    payment_status?: "all" | "remaining" | "paid" | "unpaid";
+    classification?: string;
+    status?: string;
+    sort_by?: string;
+    sort_order?: "ASC" | "DESC";
+    is_funnel?: boolean;
+  }): Promise<GarageCheckpointVehiclesResponse> => {
+    const { data } = await axiosInstance.get<GarageCheckpointVehiclesResponse>(
+      `${BASE}/checkpoint-cases`,
+      { params: { ...params, group_by: "vehicle" } },
     );
     return data;
   },

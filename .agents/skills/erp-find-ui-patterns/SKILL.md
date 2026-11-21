@@ -14,7 +14,7 @@ Tránh việc Agent tự phát minh lại bánh xe (reinvent the wheel) bằng c
 Mỗi khi bạn được yêu cầu xây dựng một giao diện hoặc luồng xử lý liên quan đến hiển thị dữ liệu dạng bảng, form nhập liệu trong modal/drawer, bạn BẮT BUỘC thực hiện các bước sau TRƯỚC KHI sinh code mới:
 
 1. Dùng công cụ tìm kiếm nội dung của agent đang chạy (`grep`/`Grep`/`grep_search`, hoặc `rg`) để tìm keyword (ví dụ: `Drawer`, `Modal`, `Spreadsheet`, `Filter`) theo đúng phiên bản đang làm:
-   - **V1** (code ngoài `src/v2/`): `src/shared/components/`.
+   - **V1** (code ngoài `src/v2/`): mã nguồn gốc tại `src/v1/components/` (kèm Facade re-export tại `src/shared/components/`).
    - **V2** (code trong `src/v2/`): `src/v2/shared/ui/` (primitive) và `src/v2/shared/components/{atoms,molecules,organisms,templates}/`. Code V2 không import V1 (xem `erp-web-truth` mục 4).
 2. Xác định file chứa component cốt lõi (thường nằm ở `common` hoặc `shared`).
 3. Dùng công cụ đọc file của agent (`Read`/`view_file`/`cat`) để đọc nội dung file đó.

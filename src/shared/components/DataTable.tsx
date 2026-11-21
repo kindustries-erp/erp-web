@@ -1,2 +1,2 @@
-export * from "./DataTable/index";
-export { DataTable as default } from "./DataTable/index";
+export * from "@/v1/components/DataTable";
+export { DataTable as default } from "@/v1/components/DataTable";

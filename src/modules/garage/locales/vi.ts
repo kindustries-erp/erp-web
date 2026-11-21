@@ -266,6 +266,11 @@ export const garageVi = {
         "Chưa có dữ liệu phễu chuyển đổi trong khoảng thời gian này",
       casesUnit: "phiếu",
       vehiclesUnit: "xe",
+      /** Đơn vị số lệnh (phiếu dịch vụ), đi kèm đơn vị xe trong nhãn "N xe · M lệnh". */
+      casesCountUnit: "lệnh",
+      /** Chú thích: số xe đếm theo biển số, nên tổng các giai đoạn có thể lớn hơn tổng xe. */
+      vehicleCountNote:
+        "Số xe đếm theo biển số khác nhau. Một xe có nhiều lệnh ở nhiều giai đoạn sẽ được đếm ở từng giai đoạn, nên tổng các giai đoạn có thể lớn hơn tổng xe.",
     },
     recentCases: {
       title: "Phiếu dịch vụ gần đây",
@@ -286,6 +291,10 @@ export const garageVi = {
   cases: {
     title: "Hoạt động garage",
     desc: "Quản lý phiếu dịch vụ & sổ báo giá Garage",
+    vehicleTruncated: "Hiển thị {{shown}}/{{total}} xe",
+    invoice: {
+      issued: "Đã xuất",
+    },
     tabs: {
       all: "Tất cả",
       quotation: "Báo giá",
@@ -328,6 +337,7 @@ export const garageVi = {
     columns: {
       caseDate: "Ngày tiếp nhận",
       caseCode: "Số chứng từ",
+      caseCount: "Số lệnh",
       licensePlate: "Biển số xe",
       customer: "Khách hàng",
       customerCode: "Mã KH",

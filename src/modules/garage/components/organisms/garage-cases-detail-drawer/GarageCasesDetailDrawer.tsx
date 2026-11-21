@@ -15,6 +15,7 @@ import { DebtRateBadge } from "../garage-debt-detail-drawer/components/DebtRateB
 import { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 import { useGarageCasesDrawerTabs } from "./GarageCasesDetailDrawer.tabs";
 import type { GarageCasesDetailDrawerProps } from "./GarageCasesDetailDrawer.type";
+import { formatVehiclesAndCases } from "./GarageCasesDetailDrawer.helper";
 
 /**
  * Organism lõi dùng chung cho xem chi tiết vụ việc dịch vụ xưởng (Doanh thu & Công nợ).
@@ -65,6 +66,18 @@ export const GarageCasesDetailDrawer: React.FC<
 
   const drawerTabs = useGarageCasesDrawerTabs(logic);
 
+  // Checkpoint: số XE (distinct biển số) và số LỆNH của cùng một bộ lọc.
+  const countsLabel = checkpointSummary
+    ? formatVehiclesAndCases(
+        checkpointSummary.totalCount,
+        checkpointSummary.totalCases ?? 0,
+        {
+          vehicles: t("dashboard.funnel.vehiclesUnit", "xe"),
+          cases: t("dashboard.funnel.casesCountUnit", "lệnh"),
+        },
+      )
+    : null;
+
   const drawerActions = useMemo<DrawerAction[]>(
     () => [
       {
@@ -103,6 +116,14 @@ export const GarageCasesDetailDrawer: React.FC<
         }
         titleExtra={
           <div className="flex items-center gap-2">
+            {countsLabel && (
+              <span
+                className="text-xs font-medium text-muted-foreground"
+                data-testid="cases-drawer-counts"
+              >
+                {countsLabel}
+              </span>
+            )}
             <DebtRateBadge rate={mainRate} isReceipt={isReceipt} />
             {isCheckpoint && (
               <Button

@@ -23,6 +23,8 @@ export interface GarageCaseDetailRow {
   partnerType: "insurance" | "enterprise" | "individual";
   debtorName: string;
   invoiceNo?: string;
+  /** Đã xuất hóa đơn nhưng API không trả số hóa đơn (checkpoint). */
+  hasInvoice?: boolean;
   vatWarning?: boolean;
   billed: number;
   paid: number;
@@ -35,6 +37,12 @@ export interface GarageCaseDetailRow {
   classification?: string;
   tinhTrangDichVu?: number;
   serviceStatus?: string;
+  /** Khóa xe; có ở danh sách checkpoint để gom theo xe. */
+  vehicleKey?: string;
+  /** Hàng gom theo xe: số lệnh của xe trong bộ lọc hiện tại. */
+  caseCount?: number;
+  /** Hàng gom theo xe: các lệnh (mới nhất trước) để mở rộng. */
+  childCases?: GarageCaseDetailRow[];
 }
 
 export interface FunnelStageCounts {
@@ -55,4 +63,6 @@ export interface GarageCasesTableTabProps {
   funnelCounts?: FunnelStageCounts;
   isFunnelScope?: boolean;
   initialCategoryFilter?: string;
+  /** Tổng số xe theo API (checkpoint); lớn hơn số đã tải thì báo bị cắt. */
+  vehicleTotal?: number;
 }
