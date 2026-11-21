@@ -258,4 +258,8 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
     - Đồng bộ vị trí ô tìm kiếm `V2SearchInput` (`w-48 sm:w-64`) tại góc trên bên phải của cả 2 tab Danh sách xe và Tiến độ công việc.
     - Cải tiến Panel phải của Drawer bằng `GarageVehicleProgressRightPanel` thể hiện các chỉ số thực tế: Tiến độ xử lý xe (4 mốc), Cơ cấu Top Hãng xe vào xưởng, và Dòng tiền dịch vụ xe.
 
+## Cơ cấu chi phí và chiết khấu 521 trong drawer phiếu (KINDU-1623, cập nhật 2026-11-21)
+- `GarageCasePreview.helper.ts` (`calculateProfitSummary`) không tự parse `journal_items` nữa: dùng `costBreakdown` do backend trả (`grossProfit.costBreakdown`, rồi `caseData.costBreakdown`), chuẩn hóa tên (`externalCost`→`outsourceCost`, `warehousePartsCost`→`inventoryPartCost`).
+- `QuoteDocumentCostSummary` hiển thị "Chiết khấu (giảm trừ doanh thu, TK 521)" thành dòng riêng ngoài cụm chi phí (`data-testid="cost-summary-discount"`); "Tổng chi phí" không cộng chiết khấu. Biên lợi nhuận do backend tính trên doanh thu thuần.
+- Test V1 của thư mục này không nằm trong `vitest.config.ts` mặc định; chạy bằng config tạm trỏ `src/modules/garage/components/organisms/garage-case-preview/**`.
 

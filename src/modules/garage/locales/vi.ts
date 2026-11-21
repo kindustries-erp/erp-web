@@ -1000,7 +1000,7 @@ export const garageVi = {
       tk1541: "1. Phụ tùng kho (1541)",
       tk1542: "2. Mua ngoài/DV (1542)",
       tk1543: "3. Hoa hồng/Khác (1543)",
-      tk521: "4. Chiết khấu (521)",
+      tk521: "Chiết khấu (giảm trừ doanh thu, TK 521)",
       revenueSummary: "Doanh thu (chưa thuế)",
       totalCostSummary: "Tổng chi phí vụ việc",
       partCostSummary: "Giá vốn phụ tùng",

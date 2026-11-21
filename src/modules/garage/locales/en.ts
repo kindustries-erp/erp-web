@@ -995,7 +995,7 @@ export const garageEn = {
       tk1541: "1. Warehouse Parts (1541)",
       tk1542: "2. Outsource / Services (1542)",
       tk1543: "3. Commissions / Other (1543)",
-      tk521: "4. Discounts (521)",
+      tk521: "Discount (revenue deduction, acct 521)",
       revenueSummary: "Revenue (excl. VAT)",
       totalCostSummary: "Total Case Cost",
       partCostSummary: "Parts Cost of Goods",
