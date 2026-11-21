@@ -123,7 +123,7 @@ describe("GarageCasesKanbanTab Component", () => {
   it("filters vehicles when searching", () => {
     render(<GarageCasesKanbanTab cases={mockCases} />);
 
-    const searchInput = screen.getByPlaceholderText(/Tìm kiếm biển số xe/i);
+    const searchInput = screen.getByPlaceholderText(/Tìm số phiếu, xe/i);
     fireEvent.change(searchInput, { target: { value: "29B" } });
     fireEvent.keyDown(searchInput, { key: "Enter" });
 

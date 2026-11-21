@@ -29,8 +29,8 @@ export const DebtPnlKpiCard: React.FC<DebtPnlKpiCardProps> = ({ summary }) => {
   return (
     <div className="grid grid-cols-1 gap-2 w-full">
       {/* 1. Doanh thu thuần */}
-      <div className="flex items-center justify-between p-2 rounded-lg bg-surface border border-border/60 shadow-xs">
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+      <div className="flex items-center justify-between p-2.5 rounded-xl bg-surface/50 dark:bg-zinc-900/40 border border-border/40 dark:border-white/[0.06]">
+        <span className="text-[11px] font-medium text-muted-fg uppercase tracking-wider">
           Doanh thu thuần
         </span>
         <span className="text-[13px] font-bold font-mono text-foreground tabular-nums">
@@ -39,17 +39,17 @@ export const DebtPnlKpiCard: React.FC<DebtPnlKpiCardProps> = ({ summary }) => {
       </div>
 
       {/* 2. Giá vốn dịch vụ */}
-      <div className="flex items-center justify-between p-2 rounded-lg bg-surface border border-border/60 shadow-xs">
-        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+      <div className="flex items-center justify-between p-2.5 rounded-xl bg-surface/50 dark:bg-zinc-900/40 border border-border/40 dark:border-white/[0.06]">
+        <span className="text-[11px] font-medium text-muted-fg uppercase tracking-wider">
           Giá vốn dịch vụ
         </span>
-        <span className="text-[13px] font-bold font-mono text-muted-foreground tabular-nums">
+        <span className="text-[13px] font-bold font-mono text-muted-fg tabular-nums">
           {money(cost)}
         </span>
       </div>
 
       {/* 3. Lãi gộp & Biên LN */}
-      <div className="flex items-center justify-between p-2 rounded-lg bg-surface border border-border/60 shadow-xs">
+      <div className="flex items-center justify-between p-2.5 rounded-xl bg-surface/50 dark:bg-zinc-900/40 border border-border/40 dark:border-white/[0.06]">
         <div className="flex items-center gap-1">
           <TrendingUp className="w-3 h-3 text-primary" />
           <span className="text-[11px] font-medium text-primary uppercase tracking-wider">
@@ -67,7 +67,7 @@ export const DebtPnlKpiCard: React.FC<DebtPnlKpiCardProps> = ({ summary }) => {
           >
             {money(profit)}
           </span>
-          <span className="text-[10px] text-muted-foreground font-medium tabular-nums">
+          <span className="text-[10px] text-muted-fg font-medium tabular-nums">
             ({margin.toFixed(1)}%)
           </span>
         </div>

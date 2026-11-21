@@ -249,4 +249,13 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
   - Kéo thả xe giữa các cột cập nhật mốc tiến độ trực quan, bắn toast thông báo kèm i18n đầy đủ.
 - **Tích hợp Drawer**:
   - Nhúng trực tiếp tại `GarageCasesDetailDrawer.tabs.tsx` qua tab `"kanban"` kế bên tab `"cases"` ("Danh sách xe") khi mở ở chế độ checkpoint overview.
+  - **Tối ưu kéo thả 60fps & Khắc phục kẹt cuộn**:
+    - `GarageVehicleKanbanCard.tsx`, `V2KanbanCardWrapper.tsx`, `V2KanbanLane.tsx` được memo hóa, tắt transition CSS khi kéo (`transition: none` khi isDragging), áp dụng biến đổi dịch chuyển mượt mà `CSS.Translate.toString(transform)`.
+    - Thuật toán va chạm 2 tầng `pointerWithin` -> `closestCorners` chống giật lag và nhảy lane bất thường khi kéo thẻ qua các ranh giới cột.
+    - Khắc phục xung đột `react-remove-scroll` của Radix Dialog V2 khi có Drawer V1 hoặc Popover mở chồng lên bằng cờ `modal={!hasNestedOpenDrawer}` trên `V2StandardDrawer` và `modal={false}` trên `GarageVehicleCasesPopover`.
+  - **Chuẩn hóa UI `/erp-ui-structure`**:
+    - Bọc toàn bộ bảng Kanban trong `DrawerSection` chuẩn với `fillHeight={true}`, căn chỉnh fit 100% viewport drawer không sinh scroll ngoài.
+    - Đồng bộ vị trí ô tìm kiếm `V2SearchInput` (`w-48 sm:w-64`) tại góc trên bên phải của cả 2 tab Danh sách xe và Tiến độ công việc.
+    - Cải tiến Panel phải của Drawer bằng `GarageVehicleProgressRightPanel` thể hiện các chỉ số thực tế: Tiến độ xử lý xe (4 mốc), Cơ cấu Top Hãng xe vào xưởng, và Dòng tiền dịch vụ xe.
+
 

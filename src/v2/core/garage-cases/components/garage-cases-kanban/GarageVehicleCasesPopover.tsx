@@ -31,12 +31,13 @@ export const GarageVehicleCasesPopover: React.FC<
     .join(" ");
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover modal={false} open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent
         align="start"
         side="bottom"
         sideOffset={8}
+        onWheel={(e) => e.stopPropagation()}
         className={cn(
           "w-[760px] max-w-[95vw] p-4 space-y-3 z-50 rounded-2xl",
           "bg-popover dark:bg-zinc-900/98 backdrop-blur-md",
@@ -82,7 +83,10 @@ export const GarageVehicleCasesPopover: React.FC<
         </div>
 
         {/* ── Table Danh Sách Phiếu ── */}
-        <div className="overflow-x-auto max-h-64 overflow-y-auto rounded-lg border border-border/50 dark:border-white/[0.08]">
+        <div
+          onWheel={(e) => e.stopPropagation()}
+          className="overflow-x-auto max-h-64 overflow-y-auto rounded-lg border border-border/50 dark:border-white/[0.08] overscroll-contain"
+        >
           <table className="w-full text-left border-collapse text-xs">
             <thead className="bg-surface-hover/70 dark:bg-zinc-800/60 sticky top-0 z-10 border-b border-border/50 dark:border-white/[0.08]">
               <tr className="text-[11px] text-muted-fg font-semibold uppercase tracking-wider">

@@ -5,8 +5,11 @@ import {
   KeyboardSensor,
   PointerSensor,
   closestCorners,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -44,6 +47,19 @@ export function V2KanbanBoard<T = any>({
     if (!activeItemId) return null;
     return findItemAndLane(lanes, activeItemId, getItemId);
   }, [activeItemId, lanes, getItemId]);
+
+  // Thuật toán va chạm 2 tầng tối ưu hiệu năng: pointerWithin trước -> fallback rect/corners
+  const collisionDetection: CollisionDetection = React.useCallback((args) => {
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    const rectCollisions = rectIntersection(args);
+    if (rectCollisions.length > 0) {
+      return rectCollisions;
+    }
+    return closestCorners(args);
+  }, []);
 
   const handleDragStart = (event: DragStartEvent) => {
     if (isDragDisabled) return;
@@ -99,11 +115,11 @@ export function V2KanbanBoard<T = any>({
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex items-start gap-4 overflow-x-auto pb-4 pt-1 w-full flex-1 min-h-0 scrollbar-thin">
+        <div className="flex items-stretch gap-4 overflow-x-auto pb-2 pt-1 w-full flex-1 min-h-0 scrollbar-thin">
           {lanes.map((lane) => (
             <V2KanbanLane<T>
               key={lane.id}

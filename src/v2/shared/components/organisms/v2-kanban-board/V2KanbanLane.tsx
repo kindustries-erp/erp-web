@@ -10,7 +10,7 @@ import { cn } from "@/v2/shared/utils/cn";
 import { V2KanbanCardWrapper } from "./V2KanbanCardWrapper";
 import type { V2KanbanLaneProps } from "./V2KanbanBoard.type";
 
-export function V2KanbanLane<T = any>({
+function V2KanbanLaneInner<T = any>({
   lane,
   getItemId,
   renderCard,
@@ -31,7 +31,7 @@ export function V2KanbanLane<T = any>({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col flex-shrink-0 w-80 rounded-2xl border transition-colors duration-200",
+        "flex flex-col flex-shrink-0 w-80 h-full max-h-full min-h-0 rounded-2xl border transition-colors duration-200",
         "bg-surface/50 dark:bg-zinc-950/40 border-border/50 dark:border-white/[0.08] shadow-xs backdrop-blur-xs",
         isOver &&
           !lane.isDropDisabled &&
@@ -82,7 +82,7 @@ export function V2KanbanLane<T = any>({
       </div>
 
       {/* ── Lane Body (Scrollable List) ── */}
-      <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 min-h-[320px] max-h-[calc(100vh-240px)]">
+      <div className="flex-1 overflow-y-auto min-h-0 p-2.5 space-y-2.5 scrollbar-thin">
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
           {lane.items.map((item) => {
             const id = getItemId(item);
@@ -109,3 +109,7 @@ export function V2KanbanLane<T = any>({
     </div>
   );
 }
+
+export const V2KanbanLane = React.memo(
+  V2KanbanLaneInner,
+) as typeof V2KanbanLaneInner;

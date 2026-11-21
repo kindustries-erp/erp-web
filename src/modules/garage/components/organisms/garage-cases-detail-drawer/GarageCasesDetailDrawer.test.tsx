@@ -249,14 +249,14 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
     expect(screen.queryByText("Phải thu")).not.toBeInTheDocument();
     expect(screen.queryByText("Phải trả")).not.toBeInTheDocument();
 
-    // Right panel P&L
-    expect(screen.getByText("Hiệu quả kinh doanh (P&L)")).toBeInTheDocument();
-    expect(screen.getByText("Tiến độ Thu tiền & Công nợ")).toBeInTheDocument();
+    // Right panel Tiến độ Dịch vụ Xe & Dòng tiền Dịch vụ Xe
+    expect(screen.getByText("Tiến độ Dịch vụ Xe")).toBeInTheDocument();
+    expect(screen.getByText("Dòng tiền Dịch vụ Xe")).toBeInTheDocument();
 
-    // Cả header bảng và Right Panel đều có các nhãn P&L
+    // Header bảng có các nhãn P&L
     expect(
       screen.getAllByText("Doanh thu thuần").length,
-    ).toBeGreaterThanOrEqual(2);
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Chi phí").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Lợi nhuận gộp").length).toBeGreaterThanOrEqual(
       1,
@@ -321,7 +321,7 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
 
     // Kiểm tra các cột kanban xuất hiện
     expect(screen.getByText("Tiếp nhận")).toBeInTheDocument();
-    expect(screen.getByText("Đang làm")).toBeInTheDocument();
-    expect(screen.getByText("Hoàn thành")).toBeInTheDocument();
+    expect(screen.getAllByText("Đang làm").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Hoàn thành").length).toBeGreaterThanOrEqual(1);
   });
 });

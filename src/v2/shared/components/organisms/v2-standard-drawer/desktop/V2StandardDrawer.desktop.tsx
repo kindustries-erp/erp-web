@@ -47,6 +47,7 @@ export const V2StandardDrawerDesktop: React.FC<V2StandardDrawerProps> = (
     <>
       <V2DrawerSheet
         open={props.open}
+        modal={props.modal}
         onRequestClose={h.requestClose}
         side={h.isFullscreen ? "fullscreen" : "floating"}
         title={drawerTitle}
