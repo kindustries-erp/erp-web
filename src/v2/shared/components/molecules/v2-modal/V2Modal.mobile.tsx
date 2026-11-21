@@ -90,7 +90,7 @@ export const V2ModalMobile: React.FC<V2ModalProps> = ({
         {footer && (
           <DialogFooter
             className={cn(
-              "px-4 py-3 border-t border-border/60 bg-surface/50 shrink-0 flex-col-reverse gap-2",
+              "px-4 py-3 border-t border-border/60 bg-surface shrink-0 flex-col-reverse gap-2",
               footerClassName,
             )}
           >

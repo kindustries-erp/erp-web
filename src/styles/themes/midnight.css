@@ -60,7 +60,7 @@
     0 18px 44px -8px rgba(0, 0, 0, 0.65), 0 6px 16px rgba(0, 0, 0, 0.4);
 
   /* ── Modals & Tooltips ── */
-  --modal-bg: rgba(18, 21, 30, 0.96);
+  --modal-bg: #12151e;
   --tooltip-bg: #212634;
 
   /* ── Table sticky glass ── */
@@ -70,11 +70,26 @@
   /* ── Drawer frosted glass & overlay (V2 Standard Drawer) ── */
   --drawer-overlay-bg: rgba(0, 0, 0, 0.65);
   --drawer-bg: #161922;
+  --drawer-blur: 0px;
+
+  /* ── Kanban Semantic Tokens (Midnight) ── */
+  --kanban-lane-bg: rgba(18, 21, 30, 0.6);
+  --kanban-lane-border: rgba(255, 255, 255, 0.08);
+  --kanban-card-bg: #181c26;
+  --kanban-card-border: rgba(255, 255, 255, 0.05);
+  --kanban-card-drag-bg: #222836;
+  --kanban-card-drag-border: rgba(255, 255, 255, 0.18);
+  --kanban-card-drag-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  --kanban-lane-over-bg: rgba(16, 185, 129, 0.12);
+  --kanban-lane-over-border: #34d399;
+  --kanban-lane-over-ring: rgba(52, 211, 153, 0.25);
+  --kanban-placeholder-border: rgba(255, 255, 255, 0.12);
+  --kanban-placeholder-bg: rgba(255, 255, 255, 0.02);
   --drawer-border: rgba(255, 255, 255, 0.08);
-  --drawer-header-bg: rgba(20, 23, 33, 0.96);
-  --drawer-header-scrolled-bg: rgba(20, 23, 33, 0.98);
-  --drawer-footer-bg: rgba(20, 23, 33, 0.96);
-  --drawer-footer-scrolled-bg: rgba(20, 23, 33, 0.98);
+  --drawer-header-bg: #141721;
+  --drawer-header-scrolled-bg: #141721;
+  --drawer-footer-bg: #141721;
+  --drawer-footer-scrolled-bg: #141721;
   --drawer-section-bg: #1c202c;
 
   /* ── App shell & Sidebar ── */

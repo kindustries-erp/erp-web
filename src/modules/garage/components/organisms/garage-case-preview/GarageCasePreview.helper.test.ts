@@ -150,19 +150,15 @@ describe("GarageCasePreview.helper", () => {
       ChiPhi: 645000,
       LoiNhuan: 855000,
       BienLoiNhuan: 57,
-      journal_items: [
-        {
-          TaiKhoanNoCode: "1543",
-          ChiPhi: 200000,
-          NoiDung: "Hoa hồng bảo hiểm",
-        },
-        {
-          TaiKhoanNoCode: "1542",
-          ChiPhi: 220000,
-          NoiDung: "Thuê gia công pha sơn",
-        },
-        { TaiKhoanNoCode: "521", ChiPhi: 225000, NoiDung: "Chiết khấu" },
-      ],
+      // Backend đã phân loại journal: 521 là giảm trừ doanh thu, không nằm trong totalCost.
+      costBreakdown: {
+        warehousePartsCost: 0,
+        outsourceCost: 220000,
+        commissionCost: 200000,
+        discountCost: 225000,
+        otherCost: 0,
+        totalCost: 420000,
+      },
     };
 
     const summary = calculateProfitSummary({}, rawData, grossProfit);
@@ -180,7 +176,7 @@ describe("GarageCasePreview.helper", () => {
     expect(summary.costBreakdown?.outsourceCost).toBe(220000);
     expect(summary.costBreakdown?.commissionCost).toBe(200000);
     expect(summary.costBreakdown?.discountCost).toBe(225000);
-    expect(summary.costBreakdown?.totalCost).toBe(645000);
+    expect(summary.costBreakdown?.totalCost).toBe(420000);
     expect(summary.estimatedProfitPreTax).toBe(855000);
     expect(summary.estimatedProfitAfterTax).toBe(957000);
     expect(summary.isInsurance).toBe(true);

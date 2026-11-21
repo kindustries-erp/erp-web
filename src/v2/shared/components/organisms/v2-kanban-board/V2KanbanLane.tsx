@@ -32,24 +32,31 @@ function V2KanbanLaneInner<T = any>({
       ref={setNodeRef}
       className={cn(
         "flex flex-col flex-shrink-0 w-80 h-full max-h-full min-h-0 rounded-2xl border transition-colors duration-200",
-        "bg-surface/50 dark:bg-zinc-950/40 border-border/50 dark:border-white/[0.08] shadow-xs backdrop-blur-xs",
+        "bg-kanban-lane border-kanban-lane-border shadow-xs",
         isOver &&
           !lane.isDropDisabled &&
-          "bg-primary/5 border-primary/40 ring-2 ring-primary/20",
+          "bg-kanban-over border-kanban-over-border ring-2 ring-kanban-over-ring",
       )}
     >
       {/* ── Lane Header ── */}
       <div
         className={cn(
-          "flex items-center justify-between px-3.5 py-2.5 border-b border-border/40 dark:border-white/[0.06] rounded-t-2xl bg-surface/80 dark:bg-zinc-900/70 backdrop-blur-xs",
+          "flex items-center justify-between px-3.5 py-2.5 border-b border-kanban-lane-border rounded-t-2xl bg-kanban-card/80",
           lane.headerClassName,
         )}
       >
         <div className="flex items-center gap-2 min-w-0">
-          {lane.accentColor && (
+          {(lane.accentClassName || lane.accentColor) && (
             <span
-              className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ backgroundColor: lane.accentColor }}
+              className={cn(
+                "w-2.5 h-2.5 rounded-full shrink-0",
+                lane.accentClassName,
+              )}
+              style={
+                !lane.accentClassName && lane.accentColor
+                  ? { backgroundColor: lane.accentColor }
+                  : undefined
+              }
             />
           )}
           {lane.icon && (

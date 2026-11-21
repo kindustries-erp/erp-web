@@ -245,6 +245,27 @@ try {
   });
 
   await step("G. đăng nhập dưới quyền rồi quay lại admin", async () => {
+    // Chỉ admin@liouni.com có quyền đăng nhập dưới quyền (canImpersonate). Với tài khoản test
+    // (ai-test-*) chỉ kiểm nhánh âm: menu dòng không có mục này, và không thử đăng nhập admin.
+    if (ADMIN.toLowerCase() !== "admin@liouni.com") {
+      const row = page.locator("table tbody tr", { hasText: EMAIL }).first();
+      await row.waitFor({ timeout: 15000 });
+      await row.locator("button").last().click();
+      await page
+        .getByRole("menuitem", { name: "Xem chi tiết", exact: true })
+        .waitFor({ timeout: 10000 });
+      check(
+        "G0 tài khoản không phải admin@liouni.com không thấy mục Đăng nhập dưới quyền",
+        (await page
+          .getByRole("menuitem", { name: "Đăng nhập dưới quyền", exact: true })
+          .count()) === 0,
+      );
+      await page.keyboard.press("Escape");
+      console.log(
+        `INFO G: ${ADMIN} không có quyền đăng nhập dưới quyền (chỉ admin@liouni.com), bỏ qua G1 và G2 (có unit test userRowActions)`,
+      );
+      return;
+    }
     await openRowMenu(EMAIL, "Đăng nhập dưới quyền");
     await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
     const banner = page.getByTestId("v2-impersonation-banner").first();

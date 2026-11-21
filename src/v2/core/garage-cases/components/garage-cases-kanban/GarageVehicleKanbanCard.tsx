@@ -26,9 +26,9 @@ export const GarageVehicleKanbanCard: React.FC<GarageVehicleKanbanCardProps> =
         className={cn(
           "p-3 rounded-xl border space-y-2.5",
           "transition-[border-color,background-color,box-shadow] duration-150",
-          "bg-surface/90 dark:bg-zinc-900/70 border-border/40 dark:border-white/[0.06]",
-          "shadow-xs dark:shadow-[0_2px_8px_rgba(0,0,0,0.35)] hover:border-border/70 dark:hover:border-white/12",
-          isOverlay && "shadow-2xl border-primary ring-2 ring-primary/40",
+          "bg-kanban-card border-kanban-card-border shadow-card-item hover:border-border hover:shadow-card-item-hover",
+          isOverlay &&
+            "shadow-kanban-drag border-kanban-drag-border bg-kanban-drag ring-1 ring-border/20",
         )}
       >
         {/* ── Hàng 1: Biển số xe & Trạng thái phiếu active ── */}

@@ -139,6 +139,7 @@ export function buildGarageKanbanLanes(
       badgeCount: laneItems.length,
       subtotalLabel: laneTotalBilled > 0 ? money(laneTotalBilled) : undefined,
       accentColor: cfg.accentColor,
+      accentClassName: cfg.accentClassName,
       icon: React.createElement(Icon, { className: "w-3.5 h-3.5" }),
       items: laneItems,
     };

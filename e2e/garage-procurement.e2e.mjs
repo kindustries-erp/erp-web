@@ -4,7 +4,7 @@
 //   E2E_API_URL      (mặc định suy từ PORT API trong erp-api/.env, xem e2e-ports.mjs)
 //   E2E_PASSWORD     (BẮT BUỘC, mật khẩu tài khoản test; không hardcode)
 //   E2E_TAO_EMAIL    (mặc định ai-test-tao@example.com, người tạo)
-//   E2E_DUYET_EMAIL  (mặc định ai-test-duyet@example.com, người duyệt)
+//   E2E_ADMIN_EMAIL  (mặc định ai-test-admin@example.com, người duyệt)
 //   E2E_CHROME_PATH  (mặc định /usr/bin/google-chrome)
 // Chạy: bun run e2e:garage-procurement
 import { chromium } from "playwright-core";
@@ -15,7 +15,7 @@ const API = resolveApiUrl();
 const WEB = resolveWebUrl();
 const PASSWORD = process.env.E2E_PASSWORD;
 const TAO_EMAIL = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
-const DUYET_EMAIL = process.env.E2E_DUYET_EMAIL ?? "ai-test-duyet@example.com";
+const ADMIN_ACCOUNT_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "ai-test-admin@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
 if (!PASSWORD) {
   console.error(
@@ -37,13 +37,13 @@ const check = (step, pass, detail = "") => {
 
 // ---------- API helpers (dựng dữ liệu nền) ----------
 async function apiLogin(email) {
-  const r = await fetch(`${API}/api/v1/auth/login`, {
+  const r = await fetch(`${API}/api/v2/auth-sessions/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password: PASSWORD }),
   });
   const b = await r.json();
-  return { token: b.accessToken, user: b.user };
+  return { token: b.data?.accessToken, user: b.data?.user };
 }
 async function api(s, method, path, body) {
   const r = await fetch(`${API}/api/v2${path}`, {
@@ -112,7 +112,7 @@ async function step(name, fn) {
 
 // ---------- Dựng dữ liệu nền qua API ----------
 const tao = await apiLogin(TAO_EMAIL);
-const duyet = await apiLogin(DUYET_EMAIL);
+const duyet = await apiLogin(ADMIN_ACCOUNT_EMAIL);
 const SUPPLIER = "02c760ca-2a7c-454b-9c52-28712653062b";
 
 const mkPr = async (title) => {
@@ -578,7 +578,7 @@ await step(
     await shot(page, "E4-receipt-prefilled");
     check(
       "E4 đúng trang nhập kho",
-      page.url().includes("garage-goods-receipts"),
+      page.url().includes("garage-stock-vouchers"),
       page.url(),
     );
     check("E4 dòng A điền sẵn", await hasInputValue(`Nhập kho A ${TAG}`));
@@ -841,10 +841,10 @@ await step(
     await page.waitForTimeout(1500);
 
     await page
-      .getByRole("textbox", { name: "Mã", exact: true })
+      .getByPlaceholder("Mã...")
       .fill(`E2E-G1-${suffix}`);
     await page
-      .getByRole("textbox", { name: "Tên", exact: true })
+      .getByPlaceholder("Tên hàng...")
       .fill(`Tạo từ UI ${TAG}`);
     await page.getByLabel("Đơn giá", { exact: true }).fill("10");
     const [resp] = await Promise.all([
@@ -1086,7 +1086,7 @@ await step("G5 lịch sử có 2 phiếu và mở được phiếu", async () =>
   await shot(page, "G5-po-history-2");
   await page.getByText(receipt1.receiptNo, { exact: true }).first().click();
   await page.waitForFunction(
-    () => window.location.pathname.includes("garage-goods-receipts"),
+    () => window.location.pathname.includes("garage-stock-vouchers"),
     null,
     { timeout: 20000 },
   );
@@ -1125,6 +1125,16 @@ const mkDraft = async (kind, label) => {
   const id = await mkPr(`${TAG} ${label}`);
   return (await api(tao, "GET", `/procurement-requests-garage/${id}`)).data;
 };
+// Quyền purge của tài khoản test (Test Tạo có delete nhưng không có purge).
+const hasPurge = async (resource) => {
+  const r = await api(tao, "GET", "/auth-sessions/profile");
+  const perms = (r.data?.data ?? r.data)?.permissions ?? [];
+  return perms.some(
+    (x) =>
+      (x.resource === resource || x.resource === "*") &&
+      (x.action === "purge" || x.action === "*"),
+  );
+};
 const deletedCount = async (base, no) => {
   const r = await api(
     tao,
@@ -1159,6 +1169,16 @@ for (const kind of ["orders", "requests"]) {
       );
       await page.keyboard.press("Escape");
 
+      const purgeResource =
+        kind === "orders"
+          ? "garage_procurement_orders"
+          : "garage_procurement_requests";
+      if (!(await hasPurge(purgeResource))) {
+        console.log(
+          `INFO H ${kind}: tài khoản test không có quyền purge, bỏ qua nhánh Đã xóa mềm (có unit test useProcurementListTabState)`,
+        );
+        return;
+      }
       const del = await api(tao, "DELETE", `${base}/${doc.id}`);
       if (del.status === 403) {
         console.log(
@@ -1309,7 +1329,7 @@ await step(
   "I2 UI: drawer phiếu nhập có Đơn mua, NCC chỉ đọc, tổng đơn mua, badge cạnh mã phiếu",
   async () => {
     const gr = globalThis.__receiptI;
-    await page.goto(`${WEB}/v2/garage-goods-receipts`, {
+    await page.goto(`${WEB}/garage-stock-vouchers`, {
       waitUntil: "domcontentloaded",
     });
     await waitTable(page);
@@ -1363,12 +1383,12 @@ await step(
 await step(
   "I3 UI: tạo phiếu mới chọn đơn mua → NCC/dòng tự điền; thiếu đơn mua bị chặn",
   async () => {
-    await page.goto(`${WEB}/v2/garage-goods-receipts`, {
+    await page.goto(`${WEB}/garage-stock-vouchers`, {
       waitUntil: "domcontentloaded",
     });
     await waitTable(page);
     await page
-      .getByRole("button", { name: /tạo phiếu nhập kho/i })
+      .getByRole("button", { name: /nhập mua hàng/i })
       .first()
       .click();
     const dialog = page.getByRole("dialog").first();
@@ -1430,7 +1450,7 @@ const pageDuyet = await ctxDuyet.newPage();
 pageDuyet.setDefaultTimeout(20000);
 
 await step("J1 người duyệt được chỉ định: không có Hủy với PR đã duyệt", async () => {
-  await login(pageDuyet, DUYET_EMAIL);
+  await login(pageDuyet, ADMIN_ACCOUNT_EMAIL);
   await pageDuyet.goto(`${WEB}/v2/garage-procurement?tab=requests`, {
     waitUntil: "domcontentloaded",
   });
