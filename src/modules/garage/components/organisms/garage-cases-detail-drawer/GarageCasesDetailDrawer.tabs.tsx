@@ -1,10 +1,11 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Table as TableIcon, ShieldCheck, Clock } from "lucide-react";
+import { Table as TableIcon, ShieldCheck, Clock, Kanban } from "lucide-react";
 import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar/V2TabBar.type";
 import { GarageCasesTableTab } from "./components/GarageCasesTableTab";
 import { DebtPartnerTab } from "../garage-debt-detail-drawer/components/DebtPartnerTab";
 import { DebtClassificationTab } from "../garage-debt-detail-drawer/components/DebtClassificationTab";
+import { GarageCasesKanbanTab } from "@/v2/core/garage-cases";
 import type { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 
 type DrawerLogic = ReturnType<typeof useGarageCasesDetailDrawer>;
@@ -62,7 +63,19 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     };
 
     if (isCheckpoint) {
-      return [mainTab];
+      const kanbanTab: V2TabItemData = {
+        key: "kanban",
+        label: t("v2.garageCases.kanban.tabTitle", "Tiến độ công việc"),
+        icon: <Kanban className="w-3.5 h-3.5" />,
+        content: (
+          <GarageCasesKanbanTab
+            cases={cases}
+            onOpenCaseDetail={setSelectedCaseCode}
+          />
+        ),
+      };
+
+      return [mainTab, kanbanTab];
     }
 
     return [

@@ -237,11 +237,12 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
       true,
     );
 
-    // Tiêu đề checkpoint & tab Danh sách xe
+    // Tiêu đề checkpoint & tab Danh sách xe & tab Tiến độ công việc
     expect(
       screen.getByText("Vụ việc Dịch vụ Garage · Tháng 11/2026"),
     ).toBeInTheDocument();
     expect(screen.getByText("Danh sách xe")).toBeInTheDocument();
+    expect(screen.getByText("Tiến độ công việc")).toBeInTheDocument();
     expect(screen.getByText("Xuất Excel")).toBeInTheDocument();
 
     // Đã xóa nút Phải thu / Phải trả theo yêu cầu
@@ -301,5 +302,26 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
         classification: "SUA_CHUA_CHUNG",
       }),
     );
+  });
+
+  it("chuyển sang tab Tiến độ công việc và hiển thị Kanban khi click", async () => {
+    const { fireEvent } = await import("@testing-library/react");
+    renderCasesScope(
+      {
+        kind: "checkpoint",
+        dateFrom: "2026-11-01",
+        dateTo: "2026-11-30",
+        periodLabel: "Tháng 11/2026",
+      },
+      true,
+    );
+
+    const kanbanTabBtn = screen.getByText("Tiến độ công việc");
+    fireEvent.click(kanbanTabBtn);
+
+    // Kiểm tra các cột kanban xuất hiện
+    expect(screen.getByText("Tiếp nhận")).toBeInTheDocument();
+    expect(screen.getByText("Đang làm")).toBeInTheDocument();
+    expect(screen.getByText("Hoàn thành")).toBeInTheDocument();
   });
 });
