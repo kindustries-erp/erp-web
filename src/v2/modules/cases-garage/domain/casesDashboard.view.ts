@@ -2,7 +2,7 @@ import type {
   CasesDashboardClassRowView,
   CasesDashboardFunnelRowView,
   CasesDashboardKpiView,
-} from "@/v2/core/garage-cases/dashboard";
+} from "@/v2/core/cases-garage";
 import {
   CASES_DASHBOARD_CLASSES,
   CASES_DASHBOARD_FUNNEL_STAGES,

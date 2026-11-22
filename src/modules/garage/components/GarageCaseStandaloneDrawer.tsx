@@ -36,7 +36,7 @@ import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
 import {
   resolveGarageAddLink,
   resolveGarageUnlink,
-} from "@/v2/core/garage-cases";
+} from "@/v2/core/cases-garage";
 
 export interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;

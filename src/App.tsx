@@ -78,7 +78,7 @@ const AdminDashboardV2Page = lazy(() =>
 );
 
 const CasesDashboardGarageV2Page = lazy(() =>
-  import("@/v2/modules/cases-dashboard-garage").then((m) => ({
+  import("@/v2/modules/cases-garage").then((m) => ({
     default: m.CasesDashboardGaragePage,
   })),
 );

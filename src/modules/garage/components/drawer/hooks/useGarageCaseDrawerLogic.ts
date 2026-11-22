@@ -17,7 +17,7 @@ import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { SettlementSubmissionItem } from "@/modules/garage/components/GarageCaseSettlementDrawerModal";
 import type { DrawerAuditLogItem } from "@/shared/components/StandardFormDrawer";
 import type { TraceabilityGraphData } from "@/shared/types/traceability";
-import { buildGarageCaseTraceabilityGraph } from "@/v2/core/garage-cases";
+import { buildGarageCaseTraceabilityGraph } from "@/v2/core/cases-garage";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { money } from "@/shared/utils/format";
 import type { GarageCaseDetailViewMode } from "../../garage-case-details-tab/GarageCaseDetailsTab.type";

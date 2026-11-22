@@ -88,7 +88,7 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 Đã đáp ứng: trang nhiều tab (dashboard + bảng), bảng (tìm kiếm, pill tab, chế độ xem, lọc, chọn nhiều, hàng loạt, hàng tổng, phân trang), drawer chi tiết 2 cột + tab + xem/sửa + panel xem trước + xếp tầng nhiều drawer, drawer hạch toán và xuất, modal hàng loạt và nhập tệp, form (combobox, ngày, số, switch, textarea), dashboard (KPI, biểu đồ), quyền theo route.
 
 **Chưa có (cần làm riêng):**
-- Chứng từ liên kết đa tầng: engine ở `src/v2/shared/components/organisms/v2-document-traceability` (canvas, pipeline, bảng, `mergeTraceabilityGraph`, `resolveLinkTargetDocType`, `openErpDocument`). Phần đặc thù từng phân hệ nằm ở `src/v2/core/<họ>` (`garage-cases`, `invoices`) dưới dạng hàm thuần; drawer V1 gọi qua barrel và giữ state/modal/API. Facade V1 `DrawerDocumentTraceability` chỉ còn bọc `V2DocumentTraceability`.
+- Chứng từ liên kết đa tầng: engine ở `src/v2/shared/components/organisms/v2-document-traceability` (canvas, pipeline, bảng, `mergeTraceabilityGraph`, `resolveLinkTargetDocType`, `openErpDocument`). Phần đặc thù từng phân hệ nằm ở `src/v2/core/<họ>` (`cases-garage`, `invoices`) dưới dạng hàm thuần; drawer V1 gọi qua barrel và giữ state/modal/API. Facade V1 `DrawerDocumentTraceability` chỉ còn bọc `V2DocumentTraceability`.
 - Lưu cấu hình cột/view lên server: đã có đường ghi (PATCH nền, xem mục Preferences bảng), nhưng chưa xác minh chiều tải về khi mở trang (`applyServerTables` cần kiểm tra ai gọi). Chọn nhanh theo lịch trong bộ lọc cột (đã có sẵn khe ngày với mốc `today/last7/last30/thisMonth`).
 - Nhiều tab cùng một trang (`instanceIndex`) như V1.
 - Bảng không đồng bộ lại khi Back đổi query trên URL.

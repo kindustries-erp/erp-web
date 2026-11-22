@@ -4,7 +4,7 @@ import {
   CasesDashboardClassificationTable,
   CasesDashboardFunnel,
   CasesDashboardKpiCard,
-} from "@/v2/core/garage-cases/dashboard";
+} from "@/v2/core/cases-garage";
 import { useCasesDashboardGarage } from "../hooks/useCasesDashboardGarage";
 import {
   toClassRows,

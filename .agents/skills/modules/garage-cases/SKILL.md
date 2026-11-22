@@ -135,7 +135,7 @@ src/modules/garage/
   1. **Chi tiết (`quote_details`)**: Quản lý toàn bộ chi tiết và nghiệp vụ của vụ việc hiện tại, bên trong gồm 3 Sub-Tabs (`V2TabBar` variant SUB):
      - `Chi tiết báo giá` (`details`): Hiển thị `GarageCasePreview` bọc trong `DrawerSection title="Sổ báo giá & Lợi nhuận dự kiến"`.
      - `Tài chính` (`financials`): Hiển thị `GarageCaseFinancialsTab` (Bảng Phải thu/Phải trả cấn trừ & chi tiết dòng tiền), kèm `financialsBadgeCount`. Khi active sub-tab này, cột phải chuyển sang `GarageCaseFinancialsRightPanel`.
-     - `Chứng từ liên kết` (`linked_docs`): Mạng lưới Canvas Graph truy xuất nguồn gốc chứng từ đa chặng (`DrawerDocumentTraceability`), kèm `linkedDocsBadgeCount`. Kiến trúc 3 lớp: engine `v2-document-traceability` (shared, không biết phân hệ) → core `src/v2/core/garage-cases` (`buildGarageCaseTraceabilityGraph`, `resolveGarageAddLink`, `resolveGarageUnlink`, hàm thuần) → drawer V1 giữ state sửa/modal/API. Đồ thị gộp server + hóa đơn/khoản thu chi đang sửa qua `mergeTraceabilityGraph` (dedupe cạnh theo cặp node, node thủ công id `manual-<id>`, giữ node chặng sau còn nối root). Khi active sub-tab này, cột phải tự động ẩn (`hideRightPanel: true`) để biểu đồ mở rộng 100% chiều ngang.
+     - `Chứng từ liên kết` (`linked_docs`): Mạng lưới Canvas Graph truy xuất nguồn gốc chứng từ đa chặng (`DrawerDocumentTraceability`), kèm `linkedDocsBadgeCount`. Kiến trúc 3 lớp: engine `v2-document-traceability` (shared, không biết phân hệ) → core `src/v2/core/cases-garage` (`buildGarageCaseTraceabilityGraph`, `resolveGarageAddLink`, `resolveGarageUnlink`, hàm thuần) → drawer V1 giữ state sửa/modal/API. Đồ thị gộp server + hóa đơn/khoản thu chi đang sửa qua `mergeTraceabilityGraph` (dedupe cạnh theo cặp node, node thủ công id `manual-<id>`, giữ node chặng sau còn nối root). Khi active sub-tab này, cột phải tự động ẩn (`hideRightPanel: true`) để biểu đồ mở rộng 100% chiều ngang.
   2. **Chi tiết theo Khách hàng (`customer_details`)**: Main Tab độc lập hiển thị toàn bộ lịch sử phiếu dịch vụ, công nợ và tuổi nợ của khách hàng này (`GarageCasePartnerTab`), kèm `badgeCount` số phiếu (`partnerCasesCount`).
   3. **Lịch sử & Đồng bộ (`sync_history`)**: Timeline kiểm toán và đồng bộ từ KGara (`DrawerAuditTimeline`).
 - **Cột phải (`rightPanel`) linh hoạt**: Mặc định hiển thị `GarageCaseGeneralInfoSection`, `GarageCaseDefaultAttributesSection`, `ModuleEntityCustomFieldsSection` và `GarageCaseBusinessPerformanceSection`. Tự động switch sang `GarageCaseFinancialsRightPanel` ở sub-tab Tài chính, hoặc ẩn ở sub-tab Chứng từ liên kết.
@@ -230,7 +230,7 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
   - Tuân thủ No Blue Mandate: loại bỏ hoàn toàn các class `blue-*` khỏi bảng và summary row.
 
 ### Cột xe & đối tượng thanh toán (KINDU-1433)
-- Phần dùng chung nằm ở `src/v2/core/garage-cases/vehicle/` (`GARAGE_CASE_VEHICLE_COLUMNS`, `buildVehicleInfoRows`, `formatVehicleBrand/Model/Payer/ModelYear`, `GarageCaseVehicleCell`, `GarageCasePayerCell`, locale `v2.garageCases.vehicle.*`). Bảng V1 (`GarageCasesTable.vehicle-columns.tsx`) và drawer (`GarageCaseGeneralInfoSection`) chỉ ghép; khi migrate V2 chỉ cần đọc lại cấu hình này.
+- Phần dùng chung nằm ở `src/v2/core/cases-garage/vehicle/` (`GARAGE_CASE_VEHICLE_COLUMNS`, `buildVehicleInfoRows`, `formatVehicleBrand/Model/Payer/ModelYear`, `GarageCaseVehicleCell`, `GarageCasePayerCell`, locale `v2.garageCases.vehicle.*`). Bảng V1 (`GarageCasesTable.vehicle-columns.tsx`) và drawer (`GarageCaseGeneralInfoSection`) chỉ ghép; khi migrate V2 chỉ cần đọc lại cấu hình này.
 - Khóa cột = khóa lọc/sắp xếp API: `soKhung`, `hangXe`, `dongXe`, `namSanXuat`, `doiTuongThanhToan`. Mặc định ẩn ở view Tổng quan và Đối soát, bật ở "Tất cả cột". Xuất Excel chưa có 5 cột này.
 - Xuất Excel: `garageCasesExportColumns.ts` có nhóm `vehicle` (5 cột trên), nằm ngoài bộ mặc định (`OPTIONAL_GARAGE_CASES_EXPORT_KEYS`); nhãn locale `exportReport.casesColumns.*`. Tổng cột chọn được: 39 (mặc định 30).
 
@@ -242,7 +242,7 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
   - Tái sử dụng chung cho toàn bộ dự án ERP, hỗ trợ kéo thả thẻ qua `@dnd-kit/core` và `@dnd-kit/sortable`.
   - Hỗ trợ cuộn ngang giữa các cột, cuộn dọc bên trong cột, header có icon, tiêu đề, badge đếm, subtotal và `DragOverlay`.
   - Cấu hình cảm biến an toàn `PointerSensor({ activationConstraint: { distance: 5 } })` chống drag nhầm khi click xem chi tiết hoặc Popover.
-- **V2 Core Garage Cases Kanban** (`src/v2/core/garage-cases/kanban/` và `components/garage-cases-kanban/`):
+- **V2 Core Garage Cases Kanban** (`src/v2/core/cases-garage/kanban/` và `components/garage-cases-kanban/`):
   - 5 làn tiến độ: Tiếp nhận (`INTAKE`), Báo giá (`QUOTATION`), Đang làm (`IN_PROGRESS`), Hoàn thành (`COMPLETED`), Hủy (`CANCELLED`).
   - Mỗi card đại diện cho **1 xe** (gom nhóm theo `bienSoXe`). Xe có nhiều phiếu trong kỳ được thể hiện bằng nút Popover (`GarageVehicleCasesPopover`), click mở popover xem danh sách phiếu đầy đủ, click số phiếu gọi `onOpenCaseDetail`.
   - Card hiển thị biển số xe phong cách dập nổi (`bg-amber-400/10`), tên khách hàng, mã phiếu, ngày hoàn thành/phát sinh, doanh thu phát sinh và nợ còn lại (hoặc badge "Đã thu đủ").

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "layer": "web",
-  "family": "garage-cases",
+  "family": "cases-garage",
   "entity": "GarageCase",
-  "barrel": "src/v2/core/garage-cases/index.ts",
+  "barrel": "src/v2/core/cases-garage/index.ts",
   "localeNamespace": "garageCases",
   "exports": {
     "traceabilityGraph": "buildGarageCaseTraceabilityGraph",
