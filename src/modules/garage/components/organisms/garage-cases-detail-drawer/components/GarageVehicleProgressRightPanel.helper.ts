@@ -1,5 +1,5 @@
 import type { GarageCaseDetailRow } from "./GarageCasesTableTab.type";
-import { groupCasesByVehicle } from "@/v2/core/garage-cases/kanban";
+import { groupCasesByVehicle } from "@/v2/core/cases-garage";
 
 export interface VehicleProgressStats {
   totalVehicles: number;

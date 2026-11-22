@@ -5,7 +5,7 @@ import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar/
 import { GarageCasesTableTab } from "./components/GarageCasesTableTab";
 import { DebtPartnerTab } from "../garage-debt-detail-drawer/components/DebtPartnerTab";
 import { DebtClassificationTab } from "../garage-debt-detail-drawer/components/DebtClassificationTab";
-import { GarageCasesKanbanTab } from "@/v2/core/garage-cases";
+import { GarageCasesKanbanTab } from "@/v2/core/cases-garage";
 import type { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 
 type DrawerLogic = ReturnType<typeof useGarageCasesDetailDrawer>;

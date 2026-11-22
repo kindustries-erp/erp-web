@@ -8,7 +8,7 @@ import {
 } from "@/shared/components/DrawerModal";
 import { formatGMT7 } from "@/shared/utils/format";
 import { useTranslation } from "react-i18next";
-import { buildVehicleInfoRows } from "@/v2/core/garage-cases";
+import { buildVehicleInfoRows } from "@/v2/core/cases-garage";
 
 export interface GarageCaseGeneralInfoSectionProps {
   caseData: any;
