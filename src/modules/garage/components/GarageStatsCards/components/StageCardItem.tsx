@@ -6,7 +6,10 @@ import type { GarageStageClassifications } from "../../../api/garageDashboardApi
 export interface StageCardItemProps {
   stageKey: string;
   stageName: string;
+  /** Số XE (distinct biển số) của giai đoạn. */
   count: number;
+  /** Số lệnh (phiếu) của giai đoạn, chỉ hiển thị trong tooltip khi có. */
+  cases?: number;
   amount?: number;
   classifications?: GarageStageClassifications;
   testId: string;
@@ -23,6 +26,7 @@ export interface StageCardItemProps {
 export function StageCardItem({
   stageName,
   count,
+  cases,
   amount = 0,
   classifications,
   testId,
@@ -50,7 +54,9 @@ export function StageCardItem({
       >
         <div className="font-semibold text-foreground border-b border-border/60 pb-1 flex justify-between items-baseline">
           <span>Giai đoạn {stageName}</span>
-          <span className="font-mono">{count} xe</span>
+          <span className="font-mono" data-testid="stage-tooltip-count">
+            {count} xe{cases !== undefined ? ` · ${cases} lệnh` : ""}
+          </span>
         </div>
         {amount > 0 && (
           <div className="flex items-center justify-between text-muted-foreground pb-0.5 border-b border-border/40">

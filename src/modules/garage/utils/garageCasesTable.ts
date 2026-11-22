@@ -3,6 +3,7 @@ import {
   isInProgressStatus,
   isCompletedStatus,
 } from "./garageCaseViewPresets";
+import { isSamePlate, plateContains } from "@/shared/utils/licensePlate";
 
 export interface GarageCasesTableState {
   sorts: string[];
@@ -243,19 +244,15 @@ function matchKeyword(val: string, kw: string, extraVal?: string): boolean {
     if (val === normKw) return true;
     if (extraVal && extraVal === normKw) return true;
     const cleanKwAlpha = cleanAlphaNum(cleanKw);
-    if (cleanKwAlpha) {
-      if (cleanAlphaNum(val) === cleanKwAlpha) return true;
-      if (extraVal && cleanAlphaNum(extraVal) === cleanKwAlpha) return true;
-    }
+    if (cleanKwAlpha && cleanAlphaNum(val) === cleanKwAlpha) return true;
+    if (extraVal && isSamePlate(extraVal, cleanKw)) return true;
     return false;
   }
   if (val.includes(normKw)) return true;
   if (extraVal && extraVal.includes(normKw)) return true;
   const cleanKwAlpha = cleanAlphaNum(cleanKw);
-  if (cleanKwAlpha) {
-    if (cleanAlphaNum(val).includes(cleanKwAlpha)) return true;
-    if (extraVal && cleanAlphaNum(extraVal).includes(cleanKwAlpha)) return true;
-  }
+  if (cleanKwAlpha && cleanAlphaNum(val).includes(cleanKwAlpha)) return true;
+  if (extraVal && plateContains(extraVal, cleanKw)) return true;
   return false;
 }
 
@@ -483,8 +480,7 @@ export function applyGarageCasesTableState(
             if (
               fPlate &&
               extraVal &&
-              (extraVal === fPlate ||
-                cleanAlphaNum(extraVal) === cleanAlphaNum(fPlate))
+              (extraVal === fPlate || isSamePlate(extraVal, fPlate))
             )
               return true;
           }
@@ -501,18 +497,15 @@ export function applyGarageCasesTableState(
             if (
               insideParen &&
               extraVal &&
-              (extraVal === insideParen ||
-                cleanAlphaNum(extraVal) === cleanAlphaNum(insideParen))
+              (extraVal === insideParen || isSamePlate(extraVal, insideParen))
             )
               return true;
           }
           if (value === normalizedFilter) return true;
           if (extraVal && extraVal === normalizedFilter) return true;
           const cleanF = cleanAlphaNum(filter);
-          if (cleanF) {
-            if (cleanAlphaNum(value) === cleanF) return true;
-            if (extraVal && cleanAlphaNum(extraVal) === cleanF) return true;
-          }
+          if (cleanF && cleanAlphaNum(value) === cleanF) return true;
+          if (extraVal && isSamePlate(extraVal, filter)) return true;
           return false;
         }
 

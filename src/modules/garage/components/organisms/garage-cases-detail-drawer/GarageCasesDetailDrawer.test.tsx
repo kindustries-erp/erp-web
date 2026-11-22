@@ -111,25 +111,36 @@ vi.mock("@/modules/garage/hooks/useGarageMonthReceivablesBreakdown", () => ({
 
 vi.mock("@/modules/garage/api/garageDashboardApi", () => ({
   garageDashboardApi: {
-    getCheckpointCases: vi.fn().mockResolvedValue({
+    getCheckpointVehicles: vi.fn().mockResolvedValue({
       items: [
         {
-          id: "cp-1",
-          soChungTu: "GR-PDV2611-0002",
+          vehicleKey: "51H97732",
           bienSoXe: "51H97732",
-          khachHangCode: "KH001",
           khachHangName: "Anh Huỳnh Anh",
-          tenTinhTrangDichVu: "Kết thúc",
           classification: "KHAC",
-          doanhThu: 13800000,
-          chiPhi: 2000000,
-          loiNhuan: 11800000,
-          tienCoThue: 16800000,
-          tienDaThanhToan: 0,
-          tienConPhaiThanhToan: 16800000,
-          hasInvoice: false,
-          ngayHoanThanhCongViec: "2026-11-05",
-          ngayPhatSinh: "2026-11-01",
+          caseCount: 1,
+          soChungTus: ["GR-PDV2611-0002"],
+          cases: [
+            {
+              id: "cp-1",
+              vehicleKey: "51H97732",
+              soChungTu: "GR-PDV2611-0002",
+              bienSoXe: "51H97732",
+              khachHangCode: "KH001",
+              khachHangName: "Anh Huỳnh Anh",
+              tenTinhTrangDichVu: "Kết thúc",
+              classification: "KHAC",
+              doanhThu: 13800000,
+              chiPhi: 2000000,
+              loiNhuan: 11800000,
+              tienCoThue: 16800000,
+              tienDaThanhToan: 0,
+              tienConPhaiThanhToan: 16800000,
+              hasInvoice: false,
+              ngayHoanThanhCongViec: "2026-11-05",
+              ngayPhatSinh: "2026-11-01",
+            },
+          ],
         },
       ],
       total: 1,
@@ -138,6 +149,7 @@ vi.mock("@/modules/garage/api/garageDashboardApi", () => ({
       totalPages: 1,
       summary: {
         totalCount: 1,
+        totalCases: 2,
         totalTienCoThue: 16800000,
         totalRevenue: 13800000,
         totalCost: 2000000,
@@ -225,25 +237,26 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
       true,
     );
 
-    // Tiêu đề checkpoint & tab Danh sách xe
+    // Tiêu đề checkpoint & tab Danh sách xe & tab Tiến độ công việc
     expect(
       screen.getByText("Vụ việc Dịch vụ Garage · Tháng 11/2026"),
     ).toBeInTheDocument();
     expect(screen.getByText("Danh sách xe")).toBeInTheDocument();
+    expect(screen.getByText("Tiến độ công việc")).toBeInTheDocument();
     expect(screen.getByText("Xuất Excel")).toBeInTheDocument();
 
     // Đã xóa nút Phải thu / Phải trả theo yêu cầu
     expect(screen.queryByText("Phải thu")).not.toBeInTheDocument();
     expect(screen.queryByText("Phải trả")).not.toBeInTheDocument();
 
-    // Right panel P&L
-    expect(screen.getByText("Hiệu quả kinh doanh (P&L)")).toBeInTheDocument();
-    expect(screen.getByText("Tiến độ Thu tiền & Công nợ")).toBeInTheDocument();
+    // Right panel Tiến độ Dịch vụ Xe & Dòng tiền Dịch vụ Xe
+    expect(screen.getByText("Tiến độ Dịch vụ Xe")).toBeInTheDocument();
+    expect(screen.getByText("Dòng tiền Dịch vụ Xe")).toBeInTheDocument();
 
-    // Cả header bảng và Right Panel đều có các nhãn P&L
+    // Header bảng có các nhãn P&L
     expect(
       screen.getAllByText("Doanh thu thuần").length,
-    ).toBeGreaterThanOrEqual(2);
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Chi phí").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Lợi nhuận gộp").length).toBeGreaterThanOrEqual(
       1,
@@ -276,13 +289,39 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
         "Khoảng thời gian: 2026-11-01 đến 2026-11-30 · Phân loại: Sửa chữa chung",
       ),
     ).toBeInTheDocument();
+    // 1 xe (distinct biển số) nhưng 2 lệnh: hai số phải hiển thị tách bạch.
+    // Số liệu checkpoint tải bất đồng bộ nên chờ nhãn xuất hiện.
+    expect((await screen.findByTestId("cases-drawer-counts")).textContent).toBe(
+      "1 xe · 2 lệnh",
+    );
 
-    expect(garageDashboardApi.getCheckpointCases).toHaveBeenCalledWith(
+    expect(garageDashboardApi.getCheckpointVehicles).toHaveBeenCalledWith(
       expect.objectContaining({
         date_from: "2026-11-01",
         date_to: "2026-11-30",
         classification: "SUA_CHUA_CHUNG",
       }),
     );
+  });
+
+  it("chuyển sang tab Tiến độ công việc và hiển thị Kanban khi click", async () => {
+    const { fireEvent } = await import("@testing-library/react");
+    renderCasesScope(
+      {
+        kind: "checkpoint",
+        dateFrom: "2026-11-01",
+        dateTo: "2026-11-30",
+        periodLabel: "Tháng 11/2026",
+      },
+      true,
+    );
+
+    const kanbanTabBtn = screen.getByText("Tiến độ công việc");
+    fireEvent.click(kanbanTabBtn);
+
+    // Kiểm tra các cột kanban xuất hiện
+    expect(screen.getByText("Tiếp nhận")).toBeInTheDocument();
+    expect(screen.getAllByText("Đang làm").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Hoàn thành").length).toBeGreaterThanOrEqual(1);
   });
 });

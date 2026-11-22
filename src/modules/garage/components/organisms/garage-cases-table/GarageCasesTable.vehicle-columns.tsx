@@ -8,7 +8,7 @@ import {
   formatVehicleBrand,
   formatVehicleModel,
   type GarageCaseVehicleColumnKey,
-} from "@/v2/core/garage-cases";
+} from "@/v2/core/cases-garage";
 import type { ColumnContext } from "./GarageCasesTable.type";
 
 const renderers: Record<

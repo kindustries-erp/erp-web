@@ -117,7 +117,10 @@ export function renderClassificationOrDebtorCell(
   );
 }
 
-export function renderVatCell(row: GarageCaseDetailRow) {
+export function renderVatCell(
+  row: GarageCaseDetailRow,
+  t: (key: string, fallback: string) => string = (_k, fb) => fb,
+) {
   if (row.vatWarning) {
     return (
       <Badge
@@ -136,6 +139,16 @@ export function renderVatCell(row: GarageCaseDetailRow) {
         className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 text-[11px] font-mono px-1.5 py-0"
       >
         #{row.invoiceNo}
+      </Badge>
+    );
+  }
+  if (row.hasInvoice) {
+    return (
+      <Badge
+        variant="outline"
+        className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 text-[11px] px-1.5 py-0"
+      >
+        {t("cases.invoice.issued", "Đã xuất")}
       </Badge>
     );
   }

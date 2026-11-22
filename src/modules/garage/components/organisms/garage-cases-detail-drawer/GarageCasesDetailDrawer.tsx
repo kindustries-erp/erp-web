@@ -15,6 +15,7 @@ import { DebtRateBadge } from "../garage-debt-detail-drawer/components/DebtRateB
 import { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 import { useGarageCasesDrawerTabs } from "./GarageCasesDetailDrawer.tabs";
 import type { GarageCasesDetailDrawerProps } from "./GarageCasesDetailDrawer.type";
+import { formatVehiclesAndCases } from "./GarageCasesDetailDrawer.helper";
 
 /**
  * Organism lõi dùng chung cho xem chi tiết vụ việc dịch vụ xưởng (Doanh thu & Công nợ).
@@ -49,6 +50,7 @@ export const GarageCasesDetailDrawer: React.FC<
     checkpointSummary,
     breakdownSummary,
     vatWarningInfo,
+    cases,
     classificationDrawer,
     setClassificationDrawer,
     partnerDrawer,
@@ -65,6 +67,18 @@ export const GarageCasesDetailDrawer: React.FC<
 
   const drawerTabs = useGarageCasesDrawerTabs(logic);
 
+  // Checkpoint: số XE (distinct biển số) và số LỆNH của cùng một bộ lọc.
+  const countsLabel = checkpointSummary
+    ? formatVehiclesAndCases(
+        checkpointSummary.totalCount,
+        checkpointSummary.totalCases ?? 0,
+        {
+          vehicles: t("dashboard.funnel.vehiclesUnit", "xe"),
+          cases: t("dashboard.funnel.casesCountUnit", "lệnh"),
+        },
+      )
+    : null;
+
   const drawerActions = useMemo<DrawerAction[]>(
     () => [
       {
@@ -78,11 +92,21 @@ export const GarageCasesDetailDrawer: React.FC<
 
   if (!scope) return null;
 
+  // Khi có bất kỳ Drawer V1 con nào mở đè lên (Chi tiết phiếu, Xuất excel, Phân loại, Đối tác):
+  // Hạ cấp modal={false} để giải phóng react-remove-scroll của Radix Dialog V2, giúp Drawer V1 con cuộn chuột 100% mượt mà!
+  const hasNestedOpenDrawer = Boolean(
+    selectedCaseCode ||
+    classificationDrawer.open ||
+    partnerDrawer.open ||
+    exportOpen,
+  );
+
   return (
     <>
       <V2StandardDrawer
         id="garage-cases-detail-drawer"
         open={open}
+        modal={!hasNestedOpenDrawer}
         mode="view"
         onClose={onClose}
         title={title}
@@ -103,6 +127,14 @@ export const GarageCasesDetailDrawer: React.FC<
         }
         titleExtra={
           <div className="flex items-center gap-2">
+            {countsLabel && (
+              <span
+                className="text-xs font-medium text-muted-foreground"
+                data-testid="cases-drawer-counts"
+              >
+                {countsLabel}
+              </span>
+            )}
             <DebtRateBadge rate={mainRate} isReceipt={isReceipt} />
             {isCheckpoint && (
               <Button
@@ -119,12 +151,15 @@ export const GarageCasesDetailDrawer: React.FC<
         }
         size="xl"
         layout="2-columns"
+        fillHeight={true}
+        bodyClassName="overflow-hidden p-3 sm:p-4 md:p-[18px]"
         tabs={drawerTabs}
         defaultTabKey="cases"
         collapsibleRightPanel={true}
         rightPanel={
           <GarageCasesRightPanel
             item={safeItem}
+            cases={cases}
             pnlSummary={pnlSummary}
             checkpointSummary={checkpointSummary}
             breakdownSummary={breakdownSummary}

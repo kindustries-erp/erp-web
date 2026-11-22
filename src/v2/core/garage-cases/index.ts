@@ -1,7 +1,0 @@
-import "./garageCases.locale";
-
-export * from "./garageCases.locale";
-export * from "./traceability/garageCaseTraceability.type";
-export * from "./traceability/garageCaseTraceability.graph";
-export * from "./traceability/garageCaseTraceability.actions";
-export * from "./vehicle";

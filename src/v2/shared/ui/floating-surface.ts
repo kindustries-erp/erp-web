@@ -1,6 +1,6 @@
-/** Mặt nổi chung cho Sheet (drawer) và Dialog mobile: nền kính, blur, shadow */
+/** Mặt nổi chung cho Sheet (drawer) và Dialog mobile: nền đặc solid 100%, không blur, shadow */
 export const FLOATING_SURFACE_CLASS =
-  "bg-[var(--drawer-bg,rgba(255,255,255,0.96))] backdrop-blur-[var(--drawer-blur,8px)] backdrop-saturate-[140%] backdrop-contrast-[101%] shadow-[var(--drawer-shadow,var(--panel-shadow,0_12px_30px_rgba(15,23,42,0.16)))]";
+  "bg-[var(--drawer-bg,#ffffff)] backdrop-blur-[var(--drawer-blur,0px)] shadow-[var(--drawer-shadow,var(--panel-shadow,0_12px_30px_rgba(15,23,42,0.16)))]";
 
 /** Thanh kính (header, footer, hàng tổng) dùng chung với V2 Standard Table */
 export const GLASS_BAR_CLASS =

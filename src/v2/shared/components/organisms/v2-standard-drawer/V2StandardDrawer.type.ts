@@ -73,6 +73,8 @@ export interface V2StandardDrawerProps {
 
   layout?: V2DrawerLayoutType;
   size?: V2DrawerSizeType;
+  /** Chế độ modal của Radix Dialog. Mặc định true. Đặt false khi có drawer/modal con mở chồng lên để không khóa scroll ngoài. */
+  modal?: boolean;
 
   // Fullscreen controls
   enableFullscreen?: boolean;

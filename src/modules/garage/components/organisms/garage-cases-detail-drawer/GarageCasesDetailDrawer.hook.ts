@@ -1,21 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useGarageMonthReceivablesBreakdown } from "@/modules/garage/hooks/useGarageMonthReceivablesBreakdown";
-import { garageDashboardApi } from "@/modules/garage/api/garageDashboardApi";
+import { useCheckpointVehiclesQuery } from "./GarageCasesDetailDrawer.checkpoint.hook";
+import { countDistinctVehicles } from "./components/GarageCasesTableTab.helper";
 import type { GarageTrendItem } from "@/modules/garage/api/garageDashboardApi";
 import type { GarageCaseDetailRow } from "./components/GarageCasesTableTab.type";
-import { buildMonthClassificationRows } from "../garage-month-detail-drawer/utils/buildMonthClassificationRows";
-import type { MonthClassificationRow } from "../garage-month-detail-drawer/components/MonthClassificationTable.type";
+import {
+  useDrawerClassificationRows,
+  useDrawerDebtTabState,
+} from "./GarageCasesDetailDrawer.tabState.hook";
 import type { GarageCasesScope } from "./GarageCasesDetailDrawer.type";
 import { useDebtDetailDrillDown } from "../garage-debt-detail-drawer/GarageDebtDetailDrawer.drillDown.hook";
 import {
   EMPTY_CATEGORIZED,
   EMPTY_TREND,
-  formatDebtMonth,
   extractDebtCases,
-  extractCheckpointCases,
+  extractCheckpointVehicleCases,
   countActiveUnpaidCases,
   calculateDebtMetrics,
+  buildCheckpointTrend,
+  buildDrawerTitle,
+  buildPnlSummary,
 } from "./GarageCasesDetailDrawer.helper";
 
 interface UseGarageCasesDetailDrawerArgs {
@@ -36,47 +40,13 @@ export function useGarageCasesDetailDrawer({
   const monthScope = scope?.kind === "month" ? scope : null;
   const horizonScope = scope?.kind === "horizon" ? scope : null;
 
-  const [currentTab, setCurrentTab] = useState<"RECEIPT" | "PAYMENT">(
-    activeTab,
-  );
-  const [partnerDebtType, setPartnerDebtType] = useState<
-    "receivables" | "payables"
-  >(activeTab === "PAYMENT" ? "payables" : "receivables");
-
-  useEffect(() => {
-    setCurrentTab(activeTab);
-    setPartnerDebtType(activeTab === "PAYMENT" ? "payables" : "receivables");
-  }, [activeTab]);
+  const { currentTab, partnerDebtType, setPartnerDebtType } =
+    useDrawerDebtTabState(activeTab);
 
   const isReceipt = currentTab === "RECEIPT";
 
-  // 1. Nhánh dữ liệu Checkpoint (Doanh thu / P&L theo khoảng ngày)
-  const { data: checkpointData, isLoading: checkpointLoading } = useQuery({
-    queryKey: [
-      "garage",
-      "casesDetailCheckpoint",
-      checkpointScope?.dateFrom,
-      checkpointScope?.dateTo,
-      checkpointScope?.branchId,
-      checkpointScope?.classification,
-      checkpointScope?.isFunnel,
-    ],
-    queryFn: () =>
-      garageDashboardApi.getCheckpointCases({
-        date_from: checkpointScope!.dateFrom,
-        date_to: checkpointScope!.dateTo,
-        classification: checkpointScope?.classification,
-        is_funnel: checkpointScope?.isFunnel,
-        page: 1,
-        pageSize: 500,
-      }),
-    enabled: Boolean(
-      open &&
-      isCheckpoint &&
-      checkpointScope?.dateFrom &&
-      checkpointScope?.dateTo,
-    ),
-  });
+  const { data: checkpointData, isLoading: checkpointLoading } =
+    useCheckpointVehiclesQuery(checkpointScope, open);
 
   // 2. Nhánh dữ liệu Công nợ (Tuổi nợ / Tháng)
   const {
@@ -97,20 +67,7 @@ export function useGarageCasesDetailDrawer({
   });
 
   const safeItem = useMemo<GarageTrendItem>(() => {
-    if (isCheckpoint) {
-      const s = checkpointData?.summary;
-      return {
-        ...EMPTY_TREND,
-        tienCoThue: s?.totalTienCoThue || 0,
-        paid: s?.totalPaid || 0,
-        receivable: s?.totalRemaining || 0,
-        collectionRate: s?.collectionRate || 0,
-        revenue: s?.totalRevenue || 0,
-        cost: s?.totalCost || 0,
-        profit: s?.totalProfit || 0,
-        caseCount: s?.totalCount || 0,
-      };
-    }
+    if (isCheckpoint) return buildCheckpointTrend(checkpointData?.summary);
     return monthScope?.item ?? breakdownTrend ?? EMPTY_TREND;
   }, [isCheckpoint, checkpointData?.summary, monthScope, breakdownTrend]);
 
@@ -134,26 +91,11 @@ export function useGarageCasesDetailDrawer({
     [safeItem, isReceipt, partnerDebtType, breakdownSummary?.totalBilled],
   );
 
-  const receivableClassificationRows = useMemo(
-    () => buildMonthClassificationRows(safeItem, "receivables"),
-    [safeItem],
-  );
-  const payableClassificationRows = useMemo(
-    () => buildMonthClassificationRows(safeItem, "payables"),
-    [safeItem],
-  );
-  const classificationCount = useMemo(
-    () =>
-      new Set([
-        ...receivableClassificationRows.map(
-          (row: MonthClassificationRow) => row.key,
-        ),
-        ...payableClassificationRows.map(
-          (row: MonthClassificationRow) => row.key,
-        ),
-      ]).size,
-    [receivableClassificationRows, payableClassificationRows],
-  );
+  const {
+    receivableClassificationRows,
+    payableClassificationRows,
+    classificationCount,
+  } = useDrawerClassificationRows(safeItem);
   const totalPartnerCount =
     safeCategorized.enterprise.all.length +
     safeCategorized.individual.all.length +
@@ -161,49 +103,41 @@ export function useGarageCasesDetailDrawer({
 
   const cases = useMemo<GarageCaseDetailRow[]>(() => {
     if (isCheckpoint) {
-      return extractCheckpointCases(checkpointData?.items || []);
+      return extractCheckpointVehicleCases(checkpointData?.items || []);
     }
     return extractDebtCases(safeCategorized);
   }, [isCheckpoint, checkpointData?.items, safeCategorized]);
 
   const casesCount = useMemo(() => {
-    if (isCheckpoint) return cases.length;
+    // Checkpoint: số XE đã tải (khớp số hàng bảng); tổng của API ở `vehicleTotal`.
+    if (isCheckpoint) return countDistinctVehicles(cases);
     return countActiveUnpaidCases(cases, partnerDebtType);
   }, [isCheckpoint, cases, partnerDebtType]);
 
   const pnlSummary = useMemo(() => {
     if (!isCheckpoint) return undefined;
-    const s = checkpointData?.summary;
-    return {
-      totalRevenue: s?.totalRevenue || 0,
-      totalCost: s?.totalCost || 0,
-      totalProfit: s?.totalProfit || 0,
-      margin:
-        (s?.totalRevenue || 0) > 0
-          ? ((s?.totalProfit || 0) / (s?.totalRevenue || 1)) * 100
-          : 0,
-    };
+    return buildPnlSummary(checkpointData?.summary);
   }, [isCheckpoint, checkpointData?.summary]);
 
   const drillDown = useDebtDetailDrillDown();
 
-  const title = useMemo(() => {
-    if (isCheckpoint) {
-      return checkpointScope?.periodLabel
-        ? `Vụ việc Dịch vụ Garage · ${checkpointScope.periodLabel}`
-        : "Vụ việc Dịch vụ Garage";
-    }
-    if (monthScope) {
-      return formatDebtMonth(safeItem.label);
-    }
-    return breakdown?.monthLabel || "Chi tiết mốc tuổi nợ";
-  }, [
-    isCheckpoint,
-    checkpointScope,
-    monthScope,
-    safeItem.label,
-    breakdown?.monthLabel,
-  ]);
+  const title = useMemo(
+    () =>
+      buildDrawerTitle({
+        checkpointLabel: isCheckpoint
+          ? (checkpointScope?.periodLabel ?? "")
+          : undefined,
+        monthLabel: monthScope ? safeItem.label : undefined,
+        fallback: breakdown?.monthLabel,
+      }),
+    [
+      isCheckpoint,
+      checkpointScope?.periodLabel,
+      monthScope,
+      safeItem.label,
+      breakdown?.monthLabel,
+    ],
+  );
 
   return {
     title,
@@ -229,6 +163,7 @@ export function useGarageCasesDetailDrawer({
     totalPartnerCount,
     cases,
     casesCount,
+    vehicleTotal: checkpointData?.total ?? 0,
     isLoading: isCheckpoint ? checkpointLoading : false,
     ...drillDown,
     horizon: horizonScope?.horizon,

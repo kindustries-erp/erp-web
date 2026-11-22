@@ -77,6 +77,12 @@ const AdminDashboardV2Page = lazy(() =>
   })),
 );
 
+const CasesDashboardGarageV2Page = lazy(() =>
+  import("@/v2/modules/cases-garage").then((m) => ({
+    default: m.CasesDashboardGaragePage,
+  })),
+);
+
 function AdminOnlyRoute({ children }: { children: React.ReactNode }) {
   const email = useAuthStore((s) => s.employee?.email || s.profile?.email);
   if (email !== "admin@liouni.com") {
@@ -434,6 +440,11 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "admin-dashboard-v2": () => (
     <AdminOnlyRoute>
       <AdminDashboardV2Page />
+    </AdminOnlyRoute>
+  ),
+  "garage-cases-v2": () => (
+    <AdminOnlyRoute>
+      <CasesDashboardGarageV2Page />
     </AdminOnlyRoute>
   ),
 };

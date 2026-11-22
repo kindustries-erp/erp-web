@@ -9,6 +9,10 @@ import {
   renderClassificationOrDebtorCell,
   renderVatCell,
 } from "./GarageCasesTableTab.cells";
+import {
+  createCaseCountColumn,
+  createProfitColumns,
+} from "./GarageCasesTableTab.columns.profit";
 
 export interface UseGarageCasesColumnsParams {
   isPayable: boolean;
@@ -25,21 +29,37 @@ export function createGarageCasesColumns({
 }: UseGarageCasesColumnsParams): V2Column<GarageCaseDetailRow>[] {
   const baseColumns: V2Column<GarageCaseDetailRow>[] = [
     {
+      key: "bienSoXe",
+      label: t("cases.columns.licensePlate", "Biển số xe"),
+      size: 115,
+      align: TableColumnAlign.CENTER,
+      className: "text-center",
+      cell: (row) => <LicensePlateCell licensePlate={row.bienSoXe} />,
+
+      summary: { variant: "label", label: t("common.total", "Tổng cộng:") },
+    },
+    {
       key: "soChungTu",
       label: t("cases.columns.soChungTu", "Số phiếu"),
       size: 130,
       align: TableColumnAlign.LEFT,
       className:
         "font-mono font-bold text-xs text-primary cursor-pointer hover:underline",
-      cell: (row) => (
-        <span
-          onClick={() => onOpenCaseDetail?.(row.soChungTu || row.id)}
-          title={row.soChungTu}
-        >
-          {row.soChungTu}
-        </span>
-      ),
-      summary: { variant: "label", label: t("common.total", "Tổng cộng:") },
+      cell: (row) => {
+        // Hàng xe nhiều lệnh: không bấm được (mở rộng hàng để chọn từng lệnh).
+        const isMulti = (row.caseCount ?? 1) > 1;
+        return (
+          <span
+            onClick={() =>
+              !isMulti && onOpenCaseDetail?.(row.soChungTu || row.id)
+            }
+            title={row.soChungTu}
+            className={isMulti ? "cursor-default" : undefined}
+          >
+            {row.soChungTu}
+          </span>
+        );
+      },
     },
     {
       key: "ngayHoanThanh",
@@ -49,14 +69,7 @@ export function createGarageCasesColumns({
       className: "text-center text-xs font-mono",
       cell: (row) => <TableDateCell date={row.ngayHoanThanh} format="date" />,
     },
-    {
-      key: "bienSoXe",
-      label: t("cases.columns.licensePlate", "Biển số xe"),
-      size: 115,
-      align: TableColumnAlign.CENTER,
-      className: "text-center",
-      cell: (row) => <LicensePlateCell licensePlate={row.bienSoXe} />,
-    },
+    ...(showProfitMetrics ? [createCaseCountColumn(t)] : []),
     {
       key: "khachHangName",
       label: t("customers.detail", "Khách hàng"),
@@ -87,7 +100,7 @@ export function createGarageCasesColumns({
       size: 110,
       align: TableColumnAlign.CENTER,
       className: "text-center",
-      cell: renderVatCell,
+      cell: (row) => renderVatCell(row, t),
     },
     {
       key: "billed",
@@ -146,59 +159,5 @@ export function createGarageCasesColumns({
     return baseColumns;
   }
 
-  const profitColumns: V2Column<GarageCaseDetailRow>[] = [
-    {
-      key: "revenue",
-      label: t("cases.columns.revenue", "Doanh thu thuần"),
-      size: 125,
-      align: TableColumnAlign.RIGHT,
-      className:
-        "text-right font-mono font-semibold text-xs tabular-nums text-foreground",
-      cell: (row) => money(row.revenue ?? 0),
-      summary: {
-        variant: "amount",
-        accessor: (r) => r.revenue ?? 0,
-      },
-    },
-    {
-      key: "cost",
-      label: t("cases.columns.cost", "Chi phí"),
-      size: 120,
-      align: TableColumnAlign.RIGHT,
-      className:
-        "text-right font-mono font-semibold text-xs tabular-nums text-muted-foreground",
-      cell: (row) => money(row.cost ?? 0),
-      summary: {
-        variant: "amount",
-        accessor: (r) => r.cost ?? 0,
-      },
-    },
-    {
-      key: "profit",
-      label: t("cases.columns.profit", "Lợi nhuận gộp"),
-      size: 125,
-      align: TableColumnAlign.RIGHT,
-      className: "text-right font-mono font-bold text-xs tabular-nums",
-      cell: (row) => {
-        const val = row.profit ?? 0;
-        return (
-          <span
-            className={
-              val >= 0
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-rose-600"
-            }
-          >
-            {money(val)}
-          </span>
-        );
-      },
-      summary: {
-        variant: "amount",
-        accessor: (r) => r.profit ?? 0,
-      },
-    },
-  ];
-
-  return [...baseColumns, ...profitColumns];
+  return [...baseColumns, ...createProfitColumns(t)];
 }

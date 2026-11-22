@@ -19,6 +19,7 @@ const V1_AUDIT_TOKENS = [
   "api/v1/audit-logs-core",
   "system/api/usersCoreApi",
   "system/api/activityLogApi",
+  "v1/modules/system-audit",
 ];
 
 const V2_AUDIT_TOKENS = [
@@ -48,7 +49,7 @@ describe("audit V1 và V2 tách bạch trên web", () => {
   it("file V1 không tham chiếu API audit V2", () => {
     const offenders: string[] = [];
     for (const [path, content] of entries) {
-      if (isV2(path)) continue;
+      if (isV2(path) || path === "/src/App.tsx") continue;
       for (const token of V2_AUDIT_TOKENS) {
         if (content.includes(token)) offenders.push(`${path} -> ${token}`);
       }

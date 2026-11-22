@@ -77,6 +77,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "invoices-v2",
   "audit-logs-v2",
   "admin-dashboard-v2",
+  "garage-cases-v2",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
@@ -264,7 +265,9 @@ export function pageToPath(
 
   const effectiveTab =
     tab ||
-    (page === "erp-invoices" || page === "garage-cases"
+    (page === "erp-invoices" ||
+    page === "garage-cases" ||
+    page === "garage-cases-v2"
       ? "dashboard"
       : page === "garage-procurement"
         ? "requests"
@@ -378,6 +381,8 @@ export function pathToPage(
       tab = "dashboard";
     }
   } else if (slug === "garage-dashboard") {
+    tab = "dashboard";
+  } else if (slug === "garage-cases-v2" || page === "garage-cases-v2") {
     tab = "dashboard";
   } else if (slug === "garage-cases" || page === "garage-cases") {
     if (tab === "cases") {

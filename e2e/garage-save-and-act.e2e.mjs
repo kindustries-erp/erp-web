@@ -9,7 +9,7 @@ const API = resolveApiUrl();
 const WEB = resolveWebUrl();
 const PASSWORD = process.env.E2E_PASSWORD;
 const TAO_EMAIL = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
-const DUYET_EMAIL = process.env.E2E_DUYET_EMAIL ?? "ai-test-duyet@example.com";
+const ADMIN_ACCOUNT_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "ai-test-admin@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
 if (!PASSWORD) {
   console.error(
@@ -30,13 +30,13 @@ const check = (step, pass, detail = "") => {
 };
 
 async function apiLogin(email) {
-  const r = await fetch(`${API}/api/v1/auth/login`, {
+  const r = await fetch(`${API}/api/v2/auth-sessions/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password: PASSWORD }),
   });
   const b = await r.json();
-  return { token: b.accessToken, user: b.user };
+  return { token: b.data?.accessToken, user: b.data?.user };
 }
 async function api(s, method, path, body) {
   const url = path.startsWith("/api/")
@@ -122,7 +122,7 @@ const listByTitle = async (s, title) =>
   ).data?.items ?? [];
 
 const tao = await apiLogin(TAO_EMAIL);
-const duyet = await apiLogin(DUYET_EMAIL);
+const duyet = await apiLogin(ADMIN_ACCOUNT_EMAIL);
 
 const browser = await chromium.launch({
   executablePath: CHROME,
@@ -182,7 +182,7 @@ const pickApproverAndConfirm = async () => {
     await page.getByRole("option").allInnerTexts(),
   );
   await page
-    .getByRole("option", { name: new RegExp(DUYET_EMAIL.split("@")[0]) })
+    .getByRole("option", { name: new RegExp(ADMIN_ACCOUNT_EMAIL.split("@")[0]) })
     .first()
     .click();
   await modal.getByRole("button", { name: "Gửi duyệt", exact: true }).click();
@@ -351,6 +351,7 @@ await step(
       page.waitForResponse(
         (r) =>
           r.url().includes("/procurement-orders-garage") &&
+          !r.url().includes("table-preferences") &&
           r.request().method() !== "GET",
         { timeout: 30000 },
       ),
@@ -421,6 +422,7 @@ await step(
       page.waitForResponse(
         (r) =>
           r.url().includes("/garage-goods-receipts") &&
+          !r.url().includes("table-preferences") &&
           r.request().method() !== "GET",
         { timeout: 30000 },
       ),
@@ -449,7 +451,7 @@ await step(
   "L2 phiếu đã nhập kho: chỉ có Hoàn nhập (không Hủy phiếu), xác nhận → CANCELLED",
   async () => {
     const rec = globalThis.kReceipt;
-    await page.goto(`${WEB}/v2/garage-goods-receipts?receipt=${rec.id}`, {
+    await page.goto(`${WEB}/garage-stock-vouchers?receipt=${rec.id}`, {
       waitUntil: "domcontentloaded",
     });
     const dialog = page.getByRole("dialog").first();

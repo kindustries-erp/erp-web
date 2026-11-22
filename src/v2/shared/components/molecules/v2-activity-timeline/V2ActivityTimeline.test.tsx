@@ -25,7 +25,7 @@ const mockItems: V2ActivityItem[] = [
   {
     id: "act-2",
     action: "đã duyệt",
-    actor: "ai-test-duyet@example.com",
+    actor: "ai-test-admin@example.com",
     timestamp: "3 giờ trước",
     variant: "success",
     badge: <span data-testid="badge-approved">Đã duyệt</span>,
@@ -60,7 +60,7 @@ describe("V2ActivityTimeline", () => {
     expect(cards[0]).toHaveTextContent("Chuyển trạng thái: Đã duyệt ➔ Đã hủy");
 
     // Card 2: Sự kiện đã duyệt
-    expect(cards[1]).toHaveTextContent("ai-test-duyet@example.com");
+    expect(cards[1]).toHaveTextContent("ai-test-admin@example.com");
     expect(cards[1]).toHaveTextContent("đã duyệt");
     expect(cards[1]).toHaveTextContent("3 giờ trước");
     expect(screen.getByTestId("badge-approved")).toBeInTheDocument();

@@ -265,6 +265,11 @@ export const garageEn = {
       noFunnelData: "No conversion funnel data available for this period",
       casesUnit: "cases",
       vehiclesUnit: "vehicles",
+      /** Unit for case count (service tickets), shown next to the vehicle unit in "N vehicles · M cases". */
+      casesCountUnit: "cases",
+      /** Note: vehicles are counted by distinct plate, so stage totals can exceed the total vehicle count. */
+      vehicleCountNote:
+        "Vehicles are counted by distinct license plate. A vehicle with several cases in several stages is counted in each stage, so stage totals can exceed the total vehicle count.",
     },
     recentCases: {
       title: "Recent Service Cases",
@@ -285,6 +290,10 @@ export const garageEn = {
   cases: {
     title: "Garage Activities",
     desc: "Manage service cases & quotation logs",
+    vehicleTruncated: "Showing {{shown}} of {{total}} vehicles",
+    invoice: {
+      issued: "Issued",
+    },
     tabs: {
       all: "All",
       quotation: "Quotation",
@@ -327,6 +336,7 @@ export const garageEn = {
     columns: {
       caseDate: "Reception Date",
       caseCode: "Case Code",
+      caseCount: "Cases",
       licensePlate: "License Plate",
       customer: "Customer",
       customerCode: "Customer Code",
@@ -985,7 +995,7 @@ export const garageEn = {
       tk1541: "1. Warehouse Parts (1541)",
       tk1542: "2. Outsource / Services (1542)",
       tk1543: "3. Commissions / Other (1543)",
-      tk521: "4. Discounts (521)",
+      tk521: "Discount (revenue deduction, acct 521)",
       revenueSummary: "Revenue (excl. VAT)",
       totalCostSummary: "Total Case Cost",
       partCostSummary: "Parts Cost of Goods",

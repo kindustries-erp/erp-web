@@ -441,6 +441,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           href: "/garage-cases",
         });
       }
+      if (isAdminEmail) {
+        items.push({
+          id: "garage-cases-v2",
+          label: t("nav.items.garageCasesV2", "Hoạt động garage (v2)"),
+          icon: Car,
+          href: "/garage-cases-v2",
+        });
+      }
       if (canReadGarageCashflow) {
         items.push({
           id: "garage-cashflow",

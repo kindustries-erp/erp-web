@@ -34,23 +34,18 @@ export function buildComponentData(answers) {
 
 /**
  * Danh sách template → file đích; thư mục gốc: src/v2/shared/components/<layer>/<folder>/
- * Chiến lược test: Organism sinh `.test.tsx` mặc định; Atom/Molecule không sinh test (chỉ viết khi có logic riêng).
- * Storybook là tùy chọn: chỉ Atom sinh `.stories.tsx` mặc định.
+ * Chiến lược test: Organism sinh `.test.tsx` mặc định; Atom/Molecule chỉ viết test khi có logic riêng.
+ * Storybook: mọi tầng (atoms, molecules, organisms) sinh `.stories.tsx` mặc định, theo quy chuẩn bắt buộc cho component mới có UI.
  */
 export function componentFileMap(data) {
   const base = `src/v2/shared/components/${data.layer}/${data.folder}`;
   const files = [
     ["Component.tsx.hbs", `${base}/${data.Name}.tsx`],
     ["Component.type.ts.hbs", `${base}/${data.Name}.type.ts`],
+    ["Component.stories.tsx.hbs", `${base}/${data.Name}.stories.tsx`],
   ];
   if (data.layer === "organisms") {
     files.push(["Component.test.tsx.hbs", `${base}/${data.Name}.test.tsx`]);
-  }
-  if (data.layer === "atoms") {
-    files.push([
-      "Component.stories.tsx.hbs",
-      `${base}/${data.Name}.stories.tsx`,
-    ]);
   }
   files.push(["index.ts.hbs", `${base}/index.ts`]);
   return files;
