@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ERP CORE auth API — gọi BE local auth Postgres, không dùng Directus
+// ERP CORE auth API — gọi BE local auth Postgres
 // ─────────────────────────────────────────────────────────────────────────────
 import axiosInstance from "@/core/api/axiosInstance";
 import {
@@ -24,7 +24,6 @@ export interface CoreLoginResponse {
     email: string;
     status: string;
     employeeId: string | null;
-    legacyDirectusUserId: string | null;
   };
   preferences?: UserPreferencesPayload;
 }
@@ -34,7 +33,6 @@ export interface CoreProfileResponse {
   email: string;
   status: string;
   employeeId: string | null;
-  legacyDirectusUserId: string | null;
   employee: {
     id: string;
     employeeCode: string;

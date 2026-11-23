@@ -13,6 +13,7 @@ import type {
   ProcurementApprovalEvent,
   ProcurementFetchOptionsParams,
   ProcurementLinePayload,
+  ProcurementLinkResult,
   ProcurementListResponse,
   ProcurementPoDraft,
   ProcurementTableQuery,
@@ -70,6 +71,8 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
     supportsPoDraft?: boolean;
     supportsPurge?: boolean;
     supportsClone?: boolean;
+    /** Họ có field liên kết FK sửa cục bộ (link-override): thêm refreshLink. */
+    supportsLinkOverride?: boolean;
     /** Đường dẫn lưu-và-hành-động một bước: PR `save-and-submit`, PO `save-and-confirm` */
     saveAndAct?: "save-and-submit" | "save-and-confirm";
   } = {},
@@ -160,6 +163,14 @@ export function createProcurementApi<T, D = unknown, C = unknown, H = unknown>(
       ? async (id) => {
           const { data } = await v2HttpClient.post<{ id: string }>(
             `${basePath}/${id}/clone`,
+          );
+          return data;
+        }
+      : undefined,
+    refreshLink: options.supportsLinkOverride
+      ? async (id, field) => {
+          const { data } = await v2HttpClient.post<ProcurementLinkResult>(
+            `${basePath}/${id}/links/${field}/refresh`,
           );
           return data;
         }

@@ -7,7 +7,6 @@ import { useT } from "@/core/i18n";
 import type { PageKey } from "@/shared/types";
 import { V2AppLayout } from "@/v2/app/layouts/v2-app-layout";
 import {
-  V2EnvStamp,
   type V2BreadcrumbItem,
   V2UniversalSearchModal,
   V2NotificationPopover,
@@ -377,7 +376,6 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
 
   return (
     <>
-      <V2EnvStamp />
       <V2AppLayout
         activeNavId={currentPage}
         sections={sections}
@@ -391,7 +389,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         logoUrl={companyProfile?.logo || undefined}
         branchName={branchName}
         tenantName={tenantName}
-        contentClassName="pb-10"
+        contentClassName="pb-1.5"
         collapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
         userMenuNode={userMenuNode}

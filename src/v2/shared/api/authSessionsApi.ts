@@ -54,7 +54,6 @@ export interface LoginSessionData {
     email: string;
     status: string;
     employeeId: string | null;
-    legacyDirectusUserId: string | null;
   };
   preferences?: Record<string, unknown>;
 }

@@ -7,7 +7,6 @@ export interface CoreUserAdmin {
   email: string;
   status: "ACTIVE" | "INACTIVE";
   employeeId: string | null;
-  legacyDirectusUserId: string | null;
   lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;

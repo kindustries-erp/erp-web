@@ -20,6 +20,7 @@ export const garageProcurementRequestsApi =
       supportsDelete: true,
       supportsPurge: true,
       supportsClone: true,
+      supportsLinkOverride: true,
       saveAndAct: "save-and-submit",
     },
   );

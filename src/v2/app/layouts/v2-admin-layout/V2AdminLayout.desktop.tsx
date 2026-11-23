@@ -1,6 +1,5 @@
 import * as React from "react";
 import { V2Sidebar, V2RightPanel } from "@/v2/shared/components";
-import { V2WorkspaceModeToggle } from "@/v2/shared/components/molecules/v2-workspace-mode-toggle";
 import { V2AdminRouteId } from "@/v2/shared/types";
 import { useV2AdminNav } from "./hooks/useV2AdminNav";
 import type { V2AdminLayoutProps } from "./V2AdminLayout.type";
@@ -72,7 +71,6 @@ export const V2AdminLayoutDesktop: React.FC<V2AdminLayoutProps> = ({
         logoUrl={logoUrl}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
-        topbarActions={<V2WorkspaceModeToggle />}
         contentClassName={contentClassName}
       >
         {children}

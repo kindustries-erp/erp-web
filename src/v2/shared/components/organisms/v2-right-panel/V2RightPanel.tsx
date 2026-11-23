@@ -2,6 +2,9 @@ import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Topbar } from "../../molecules/v2-topbar";
 import { V2TabBar } from "../../molecules/v2-tab-bar";
+import { V2StatusBar } from "../../molecules/v2-status-bar";
+import { V2QuickSearch } from "../../molecules/v2-quick-search";
+import { V2ImpersonationBanner } from "../../molecules/v2-impersonation-banner";
 import { V2RightPanelProps } from "./V2RightPanel.type";
 
 export const V2RightPanel: React.FC<V2RightPanelProps> = ({
@@ -21,6 +24,20 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
   className,
   ...props
 }) => {
+  const hasTabs = Boolean(tabs && tabs.length > 0);
+
+  // Quick action slot on the right side of the Top TabBar
+  const topBarExtra = React.useMemo(
+    () => (
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <V2ImpersonationBanner />
+        {onSearchClick && <V2QuickSearch onClick={onSearchClick} />}
+        {topbarActions}
+      </div>
+    ),
+    [onSearchClick, topbarActions],
+  );
+
   return (
     <div
       data-testid="v2-right-panel"
@@ -30,40 +47,48 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
       )}
       {...props}
     >
-      {/* Topbar inside Right Panel (Absolute Frosted Glass Overlay) */}
-      <V2Topbar
-        breadcrumbs={breadcrumbs}
-        branchName={branchName}
-        companyName={companyName}
-        logoUrl={logoUrl}
-        onSearchClick={onSearchClick}
-        onBranchClick={onBranchClick}
-        actions={topbarActions}
-        className="absolute top-0 left-0 right-0 z-20"
-      />
+      {/* ── Top Header: If tabs exist, render V2TabBar on TOP; otherwise fallback to V2Topbar ── */}
+      {hasTabs ? (
+        <V2TabBar
+          tabs={tabs!}
+          activeTabId={activeTabId}
+          onTabSelect={onTabSelect}
+          onTabClose={onTabClose}
+          extra={topBarExtra}
+          className="rounded-t-2xl rounded-b-none border-b border-border dark:border-white/[0.06]"
+        />
+      ) : (
+        <V2Topbar
+          breadcrumbs={breadcrumbs}
+          branchName={branchName}
+          companyName={companyName}
+          logoUrl={logoUrl}
+          onSearchClick={onSearchClick}
+          onBranchClick={onBranchClick}
+          actions={topbarActions}
+        />
+      )}
 
-      {/* Main Content Area: scrolls full height under frosted glass header & footer */}
+      {/* ── Main Content Area: in-flow flex-1 with clean scrollbar ── */}
       <main
         tabIndex={-1}
         className={cn(
-          "v2-right-panel-content flex-1 overflow-y-auto overflow-x-hidden pt-9 focus:outline-none",
+          "v2-right-panel-content flex-1 overflow-y-auto overflow-x-hidden min-h-0 focus:outline-none",
           contentClassName,
         )}
       >
         {children}
       </main>
 
-      {/* TabBar inside Right Panel (Absolute Frosted Glass Overlay) */}
-      {tabs && tabs.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-transparent dark:border-white/[0.06]">
-          <V2TabBar
-            tabs={tabs}
-            activeTabId={activeTabId}
-            onTabSelect={onTabSelect}
-            onTabClose={onTabClose}
-            className="rounded-b-2xl"
-          />
-        </div>
+      {/* ── Bottom Status Bar: In OrcaQ inspired layout, breadcrumbs & branch info sit at the bottom ── */}
+      {hasTabs && (
+        <V2StatusBar
+          breadcrumbs={breadcrumbs}
+          branchName={branchName}
+          companyName={companyName}
+          logoUrl={logoUrl}
+          onBranchClick={onBranchClick}
+        />
       )}
     </div>
   );
