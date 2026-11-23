@@ -17,7 +17,6 @@ export interface UserRecord {
   status: UserStatus | string;
   employeeId: string | null;
   employee: UserEmployeeSummary | null;
-  legacyDirectusUserId: string | null;
   /** ISO UTC; hiển thị theo múi giờ trình duyệt */
   lastLoginAt: string | null;
   passwordChangedAt: string | null;

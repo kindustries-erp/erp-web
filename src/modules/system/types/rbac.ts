@@ -213,11 +213,6 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
   },
   // Hệ thống
   {
-    collection: "directus_roles",
-    label: "Vai trò hệ thống",
-    group: "Hệ thống",
-  },
-  {
     collection: "sys_tags",
     label: "Tags",
     group: "Hệ thống",
