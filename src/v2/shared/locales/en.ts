@@ -334,6 +334,13 @@ export const v2En: V2Dictionary = {
       category: "Category",
       other: "Other",
     },
+    linkedField: {
+      edited: "Edited",
+      sourceHint: "Source: {{value}}",
+      revert: "Restore from source",
+      refresh: "Update from source",
+      refreshFailed: "Could not update from source",
+    },
     form: {
       selectPlaceholder: "Select...",
       searchPlaceholder: "Search...",

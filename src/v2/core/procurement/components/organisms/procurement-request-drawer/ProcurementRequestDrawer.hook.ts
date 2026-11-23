@@ -25,6 +25,7 @@ import type { ProcurementRequestDetail } from "../../../procurement.types";
 import { showProcurementWarning } from "../../../procurement.toast";
 import type { ProcurementDrawerProps } from "../../../procurement.drawer.type";
 import { useApproversQuery } from "../../../hooks/useApproversQuery";
+import { useProcurementRequestBranchLink } from "../../../hooks/useProcurementRequestBranchLink";
 import { useProcurementRequestSave } from "./ProcurementRequestDrawer.save.hook";
 
 export type ProcurementDrawerTabKey = "general" | "traceability";
@@ -94,6 +95,18 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
       ? gated.filter((action) => action !== "submit")
       : gated;
   }, [creating, detail.data, status, props.approval, props.submitFromDrawer]);
+
+  const branchLink = useProcurementRequestBranchLink({
+    api: props.api,
+    documentId: props.documentId,
+    creating,
+    detail: detail.data,
+    branchId: form.branchId,
+    onRefreshed: (branchName) => {
+      setForm((current) => ({ ...current, branchName }));
+      setInitial((current) => ({ ...current, branchName }));
+    },
+  });
 
   const approvers = useApproversQuery(props.approvalConfigPath, approverOpen);
 
@@ -179,6 +192,7 @@ export function useProcurementRequestDrawer(props: ProcurementDrawerProps) {
      */
     branchLocked: branchOptional ? false : !creating,
     branchOptional,
+    branchLink,
     mode,
     setMode,
     tab,

@@ -15,8 +15,11 @@ interface SupplierRowDto {
   taxCode?: string | null;
 }
 
+/** Option chi nhánh kèm tên thuần (giá trị nguồn của field liên kết `branchName`). */
+export type BranchLinkOption = V2ComboboxOption & { name: string };
+
 /** Chi nhánh cho ô chọn; API trả `items` hoặc `data` tùy bản. */
-export async function listBranchOptions(): Promise<V2ComboboxOption[]> {
+export async function listBranchLinkOptions(): Promise<BranchLinkOption[]> {
   const { data } = await v2HttpClient.get<{
     items?: BranchRowDto[];
     data?: BranchRowDto[];
@@ -26,6 +29,15 @@ export async function listBranchOptions(): Promise<V2ComboboxOption[]> {
   return (data.items ?? data.data ?? []).map((b) => ({
     value: b.id,
     label: `${b.code} — ${b.name}`,
+    name: b.name,
+  }));
+}
+
+/** Chi nhánh cho ô chọn (không kèm tên thuần). */
+export async function listBranchOptions(): Promise<V2ComboboxOption[]> {
+  return (await listBranchLinkOptions()).map(({ value, label }) => ({
+    value,
+    label,
   }));
 }
 

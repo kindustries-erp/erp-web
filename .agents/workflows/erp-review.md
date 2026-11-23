@@ -36,6 +36,7 @@ Phân biệt với workflow khác: `/erp-local-changes-audit` kiểm diff local 
 
 - **Cấu trúc**: giới hạn 180/250 dòng; tách Presentation và hook; folder-per-component; import một chiều; core theo họ qua barrel (`erp-ui-structure`).
 - **V2 Atom và component chuẩn**: trong `src/v2/**` không có thẻ HTML trần khi đã có atom; bảng dùng `V2StandardTable` (V2) hoặc `SpreadsheetPageTemplate` (V1); drawer dùng `V2StandardDrawer` (V2) hoặc `StandardFormDrawer` (V1); xác nhận dùng `V2ConfirmModal`. Chọn đúng skill: `standardize-table`, `standardize-drawer`, `standardize-modal`.
+- **Field FK + giá trị song song**: dùng `V2LinkedField`/`useLinkedField`, không tự dựng cặp combobox + input; giá trị điền là giá trị nguồn thuần (`getSourceText`), id và giá trị song song đặt bằng hai setter riêng.
 - **Data fetching**: `@tanstack/react-query` với query key chuẩn; không `useEffect` + fetch thủ công.
 - **Token và theme**: không `blue-*`; màu có token ngữ cảnh phải dùng token; không opacity trên token `var()`.
 - **i18n**: không chuỗi hiển thị cứng; V2 dùng `useV2Translation`, key `v2.*`, đủ VI và EN.

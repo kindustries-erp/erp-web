@@ -568,6 +568,15 @@ Quy tắc: làm theo workflow của loại tương ứng, sau đó chạy audit 
 
 ---
 
+### 🔗 Field liên kết FK + giá trị song song (`V2LinkedField`)
+
+Khi form có một FK chọn từ bản ghi khác và một giá trị hiển thị sửa được song song (ví dụ chi nhánh + tên chi nhánh trên phiếu), dùng molecule `V2LinkedField` + hook `useLinkedField` (`src/v2/shared/components/molecules/v2-linked-field/`), không tự dựng cặp combobox + input.
+- Chọn option thì điền giá trị nguồn vào ô song song; sửa ô song song chỉ đổi giá trị cục bộ, không đổi FK. Lệch nguồn thì hiện nhãn "Đã chỉnh" kèm "Khôi phục theo nguồn" và "Cập nhật từ nguồn".
+- Giá trị điền vào ô là giá trị **nguồn** (tên thuần), không phải nhãn option kiểu "mã — tên": truyền `getSourceText` khi nhãn khác giá trị nguồn.
+- Id và giá trị song song đặt bằng hai setter riêng (component gọi liên tiếp trong một lượt chọn); không gộp thành một callback `(id, name)`.
+- Server là nơi lập snapshot; client chỉ gửi FK id và giá trị đã sửa. API phải dùng bộ `link-override-core` (xem `/erp-api-structure`).
+- Key i18n `v2.linkedField.*` (đủ VI và EN); core họ dùng molecule qua barrel `@/v2/shared/components`. Mẫu: `ProcurementBranchLinkedField` trong `src/v2/core/procurement/`.
+
 ## 🅳 Phần D: Enum cho Field nhập liệu & Option dùng chung
 
 Mục tiêu: mỗi key field và mỗi bộ option (trạng thái, phương thức thanh toán, loại đối tượng…) chỉ khai báo một lần, để form, bảng và filter thống nhất và tái sử dụng được.

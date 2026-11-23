@@ -334,6 +334,13 @@ export const v2Vi = {
       category: "Hạng mục",
       other: "Khác",
     },
+    linkedField: {
+      edited: "Đã chỉnh",
+      sourceHint: "Gốc: {{value}}",
+      revert: "Khôi phục theo nguồn",
+      refresh: "Cập nhật từ nguồn",
+      refreshFailed: "Không cập nhật được từ nguồn",
+    },
     form: {
       selectPlaceholder: "Chọn...",
       searchPlaceholder: "Tìm kiếm...",

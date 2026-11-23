@@ -272,6 +272,17 @@ const drawerTabs: DrawerTopTabItem[] = useMemo(() => [
 
 ---
 
+## 🔗 Mẫu field FK + giá trị song song (Drawer V2)
+
+Field vừa chọn bản ghi liên kết (FK) vừa cho sửa giá trị hiển thị trên phiếu dùng `V2LinkedField` (`useLinkedField`), đặt trong `V2DrawerFieldGrid` như field thường (`className: "sm:col-span-2"`).
+- Bọc thành một component riêng cho họ (ví dụ `ProcurementBranchLinkedField`), nhận id và giá trị song song qua **hai setter riêng** (`onBranchIdChange`, `onBranchNameChange`), kèm `link` (`sourceValue`, `overridden`, `onRefresh`) từ hook của drawer. Hook lấy `overriddenFields` và `sourceSnapshot` từ chi tiết API.
+- Ô song song điền **giá trị nguồn thuần** (không phải nhãn "mã — tên"): truyền `getSourceText`.
+- "Cập nhật từ nguồn" gọi API `refreshLink`, rồi cập nhật `form` và `initial` (không refetch chi tiết, để không mất phần đang sửa). "Khôi phục theo nguồn" làm ở client; khi lưu server tự bỏ cờ.
+- View mode: hiển thị qua `V2DrawerRowList` như field khác; chỉ edit mode mới có `V2LinkedField`. Mobile: giữ `flex-wrap`, không width cố định.
+- Test: hook (`select`/`edit`/`revert`/`refresh`), component (chọn → điền, sửa → "Đã chỉnh", khôi phục), và E2E kiểm chọn chi nhánh mà không sửa thì **không** bị đánh dấu "Đã chỉnh".
+
+---
+
 ## 📋 Drawer Quality Checklist
 
 | Hạng mục kiểm tra | Tiêu chuẩn bắt buộc | Trạng thái |
@@ -288,5 +299,6 @@ const drawerTabs: DrawerTopTabItem[] = useMemo(() => [
 | **Timeline Trục Dọc** | Lịch sử / Audit Timeline dùng trục dọc spine liên tục (`w-[2px]`), node tròn (`w-7 h-7`), không lồng nhiều lớp border card. | [ ] |
 | **0ms Input Debounce** | Text input / textarea dùng local buffer với 500ms debounce và nút `X` clear với `onMouseDown={(e) => { e.preventDefault(); handleClear(); }}`. | [ ] |
 | **View mode render thông tin (Drawer V2)** | Ở `mode="view"`, section render nhãn - giá trị bằng `V2DrawerRowList` (file `*View.tsx`), không render ô nhập hay `V2ReadValue`/`V2TextField viewing`. Test khẳng định không có textbox/combobox ở view mode. Audit: `/usr/bin/grep -rnE "V2ReadValue\|V2TextField[^>]*viewing" src/v2/core src/v2/modules`. Chi tiết: `standardize-drawer/references/v2-drawer.md`. | [ ] |
+| **Field FK + giá trị song song** | Dùng `V2LinkedField`, không tự dựng combobox + input; id và giá trị song song đặt bằng hai setter riêng; điền giá trị nguồn thuần (`getSourceText`); hai chuỗi VI/EN `v2.linkedField.*`. | [ ] |
 | **i18n 100%** | 100% text, tab labels, badge, placeholder và button được bọc trong `t(...)`. | [ ] |
 | **QC Build & Typecheck** | Chạy `bun run type:check` (0 errors) và `bun run test` (100% tests pass). | [ ] |
