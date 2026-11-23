@@ -9,4 +9,8 @@ export interface V2TabItemProps extends V2BaseProps {
   isActive?: boolean;
   isClosable?: boolean;
   onClose?: () => void;
+  /** Chỉ hiển thị icon khi tab đang active (mặc định: true) */
+  showIconOnActiveOnly?: boolean;
+  /** Trạng thái tab đang được kéo thả */
+  isDragging?: boolean;
 }

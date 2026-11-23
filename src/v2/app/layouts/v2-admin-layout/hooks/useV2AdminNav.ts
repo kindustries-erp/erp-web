@@ -4,7 +4,9 @@ import type {
   V2SidebarSectionData,
   V2BreadcrumbItem,
 } from "@/v2/shared/components";
+import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { filterV2NavSections } from "@/v2/app/layouts/v2-app-layout/navigation";
 import { getV2AdminNavigationSections } from "../navigation";
 import type { V2AdminLayoutProps } from "../V2AdminLayout.type";
 
@@ -27,6 +29,7 @@ export function useV2AdminNav({
   onNavigate,
 }: UseV2AdminNavProps = {}) {
   const { t, locale } = useV2Translation();
+  const can = useV2PermissionChecker();
 
   const effectiveAppName = appName ?? t("v2.admin.app.name", "ERP Admin");
   const effectiveTenantName =
@@ -37,8 +40,8 @@ export function useV2AdminNav({
     branchName ?? t("v2.topbar.mainBranch", "Chi nhánh chính");
 
   const dynamicSections: V2SidebarSectionData[] = React.useMemo(
-    () => sections ?? getV2AdminNavigationSections(t),
-    [sections, t, locale],
+    () => sections ?? filterV2NavSections(getV2AdminNavigationSections(t), can),
+    [sections, t, locale, can],
   );
 
   const fallbackBreadcrumbs: V2BreadcrumbItem[] = React.useMemo(

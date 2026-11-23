@@ -2,8 +2,12 @@ import type { StorybookConfig } from "@storybook/react-vite";
 import path from "path";
 
 const config: StorybookConfig = {
-  // Chỉ quét stories nằm trong cây components/{atoms,molecules,organisms,templates}; title luôn là "Components/<Layer>/<Name>"
-  stories: ["../src/v2/shared/components/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
+  // Ba vùng quét: shared/components (title "Components/<Layer>/<Name>"), core (title "Core/<Họ>/<Name>"), modules (title "Modules/<Module>/<Name>")
+  stories: [
+    "../src/v2/shared/components/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../src/v2/core/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../src/v2/modules/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+  ],
   addons: ["@storybook/addon-essentials", "@storybook/addon-interactions"],
   framework: {
     name: "@storybook/react-vite",

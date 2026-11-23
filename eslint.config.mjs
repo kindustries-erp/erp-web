@@ -42,6 +42,7 @@ export default tseslint.config(
     // mở rộng dần sang các module V2 khác khi được migrate.
     files: [
       "src/v2/core/goods-receipts/**/*.{ts,tsx}",
+      "src/v2/core/export-jobs/**/*.{ts,tsx}",
       "src/v2/modules/garage-goods-receipts/**/*.{ts,tsx}",
     ],
     rules: {

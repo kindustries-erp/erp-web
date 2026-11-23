@@ -118,7 +118,7 @@ describe("GarageTimeHorizonDetailDrawer", () => {
     defaultOptions: { queries: { retry: false } },
   });
 
-  it("renders drawer with month-style layout, header, 3 tabs and right panel", () => {
+  it("renders drawer with month-style layout: header, 2 tabs (không có tab danh sách/rủi ro riêng của mốc)", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <GarageTimeHorizonDetailDrawer
@@ -133,14 +133,16 @@ describe("GarageTimeHorizonDetailDrawer", () => {
     expect(screen.getAllByText("Quá hạn >90 ngày").length).toBeGreaterThan(0);
     expect(screen.getByText("97.7% Hoàn tất")).toBeInTheDocument();
 
-    // 3 Tabs
+    // 2 tab giống drawer tháng
     expect(screen.getByText("Phân loại Nghiệp vụ")).toBeInTheDocument();
     expect(screen.getByText("Phân loại theo đối tượng")).toBeInTheDocument();
-    expect(screen.getByText("Danh sách vụ việc")).toBeInTheDocument();
+    expect(screen.queryByText("Danh sách vụ việc")).not.toBeInTheDocument();
 
-    // Right panel
+    // Panel phải giống drawer tháng
+    expect(screen.getByText("Cơ cấu Thu KH vs Thu BH")).toBeInTheDocument();
+    expect(screen.getByText("Chi phí phát sinh & Còn nợ")).toBeInTheDocument();
     expect(
-      screen.getByText(/Đánh giá rủi ro mốc thời gian/i),
-    ).toBeInTheDocument();
+      screen.queryByText(/Đánh giá rủi ro mốc thời gian/i),
+    ).not.toBeInTheDocument();
   });
 });

@@ -31,6 +31,7 @@ src/modules/garage/
 │   │   │   ├── GarageCasesTable.columns.tsx # Aggregator kết hợp các nhóm cột
 │   │   │   ├── GarageCasesTable.date-columns.tsx # Nhóm 5 cột ngày tháng
 │   │   │   ├── GarageCasesTable.general-columns.tsx # Nhóm 11 cột thông tin chung (tích hợp Exclamation Tooltip phân loại KGara trong cột ERP)
+│   │   │   ├── GarageCasesTable.vehicle-columns.tsx # 5 cột Số khung, Hãng xe, Dòng xe, Năm SX, Đối tượng thanh toán (mặc định ẩn), dựng từ cấu hình core
 │   │   │   ├── GarageCasesTable.progress-columns.tsx # Nhóm 4 cột tiến độ thu/chi
 │   │   │   ├── GarageCasesTable.financial-columns.tsx # Nhóm 10 cột tài chính P&L
 │   │   │   └── GarageCasesTable.test.tsx # Unit tests kiểm tra 23 cột khớp view presets
@@ -130,19 +131,15 @@ src/modules/garage/
 ## 4. Tích hợp Drawer Chuẩn Hóa (`standardize-drawer` & `standardize-table`)
 
 ### 4.1. Phiếu Dịch Vụ (`GarageCaseStandaloneDrawer`)
-- Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">` với 4 Top Navigation Tabs:
-  1. **Chi tiết (`quote_details`)**: Tích hợp component `GarageCaseDetailsTab` gồm 2 Sub-Tabs (`PillTabs`):
-     - `Chi tiết` (`details`): Hiển thị `GarageCasePreview` bọc trong `DrawerSection title="Sổ báo giá & Lợi nhuận dự kiến"`.
-     - `Chi tiết theo đối tượng` (`partner`): Hiển thị `GarageCasePartnerTab` kèm `badgeCount` số phiếu của khách hàng.
-  2. **Tài chính (`financials`)**: Quản lý cấn trừ dòng tiền và hóa đơn liên kết (`GarageCaseFinancialsTab`):
-     - Giao diện tinh gọn gồm 3 Bảng dữ liệu chuẩn hóa (`/standardize-table`):
-       - `QuoteReceivablesTable`: Bảng Phải thu đúng 2 hàng (1 là Khách hàng thanh toán, 2 là Bảo hiểm thanh toán). Click nút "Thu KH" hoặc "Thu BH" sẽ mở Drawer cấn trừ Hóa đơn bán ra (`OUT`) hoặc Thu ngoài sổ (`RECEIPT`).
-       - `QuotePartsTable`: Bảng Chi tiết Vật tư & Phụ tùng cấn trừ CHI TIỀN. Click nút "Chi tiền" sẽ mở Drawer cấn trừ Hóa đơn mua vào (`IN`) hoặc Chi ngoài sổ (`PAYMENT`).
-       - `QuoteServicesTable`: Bảng Chi tiết Nhân công & Dịch vụ cấn trừ CHI TIỀN. Click nút "Chi tiền" sẽ mở Drawer cấn trừ Hóa đơn mua vào (`IN`) hoặc Chi ngoài sổ (`PAYMENT`).
-     - **Drawer Cấn trừ chuyên biệt (`CaseLinePaymentDrawer`)**: Sử dụng component chuẩn `PillTabs` đặt bên trái với thứ tự đảo ngược ưu tiên: 1. `Đã cấn trừ` (`linked`) ➔ 2. `Đang chọn` (`selected`) ➔ 3. `Gợi ý khớp` (`suggestions`) ➔ 4. `Tất cả` (`all`). Nút footer tự động biến đổi động theo tab: khi ở tab Hóa đơn thì hiển thị "Lưu cấn trừ (X HĐ)", khi chuyển sang tab Thu/Chi ngoài sổ sách thì đổi thành "Ghi nhận thu ngoài sổ" / "Ghi nhận chi ngoài sổ" (kích hoạt `handleSubmitBankAndCash`, kết nối đầy đủ `handleAddManualToDraft` và `activeSettlements`).
-  3. **Chứng từ liên kết (`linked_docs`)**: Mạng lưới Canvas Graph truy xuất nguồn gốc chứng từ đa chặng (`DrawerDocumentTraceability`).
-  4. **Lịch sử & Đồng bộ (`sync_history`)**: Timeline kiểm toán và đồng bộ từ KGara (`DrawerAuditTimeline`).
-- **Cột phải (`rightPanel`)**: `GarageCaseGeneralInfoSection`, `GarageCaseDefaultAttributesSection`, `ModuleEntityCustomFieldsSection` và `GarageCaseBusinessPerformanceSection`.
+- Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">` chuẩn hóa phân cấp theo **3 Main Tabs** (đồng nhất 100% với `ErpInvoiceDetailDrawer`):
+  1. **Chi tiết (`quote_details`)**: Quản lý toàn bộ chi tiết và nghiệp vụ của vụ việc hiện tại, bên trong gồm 3 Sub-Tabs (`V2TabBar` variant SUB):
+     - `Chi tiết báo giá` (`details`): Hiển thị `GarageCasePreview` bọc trong `DrawerSection title="Sổ báo giá & Lợi nhuận dự kiến"`.
+     - `Tài chính` (`financials`): Hiển thị `GarageCaseFinancialsTab` (Bảng Phải thu/Phải trả cấn trừ & chi tiết dòng tiền), kèm `financialsBadgeCount`. Khi active sub-tab này, cột phải chuyển sang `GarageCaseFinancialsRightPanel`.
+     - `Chứng từ liên kết` (`linked_docs`): Mạng lưới Canvas Graph truy xuất nguồn gốc chứng từ đa chặng (`DrawerDocumentTraceability`), kèm `linkedDocsBadgeCount`. Kiến trúc 3 lớp: engine `v2-document-traceability` (shared, không biết phân hệ) → core `src/v2/core/cases-garage` (`buildGarageCaseTraceabilityGraph`, `resolveGarageAddLink`, `resolveGarageUnlink`, hàm thuần) → drawer V1 giữ state sửa/modal/API. Đồ thị gộp server + hóa đơn/khoản thu chi đang sửa qua `mergeTraceabilityGraph` (dedupe cạnh theo cặp node, node thủ công id `manual-<id>`, giữ node chặng sau còn nối root). Khi active sub-tab này, cột phải tự động ẩn (`hideRightPanel: true`) để biểu đồ mở rộng 100% chiều ngang.
+  2. **Chi tiết theo Khách hàng (`customer_details`)**: Main Tab độc lập hiển thị toàn bộ lịch sử phiếu dịch vụ, công nợ và tuổi nợ của khách hàng này (`GarageCasePartnerTab`), kèm `badgeCount` số phiếu (`partnerCasesCount`).
+  3. **Lịch sử & Đồng bộ (`sync_history`)**: Timeline kiểm toán và đồng bộ từ KGara (`DrawerAuditTimeline`).
+- **Cột phải (`rightPanel`) linh hoạt**: Mặc định hiển thị `GarageCaseGeneralInfoSection`, `GarageCaseDefaultAttributesSection`, `ModuleEntityCustomFieldsSection` và `GarageCaseBusinessPerformanceSection`. Tự động switch sang `GarageCaseFinancialsRightPanel` ở sub-tab Tài chính, hoặc ẩn ở sub-tab Chứng từ liên kết.
+- **Tương thích ngược (Backward Compatibility)**: Hook `useGarageCaseDrawerLogic` tự động map `initialTabKey="financials"` sang `mainTab: "quote_details", subTab: "financials"`; map `initialTabKey="partner_details"` sang `mainTab: "customer_details"`.
 
 
 ### 4.2. Công Nợ Đối Tác (`GarageCustomerDetailDrawer` & `GarageCasePartnerTab`)
@@ -231,3 +228,41 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
   - Tách sub-component phân tầng `GarageCaseViewTabs` (`GarageCasesTable.view-tabs.tsx`, 33 LoC) quản lý cụm view presets combobox & status tabs.
   - Tách hàm tính toán nhãn tổng hợp `resolveTotalLabelCol` vào `GarageCasesTable.summary.tsx`.
   - Tuân thủ No Blue Mandate: loại bỏ hoàn toàn các class `blue-*` khỏi bảng và summary row.
+
+### Cột xe & đối tượng thanh toán (KINDU-1433)
+- Phần dùng chung nằm ở `src/v2/core/cases-garage/vehicle/` (`GARAGE_CASE_VEHICLE_COLUMNS`, `buildVehicleInfoRows`, `formatVehicleBrand/Model/Payer/ModelYear`, `GarageCaseVehicleCell`, `GarageCasePayerCell`, locale `v2.garageCases.vehicle.*`). Bảng V1 (`GarageCasesTable.vehicle-columns.tsx`) và drawer (`GarageCaseGeneralInfoSection`) chỉ ghép; khi migrate V2 chỉ cần đọc lại cấu hình này.
+- Khóa cột = khóa lọc/sắp xếp API: `soKhung`, `hangXe`, `dongXe`, `namSanXuat`, `doiTuongThanhToan`. Mặc định ẩn ở view Tổng quan và Đối soát, bật ở "Tất cả cột". Xuất Excel chưa có 5 cột này.
+- Xuất Excel: `garageCasesExportColumns.ts` có nhóm `vehicle` (5 cột trên), nằm ngoài bộ mặc định (`OPTIONAL_GARAGE_CASES_EXPORT_KEYS`); nhãn locale `exportReport.casesColumns.*`. Tổng cột chọn được: 39 (mặc định 30).
+
+---
+
+## 9. Tab Tiến độ công việc (Kanban Board) trong Drawer Chi Tiết Vụ Việc (KINDU-1598)
+
+- **V2 Shared Organism `v2-kanban-board`** (`src/v2/shared/components/organisms/v2-kanban-board/`):
+  - Tái sử dụng chung cho toàn bộ dự án ERP, hỗ trợ kéo thả thẻ qua `@dnd-kit/core` và `@dnd-kit/sortable`.
+  - Hỗ trợ cuộn ngang giữa các cột, cuộn dọc bên trong cột, header có icon, tiêu đề, badge đếm, subtotal và `DragOverlay`.
+  - Cấu hình cảm biến an toàn `PointerSensor({ activationConstraint: { distance: 5 } })` chống drag nhầm khi click xem chi tiết hoặc Popover.
+- **V2 Core Garage Cases Kanban** (`src/v2/core/cases-garage/kanban/` và `components/garage-cases-kanban/`):
+  - 5 làn tiến độ: Tiếp nhận (`INTAKE`), Báo giá (`QUOTATION`), Đang làm (`IN_PROGRESS`), Hoàn thành (`COMPLETED`), Hủy (`CANCELLED`).
+  - Mỗi card đại diện cho **1 xe** (gom nhóm theo `bienSoXe`). Xe có nhiều phiếu trong kỳ được thể hiện bằng nút Popover (`GarageVehicleCasesPopover`), click mở popover xem danh sách phiếu đầy đủ, click số phiếu gọi `onOpenCaseDetail`.
+  - Card hiển thị biển số xe phong cách dập nổi (`bg-amber-400/10`), tên khách hàng, mã phiếu, ngày hoàn thành/phát sinh, doanh thu phát sinh và nợ còn lại (hoặc badge "Đã thu đủ").
+  - Kéo thả xe giữa các cột cập nhật mốc tiến độ trực quan, bắn toast thông báo kèm i18n đầy đủ.
+- **Tích hợp Drawer**:
+  - Nhúng trực tiếp tại `GarageCasesDetailDrawer.tabs.tsx` qua tab `"kanban"` kế bên tab `"cases"` ("Danh sách xe") khi mở ở chế độ checkpoint overview.
+  - **Tối ưu kéo thả 60fps & Khắc phục kẹt cuộn**:
+    - `GarageVehicleKanbanCard.tsx`, `V2KanbanCardWrapper.tsx`, `V2KanbanLane.tsx` được memo hóa, tắt transition CSS khi kéo (`transition: none` khi isDragging), áp dụng biến đổi dịch chuyển mượt mà `CSS.Translate.toString(transform)`.
+    - `<DragOverlay>` được render qua `createPortal(..., document.body)` với `zIndex={1000}` giải quyết triệt để lỗi lệch tọa độ Offset Y khi bọc trong Dialog/Drawer có `transform`/`backdrop-filter`.
+    - Thuật toán va chạm 2 tầng `pointerWithin` -> `closestCorners` chống giật lag và nhảy lane bất thường khi kéo thẻ qua các ranh giới cột.
+    - Khắc phục xung đột `react-remove-scroll` của Radix Dialog V2 khi có Drawer V1 hoặc Popover mở chồng lên bằng cờ `modal={!hasNestedOpenDrawer}` trên `V2StandardDrawer` và `modal={false}` trên `GarageVehicleCasesPopover`.
+  - **Chuẩn hóa UI & Design Tokens `/erp-ui-structure`**:
+    - Màu accent các làn được quản lý tập trung qua `GARAGE_KANBAN_LANE_ACCENTS` (`garageCaseKanban.config.ts`), sử dụng design token chuẩn (`var(--kanban-*)`) và fallback semantic, tuyệt đối không hardcode mã hex.
+    - Tắt hoàn toàn `backdrop-blur` (`0px`) và khử kênh alpha (opacity 100% solid) trên toàn bộ Floating Surface (Drawer V2, Modal V2, Popover, Card) giúp GPU không phải chạy Gaussian blur / framebuffer readback liên tục khi kéo thả thẻ.
+    - Bọc toàn bộ bảng Kanban trong `DrawerSection` chuẩn với `fillHeight={true}`, căn chỉnh fit 100% viewport drawer không sinh scroll ngoài.
+    - Đồng bộ vị trí ô tìm kiếm `V2SearchInput` (`w-48 sm:w-64`) tại góc trên bên phải của cả 2 tab Danh sách xe và Tiến độ công việc.
+    - Cải tiến Panel phải của Drawer bằng `GarageVehicleProgressRightPanel` thể hiện các chỉ số thực tế: Tiến độ xử lý xe (4 mốc), Cơ cấu Top Hãng xe vào xưởng, và Dòng tiền dịch vụ xe.
+
+## Cơ cấu chi phí và chiết khấu 521 trong drawer phiếu (KINDU-1623, cập nhật 2026-11-21)
+- `GarageCasePreview.helper.ts` (`calculateProfitSummary`) không tự parse `journal_items` nữa: dùng `costBreakdown` do backend trả (`grossProfit.costBreakdown`, rồi `caseData.costBreakdown`), chuẩn hóa tên (`externalCost`→`outsourceCost`, `warehousePartsCost`→`inventoryPartCost`).
+- `QuoteDocumentCostSummary` hiển thị "Chiết khấu (giảm trừ doanh thu, TK 521)" thành dòng riêng ngoài cụm chi phí (`data-testid="cost-summary-discount"`); "Tổng chi phí" không cộng chiết khấu. Biên lợi nhuận do backend tính trên doanh thu thuần.
+- Test V1 của thư mục này không nằm trong `vitest.config.ts` mặc định; chạy bằng config tạm trỏ `src/modules/garage/components/organisms/garage-case-preview/**`.
+

@@ -37,13 +37,14 @@ Quy tắc:
 - **Folder-per-component**: mỗi component một thư mục kebab-case, có `index.ts`, file `.type.ts`, `.hook.ts` khi cần, và thư mục `__tests__` hoặc file test co-located.
 - **Giới hạn**: cảnh báo ở 180 dòng cho `.tsx` và `.hook.ts`, chặn ở 250 dòng. Loại trừ file dữ liệu và cấu hình thuần (`*.locale.ts`, `*.options.ts`, `*.config.ts`, `*.type.ts`, `*.data.ts`). Tách hook, helper và sub-component khi gần ngưỡng.
 - **Tên hook**: `[Component].hook.ts` (hook gắn một component, export `use[Component]`); `use<Tên>.ts` (hook độc lập trong `api/`, `hooks/`, `stores/`). Hook không có JSX đuôi `.ts`. Chi tiết: `erp-ui-structure`, mục "Quy Ước Tên Hook".
+- **URL chính không có `v2`**: URL chính thức của mọi trang luôn là `/<slug>` (ví dụ `/file-attachments`, `/employees-management`), không bao giờ `/v2/...` hay `/v3/...`. `/v2/*` chỉ để demo/test song song với V1. Khi một module V2 sẵn sàng, nối vào shell chính: thêm PageKey `<slug>` (`shared/types`, `shared/utils/pageUrl.ts`, `core/config/appStore/constants.ts`, nav/sidebar, `V2ShellLayout` breadcrumb), đăng ký component V2 trong `App.tsx` (map PageKey → trang V2), và giữ slug cũ của V1 làm `LEGACY_SLUGS` trỏ về PageKey mới. Mẫu: `employees-management`, `file-attachments`.
 - **Tầng core theo họ (áp dụng cho mọi họ, không ngoại lệ)**: UI, rule, hook controller và locale của một họ nằm ở `src/v2/core/<họ>/` (ví dụ `core/goods-receipts/`), giống `src/v2/core/` của API v2. Module của họ chỉ giữ API, cấu hình ghép core, page và locale riêng. Chiều phụ thuộc `modules/* → core/* → shared/`; core không import module và không chứa tên module. Import qua barrel (`@/v2/core/<họ>`, `@/v2/shared/components`), không import sâu từ module hay core. Chi tiết: `erp-ui-structure` Phần B.
 - **i18n**: 100% chuỗi hiển thị đi qua `t()` cho VI/EN. Với V2, key bắt buộc có prefix `v2.`, dùng `useV2Translation` (không `react-i18next`), và **mỗi key phải khai báo đủ vi và en cùng lúc** (atom/shared vào `src/v2/shared/locales/vi.ts` + `en.ts`; core/module vào `<họ>.locale.ts` qua `registerV2ModuleLocale`). Chi tiết: `references/atomic-ui.md` mục 6.1.
 - **Màu**: không dùng `blue-*`. Dùng token ngữ cảnh (bảng token và màu raw được chấp nhận: `erp-web-truth/references/ui-shell-and-theme.md` mục 4).
 - **Zustand**: đọc state bằng selector riêng lẻ (`useXStore((s) => s.field)`). Tránh `const { a, b } = useXStore()` vì component render lại theo cả store.
 - **A11y**: control, overlay và field lỗi theo mục A11y trong checklist `references/atomic-ui.md`.
 - **Mobile-First & Responsive**: thiết kế và viết CSS Mobile-First (style gốc cho mobile, mở rộng bằng `sm:`, `md:`, `lg:`). Touch target $\ge 44\text{px}$, input font $\ge 16\text{px}$ chống iOS Safari zoom, bọc safe-area insets. Tách `*.desktop.tsx` / `*.mobile.tsx` (Platform Split) khi UX khác biệt căn bản (App Layout, Drawer Bottom Sheet, Table vs Card List) qua Switcher `< 15 LoC`.
-- **Storybook (tùy chọn)**: khuyến khích `*.stories.tsx` cho atoms; không bắt buộc, không nằm trong gate CI. Story phải đặt trong `src/v2/shared/components/<tầng>/<folder>/` và có `title: "Components/<Tầng>/<Name>"` (`.storybook/main.ts` chỉ quét vùng này).
+- **Storybook (bắt buộc cho component mới có UI)**: mọi component mới có UI (atoms → organisms, kể cả trong `src/v2/core/<họ>/` và `src/v2/modules/<module>/`) có `*.stories.tsx` cạnh file. Ngoại lệ, ghi lý do: page ghép (`*Page.tsx`) và hook thuần. Title theo vùng: `Components/<Tầng>/<Name>` (shared), `Core/<Họ>/<Name>`, `Modules/<Module>/<Name>`. `.storybook/main.ts` quét cả ba vùng. Không nằm trong gate CI; kiểm bằng `/erp-local-changes-audit`.
 - **Test theo tầng**: bắt buộc cho Organism và luồng page (`tests/integration/`); Atom/Molecule chỉ test khi có logic riêng.
 - **Enum nhập liệu**: key field và option dùng chung khai báo bằng `enum` (một nguồn, nhãn qua `t()`), tái sử dụng giữa form, bảng và filter. Xem `erp-ui-structure` Phần D.
 
@@ -57,7 +58,7 @@ Mỗi loại có một skill duy nhất, đã gồm V1, V2 và phần phụ. Ski
 | Cột, filter, sort, subtotal, phân trang, view mode, bảng nhúng | `standardize-table` | `references/table-rules.md` |
 | Bảng hoặc trang dưới `src/v2/` | `standardize-table` | `references/v2-table.md` |
 | Drawer chi tiết hoặc form (V1) | `standardize-drawer` | `references/drawer-rules.md` |
-| Drawer dưới `src/v2/` | `standardize-drawer` | `references/v2-drawer.md` |
+| Drawer dưới `src/v2/` | `standardize-drawer` | `references/v2-drawer.md` (view mode render thông tin bằng `V2DrawerRowList`, không render ô nhập) |
 | Tab chứng từ liên kết, cấn trừ, truy vết | `standardize-drawer` | `references/drawer-rules.md` mục 11 |
 | Modal dưới `src/v2/` (`V2Modal`, `V2ConfirmModal`) | `standardize-modal` | mục 9 của `standardize-modal/SKILL.md` |
 

@@ -3,6 +3,7 @@
 // Biến môi trường như loans-projection.e2e.mjs: E2E_PASSWORD (đọc từ erp-api/.env nếu thiếu).
 // Chạy: node e2e/loans-record-payment.e2e.mjs
 import { chromium } from "playwright-core";
+import { resolveWebUrl } from "./e2e-ports.mjs";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 
 const API_ENV = new URL("../../erp-api/.env", import.meta.url).pathname;
@@ -16,7 +17,7 @@ const readApiEnv = (key) => {
 
 const API =
   process.env.E2E_API_URL ?? `http://localhost:${readApiEnv("PORT") ?? 10002}`;
-const WEB = process.env.E2E_WEB_URL ?? "http://127.0.0.1:5174";
+const WEB = resolveWebUrl();
 const PASSWORD = process.env.E2E_PASSWORD ?? readApiEnv("E2E_PASSWORD");
 const LOAN_EMAIL = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
@@ -41,13 +42,13 @@ const shot = (page, name) =>
   page.screenshot({ path: `${SHOTS}${name}.png` }).catch(() => {});
 
 async function apiLogin(email) {
-  const r = await fetch(`${API}/api/v1/auth/login`, {
+  const r = await fetch(`${API}/api/v2/auth-sessions/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password: PASSWORD }),
   });
   const b = await r.json().catch(() => ({}));
-  return { token: b.accessToken, status: r.status };
+  return { token: b.data?.accessToken, status: r.status };
 }
 async function api(s, method, path, body) {
   const r = await fetch(`${API}/api/v2${path}`, {

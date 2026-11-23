@@ -15,87 +15,47 @@ export interface EdgeGeometry {
   labelY: number;
 }
 
-const BORDER_RADIUS = 16;
-/** Khoảng cách vượt qua hai giai đoạn thì đi đường vòng ra ngoài khung */
-const SKIP_VERTICAL = 360;
-const SKIP_HORIZONTAL = 450;
+const BORDER_RADIUS = 8;
 
-/** Đường nối và vị trí nhãn của một cạnh, tự chọn đường vòng khi nối qua giai đoạn xa */
+/**
+ * Đường nối trực tiếp ngắn nhất giữa hai chứng từ theo chuẩn sơ đồ khối (Image 2).
+ * Tự động đi thẳng khi các node cùng hàng và rẽ góc vuông bo nhẹ R=8 khi lệch hàng,
+ * né node trung gian khi nối nhảy cóc qua cột/hàng.
+ */
 export function computeEdgeGeometry(input: EdgeGeometryInput): EdgeGeometry {
-  return input.targetPosition === Position.Top
-    ? verticalGeometry(input)
-    : horizontalGeometry(input);
-}
+  const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition } =
+    input;
 
-function verticalGeometry(input: EdgeGeometryInput): EdgeGeometry {
-  const { sourceX, sourceY, targetX, targetY } = input;
-  if (targetY - sourceY <= SKIP_VERTICAL) {
-    const centerY = (sourceY + targetY) / 2;
-    const isStraight = Math.abs(targetX - sourceX) < 10;
-    return {
-      path: smoothPath(input),
-      labelX: targetX,
-      labelY: isStraight ? centerY : (centerY + targetY) / 2,
-    };
-  }
+  // Khi đường nối nhảy qua cột (dx > 320px) và khác hàng (sourceY !== targetY):
+  // Rẽ độ cao ngay tại khoảng trống (gap) đầu tiên sau nguồn (sourceX + 60),
+  // giúp đường nối hạ/nâng độ cao sớm và đi thẳng bên dưới/trên các thẻ cột giữa.
+  const isMultiColumnHorizontal =
+    sourcePosition === Position.Right &&
+    targetPosition === Position.Left &&
+    targetX - sourceX > 320 &&
+    sourceY !== targetY;
 
-  // Đi vòng bên phải, ngoài các khung giai đoạn
-  const bypassX = Math.max(sourceX, targetX) + 180;
-  const r = BORDER_RADIUS;
-  const midY1 = sourceY + 45;
-  const midY2 = targetY - 45;
-  const outDir = bypassX > sourceX ? r : -r;
-  const inDir = targetX > bypassX ? r : -r;
-  const path = [
-    `M ${sourceX} ${sourceY}`,
-    `L ${sourceX} ${midY1 - r}`,
-    `Q ${sourceX} ${midY1} ${sourceX + outDir} ${midY1}`,
-    `L ${bypassX - outDir} ${midY1}`,
-    `Q ${bypassX} ${midY1} ${bypassX} ${midY1 + r}`,
-    `L ${bypassX} ${midY2 - r}`,
-    `Q ${bypassX} ${midY2} ${bypassX + inDir} ${midY2}`,
-    `L ${targetX - inDir} ${midY2}`,
-    `Q ${targetX} ${midY2} ${targetX} ${midY2 + r}`,
-    `L ${targetX} ${targetY}`,
-  ].join(" ");
-  return { path, labelX: bypassX, labelY: (midY1 + midY2) / 2 };
-}
+  // Tương tự cho layout dọc khi nhảy qua hàng (dy > 220px) và khác cột (sourceX !== targetX)
+  const isMultiRowVertical =
+    sourcePosition === Position.Bottom &&
+    targetPosition === Position.Top &&
+    targetY - sourceY > 220 &&
+    sourceX !== targetX;
 
-function horizontalGeometry(input: EdgeGeometryInput): EdgeGeometry {
-  const { sourceX, sourceY, targetX, targetY } = input;
-  if (targetX - sourceX <= SKIP_HORIZONTAL) {
-    const centerX = (sourceX + targetX) / 2;
-    const isStraight = Math.abs(targetY - sourceY) < 10;
-    return {
-      path: smoothPath(input),
-      labelX: isStraight ? centerX : (centerX + targetX) / 2,
-      labelY: targetY,
-    };
-  }
+  const centerX = isMultiColumnHorizontal ? sourceX + 60 : undefined;
+  const centerY = isMultiRowVertical ? sourceY + 40 : undefined;
 
-  // Đi vòng bên dưới, ngoài các khung giai đoạn
-  const bypassY = Math.max(sourceY, targetY) + 65;
-  const r = BORDER_RADIUS;
-  const midX1 = sourceX + 60;
-  const midX2 = targetX - 60;
-  const downDir = bypassY > sourceY ? r : -r;
-  const upDir = targetY > bypassY ? r : -r;
-  const path = [
-    `M ${sourceX} ${sourceY}`,
-    `L ${midX1 - r} ${sourceY}`,
-    `Q ${midX1} ${sourceY} ${midX1} ${sourceY + downDir}`,
-    `L ${midX1} ${bypassY - downDir}`,
-    `Q ${midX1} ${bypassY} ${midX1 + r} ${bypassY}`,
-    `L ${midX2 - r} ${bypassY}`,
-    `Q ${midX2} ${bypassY} ${midX2} ${bypassY + upDir}`,
-    `L ${midX2} ${targetY - upDir}`,
-    `Q ${midX2} ${targetY} ${midX2 + r} ${targetY}`,
-    `L ${targetX} ${targetY}`,
-  ].join(" ");
-  return { path, labelX: (midX1 + midX2) / 2, labelY: bypassY };
-}
+  const [path, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    borderRadius: BORDER_RADIUS,
+    centerX,
+    centerY,
+  });
 
-function smoothPath(input: EdgeGeometryInput): string {
-  const [path] = getSmoothStepPath({ ...input, borderRadius: BORDER_RADIUS });
-  return path;
+  return { path, labelX, labelY };
 }

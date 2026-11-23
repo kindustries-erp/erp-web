@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ERP CORE auth store — local JWT, không có Directus/impersonation/refresh
+// ERP CORE auth store — local JWT, không có impersonation/refresh
 // ─────────────────────────────────────────────────────────────────────────────
 import { create } from "zustand";
 import { persist } from "zustand/middleware";

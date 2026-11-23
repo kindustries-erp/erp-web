@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import {
   calculateClassificationTableRows,
   calculateTimelineDatasets,
@@ -88,5 +88,26 @@ describe("Funnel: giai đoạn Báo giá", () => {
     ]) {
       expect(screen.getByText(label)).toBeTruthy();
     }
+  });
+
+  it("thẻ tổng quan gọi onStageClick khi người dùng click vào thẻ giai đoạn", () => {
+    const f = funnel({});
+    const onStageClick = vi.fn();
+    render(
+      <FunnelOverviewCards
+        totalIntake={f.totalIntake}
+        quotation={f.quotation!}
+        inProgress={f.inProgress}
+        completed={f.completed}
+        cancelled={f.cancelled}
+        onStageClick={onStageClick}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("2. Báo Giá"));
+    expect(onStageClick).toHaveBeenCalledWith("QUOTATION", "2. Báo Giá");
+
+    fireEvent.click(screen.getByText("1. Tổng Tiếp Nhận"));
+    expect(onStageClick).toHaveBeenCalledWith("ALL", "1. Tổng Tiếp Nhận");
   });
 });

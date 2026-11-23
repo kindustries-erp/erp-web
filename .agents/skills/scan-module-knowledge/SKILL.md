@@ -100,4 +100,4 @@ description: Module tri thức <Tên Module> trong erp-web. Chứa toàn bộ c�
 - [ ] File skill được lưu đúng tại `erp-web/.agents/skills/modules/<module-name>/SKILL.md`.
 - [ ] YAML frontmatter có `name` (trùng tên module) và `description` rõ ràng.
 - [ ] Thư mục `modules` đã được đăng ký trong `.agents/skills.json`.
-- [ ] Đã cập nhật tham chiếu trong `erp-web/.agents/skills/erp-web-truth/SKILL.md`.
+- [ ] `description` trong frontmatter là một dòng, nêu rõ phạm vi module. Bản đồ module (`erp-web/.agents/skills/erp-web-truth/references/module-map.md`) là file tự sinh từ `description`: không sửa tay, chạy `/sync-agents` rồi kiểm tra module đã có trong bản đồ.

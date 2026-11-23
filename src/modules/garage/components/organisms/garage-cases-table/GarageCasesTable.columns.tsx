@@ -1,6 +1,7 @@
 import React from "react";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { buildGeneralColumns } from "./GarageCasesTable.general-columns";
+import { buildVehicleColumns } from "./GarageCasesTable.vehicle-columns";
 import { buildFinancialColumns } from "./GarageCasesTable.financial-columns";
 import type { ColumnContext } from "./GarageCasesTable.type";
 
@@ -64,6 +65,7 @@ export function buildGarageCasesColumns(ctx: ColumnContext) {
 
   return [
     ...buildGeneralColumns(ctx, makeHdr),
+    ...buildVehicleColumns(ctx, makeHdr),
     ...buildFinancialColumns(ctx, makeHdr),
   ];
 }

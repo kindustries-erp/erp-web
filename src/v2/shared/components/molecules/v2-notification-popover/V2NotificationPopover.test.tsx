@@ -5,8 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { V2NotificationPopover } from "./V2NotificationPopover";
 import {
   notificationsApi,
+  NotificationType,
+  NotificationTargetAction,
   type CoreNotification,
 } from "@/core/api/notifications";
+import { resolveNotificationIconMeta } from "./V2NotificationItem.config";
 
 vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
   useV2Translation: () => ({
@@ -17,6 +20,9 @@ vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
         "v2.notifications.deleteAll": "Xóa tất cả",
         "v2.notifications.markAllAsRead": "Đánh dấu đã đọc tất cả",
         "v2.notifications.deleteItem": "Xóa thông báo",
+        "v2.notifications.markAsReadSuccess": "Đã đánh dấu thông báo là đã đọc",
+        "v2.notifications.markAllAsReadSuccess":
+          "Đã đánh dấu tất cả thông báo là đã đọc",
       };
       return map[key] ?? fallback ?? key;
     },
@@ -24,19 +30,32 @@ vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
   }),
 }));
 
+const mockShowToast = vi.fn();
+vi.mock("@/v2/shared/stores/useV2ToastStore", () => ({
+  useV2ToastStore: (selector: any) =>
+    selector
+      ? selector({ showToast: mockShowToast })
+      : { showToast: mockShowToast },
+}));
+
 vi.mock("@/core/config/appStore", () => ({
   useAppStore: () => ({ locale: "vi" }),
 }));
 
-vi.mock("@/core/api/notifications", () => ({
-  notificationsApi: {
-    findAll: vi.fn(),
-    markAsRead: vi.fn(),
-    markAllAsRead: vi.fn(),
-    delete: vi.fn(),
-    deleteAll: vi.fn(),
-  },
-}));
+vi.mock("@/core/api/notifications", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/core/api/notifications")>();
+  return {
+    ...actual,
+    notificationsApi: {
+      findAll: vi.fn(),
+      markAsRead: vi.fn(),
+      markAllAsRead: vi.fn(),
+      delete: vi.fn(),
+      deleteAll: vi.fn(),
+    },
+  };
+});
 
 const mockUseViewport = vi.fn().mockReturnValue({
   width: 1280,
@@ -55,7 +74,7 @@ const mockNotifications: CoreNotification[] = [
     id: "notif-1",
     title: "Đơn hàng mới #1001",
     message: "Khách hàng Nguyễn Văn A vừa đặt hàng.",
-    type: "INFO",
+    type: NotificationType.INFO,
     isRead: false,
     createdAt: new Date().toISOString(),
     readAt: null,
@@ -66,7 +85,7 @@ const mockNotifications: CoreNotification[] = [
     id: "notif-2",
     title: "Cập nhật tồn kho",
     message: "Mã SKU ABC đã hết hàng.",
-    type: "WARNING",
+    type: NotificationType.WARNING,
     isRead: true,
     createdAt: new Date().toISOString(),
     readAt: null,
@@ -87,6 +106,7 @@ const createTestQueryClient = () =>
 describe("V2NotificationPopover Molecule", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockShowToast.mockClear();
     mockUseViewport.mockReturnValue({
       width: 1280,
       height: 800,
@@ -162,6 +182,10 @@ describe("V2NotificationPopover Molecule", () => {
     fireEvent.click(screen.getByTestId("mark-as-read-button"));
     await waitFor(() => {
       expect(notificationsApi.markAsRead).toHaveBeenCalledWith("notif-1");
+      expect(mockShowToast).toHaveBeenCalledWith({
+        variant: "success",
+        title: "Đã đánh dấu thông báo là đã đọc",
+      });
     });
     expect(screen.getByText("Đơn hàng mới #1001")).toBeInTheDocument();
 
@@ -170,6 +194,10 @@ describe("V2NotificationPopover Molecule", () => {
     fireEvent.click(markAllBtn);
     await waitFor(() => {
       expect(notificationsApi.markAllAsRead).toHaveBeenCalled();
+      expect(mockShowToast).toHaveBeenCalledWith({
+        variant: "success",
+        title: "Đã đánh dấu tất cả thông báo là đã đọc",
+      });
     });
 
     // Click delete all
@@ -202,6 +230,10 @@ describe("V2NotificationPopover Molecule", () => {
         mockNotifications[0],
       );
       expect(notificationsApi.markAsRead).toHaveBeenCalledWith("notif-1");
+      expect(mockShowToast).toHaveBeenCalledWith({
+        variant: "success",
+        title: "Đã đánh dấu thông báo là đã đọc",
+      });
       expect(screen.queryByText("Đơn hàng mới #1001")).not.toBeInTheDocument();
     });
   });
@@ -287,7 +319,7 @@ describe("V2NotificationPopover Molecule", () => {
         id: "notif-3",
         title: "Nhập kho hoàn tất",
         message: "Phiếu nhập #GR-01 đã xác nhận.",
-        type: "SUCCESS",
+        type: NotificationType.SUCCESS,
         isRead: false,
         createdAt: new Date().toISOString(),
         readAt: null,
@@ -298,7 +330,7 @@ describe("V2NotificationPopover Molecule", () => {
         id: "notif-4",
         title: "Lỗi đồng bộ",
         message: "Không thể kết nối máy chủ hóa đơn.",
-        type: "ERROR",
+        type: NotificationType.ERROR,
         isRead: true,
         createdAt: new Date().toISOString(),
         readAt: null,
@@ -325,15 +357,16 @@ describe("V2NotificationPopover Molecule", () => {
       .closest("div.group");
     const readCard = screen.getByText("Cập nhật tồn kho").closest("div.group");
 
-    expect(unreadCard?.className).toContain("bg-teal-50/70");
-    expect(unreadCard?.className).toContain("border-teal-500/25");
-    expect(readCard?.className).toContain("bg-slate-50/75");
-    expect(readCard?.className).toContain("dark:opacity-60");
-    expect(readCard?.className).not.toMatch(/(?:^|\s)opacity-60(?:\s|$)/);
+    expect(unreadCard?.className).toContain("bg-item-bg-unread");
+    expect(unreadCard?.className).toContain("border-item-border-unread");
+    expect(unreadCard?.className).toContain("border-l-primary");
+    expect(unreadCard?.className).toContain("shadow-card-item");
+    expect(readCard?.className).toContain("border-item-border");
+    expect(readCard?.className).toContain("bg-surface-hover/25");
+    expect(readCard?.className).toContain("opacity-75");
 
     const unreadDots = screen.getAllByTestId("unread-indicator");
-    expect(unreadDots[0].className).toContain("bg-teal-600");
-    expect(unreadDots[0].className).toContain("dark:bg-teal-400");
+    expect(unreadDots[0].className).toContain("bg-primary");
 
     const deleteButtons = screen.getAllByRole("button", {
       name: "Xóa thông báo",
@@ -342,5 +375,31 @@ describe("V2NotificationPopover Molecule", () => {
     await waitFor(() => {
       expect(notificationsApi.delete).toHaveBeenCalledWith("notif-1");
     });
+  });
+
+  it("phân giải icon thông minh: icon File* cho chứng từ tương tác và icon Circle* cho thông báo tĩnh", () => {
+    const approveAction = resolveNotificationIconMeta(NotificationType.INFO, {
+      module: "PROCUREMENT_REQUEST_GARAGE",
+      id: "pr-1",
+      action: NotificationTargetAction.APPROVE,
+    });
+    expect(approveAction.isActionable).toBe(true);
+    expect(approveAction.Icon.displayName || approveAction.Icon.name).toBe(
+      "FileClock",
+    );
+
+    const successDoc = resolveNotificationIconMeta(NotificationType.SUCCESS, {
+      module: "PROCUREMENT_REQUEST_GARAGE",
+      id: "pr-2",
+      action: NotificationTargetAction.VIEW,
+    });
+    expect(successDoc.isActionable).toBe(true);
+    expect(successDoc.Icon.displayName || successDoc.Icon.name).toBe(
+      "FileCheck2",
+    );
+
+    const staticInfo = resolveNotificationIconMeta(NotificationType.INFO, null);
+    expect(staticInfo.isActionable).toBe(false);
+    expect(staticInfo.Icon.displayName || staticInfo.Icon.name).toBe("Info");
   });
 });

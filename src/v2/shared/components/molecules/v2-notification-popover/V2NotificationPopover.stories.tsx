@@ -3,7 +3,10 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { V2NotificationPopover } from "./V2NotificationPopover";
-import type { CoreNotification } from "@/core/api/notifications";
+import {
+  NotificationType,
+  type CoreNotification,
+} from "@/core/api/notifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,7 +19,7 @@ const sampleNotifications: CoreNotification[] = [
     id: "notif-1",
     title: "Đề nghị đã được duyệt",
     message: "GDNM-20261106-001 đã được duyệt",
-    type: "SUCCESS",
+    type: NotificationType.SUCCESS,
     isRead: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
     readAt: null,
@@ -27,7 +30,7 @@ const sampleNotifications: CoreNotification[] = [
     id: "notif-2",
     title: "Có đề nghị chờ bạn duyệt",
     message: "GDNM-20261109-001 - Mua hàng demo 2 đang chờ bạn duyệt.",
-    type: "INFO",
+    type: NotificationType.INFO,
     isRead: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
     readAt: null,
@@ -39,7 +42,7 @@ const sampleNotifications: CoreNotification[] = [
     title: "Đồng bộ hóa đơn chưa đầy đủ",
     message:
       "Lượt đồng bộ Cổng Thuế có vấn đề: mua vào: 4 phần lỗi. Các hóa đơn còn thiếu sẽ được quét lại ở lượt sau.",
-    type: "WARNING",
+    type: NotificationType.WARNING,
     isRead: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString(),
     readAt: null,
@@ -50,7 +53,7 @@ const sampleNotifications: CoreNotification[] = [
     id: "notif-4",
     title: "Lỗi đồng bộ hóa đơn GDT",
     message: "Hóa đơn số 0012345 bị từ chối do sai chữ ký số.",
-    type: "ERROR",
+    type: NotificationType.ERROR,
     isRead: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
     readAt: null,

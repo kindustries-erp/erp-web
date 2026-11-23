@@ -337,6 +337,18 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - Inactive tab của `button-group` để nền và viền trong suốt; chỉ active tab có nền fill.
 - Drawer có thể được mở từ route V1, nơi `v2-theme.css` không được import. Sheet mang `data-v2-standard-drawer`; `src/styles/panels.css` cung cấp Midnight drawer tokens theo marker này để portal content vẫn nhận dark surface.
 
+### View mode: render thông tin, không render ô nhập (bắt buộc)
+
+Drawer V2 ở `mode="view"` hiển thị **nhãn - giá trị** (từng dòng, không viền ô), giống section "Thông tin đơn" của drawer `garage-procurement?tab=requests`. Không dựng control nhập rồi khóa lại.
+
+- **View mode**: dùng `V2DrawerRowList` + `DrawerRowConfig` (`@/v2/shared/components`). `value` là `ReactNode` (badge trạng thái, link, text). `copyable` cho mã/email/SĐT, `multiline` cho văn bản dài, `hidden` để ẩn dòng theo điều kiện. Giá trị rỗng hiển thị `—`.
+- **Edit/create mode**: dùng `V2DrawerFieldGrid` hoặc `DrawerField` + control nhập (`V2TextField`, `V2Combobox`, `V2DatePicker`...).
+- **Tách file**: `<Section>View.tsx` (chỉ `V2DrawerRowList`) riêng với `<Section>.tsx` (edit). `<Section>.tsx` trả `<Section>View />` khi `viewing`. Mẫu: `src/v2/core/procurement/components/organisms/procurement-request-drawer/sections/ProcurementRequestHeaderView.tsx` và `ProcurementRequestHeaderSection.tsx`.
+- **Cấm ở view mode**: `V2TextField viewing`, `V2ReadValue`, `V2Input` hay `V2Textarea` `disabled`/`readOnly`, `V2Combobox`/`V2DatePicker` chỉ để hiển thị. `V2ReadValue` có hình ô nhập (viền, nền, `min-h-10`) nên chỉ dùng cho trường bị khóa **trong edit mode** (ví dụ mã tự sinh) khi cần giữ bố cục ô.
+- **Section chỉ đọc cả hai mode** (ví dụ tài khoản liên kết): dùng `V2DrawerRowList`, không dùng `V2ReadValue`.
+- **Test bắt buộc**: render view mode và khẳng định không có `role` `textbox`, `combobox`, `spinbutton`; render edit mode vẫn có control. Mẫu: `UserFormView.test.tsx`, `EmployeeProfileView.test.tsx`.
+- **Audit bằng grep**: `/usr/bin/grep -rnE "V2ReadValue|V2TextField[^>]*viewing" src/v2/core src/v2/modules` (chỉ file `*View.tsx` và code edit mode có chủ đích mới được còn).
+
 ### Field trong card & focus ring
 
 - Field (input, textarea, combobox trigger, multi-select, date picker) dùng `bg-background` và `border-input`, lấy từ token theme. Không dùng `bg-white`, `border-white`, `bg-slate-*` không kèm cặp `dark:`.

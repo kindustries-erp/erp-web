@@ -116,6 +116,7 @@ registerV2ModuleLocale("procurement", {
     fields: {
       branch: "Chi nhánh",
       branchPlaceholder: "Chọn chi nhánh",
+      branchName: "Tên chi nhánh trên phiếu",
       request: "Từ đề nghị mua",
       requestPlaceholder: "Chọn đề nghị mua hàng",
       orderDate: "Ngày đơn",
@@ -339,6 +340,7 @@ registerV2ModuleLocale("procurement", {
     fields: {
       branch: "Branch",
       branchPlaceholder: "Select a branch",
+      branchName: "Branch name on the document",
       request: "From purchase request",
       requestPlaceholder: "Select a purchase request",
       orderDate: "Order date",

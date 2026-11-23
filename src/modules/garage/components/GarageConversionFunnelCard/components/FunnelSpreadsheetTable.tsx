@@ -15,6 +15,7 @@ interface FunnelSpreadsheetTableProps {
   inProgress: { count: number; amount: number };
   completed: { count: number; amount: number; rate?: number };
   cancelled: { count: number; amount: number };
+  onClassificationClick?: (key: string, name: string) => void;
 }
 
 export function FunnelSpreadsheetTable({
@@ -24,6 +25,7 @@ export function FunnelSpreadsheetTable({
   inProgress,
   completed,
   cancelled,
+  onClassificationClick,
 }: FunnelSpreadsheetTableProps) {
   const { t } = useTranslation("garage");
 
@@ -71,6 +73,11 @@ export function FunnelSpreadsheetTable({
           "Chưa có dữ liệu phân loại trong kỳ",
         )}
         enableColumnResizing={true}
+        onRowClick={
+          onClassificationClick
+            ? (item) => onClassificationClick(item.key, item.name)
+            : undefined
+        }
       />
     </div>
   );

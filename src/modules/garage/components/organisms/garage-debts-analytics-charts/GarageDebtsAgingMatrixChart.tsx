@@ -33,7 +33,7 @@ export const GarageDebtsAgingMatrixChart: React.FC<
         type: "bar" as const,
         data: agingComparison.map((a) => a.receivableAmount),
         color: "#10b981",
-        label: t("debts:dashboard.receivableLegend", "Phải thu (KH)"),
+        label: t("debts:dashboard.garageReceivableTotal", "Phải thu"),
       },
       {
         type: "bar" as const,

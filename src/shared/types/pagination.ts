@@ -18,7 +18,7 @@ export const DEFAULT_PAGE_SIZE = 15;
 export const DEFAULT_SORT = ["-created_at"];
 export const FALLBACK_SORT = ["id"];
 
-/** Build a PaginatedResponse<T> from a raw Directus-style response. */
+/** Build a PaginatedResponse<T> from a raw API response. */
 export function buildPaginated<T>(
   data: T[],
   meta: { filter_count?: number } | undefined,

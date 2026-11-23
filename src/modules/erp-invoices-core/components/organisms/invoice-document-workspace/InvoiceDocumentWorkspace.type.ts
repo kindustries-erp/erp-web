@@ -29,7 +29,5 @@ export interface InvoiceDocumentWorkspaceProps {
   form?: CreateErpInvoicePayload;
   editMode?: boolean;
   fieldSet?: (key: string, value: unknown) => void;
-  onLinkExistingAttachment?: (attachmentId: string) => void;
-  onUnlinkAttachment?: (attachmentId: string) => void;
   onRefreshDetail?: () => void;
 }

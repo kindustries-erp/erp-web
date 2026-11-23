@@ -51,6 +51,13 @@ export const debtsEn = {
     netFlow: "Net Difference",
     freshBadge: "Fresh",
     standardBadge: "Normal",
+    garageReceivableTotal: "Receivable",
+    garageFresh7: "Fresh Invoices (≤ 7 days)",
+    garageStandard8To30: "Standard Current (8–30 days)",
+    garageOverdue31To60: "Overdue 31-60 days",
+    garageOverdue61To90: "Overdue 61-90 days",
+    garageOverdueOver90: "Critical Overdue >90 days",
+    riskBadge: "At Risk",
     urgentBadge: "Follow-up",
     warningBadge: "Warning",
     forecastT7Badge: "T+7 (Lag)",
@@ -449,6 +456,29 @@ export const debtsEn = {
     subtitle:
       "Detailed breakdown of the 4 aging buckets and intelligent cashflow forecasting models",
     tabBuckets: "1. 4 Debt Aging Buckets",
+    tabBuckets5: "1. 5 Debt Aging Buckets",
+    garage: {
+      fresh7Desc:
+        "Newly completed service cases handed over within the standard payment cycle.",
+      standard8To30Desc:
+        "Past the fresh stage but still within 30 days of completion.",
+      overdue31To60Desc:
+        "Past the standard cycle. Accounting sends reminder letters or reconciles statements with the customer.",
+      overdue61To90Desc:
+        "Long overdue debt. Accounting and collections must press for payment or offset VAT invoices.",
+      over90Desc:
+        "Severely overdue debt with a risk of non-recovery; specialized recovery measures are required.",
+      fresh7Title: "Fresh (≤ 7 days)",
+      standard8To30Title: "Standard Current (8–30 days)",
+      overdue31To60Title: "Overdue 31-60 days",
+      overdue61To90Title: "Overdue 61-90 days",
+      over90Title: "Critical Overdue >90 days",
+      fresh7Badge: "Fresh",
+      standard8To30Badge: "Normal",
+      overdue31To60Badge: "Follow-up",
+      overdue61To90Badge: "At Risk",
+      over90Badge: "Warning",
+    },
     tabAlgorithms: "2. Cashflow Forecasting Models",
     bucket1Title: "Fresh Invoices (≤ 7 days)",
     bucket1Desc:

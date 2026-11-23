@@ -1,24 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  DrawerModal,
-  DrawerSection,
-  DrawerField,
-} from "@/shared/components/DrawerModal";
-import { Button } from "@/shared/components/ui/Button";
-import { DatePicker } from "@/shared/components/DatePicker";
-import { Checkbox } from "@/shared/components/ui/checkbox";
-import { Combobox } from "@/shared/components/Combobox";
-import {
-  bankStatementApi,
-  type ErpBankAccount,
-} from "@/modules/bank-statements/api/bankStatementApi";
-import { getChartOfAccountsApi } from "@/modules/accounting/api/catalogApi";
-import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
-import { useQuery } from "@tanstack/react-query";
-import { useAppStore } from "@/core/config/appStore";
+import React from "react";
 import { useT } from "@/core/i18n";
-import toast from "react-hot-toast";
+import type { ErpBankAccount } from "@/modules/bank-statements/api/bankStatementApi";
+import {
+  V2StandardDrawer,
+  V2DrawerSize,
+  V2DrawerLayout,
+  type DrawerAction,
+} from "@/v2/shared/components/organisms/v2-standard-drawer";
+import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
+import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
+import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
+import { V2Input } from "@/v2/shared/components/atoms/v2-input";
+import { V2NumberInput } from "@/v2/shared/components/atoms/v2-number-input";
+import { V2DatePicker } from "@/v2/shared/components/molecules/v2-date-picker";
+import { V2Switch } from "@/v2/shared/components/atoms/v2-switch";
+import { useBankAccountDrawer } from "./BankAccountDrawer.hook";
+
+const CURRENCY_OPTIONS = [
+  { value: "VND", label: "VND" },
+  { value: "USD", label: "USD" },
+];
 
 interface Props {
   open: boolean;
@@ -34,233 +35,139 @@ export function BankAccountDrawer({
   onSuccess,
 }: Props) {
   const t = useT();
-  const queryClient = useQueryClient();
-  const { currentBranchId } = useAppStore();
-  const [selectedBranchId, setSelectedBranchId] = useState(
-    currentBranchId || "",
-  );
+  const d = useBankAccountDrawer({ open, bankAccount, onSuccess, onClose });
 
-  const { data: branchOptions = [] } = useQuery({
-    queryKey: ["branchOptions"],
-    queryFn: getBranchOptionsApi,
-  });
-
-  const { data: accounts = [] } = useQuery({
-    queryKey: ["chartOfAccounts-flat"],
-    queryFn: getChartOfAccountsApi,
-  });
-
-  const accountOptions = React.useMemo(() => {
-    // Ưu tiên nhóm 112* lên đầu
-    const list = Array.isArray(accounts)
-      ? accounts
-      : (accounts as any).items || [];
-    const bankAccounts = list.filter((a: any) =>
-      (a.accountCode || a.account_code || "").startsWith("112"),
-    );
-    const otherAccounts = list.filter(
-      (a: any) => !(a.accountCode || a.account_code || "").startsWith("112"),
-    );
-    return [...bankAccounts, ...otherAccounts].map((a: any) => ({
-      value: a.id,
-      label: `${a.accountCode || a.account_code} - ${a.accountName || a.account_name}`,
-    }));
-  }, [accounts]);
-
-  const [accountingAccountId, setAccountingAccountId] = useState("");
-  const [bankCode, setBankCode] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [currency, setCurrency] = useState("VND");
-  const [isActive, setIsActive] = useState(true);
-  const [openingBalance, setOpeningBalance] = useState<number>(0);
-  const [periodDate, setPeriodDate] = useState("");
-
-  useEffect(() => {
-    if (bankAccount) {
-      setSelectedBranchId(bankAccount.branchId ?? currentBranchId ?? "");
-      setAccountingAccountId(bankAccount.accountingAccountId ?? "");
-      setBankCode(bankAccount.bankCode ?? "");
-      setBankName(bankAccount.bankName ?? "");
-      setAccountNumber(bankAccount.accountNumber ?? "");
-      setAccountName(bankAccount.accountName ?? "");
-      setCurrency(bankAccount.currency ?? "VND");
-      setIsActive(bankAccount.isActive ?? true);
-      setOpeningBalance(bankAccount.openingBalance ?? 0);
-      setPeriodDate(bankAccount.periodDate ?? "");
-    } else {
-      setSelectedBranchId(currentBranchId || "");
-      setAccountingAccountId("");
-      setBankCode("");
-      setBankName("");
-      setAccountNumber("");
-      setAccountName("");
-      setCurrency("VND");
-      setIsActive(true);
-      setOpeningBalance(0);
-      setPeriodDate("");
-    }
-  }, [bankAccount, open]);
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: () => {
-      if (!selectedBranchId) throw new Error("Branch ID is required");
-      if (!accountingAccountId)
-        throw new Error("Tài khoản kế toán là bắt buộc");
-      const payload = {
-        branchId: selectedBranchId,
-        accountingAccountId,
-        bankCode: bankCode.trim(),
-        bankName: bankName.trim(),
-        accountNumber: accountNumber.trim(),
-        accountName: accountName.trim(),
-        currency: currency || "VND",
-        isActive,
-        openingBalance: openingBalance || 0,
-        periodDate: periodDate || undefined,
-      };
-
-      if (bankAccount) {
-        return bankStatementApi.updateBankAccount(bankAccount.id, payload);
-      }
-      return bankStatementApi.createBankAccount(payload);
+  const actions: DrawerAction[] = [
+    {
+      label: t("common.cancel") || "Hủy",
+      variant: "secondary",
+      onClick: onClose,
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["bank-accounts"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["bankAccounts"],
-      });
-      onSuccess();
-      onClose();
+    {
+      label: t("common.save") || "Lưu",
+      variant: "primary",
+      onClick: d.handleSave,
+      loading: d.isPending,
+      disabled: !d.canSave,
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message || err.message);
-    },
-  });
+  ];
 
   return (
-    <DrawerModal
+    <V2StandardDrawer
       open={open}
       onClose={onClose}
+      size={V2DrawerSize.MD}
+      layout={V2DrawerLayout.ONE_COLUMN}
       title={bankAccount ? t("common.edit") : t("panel.createNew")}
+      actions={actions}
     >
-      <div className="space-y-6">
-        <DrawerSection title="Thông tin chung">
+      <div className="space-y-4">
+        <DrawerSection title="Thông tin chung" collapsible={false}>
           <DrawerField label="Chi nhánh *" required>
-            <Combobox
-              options={branchOptions}
-              value={selectedBranchId}
-              onChange={setSelectedBranchId}
+            <V2Combobox
+              options={d.branchOptions}
+              value={d.form.selectedBranchId}
+              onValueChange={(val) => d.setField("selectedBranchId", val || "")}
               placeholder="-- Chọn chi nhánh --"
             />
           </DrawerField>
 
           <DrawerField label="Tài khoản kế toán (112*) *" required>
-            <Combobox
-              options={accountOptions}
-              value={accountingAccountId}
-              onChange={setAccountingAccountId}
+            <V2Combobox
+              options={d.accountOptions}
+              value={d.form.accountingAccountId}
+              onValueChange={(val) =>
+                d.setField("accountingAccountId", val || "")
+              }
               placeholder="-- Chọn tài khoản kế toán --"
             />
           </DrawerField>
 
-          <DrawerField label="Mã ngân hàng *" required>
-            <input
-              type="text"
-              value={bankCode}
-              onChange={(e) => setBankCode(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
+          <DrawerField label="Ngân hàng (chọn từ danh mục)">
+            <V2Combobox
+              options={d.bankComboboxOptions}
+              value={d.form.bankCode}
+              onValueChange={d.handleBankSelect}
+              placeholder="-- Chọn ngân hàng --"
+              onScrollBottom={d.handleBankScrollBottom}
+              onSearchChange={d.handleBankSearchChange}
+              loading={d.isBanksLoading}
             />
           </DrawerField>
 
-          <DrawerField label="Tên ngân hàng *" required>
-            <input
-              type="text"
-              value={bankName}
-              onChange={(e) => setBankName(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
-            />
-          </DrawerField>
+          <div className="grid grid-cols-2 gap-3">
+            <DrawerField label="Mã ngân hàng *" required>
+              <V2Input
+                value={d.form.bankCode}
+                onChange={(e) => d.setField("bankCode", e.target.value)}
+                placeholder="Ví dụ: VCB"
+              />
+            </DrawerField>
+
+            <DrawerField label="Tên ngân hàng *" required>
+              <V2Input
+                value={d.form.bankName}
+                onChange={(e) => d.setField("bankName", e.target.value)}
+                placeholder="Ví dụ: Vietcombank"
+              />
+            </DrawerField>
+          </div>
 
           <DrawerField label="Số tài khoản *" required>
-            <input
-              type="text"
-              value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
+            <V2Input
+              value={d.form.accountNumber}
+              onChange={(e) => d.setField("accountNumber", e.target.value)}
+              placeholder="Nhập số tài khoản"
             />
           </DrawerField>
 
           <DrawerField label="Tên tài khoản *" required>
-            <input
-              type="text"
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
+            <V2Input
+              value={d.form.accountName}
+              onChange={(e) => d.setField("accountName", e.target.value)}
+              placeholder="Nhập tên chủ tài khoản"
             />
           </DrawerField>
 
-          <DrawerField label="Tiền tệ">
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
-            >
-              <option value="VND">VND</option>
-              <option value="USD">USD</option>
-            </select>
-          </DrawerField>
-
-          <DrawerField label="Trạng thái">
-            <div className="flex items-center space-x-2 h-10">
-              <Checkbox
-                checked={isActive}
-                onCheckedChange={(checked) => setIsActive(!!checked)}
+          <div className="grid grid-cols-2 gap-3 items-center">
+            <DrawerField label="Tiền tệ">
+              <V2Combobox
+                options={CURRENCY_OPTIONS}
+                value={d.form.currency}
+                onValueChange={(val) => d.setField("currency", val || "VND")}
               />
-              <span className="text-sm font-medium">Hoạt động</span>
-            </div>
-          </DrawerField>
+            </DrawerField>
+
+            <DrawerField label="Trạng thái">
+              <div className="h-10 flex items-center">
+                <V2Switch
+                  checked={d.form.isActive}
+                  onCheckedChange={(checked) => d.setField("isActive", checked)}
+                  label="Đang hoạt động"
+                />
+              </div>
+            </DrawerField>
+          </div>
         </DrawerSection>
 
-        <DrawerSection title="Số dư ban đầu">
-          <DrawerField label="Ngày chốt số dư">
-            <DatePicker
-              value={periodDate}
-              onChange={(val) => setPeriodDate(val)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
-            />
-          </DrawerField>
-          <DrawerField label="Số dư">
-            <input
-              type="number"
-              value={openingBalance}
-              onChange={(e) => setOpeningBalance(Number(e.target.value))}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
-            />
-          </DrawerField>
+        <DrawerSection title="Số dư ban đầu" collapsible={false}>
+          <div className="grid grid-cols-2 gap-3">
+            <DrawerField label="Ngày chốt số dư">
+              <V2DatePicker
+                value={d.form.periodDate}
+                onValueChange={(val) => d.setField("periodDate", val || "")}
+                placeholder="Chọn ngày"
+              />
+            </DrawerField>
+            <DrawerField label="Số dư">
+              <V2NumberInput
+                value={d.form.openingBalance}
+                onValueChange={(val) => d.setField("openingBalance", val ?? 0)}
+              />
+            </DrawerField>
+          </div>
         </DrawerSection>
-
-        <div className="flex items-center justify-end space-x-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            {t("common.cancel")}
-          </Button>
-          <Button
-            onClick={() => mutate()}
-            disabled={
-              isPending ||
-              !bankName.trim() ||
-              !accountNumber.trim() ||
-              !accountName.trim() ||
-              !selectedBranchId
-            }
-          >
-            {t("common.save")}
-          </Button>
-        </div>
       </div>
-    </DrawerModal>
+    </V2StandardDrawer>
   );
 }

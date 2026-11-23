@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   StandardFormDrawer,
   DrawerAuditTimeline,
@@ -17,20 +18,14 @@ import {
   GarageCaseFinancialsRightPanel,
   GarageCaseFinancialsProvider,
 } from "./GarageCaseFinancialsTab";
+import { GarageCasePartnerTab } from "./GarageCasePartnerTab";
 import { DrawerDocumentTraceability } from "@/shared/components/drawer/DrawerDocumentTraceability";
 import { garageApi } from "../api/garageApi";
 import {
   ActionDropdown,
   type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
-import {
-  Link2,
-  History,
-  RefreshCw,
-  ChevronDown,
-  Wallet,
-  FileText,
-} from "lucide-react";
+import { History, RefreshCw, ChevronDown, FileText, Users } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useGarageCaseDrawerLogic } from "./drawer/hooks/useGarageCaseDrawerLogic";
 import { GarageCaseGeneralInfoSection } from "./drawer/sections/GarageCaseGeneralInfoSection";
@@ -38,6 +33,10 @@ import { GarageCaseDefaultAttributesSection } from "./drawer/sections/GarageCase
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
 import { GarageCaseBusinessPerformanceSection } from "./drawer/sections/GarageCaseBusinessPerformanceSection";
 import { V2Skeleton } from "@/v2/shared/components/atoms/v2-skeleton";
+import {
+  resolveGarageAddLink,
+  resolveGarageUnlink,
+} from "@/v2/core/cases-garage";
 
 export interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;
@@ -58,7 +57,6 @@ export function GarageCaseStandaloneDrawer(
     selectedBranchId,
     selectedCase,
     isLoadingCase,
-    refetchCase,
     syncCaseDetail,
     isSyncingDetail,
     grossProfit,
@@ -175,145 +173,151 @@ export function GarageCaseStandaloneDrawer(
     },
   ];
 
+  const effectiveBranchId =
+    selectedCase?.branchExternalId || selectedBranchId || "";
+  const customerCode = selectedCase?.khachHangCode;
+
+  const { data: partnerCases = [] } = useQuery({
+    queryKey: ["garage-cases-by-customer", effectiveBranchId, customerCode],
+    queryFn: () => {
+      if (!customerCode) return Promise.resolve([]);
+      return garageApi.getCasesByCustomer(effectiveBranchId, customerCode);
+    },
+    enabled: Boolean(props.isOpen && customerCode),
+    staleTime: 30000,
+  });
+
+  const partnerCasesCount = Array.isArray(partnerCases)
+    ? partnerCases.length
+    : 0;
+
+  const financialsBadgeCount =
+    (activeLinkedInvoices?.length || 0) + (activeSettlements?.length || 0);
+  const linkedDocsBadgeCount =
+    (activeLinkedInvoices?.length || 0) + (activeSettlements?.length || 0);
+
   const resolvedDrawerTabs = useMemo<DrawerTopTabItem[] | undefined>(() => {
     if (!selectedCase) return undefined;
 
     return [
+      // 1. Tab Chi tiết (gồm 3 sub-tabs: Chi tiết báo giá | Tài chính | Chứng từ liên kết)
       {
         key: "quote_details",
         label: t("cases.drawer.tabDetails", "Chi tiết"),
         icon: <FileText className="w-3.5 h-3.5" />,
+        hideRightPanel: detailsSubTab === "linked_docs",
+        rightPanel:
+          detailsSubTab === "financials" ? (
+            <GarageCaseFinancialsRightPanel
+              caseId={selectedCase.id}
+              caseCode={selectedCase.soChungTu}
+              caseData={selectedCase}
+              grossProfit={grossProfit}
+            />
+          ) : undefined,
         content: (
           <GarageCaseDetailsTab
             selectedCase={selectedCase}
             grossProfit={grossProfit}
-            selectedBranchId={selectedCase.branchExternalId || selectedBranchId}
+            selectedBranchId={effectiveBranchId}
             viewMode={detailsSubTab}
             onViewModeChange={setDetailsSubTab}
+            onSelectCase={handleSelectCase}
+            financialsBadgeCount={financialsBadgeCount}
+            linkedDocsBadgeCount={linkedDocsBadgeCount}
+            financialsSlot={
+              <GarageCaseFinancialsTab
+                caseId={selectedCase.id}
+                caseCode={selectedCase.soChungTu}
+                caseData={selectedCase}
+                grossProfit={grossProfit}
+                editMode={editMode}
+                onStartEdit={startEdit}
+                activeSettlements={activeSettlements}
+                activeLinkedInvoices={activeLinkedInvoices}
+                activeSummary={activeSummary}
+                onAddSettlement={addSettlements}
+                onRemoveSettlement={removeSettlement}
+                onAddInvoice={addLinkedInvoice}
+                onRemoveInvoice={removeLinkedInvoice}
+              />
+            }
+            linkedDocsSlot={
+              <DrawerDocumentTraceability
+                rootId={selectedCase.id}
+                rootType="GARAGE_CASE"
+                graphData={mergedGraphData}
+                editMode={editMode}
+                allowedDocTypes={[
+                  "BANK_TXN",
+                  "INVOICE",
+                  "PURCHASE_ORDER",
+                  "SALES_ORDER",
+                ]}
+                onEditManualSettlement={handleEditSettlementNode}
+                onAddLink={(stageKey, docType) => {
+                  const action = resolveGarageAddLink(stageKey, docType);
+                  if (action === "ADD_INVOICE") handleOpenAddInvoice();
+                  else if (action === "ADD_SETTLEMENT")
+                    handleOpenAddSettlement("RECEIPT");
+                  else
+                    toast(
+                      action === "PO_UNSUPPORTED"
+                        ? t(
+                            "cases.drawer.linkPoSoon",
+                            "Tính năng ghép nối Đơn mua hàng PO đang được cập nhật.",
+                          )
+                        : t(
+                            "cases.drawer.linkSoSoon",
+                            "Tính năng ghép nối Đơn bán hàng SO đang được cập nhật.",
+                          ),
+                      { icon: "ℹ️" },
+                    );
+                }}
+                onUnlinkNode={(node) => {
+                  if (!editMode) {
+                    toast.error(
+                      t(
+                        "cases.drawer.enterEditToUnlink",
+                        "Vui lòng chuyển sang chế độ Chỉnh sửa trước khi gỡ liên kết chứng từ.",
+                      ),
+                    );
+                    return;
+                  }
+                  const target = resolveGarageUnlink(
+                    node as never,
+                    activeSettlements as never,
+                    activeLinkedInvoices as never,
+                  );
+                  if (target?.kind === "INVOICE")
+                    removeLinkedInvoice(target.id);
+                  else if (target?.kind === "SETTLEMENT")
+                    removeSettlement(target.id);
+                }}
+              />
+            }
+          />
+        ),
+      },
+
+      // 2. Tab Chi tiết theo Khách hàng
+      {
+        key: "customer_details",
+        label: t("cases.drawer.tabCustomerDetails", "Chi tiết theo Khách hàng"),
+        icon: <Users className="w-3.5 h-3.5" />,
+        badgeCount: partnerCasesCount > 0 ? partnerCasesCount : undefined,
+        content: (
+          <GarageCasePartnerTab
+            customerCode={selectedCase.khachHangCode}
+            customerName={selectedCase.khachHangName}
+            currentCaseCode={selectedCase.soChungTu}
+            branchId={effectiveBranchId}
             onSelectCase={handleSelectCase}
           />
         ),
       },
-      {
-        key: "financials",
-        label: t("cases.drawer.financials", "Tài chính"),
-        icon: <Wallet className="w-3.5 h-3.5" />,
-        badgeCount:
-          (activeLinkedInvoices?.length || 0) +
-          (activeSettlements?.length || 0),
-        content: (
-          <GarageCaseFinancialsTab
-            caseId={selectedCase.id}
-            caseCode={selectedCase.soChungTu}
-            caseData={selectedCase}
-            grossProfit={grossProfit}
-            editMode={editMode}
-            onStartEdit={startEdit}
-            activeSettlements={activeSettlements}
-            activeLinkedInvoices={activeLinkedInvoices}
-            activeSummary={activeSummary}
-            onAddSettlement={addSettlements}
-            onRemoveSettlement={removeSettlement}
-            onAddInvoice={addLinkedInvoice}
-            onRemoveInvoice={removeLinkedInvoice}
-          />
-        ),
-        rightPanel: (
-          <GarageCaseFinancialsRightPanel
-            caseId={selectedCase.id}
-            caseCode={selectedCase.soChungTu}
-            caseData={selectedCase}
-            grossProfit={grossProfit}
-          />
-        ),
-      },
-      {
-        key: "linked_docs",
-        label: t("cases.drawer.linkedDocs", "Chứng từ liên kết"),
-        icon: <Link2 className="w-3.5 h-3.5" />,
-        badgeCount:
-          (activeLinkedInvoices?.length || 0) +
-          (activeSettlements?.length || 0),
-        hideRightPanel: true,
-        content: (
-          <DrawerDocumentTraceability
-            rootId={selectedCase.id}
-            rootType="GARAGE_CASE"
-            graphData={mergedGraphData}
-            fetchGraph={(id) => garageApi.getCaseTraceabilityGraph(id)}
-            editMode={editMode}
-            allowedDocTypes={[
-              "BANK_TXN",
-              "INVOICE",
-              "PURCHASE_ORDER",
-              "SALES_ORDER",
-            ]}
-            onEditManualSettlement={handleEditSettlementNode}
-            onAddLink={(stageKey, docType) => {
-              if (docType === "INVOICE" || stageKey === "INVOICE") {
-                handleOpenAddInvoice();
-              } else if (docType === "BANK_TXN" || stageKey === "PAYMENT") {
-                handleOpenAddSettlement("RECEIPT");
-              } else if (
-                docType === "PURCHASE_ORDER" ||
-                stageKey === "ORDER_STOCK"
-              ) {
-                toast(
-                  "Tính năng ghép nối Đơn mua hàng PO đang được cập nhật.",
-                  { icon: "ℹ️" },
-                );
-              } else if (docType === "SALES_ORDER") {
-                toast(
-                  "Tính năng ghép nối Đơn bán hàng SO đang được cập nhật.",
-                  { icon: "ℹ️" },
-                );
-              } else {
-                handleOpenAddSettlement("RECEIPT");
-              }
-            }}
-            onUnlinkNode={async (node) => {
-              try {
-                if (editMode) {
-                  if (node.docType === "INVOICE") {
-                    const target = activeLinkedInvoices.find(
-                      (l: any) =>
-                        l.invoiceId === node.id ||
-                        l.id === node.id ||
-                        l.invoice?.id === node.id,
-                    );
-                    if (target) {
-                      removeLinkedInvoice(target.id || target.tempId);
-                    }
-                  } else if (node.docType === "BANK_TXN") {
-                    const target = activeSettlements.find(
-                      (s: any) =>
-                        s.bank_transaction_id === node.id ||
-                        s.bankTransactionId === node.id ||
-                        s.id === node.id ||
-                        s.tempId === node.id ||
-                        `manual-${s.id}` === node.id,
-                    );
-                    if (target) {
-                      removeSettlement(target.id || target.tempId);
-                    }
-                  }
-                } else {
-                  toast.error(
-                    t(
-                      "cases.drawer.enterEditToUnlink",
-                      "Vui lòng chuyển sang chế độ Chỉnh sửa trước khi gỡ liên kết chứng từ.",
-                    ),
-                  );
-                }
-              } catch (err: any) {
-                toast.error(
-                  err?.response?.data?.message || "Lỗi khi hủy liên kết",
-                );
-              }
-            }}
-          />
-        ),
-      },
+
+      // 3. Tab Lịch sử & Đồng bộ
       {
         key: "sync_history",
         label: t("cases.drawer.syncHistory", "Lịch sử & Đồng bộ"),
@@ -335,12 +339,17 @@ export function GarageCaseStandaloneDrawer(
   }, [
     selectedCase,
     grossProfit,
-    selectedBranchId,
-    activeLinkedInvoices,
-    activeSettlements,
-    activeSummary,
+    effectiveBranchId,
+    detailsSubTab,
+    setDetailsSubTab,
+    handleSelectCase,
+    financialsBadgeCount,
+    linkedDocsBadgeCount,
     editMode,
     startEdit,
+    activeSettlements,
+    activeLinkedInvoices,
+    activeSummary,
     addSettlements,
     removeSettlement,
     addLinkedInvoice,
@@ -349,12 +358,8 @@ export function GarageCaseStandaloneDrawer(
     handleEditSettlementNode,
     handleOpenAddInvoice,
     handleOpenAddSettlement,
+    partnerCasesCount,
     auditItems,
-    detailsSubTab,
-    setDetailsSubTab,
-    handleSelectCase,
-    refetchCase,
-    queryClient,
     t,
   ]);
 

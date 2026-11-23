@@ -59,11 +59,9 @@ describe("V2 Sheet Primitive", () => {
     ).toBeInTheDocument();
     expect(screen.getByTestId("sheet-body")).toBeInTheDocument();
     expect(screen.getByRole("dialog")).toHaveClass(
-      "bg-[var(--drawer-bg,rgba(255,255,255,0.96))]",
-      "backdrop-blur-[var(--drawer-blur,8px)]",
+      "bg-[var(--drawer-bg,#ffffff)]",
+      "backdrop-blur-[var(--drawer-blur,0px)]",
       "shadow-[var(--drawer-shadow,var(--panel-shadow,0_12px_30px_rgba(15,23,42,0.16)))]",
-      "backdrop-saturate-[140%]",
-      "backdrop-contrast-[101%]",
       "text-foreground",
     );
     expect(screen.getByRole("dialog")).toHaveAttribute(

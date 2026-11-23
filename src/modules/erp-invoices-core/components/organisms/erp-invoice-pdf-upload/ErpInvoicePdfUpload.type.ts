@@ -3,21 +3,13 @@ export interface PendingAttachment {
   documentType: string;
 }
 
+/** Danh sách file đọc từ API V2 theo `invoiceId`; xóa chỉ đánh dấu chờ (UUID) và áp dụng khi lưu. */
 export interface ErpInvoicePdfUploadProps {
   invoiceId: string | null;
-  attachments: { attachmentId: string; attachment: any }[] | null;
-  pdfFileKey?: string | null;
-  pdfFiles?: Array<{
-    key: string;
-    filename: string;
-    uploadedAt: string;
-  }> | null;
   editMode: boolean;
   pendingDeletedPdfs?: string[];
-  onPendingDeletePdf?: (key: string) => void;
+  onPendingDeletePdf?: (id: string) => void;
   pendingAddedAttachments?: PendingAttachment[];
   onPendingAddedAttachmentsChange?: (files: PendingAttachment[]) => void;
-  onLinkExistingAttachment?: (attachmentId: string) => void;
-  onUnlinkAttachment?: (attachmentId: string) => void;
   noCard?: boolean;
 }

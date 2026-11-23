@@ -11,5 +11,7 @@ export interface V2DrawerSheetProps {
   className?: string;
   style?: React.CSSProperties;
   overlayStyle?: React.CSSProperties;
+  /** Chế độ modal của Radix Dialog. Mặc định true. Đặt false khi có drawer/modal/popover con mở chồng lên để không khóa scroll ngoài. */
+  modal?: boolean;
   children: React.ReactNode;
 }

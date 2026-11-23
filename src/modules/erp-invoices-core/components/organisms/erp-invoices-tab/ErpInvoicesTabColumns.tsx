@@ -20,7 +20,6 @@ export interface UseInvoiceColumnsOptions {
       filename: string;
       fileKey: string;
       invoiceId: string;
-      isAttachment?: boolean;
     } | null,
   ) => void;
   handleOpenInternal: (

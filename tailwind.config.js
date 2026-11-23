@@ -72,11 +72,39 @@ export default {
         },
         input: "var(--border)",
         ring: "var(--primary)",
+
+        /* Card & Item Context Tokens (Đồng nhất toàn UI & Match Light/Dark Theme) */
+        "item-border": "var(--item-border, var(--border))",
+        "item-border-subtle": "var(--item-border-subtle, var(--border-light))",
+        "item-border-unread": "var(--item-border-unread, var(--border))",
+        "item-bg-unread": "var(--item-bg-unread, transparent)",
+
+        /* Kanban Semantic Tokens với Fallback chuẩn ERP Theme */
+        "kanban-lane": "var(--kanban-lane-bg, var(--surface-hover))",
+        "kanban-lane-border": "var(--kanban-lane-border, var(--border))",
+        "kanban-card": "var(--kanban-card-bg, var(--surface))",
+        "kanban-card-border": "var(--kanban-card-border, var(--item-border))",
+        "kanban-drag": "var(--kanban-card-drag-bg, var(--surface))",
+        "kanban-drag-border":
+          "var(--kanban-card-drag-border, var(--item-border))",
+        "kanban-over": "var(--kanban-lane-over-bg, var(--approve-bg))",
+        "kanban-over-border":
+          "var(--kanban-lane-over-border, var(--approve-fg))",
+        "kanban-over-ring":
+          "var(--kanban-lane-over-ring, rgba(20, 184, 166, 0.25))",
+        "kanban-placeholder":
+          "var(--kanban-placeholder-bg, rgba(255, 255, 255, 0.02))",
+        "kanban-placeholder-border":
+          "var(--kanban-placeholder-border, var(--border))",
       },
       boxShadow: {
         "2xs": "0 1px 2px rgba(0, 0, 0, 0.05)",
         xs: "0 1px 3px rgba(0, 0, 0, 0.08)",
         panel: "0 4px 16px rgba(0, 0, 0, 0.08)",
+        "card-item": "var(--item-shadow, 0 1px 3px rgba(0, 0, 0, 0.08))",
+        "card-item-hover":
+          "var(--item-shadow-hover, 0 4px 12px rgba(0, 0, 0, 0.12))",
+        "kanban-drag": "var(--kanban-card-drag-shadow)",
       },
       borderRadius: {
         xs: "4px",

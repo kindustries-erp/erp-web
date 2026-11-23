@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ERP CORE auth store — local JWT, không dùng Directus
+// ERP CORE auth store — local JWT
 // Giữ nguyên tên export để không vỡ component cũ
 // ─────────────────────────────────────────────────────────────────────────────
 import { create } from "zustand";
@@ -124,7 +124,7 @@ interface AuthState {
   expiresAt: number | null;
   employee: Employee | null;
   profile: UserProfile | null;
-  effectivePermissions: EffectiveCollectionPermission[]; // luôn [] — no Directus RBAC
+  effectivePermissions: EffectiveCollectionPermission[]; // luôn []
   loading: boolean;
   error: string | null;
   canImpersonate: boolean;

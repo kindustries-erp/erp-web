@@ -4,9 +4,7 @@ import type {
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
 import type { AuditLogEntry } from "@/modules/system/api/usersCoreApi";
-
-export const normPlate = (v?: string | null) =>
-  (v ?? "").replace(/[^0-9a-zA-Z]/g, "").toUpperCase();
+import { normalizePlate } from "@/shared/utils/licensePlate";
 
 export function duplicateFieldsChanged(
   form: Partial<CreateGarageCashflowVoucherDto>,
@@ -16,7 +14,7 @@ export function duplicateFieldsChanged(
     Number(form.amount) !== Number(voucher.amount) ||
     (form.transDate || "") !== (voucher.transDate || "").slice(0, 10) ||
     (form.caseId || "") !== (voucher.caseId || "") ||
-    normPlate(form.licensePlate) !== normPlate(voucher.licensePlate)
+    normalizePlate(form.licensePlate) !== normalizePlate(voucher.licensePlate)
   );
 }
 

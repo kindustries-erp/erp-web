@@ -2,6 +2,7 @@
 // Biến môi trường như garage-procurement.e2e.mjs (xem erp-e2e-playwright/SKILL.md): E2E_PASSWORD bắt buộc.
 // Chạy: bun run e2e:loans-projection
 import { chromium } from "playwright-core";
+import { resolveWebUrl } from "./e2e-ports.mjs";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 
 // Nếu shell chưa có E2E_PASSWORD, đọc từ erp/erp-api/.env (quy định erp-e2e-playwright; không in ra log).
@@ -17,7 +18,7 @@ const readApiEnv = (key) => {
 // Mặc định theo repo này: API lấy PORT trong erp/erp-api/.env, web 5174 (vite của repos-dev-02).
 const API =
   process.env.E2E_API_URL ?? `http://localhost:${readApiEnv("PORT") ?? 10002}`;
-const WEB = process.env.E2E_WEB_URL ?? "http://127.0.0.1:5174";
+const WEB = resolveWebUrl();
 const PASSWORD = process.env.E2E_PASSWORD ?? readApiEnv("E2E_PASSWORD");
 const LOAN_EMAIL = process.env.E2E_TAO_EMAIL ?? "ai-test-tao@example.com";
 const CHROME = process.env.E2E_CHROME_PATH ?? "/usr/bin/google-chrome";
@@ -40,13 +41,13 @@ const check = (step, pass, detail = "") => {
 };
 
 async function apiLogin(email) {
-  const r = await fetch(`${API}/api/v1/auth/login`, {
+  const r = await fetch(`${API}/api/v2/auth-sessions/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password: PASSWORD }),
   });
   const b = await r.json().catch(() => ({}));
-  return { token: b.accessToken, status: r.status };
+  return { token: b.data?.accessToken, status: r.status };
 }
 async function api(s, method, path, body) {
   const r = await fetch(`${API}/api/v2${path}`, {

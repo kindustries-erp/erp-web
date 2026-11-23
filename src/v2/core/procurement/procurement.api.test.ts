@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { del, get } = vi.hoisted(() => ({ del: vi.fn(), get: vi.fn() }));
+const { del, get, post } = vi.hoisted(() => ({
+  del: vi.fn(),
+  get: vi.fn(),
+  post: vi.fn(),
+}));
 
 vi.mock("@/v2/shared/api/v2HttpClient", () => ({
-  v2HttpClient: { delete: del, get },
+  v2HttpClient: { delete: del, get, post },
   V2_API_BASE_URL: "http://test",
 }));
 
@@ -251,5 +255,31 @@ describe("bộ lọc procurement trong query API", () => {
 
   it("withProcurementFilter trả undefined khi không có hàm options", () => {
     expect(withProcurementFilter(undefined, {})).toBeUndefined();
+  });
+});
+
+describe("createProcurementApi: link-override", () => {
+  beforeEach(() => {
+    post.mockReset();
+    post.mockResolvedValue({ data: { id: "r1", overriddenFields: [] } });
+  });
+
+  it("refreshLink gọi POST {base}/{id}/links/{field}/refresh khi bật supportsLinkOverride", async () => {
+    const api = createProcurementApi("/api/v2/procurement-requests-garage", {
+      supportsLinkOverride: true,
+    });
+
+    await api.refreshLink?.("r1", "branchName");
+
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post).toHaveBeenCalledWith(
+      "/api/v2/procurement-requests-garage/r1/links/branchName/refresh",
+    );
+  });
+
+  it("không có refreshLink khi không bật supportsLinkOverride", () => {
+    const api = createProcurementApi("/api/v2/procurement-orders-garage");
+
+    expect(api.refreshLink).toBeUndefined();
   });
 });

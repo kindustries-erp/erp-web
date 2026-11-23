@@ -52,4 +52,33 @@ describe("QuoteDocumentCostSummary", () => {
 
     expect(container.firstChild).toBeNull();
   });
+
+  it("shows discount (521) as revenue deduction outside the cost group, not in total", () => {
+    render(
+      <QuoteDocumentCostSummary
+        costBreakdown={{
+          inventoryPartCost: 550000,
+          outsourceCost: 150000,
+          commissionCost: 50000,
+          discountCost: 90000,
+          totalCost: 750000,
+        }}
+      />,
+    );
+
+    const discount = screen.getByTestId("cost-summary-discount");
+    expect(discount).toHaveTextContent("90.000");
+    expect(discount).toHaveTextContent("giảm trừ doanh thu");
+    // Tổng chi phí vẫn là 750.000, không cộng chiết khấu
+    expect(screen.getByText("750.000")).toBeInTheDocument();
+  });
+
+  it("hides the discount line when there is no discount", () => {
+    render(
+      <QuoteDocumentCostSummary
+        costBreakdown={{ inventoryPartCost: 100, totalCost: 100 }}
+      />,
+    );
+    expect(screen.queryByTestId("cost-summary-discount")).toBeNull();
+  });
 });

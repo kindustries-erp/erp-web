@@ -1,7 +1,6 @@
 import * as React from "react";
 import { LayoutDashboard } from "lucide-react";
 import { V2Sidebar, V2RightPanel } from "@/v2/shared/components";
-import { V2WorkspaceModeToggle } from "@/v2/shared/components/molecules/v2-workspace-mode-toggle";
 import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
@@ -38,6 +37,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   onClickLogo,
   collapsed,
   onToggleCollapse,
+  hideSidebar = false,
 }) => {
   const { t, locale } = useV2Translation();
   const can = useV2PermissionChecker();
@@ -75,25 +75,27 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
       className="flex h-screen w-full overflow-hidden p-2 gap-2 bg-[#f4f4f4] dark:bg-[color:var(--app-shell-bg,#131418)] text-foreground"
     >
       {/* Card 1: Sidebar floating card */}
-      <V2Sidebar
-        sections={sections ?? (navItems ? undefined : dynamicSections)}
-        items={navItems}
-        activeId={activeNavId}
-        onNavigate={onNavigate}
-        appName={appName}
-        onClickLogo={onClickLogo}
-        collapsed={collapsed}
-        onToggleCollapse={onToggleCollapse}
-        userMenuNode={userMenuNode}
-        notificationNode={notificationNode}
-        user={{
-          displayName: effectiveUserName,
-          avatarInitials: effectiveUserName
-            ? effectiveUserName.substring(0, 2).toUpperCase()
-            : "AD",
-          unreadCount: 0,
-        }}
-      />
+      {!hideSidebar && (
+        <V2Sidebar
+          sections={sections ?? (navItems ? undefined : dynamicSections)}
+          items={navItems}
+          activeId={activeNavId}
+          onNavigate={onNavigate}
+          appName={appName}
+          onClickLogo={onClickLogo}
+          collapsed={collapsed}
+          onToggleCollapse={onToggleCollapse}
+          userMenuNode={userMenuNode}
+          notificationNode={notificationNode}
+          user={{
+            displayName: effectiveUserName,
+            avatarInitials: effectiveUserName
+              ? effectiveUserName.substring(0, 2).toUpperCase()
+              : "AD",
+            unreadCount: 0,
+          }}
+        />
+      )}
 
       {/* Card 2: Right Panel floating card with Topbar, Content & TabBar */}
       <V2RightPanel
@@ -103,7 +105,6 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
         logoUrl={logoUrl}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
-        topbarActions={<V2WorkspaceModeToggle />}
         contentClassName={contentClassName}
         tabs={tabs ?? fallbackTabs}
         activeTabId={activeTabId ?? "dashboard"}

@@ -1,6 +1,11 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
-import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import {
+  V2Button,
+  V2Text,
+  V2Badge,
+  V2BadgeSize,
+} from "@/v2/shared/components/atoms";
 import {
   V2TabBarVariant,
   type V2TabBarPillVariant,
@@ -37,11 +42,15 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
   const renderIcon = () => {
     if (!tab.icon) return null;
 
-    if (isSub) {
+    if (isSub || isHeader) {
       const showAlways = tab.alwaysShowIcon;
       const colorCls = isActive
-        ? "text-teal-600 dark:text-teal-300"
-        : "text-slate-500 dark:text-zinc-500";
+        ? isHeader
+          ? "text-white dark:text-teal-300"
+          : "text-teal-600 dark:text-teal-300"
+        : isHeader
+          ? "text-muted-foreground group-hover:text-foreground dark:text-slate-400 dark:group-hover:text-slate-200"
+          : "text-slate-500 dark:text-zinc-500";
 
       const iconCls = cn(
         "shrink-0 transition-all duration-150 ease-out",
@@ -60,17 +69,13 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
       return <IconComp className={iconCls} />;
     }
 
-    const colorCls = isHeader
+    const colorCls = isBtnGroup
       ? isActive
-        ? "text-white dark:text-teal-300"
-        : "text-muted-foreground group-hover:text-foreground dark:text-slate-400 dark:group-hover:text-slate-200"
-      : isBtnGroup
-        ? isActive
-          ? "text-primary-fg dark:text-teal-200"
-          : "text-slate-500 dark:text-slate-400"
-        : isActive
-          ? "text-slate-900 dark:text-teal-300"
-          : "text-slate-400 dark:text-slate-400";
+        ? "text-primary-fg dark:text-teal-200"
+        : "text-slate-500 dark:text-slate-400"
+      : isActive
+        ? "text-slate-900 dark:text-teal-300"
+        : "text-slate-400 dark:text-slate-400";
 
     if (React.isValidElement(tab.icon)) {
       return <span className={cn("shrink-0", colorCls)}>{tab.icon}</span>;
@@ -159,9 +164,10 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
         />
       )}
       {tab.badgeCount !== undefined && tab.badgeCount > 0 && (
-        <span
+        <V2Badge
+          size={V2BadgeSize.XS}
           className={cn(
-            "inline-flex items-center justify-center rounded-full leading-none shrink-0 font-mono transition-colors",
+            "rounded-full leading-none shrink-0 font-mono transition-colors border-0",
             isHeader
               ? "min-w-[18px] h-[18px] px-1.5 text-[10px]"
               : isSub
@@ -171,7 +177,7 @@ export const TabBarPillItem: React.FC<TabBarPillItemProps> = ({
           )}
         >
           {tab.badgeCount > 99 ? "99+" : tab.badgeCount}
-        </span>
+        </V2Badge>
       )}
     </V2Button>
   );

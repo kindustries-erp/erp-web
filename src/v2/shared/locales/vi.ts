@@ -45,6 +45,11 @@ export const v2Vi = {
         // v2-module:inventory-movements-garage:locale-vi
         erpPermissionsCore: "Phân quyền & Vai trò",
         // v2-module:rbac-roles:locale-vi
+        usersManagement: "Quản lý tài khoản",
+        employeesManagement: "Quản lý nhân viên",
+        // v2-module:users-management:locale-vi
+        fileAttachments: "Quản lý tài liệu",
+        // v2-module:file-attachments-management:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",
@@ -65,6 +70,7 @@ export const v2Vi = {
       done: "Xong",
       reset: "Mặc định",
       loading: "Đang tải...",
+      loadingPage: "Đang tải trang...",
       error: "Đã xảy ra lỗi",
       actions: "Thao tác",
       overview: "Tổng quan",
@@ -88,9 +94,11 @@ export const v2Vi = {
       markAllAsRead: "Đánh dấu đã đọc tất cả",
       markAsRead: "Đánh dấu đã đọc",
       deleteItem: "Xóa thông báo",
+      markAsReadSuccess: "Đã đánh dấu thông báo là đã đọc",
+      markAllAsReadSuccess: "Đã đánh dấu tất cả thông báo là đã đọc",
     },
     topbar: {
-      quickSearchPlaceholder: "Tìm kiếm menu, chứng từ (Ctrl K)...",
+      quickSearchPlaceholder: "Tìm nhanh...",
       quickSearchShortcut: "Ctrl K",
       quickSearchAria: "Tìm kiếm nhanh hệ thống",
       languageSwitchAria: "Chuyển đổi ngôn ngữ hiển thị",
@@ -325,6 +333,13 @@ export const v2Vi = {
       viewTable: "Xem dạng bảng",
       category: "Hạng mục",
       other: "Khác",
+    },
+    linkedField: {
+      edited: "Đã chỉnh",
+      sourceHint: "Gốc: {{value}}",
+      revert: "Khôi phục theo nguồn",
+      refresh: "Cập nhật từ nguồn",
+      refreshFailed: "Không cập nhật được từ nguồn",
     },
     form: {
       selectPlaceholder: "Chọn...",

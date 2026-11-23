@@ -60,11 +60,12 @@ beforeAll(() => {
 });
 
 describe("V2TraceabilityCanvas", () => {
-  it("renders the document nodes and their stage labels", () => {
+  it("renders the document nodes, stage labels and floating legend", () => {
     render(<V2TraceabilityCanvas graph={graph} direction="horizontal" />);
     expect(screen.getByText("HD-2148")).toBeInTheDocument();
     expect(screen.getByText("UNC-77")).toBeInTheDocument();
     expect(screen.getByText("HÓA ĐƠN VAT")).toBeInTheDocument();
+    expect(screen.getByTestId("v2-trace-canvas-legend")).toBeInTheDocument();
   });
 
   it("shows the layout toggle only when a handler is given", () => {

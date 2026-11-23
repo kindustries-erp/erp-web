@@ -9,6 +9,8 @@ import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import { placeBranchAfter } from "../../../../procurement.branch";
+import { ProcurementBranchLinkedField } from "../../../molecules/procurement-pickers/ProcurementBranchLinkedField";
+import type { ProcurementBranchLink } from "../../../../hooks/useProcurementRequestBranchLink";
 import {
   ProcurementBranchPicker,
   ProcurementDateField,
@@ -27,6 +29,8 @@ export interface ProcurementRequestHeaderSectionProps {
   branchLocked: boolean;
   /** Chi nhánh tùy chọn (Garage): không bắt buộc, bỏ trống được */
   branchOptional?: boolean;
+  /** Họ hỗ trợ link-override: chi nhánh + tên song song sửa được (không đổi bản ghi chi nhánh). */
+  branchLink?: ProcurementBranchLink;
   setField: <K extends keyof ProcurementRequestFormValue>(
     key: K,
     value: ProcurementRequestFormValue[K],
@@ -43,6 +47,7 @@ export function ProcurementRequestHeaderSection({
   headerViewing,
   branchLocked,
   branchOptional = false,
+  branchLink,
   setField,
 }: ProcurementRequestHeaderSectionProps) {
   const { t } = useV2Translation();
@@ -71,18 +76,28 @@ export function ProcurementRequestHeaderSection({
         required: !branchOptional,
         error: errors.branchId ? requiredError : undefined,
         className: "sm:col-span-2",
-        render: () => (
-          <ProcurementBranchPicker
-            value={form.branchId}
-            label={form.branchName}
-            viewing={branchLocked}
-            clearable={branchOptional}
-            onChange={(id, name) => {
-              setField("branchId", id);
-              setField("branchName", name);
-            }}
-          />
-        ),
+        render: () =>
+          branchLink ? (
+            <ProcurementBranchLinkedField
+              branchId={form.branchId}
+              branchName={form.branchName}
+              link={branchLink}
+              disabled={branchLocked}
+              onBranchIdChange={(id) => setField("branchId", id)}
+              onBranchNameChange={(name) => setField("branchName", name)}
+            />
+          ) : (
+            <ProcurementBranchPicker
+              value={form.branchId}
+              label={form.branchName}
+              viewing={branchLocked}
+              clearable={branchOptional}
+              onChange={(id, name) => {
+                setField("branchId", id);
+                setField("branchName", name);
+              }}
+            />
+          ),
       },
       {
         key: "requestDate",

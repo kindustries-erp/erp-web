@@ -62,6 +62,7 @@ export {
   KeyRound,
   Play,
   FileSpreadsheet,
+  QrCode,
   Globe,
   Languages,
   Sliders,

@@ -1,4 +1,5 @@
 export * from "./v2-chart";
+export * from "./v2-attachments-panel";
 export * from "./v2-file-preview-panel";
 export * from "./v2-period-picker";
 export * from "./v2-bottom-nav";
@@ -17,3 +18,4 @@ export * from "./v2-mobile-catalog-section-list";
 export * from "./v2-export-excel-drawer";
 export * from "./v2-document-traceability";
 export * from "./v2-floating-chat";
+export * from "./v2-kanban-board";

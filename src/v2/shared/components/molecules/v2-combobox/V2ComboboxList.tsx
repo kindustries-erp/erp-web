@@ -1,9 +1,11 @@
 import * as React from "react";
 import { Check } from "lucide-react";
-import { V2Icon } from "@/v2/shared/components/atoms/v2-icon";
-import { V2Spinner } from "@/v2/shared/components/atoms/v2-spinner";
-import { V2Text } from "@/v2/shared/components/atoms/v2-text";
-import { V2Tooltip } from "@/v2/shared/components/atoms/v2-tooltip/V2Tooltip";
+import {
+  V2Icon,
+  V2Spinner,
+  V2Text,
+  V2Tooltip,
+} from "@/v2/shared/components/atoms";
 import { cn } from "@/v2/shared/utils/cn";
 import type { V2ComboboxOption } from "./V2Combobox.type";
 
@@ -81,6 +83,15 @@ export const V2ComboboxList: React.FC<V2ComboboxListProps> = ({
             size={16}
             className={cn("shrink-0", isSelected ? "opacity-100" : "opacity-0")}
           />
+          {option.icon && (
+            <div className="shrink-0 flex items-center justify-center">
+              {typeof option.icon === "function" ? (
+                <V2Icon icon={option.icon as any} size={16} />
+              ) : (
+                option.icon
+              )}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <V2Text
               as="span"

@@ -7,7 +7,6 @@ import { useT } from "@/core/i18n";
 import type { PageKey } from "@/shared/types";
 import { V2AppLayout } from "@/v2/app/layouts/v2-app-layout";
 import {
-  V2EnvStamp,
   type V2BreadcrumbItem,
   V2UniversalSearchModal,
   V2NotificationPopover,
@@ -19,6 +18,7 @@ import { cn } from "@/v2/shared/utils/cn";
 import { useV2AdaptedNavSections } from "./adapters/useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "./adapters/useV2AdaptedTabs";
 import { useEnsureValidCurrentBranch } from "./hooks/useEnsureValidCurrentBranch";
+import { useFaviconEffect } from "./hooks/useFaviconEffect";
 import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
@@ -49,18 +49,20 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   const { data: companyProfile } = useCompanyProfile();
   const t = useT();
   useEnsureValidCurrentBranch();
+  useFaviconEffect(companyProfile, t("nav.appName", "Hệ thống ERP"));
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [userProfileOpen, setUserProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const { data: notifications = [] } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: notificationsApi.findAll,
+  const { data: inboxData } = useQuery({
+    queryKey: ["notifications", "inbox"],
+    queryFn: notificationsApi.findInbox,
     refetchInterval: 30000,
   });
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const notifications = inboxData?.items ?? [];
+  const unreadCount = inboxData?.unreadCount ?? 0;
 
   /** Bấm thông báo có đích được hỗ trợ thì mở đúng chứng từ; không thì chỉ đánh dấu đã đọc. */
   const handleNotificationClick = useCallback((notif: CoreNotification) => {
@@ -116,6 +118,10 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
     switch (currentPage) {
       case "dashboard":
         return [{ label: t("nav.items.dashboard", "Tổng quan") }];
+      case "admin-dashboard-v2":
+        return [
+          { label: t("nav.items.adminDashboardV2", "Tổng quan Quản trị (v2)") },
+        ];
       case "sales-report-dashboard":
         return [
           { label: t("nav.sections.sales", "Bán hàng") },
@@ -131,6 +137,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.sales", "Bán hàng") },
           { label: t("nav.items.customers", "Khách hàng") },
         ];
+      case "customers-v2":
+        return [
+          { label: t("nav.sections.sales", "Bán hàng") },
+          { label: t("nav.items.customersV2", "Khách hàng (v2)") },
+        ];
       case "after-sales":
         return [
           { label: t("nav.sections.sales", "Bán hàng") },
@@ -145,6 +156,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         return [
           { label: t("nav.sections.purchasing", "Mua hàng") },
           { label: t("nav.items.suppliers", "Nhà cung cấp") },
+        ];
+      case "suppliers-v2":
+        return [
+          { label: t("nav.sections.purchasing", "Mua hàng") },
+          { label: t("nav.items.suppliersV2", "Nhà cung cấp (v2)") },
         ];
       case "inventory-dashboard":
         return [
@@ -180,6 +196,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         return [
           { label: t("nav.sections.manufacturing", "Sản xuất") },
           { label: t("nav.items.erpProduction", "Lệnh sản xuất") },
+        ];
+      case "garage-cases-v2":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          { label: t("nav.items.garageCasesV2", "Hoạt động garage (v2)") },
         ];
       case "garage-dashboard":
       case "garage-cases":
@@ -234,6 +255,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.accounting", "Kế toán") },
           { label: t("nav.items.invoices", "Hóa đơn") },
         ];
+      case "invoices-v2":
+        return [
+          { label: t("nav.sections.accounting", "Kế toán") },
+          { label: t("nav.items.invoicesV2", "Hóa đơn điện tử (v2)") },
+        ];
       case "invoice-debts":
         return [
           { label: t("nav.sections.accounting", "Kế toán") },
@@ -260,15 +286,25 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.phanquyen", "Phân quyền & Vai trò") },
         ];
-      case "erp-users":
+      case "users-management":
         return [
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.users", "Quản lý người dùng") },
+        ];
+      case "file-attachments":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("nav.items.attachments", "Quản lý tài liệu") },
         ];
       case "erp-activity-logs":
         return [
           { label: t("breadcrumb.settings", "Hệ thống") },
           { label: t("breadcrumb.activitylog", "Nhật ký hoạt động") },
+        ];
+      case "audit-logs-v2":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("nav.items.auditLogsV2", "Nhật ký hoạt động (v2)") },
         ];
       case "loans":
         return [
@@ -320,6 +356,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   const notificationNode = (
     <V2NotificationPopover
       notifications={notifications}
+      unreadCount={unreadCount}
       onNotificationClick={handleNotificationClick}
     >
       <V2Button
@@ -339,7 +376,6 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
 
   return (
     <>
-      <V2EnvStamp />
       <V2AppLayout
         activeNavId={currentPage}
         sections={sections}
@@ -353,7 +389,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         logoUrl={companyProfile?.logo || undefined}
         branchName={branchName}
         tenantName={tenantName}
-        contentClassName="pb-10"
+        contentClassName="pb-1.5"
         collapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
         userMenuNode={userMenuNode}

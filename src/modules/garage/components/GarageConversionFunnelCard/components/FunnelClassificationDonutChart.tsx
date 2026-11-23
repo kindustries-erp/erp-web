@@ -8,20 +8,28 @@ interface DonutItem {
   label: string;
   value: number;
   color: string;
+  key?: string;
 }
 
 interface FunnelClassificationDonutChartProps {
   items: DonutItem[];
   totalValue: number;
   isAmount: boolean;
+  onClassificationClick?: (key: string, name: string) => void;
 }
 
 export function FunnelClassificationDonutChart({
   items,
   totalValue,
   isAmount,
+  onClassificationClick,
 }: FunnelClassificationDonutChartProps) {
   const { t } = useTranslation("garage");
+
+  const handleClick = onClassificationClick
+    ? (item: DonutItem) =>
+        onClassificationClick(item.key || item.label, item.label)
+    : undefined;
 
   return (
     <div className="col-span-12 md:col-span-1 lg:col-span-3 bg-slate-50/50 dark:bg-slate-900/30 border border-border/80 rounded-xl p-4 flex flex-col justify-between">
@@ -47,11 +55,13 @@ export function FunnelClassificationDonutChart({
             items={items}
             cutout="62%"
             valueFormatter={(val) => (isAmount ? money(val) : `${val} xe`)}
+            onClick={handleClick}
           />
         </div>
         <div className="border-t border-border/60 pt-1.5 max-h-[95px] overflow-y-auto">
           <DonutLegend
             items={items}
+            onClick={handleClick}
             valueFormatter={(val) => {
               const pct =
                 totalValue > 0 ? ((val / totalValue) * 100).toFixed(1) : "0.0";
