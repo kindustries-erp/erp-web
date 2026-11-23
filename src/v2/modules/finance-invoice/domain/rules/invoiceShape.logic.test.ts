@@ -26,7 +26,30 @@ describe("invoice-shape fake logic", () => {
     const page2 = queryInvoices(rows, query({ page: 2, pageSize: 20 }), "all");
     expect(page2.items).toHaveLength(20);
     expect(page2.total).toBe(60);
-    expect(page2.summaries.total).toBe(rows.reduce((s, r) => s + r.total, 0));
+  });
+
+  it("returns total, page subtotal and cumulative per requested key", () => {
+    const page2 = queryInvoices(
+      rows,
+      query({ page: 2, pageSize: 20, summaryKeys: ["total"] }),
+      "all",
+    );
+    const sum = (list: typeof rows) => list.reduce((s, r) => s + r.total, 0);
+    expect(page2.summaries.total).toEqual({
+      total: sum(rows),
+      pageSubtotal: sum(rows.slice(20, 40)),
+      cumulative: sum(rows.slice(0, 40)),
+    });
+  });
+
+  it("returns null for keys outside the sample summary columns and none when not requested", () => {
+    const result = queryInvoices(
+      rows,
+      query({ summaryKeys: ["unknownKey"] }),
+      "all",
+    );
+    expect(result.summaries).toEqual({ unknownKey: null });
+    expect(queryInvoices(rows, query(), "all").summaries).toEqual({});
   });
 
   it("filters by tax tab", () => {

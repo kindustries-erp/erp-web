@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2CopyButton } from "./V2CopyButton";
 
 const meta: Meta<typeof V2CopyButton> = {
-  title: "Components/Atoms/Buttons & Icons/V2CopyButton",
+  title: "Components/Atoms/V2CopyButton",
   component: V2CopyButton,
   tags: ["autodocs"],
   args: { value: "C26TGA-1474" },

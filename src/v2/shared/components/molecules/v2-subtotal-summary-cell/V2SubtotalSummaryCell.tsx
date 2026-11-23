@@ -33,11 +33,16 @@ export const V2SubtotalSummaryCell: React.FC<V2SubtotalSummaryCellProps> = ({
   const shownValue = displayMode === "total" ? totalValue : pageValue;
   const multiPage = isMultiPage(totalPages);
   const cumulative = resolveCumulative(page, pageValue, cumulativeValue);
-  const pageRatio = ratioPct(pageValue, totalValue);
+  const pageRatio = ratioPct(pageValue, totalValue ?? 0);
   const cumulativeRatio =
-    cumulative === undefined ? pageRatio : ratioPct(cumulative, totalValue);
+    typeof cumulative === "number"
+      ? ratioPct(cumulative, totalValue ?? 0)
+      : pageRatio;
   const fmt = (value: number) =>
     formatSubtotalValue(variant, value, unit, locale);
+  /** `null` = API không tính được số này, hiển thị "—" */
+  const fmtOrDash = (value: number | null | undefined) =>
+    value === null || value === undefined ? "—" : fmt(value);
 
   const title =
     metricTitle ??
@@ -85,7 +90,7 @@ export const V2SubtotalSummaryCell: React.FC<V2SubtotalSummaryCellProps> = ({
           t("v2.subtotal.cumulative", {
             defaultValue: `Lũy kế (T1 → T${page})`,
           }),
-          fmt(cumulative),
+          fmtOrDash(cumulative),
         )}
       {row(
         multiPage
@@ -93,7 +98,7 @@ export const V2SubtotalSummaryCell: React.FC<V2SubtotalSummaryCellProps> = ({
               defaultValue: `Tổng toàn bộ (${totalPages} trang)`,
             })
           : t("v2.subtotal.grandTotal", "Tổng toàn bộ"),
-        fmt(totalValue),
+        fmtOrDash(totalValue),
         true,
       )}
 
@@ -144,7 +149,7 @@ export const V2SubtotalSummaryCell: React.FC<V2SubtotalSummaryCellProps> = ({
               </span>
             ) : (
               <span className="border-b border-dashed border-current/40 font-mono tabular-nums transition-colors group-hover:border-current group-hover:text-primary">
-                {fmt(shownValue)}
+                {fmtOrDash(shownValue)}
               </span>
             )}
             <Info className="h-3 w-3 text-muted-fg/50 opacity-70 transition-colors group-hover:text-primary group-hover:opacity-100" />

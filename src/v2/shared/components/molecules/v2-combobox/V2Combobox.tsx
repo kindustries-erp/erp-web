@@ -1,13 +1,20 @@
 import * as React from "react";
 import { ChevronDown, X } from "lucide-react";
-import { V2Input } from "@/v2/shared/components/atoms/v2-input";
-import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import {
+  V2Button,
+  V2Icon,
+  V2Input,
+  V2Text,
+} from "@/v2/shared/components/atoms";
 import { V2Popover } from "@/v2/shared/components/molecules/v2-popover";
 import { useV2PopoverDismiss } from "@/v2/shared/hooks/useV2PopoverDismiss";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { useViewport } from "@/v2/shared/hooks/useViewport";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import { useV2Combobox } from "./V2Combobox.hook";
 import { V2ComboboxList } from "./V2ComboboxList";
+import { V2ComboboxSheet } from "./V2ComboboxSheet";
 import type { V2ComboboxProps } from "./V2Combobox.type";
 
 export const V2Combobox: React.FC<V2ComboboxProps> = ({
@@ -26,119 +33,142 @@ export const V2Combobox: React.FC<V2ComboboxProps> = ({
   "aria-label": ariaLabel,
   onScrollBottom,
   fallbackLabel,
+  portalContainer,
 }) => {
   const { t } = useV2Translation();
-  const c = useV2Combobox({ options, value, searchable, onValueChange });
+  const { isMobile } = useViewport();
+  const hint = placeholder ?? t("v2.form.selectPlaceholder", "Chọn...");
+  const searchHint =
+    searchPlaceholder ?? t("v2.form.searchPlaceholder", "Tìm kiếm...");
+
+  const c = useV2Combobox({
+    options,
+    value,
+    searchable,
+    onValueChange,
+    onScrollBottom,
+    loading,
+    emptyLabel: emptyLabel ?? t("v2.form.noResults", "Không có kết quả"),
+    loadingText: t("v2.form.searching", "Đang tìm..."),
+  });
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   useV2PopoverDismiss({
-    open: c.open,
+    open: !isMobile && c.open,
     onClose: () => c.setOpen(false),
     containerRef,
     panelSelector: "[data-v2-combobox-panel]",
   });
 
-  const hint = placeholder ?? t("v2.form.selectPlaceholder", "Chọn...");
   const canClear = clearable && value !== null && !disabled;
   const displayLabel =
     c.selected?.label ?? (value && fallbackLabel ? fallbackLabel : hint);
   const isPlaceholder = !c.selected && !(value && fallbackLabel);
 
-  const handleListScroll = (e: React.UIEvent<HTMLUListElement>) => {
-    if (!onScrollBottom || loading) return;
-    const target = e.currentTarget;
-    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 15) {
-      onScrollBottom();
-    }
+  const handleQueryChange = (next: string) => {
+    c.setQuery(next);
+    onSearchChange?.(next);
   };
 
   const trigger = (
-    <button
+    <V2Button
       type="button"
+      variant="outline"
       role="combobox"
       aria-expanded={c.open}
-      aria-haspopup="listbox"
+      aria-haspopup={isMobile ? "dialog" : "listbox"}
       aria-label={ariaLabel ?? hint}
       disabled={disabled}
+      onClick={isMobile ? () => !disabled && c.setOpen(true) : undefined}
       className={cn(
-        "flex h-8 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-        canClear && "pr-8",
+        "flex h-10 sm:h-8 w-full justify-start text-left font-normal items-center gap-2 rounded-md border border-input bg-background pl-3 text-base sm:text-sm shadow-none hover:bg-background hover:text-foreground",
+        canClear ? "pr-16" : "pr-9",
+        V2_DRAWER_FOCUS_RING_CLASS,
+        "disabled:cursor-not-allowed disabled:opacity-50",
       )}
     >
+      {c.selected?.icon && (
+        <span className="shrink-0 flex items-center justify-center">
+          {c.selected.icon}
+        </span>
+      )}
       <V2Text
-        asChild
+        as="span"
+        truncate
         color={isPlaceholder ? "muted" : "default"}
-        className="truncate"
+        className="min-w-0 flex-1 text-left"
       >
-        <span>{displayLabel}</span>
+        {displayLabel}
       </V2Text>
-      <ChevronDown aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
-    </button>
-  );
-
-  const content = (
-    <div
-      className="flex flex-col gap-1"
-      data-v2-combobox-panel=""
-      onKeyDown={c.onKeyDown}
-    >
-      {searchable && (
-        <V2Input
-          size="sm"
-          autoFocus
-          value={c.query}
-          placeholder={
-            searchPlaceholder ?? t("v2.form.searchPlaceholder", "Tìm kiếm...")
-          }
-          aria-label={
-            searchPlaceholder ?? t("v2.form.searchPlaceholder", "Tìm kiếm...")
-          }
-          onChange={(event) => {
-            c.setQuery(event.target.value);
-            onSearchChange?.(event.target.value);
-          }}
-        />
-      )}
-      <V2ComboboxList
-        options={c.filtered}
-        value={value}
-        activeIndex={c.activeIndex}
-        loading={loading}
-        emptyLabel={emptyLabel ?? t("v2.form.noResults", "Không có kết quả")}
-        loadingText={t("v2.form.searching", "Đang tìm...")}
-        onSelect={c.select}
-        onHoverIndex={c.setActiveIndex}
-        onScroll={handleListScroll}
-      />
-    </div>
+    </V2Button>
   );
 
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
-      <V2Popover
-        trigger={trigger}
-        content={content}
-        open={c.open}
-        onOpenChange={c.setOpen}
-        align="start"
-        arrow={false}
-        glass={false}
-        hideCloseButton
-        title={hint}
-        className="w-64 p-1"
-        triggerClassName="w-full"
-      />
-      {canClear && (
-        <button
-          type="button"
-          aria-label={t("v2.form.clearSelection", "Bỏ lựa chọn")}
-          className="absolute right-7 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
-          onClick={() => onValueChange(null)}
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
+      {isMobile ? (
+        <>
+          {trigger}
+          <V2ComboboxSheet
+            open={c.open}
+            onOpenChange={c.setOpen}
+            title={hint}
+            searchable={searchable}
+            searchPlaceholder={searchHint}
+            query={c.query}
+            onQueryChange={handleQueryChange}
+            onKeyDown={c.onKeyDown}
+            {...c.listProps}
+          />
+        </>
+      ) : (
+        <V2Popover
+          trigger={trigger}
+          content={
+            <div
+              className="flex flex-col gap-1"
+              data-v2-combobox-panel=""
+              onKeyDown={c.onKeyDown}
+            >
+              {searchable && (
+                <V2Input
+                  sizeVariant="sm"
+                  autoFocus
+                  value={c.query}
+                  placeholder={searchHint}
+                  aria-label={searchHint}
+                  onChange={(e) => handleQueryChange(e.target.value)}
+                />
+              )}
+              <V2ComboboxList {...c.listProps} />
+            </div>
+          }
+          open={c.open}
+          onOpenChange={c.setOpen}
+          align="start"
+          arrow={false}
+          glass={false}
+          hideCloseButton
+          portalContainer={portalContainer}
+          title={hint}
+          className="w-64 p-1"
+          triggerClassName="w-full"
+        />
       )}
+      <div className="pointer-events-none absolute right-3 top-1/2 flex h-4 -translate-y-1/2 items-center gap-1">
+        {canClear && (
+          <V2Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={t("v2.form.clearSelection", "Bỏ lựa chọn")}
+            className="pointer-events-auto h-5 w-5 p-0 text-muted-fg hover:text-foreground"
+            onClick={() => onValueChange(null)}
+          >
+            <V2Icon icon={X} size={14} />
+          </V2Button>
+        )}
+        <V2Icon icon={ChevronDown} size={16} className="shrink-0 opacity-60" />
+      </div>
     </div>
   );
 };

@@ -50,6 +50,10 @@ export enum ErpResource {
   GARAGE_DEBTS = "garage_debts",
   GARAGE_CASHFLOW = "garage_cashflow",
   GARAGE_GOODS_RECEIPTS = "garage_goods_receipts",
+  GARAGE_STOCK_VOUCHERS = "garage_stock_vouchers",
+  GARAGE_STOCK_LEDGER = "garage_stock_ledger",
+  GARAGE_PROCUREMENT_ORDERS = "garage_procurement_orders",
+  GARAGE_PROCUREMENT_REQUESTS = "garage_procurement_requests",
   ACCOUNTING_CONFIGS = "accounting_configs",
   INVOICES = "invoices",
   INVOICE_DEBTS = "invoice_debts",
@@ -62,6 +66,7 @@ export enum ErpResource {
   VEHICLES = "vehicles",
   VINFAST = "vinfast",
   PAYMENT_VOUCHERS = "payment_vouchers",
+  LOANS = "loans",
   CASHFLOW_VOUCHERS = "erp_cashflow_vouchers",
   DASHBOARD = "dashboard",
   ATTACHMENTS = "attachments",
@@ -208,11 +213,6 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
   },
   // Hệ thống
   {
-    collection: "directus_roles",
-    label: "Vai trò hệ thống",
-    group: "Hệ thống",
-  },
-  {
     collection: "sys_tags",
     label: "Tags",
     group: "Hệ thống",
@@ -257,6 +257,26 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
   {
     collection: "garage_goods_receipts",
     label: "Phiếu nhập kho Garage",
+    group: "Garage & Xưởng dịch vụ",
+  },
+  {
+    collection: "garage_stock_vouchers",
+    label: "Chứng từ kho Garage",
+    group: "Garage & Xưởng dịch vụ",
+  },
+  {
+    collection: "garage_stock_ledger",
+    label: "Tồn kho Garage",
+    group: "Garage & Xưởng dịch vụ",
+  },
+  {
+    collection: "garage_procurement_requests",
+    label: "Đề nghị mua hàng Garage",
+    group: "Garage & Xưởng dịch vụ",
+  },
+  {
+    collection: "garage_procurement_orders",
+    label: "Đơn mua hàng Garage",
     group: "Garage & Xưởng dịch vụ",
   },
 ];
@@ -327,6 +347,8 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
       ErpResource.GARAGE_DEBTS,
       ErpResource.GARAGE_CASHFLOW,
       ErpResource.GARAGE_GOODS_RECEIPTS,
+      ErpResource.GARAGE_PROCUREMENT_REQUESTS,
+      ErpResource.GARAGE_PROCUREMENT_ORDERS,
     ],
   },
   {
@@ -363,5 +385,11 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
       ErpResource.SYS_TAGS,
       ErpResource.ATTACHMENTS,
     ],
+  },
+  {
+    groupKey: "tools",
+    labelKey: "rbac.groups.tools",
+    defaultLabel: "Công cụ & Tiện ích",
+    resources: [ErpResource.LOANS],
   },
 ];

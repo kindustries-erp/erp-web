@@ -1,6 +1,6 @@
 import React from "react";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
-import { Eye, Pencil, Trash2, FileSpreadsheet } from "lucide-react";
+import { Eye, Pencil, Trash2, FileSpreadsheet, Printer } from "lucide-react";
 
 export const getGarageCashflowRowActions = (
   openDetail: (row: GarageCashflowVoucher, mode: "view" | "edit") => void,
@@ -8,6 +8,7 @@ export const getGarageCashflowRowActions = (
   canEdit: boolean = true,
   canDelete: boolean = true,
   t?: (key: string, def?: string) => string,
+  onPrint?: (row: GarageCashflowVoucher) => void,
 ) => {
   const tr = t || ((_: string, def?: string) => def || "");
   const showDelete = Boolean(canDelete && onDelete);
@@ -21,6 +22,22 @@ export const getGarageCashflowRowActions = (
           icon: <Eye className="w-4 h-4" />,
           onClick: () => openDetail(row, "view"),
         },
+        ...(onPrint
+          ? [
+              {
+                key: "print",
+                label:
+                  row.voucherType === "PAYMENT"
+                    ? tr("garage.cashflow.actions.printPayment", "In phiếu chi")
+                    : tr(
+                        "garage.cashflow.actions.printReceipt",
+                        "In phiếu thu",
+                      ),
+                icon: <Printer className="w-4 h-4" />,
+                onClick: () => onPrint(row),
+              },
+            ]
+          : []),
         ...(canEdit
           ? [
               {

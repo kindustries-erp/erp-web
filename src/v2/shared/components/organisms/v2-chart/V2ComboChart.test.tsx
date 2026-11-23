@@ -41,6 +41,36 @@ const comboSeries: V2ComboSeries[] = [
 ];
 
 describe("V2ComboChart", () => {
+  it("không đưa mục legendHidden vào legend", () => {
+    render(
+      <V2ComboChart
+        labels={["T1"]}
+        series={[
+          { key: "a", label: "Hiện", data: [1], type: "bar", color: "#ea580c" },
+          {
+            key: "c",
+            label: "Hiện 2",
+            data: [1],
+            type: "bar",
+            color: "#059669",
+          },
+          {
+            key: "b",
+            label: "Ẩn mục",
+            data: [1],
+            type: "bar",
+            color: "#7c3aed",
+            legendHidden: true,
+          },
+        ]}
+        ariaLabel="legend ẩn"
+      />,
+    );
+
+    expect(screen.getByText("Hiện")).toBeInTheDocument();
+    expect(screen.queryByText("Ẩn mục")).not.toBeInTheDocument();
+  });
+
   it("renders mixed bar and line datasets properly", () => {
     captured.length = 0;
     render(

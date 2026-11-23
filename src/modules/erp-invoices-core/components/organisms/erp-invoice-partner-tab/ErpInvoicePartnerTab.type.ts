@@ -20,8 +20,6 @@ export interface ErpInvoiceDetailPaneProps {
   onUnpost?: () => void;
   activeSubTab?: InvoiceDetailSubTabKey;
   onSubTabChange?: (tab: InvoiceDetailSubTabKey) => void;
-  onLinkExistingAttachment?: (attachmentId: string) => void;
-  onUnlinkAttachment?: (attachmentId: string) => void;
   linkedBadgeCount?: number;
   linkedDocsSlot?: React.ReactNode;
 }

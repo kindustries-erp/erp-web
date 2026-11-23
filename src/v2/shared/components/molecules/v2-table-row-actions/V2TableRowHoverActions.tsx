@@ -33,7 +33,15 @@ export const V2TableRowHoverActions = React.memo(
         onClick={(event) => event.stopPropagation()}
       >
         {quickActions.map((action, index) => (
-          <V2Tooltip key={action.label} content={action.label} side="bottom">
+          <V2Tooltip
+            key={action.label}
+            content={
+              action.disabled && action.disabledReason
+                ? action.disabledReason
+                : action.label
+            }
+            side="bottom"
+          >
             <V2Button
               variant="ghost"
               size="icon-xs"

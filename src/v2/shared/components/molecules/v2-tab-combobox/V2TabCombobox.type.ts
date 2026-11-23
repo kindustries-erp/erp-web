@@ -32,4 +32,6 @@ export interface V2TabComboboxProps extends Omit<
   menuWidth?: string;
   /** Căn lề popover (mặc định: "start") */
   align?: "start" | "center" | "end";
+  /** ClassName bổ sung cho nút trigger */
+  triggerClassName?: string;
 }

@@ -1,6 +1,6 @@
 /**
  * Enums tập trung cho GarageCashflowDrawer nhằm đảm bảo type-safety
- * và loại bỏ hoàn toàn magic strings theo chuẩn /ui-structure.
+ * và loại bỏ hoàn toàn magic strings theo chuẩn /erp-ui-structure.
  */
 
 export enum GarageCashflowFieldKey {
@@ -12,6 +12,7 @@ export enum GarageCashflowFieldKey {
   PAYMENT_CONTENT = "paymentContent",
   AMOUNT = "amount",
   CASE_ID = "caseId",
+  PAYER_TYPE = "payerType",
   PARTNER_NAME = "partnerName",
   LICENSE_PLATE = "licensePlate",
   NOTE = "note",

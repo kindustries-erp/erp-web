@@ -66,7 +66,7 @@ vi.mock("../../components/GarageExportDrawer", () => ({
     ) : null,
 }));
 
-vi.mock("../../components/GarageWorkflowDrawer", () => ({
+vi.mock("@/v2/modules/garage-workflow", () => ({
   GarageWorkflowDrawer: (props: any) =>
     props.open ? <div data-testid="workflow-drawer" /> : null,
 }));

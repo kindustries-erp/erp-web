@@ -278,7 +278,7 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - [x] Floating Card: 4 góc bo cong `rounded-2xl`, viền 4 cạnh `border border-border/80`, cách mép màn hình `top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5`.
 - [x] Slide animation êm mượt: Sử dụng `cubic-bezier(0.16, 1, 0.3, 1)` với Tailwind keyframes `slide-in-from-right` và `slide-in-from-bottom`.
 - [x] 2 Khối Card Kính Độc Lập: Cột trái và cột phải nằm trên canvas với `gap-4 lg:gap-6`, không dùng đường kẻ dọc `border-l` cứng nhắc.
-- [x] Khống chế kích thước file: 100% file thành phần đều `< 178 LoC` (tuân thủ /ui-structure < 180 LoC).
+- [x] Khống chế kích thước file: 100% file thành phần đều `< 178 LoC` (tuân thủ /erp-ui-structure < 180 LoC).
 - [x] Tuân thủ No Blue Mandate: Không dùng class màu `blue-*`.
 - [x] Phím tắt `Esc` 2 tầng: Esc lần 1 thu nhỏ toàn màn hình, Esc lần 2 đóng drawer (hỏi confirm nếu đang edit).
 - [x] Multi-Drawer Stacking Store: `utils/v2DrawerStack.ts` quản lý active stack cross-tree qua `useSyncExternalStore`, tự động cấp phát `zIndex = 50 + depth * 10`, `depth`, `isTopmost`, `isUnderlying`.
@@ -293,10 +293,10 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 
 ### Glass surface và theme tokens
 
-- `SheetContent` dùng `--drawer-bg` cho bề mặt translucent, `--drawer-blur: 20px`, saturate `190%`, contrast `102%`, shadow nhẹ theo theme (`--drawer-shadow`). Light surface dùng alpha `0.35`, dark surface dùng alpha `0.75`; overlay dùng alpha `0.2` và blur nhẹ `1px` ở cả hai theme.
-- Light và dark theme định nghĩa alpha background riêng để giữ contrast đồng thời cho thấy backdrop. V2 drawer mount trên route V1 nhận fallback token từ `src/styles/panels.css`.
-- OrcaQ dùng cùng blur `20px` theo yêu cầu glass đồng nhất giữa theme.
-- `SheetOverlay` là lớp dim độc lập; overlay alpha 0.2 và blur 1px, còn blur glass 20px được áp dụng trên Sheet content.
+- `SheetContent` dùng `--drawer-bg` cho bề mặt gần như đặc (độ đục `0.96`), `--drawer-blur: 8px`, saturate `140%`, contrast `101%`, shadow nhẹ theo theme (`--drawer-shadow`). Cả light surface và dark surface đều dùng alpha `0.96` để tránh lộ chữ/bảng phía sau; overlay mặc định `transparent` (`--overlay-bg`, `--overlay-blur: 0px`) hoặc dim nhẹ theo biến `--drawer-overlay-bg`.
+- Light và dark theme định nghĩa alpha background riêng để giữ độ đọc tối đa. V2 drawer mount trên route V1 nhận fallback token từ `src/styles/panels.css`.
+- OrcaQ dùng cùng blur `8px` theo chuẩn glass tinh gọn đồng nhất giữa theme.
+- `SheetOverlay` là lớp phủ độc lập (`FLOATING_OVERLAY_CLASS`), tách biệt với blur `8px` trên Sheet content.
 
 - `V2TabItemData.rightPanel` chọn panel phải theo tab active; nếu không đặt, drawer dùng `V2StandardDrawerProps.rightPanel` làm fallback. `rightTabs` vẫn có ưu tiên nội dung riêng của sub-tab phải. Quy tắc áp dụng đồng nhất trên Desktop và Mobile.
 - ERP Invoice detail drawer dùng API này để giữ panel chung theo tab và chuyển sang panel đối soát khi sub-tab Chứng từ liên kết được chọn. Luồng nghiệp vụ vẫn do module invoice hiện tại quản lý.
@@ -336,6 +336,26 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - Nhóm tab button dùng `--primary`/`--primary-fg` cho active; inactive dùng nền/viền trong suốt và chỉ đổi màu chữ khi hover.
 - Inactive tab của `button-group` để nền và viền trong suốt; chỉ active tab có nền fill.
 - Drawer có thể được mở từ route V1, nơi `v2-theme.css` không được import. Sheet mang `data-v2-standard-drawer`; `src/styles/panels.css` cung cấp Midnight drawer tokens theo marker này để portal content vẫn nhận dark surface.
+
+### View mode: render thông tin, không render ô nhập (bắt buộc)
+
+Drawer V2 ở `mode="view"` hiển thị **nhãn - giá trị** (từng dòng, không viền ô), giống section "Thông tin đơn" của drawer `garage-procurement?tab=requests`. Không dựng control nhập rồi khóa lại.
+
+- **View mode**: dùng `V2DrawerRowList` + `DrawerRowConfig` (`@/v2/shared/components`). `value` là `ReactNode` (badge trạng thái, link, text). `copyable` cho mã/email/SĐT, `multiline` cho văn bản dài, `hidden` để ẩn dòng theo điều kiện. Giá trị rỗng hiển thị `—`.
+- **Edit/create mode**: dùng `V2DrawerFieldGrid` hoặc `DrawerField` + control nhập (`V2TextField`, `V2Combobox`, `V2DatePicker`...).
+- **Tách file**: `<Section>View.tsx` (chỉ `V2DrawerRowList`) riêng với `<Section>.tsx` (edit). `<Section>.tsx` trả `<Section>View />` khi `viewing`. Mẫu: `src/v2/core/procurement/components/organisms/procurement-request-drawer/sections/ProcurementRequestHeaderView.tsx` và `ProcurementRequestHeaderSection.tsx`.
+- **Cấm ở view mode**: `V2TextField viewing`, `V2ReadValue`, `V2Input` hay `V2Textarea` `disabled`/`readOnly`, `V2Combobox`/`V2DatePicker` chỉ để hiển thị. `V2ReadValue` có hình ô nhập (viền, nền, `min-h-10`) nên chỉ dùng cho trường bị khóa **trong edit mode** (ví dụ mã tự sinh) khi cần giữ bố cục ô.
+- **Section chỉ đọc cả hai mode** (ví dụ tài khoản liên kết): dùng `V2DrawerRowList`, không dùng `V2ReadValue`.
+- **Test bắt buộc**: render view mode và khẳng định không có `role` `textbox`, `combobox`, `spinbutton`; render edit mode vẫn có control. Mẫu: `UserFormView.test.tsx`, `EmployeeProfileView.test.tsx`.
+- **Audit bằng grep**: `/usr/bin/grep -rnE "V2ReadValue|V2TextField[^>]*viewing" src/v2/core src/v2/modules` (chỉ file `*View.tsx` và code edit mode có chủ đích mới được còn).
+
+### Field trong card & focus ring
+
+- Field (input, textarea, combobox trigger, multi-select, date picker) dùng `bg-background` và `border-input`, lấy từ token theme. Không dùng `bg-white`, `border-white`, `bg-slate-*` không kèm cặp `dark:`.
+- Focus dùng `V2_DRAWER_FOCUS_RING_CLASS` (`src/v2/shared/utils/v2FocusRing.ts`): ring 1px `--primary` 40%, `ring-offset-0`. Không dùng `focus-visible:ring-ring` đứng một mình, vì ring đậm và offset mặc định trắng làm viền trắng trong dark theme.
+- Cấm `ring-offset-<n>` nếu dòng đó không có `ring-offset-background` hoặc `ring-offset-0`. Test `src/v2/shared/utils/v2FocusRing.guard.test.ts` kiểm tra điều này cho toàn bộ `src/v2`.
+- Input trong popover tự focus (ví dụ ô tìm kiếm của `V2Combobox`) cũng theo cùng chuẩn. Variant `search` và `ghost` tắt ring bằng `focus:ring-0 focus-visible:ring-0`.
+- Khi đụng field trong drawer/card, kiểm tra ít nhất 3 theme: `default`, `classic-dark`, `midnight` (Storybook hoặc app thật).
 
 ## 3. Mở V2 drawer chồng lên drawer v1 (DrawerModal)
 

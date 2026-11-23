@@ -124,7 +124,7 @@ const PlaygroundTable = ({
 };
 
 const meta: Meta<PlaygroundArgs> = {
-  title: "Components/Organisms/Table/V2StandardTable",
+  title: "Components/Organisms/V2StandardTable",
   parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (

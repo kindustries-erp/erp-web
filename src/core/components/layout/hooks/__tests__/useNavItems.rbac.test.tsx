@@ -33,7 +33,7 @@ describe("useNavItems RBAC Guard", () => {
     const keys = result.current.map((item) => item.key);
 
     expect(keys).not.toContain("dashboard");
-    expect(keys).not.toContain("attachments");
+    expect(keys).not.toContain("file-attachments");
     expect(keys).toContain("garage-cases");
     expect(keys).toContain("garage-debts");
     expect(keys).toContain("garage-opex");
@@ -75,6 +75,90 @@ describe("useNavItems RBAC Guard", () => {
     const keys = result.current.map((item) => item.key);
 
     expect(keys).toContain("dashboard");
-    expect(keys).toContain("attachments");
+    expect(keys).toContain("file-attachments");
+  });
+
+  it("includes garage-procurement when user has GARAGE_PROCUREMENT_REQUESTS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      if (resource === ErpResource.GARAGE_PROCUREMENT_REQUESTS) return true;
+      return false;
+    });
+
+    const { result } = renderHook(() => useNavItems());
+    const keys = result.current.map((item) => item.key);
+
+    expect(keys).toContain("garage-procurement");
+    const prItem = result.current.find(
+      (item) => item.key === "garage-procurement",
+    );
+    expect(prItem?.section).toBe("GARAGE");
+    expect(prItem?.keywords).toContain("de nghi mua hang garage");
+    expect(prItem?.keywords).toContain("pr garage");
+  });
+
+  it("arranges garage items in order: cases, cashflow, debts, opex, procurement", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const { result } = renderHook(() => useNavItems());
+    const garageKeys = result.current
+      .filter((item) => item.section === "GARAGE")
+      .map((item) => item.key);
+
+    expect(garageKeys).toEqual([
+      "garage-cases",
+      "garage-cashflow",
+      "garage-debts",
+      "garage-opex",
+      "garage-procurement",
+    ]);
+  });
+
+  it("includes journal-entry only when user has JOURNAL_ENTRIES permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.JOURNAL_ENTRIES;
+    });
+
+    const { result } = renderHook(() => useNavItems());
+    const keys = result.current.map((item) => item.key);
+
+    expect(keys).toContain("journal-entry");
+    expect(keys).not.toContain("settings-accounts");
+  });
+
+  it("includes settings-accounts only when user has ACCOUNTING_CONFIGS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.ACCOUNTING_CONFIGS;
+    });
+
+    const { result } = renderHook(() => useNavItems());
+    const keys = result.current.map((item) => item.key);
+
+    expect(keys).toContain("settings-accounts");
+    expect(keys).not.toContain("journal-entry");
+  });
+
+  it("excludes journal-entry, settings-accounts, and loans when user lacks permissions", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.INVOICES;
+    });
+
+    const { result } = renderHook(() => useNavItems());
+    const keys = result.current.map((item) => item.key);
+
+    expect(keys).toContain("erp-invoices");
+    expect(keys).not.toContain("journal-entry");
+    expect(keys).not.toContain("settings-accounts");
+    expect(keys).not.toContain("loans");
+  });
+
+  it("includes loans in search items only when user has LOANS permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.LOANS;
+    });
+
+    const { result } = renderHook(() => useNavItems());
+    const keys = result.current.map((item) => item.key);
+
+    expect(keys).toContain("loans");
   });
 });

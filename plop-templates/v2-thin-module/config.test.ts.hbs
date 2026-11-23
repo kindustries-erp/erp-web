@@ -1,0 +1,10 @@
+import { describe, expect, it } from "vitest";
+import { {{moduleCamel}}Config } from "../{{moduleCamel}}.config";
+
+describe("{{moduleCamel}}Config", () => {
+  it("ghép đủ API, khóa cache và quyền riêng của module", () => {
+    expect({{moduleCamel}}Config.keys.all).toEqual(["v2-{{moduleName}}"]);
+    expect({{moduleCamel}}Config.permissionCollection).toBe("{{permissionCollection}}");
+    expect(typeof {{moduleCamel}}Config.api.list).toBe("function");
+  });
+});

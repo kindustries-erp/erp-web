@@ -10,6 +10,7 @@ import {
 import {
   DrawerSection,
   V2TabBar,
+  V2TabBarVariant,
   type V2TabItemData,
 } from "@/v2/shared/components";
 import { DrawerAuditTimeline } from "@/v2/shared/components/molecules/v2-drawer-audit-timeline";
@@ -112,7 +113,7 @@ export function buildBankDetailTabs(
         <div className="flex flex-col gap-3 pb-2 flex-1 min-w-0 w-full">
           <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1">
             <V2TabBar
-              variant="sub"
+              variant={V2TabBarVariant.SUB}
               activeTabKey={detailsSubTab}
               onTabChange={(k) =>
                 onDetailsSubTabChange(k as BankDetailsSubTabKey)
@@ -142,7 +143,7 @@ export function buildBankDetailTabs(
               <div className="flex flex-col gap-3 pb-2 flex-1 min-w-0 w-full">
                 <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1">
                   <V2TabBar
-                    variant="sub"
+                    variant={V2TabBarVariant.SUB}
                     activeTabKey={partnerSubTab}
                     onTabChange={(k) =>
                       onPartnerSubTabChange(k as BankPartnerSubTabKey)

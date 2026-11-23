@@ -111,7 +111,7 @@ export function useV2MobileNav({
       if (currentSelectedIds.length >= MAX_PINNED_MOBILE_NAV) {
         const warningMsg = t(
           "v2.nav.maxShortcutsDesc",
-          "Đã chọn đủ 4/4 mục lối tắt. Vui lòng bỏ chọn bớt một mục trước khi chọn mục mới.",
+          `Đã chọn đủ ${MAX_PINNED_MOBILE_NAV}/${MAX_PINNED_MOBILE_NAV} mục lối tắt. Vui lòng bỏ chọn bớt một mục trước khi chọn mục mới.`,
         );
         setLimitWarning(warningMsg);
         useV2ToastStore.getState().showToast({

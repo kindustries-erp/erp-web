@@ -4,7 +4,7 @@ import { en } from "@/core/locale/en";
 
 /**
  * Extracts a user-facing error message from an Axios error.
- * Preserves the original API/Directus error message as-is.
+ * Preserves the original API error message as-is.
  * Falls back to a translated generic message if none is available.
  */
 export function extractApiError(e: unknown, fallback?: string): string {
@@ -14,7 +14,7 @@ export function extractApiError(e: unknown, fallback?: string): string {
     message?: string;
   };
 
-  // API returned a structured error body (NestJS / Directus passthrough)
+  // API returned a structured error body (NestJS)
   const apiMsg = err?.response?.data?.message;
   if (apiMsg) {
     // NestJS validation pipe can return string[]

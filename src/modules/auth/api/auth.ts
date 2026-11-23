@@ -1,4 +1,9 @@
 import axiosInstance from "@/core/api/axiosInstance";
+import {
+  AUTH_SESSIONS_PATH,
+  refreshSession,
+  type AuthSessionsEnvelope,
+} from "@/v2/shared/api/authSessionsApi";
 
 // ── Domain types ───────────────────────────────────────────────────────────
 
@@ -98,7 +103,6 @@ export interface Employee {
   email: string;
   phone: string | null;
   manager_employee_id: string | null;
-  directus_user_id: string;
   business_partner_id: string | null;
   employment_status: string;
   hire_date: string | null;
@@ -208,20 +212,18 @@ export interface ImpersonateResponse {
 // ── API calls ──────────────────────────────────────────────────────────────
 
 export async function loginApi(payload: LoginRequest): Promise<LoginResponse> {
-  const { data } = await axiosInstance.post<LoginResponse>(
-    "/api/v1/auth/login",
-    payload,
-    { _silentSuccess: true },
-  );
-  return data;
+  const { data } = await axiosInstance.post<
+    AuthSessionsEnvelope<LoginResponse>
+  >(`${AUTH_SESSIONS_PATH}/login`, payload, { _silentSuccess: true });
+  return data.data;
 }
 
 export async function logoutApi(
   payload: LogoutRequest,
 ): Promise<LogoutResponse> {
   const { data } = await axiosInstance.post<LogoutResponse>(
-    "/api/v1/auth/logout",
-    payload,
+    `${AUTH_SESSIONS_PATH}/logout`,
+    { refreshToken: payload.refresh_token },
     { _silentSuccess: true },
   );
   return data;
@@ -230,23 +232,23 @@ export async function logoutApi(
 export async function refreshTokenApi(
   payload: RefreshRequest,
 ): Promise<RefreshResponse> {
-  const { data } = await axiosInstance.post<RefreshResponse>(
-    "/api/v1/auth/refresh",
-    payload,
-    { _silentSuccess: true },
+  return refreshSession(
+    axiosInstance.defaults.baseURL ?? "",
+    payload.refresh_token,
   );
-  return data;
 }
 
 export async function impersonateApi(
   payload: ImpersonateRequest,
 ): Promise<ImpersonateResponse> {
-  const { data } = await axiosInstance.post<ImpersonateResponse>(
-    "/api/v1/auth/impersonate",
-    payload,
+  const { data } = await axiosInstance.post<
+    AuthSessionsEnvelope<ImpersonateResponse>
+  >(
+    `${AUTH_SESSIONS_PATH}/impersonate`,
+    { targetUserId: payload.target_user_id },
     { _silentSuccess: true },
   );
-  return data;
+  return data.data;
 }
 
 export async function updateProfileApi(
@@ -271,17 +273,17 @@ export async function changePasswordApi(
   payload: ChangePasswordRequest,
 ): Promise<{ message: string }> {
   const { data } = await axiosInstance.post<{ message: string }>(
-    "/api/v1/auth/change-password",
+    `${AUTH_SESSIONS_PATH}/change-password`,
     payload,
   );
   return data;
 }
 
 export async function getProfileApi(): Promise<AuthProfileResponse> {
-  const { data } = await axiosInstance.get<AuthProfileResponse>(
-    "/api/v1/auth/profile",
-  );
-  return data;
+  const { data } = await axiosInstance.get<
+    AuthSessionsEnvelope<AuthProfileResponse>
+  >(`${AUTH_SESSIONS_PATH}/profile`);
+  return data.data;
 }
 
 export async function selfUpdateProfileApi(
@@ -289,24 +291,25 @@ export async function selfUpdateProfileApi(
 ): Promise<SelfUpdateProfileData> {
   const { data } = await axiosInstance.patch<{
     message: string;
-    data: SelfUpdateProfileData;
-  }>("/api/v1/auth/profile", payload);
-  return data.data;
+    data: {
+      id: string;
+      fullName: string;
+      phone: string | null;
+      notes: string | null;
+    };
+  }>(`${AUTH_SESSIONS_PATH}/profile`, {
+    email: payload.email,
+    fullName: payload.full_name,
+    phone: payload.phone,
+    notes: payload.notes,
+  });
+  const result = data.data;
+  return {
+    id: result.id,
+    full_name: result.fullName,
+    phone: result.phone,
+    notes: result.notes,
+  };
 }
 
 // ── Permission helpers ─────────────────────────────────────────────────────
-
-/**
- * Returns true only when the effective permissions of the current session
- * include full CRUD on the `directus_roles` collection.
- * Used to gate the "Login as user" impersonation feature.
- */
-export function hasFullDirectusRolesAccess(
-  permissions: EffectiveCollectionPermission[],
-): boolean {
-  const entry = permissions.find((p) => p.collection === "directus_roles");
-  if (!entry) return false;
-  return ["read", "create", "update", "delete"].every((a) =>
-    entry.actions.includes(a),
-  );
-}

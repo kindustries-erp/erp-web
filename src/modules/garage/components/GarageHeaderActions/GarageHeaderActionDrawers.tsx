@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { GarageCaseSyncDrawer } from "../GarageCaseSyncDrawer";
 import { GarageExportDrawer } from "../GarageExportDrawer";
-import { GarageWorkflowDrawer } from "../GarageWorkflowDrawer";
+import { GarageWorkflowDrawer } from "@/v2/modules/garage-workflow";
 import type { GarageExportDefaultReport } from "../../export/garageExportReportTypes";
 import type { GarageDashboardExportRange } from "../GarageDashboardExportDrawer";
 import type { GarageHeaderActionsState } from "./useGarageHeaderActions";

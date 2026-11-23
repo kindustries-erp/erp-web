@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { useGarageStore } from "../../store/garageStore";
 import { useChartTheme } from "@/shared/utils/chartTheme";
 import type { ComboboxOption } from "@/shared/components/Combobox";
 import type { GarageConversionFunnelCardProps } from "./types";
@@ -36,6 +38,90 @@ export function useGarageConversionFunnelLogic(
 
   const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthStr);
   const [viewMode, setViewMode] = useState<"AMOUNT" | "COUNT">("AMOUNT");
+  const { selectedBranchId } = useGarageStore();
+
+  const [classificationDrawer, setClassificationDrawer] = useState<{
+    open: boolean;
+    dateFrom: string;
+    dateTo: string;
+    periodLabel: string;
+    classification?: string;
+    classificationName?: string;
+    initialStatus?: string;
+    isFunnel?: boolean;
+    branchId?: string;
+  }>({
+    open: false,
+    dateFrom: "",
+    dateTo: "",
+    periodLabel: "",
+    classification: "",
+    classificationName: "",
+    initialStatus: "ALL",
+    isFunnel: false,
+  });
+
+  const getDateRange = () => {
+    if (selectedMonth === "ALL") {
+      const oldestMonth =
+        availableMonths[availableMonths.length - 1] ||
+        format(subMonths(new Date(), 5), "yyyy-MM");
+      const newestMonth = availableMonths[0] || format(new Date(), "yyyy-MM");
+      const [newestY, newestM] = newestMonth.split("-").map(Number);
+      return {
+        dateFrom: `${oldestMonth}-01`,
+        dateTo: format(
+          endOfMonth(new Date(newestY, newestM - 1, 1)),
+          "yyyy-MM-dd",
+        ),
+        periodPrefix: t("dashboard.funnel.allSixMonthsView", "Toàn bộ 6 tháng"),
+      };
+    }
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const monthDate = new Date(year, month - 1, 1);
+    return {
+      dateFrom: format(startOfMonth(monthDate), "yyyy-MM-dd"),
+      dateTo: format(endOfMonth(monthDate), "yyyy-MM-dd"),
+      periodPrefix: formatMonthLabel(selectedMonth),
+    };
+  };
+
+  const handleClassificationClick = (
+    classificationKey: string,
+    classificationName: string,
+  ) => {
+    const { dateFrom, dateTo, periodPrefix } = getDateRange();
+    setClassificationDrawer({
+      open: true,
+      dateFrom,
+      dateTo,
+      periodLabel: `${periodPrefix} · ${classificationName}`,
+      classification: classificationKey,
+      classificationName,
+      initialStatus: "ALL",
+      isFunnel: true,
+      branchId: selectedBranchId,
+    });
+  };
+
+  const handleStageClick = (stageKey: string, stageTitle: string) => {
+    const { dateFrom, dateTo, periodPrefix } = getDateRange();
+    setClassificationDrawer({
+      open: true,
+      dateFrom,
+      dateTo,
+      periodLabel: `${periodPrefix} · ${stageTitle}`,
+      classification: undefined,
+      classificationName: undefined,
+      initialStatus: stageKey,
+      isFunnel: true,
+      branchId: selectedBranchId,
+    });
+  };
+
+  const closeClassificationDrawer = () => {
+    setClassificationDrawer((prev) => ({ ...prev, open: false }));
+  };
 
   // Đồng bộ kỳ chọn khi dữ liệu availableMonths tải về
   useEffect(() => {
@@ -180,5 +266,9 @@ export function useGarageConversionFunnelLogic(
     statusDonutItems,
     totalStatusVal,
     tableRows,
+    classificationDrawer,
+    handleClassificationClick,
+    handleStageClick,
+    closeClassificationDrawer,
   };
 }

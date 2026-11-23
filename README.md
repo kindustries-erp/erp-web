@@ -44,7 +44,9 @@ bun install
 bun run dev
 ```
 
-Truy cập tại: **http://localhost:5173**
+Truy cập tại: **http://localhost:5173** (mặc định khi `PORT=5173` trong `erp-web/.env`, tương ứng API `PORT=10003`).
+
+> Cổng web phụ thuộc cổng API trong `erp/erp-api/.env`: API `10001` → web `5171`, API `10002` → web `5172`, API `10003` → web `5173`. Đặt `PORT` trong `erp-web/.env` khớp với bảng này khi chạy E2E.
 
 ---
 

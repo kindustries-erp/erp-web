@@ -4,6 +4,7 @@ import type { V2ButtonBaseProps } from "@/v2/shared/types";
 export enum V2HeroButtonSize {
   DEFAULT = "default",
   SM = "sm",
+  MD = "md",
   LG = "lg",
 }
 

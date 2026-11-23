@@ -38,12 +38,14 @@ vi.mock("../api/branchOptionsApi", () => ({
   branchOptionsApi: { listBranchOptions: listBranches },
 }));
 
-vi.mock(
-  "@/v2/modules/business-partners/components/organisms/business-partner-picker",
-  () => ({
+vi.mock("@/v2/core/business-partners", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/v2/core/business-partners")>();
+  return {
+    ...actual,
     BusinessPartnerPicker: () => <div data-testid="partner-picker" />,
-  }),
-);
+  };
+});
 
 import "../bankStatements.locale";
 import { BankTransactionDetailDrawer } from "./BankTransactionDetailDrawer";

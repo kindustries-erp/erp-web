@@ -30,6 +30,7 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
   onView,
   onEdit,
   onDelete,
+  onPrint,
   onOpenCaseDetail,
   canDelete = true,
   onExportExcel,
@@ -116,8 +117,9 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
         Boolean(onEdit),
         canDelete,
         t,
+        onPrint,
       ),
-    [openDetail, onDelete, onEdit, canDelete, t],
+    [openDetail, onDelete, onEdit, canDelete, t, onPrint],
   );
 
   const createActions = useMemo(

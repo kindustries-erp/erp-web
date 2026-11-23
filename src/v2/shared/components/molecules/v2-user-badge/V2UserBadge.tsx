@@ -56,7 +56,7 @@ export const V2UserBadge: React.FC<V2UserBadgeProps> = ({
       </div>
 
       {!isCompact && (
-        <div className="flex flex-col min-w-0 leading-none">
+        <div className="hidden sm:flex flex-col min-w-0 leading-none">
           <div className="flex items-center gap-1.5">
             <V2Text variant="body-sm" weight="semibold" truncate>
               {name}

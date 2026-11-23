@@ -137,4 +137,72 @@ describe("computeAlignedStagePositions", () => {
     // Stage frame must comfortably contain node C
     expect(dimStage1.height).toBeGreaterThan(posC.y);
   });
+
+  it("aligns middle single invoice and order nodes with multi-payment downstream (GR-PDV2610-0043 case)", () => {
+    // Stage 0: [RO] (1 node)
+    // Stage 1: [INV] (1 node, connected to RO)
+    // Stage 2: [P1, P2, P3, P4] (4 nodes, connected to RO / INV)
+    const stages: StageNodeGroup[] = [
+      { stageKey: "ORDER_STOCK", nodes: [makeNode("RO")] },
+      { stageKey: "INVOICE", nodes: [makeNode("INV")] },
+      {
+        stageKey: "PAYMENT",
+        nodes: [makeNode("P1"), makeNode("P2"), makeNode("P3"), makeNode("P4")],
+      },
+    ];
+    const edges: TraceabilityEdge[] = [
+      {
+        id: "e1",
+        source: "RO",
+        target: "INV",
+        relationType: "NET_OFF",
+        isTransitive: false,
+      },
+      {
+        id: "e2",
+        source: "INV",
+        target: "P1",
+        relationType: "NET_OFF",
+        isTransitive: false,
+      },
+      {
+        id: "e3",
+        source: "RO",
+        target: "P2",
+        relationType: "NET_OFF",
+        isTransitive: false,
+      },
+      {
+        id: "e4",
+        source: "RO",
+        target: "P3",
+        relationType: "NET_OFF",
+        isTransitive: false,
+      },
+      {
+        id: "e5",
+        source: "RO",
+        target: "P4",
+        relationType: "NET_OFF",
+        isTransitive: false,
+      },
+    ];
+
+    const result = computeAlignedStagePositions(stages, edges, "horizontal");
+    const posRO = result.nodePositions.get("RO")!;
+    const posINV = result.nodePositions.get("INV")!;
+    const posP1 = result.nodePositions.get("P1")!;
+    const posP2 = result.nodePositions.get("P2")!;
+    const posP3 = result.nodePositions.get("P3")!;
+    const posP4 = result.nodePositions.get("P4")!;
+
+    // RO and INV must align exactly on the same Y coordinate (straight horizontal line)
+    expect(posRO.y).toBe(posINV.y);
+    // Both must be centered relative to the 4 payments (span from 0 to 540 -> center at 270)
+    expect(posRO.y).toBe(270);
+    expect(posP1.y).toBe(0);
+    expect(posP2.y).toBe(180);
+    expect(posP3.y).toBe(360);
+    expect(posP4.y).toBe(540);
+  });
 });

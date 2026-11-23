@@ -68,4 +68,19 @@ describe("V2Input", () => {
     expect(input.className).toContain("border-0");
     expect(input.className).toContain("bg-transparent");
   });
+
+  it("uses the drawer focus ring (theme-aware, no white offset)", () => {
+    render(<V2Input placeholder="Focus" />);
+    const input = screen.getByPlaceholderText("Focus");
+    expect(input.className).toContain("focus-visible:ring-primary/40");
+    expect(input.className).toContain("focus-visible:ring-offset-0");
+    expect(input.className).not.toContain("ring-offset-2");
+  });
+
+  it("keeps search variant free of focus ring", () => {
+    render(<V2Input placeholder="S" variant="search" />);
+    const input = screen.getByPlaceholderText("S");
+    expect(input.className).toContain("focus-visible:ring-0");
+    expect(input.className).toContain("focus:ring-0");
+  });
 });

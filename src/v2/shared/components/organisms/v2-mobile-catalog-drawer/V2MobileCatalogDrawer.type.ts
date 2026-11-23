@@ -10,8 +10,6 @@ export interface V2MobileCatalogDrawerProps {
   filteredSectionsCount: number;
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  currentTheme?: string;
-  onThemeChange?: (theme: any) => void;
   isCustomizing: boolean;
   limitWarning: string | null;
   currentCount: number;

@@ -13,10 +13,33 @@ export interface V2ViewPreset {
   baseKey: string;
   visibility: Record<string, boolean>;
   order: string[];
+  /** Bộ lọc có sẵn (filter group) đi kèm view; undefined = view cũ, không đổi bộ lọc khi chọn */
+  filterKey?: string;
+}
+
+/** Điều kiện đã lưu của bảng, cùng định dạng query string của URL V2 (không gồm page/size) */
+export interface V2FilterPresetQuery {
+  sort?: string;
+  q?: string;
+  cf?: string;
+  cs?: string;
+  co?: string;
+  dr?: string;
+}
+
+/** Bộ lọc tùy chỉnh: snapshot điều kiện đang áp dụng trên bảng, lưu theo user */
+export interface V2FilterPreset {
+  key: string;
+  label: string;
+  /** Bộ lọc có sẵn gốc lúc lưu; undefined = không gắn nhóm */
+  groupKey?: string;
+  query: V2FilterPresetQuery;
 }
 
 export interface V2ViewPresetState {
   customViews: V2ViewPreset[];
+  /** Bộ lọc tùy chỉnh; dữ liệu cũ không có trường này thì coi là rỗng */
+  customFilters?: V2FilterPreset[];
   /** Chế độ xem đang chọn (hệ thống hoặc tùy chỉnh) */
   activeKey?: string;
   /** Key của filter group đang chọn */

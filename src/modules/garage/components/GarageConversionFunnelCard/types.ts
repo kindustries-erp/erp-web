@@ -21,6 +21,12 @@ export interface GarageConversionFunnelCardProps {
   loading?: boolean;
 }
 
+export interface FunnelStageData {
+  count: number;
+  amount: number;
+  rate?: number;
+}
+
 export interface ClassificationTableRow {
   id: string;
   key: string;

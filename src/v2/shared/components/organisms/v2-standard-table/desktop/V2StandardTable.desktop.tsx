@@ -1,9 +1,12 @@
 import * as React from "react";
-import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
+import {
+  V2TablePagination,
+  V2TablePaginationVariant,
+} from "@/v2/shared/components/molecules/v2-table-pagination";
 import { V2TableContextMenu } from "@/v2/shared/components/molecules/v2-table-row-actions";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2TableGrid } from "../grid/V2StandardTable.grid";
-import { V2TableFilterPanel } from "../filterpanel/V2StandardTable.filterpanel";
+import { V2TableFilterDrawer } from "../filterpanel/filterdrawer";
 import { V2TableToolbar } from "../toolbar/V2StandardTable.toolbar";
 import type { V2StandardTableProps } from "../V2StandardTable.type";
 import { useV2DesktopTable } from "./V2StandardTable.desktop.hook";
@@ -15,6 +18,7 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
     rowActions,
     state,
     selection,
+    expansion,
     view,
     scroll,
     table,
@@ -28,6 +32,7 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
     hasSummary,
     totalPages,
     panel,
+    filterPresets,
     toolbarProps,
     isFullscreen,
     emptyLabel,
@@ -78,6 +83,8 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
               rowActions={rowActions}
               getRowClassName={props.getRowClassName}
               onRowContextMenu={menu.open}
+              expandedKeys={expansion.expandedSet}
+              renderExpandedRow={props.renderExpandedRow}
               summary={
                 hasSummary
                   ? {
@@ -97,19 +104,24 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
             total={view.total}
             onPageChange={state.setPage}
             onPageSizeChange={state.setPageSize}
+            variant={V2TablePaginationVariant.DESKTOP}
             className="mt-2 shrink-0"
           />
         </div>
-        {panel.open && (
-          <V2TableFilterPanel
-            panel={panel}
-            columns={columns}
-            state={state}
-            filters={filters}
-            extraContent={props.toolbar?.filterPanel?.extraContent}
-          />
-        )}
       </div>
+      <V2TableFilterDrawer
+        panel={panel}
+        columns={columns}
+        state={state}
+        filters={filters}
+        extraContent={props.toolbar?.filterPanel?.extraContent}
+        presets={{
+          presets: filterPresets.presets,
+          activeKey: filterPresets.activeKey,
+          onSelect: filterPresets.select,
+          onClearActive: filterPresets.clearActive,
+        }}
+      />
       <V2TableContextMenu
         position={menu.state ? { x: menu.state.x, y: menu.state.y } : null}
         groups={menuGroups}

@@ -5,6 +5,7 @@ import {
   mapV1TablePreference,
   readV1TablePreferences,
 } from "./v2TablePreferences.migrate";
+import { renameV2TablePreferenceIds } from "./v2TablePreferences.rename";
 import type { V2TablePreferenceEntry } from "./v2TablePreferences.type";
 
 export const V2_PREFERENCES_STORAGE_KEY = "v2_table_preferences";
@@ -61,8 +62,19 @@ export function migrateV1TablePreferences(): void {
   });
 }
 
+/**
+ * Đổi tableId local sang tên theo feature. Chạy sau migration V1 để đổi luôn các bảng
+ * vừa được chép từ V1 dưới id cũ. Chạy lại không đổi gì thêm.
+ */
+export function renameTablePreferenceIdsLocal(): void {
+  const { tables } = useV2TablePreferencesStore.getState();
+  const renamed = renameV2TablePreferenceIds(tables);
+  if (renamed) useV2TablePreferencesStore.setState({ tables: renamed });
+}
+
 try {
   migrateV1TablePreferences();
+  renameTablePreferenceIdsLocal();
 } catch {
   // Lỗi preference không được làm sập app
 }

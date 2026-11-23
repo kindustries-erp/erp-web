@@ -80,6 +80,19 @@ describe("useStandardDrawer", () => {
     expect(result.current.showConfirmClose).toBe(false);
   });
 
+  it("asks for confirmation when confirmOnClose is set, even in view mode", () => {
+    const onClose = vi.fn();
+    const { result } = renderHook(() =>
+      useStandardDrawer(
+        makeProps({ onClose, mode: "view", confirmOnClose: true }),
+      ),
+    );
+
+    act(() => result.current.requestClose());
+    expect(result.current.showConfirmClose).toBe(true);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it("toggles fullscreen with internal state and notifies the parent", () => {
     const onFullscreenChange = vi.fn();
     const { result } = renderHook(() =>

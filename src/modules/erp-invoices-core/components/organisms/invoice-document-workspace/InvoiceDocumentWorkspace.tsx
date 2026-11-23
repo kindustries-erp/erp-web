@@ -1,8 +1,7 @@
 import React from "react";
-import { Search, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { useInvoicePreviewMode } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
-import { ErpAttachmentSelectDrawer } from "../erp-attachment-select-drawer";
 import { useInvoiceDocumentWorkspaceLogic } from "./InvoiceDocumentWorkspace.hook";
 import { InvoiceFileList } from "@/modules/erp-invoices-core/components/molecules/invoice-file-list";
 import { InvoiceFileUploadSection } from "@/modules/erp-invoices-core/components/molecules/invoice-file-upload-section";
@@ -20,8 +19,6 @@ export const InvoiceDocumentWorkspace = React.memo(
       isLoadingPreview,
       uploadType,
       setUploadType,
-      showSelectDrawer,
-      setShowSelectDrawer,
       isDownloadingZip,
       isUploadingDirect,
       handleSelectDoc,
@@ -36,35 +33,19 @@ export const InvoiceDocumentWorkspace = React.memo(
     return (
       <div className="flex flex-col gap-3 w-full">
         {/* Workspace Quick Actions Bar */}
-        {(props.onLinkExistingAttachment ||
-          (docCount > 1 && props.detailInvoice?.id)) && (
+        {docCount > 1 && props.detailInvoice?.id && (
           <div className="flex items-center justify-end gap-1.5 flex-wrap pb-1">
-            {props.onLinkExistingAttachment && props.detailInvoice?.id && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 px-2 text-xs cursor-pointer"
-                onClick={() => setShowSelectDrawer(true)}
-              >
-                <Search className="w-3.5 h-3.5 mr-1" />
-                {t("findExistingAttachment", "Tìm tài liệu có sẵn")}
-              </Button>
-            )}
-
-            {docCount > 1 && props.detailInvoice?.id && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={isDownloadingZip}
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                onClick={handleDownloadAllZip}
-              >
-                <Download className="w-3.5 h-3.5 mr-1" />
-                {t("downloadAllZip", "Tải tất cả (ZIP)")}
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isDownloadingZip}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+              onClick={handleDownloadAllZip}
+            >
+              <Download className="w-3.5 h-3.5 mr-1" />
+              {t("downloadAllZip", "Tải tất cả (ZIP)")}
+            </Button>
           </div>
         )}
 
@@ -109,20 +90,6 @@ export const InvoiceDocumentWorkspace = React.memo(
             />
           </div>
         </div>
-
-        {/* Modal: Link existing document from attachments system */}
-        {showSelectDrawer && props.detailInvoice?.id && (
-          <ErpAttachmentSelectDrawer
-            open={showSelectDrawer}
-            onClose={() => setShowSelectDrawer(false)}
-            onSelect={(attachment: any) => {
-              if (props.onLinkExistingAttachment) {
-                props.onLinkExistingAttachment(attachment.id);
-              }
-              setShowSelectDrawer(false);
-            }}
-          />
-        )}
       </div>
     );
   },

@@ -56,7 +56,7 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 
 - `useData(query)` là hook của module, được gọi **bên trong tab mount lazy**: tab chưa mở thì chưa tải dữ liệu. Không nhận state của V1.
 - `refetch` tự gắn vào nút Làm mới của toolbar (trừ khi toolbar đã có `onRefresh`).
-- `summaries: { [columnKey]: tổng }` là tổng toàn bộ mọi trang, khung gắn vào `summary.total` của cột (chế độ server).
+- `summaries: { [columnKey]: { total, pageSubtotal, cumulative } | null }` lấy từ API theo `summary_keys` (khung tự gửi key của cột có `summary`). Khung gắn vào `summary.total/pageSubtotal/cumulative` của cột; `null` hiển thị "—". Hook phải truyền `query` nguyên vẹn (có `summaryKeys`) xuống API client, và client dùng `toSummaryKeysParam`.
 - State ngoài `V2TableQuery` (pill tab, chế độ xem) do page giữ; `useData` đọc qua closure. Đổi pill tab thì gọi `resetV2TableUrl(tabKey)` và đổi `resetKey` để bảng về trang 1.
 - `syncUrl` (mặc định true) giữ tab trên URL; tắt trong story/test cần cô lập.
 - Mẫu hoàn chỉnh: `src/v2/modules/finance-invoice/` (dữ liệu giả, không gọi API), story use case `ErpInvoiceV2ModulePage.stories.tsx`; smoke test `ErpInvoiceV2ModulePage.test.tsx`. Đã bỏ global searchbox; cột "Đã thanh toán" và "Còn lại" có header filter; nút "Đồng bộ" là split button (`toolbar.create`).
@@ -88,7 +88,7 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 Đã đáp ứng: trang nhiều tab (dashboard + bảng), bảng (tìm kiếm, pill tab, chế độ xem, lọc, chọn nhiều, hàng loạt, hàng tổng, phân trang), drawer chi tiết 2 cột + tab + xem/sửa + panel xem trước + xếp tầng nhiều drawer, drawer hạch toán và xuất, modal hàng loạt và nhập tệp, form (combobox, ngày, số, switch, textarea), dashboard (KPI, biểu đồ), quyền theo route.
 
 **Chưa có (cần làm riêng):**
-- Chứng từ liên kết đa tầng: V1 `DrawerDocumentTraceability` dài khoảng 2.900 dòng (canvas, pipeline, bảng, liên kết/gỡ liên kết). V2 mới có `DrawerRelatedDeck` làm khung; story mẫu dùng bảng rút gọn.
+- Chứng từ liên kết đa tầng: engine ở `src/v2/shared/components/organisms/v2-document-traceability` (canvas, pipeline, bảng, `mergeTraceabilityGraph`, `resolveLinkTargetDocType`, `openErpDocument`). Phần đặc thù từng phân hệ nằm ở `src/v2/core/<họ>` (`cases-garage`, `invoices`) dưới dạng hàm thuần; drawer V1 gọi qua barrel và giữ state/modal/API. Facade V1 `DrawerDocumentTraceability` chỉ còn bọc `V2DocumentTraceability`.
 - Lưu cấu hình cột/view lên server: đã có đường ghi (PATCH nền, xem mục Preferences bảng), nhưng chưa xác minh chiều tải về khi mở trang (`applyServerTables` cần kiểm tra ai gọi). Chọn nhanh theo lịch trong bộ lọc cột (đã có sẵn khe ngày với mốc `today/last7/last30/thisMonth`).
 - Nhiều tab cùng một trang (`instanceIndex`) như V1.
 - Bảng không đồng bộ lại khi Back đổi query trên URL.
@@ -96,7 +96,7 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 ## 8. Công thức dựng một module mới
 
 1. Thêm route vào `V2_ROUTES` (kèm `permission`) và đăng ký i18n bằng `registerV2ModuleLocale`.
-2. Viết hook `useXData(query)` (React Query) dùng `v2TableQueryParams` để đổi query thành tham số API; trả `{ items, total, loading, refetch, summaries }`.
+2. Viết hook `useXData(query)` (React Query) dùng `v2TableQueryParams` để đổi query thành tham số API, thêm `summary_keys: toSummaryKeysParam(query)` nếu API có số tổng; trả `{ items, total, loading, refetch, summaries }`.
 3. Viết cột bằng `headerFilter...`; ô đặc thù (số HĐ, đối tác) là component của module.
 4. Viết drawer bằng `V2StandardDrawer` + `DrawerSection`/`DrawerField` và các ô nhập V2; mở/đóng bằng `useV2OverlayState`.
 5. Ghép trong `V2ModulePage` (page chỉ ghép, dưới ~200 dòng), bọc route bằng `PermissionGuard`.

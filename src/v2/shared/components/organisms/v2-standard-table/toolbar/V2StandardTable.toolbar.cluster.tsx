@@ -60,12 +60,13 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
   const refreshLabel = t("v2.table.refresh", "Làm mới");
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 sm:flex-initial flex-nowrap sm:flex-wrap">
       {search && (
         <V2SearchInput
           value={search.value}
           onChange={search.onChange}
           placeholder={config.search?.placeholder}
+          className="flex-1 min-w-0 sm:w-56"
         />
       )}
       {viewPresets

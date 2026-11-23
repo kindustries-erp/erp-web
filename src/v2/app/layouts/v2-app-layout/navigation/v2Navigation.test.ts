@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { V2_ROUTES } from "@/v2/app/router/v2RouteConfig";
+import { NAV_DEFS } from "./v2Navigation.config";
 import {
   getV2NavItems,
   getV2NavigationSections,
@@ -21,7 +23,7 @@ describe("v2Navigation", () => {
     expect(items[0].href).toBe("/v2");
   });
 
-  it("generates 7 sections with translated labels in English", () => {
+  it("generates 9 sections with translated labels in English", () => {
     const mockEnT = (key: string, fallback?: string) => {
       const enDict: Record<string, string> = {
         "v2.nav.sections.admin": "OVERVIEW",
@@ -29,7 +31,9 @@ describe("v2Navigation", () => {
         "v2.nav.sections.purchasing": "PURCHASING",
         "v2.nav.sections.inventory": "INVENTORY",
         "v2.nav.sections.manufacturing": "MANUFACTURING",
+        "v2.nav.sections.garage": "GARAGE",
         "v2.nav.sections.accounting": "ACCOUNTING & CASHFLOW",
+        "v2.nav.sections.tools": "TOOLS",
         "v2.nav.sections.settings": "SETTINGS",
         "v2.nav.items.dashboard": "Dashboard",
         "v2.nav.items.erpSalesOrders": "Sales Orders",
@@ -39,16 +43,40 @@ describe("v2Navigation", () => {
     };
 
     const sections = getV2NavigationSections(mockEnT);
-    expect(sections).toHaveLength(7);
+    expect(sections).toHaveLength(9);
     expect(sections[0].label).toBe("OVERVIEW");
     expect(sections[1].label).toBe("SALES");
     expect(sections[1].items[0].label).toBe("Sales Orders");
     expect(sections[1].items[1].label).toBe("Customers");
   });
 
+  it("puts garage menu items under the garage section, not inventory", () => {
+    const sections = getV2NavigationSections((_, fallback) => fallback ?? "");
+    const garage = sections.find((section) => section.id === "garage");
+    const inventory = sections.find((section) => section.id === "inventory");
+
+    expect(garage?.items.map((item) => item.id)).toEqual([
+      "garage-stock-vouchers",
+      "garage-stock-balances",
+      "garage-procurement",
+    ]);
+    expect(inventory?.items.some((item) => item.id.startsWith("garage-"))).toBe(
+      false,
+    );
+  });
+
   it("exports valid DEFAULT_V2_NAV_ITEMS and DEFAULT_V2_SECTIONS fallbacks", () => {
     expect(DEFAULT_V2_NAV_ITEMS.length).toBeGreaterThan(0);
-    expect(DEFAULT_V2_SECTIONS.length).toBe(7);
+    expect(DEFAULT_V2_SECTIONS.length).toBe(9);
     expect(DEFAULT_V2_SECTIONS[0].items[0].id).toBe("dashboard");
+  });
+
+  it("ensures every nav item in NAV_DEFS maps to a valid route in V2_ROUTES", () => {
+    const routeIds = new Set(V2_ROUTES.map((r) => r.id));
+    routeIds.add("dashboard"); // Trang chủ mặc định
+
+    NAV_DEFS.forEach((navItem) => {
+      expect(routeIds.has(navItem.id)).toBe(true);
+    });
   });
 });

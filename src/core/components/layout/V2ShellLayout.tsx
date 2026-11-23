@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Bell, ChevronsUpDown } from "lucide-react";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
@@ -6,22 +7,28 @@ import { useT } from "@/core/i18n";
 import type { PageKey } from "@/shared/types";
 import { V2AppLayout } from "@/v2/app/layouts/v2-app-layout";
 import {
-  V2EnvStamp,
   type V2BreadcrumbItem,
   V2UniversalSearchModal,
   V2NotificationPopover,
+  V2UserMenu,
+  V2Button,
   V2Text,
 } from "@/v2/shared/components";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2AdaptedNavSections } from "./adapters/useV2AdaptedNavSections";
 import { useV2AdaptedTabs } from "./adapters/useV2AdaptedTabs";
 import { useEnsureValidCurrentBranch } from "./hooks/useEnsureValidCurrentBranch";
+import { useFaviconEffect } from "./hooks/useFaviconEffect";
 import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "./GlobalSettingsDrawer";
-import { UserMenuPopover } from "./sidebar/components/UserMenuPopover";
 import { useQuery } from "@tanstack/react-query";
-import { notificationsApi } from "@/core/api/notifications";
+import {
+  notificationsApi,
+  type CoreNotification,
+} from "@/core/api/notifications";
+import { resolveNotificationHref } from "@/v2/app/router/notificationTargetRoutes";
+import { navigateV2Url } from "@/v2/shared/utils/v2Url";
 
 interface V2ShellLayoutProps {
   children: React.ReactNode;
@@ -42,18 +49,29 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
   const { data: companyProfile } = useCompanyProfile();
   const t = useT();
   useEnsureValidCurrentBranch();
+  useFaviconEffect(companyProfile, t("nav.appName", "Hệ thống ERP"));
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [userProfileOpen, setUserProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const { data: notifications = [] } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: notificationsApi.findAll,
+  const { data: inboxData } = useQuery({
+    queryKey: ["notifications", "inbox"],
+    queryFn: notificationsApi.findInbox,
     refetchInterval: 30000,
   });
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const notifications = inboxData?.items ?? [];
+  const unreadCount = inboxData?.unreadCount ?? 0;
+
+  /** Bấm thông báo có đích được hỗ trợ thì mở đúng chứng từ; không thì chỉ đánh dấu đã đọc. */
+  const handleNotificationClick = useCallback((notif: CoreNotification) => {
+    const href = resolveNotificationHref(
+      notif.target,
+      window.location.pathname,
+    );
+    if (href) navigateV2Url(href);
+  }, []);
 
   const sections = useV2AdaptedNavSections();
   const { tabs, activeTabId, handleTabSelect, handleTabClose } =
@@ -100,6 +118,10 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
     switch (currentPage) {
       case "dashboard":
         return [{ label: t("nav.items.dashboard", "Tổng quan") }];
+      case "admin-dashboard-v2":
+        return [
+          { label: t("nav.items.adminDashboardV2", "Tổng quan Quản trị (v2)") },
+        ];
       case "sales-report-dashboard":
         return [
           { label: t("nav.sections.sales", "Bán hàng") },
@@ -115,6 +137,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.sales", "Bán hàng") },
           { label: t("nav.items.customers", "Khách hàng") },
         ];
+      case "customers-v2":
+        return [
+          { label: t("nav.sections.sales", "Bán hàng") },
+          { label: t("nav.items.customersV2", "Khách hàng (v2)") },
+        ];
       case "after-sales":
         return [
           { label: t("nav.sections.sales", "Bán hàng") },
@@ -129,6 +156,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         return [
           { label: t("nav.sections.purchasing", "Mua hàng") },
           { label: t("nav.items.suppliers", "Nhà cung cấp") },
+        ];
+      case "suppliers-v2":
+        return [
+          { label: t("nav.sections.purchasing", "Mua hàng") },
+          { label: t("nav.items.suppliersV2", "Nhà cung cấp (v2)") },
         ];
       case "inventory-dashboard":
         return [
@@ -165,16 +197,33 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.manufacturing", "Sản xuất") },
           { label: t("nav.items.erpProduction", "Lệnh sản xuất") },
         ];
+      case "garage-cases-v2":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          { label: t("nav.items.garageCasesV2", "Hoạt động garage (v2)") },
+        ];
       case "garage-dashboard":
       case "garage-cases":
         return [
           { label: t("nav.sections.garage", "Garage") },
           { label: t("nav.items.garageCases", "Hoạt động garage") },
         ];
-      case "garage-goods-receipts":
+      case "garage-stock-vouchers":
         return [
           { label: t("nav.sections.garage", "Garage") },
-          { label: t("nav.items.garageGoodsReceipts", "Nhập kho Garage") },
+          { label: t("nav.items.garageStockVouchers", "Chứng từ kho Garage") },
+        ];
+      case "garage-stock-balances":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          { label: t("nav.items.garageStockBalances", "Tồn kho Garage") },
+        ];
+      case "garage-procurement":
+        return [
+          { label: t("nav.sections.garage", "Garage") },
+          {
+            label: t("nav.items.garageProcurement", "Mua hàng Garage"),
+          },
         ];
       case "garage-cashflow":
         return [
@@ -206,6 +255,11 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.accounting", "Kế toán") },
           { label: t("nav.items.invoices", "Hóa đơn") },
         ];
+      case "invoices-v2":
+        return [
+          { label: t("nav.sections.accounting", "Kế toán") },
+          { label: t("nav.items.invoicesV2", "Hóa đơn điện tử (v2)") },
+        ];
       case "invoice-debts":
         return [
           { label: t("nav.sections.accounting", "Kế toán") },
@@ -226,6 +280,37 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
           { label: t("nav.sections.settings", "Thiết lập") },
           { label: t("nav.items.sysTags", "Tags") },
         ];
+      case "permission":
+      case "erp-permissions-core":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("breadcrumb.phanquyen", "Phân quyền & Vai trò") },
+        ];
+      case "users-management":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("breadcrumb.users", "Quản lý người dùng") },
+        ];
+      case "file-attachments":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("nav.items.attachments", "Quản lý tài liệu") },
+        ];
+      case "erp-activity-logs":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("breadcrumb.activitylog", "Nhật ký hoạt động") },
+        ];
+      case "audit-logs-v2":
+        return [
+          { label: t("breadcrumb.settings", "Hệ thống") },
+          { label: t("nav.items.auditLogsV2", "Nhật ký hoạt động (v2)") },
+        ];
+      case "loans":
+        return [
+          { label: t("breadcrumb.tools", "Công cụ") },
+          { label: t("nav.items.loans", "Khoản vay & Lãi suất") },
+        ];
       default:
         return [
           { label: t("nav.items.dashboard", "Tổng quan") },
@@ -236,7 +321,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
 
   const userMenuNode = useCallback(
     ({ collapsed = false }: { collapsed?: boolean } = {}) => (
-      <UserMenuPopover
+      <V2UserMenu
         onOpenProfile={() => setUserProfileOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       >
@@ -255,56 +340,42 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
                 as="span"
                 variant="body-sm"
                 truncate
-                className="text-muted-fg font-medium flex-1 min-w-0"
+                className="text-muted-fg font-medium flex-1 min-w-0 hidden sm:inline"
               >
                 {displayName}
               </V2Text>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-faint flex-shrink-0 opacity-70"
-                aria-hidden="true"
-              >
-                <polyline points="7 10 12 5 17 10" />
-                <polyline points="7 14 12 19 17 14" />
-              </svg>
+              <ChevronsUpDown className="w-3.5 h-3.5 text-faint flex-shrink-0 opacity-70 hidden sm:inline" />
             </>
           )}
         </div>
-      </UserMenuPopover>
+      </V2UserMenu>
     ),
     [av, displayName],
   );
 
   const notificationNode = (
-    <V2NotificationPopover notifications={notifications}>
-      <div className="relative flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-faint hover:text-foreground hover:bg-accent/50 cursor-pointer flex-shrink-0 transition-colors p-0">
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          aria-hidden="true"
-        >
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
+    <V2NotificationPopover
+      notifications={notifications}
+      unreadCount={unreadCount}
+      onNotificationClick={handleNotificationClick}
+    >
+      <V2Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label={t("v2.notifications.title", "Thông báo")}
+        className="relative w-8 h-8 rounded-lg text-muted-fg hover:text-foreground hover:bg-accent/60 p-0"
+      >
+        <Bell className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-foreground/85 hover:text-foreground transition-colors" />
         {unreadCount > 0 && (
-          <span className="absolute top-[2px] right-[2px] w-[6px] h-[6px] bg-destructive rounded-full" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full ring-2 ring-background" />
         )}
-      </div>
+      </V2Button>
     </V2NotificationPopover>
   );
 
   return (
     <>
-      <V2EnvStamp />
       <V2AppLayout
         activeNavId={currentPage}
         sections={sections}
@@ -318,7 +389,7 @@ export function V2ShellLayout({ children }: V2ShellLayoutProps) {
         logoUrl={companyProfile?.logo || undefined}
         branchName={branchName}
         tenantName={tenantName}
-        contentClassName="pb-10"
+        contentClassName="pb-1.5"
         collapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
         userMenuNode={userMenuNode}

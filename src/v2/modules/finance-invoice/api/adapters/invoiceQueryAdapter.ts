@@ -1,4 +1,5 @@
 import { TableSortState, type V2TableQuery } from "@/v2/shared/types/v2-table";
+import { toSummaryKeysParam } from "@/v2/shared/utils/toSummaryKeysParam";
 import type {
   InvoiceDirection,
   TaxTab,
@@ -16,6 +17,8 @@ export interface InvoiceListQueryParams {
   column_filters?: string;
   date_from?: string;
   date_to?: string;
+  /** CSV các key cột cần tổng, lấy từ `toSummaryKeysParam` */
+  summary_keys?: string;
 }
 
 const TAX_TAB_STATUS_MAP: Record<TaxTab, string[] | null> = {
@@ -71,5 +74,6 @@ export function v2InvoiceQueryToParams(
       : undefined,
     date_from: dateRange?.from || undefined,
     date_to: dateRange?.to || undefined,
+    summary_keys: toSummaryKeysParam(query),
   };
 }

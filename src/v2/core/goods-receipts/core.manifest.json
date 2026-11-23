@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "layer": "web",
+  "family": "goods-receipts",
+  "entity": "GoodsReceipt",
+  "barrel": "src/v2/core/goods-receipts/index.ts",
+  "localeNamespace": "goodsReceipts",
+  "exports": {
+    "configType": "GoodsReceiptModuleConfig",
+    "apiType": "GoodsReceiptApi",
+    "keysFactory": "createGoodsReceiptKeys",
+    "recordType": "GoodsReceiptRecord",
+    "formValueType": "GoodsReceiptFormValue",
+    "listController": "useGoodsReceiptListController",
+    "query": "useGoodsReceiptsQuery",
+    "drawer": "GoodsReceiptDrawer",
+    "viewVisibility": "goodsReceiptViewVisibility",
+    "lifecycle": ["post", "cancel"],
+    "nextCode": true
+  }
+}

@@ -3,6 +3,7 @@ import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import type { ColumnSizingState, Updater } from "@tanstack/react-table";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { useV2TableColumns } from "../hooks/V2StandardTable.hook";
+import { useV2RowExpansion } from "../hooks/V2StandardTable.expand.hook";
 import { useV2TableController } from "../hooks/V2StandardTable.controller.hook";
 import { useV2FilterPanelToolbar } from "../filterpanel/V2StandardTable.filterpanel.hook";
 import { useV2DesktopToolbar } from "../toolbar/V2StandardTable.toolbar.hook";
@@ -11,7 +12,11 @@ import { useV2TableSummary } from "../summary/V2StandardTable.summary.hook";
 import { useV2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import { useV2RowMenu } from "../hooks/V2StandardTable.menu.hook";
 import { useV2ColumnPreferences } from "../hooks/V2StandardTable.preferences.hook";
-import { useV2ViewPresets } from "../hooks/V2StandardTable.views.hook";
+import { useV2FilterPresets } from "../hooks/V2StandardTable.filterpresets.hook";
+import {
+  useV2ViewPresets,
+  type V2ViewPresetsApi,
+} from "../hooks/V2StandardTable.views.hook";
 import type { V2StandardTableProps } from "../V2StandardTable.type";
 
 /** Toàn bộ state và bảng TanStack của bản desktop; component chỉ lo JSX */
@@ -19,7 +24,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
   const { tableId, columns, getRowKey, rowActions, loading = false } = props;
   const enableRowSelection = props.enableRowSelection ?? false;
   const { t } = useV2Translation();
-  const { mode, state, columnsByKey, view, selection } =
+  const { mode, state, columnsByKey, fetchOptionsForKey, view, selection } =
     useV2TableController(props);
   const columnKeys = React.useMemo(() => columns.map((c) => c.key), [columns]);
   const prefs = useV2ColumnPreferences({
@@ -27,16 +32,23 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     columnKeys,
     storage: props.preferencesStorage,
   });
+  const expansion = useV2RowExpansion({
+    expandedRowKeys: props.expandedRowKeys,
+    onExpandedRowsChange: props.onExpandedRowsChange,
+  });
   const { columnDefs, columnOrder, columnVisibility } = useV2TableColumns({
     columns,
     prefs,
     enableRowSelection,
+    enableRowExpansion: Boolean(props.renderExpandedRow),
+    canExpandRow: props.canExpandRow,
+    expansion,
     startIndex: view.startIndex,
   });
   const filters = useV2HeaderFilters({
     tableId,
     columnsByKey,
-    fetchOptionsFor: view.fetchOptionsFor,
+    fetchOptionsForKey,
     filtersStrFor: view.filtersStrFor,
   });
   const scroll = useV2TableScroll(view.rows.length, loading);
@@ -62,7 +74,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     getCoreRowModel: getCoreRowModel(),
     getRowId: getRowKey,
     enableRowSelection,
-    columnResizeMode: "onEnd",
+    columnResizeMode: "onChange",
     state: {
       columnOrder,
       columnVisibility,
@@ -92,19 +104,48 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     canFilter: (c) => Boolean(c.filter && view.fetchOptionsFor(c)),
     committedSearchOf: (key) => state.query.columnSearch[key] ?? "",
   });
-  const viewPresets = useV2ViewPresets({
+  const views = useV2ViewPresets({
     tableId,
     viewModes: toolbarConfig?.viewModes,
     filterGroup: toolbarConfig?.filterGroup,
     prefs,
     storage: props.viewPresetStorage,
   });
+  const editorColumns = React.useMemo(
+    () =>
+      columns
+        .filter((c) => Boolean(c.filter && view.fetchOptionsFor(c)))
+        .map((c) => ({
+          key: c.key,
+          label: c.label,
+          filter: c.filter,
+          align: c.align,
+        })),
+    [columns, view.fetchOptionsFor],
+  );
+  const filterPresets = useV2FilterPresets({
+    tableId,
+    presets: views.customFilters,
+    setPresets: views.setCustomFilters,
+    filterGroup: toolbarConfig?.filterGroup,
+    query: state.query,
+    applyQuery: state.applyQuery,
+    editorSource: {
+      tableId,
+      columns: editorColumns,
+      fetchOptionsForKey,
+      filtersStrForQuery: view.filtersStrForQuery,
+      tableQuery: state.query,
+    },
+  });
+  const viewPresets: V2ViewPresetsApi = { ...views, filterPresets };
   const { isFullscreen, toolbarProps } = useV2DesktopToolbar(
     prefs,
     columnsByKey,
     toolbarConfig,
     () => selection.onRowSelectionChange({}),
     viewPresets,
+    props.enableColumnVisibility,
   );
 
   return {
@@ -112,6 +153,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     rowActions,
     state,
     selection,
+    expansion,
     view,
     scroll,
     table,
@@ -125,6 +167,7 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     hasSummary,
     totalPages,
     panel,
+    filterPresets,
     toolbarProps,
     isFullscreen,
     emptyLabel: props.emptyLabel ?? t("v2.table.empty", "Không có dữ liệu"),

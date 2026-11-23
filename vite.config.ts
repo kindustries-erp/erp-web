@@ -108,6 +108,7 @@ export default defineConfig(({ mode }) => {
           clientsClaim: true,
           globPatterns: ["**/*.{js,css,ico,png,svg}"],
           maximumFileSizeToCacheInBytes: 5000000,
+          navigateFallbackDenylist: [/^\/decks\//],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/api-vinvoice\.viettel\.vn\/.*/i,
@@ -138,6 +139,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@/v2": path.resolve(__dirname, "./src/v2"),
+        "@/v1": path.resolve(__dirname, "./src/v1"),
         "@": path.resolve(__dirname, "./src"),
       },
     },

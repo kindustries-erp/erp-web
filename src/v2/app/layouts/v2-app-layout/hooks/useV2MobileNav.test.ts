@@ -70,10 +70,10 @@ describe("useV2MobileNav hook", () => {
 
     const { result } = renderHook(() => useV2MobileNav());
 
-    // Không dùng danh sách dashboard cũ mà tự động fallback về 4 mục nghiệp vụ chuẩn
+    // Không dùng danh sách dashboard cũ mà tự động fallback về các mục nghiệp vụ chuẩn
     expect(result.current.currentSelectedIds).not.toContain(
       "sales-report-dashboard",
     );
-    expect(result.current.currentSelectedIds.length).toBeLessThanOrEqual(4);
+    expect(result.current.currentSelectedIds.length).toBeLessThanOrEqual(6);
   });
 });

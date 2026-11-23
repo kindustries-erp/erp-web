@@ -1,0 +1,9 @@
+import { {{listController}} } from "{{coreBarrel}}";
+import { {{moduleCamel}}Config } from "../{{moduleCamel}}.config";
+
+/** Trạng thái màn {{titleVi}}: toàn bộ logic nằm ở lõi {{family}}, module chỉ truyền cấu hình */
+export function {{hookName}}() {
+  return {{listController}}({{moduleCamel}}Config);
+}
+
+export type {{pageName}}State = ReturnType<typeof {{hookName}}>;

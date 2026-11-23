@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2AdminStatCard } from "./V2AdminStatCard";
 
 const meta: Meta<typeof V2AdminStatCard> = {
-  title: "Molecules/V2AdminStatCard",
+  title: "Components/Molecules/V2AdminStatCard",
   component: V2AdminStatCard,
 };
 

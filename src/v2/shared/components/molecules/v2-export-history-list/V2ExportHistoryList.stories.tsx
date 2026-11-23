@@ -3,7 +3,7 @@ import React from "react";
 import { V2ExportHistoryList } from "./V2ExportHistoryList";
 
 const meta: Meta<typeof V2ExportHistoryList> = {
-  title: "Components/Molecules/Data Display/V2ExportHistoryList",
+  title: "Components/Molecules/V2ExportHistoryList",
   component: V2ExportHistoryList,
   tags: ["autodocs"],
 };

@@ -1,0 +1,18 @@
+import { registerV2ModuleLocale } from "@/v2/shared/locales";
+
+/**
+ * Chữ hiển thị dùng chung của họ {{family}}. Khóa dạng `v2.{{localeNamespace}}.*`;
+ * module chỉ giữ tiêu đề và mô tả riêng.
+ */
+registerV2ModuleLocale("{{localeNamespace}}", {
+  vi: {
+    list: "Danh sách {{entity}}",
+    create: "Tạo {{entity}}",
+    empty: "Chưa có dữ liệu",
+  },
+  en: {
+    list: "{{entity}} list",
+    create: "Create {{entity}}",
+    empty: "No data yet",
+  },
+});

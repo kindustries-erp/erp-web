@@ -11,13 +11,15 @@ import {
 import type {
   TraceabilityGraphData,
   TraceabilityLayoutDirection,
-  TraceabilityNodeType,
 } from "../../types/traceability.type";
 import type {
   TraceabilityCanvasActions,
   TraceFlowEdge,
 } from "../../types/traceability.flow.type";
-import { computeTraceabilityLayout } from "../../utils/traceability.layout";
+import {
+  applySelectionToLayout,
+  computeBaseTraceabilityLayout,
+} from "../../utils/traceability.layout";
 
 /**
  * Bọc các callback của cha bằng hàm có tham chiếu ổn định: layout không tính lại
@@ -59,7 +61,6 @@ export interface UseTraceabilityCanvasOptions {
   graph: TraceabilityGraphData;
   direction: TraceabilityLayoutDirection;
   allowEdit: boolean;
-  allowedDocTypes?: TraceabilityNodeType[];
   isFullscreen: boolean;
   actions: TraceabilityCanvasActions;
 }
@@ -69,7 +70,6 @@ export function useTraceabilityCanvas({
   graph,
   direction,
   allowEdit,
-  allowedDocTypes,
   isFullscreen,
   actions,
 }: UseTraceabilityCanvasOptions) {
@@ -77,48 +77,63 @@ export function useTraceabilityCanvas({
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const { fitView } = useReactFlow();
 
-  // Khóa chuỗi để mảng loại chứng từ tạo bởi cha (mỗi lần render một tham chiếu mới) không làm layout tính lại
-  const allowedKey = allowedDocTypes?.join(",") ?? "";
-
-  const layout = useMemo(
+  // 1. Tầng hình học (Base Layout): chỉ tính toán tọa độ khi đồ thị, hướng hoặc quyền sửa thay đổi
+  const baseLayout = useMemo(
     () =>
-      computeTraceabilityLayout({
+      computeBaseTraceabilityLayout({
         graph,
         direction,
         allowEdit,
-        allowedDocTypes: allowedKey
-          ? (allowedKey.split(",") as TraceabilityNodeType[])
-          : undefined,
-        selectedNodeId,
         actions: stableActions,
       }),
-    [graph, direction, allowEdit, allowedKey, selectedNodeId, stableActions],
+    [graph, direction, allowEdit, stableActions],
+  );
+
+  // 2. Tầng chọn (Selection State): cập nhật cờ selected/animated tức thì trong O(N) mà không tính lại Barycenter
+  const layout = useMemo(
+    () => applySelectionToLayout(baseLayout, graph, selectedNodeId),
+    [baseLayout, graph, selectedNodeId],
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setNodes(layout.nodes);
     setEdges(layout.edges);
   }, [layout, setNodes, setEdges]);
 
-  // Căn khung nhìn khi đổi đồ thị, hướng bố cục, hoặc chuyển toàn màn hình
-  useEffect(() => {
-    const timer = setTimeout(
-      () => fitView({ duration: 400, padding: 0.2 }),
-      60,
-    );
-    return () => clearTimeout(timer);
-  }, [graph.rootId, direction, fitView]);
-
+  // Căn khung nhìn khi đổi đồ thị, hướng bố cục, chuyển toàn màn hình hoặc container resize
   useEffect(() => {
     const timer = setTimeout(
       () => fitView({ duration: 350, padding: 0.2 }),
-      120,
+      60,
     );
     return () => clearTimeout(timer);
-  }, [isFullscreen, fitView]);
+  }, [graph.rootId, direction, isFullscreen, fitView]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let timer: ReturnType<typeof setTimeout>;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (
+        entry &&
+        entry.contentRect.width > 50 &&
+        entry.contentRect.height > 50
+      ) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fitView({ duration: 250, padding: 0.2 }), 100);
+      }
+    });
+    observer.observe(el);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [fitView]);
 
   const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
     if (node.type === "stageGroupNode") return;
@@ -139,6 +154,7 @@ export function useTraceabilityCanvas({
   return {
     nodes,
     edges,
+    containerRef,
     onNodesChange,
     onEdgesChange,
     onNodeClick,

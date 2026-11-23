@@ -4,7 +4,7 @@ import { V2FormGrid } from "./V2FormGrid";
 type DemoValues = { code: string; name: string; note: string };
 
 const meta: Meta<typeof V2FormGrid<DemoValues>> = {
-  title: "Molecules/V2FormGrid",
+  title: "Components/Molecules/V2FormGrid",
   component: V2FormGrid,
 };
 

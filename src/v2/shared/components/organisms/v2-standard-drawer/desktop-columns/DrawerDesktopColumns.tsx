@@ -1,5 +1,8 @@
 import React from "react";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+} from "@/v2/shared/components/molecules/v2-tab-bar";
 import { V2Stack } from "@/v2/shared/components/atoms/v2-stack";
 import { cn } from "@/v2/shared/utils/cn";
 import type { useStandardDrawer } from "../hooks/V2StandardDrawer.hook";
@@ -38,7 +41,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
       >
         {props.leftTabs && props.leftTabs.length > 0 && (
           <V2TabBar
-            variant="sub"
+            variant={V2TabBarVariant.SUB}
             tabs={props.leftTabs}
             activeTabKey={h.activeLeftTabKey}
             onTabChange={h.handleLeftTabChange}
@@ -62,6 +65,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
           aria-hidden={isRightCollapsed}
           className={cn(
             "shrink-0 sm:gap-4 transition-all duration-300 ease-in-out overflow-x-hidden",
+            props.fillHeight && "overflow-y-auto max-h-full scrollbar-thin",
             props.stickyRightPanel && "lg:sticky lg:top-0",
             isRightCollapsed
               ? "w-0 lg:w-0 opacity-0 overflow-hidden !p-0 !m-0 pointer-events-none"
@@ -74,7 +78,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
           >
             {props.rightTabs && props.rightTabs.length > 0 && (
               <V2TabBar
-                variant="sub"
+                variant={V2TabBarVariant.SUB}
                 tabs={props.rightTabs}
                 activeTabKey={h.activeRightTabKey}
                 onTabChange={h.handleRightTabChange}

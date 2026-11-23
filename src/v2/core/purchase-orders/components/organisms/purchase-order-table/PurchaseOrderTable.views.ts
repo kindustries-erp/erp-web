@@ -1,0 +1,31 @@
+/** Chế độ xem hệ thống của bảng PO: cột hiển thị theo từng view. */
+export const purchaseOrderViewVisibility = {
+  overview: {
+    poNo: true,
+    orderDate: true,
+    expectedDate: false,
+    supplierName: true,
+    branchName: true,
+    totalAmount: true,
+    status: true,
+    paymentStatus: false,
+    inventoryStatus: true,
+    supplierInvoiceNo: false,
+    remarks: false,
+    createdAt: false,
+  },
+  all: {
+    poNo: true,
+    orderDate: true,
+    expectedDate: true,
+    supplierName: true,
+    branchName: true,
+    totalAmount: true,
+    status: true,
+    paymentStatus: true,
+    inventoryStatus: true,
+    supplierInvoiceNo: true,
+    remarks: true,
+    createdAt: true,
+  },
+} as const;

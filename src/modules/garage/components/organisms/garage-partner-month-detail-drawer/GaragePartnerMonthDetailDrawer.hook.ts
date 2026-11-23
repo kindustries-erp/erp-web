@@ -13,6 +13,8 @@ import {
 export function useGaragePartnerMonthDetailDrawerLogic({
   open,
   month,
+  horizon,
+  periodLabel,
   customerCode,
   branchId,
   initialDebtType = "receivables",
@@ -53,7 +55,8 @@ export function useGaragePartnerMonthDetailDrawerLogic({
       if (!customerCode) return [];
       return garageApi.getCasesByCustomer(branchId || "", customerCode);
     },
-    enabled: open && !initialCases && Boolean(customerCode),
+    // Theo mốc: không tải lại toàn bộ phiếu của khách (không lọc được theo mốc phía client)
+    enabled: open && !initialCases && Boolean(customerCode) && !horizon,
   });
 
   const monthCases = useMemo(() => {
@@ -64,10 +67,11 @@ export function useGaragePartnerMonthDetailDrawerLogic({
       const isCompleted =
         c.isCompleted !== false && Boolean(c.ngayHoanThanhCongViec);
       if (!isCompleted) return false;
+      if (horizon) return true; // danh sách đã được lọc theo mốc ở breakdown
       const dateStr = String(c.ngayHoanThanhCongViec || c.ngayPhatSinh || "");
       return dateStr.startsWith(monthKey);
     });
-  }, [initialCases, fetchedCases, monthKey]);
+  }, [initialCases, fetchedCases, monthKey, horizon]);
 
   const filteredCases = useMemo(() => {
     return filterClientItems(monthCases, tableHook, {
@@ -103,7 +107,7 @@ export function useGaragePartnerMonthDetailDrawerLogic({
     activeSubTab,
     setActiveSubTab,
     monthKey,
-    monthLabel,
+    monthLabel: periodLabel || monthLabel,
     dateFrom,
     dateTo,
     tableHook,

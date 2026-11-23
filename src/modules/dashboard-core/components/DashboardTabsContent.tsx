@@ -17,7 +17,12 @@ import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { money } from "@/shared/utils/format";
 import { Tabs, TabsContent } from "@/shared/components/ui/tabs";
-import { V2TabBar, V2Text, type V2TabItemData } from "@/v2/shared/components";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+  V2Text,
+  type V2TabItemData,
+} from "@/v2/shared/components";
 import { CashflowForecastDashboardWidget } from "@/modules/budget/components/CashflowForecastDashboardWidget";
 import {
   VinfastPartsSummaryCards,
@@ -165,7 +170,7 @@ export function DashboardTabsContent({
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <div className="mb-6 flex items-center justify-start">
         <V2TabBar
-          variant="sub"
+          variant={V2TabBarVariant.SUB}
           tabs={tabItems}
           activeTabKey={activeTab}
           onTabChange={setActiveTab}

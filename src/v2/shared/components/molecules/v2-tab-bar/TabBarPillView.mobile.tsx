@@ -4,7 +4,12 @@ import { GLASS_BAR_CLASS } from "@/v2/shared/ui/floating-surface";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { TabBarPillItem } from "./TabBarPillItem";
 import { useSlidingTabIndicator } from "./useSlidingTabIndicator";
-import type { TabBarPillViewProps, V2TabItemData } from "./V2TabBar.type";
+import {
+  V2TabBarVariant,
+  type TabBarPillViewProps,
+  type V2TabBarPillVariant,
+  type V2TabItemData,
+} from "./V2TabBar.type";
 
 export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
   tabs,
@@ -26,7 +31,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
     containerRef: subContainerRef,
     indicatorRef: subIndicatorRef,
     activeKey,
-    enabled: variant === "sub",
+    enabled: variant === V2TabBarVariant.SUB,
     extraDeps: [tabs],
   });
 
@@ -34,11 +39,11 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
     containerRef: headerContainerRef,
     indicatorRef: headerIndicatorRef,
     activeKey,
-    enabled: variant === "header",
+    enabled: variant === V2TabBarVariant.HEADER,
     extraDeps: [tabs],
   });
 
-  const renderPillItems = (v: "header" | "button-group" | "sub") =>
+  const renderPillItems = (v: V2TabBarPillVariant) =>
     tabs.map((tab: V2TabItemData) => {
       const tabKey = (tab.key ?? tab.id) || "";
       return (
@@ -53,7 +58,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
       );
     });
 
-  if (variant === "header") {
+  if (variant === V2TabBarVariant.HEADER) {
     return (
       <div
         role="tablist"
@@ -80,7 +85,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
             className="pointer-events-none absolute rounded-lg bg-slate-900 dark:bg-teal-500/15 dark:border dark:border-teal-500/35 dark:shadow-[0_2px_10px_rgba(20,184,166,0.18)] shadow-xs will-change-[left,width] transition-all duration-200 ease-out z-0"
             style={{ width: 0, opacity: 0 }}
           />
-          {renderPillItems("header")}
+          {renderPillItems(V2TabBarVariant.HEADER)}
         </div>
         {/* Subtle edge fade indicator for horizontal scroll hint */}
         <div
@@ -91,7 +96,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
     );
   }
 
-  if (variant === "button-group") {
+  if (variant === V2TabBarVariant.BUTTON_GROUP) {
     return (
       <div
         role="tablist"
@@ -104,7 +109,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
           className,
         )}
       >
-        {renderPillItems("button-group")}
+        {renderPillItems(V2TabBarVariant.BUTTON_GROUP)}
       </div>
     );
   }
@@ -135,7 +140,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
             className="pointer-events-none absolute rounded-md bg-white dark:bg-[#1e2430] border border-transparent dark:border-teal-500/30 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4)] will-change-[left,width] transition-all duration-180 ease-out z-0"
             style={{ width: 0, opacity: 0 }}
           />
-          {renderPillItems("sub")}
+          {renderPillItems(V2TabBarVariant.SUB)}
         </div>
       </div>
 

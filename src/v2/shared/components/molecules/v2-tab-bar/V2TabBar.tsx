@@ -1,10 +1,10 @@
 import * as React from "react";
-import { cn } from "@/v2/shared/utils/cn";
-import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { V2TabItem } from "../v2-tab-item";
 import { TabBarPageView } from "./TabBarPageView";
+import { TabBarPagePillView } from "./TabBarPagePillView";
 import { TabBarPillView } from "./TabBarPillView";
-import type { V2TabBarProps } from "./V2TabBar.type";
+import { TabBarChipView } from "./TabBarChipView";
+import { TabBarAppView } from "./TabBarAppView";
+import { V2TabBarVariant, type V2TabBarProps } from "./V2TabBar.type";
 
 export const V2TabBar: React.FC<V2TabBarProps> = ({
   tabs,
@@ -13,15 +13,18 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
   onTabSelect,
   onTabChange,
   onTabClose,
-  variant = "app",
+  onTabsReorder,
+  variant = V2TabBarVariant.APP,
   extra,
   className,
   ariaLabel,
   stretch,
+  density,
+  metricMode,
+  equalWidth,
+  indicator,
   ...props
 }) => {
-  const { t } = useV2Translation();
-  const scrollRef = React.useRef<HTMLDivElement>(null);
   const activeKey =
     activeTabKey ?? activeTabId ?? tabs?.[0]?.id ?? tabs?.[0]?.key ?? "";
 
@@ -33,13 +36,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
     [onTabSelect, onTabChange],
   );
 
-  const handleWheel = React.useCallback((e: React.WheelEvent) => {
-    if (scrollRef.current && e.deltaY !== 0) {
-      scrollRef.current.scrollLeft += e.deltaY;
-    }
-  }, []);
-
-  if (variant === "page") {
+  if (variant === V2TabBarVariant.PAGE) {
     return (
       <TabBarPageView
         tabs={tabs}
@@ -52,7 +49,41 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
     );
   }
 
-  if (variant === "header" || variant === "button-group" || variant === "sub") {
+  if (variant === V2TabBarVariant.PILL) {
+    return (
+      <TabBarPagePillView
+        tabs={tabs}
+        activeKey={activeKey}
+        onSelect={handleSelect}
+        extra={extra}
+        className={className}
+        ariaLabel={ariaLabel}
+      />
+    );
+  }
+
+  if (variant === V2TabBarVariant.STATUS_CHIP) {
+    return (
+      <TabBarChipView
+        tabs={tabs}
+        activeKey={activeKey}
+        onSelect={handleSelect}
+        extra={extra}
+        className={className}
+        ariaLabel={ariaLabel}
+        density={density}
+        metricMode={metricMode}
+        equalWidth={equalWidth}
+        indicator={indicator}
+      />
+    );
+  }
+
+  if (
+    variant === V2TabBarVariant.HEADER ||
+    variant === V2TabBarVariant.BUTTON_GROUP ||
+    variant === V2TabBarVariant.SUB
+  ) {
     return (
       <TabBarPillView
         tabs={tabs}
@@ -68,41 +99,17 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
   }
 
   return (
-    <div
-      data-testid="v2-tab-bar"
-      role="tablist"
-      aria-label={ariaLabel || t("v2.tabBar.ariaLabel", "Thanh tab đa nhiệm")}
-      className={cn(
-        "v2-tab-bar flex h-9 min-h-[36px] w-full bg-background/80 dark:bg-[#18181b]/80 backdrop-blur-md px-4 sm:px-6 select-none flex-shrink-0 rounded-b-2xl items-center justify-between",
-        className,
-      )}
+    <TabBarAppView
       {...props}
-    >
-      <div
-        ref={scrollRef}
-        onWheel={handleWheel}
-        className="flex items-center flex-1 h-full overflow-x-auto overflow-y-hidden scrollbar-none"
-      >
-        {tabs.map((tab) => {
-          const tabKey = (tab.id ?? tab.key) || "";
-          return (
-            <V2TabItem
-              key={tabKey}
-              id={tabKey}
-              label={typeof tab.label === "string" ? tab.label : String(tabKey)}
-              icon={tab.icon as any}
-              isActive={activeKey === tabKey}
-              isClosable={tab.isClosable ?? true}
-              onClick={() => handleSelect(tabKey)}
-              onClose={() => onTabClose?.(tabKey)}
-            />
-          );
-        })}
-      </div>
-      {extra && (
-        <div className="flex items-center gap-2 shrink-0 ml-auto">{extra}</div>
-      )}
-    </div>
+      tabs={tabs}
+      activeKey={activeKey}
+      onSelect={handleSelect}
+      onTabClose={onTabClose}
+      onTabsReorder={onTabsReorder}
+      extra={extra}
+      className={className}
+      ariaLabel={ariaLabel}
+    />
   );
 };
 V2TabBar.displayName = "V2TabBar";

@@ -1,2 +1,1 @@
-export * from "./CoaCombobox";
-export * from "./types";
+export * from "@/v1/components/CoaCombobox/index";

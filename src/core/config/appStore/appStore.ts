@@ -120,6 +120,15 @@ export const useAppStore = create<AppState>()(
             "dashboard",
             instanceIndex === 2 ? { _i: "2" } : undefined,
           );
+        } else if (
+          page === "garage-procurement" &&
+          !targetPath.includes("tab=")
+        ) {
+          targetPath = pageToPath(
+            "garage-procurement",
+            "requests",
+            instanceIndex === 2 ? { _i: "2" } : undefined,
+          );
         }
         const current =
           typeof window !== "undefined"

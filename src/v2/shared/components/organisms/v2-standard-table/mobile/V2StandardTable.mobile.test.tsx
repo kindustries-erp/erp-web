@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, within } from "@testing-library/react";
 import { V2StandardTableMobile } from "./V2StandardTable.mobile";
 import {
+  makeColumns,
   makeRows,
   mockViewport,
   renderTable,
@@ -23,6 +24,49 @@ describe("V2StandardTableMobile", () => {
     expect(within(first).getByText("Alpha")).toBeInTheDocument();
     expect(within(first).getByText("Số lượng")).toBeInTheDocument();
     expect(within(first).getByText("Ngày")).toBeInTheDocument();
+  });
+
+  it("renders status badge next to STT in card header", () => {
+    const columnsWithBadge: NonNullable<
+      Parameters<typeof render>[0]
+    >["columns"] = [
+      ...makeColumns(),
+      {
+        key: "status",
+        label: "Trạng thái",
+        mobileSlot: "badge",
+        cell: () => <span>Đã duyệt</span>,
+      },
+    ];
+    render({ columns: columnsWithBadge });
+    const first = screen.getAllByRole("listitem")[0];
+    expect(within(first).getByText("#1")).toBeInTheDocument();
+    expect(within(first).getByText("Đã duyệt")).toBeInTheDocument();
+  });
+
+  it("renders multiple badges side-by-side next to STT in card header", () => {
+    const columnsWithBadges: NonNullable<
+      Parameters<typeof render>[0]
+    >["columns"] = [
+      ...makeColumns(),
+      {
+        key: "status",
+        label: "Trạng thái",
+        mobileSlot: "badge",
+        cell: () => <span>Đã duyệt</span>,
+      },
+      {
+        key: "orderingStatus",
+        label: "Tiến độ đặt",
+        mobileSlot: "badge",
+        cell: () => <span>Một phần</span>,
+      },
+    ];
+    render({ columns: columnsWithBadges });
+    const first = screen.getAllByRole("listitem")[0];
+    expect(within(first).getByText("#1")).toBeInTheDocument();
+    expect(within(first).getByText("Đã duyệt")).toBeInTheDocument();
+    expect(within(first).getByText("Một phần")).toBeInTheDocument();
   });
 
   it("scrolls the card list inside its own container, keeping pagination fixed", () => {
@@ -135,16 +179,29 @@ describe("V2StandardTableMobile", () => {
     expect(onRefresh).toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Toàn màn hình" })).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Bộ lọc dữ liệu" }));
+    fireEvent.click(screen.getByTestId("v2-table-mobile-search-filter-btn"));
     expect(screen.queryByRole("option", { name: /Tổng quan/ })).toBeNull();
     fireEvent.click(screen.getByRole("option", { name: /Mới/ }));
     expect(onChange).toHaveBeenCalledWith("new");
   });
 
-  it("opens the column filter panel in a mobile modal", () => {
-    render({ toolbar: { filterPanel: {} } });
-    fireEvent.click(screen.getByRole("button", { name: "Bộ lọc" }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/Bộ lọc theo cột/)).toBeInTheDocument();
+  it("opens unified search and column filter bottom sheet on mobile", () => {
+    const onQueryChange = vi.fn();
+    render({
+      toolbar: { search: {}, filterPanel: {} },
+      onQueryChange,
+    });
+    fireEvent.click(screen.getByTestId("v2-table-mobile-search-filter-btn"));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText(/Bộ lọc theo cột/)).toBeInTheDocument();
+
+    const searchInput = within(dialog).getByLabelText("Tìm kiếm...");
+    fireEvent.change(searchInput, { target: { value: "HD-001" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Áp dụng" }));
+
+    expect(onQueryChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ search: "HD-001" }),
+    );
   });
 });

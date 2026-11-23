@@ -28,7 +28,7 @@ src/v2/shared/
     │   ├── v2-table-selection-chip/      ☑ (N) ▾ ✕; menu bơm qua renderMenu
     │   ├── v2-view-mode-combobox/        Trigger + popover: nhóm lọc `filterGroup` (trên) và danh sách chế độ xem (dưới), chỉ UI, không lưu
     │   ├── v2-filter-card/               Card thu gọn/mở cho một cột (icon theo kiểu dữ liệu, chấm active); children chỉ render khi mở
-    │   └── v2-filter-panel/              Shell panel lọc: header, reset, đóng, ô tìm cột, chips, extraContent, empty state
+    │   └── v2-filter-column-search/      Ô tìm cột cần lọc (dùng chung panel lọc và editor trong hộp thoại)
     ├── organisms/v2-standard-table/
     │   V2StandardTable.tsx               Switcher theo useViewport
     │   .desktop.tsx / .mobile.tsx        Bảng spreadsheet / danh sách card
@@ -41,7 +41,7 @@ src/v2/shared/
     │   hooks/.views.hook.ts / .views.sync.hook.ts / .views.dialog.hook.ts   Trạng thái view tùy chỉnh, đồng bộ storage, trạng thái hộp thoại
     │   .fullscreen.hook.ts               Bật/tắt fullscreen (ESC thoát)
     │   .grid.tsx                         Phần <table> (colgroup + header + body)
-    │   .filterpanel.tsx / .filterpanel.hook.ts / v2ActiveFilterChips.ts   Panel lọc theo cột: card = V2ColumnHeaderFilterPanel, chips, mở card nào truy vấn options card đó
+    │   filterpanel/filterdrawer/ (V2TableFilterDrawer: switcher, .desktop, .mobile, .body, .actions, .groups, .ui.hook) / .filterpanel.hook.ts / v2ActiveFilterChips.ts   Drawer lọc theo cột: card = V2ColumnHeaderFilterPanel, chips, mở card nào truy vấn options card đó
     │   .hook.tsx                         useV2TableColumns (STT, cột chọn, cột dữ liệu TanStack)
     │   v2TableFilter / v2TableEvaluate / v2TableClient / v2TableData / v2TableQuery / v2ColumnPreferences
     │   v2HeaderFilterBuilder.ts          headerFilter(label), .date, .amount, .qty, .select
@@ -49,7 +49,7 @@ src/v2/shared/
     └── templates/v2-module-page/               Khung trang `V2ModulePage`: `V2PageHeader` (icon, tiêu đề, mô tả, slot toolbar theo tab, actions) + tab (`kind`: `list` dựng `V2StandardTable`, `dashboard` render nội dung) + vùng nội dung full-height (`V2Stack`)
 ```
 
-Quy tắc tầng đã áp dụng (theo `ui-structure`):
+Quy tắc tầng đã áp dụng (theo `erp-ui-structure`):
 - Molecule **không import molecule khác**: popup dùng primitive `shared/ui` (`Popover`) và `V2Button` (atom) thay vì `V2Popover`/`V2Dropdown`.
 - Molecule **0% API**: `V2ColumnHeaderFilter` nhận `optionsState` qua props; hook React Query nằm ở organism (`hooks/V2StandardTable.options.hook.ts`) và chỉ truy vấn cột đang mở popup.
 - Không dùng `<button>` thuần trong code bảng: dùng `V2Button`.
@@ -125,7 +125,7 @@ const columns = useMemo<V2Column<Order>[]>(() => [
   `[Chế độ xem / viewModes]` ➔ `[Chip chọn hàng loạt]` ➔ `[Xóa bộ lọc]` ➔ **`[Tùy chỉnh cột (V2ColumnToggle)]`** ➔ **`[Bộ lọc (V2TableFilterButton)]`** ➔ `[Toàn màn hình]` ➔ `[Làm mới (V2ToolbarIconButton)]` ➔ `[Hành động chính (V2SplitButton)]`.
   Quy chuẩn: **Nút Cột luôn đứng TRƯỚC nút Bộ lọc**.
 - **Nút icon toolbar luôn dùng `V2ToolbarIconButton`** (Lọc, Cột, Toàn màn hình, Làm mới); không tự viết `V2Button` icon mới cho cụm này.
-- **Panel lọc** (`toolbar.filterPanel`): cột bên phải `w-80`, co bảng lại, nằm trong vùng fullscreen. Mỗi cột có `filter` spec + nguồn options là một `V2FilterCard`, thân là `V2ColumnHeaderFilterPanel` (cùng mô hình chờ "Áp dụng" như popup header, một nguồn logic). Chip "Đang lọc" dựng bởi `v2ActiveFilterChips` (một chip/cột, gỡ = `clearColumn`). `extraContent` cho bộ lọc theo trang.
+- **Drawer lọc** (`toolbar.filterPanel`): Sheet nổi bên phải (desktop) hoặc bottom sheet 85dvh (mobile), chọn bản theo `useViewport`. Bảng phía sau vẫn thấy và cập nhật live khi lọc. Header có tab **Cột | Bộ lọc đã lưu** (tab thứ hai chỉ có trên desktop, chỉ chọn/bỏ chọn preset; tạo/sửa preset vẫn ở thanh công cụ). Thân tab Cột: ô tìm cột, chip "Đang lọc" (`v2ActiveFilterChips`, một chip/cột, gỡ = `clearColumn`), danh sách card gom theo loại giá trị (`groupFilterColumns`: văn bản, chọn/trạng thái, ngày, số), mỗi nhóm là một `DrawerSection`. Footer: "Xóa tất cả bộ lọc" (vô hiệu khi không có điều kiện) và "Đóng". Mỗi cột có `filter` spec + nguồn options là một `V2FilterCard`, thân là `V2ColumnHeaderFilterPanel` (cùng mô hình chờ "Áp dụng" như popup header). `extraContent` cho bộ lọc theo trang. Drawer dựng từ molecule drawer chuẩn (`V2DrawerSheet`, `DrawerHeader`, `V2TabBar`, `DrawerSection`, `DrawerFooter`, `V2BottomSheet`), không import `V2StandardDrawer` vì organism không import organism.
 
 ## 3. Quy tắc cố định (giữ khi sửa)
 
@@ -138,8 +138,10 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - Cột đệm cuối (116px) hấp thụ phần dư và chứa hover pill (`sticky right-0 z-20 pointer-events-none`, pill `pointer-events-auto`).
 - Chỉ có một giao diện (spreadsheet), không có prop `variant`.
 
-**Phân trang (khớp `TablePagination` V1):**
-- Nằm **ngoài khung bảng**, `mt-2 shrink-0`. Trái: "Hiển thị [20▾] hàng/trang" (chọn số dòng bằng `ui/popover`, dấu check ở giá trị hiện tại, mốc `[20,50,100,200]`). Giữa: `a–b / total` (ẩn dưới 480px). Phải: `‹ 1 … 4 [5] 6 … N ›` bằng `V2PageButton`.
+**Phân trang (khớp `TablePagination` V1 trên desktop; Bottom Sheet trên mobile):**
+- Nằm **ngoài khung bảng**, `mt-2 shrink-0`. Hỗ trợ enum `V2TablePaginationVariant` (`AUTO` / `DESKTOP` / `MOBILE`).
+- **Desktop**: Trái: "Hiển thị [20▾] hàng/trang" (chọn số dòng bằng `ui/popover`, dấu check ở giá trị hiện tại, mốc `[20,50,100,200]`). Giữa: `a–b / total` (ẩn dưới 480px). Phải: `‹ 1 … 4 [5] 6 … N ›` bằng `V2PageButton`.
+- **Mobile**: Thanh compact 1 dòng gồm Prev / Trigger Pill (`Trang X / Y • a–b / total`) / Next (`V2Button` cao `h-11`); chạm Trigger mở `V2BottomSheet` chọn số dòng/trang, nhảy Trang đầu/Trang cuối, lưới chọn trang (khi `totalPages > 20`, tự chia cụm **Range Chips** `1–20`, `21–40`… kèm ô nhập `V2Input` `V2Size.LG` nhảy thẳng tới trang). Thanh tìm kiếm và bộ lọc mobile (`V2StandardTableMobileToolbar`) gom chung vào `V2TableSearchFilterSheet` (`V2BottomSheet`); thanh tab trang (`TabBarPageView` của `V2TabBar`) trên mobile mở `TabBarPageViewSheet`.
 - Cửa sổ trang do `getPageWindow(page, totalPages, 5)` (thuật toán V1: trang đầu/cuối kèm `…`).
 - Mặc định page size theo `innerHeight` (< 900 → 20, ≥ 900 → 50).
 
@@ -195,14 +197,15 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - Popover của ô tổng (`V2SubtotalSummaryCell`) rộng 320px, giữ glass/blur; nhãn `truncate`, giá trị `shrink-0 whitespace-nowrap` để không tràn.
 - Giá trị (`summary/V2StandardTable.summary.ts` + `summary/V2StandardTable.summary.hook.ts`):
   - `mode="client"`: tự tính từ toàn bộ dòng đã lọc/sắp xếp (subtotal trang, lũy kế, tổng).
-  - `mode="server"`: subtotal trang lấy từ `items`; **tổng toàn bộ phải truyền qua `summary.total`** (từ API); **lũy kế được bảng tự tích lũy theo từng trang**, reset khi đổi filter/sort/pageSize. Trang chưa đi qua thì không có lũy kế.
+  - `mode="server"`: ưu tiên số của API (`summary.total`, `summary.pageSubtotal`, `summary.cumulative`); thiếu số thì bảng tự tính (subtotal cộng từ `items`; lũy kế tích lũy theo các trang đã xem, reset khi đổi filter/sort/pageSize, trang chưa đi qua thì không có lũy kế). `null` từ API hiển thị "—".
+- **Hợp đồng server (`summary_keys`)**: `V2ModuleListTab` lấy key từ mọi cột có `summary` (trừ `variant: "label"`) và gắn vào `query.summaryKeys` khi gọi `tab.useData`. API client gọi `toSummaryKeysParam(query)` (`shared/utils/toSummaryKeysParam.ts`), không tự ghép chuỗi. Response: `summaries[key] = { total, pageSubtotal, cumulative }` hoặc `null` (`V2SummaryMetric`, `shared/types/v2-table.ts`). Không dùng số trơn như trước.
 - Story: `V2StandardTable` → `WithSummary` (client), `WithSummaryServer`, `BenchmarkParity` (so khớp chuẩn mực V1); template → `V2ModulePage` → `ListAndDashboard`.
 
 ## 8. Tìm kiếm toàn cục, query trên URL và dữ liệu từ khung trang
 
 - `V2TableQuery.search?: string` và `toolbar.search = { placeholder? }`: ô tìm kiếm (`V2SearchInput`, debounce 300ms, Enter/nút xóa áp dụng ngay) ở đầu cụm toolbar. Đổi tìm kiếm thì về trang 1; `resetAll` xóa luôn tìm kiếm. Chế độ `client` lọc theo giá trị mọi cột (dấu `;` nhiều từ khóa, `"..."` khớp chính xác); chế độ `server` chỉ báo `query.search`.
 - Bảng là uncontrolled: đồng bộ URL bằng `useV2TableUrlState` (truyền `initialQuery`, `onQueryChange`). Khi bảng nằm trong `V2ModulePage`, khung đã làm sẵn với tiền tố là khóa tab.
-- Chế độ `server` với hàng tổng: tổng toàn bộ do hook trả về trong `summaries` của `useData`, khung gắn vào `summary.total` của cột.
+- Chế độ `server` với hàng tổng: hook trả `summaries` (metric theo key) trong `useData`, khung gắn vào `summary.total/pageSubtotal/cumulative` của cột. Không tự cộng dồn tổng ở FE khi API đã trả số.
 - Bảng nhúng trong drawer: xem `v2-foundation` mục 5.
 
 ## 9. Playground trên Storybook (nguồn prop là type gốc)
@@ -236,3 +239,31 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - **Trang hóa đơn** (`src/v2/modules/finance-invoice`): hai bảng IN và OUT **mỗi bảng lưu view riêng** (theo `tableId` `invoice-shape-IN|OUT`, giống cách lưu cột). Trang khôi phục state ban đầu từ bảng IN. Một view tạo ở bảng IN sẽ không hiện ở bảng OUT. Dùng chung một khóa lưu cho cả hai sẽ làm hai bảng ghi đè dữ liệu của nhau.
 - Hộp thoại (`V2ViewConfigDialog`): tên bắt buộc, không trùng (không phân biệt hoa thường), ít nhất 1 cột hiển thị (cột `canHide: false` luôn tính là hiển thị). Xóa view có `V2ConfirmModal` variant `danger`; xóa view đang chọn thì quay về view hệ thống đầu tiên.
 - i18n: `v2.table.filterGroupTitle`, `viewModeSection`, `createViewTitle`, `editViewTitle`, `viewDeleteTitle`, `viewDeleteConfirm`, `viewNameLabel`, `viewNamePlaceholder`, `viewColumnsLabel`, `selectAllColumns`, `clearAllColumns`, `viewNameRequired`, `viewNameDuplicate`, `viewColumnsRequired` (vi + en). Nút Lưu/Hủy dùng `v2.common.save` / `v2.common.cancel`.
+
+## 13. Bộ lọc tùy chỉnh (nút "Tạo bộ lọc mới" trong nhóm Bộ lọc có sẵn, desktop)
+
+- **Snapshot**: `V2FilterPreset` = `{ key, label, groupKey?, query }`, `query` gồm `sort/q/cf/cs/co/dr` (cùng định dạng URL V2, bỏ `page`/`size`). Dùng `toPresetQuery` / `fromPresetQuery` (`utils/v2FilterPresets.ts`), không có serializer riêng.
+- **Lưu**: trong `V2ViewPresetState.customFilters`, cùng object với chế độ xem nên đi chung một lần đồng bộ server (`views.customFilters`). Dữ liệu cũ không có trường này coi là rỗng. Giới hạn 50 (`V2_FILTER_PRESETS_MAX`, khớp `customFiltersMax` ở API). Limit query field 4000 ký tự ở API.
+- **Hook**: `useV2FilterPresets` (`hooks/V2StandardTable.filterpresets.hook.ts`), nối trong `desktop/V2StandardTable.desktop.hook.ts`. Bộ lọc đang chọn được suy ra (so điều kiện hiện tại với snapshot và `groupKey` với bộ lọc gốc), không lưu riêng. Có ô `filterPresets` trong `viewPresets`.
+- **Chọn bộ lọc**: cùng `groupKey` thì `applyQuery` tại chỗ (`useV2TableState.applyQuery`: thay toàn bộ điều kiện + sort, về trang 1, giữ pageSize). Khác `groupKey` còn trong nhóm: ghi snapshot vào `utils/v2PendingFilterPreset.ts` rồi `filterGroup.onChange(groupKey)`; bảng mới đọc pending khi mount (và khi `filterGroup.activeKey` đổi) rồi áp. Không đi qua `filterGroup.onChange` cho điều kiện thường, vì trang xử lý key lạ như trạng thái.
+- **Chỉ desktop**: mobile không có cụm toolbar nên không có mục này. Bộ lọc tùy chỉnh không đưa vào dialog "gắn Bộ lọc có sẵn" của chế độ xem.
+- **Điều kiện được lưu**: lọc cột, tìm trong cột, toán tử, khoảng ngày, tìm kiếm chung, sắp xếp. Bộ lọc custom **bắt buộc có ít nhất một điều kiện** (`hasConditions`), nền chỉ là bối cảnh. Lý do: không có điều kiện thì mục custom trùng hệt mục có sẵn. Dialog báo "Thêm ít nhất một điều kiện lọc để lưu" ngay trong modal, sửa được tại chỗ. Bộ lọc cũ chỉ có nền vẫn hiện nhưng không bao giờ sáng (`findMatchingPreset` bỏ qua).
+- **Một danh sách, chỉ một mục được chọn**: bộ lọc custom là mục thứ hai trong cùng `listbox` "Bộ lọc có sẵn" của `V2FilterGroupList` (prop `custom`), không có đường kẻ riêng. Mục có sẵn được chọn khi không có custom nào khớp; custom đang chọn thì mục có sẵn không được chọn. Bấm mục có sẵn khi đang ở custom: gọi `custom.onClear` (`filters.clearActive`) rồi mới `filterGroup.onChange`. `clearActive` đặt snapshot **rỗng** vào pending store rồi `applyQuery({})`; snapshot rỗng còn sót (bảng không dựng lại) được dọn sau một tick. Lý do phải có pending: đổi nhóm làm bảng dựng lại (`resetKey` đổi) và bảng mới đọc `initialQuery` từ URL, mà URL chỉ ghi qua `useEffect` nên chưa kịp xóa điều kiện cũ. Không có pending thì điều kiện của custom quay lại và bảng trống. Chọn lại custom khác nhóm đã dùng cùng cơ chế. Hàng custom có sửa/xóa khi hover (`V2ViewModeRowActions`, dùng chung với danh sách chế độ xem).
+- **Dialog tạo/sửa** (`toolbar/V2StandardTable.filterdialog.tsx`, `V2FilterPresetDialog`): cùng bố cục với dialog chế độ xem. Thứ tự: tên (`V2PresetNameField`, tên bắt buộc và không trùng) → nền "Bộ lọc có sẵn" (`V2ViewFilterField`, chọn được) → editor điều kiện (`toolbar/V2StandardTable.filterdialog.editor.tsx`, `V2FilterPresetEditor`). Editor dùng `useV2TableState` làm bản nháp riêng (không đẩy lên bảng cho tới khi lưu) và `useV2HeaderFilters` cho nguồn options; hiển thị bằng `V2TableFilterCards`, cùng card với panel lọc bên phải. Nút "Dùng điều kiện đang áp dụng" lấy điều kiện của bảng vào nháp; "Xóa điều kiện" đặt lại nháp. Sửa: nháp khởi tạo từ snapshot đã lưu. Không còn checkbox "Cập nhật theo điều kiện hiện tại".
+- **Lưu**: `create` / `update` nhận `{ label, groupKey, query }` (`V2FilterPresetDraft`); `query` do `toPresetQuery(nháp)` sinh, không đọc điều kiện bảng ngầm.
+- **Nút tạo**: "Tạo bộ lọc mới" và "Tạo chế độ xem mới" đều dùng `V2ViewModeCreateButton` (molecule `v2-view-mode-combobox/V2ViewModeCombobox.create.tsx`). Nút hiển thị ngắn "Tạo mới" (`v2.table.createNew`), `aria-label` và `title` là nhãn đầy đủ. Nút nằm **cùng hàng tiêu đề nhóm, căn phải** qua `V2ViewModeSectionHeader` (`V2ViewModeCombobox.header.tsx`): "BỘ LỌC CÓ SẴN" (`V2FilterGroupList` nhận `action`) và "CHẾ ĐỘ XEM". Nút tạo bộ lọc bị khóa khi đủ giới hạn. Nhãn trigger dùng tên bộ lọc khi đang khớp.
+- **Chung card, chip, ô tìm cột**: `useV2FilterCardsState` (`filterpanel/V2StandardTable.filtercards.hook.ts`: một card mở một lúc vì mỗi lần mở card tải options của cột đó, ô tìm cột, cột hiển thị) được cả `useV2FilterPanel` và editor dùng. `V2TableFilterChips` (`filterpanel/V2StandardTable.filterchips.tsx`) là hàng chip; `V2FilterColumnSearch` (molecule `v2-filter-column-search/`) là ô tìm cột. Không viết lại các khối này trong màn khác.
+- **Editor trong dialog**: danh sách card đặt trong `grid` có `max-h-[min(22rem,50vh)]` và cuộn. Không để card nằm trong vùng flex có chiều cao cố định, vì flex sẽ co card và cắt nội dung.
+- **Hàng chọn dùng chung**: `V2ViewModeOption` (`V2ViewModeCombobox.option.tsx`) là dòng ✓ cho cả chế độ xem và bộ lọc; không viết lại `OptionButton`.
+- **Nút "Bộ lọc (n)" trên toolbar**: chỉ mở được panel khi toolbar có `filterPanel` (ví dụ `filterPanel: {}`). Bảng procurement đã bật; bảng mới có điều kiện lọc mà thiếu `filterPanel` thì nút không làm gì.
+- **Hằng số**: nhóm "Tất cả" là `V2_FILTER_GROUP_ALL_KEY` (`V2ViewModeCombobox.helper.ts`), không viết chuỗi `"all"` trần.
+- **Tách action**: `createV2ViewActions` (`hooks/V2StandardTable.views.actions.hook.ts`) giữ logic chọn/sửa/lưu/xóa chế độ xem, để `views.hook.ts` dưới 180 dòng.
+- i18n: `v2.table.createFilterPreset`, `filterPresetsSection`, `editFilterPreset`, `deleteFilterPreset`, `filterPresetCreateTitle` / `filterPresetEditTitle`, `filterPresetName*`, `filterPresetBase` đã xóa (nền dùng `viewFilterLabel`), `filterPresetConditions`, `filterPresetUseCurrent`, `filterPresetClearConditions`, `filterPresetEmpty`, `filterPresetDeleteTitle` / `filterPresetDeleteConfirm` (vi + en).
+
+## 14. Hợp đồng response API v2 (list và column-options)
+
+- List: `{ items, pagination: { page, pageSize, total, totalPages, next, previous }, summaries?, extraData? }`. Web đọc `res.pagination.total`, không đọc `total`/`totalPages` ở gốc. Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`).
+- Column-options: `{ items, pagination }`. API client đổi sang kiểu bảng `V2FetchOptionsResult` (`items`, `total`, `next`) bằng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`); `V2StandardTable` không đổi.
+- Dữ liệu phụ chung của list (ví dụ `unreadCount`) nằm trong `extraData`, đọc `res.extraData.<key>`; không chờ key phẳng ở gốc.
+- Route API v2 là `/api/v2/<tên module>`; API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`).
+

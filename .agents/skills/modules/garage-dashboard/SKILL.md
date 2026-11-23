@@ -37,8 +37,9 @@ Module `garage-dashboard` (được hiện thực tại `src/kgara-api-core/` v�
   - `revenue`, `cost`, `profit`, `margin`: Chỉ số tài chính lãi gộp.
   - `paid`, `receivable`, `collectionRate`: Tiền khách đã thanh toán, công nợ phải thu và tỷ lệ hoàn tất thu tiền (%).
   - `paidCost`, `payableCost`, `costPaymentRate`: Tiền đã chi trả chi phí/NCC, công nợ phải trả NCC và tỷ lệ chi trả (%).
-- **Chỉ số KPI Sparklines theo Chu kỳ (`getCheckpointKpis`)**:
-  - Phân tích 3 chu kỳ: **Tháng này** (Sparkline 6 tháng), **Tuần này** (Sparkline 4 tuần), **Hôm nay** (Sparkline 7 ngày) theo Ngày hoàn thành.
+- **Chỉ số KPI theo Chu kỳ (`getCheckpointKpis` & `GarageStatsCards.tsx`)**:
+  - Phân tích 3 chu kỳ: **Tháng này**, **Tuần này**, **Hôm nay** theo Ngày hoàn thành.
+  - Hiển thị 2 Donut chart song song (Phân loại xe & Tiến độ thu tiền), icon đặt ngang hàng với nhãn tiêu đề (`[Icon] XE THÁNG NÀY`), và lưới 4 card giai đoạn tiếp nhận (Tiếp nhận, Báo giá, Đang sửa, Hoàn tất) hiển thị **số xe khác nhau** (đếm theo biển số, không phải số phiếu) kèm số tiền phát sinh trong ngoặc đơn (ví dụ: `11 (124tr)`).
   - Hỗ trợ click-to-drilldown xem danh sách phiếu dịch vụ chi tiết hoàn thành trong kỳ (`getCheckpointCases`).
 - **Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (`GarageConversionFunnelCard.tsx`)**:
   - Hub phân tích 3 tầng tích hợp toàn diện:
@@ -48,6 +49,11 @@ Module `garage-dashboard` (được hiện thực tại `src/kgara-api-core/` v�
       - Donut Chart Cơ Cấu Nghiệp Vụ (ERP) (4 nhóm ERP: Sửa chữa chung, Ký gửi/Nội bộ, OJ Ngoài, Khác).
       - Donut Chart Phân Bổ Trạng Thái Phiếu DV (Hoàn tất, Đang xử lý, Báo giá, Tiếp nhận, Hủy).
     - **Tầng 3**: Bảng `<DataTable variant="spreadsheet">` chi tiết 4 phân loại ERP chuẩn `/standardize-table` (STT `#` 40px center, No Blue Mandate, SubtotalSummaryCell footer).
+    - **Tương tác Click-to-Drilldown Phân Loại ERP & Card Doanh Thu**:
+      - Click vào hàng trên bảng Phân loại ERP (hoặc lát cắt Donut Cơ Cấu Nghiệp Vụ) sẽ mở `GarageCheckpointDrawer` (`GarageCasesDetailDrawer`) với `classification` tương ứng, hiển thị toàn bộ phiếu dịch vụ thuộc phân loại đó trong kỳ (tất cả các giai đoạn phễu tiếp nhận: Báo giá, Đang làm, Hoàn thành, Đã hủy).
+      - Sub-tab trên thanh công cụ chuyển thành **5 Trạng thái Phễu Chuyển Đổi**: `Tổng tiếp nhận`, `Báo giá`, `Đang làm (Dự thu)`, `Hoàn thành (Doanh thu)`, `Đã hủy` kèm badge đếm số lượng phiếu tương ứng cho từng trạng thái.
+      - Khi click Card Doanh thu (`classification` không truyền hoặc là `ALL`): drawer giữ nguyên 100% cơ chế cũ theo Quy tắc Hoàn Thành Nghiêm Ngặt (`c.ngay_hoan_thanh_cong_viec IS NOT NULL`), sub-tab hiển thị 5 phân loại ERP (`Tất cả`, `Sửa chữa chung`, `Ký gửi / Nội bộ`, `OJ Ngoài`, `Khác`).
+      - Nút chuyển trạng thái `[ ↙ Phải thu | ↗ Phải trả ]` đã được lược bỏ khỏi drawer này để giao diện tinh gọn, tập trung hoàn toàn vào theo dõi vụ việc và trạng thái tiến độ dịch vụ.
   - Dữ liệu tính toán độc lập tại `conversionFunnel` & `conversionFunnelByMonth` trong `garage-dashboard.service.ts`, phản hồi tức thì theo kỳ tháng được chọn.
 - **2 chart P&L 12 tháng trên Dashboard (cập nhật 2026-10-17)**:
   - `GaragePnlSection` render `GaragePnlChartsCard` (`components/GaragePnlCharts/`): chart "Báo cáo lợi nhuận" (cột Doanh thu/Chi phí/Lợi nhuận gộp + đường `% Lợi nhuận gộp` trên trục phụ) và chart "Tỷ trọng các chỉ số trên 100% doanh thu" (7 cột chồng `/ DT`), giống sheet Excel cùng tên; màu `PNL_CHART_PALETTE` khớp `CHART_PALETTE` của API.
@@ -193,8 +199,22 @@ Resource RBAC: `garage`
 2. **Backend Unit Tests**: Chạy `bunx jest src/kgara-api-core/ --forceExit` (bắt buộc pass 100%).
 3. **Web Build**: Chạy `bun run build` trong `erp-web/` (bắt buộc pass 100%).
 
-## 7. Garage Month Detail Drawer - Debt Tables (2026-10)
+## 7. Garage Cases & Debt Detail Drawers - Chuẩn Hóa V2 (2026-11)
 
+- **Organism lõi dùng chung `GarageCasesDetailDrawer` (2026-11 - Chuẩn hóa V2)**:
+  - Tách thành component lõi `GarageCasesDetailDrawer` (`src/modules/garage/components/organisms/garage-cases-detail-drawer/`) dùng chung cho cả Doanh thu / Kỳ hoàn tất (Checkpoint) và Công nợ (Tuổi nợ / Tháng).
+  - Sử dụng `V2StandardDrawer` (`size="xl"`, `layout="2-columns"`, `collapsibleRightPanel={true}`), hỗ trợ nút phóng to full-screen.
+  - Left Panel: Danh sách vụ việc dùng `V2StandardTable` bọc trong `DrawerSection`, có toolbar lọc (`V2TabBar`, `V2SearchInput`, Switch), chân bảng có summary row tự động tính tổng tiền.
+  - Điều khiển cột hiển thị qua prop `showProfitMetrics`:
+    - Khi `true`: Kích hoạt thêm 3 cột **Doanh thu thuần**, **Chi phí (Giá vốn)**, **Lợi nhuận gộp** (màu semantic token, font mono tabular-nums, không dùng blue).
+    - Khi `false`: Ẩn 3 cột P&L để tập trung vào số liệu công nợ.
+  - Right Panel: `GarageCasesRightPanel` tự động hiển thị Section **Hiệu quả kinh doanh (P&L)** (Doanh thu thuần, Giá vốn, Lãi gộp & Biên LN) + **Tiến độ thu tiền & công nợ** (khi ở Checkpoint), hoặc **Cơ cấu Thu KH vs BH & Chi phí nợ** (khi ở Công nợ).
+  - Bọc ngoài bởi 2 wrapper chuẩn ngữ nghĩa nghiệp vụ:
+    - `GarageCheckpointDrawer`: Wrapper mỏng (35 LoC) bọc `GarageCasesDetailDrawer` với `scope: checkpoint` và `showProfitMetrics={true}`. Thay thế hoàn toàn file monolith 662 LoC cũ dùng HTML trần.
+    - `GarageDebtDetailDrawer`: Wrapper mỏng (22 LoC) bọc `GarageCasesDetailDrawer` với `showProfitMetrics={false}`. Giữ nguyên 100% interface cho các caller cũ (`GarageTimeHorizonDetailDrawer` và `GarageMonthDetailDrawer`).
+  - Toàn bộ các file trong cụm đều tuân thủ No Blue Mandate và khống chế 100% file code $< 250\text{ LoC}$.
+
+- Drill-down mốc: `GarageMonthClassificationCasesDrawer` và `GaragePartnerMonthDetailDrawer` nhận prop `horizon`. Danh sách phân loại lọc `agingHorizon=[horizon]` và `ngayHoanThanhCongViec=["2026-07-01.."]`; đối tác dùng `initialCases` từ breakdown, không lọc theo tháng. Test: `*.horizon.test.tsx` cạnh hai drawer.
 - `GarageMonthDetailDrawer` hiển thị đồng thời hai bảng `DataTable` chuẩn spreadsheet cho Phải thu và Phải trả; mỗi bảng có state/filter độc lập và các table ID `garage-month-detail-receivables-table` và `garage-month-detail-payables-table`.
 - Tab Đối tượng HĐ hiển thị riêng hai bảng Thu khách hàng và Thu bảo hiểm, dùng lần lượt `customerPartners` và `insuranceCompanies`, với table ID `garage-month-detail-customer-partners-table` và `garage-month-detail-insurance-companies-table`.
 - `CustomerDetailDebtSwitch` không còn được dùng trong hai khu vực bảng; click row vẫn mở classification hoặc partner detail drawer như trước.
@@ -237,25 +257,20 @@ Resource RBAC: `garage`
 - Drawer là một `StandardFormDrawer` (`size="xl"`) không có thanh tab; việc chọn sơ đồ (End user hoặc Dev) làm bằng dropdown ngay trên toolbar của canvas:
   - **Người dùng cuối**: lưới ô cờ ca-rô, hàng là bộ phận (`r1`..`r6`), cột là giai đoạn (`c1`..`c5`).
   - **Kỹ thuật (Dev)**: 4 khung module: **Hoạt động garage** (trái: sync KGara, phiếu dịch vụ, cấn trừ, P&L), **Garage Hub** (giữa), **Thu chi** và **OPEX** (phải), cộng dải lớp chỉ đọc "Báo cáo & phân tích" (ẩn mặc định). Mũi tên tô màu theo **luồng tự động** A–D (A: Kết thúc → sinh Dự thu; B: lưu phiếu chi HHBH/vật tư → ghi OPEX; C: mở báo cáo P&L → sinh phiếu hoa hồng; D: lưu phiếu gắn phiếu dịch vụ → tự cấn trừ, đặt lại Dự thu) và luồng thủ công M. Số thứ tự theo từng luồng (A1, B2...); bấm chip luồng ở thanh công cụ để làm nổi một luồng, các luồng khác mờ đi (ảnh xuất PNG/PDF theo đúng trạng thái đang hiển thị). Nhãn mũi tên ghi cơ chế gọi (DI, cron, HTTP, ghi DB...) ở dòng dưới.
-- Thư mục `src/modules/garage/components/GarageWorkflowDrawer/`:
-  - `garageWorkflowTypes.ts`: kiểu dữ liệu lane, cột, node, edge; `step` (số thứ tự) và `description` của canvas.
-  - `endUserCanvasData.ts`, `devCanvasData.ts`: dữ liệu tĩnh của từng canvas. `garageWorkflowData.ts` ghép hai canvas và thứ tự tab.
-  - `GarageWorkflowCanvas.tsx`, `WorkflowNodeCard.tsx`, `WorkflowEdge.tsx`: React Flow readonly, màu hex tường minh (bảng màu trầm, icon theo bộ phận ở `workflowIcons.ts`), nhãn mũi tên là HTML có vòng số.
-  - `edgeRouter.ts`: định tuyến mũi tên trực giao trên lưới 10px bằng A* (tránh thẻ, ít rẽ). Canvas tính đường đi trước khi vẽ và đưa vào `data.points`; `edgeRoutes.spec.ts` kiểm tra không mũi tên nào cắt thẻ trên dữ liệu thật. Lớp xếp: lane/cột `zIndex -1`, thẻ `10`, tiêu đề xuất `20`, mũi tên `30`. Số thứ tự: end-user là vòng số trên thẻ, dev là tiền tố trên nhãn mũi tên.
-  - `edgeLabels.ts`: đặt nhãn trên đường đi, tránh đè thẻ, đè nhãn khác, ưu tiên ít cắt mũi tên khác. `routeEdges` định tuyến cả batch và phạt đi chồng lên mũi tên đã đi trước.
-  - `workflowPalette.ts`: màu lane lấy từ bảng chart dashboard (`PNL_PALETTE_LIGHT`), pha nhạt bằng `tonePalette`.
-  - Mũi tên có `kind: "read"` (chỉ đọc dữ liệu) ẩn mặc định, bật bằng nút trên thanh công cụ. Thanh công cụ nằm trên khung canvas, không đè sơ đồ.
-  - `WorkflowCanvasToolbar.tsx` (zoom, full screen, % zoom), `WorkflowLegend.tsx` (panel "Cách đọc", không vào ảnh xuất), `useCanvasFullscreen.ts` (Fullscreen API cho đúng khung canvas).
-  - `canvasBounds.ts`: khung bao canvas; `withHeading` cộng khối tiêu đề khi xuất.
-  - `useWorkflowExport.ts`: xuất PNG và PDF A3 (tự chọn ngang hoặc dọc) theo khung bao toàn bộ sơ đồ, nền trắng cố định, lọc controls/minimap/panel. Khi xuất, drawer bật `exportMode` để vẽ khối tiêu đề + mô tả phía trên sơ đồ, chờ 2 frame rồi chụp, sau đó tắt.
-- **Dữ liệu tĩnh**: sơ đồ không đọc backend. Khi đổi rule Hub, cashflow, hoa hồng, sync hoặc báo cáo ở API, phải cập nhật `endUserCanvasData.ts` / `devCanvasData.ts` và nhánh `workflow` trong `locales/vi.ts` + `en.ts`.
+- Vị trí code (toàn bộ nằm trong V2, V1 chỉ import):
+  - **Engine dùng chung** `src/v2/core/workflow/` (import qua `@/v2/core/workflow`): `WorkflowCanvas.tsx` (khung React Flow readonly), `useWorkflowGraph.ts` (focus, node, mũi tên, click), `canvasNodes.ts` / `canvasEdges.ts` / `canvasToolbarProps.ts` (dựng node, định tuyến và nhãn mũi tên, chữ toolbar), `WorkflowNodeCard.tsx` + `WorkflowChromeNodes.tsx` (thẻ, lane, cột, ô góc, tiêu đề), `WorkflowEdge.tsx`, `WorkflowCanvasToolbar.tsx` (dùng `V2Button`; ô chọn dùng `V2Combobox` + `portalContainer` (khung fullscreen) để danh sách không bị ẩn khi toàn màn hình), `ToolbarSelect.tsx`, `WorkflowCanvasLegend.tsx`, `V2WorkflowDrawer.tsx` (drawer: chọn sơ đồ, toàn màn hình, xuất PNG/PDF), `workflowTypes.ts`, `workflowPalette.ts` (hex cố định, không phụ thuộc V1), `workflowIcons.ts`, `workflowFocus.ts`, `canvasBounds.ts`, `canvasHeaderRects.ts`, `useCanvasFullscreen.ts`, `useWorkflowExport.ts`, locale chrome `v2.workflowCanvas.*`, thư mục `guide/` (tài liệu PDF).
+  - **Định tuyến**: `edgeRouter.ts` (điều phối, `routeEdges`), `edgeRouter.sides.ts` (hằng số, cạnh), `edgeRouter.grid.ts` (lưới + A*), `edgeRouter.path.ts` (căn đầu cuối, trực giao hóa), `edgeGutters.ts`, `edgeLabels.ts`. Lớp xếp: lane/cột `zIndex -1`, thẻ `10`, tiêu đề xuất `20`, mũi tên `30`.
+  - **Dữ liệu garage** `src/v2/modules/garage-workflow/` (barrel `@/v2/modules/garage-workflow`): `endUserCanvas.data.ts`, `devCanvas.data.ts`, `garageAutoFlows.ts`, `garageWorkflowData.ts` (ghép canvas, thứ tự tab), `garageGuideSource.ts` + `guide/*.data.ts`, `GarageWorkflowDrawer.tsx` (bọc `V2WorkflowDrawer`, `useTranslation("garage")`). Thư mục V1 `modules/garage/components/GarageWorkflowDrawer/` đã xóa; consumer V1 import từ barrel V2.
+  - **Chuỗi mua** `src/v2/core/procurement/workflow/`: 2 canvas (end-user, dev) + `ProcurementWorkflowDrawer` + hook `useProcurementWorkflowMenu` (mục menu "Xem sơ đồ quy trình"); chữ `v2.procurementWorkflow.*`.
+  - Số thứ tự: end-user là vòng số trên thẻ, dev là tiền tố trên nhãn mũi tên. Mũi tên `kind: "read"` ẩn mặc định, bật bằng nút trên toolbar. Xuất file: PNG và PDF A3, nền trắng, `exportMode` vẽ khối tiêu đề rồi chụp sau 2 frame.
+- **Dữ liệu tĩnh**: sơ đồ không đọc backend. Khi đổi rule Hub, cashflow, hoa hồng, sync hoặc báo cáo ở API, phải cập nhật `endUserCanvas.data.ts` / `devCanvas.data.ts` và nhánh `workflow` trong `locales/vi.ts` + `en.ts`.
 - `statusCode` chỉ gắn cho mã đã xác minh trong code: `3` = Kết thúc (`KGARA_STATUS_COMPLETED`, tên hiển thị theo KGara), `9` = Hủy.
 - Test: `garageWorkflowData.spec.ts` (vị trí, chồng lấn, key), `workflowEdgeHandles.spec.ts`, `useWorkflowExport.spec.ts`, `garageWorkflowLocales.spec.ts` (parity vi/en), `GarageHeaderActions/buildGarageHeaderActions.spec.tsx`.
 - `KgaraCaseStatusBadge.tsx` dùng đúng mã của API skill: `0` Tiếp nhận, `1` Báo giá, `2` Đang sửa, `3` Kết thúc, `9` Đã hủy. Nếu đổi mã ở API thì sửa badge và test cùng lúc.
 - **Hiển thị mũi tên**: thẻ có chiều cao tối thiểu chung (`WORKFLOW_CARD_MIN_HEIGHT` = 112) để các thẻ cùng hàng có tâm cạnh thẳng hàng. Canvas đo chiều cao thật của thẻ (`useNodesInitialized` + `node.measured`) rồi mới định tuyến; đầu và cuối mũi tên căn đúng tâm cạnh thẻ, đoạn nằm trong khe giữa các cột/hàng thẻ được căn về giữa khe (`edgeGutters.ts`, nhiều mũi tên cùng khe chia slot đối xứng). Nhãn mũi tên là HTML `zIndex: 1000` nên luôn nằm trên mọi mũi tên.
 - **Lớp chỉ đọc**: thẻ/cột `layer: "read"` và mũi tên `kind: "read"` ẩn mặc định; trạng thái `showRead` nằm ở `GarageWorkflowDrawer` (theo từng canvas) để khung bao khi xuất PNG/PDF khớp với màn hình (`canvasBounds(canvas, { showRead })`).
 - **End user: các khoản tiền** (đối chiếu `garage-cashflow-payment-rules.ts`): thẻ riêng cho **Dự thu** (phiếu thu `EXPECTED`, hạn +7 ngày, chưa tính thực thu), **Thực thu**, **Dự chi** (`PENDING`/`APPROVED`), **Thực chi** (`PAID`, khóa), **HHBH** (nội dung `4. HHBH`, P&L mục 4.2) và **Vật tư tiêu hao** (nội dung `10. Vật tư tiêu hao`, mã cũ `8.`, P&L Giá vốn). HHBH và vật tư tiêu hao không trừ công nợ, ghi OPEX khi `APPROVED`/`PAID`.
-- **Thanh công cụ một hàng**: dropdown **Sơ đồ**, dropdown **Luồng tự động** (cả 2 sơ đồ đều có; Tất cả luồng, A–D, M), zoom `−`/`+`, nút có chữ "Vừa khung" và "Toàn màn hình" (icon khác nhau), nút luồng đọc, nút "Bỏ chọn thẻ" khi đang chọn thẻ, chú giải. Dropdown dùng `Combobox` chung; khi canvas ở chế độ toàn màn hình truyền `portalContainer` (khung canvas) để dropdown không bị ẩn.
+- **Thanh công cụ một hàng**: ô chọn **Sơ đồ**, ô chọn **Luồng tự động** (Tất cả luồng, A–D, M), zoom `−`/`+`, nút "Vừa khung" và "Toàn màn hình", nút luồng đọc, nút "Bỏ chọn thẻ" khi đang chọn thẻ, chú giải. Nút là `V2Button` (cao ≥ 44px trên mobile); ô chọn là `V2Combobox` (không ô tìm kiếm), danh sách portal vào khung fullscreen qua `portalContainer`.
 - **Luồng tự động dùng chung** (`garageAutoFlows.ts`, key `workflow.flows.*`): A Kết thúc → sinh Dự thu, B phiếu chi HHBH/vật tư → ghi OPEX, C mở P&L → sinh hoa hồng, D phiếu gắn phiếu dịch vụ → cấn trừ + đặt lại Dự thu, M thủ công. Mũi tên có `flows` và `steps` theo từng luồng.
 - **Làm nổi bật** (`workflowFocus.ts`, hàm thuần `computeFocus`): chọn luồng thì chỉ luồng đó sáng và chạy animation; bấm một thẻ thì thẻ đó và các thẻ nối trực tiếp (hai chiều) sáng, mũi tên chạm thẻ chạy animation (`animated`), phần còn lại mờ; bấm vùng trống, bấm lại thẻ hoặc "Bỏ chọn thẻ" để xoá. Đổi sơ đồ thì tự xoá chọn và fit lại; ảnh PNG/PDF xuất đúng trạng thái đang hiển thị.
 - **v8 bố cục và dropdown**: khe giữa khung Thu chi và OPEX = 120px, OPEX có 2 hàng thẻ (`OPEX_ROW_1/2` trong `devCanvasData.ts`), đáy 3 khung thẳng hàng. `canvasHeaderRects.ts` coi thanh tiêu đề khung/cột/ô góc là vật cản cho cả `routeEdges` và `placeLabels`. Dropdown `w-40`/`w-56`, mỗi option có `tooltipContent` (luồng có `description`, key `workflow.flowDescriptions.*`). Tiêu đề Dev: "Kiến trúc module Garage".
@@ -288,5 +303,39 @@ Resource RBAC: `garage`
   - Tự động query các phiếu dịch vụ của đối tượng (`getCasesByCustomer`, `getCasesBySupplier`, hoặc query theo `licensePlate`).
   - Đưa danh sách lên đầu combobox dưới nhóm ưu tiên: **"⭐ Phiếu dịch vụ của [Khách hàng/BKS]"** kèm tooltip chi tiết (Số chứng từ, BKS, Doanh thu, Chi phí, Dư nợ).
   - Khi chọn case: Tự động bind `caseId`, cập nhật `licensePlate`, `partnerName`, và nếu `amount` chưa có thì gợi ý điền số tiền của vụ việc.
-- Tuân thủ `/ui-structure`: File helper `GarageCaseCombobox.helper.tsx` độc lập, hook $< 160\text{ LoC}$, 0 class `blue-*`, 100% i18n, co-located test.
+- Tuân thủ `/erp-ui-structure`: File helper `GarageCaseCombobox.helper.tsx` độc lập, hook $< 160\text{ LoC}$, 0 class `blue-*`, 100% i18n, co-located test.
+
+### D. In Phiếu Thu / Phiếu Chi (`garage-cashflow?tab=vouchers`)
+- **Context menu**: `GarageCashflowTable.actions.tsx` (`getGarageCashflowRowActions`) nhận thêm tham số `onPrint`; hiển thị 1 mục icon `Printer` trong nhóm "Thao tác chính" ngay sau "Xem chi tiết". Nhãn theo `row.voucherType`: `RECEIPT` → `garage.cashflow.actions.printReceipt` ("In phiếu thu"), `PAYMENT` → `garage.cashflow.actions.printPayment` ("In phiếu chi"). Ẩn khi không truyền `onPrint`.
+- **Print template dùng chung**: `src/shared/components/print-templates/garage-cashflow-print-template/` — `GarageCashflowPrintTemplate.tsx` (forwardRef, A4, Times New Roman) bám mẫu **01-TT (PHIẾU THU)** / **02-TT (PHIẾU CHI)**, QĐ 15/2006/QĐ-BTC. Nhãn hành chính cố định nằm trong `.data.ts`; map dữ liệu qua `GarageCashflowPrintTemplate.helper.ts` (`buildGarageCashflowPrintData`, dùng `readVietnameseCurrency`); type trong `.type.ts` (`GarageCashflowPrintSource` là cấu trúc con của `GarageCashflowVoucher`, không import module → tránh phụ thuộc shared→module).
+- **Hook**: `src/modules/garage/hooks/useGarageCashflowPrint.ts` — quản lý `printRef`/`printData`/`printVoucher` với `useReactToPrint` (pattern giống `useWarehousePrintExport`). Không gọi thêm API: dữ liệu lấy từ dòng list.
+- **Logo công ty**: header bản in render `companyProfile.logo` (`useCompanyProfile`) ở góc trên-trái, cạnh tên/địa chỉ công ty; ẩn khi không có logo.
+- **Wiring**: `GarageCashflowList` gọi `useGarageCashflowPrint()`, truyền `onPrint={printVoucher}` xuống `GarageCashflowTable`, render `<GarageCashflowPrintTemplate ref={printRef} …/>` trong `<div style={{ display: "none" }}>`.
+- **Không đổi contract**: không thay đổi DB/API; quyền dùng `GARAGE_CASHFLOW:READ` sẵn có.
+- "Quyển số" để trống (chấm dòng); chỉ in `Số: {voucherCode}`. Field "Địa chỉ" để trống vì voucher không có dữ liệu.
+
+## 13. Nhãn thẻ tuổi nợ garage (2026-11)
+
+- Thẻ tuổi nợ và ma trận tuổi nợ garage ghi tổng "Phải thu" (`debts:dashboard.garageReceivableTotal`), vì giá trị là tổng KH + BH theo công thức chung của erp-api (`kgara-case-remaining`). Nhãn "Phải thu (KH)" vẫn dùng ở dự báo dòng tiền (`debts:dashboard.expectedIn`) và dashboard hóa đơn.
+
+## 14. Đếm theo XE và trang V2 `garage-cases-v2` (2026-11-20)
+
+- **Quy ước hiển thị**: mọi số "xe" là biển số khác nhau (một xe nhiều lệnh vẫn là 1). Thẻ "XE THÁNG/TUẦN/HÔM NAY" hiển thị `stages.totalIntake`; tiền trong ngoặc là `totalTienCoThue` (lệnh hoàn thành trong kỳ). Backend xem `erp-api` skill `garage-dashboard` mục 8.
+- **V1 (`src/modules/garage/`)**: `garageDashboardApi.ts` ghi rõ `count`/`totalCount` là số xe và thêm `totalCases?` tùy chọn (KPI kỳ, `GarageCheckpointSummary`, phễu). `FunnelOverviewCards` dùng đơn vị `dashboard.funnel.vehiclesUnit` ("xe") và chú thích `vehicleCountNote` (testid `funnel-vehicle-count-note`: tổng các giai đoạn có thể lớn hơn tổng xe). `StageCardItem` có prop `cases?`, tooltip "N xe · M lệnh" khi có (testid `stage-tooltip-count`). `GarageCasesDetailDrawer` hiển thị "N xe · M lệnh" (`cases-drawer-counts`), `caseCount` của checkpoint lấy từ `totalCases`; helper `formatVehiclesAndCases`.
+- **Chưa nối (cần backend)**: `conversionFunnel` của `/stats` chưa trả `totalCases` và số lệnh theo từng giai đoạn, nên `StageCardItem.cases` chưa được truyền; các field `caseCount*` của xu hướng tháng vẫn đếm phiếu.
+- **Trang V2** (PageKey `garage-cases-v2`, URL `/garage-cases-v2?tab=dashboard`, chỉ có tab `dashboard`): đăng ký ở `shared/types`, `shared/utils/pageUrl.ts` (`ALL_PAGE_KEYS`, tab mặc định `dashboard`), `core/config/appStore/constants.ts`, nav Garage (nhãn "Hoạt động garage (v2)", `useV2AdaptedNavSections`), `V2ShellLayout` (breadcrumb), `useV2AdaptedTabs` (icon, tiêu đề), `App.tsx` (lazy `CasesDashboardGaragePage` trong `AdminOnlyRoute`). **Chỉ `admin@liouni.com` thấy menu và vào được trang**; người khác thấy 404. Đây là quy ước chung của module có hai component khác nhau giữa V1 và V2 (xem `erp-web-truth` mục 4), không phải lỗi.
+- **Cấu trúc V2**: lõi UI `src/v2/core/cases-garage/dashboard/` (`CasesDashboardKpiCard`, `CasesDashboardFunnel`, `CasesDashboardClassificationTable`, `formatVehicleCaseCounts`, locale `garageCasesDashboard`); module `src/v2/modules/cases-garage/` (api client `casesDashboardApi` với đúng 2 hàm `getOverview` và `listVehicles`; queries `useCasesDashboardOverviewQuery` và `useCasesDashboardVehiclesQuery`; hook `useCasesDashboardGarage` trả `kpi`, `funnel`, `vehicles`; `CasesDashboardGaragePage` desktop/mobile; view-model `casesDashboard.view.ts` gồm `toVehicleRows`; `CasesDashboardCasesList` mỗi xe một dòng; locale `casesDashboardGarage`). API (erp-api) chỉ 2 endpoint: `GET api/v2/cases-dashboard-garage/overview` (`{period, funnel}`) và `GET api/v2/cases-dashboard-garage` (danh sách xe kèm `cases[]`, không `summaries`).
+- **Chưa có**: bộ lọc ngày trên trang V2 (dùng mặc định backend: hôm nay/tuần/tháng; phễu tháng hiện tại).
+- **QC**: `bun run e2e:garage-dashboard` (V1 khớp API, guard V2 với tài khoản không phải admin; nội dung V2 chỉ kiểm bằng unit test vì admin-only). Đối chiếu V1 với V2 phía API: `bun run test:smoke:garage-dashboard` trong `erp-api`.
+
+## 15. Drawer vụ việc V1 theo XE (2026-11-20, Phase 5)
+
+- `GarageCasesDetailDrawer` (checkpoint) gọi `garageDashboardApi.getCheckpointVehicles` (`group_by=vehicle`, page 1, pageSize 500). Hook làm phẳng thành dòng lệnh (`extractCheckpointVehicleCases`, giữ `vehicleKey`) để lọc/tìm/tab giai đoạn vẫn theo lệnh; bảng gom lại mỗi XE một hàng bằng `groupCasesByVehicle` (`GarageCasesTableTab.helper.ts`, tiền cộng theo lệnh, `caseCount`, `childCases`).
+- Hàng xe nhiều lệnh mở rộng ra từng lệnh (`GarageVehicleCasesExpanded`, bấm mã lệnh mở chi tiết); cột "Số lệnh" chỉ ở chế độ checkpoint; tiêu đề bảng "N xe · M lệnh"; `casesCount` ("Danh sách xe") = `total` xe từ API; số tab dự phòng đếm xe distinct (`countDistinctVehicles`, `calculateFunnelStatusCounts`). Header drawer "N xe · M lệnh" là tổng cả kỳ, còn bảng của một tab khớp thẻ giai đoạn tương ứng.
+- Chế độ công nợ (không `showProfitMetrics`) giữ hàng theo phiếu.
+- **Thứ tự cột (checkpoint)**: "Biển số xe" là cột dữ liệu đầu (mang dòng "Tổng cộng"), rồi "Số phiếu", "Ngày HT", "Số lệnh", "Khách hàng"…; cột doanh thu/chi phí/lợi nhuận và "Số lệnh" nằm ở `GarageCasesTableTab.columns.profit.tsx` (file ≤180 dòng).
+- **Chuẩn hóa biển số**: một hàm `normalizePlate` (cùng quy tắc erp-api) ở `src/shared/utils/licensePlate.ts` cùng `isSamePlate`, `plateContains`; dùng cho so khớp/tìm biển trong `garageCasesTable.ts` và `GarageCashflowDrawer.helper.ts`. Không viết hàm chuẩn hóa riêng; `cleanAlphaNum` chỉ còn cho mã phiếu.
+- **Cột Hóa đơn VAT**: API chỉ trả `hasInvoice` (boolean) nên hàng checkpoint dùng `hasInvoice` và hiện badge i18n `cases.invoice.issued` (không `#`); số hóa đơn thật (`invoiceNo`, chế độ công nợ) hiện `#số`. Không còn chuỗi "Đã xuất" viết cứng. Ngày hoàn thành mới nhất của hàng gom xe so bằng timestamp.
+- **Đếm xe đã tải**: `casesCount` (tab "Danh sách xe") = số xe distinct đã tải; `vehicleTotal` = tổng xe của API (pageSize tối đa 500, `CHECKPOINT_VEHICLE_PAGE_SIZE` trong `GarageCasesDetailDrawer.checkpoint.hook.ts`). Nếu `vehicleTotal` lớn hơn đã tải, tiêu đề bảng hiện badge `cases.vehicleTruncated` ("Hiển thị X/Y xe", testid `cases-table-truncated`). Tiêu đề đếm là `GarageCasesTableTab.titleExtra.tsx` (testid `cases-table-counts`).
+- QC: `bun run e2e:garage-dashboard` bước B4-B7 (bấm thẻ phễu "2. Báo Giá" bằng locator cụ thể: `cases-table-counts` "N xe" = `stages.quotation` của API, không còn "N phiếu", cột dữ liệu đầu là "Biển số xe" trước "Số phiếu").
 

@@ -25,6 +25,16 @@ export const updateV2SearchParams = (
   window.dispatchEvent(new Event(V2_URL_CHANGE_EVENT));
 };
 
+/**
+ * Chuyển sang đường dẫn khác (pushState) rồi phát popstate để các listener URL tự đồng bộ.
+ * Dùng khi đích có thể đang mở sẵn trang hiện tại (V2 không dùng router thư viện).
+ */
+export const navigateV2Url = (href: string): void => {
+  if (typeof window === "undefined") return;
+  window.history.pushState(null, "", href);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+};
+
 export const subscribeV2Url = (listener: () => void): (() => void) => {
   window.addEventListener("popstate", listener);
   window.addEventListener(V2_URL_CHANGE_EVENT, listener);

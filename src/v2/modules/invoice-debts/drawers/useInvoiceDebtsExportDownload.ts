@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { saveBlob } from "@/v2/core/export-jobs";
 import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { invoiceDebtsExportApi } from "../api/invoiceDebtsExportApi";
 
@@ -20,17 +21,7 @@ export function useInvoiceDebtsExportDownload({
       try {
         setDownloadingJobId(jobId);
         const blob = await invoiceDebtsExportApi.downloadBackgroundFile(jobId);
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = blobUrl;
-        a.download = customFileName || "Bao_cao_cong_no.xlsx";
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          if (document.body.contains(a)) document.body.removeChild(a);
-          window.URL.revokeObjectURL(blobUrl);
-        }, 2000);
+        saveBlob(blob, customFileName || "Bao_cao_cong_no.xlsx");
 
         useV2ToastStore.getState().showToast({
           title: downloadToastText,

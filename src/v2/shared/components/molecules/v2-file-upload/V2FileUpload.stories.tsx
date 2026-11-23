@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2FileUpload } from "./V2FileUpload";
 
 const meta: Meta<typeof V2FileUpload> = {
-  title: "Components/Molecules/Forms & Inputs/V2FileUpload",
+  title: "Components/Molecules/V2FileUpload",
   component: V2FileUpload,
   tags: ["autodocs"],
   args: { onFilesSelected: () => {}, hint: "XML, ZIP, tối đa 20 MB" },

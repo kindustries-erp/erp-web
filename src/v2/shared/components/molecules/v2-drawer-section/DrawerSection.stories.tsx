@@ -3,7 +3,7 @@ import React from "react";
 import { DrawerSection } from "./DrawerSection";
 
 const meta: Meta<typeof DrawerSection> = {
-  title: "Components/Molecules/Overlay & Menu/V2DrawerSection",
+  title: "Components/Molecules/V2DrawerSection",
   component: DrawerSection,
   tags: ["autodocs"],
 };

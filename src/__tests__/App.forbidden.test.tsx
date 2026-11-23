@@ -32,18 +32,6 @@ vi.mock("@/core/components/layout/V2ShellLayout", () => ({
   ),
 }));
 
-vi.mock("@/core/components/layout/sidebar/index", () => ({
-  Sidebar: () => <div>sidebar</div>,
-}));
-
-vi.mock("@/core/components/layout/Topbar", () => ({
-  Topbar: () => <div>topbar</div>,
-}));
-
-vi.mock("@/core/components/layout/TabBar", () => ({
-  TabBar: () => <div>tabbar</div>,
-}));
-
 vi.mock("@/shared/components/SlidePanel", () => ({
   SlidePanel: () => <div>slidepanel</div>,
 }));
@@ -96,6 +84,7 @@ vi.mock("@/core/components/GlobalErpDocumentOpener", () => ({
 }));
 
 vi.mock("@/shared/utils/pageUrl", () => ({
+  LOANS_TOOL_PATH: "/loans-tool",
   pathToPage: () => ({ page: "purchasing" }),
 }));
 

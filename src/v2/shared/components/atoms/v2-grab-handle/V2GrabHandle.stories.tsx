@@ -3,7 +3,7 @@ import React from "react";
 import { V2GrabHandle } from "./V2GrabHandle";
 
 const meta: Meta<typeof V2GrabHandle> = {
-  title: "Components/Atoms/Display/V2GrabHandle",
+  title: "Components/Atoms/V2GrabHandle",
   component: V2GrabHandle,
   tags: ["autodocs"],
 };

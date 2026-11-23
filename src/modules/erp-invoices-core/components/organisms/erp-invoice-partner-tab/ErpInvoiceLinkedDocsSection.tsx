@@ -3,7 +3,14 @@ import { useTranslation } from "react-i18next";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { openGlobalErpDocument } from "@/shared/components/drawer/DrawerDocumentTraceability/constants";
 import { V2DocumentTraceability } from "@/v2/shared/components/organisms/v2-document-traceability";
-import type { TraceabilityNode } from "@/v2/shared/components/organisms/v2-document-traceability";
+import type {
+  TraceabilityNode,
+  TraceabilityNodeType,
+} from "@/v2/shared/components/organisms/v2-document-traceability";
+import {
+  resolveInvoiceAddLink,
+  toPendingDocumentChange,
+} from "@/v2/core/invoices";
 import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 export interface ErpInvoiceLinkedDocsSectionProps {
@@ -44,34 +51,23 @@ export const ErpInvoiceLinkedDocsSection = React.memo(
     const { t } = useTranslation("erpInvoices");
 
     const handleAddLink = useCallback(
-      (stageKey?: string, docType?: string) => {
-        if (docType === "BANK_TXN" || stageKey === "PAYMENT")
-          onOpenNetOffModal();
-        else if (docType === "PURCHASE_ORDER" || stageKey === "ORDER_STOCK")
-          onOpenPoModal();
-        else if (docType === "SALES_ORDER") onOpenSoModal();
-        else if (docType === "GARAGE_CASE") onOpenGarageCaseModal();
+      (stageKey?: string, docType?: TraceabilityNodeType) => {
+        const action = resolveInvoiceAddLink(stageKey, docType);
+        if (action === "OPEN_PO") onOpenPoModal();
+        else if (action === "OPEN_SO") onOpenSoModal();
+        else if (action === "OPEN_GARAGE_CASE") onOpenGarageCaseModal();
         else onOpenNetOffModal();
       },
       [onOpenNetOffModal, onOpenPoModal, onOpenSoModal, onOpenGarageCaseModal],
     );
 
     const handleUnlinkNode = useCallback(
-      (node: { id: string; docType: string }) => {
+      (node: TraceabilityNode) => {
         if (!editMode) return;
-        const mapping: Record<string, "BANK" | "PO" | "CASE" | "SO"> = {
-          BANK_TXN: "BANK",
-          PURCHASE_ORDER: "PO",
-          GARAGE_CASE: "CASE",
-          SALES_ORDER: "SO",
-        };
-        const type = mapping[node.docType];
-        if (!type) return;
+        const change = toPendingDocumentChange(node);
+        if (!change) return;
         const currentChanges = form?.pendingDocumentChanges || [];
-        fieldSet?.("pendingDocumentChanges", [
-          ...currentChanges,
-          { type, action: "REMOVE", refId: node.id },
-        ]);
+        fieldSet?.("pendingDocumentChanges", [...currentChanges, change]);
       },
       [editMode, form?.pendingDocumentChanges, fieldSet],
     );

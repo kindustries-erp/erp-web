@@ -8,6 +8,7 @@ import {
 } from "@/shared/components/DrawerModal";
 import { formatGMT7 } from "@/shared/utils/format";
 import { useTranslation } from "react-i18next";
+import { buildVehicleInfoRows } from "@/v2/core/cases-garage";
 
 export interface GarageCaseGeneralInfoSectionProps {
   caseData: any;
@@ -52,6 +53,26 @@ export function GarageCaseGeneralInfoSection({
         label={t("cases.drawer.customer", "Khách hàng")}
         value={caseData.khachHangName || "—"}
       />
+      {buildVehicleInfoRows(caseData).map((row) => (
+        <DrawerRow
+          key={row.key}
+          label={t(`cases.columns.${row.key}`, row.defaultLabel)}
+          value={
+            row.value ? (
+              <span className="font-medium">
+                {row.value}
+                {row.code && (
+                  <span className="ml-1.5 font-mono text-[11px] text-muted-foreground">
+                    {row.code}
+                  </span>
+                )}
+              </span>
+            ) : (
+              "—"
+            )
+          }
+        />
+      ))}
       <DrawerRow
         label={t("cases.drawer.serviceStatus", "Trạng thái")}
         value={caseData.tenTinhTrangDichVu || "—"}

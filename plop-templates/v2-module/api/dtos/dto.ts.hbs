@@ -1,3 +1,5 @@
+import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
+
 /** Hình dạng bản ghi và payload của `{{{apiBase}}}` (khớp backend, không phụ thuộc V1) */
 
 export interface {{Entity}}Dto {
@@ -14,8 +16,8 @@ export interface {{Entity}}ListResultDto {
   page: number;
   pageSize: number;
   totalPages: number;
-  /** Tổng toàn bộ dòng khớp bộ lọc, theo tên cột số (khớp `V2Column.key`) */
-  summaries?: Record<string, number>;
+  /** Số liệu tổng theo key đã gửi trong `summary_keys` (khớp `V2Column.key`); `null` = không tính được */
+  summaries?: Record<string, V2SummaryMetric | null>;
 }
 
 export interface ColumnOptionsResultDto {

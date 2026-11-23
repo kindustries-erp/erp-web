@@ -30,7 +30,7 @@ describe("V2BottomNavHeroButton Molecule", () => {
   });
 
   it("hỗ trợ cấu hình kích thước qua enum V2HeroButtonSize", () => {
-    render(
+    const { unmount } = render(
       <V2BottomNavHeroButton
         label="Tạo mới"
         icon={Plus}
@@ -38,7 +38,39 @@ describe("V2BottomNavHeroButton Molecule", () => {
       />,
     );
 
-    const button = screen.getByRole("button", { name: "Tạo mới" });
+    let button = screen.getByRole("button", { name: "Tạo mới" });
+    expect(button.className).toContain("h-9 w-9");
+    unmount();
+
+    // Default size is 44px
+    const resDefault = render(
+      <V2BottomNavHeroButton label="Tạo mới" icon={Plus} />,
+    );
+    button = screen.getByRole("button", { name: "Tạo mới" });
     expect(button.className).toContain("h-11 w-11");
+    resDefault.unmount();
+
+    // MD size is 40px
+    const resMd = render(
+      <V2BottomNavHeroButton
+        label="Tạo mới"
+        icon={Plus}
+        size={V2HeroButtonSize.MD}
+      />,
+    );
+    button = screen.getByRole("button", { name: "Tạo mới" });
+    expect(button.className).toContain("h-10 w-10");
+    resMd.unmount();
+
+    // LG size is 52px
+    render(
+      <V2BottomNavHeroButton
+        label="Tạo mới"
+        icon={Plus}
+        size={V2HeroButtonSize.LG}
+      />,
+    );
+    button = screen.getByRole("button", { name: "Tạo mới" });
+    expect(button.className).toContain("h-[52px] w-[52px]");
   });
 });

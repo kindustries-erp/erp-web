@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2EnvStamp } from "./V2EnvStamp";
 
 const meta: Meta<typeof V2EnvStamp> = {
-  title: "Components/Molecules/Feedback & Overlay/V2EnvStamp",
+  title: "Components/Molecules/V2EnvStamp",
   component: V2EnvStamp,
   tags: ["autodocs"],
   argTypes: {

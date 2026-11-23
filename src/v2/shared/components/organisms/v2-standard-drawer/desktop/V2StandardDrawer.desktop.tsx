@@ -2,7 +2,10 @@ import React from "react";
 import { V2DrawerSheet } from "@/v2/shared/components/molecules/v2-drawer-sheet";
 import { DrawerHeader } from "@/v2/shared/components/molecules/v2-drawer-header";
 import { DrawerFooter } from "@/v2/shared/components/molecules/v2-drawer-footer";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+} from "@/v2/shared/components/molecules/v2-tab-bar";
 import { DrawerRelatedDeck } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
 import { V2Stack } from "@/v2/shared/components/atoms/v2-stack";
 import { DrawerConfirmCloseModal } from "../confirm-modal";
@@ -44,6 +47,7 @@ export const V2StandardDrawerDesktop: React.FC<V2StandardDrawerProps> = (
     <>
       <V2DrawerSheet
         open={props.open}
+        modal={props.modal}
         onRequestClose={h.requestClose}
         side={h.isFullscreen ? "fullscreen" : "floating"}
         title={drawerTitle}
@@ -88,7 +92,7 @@ export const V2StandardDrawerDesktop: React.FC<V2StandardDrawerProps> = (
 
         {props.tabs && props.tabs.length > 0 && (
           <V2TabBar
-            variant="header"
+            variant={V2TabBarVariant.HEADER}
             tabs={props.tabs}
             activeTabKey={h.activeTabKey}
             onTabChange={h.handleTabChange}

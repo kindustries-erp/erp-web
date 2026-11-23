@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 import type { V2TableToolbarConfig } from "@/v2/shared/components/organisms/v2-standard-table";
+import type { V2SummaryMetric } from "@/v2/shared/types/v2-table";
 import { V2ModuleListTab } from "./V2ModuleListTab";
 import type { V2ModuleListTab as ListTabConfig } from "./V2ModulePage.type";
 
@@ -27,7 +28,7 @@ const refetch = vi.fn();
 
 const makeTab = (
   toolbar?: V2TableToolbarConfig,
-  summaries?: Record<string, number>,
+  summaries?: Record<string, V2SummaryMetric | null>,
 ): ListTabConfig<Row> => ({
   key: "list",
   label: "Danh sách",
@@ -74,9 +75,17 @@ describe("V2ModuleListTab", () => {
   });
 
   it("merges server summaries into the summary columns only", () => {
-    render(<V2ModuleListTab tab={makeTab(undefined, { total: 9000 })} />);
+    render(
+      <V2ModuleListTab
+        tab={makeTab(undefined, {
+          total: { total: 9000, pageSubtotal: 300, cumulative: 700 },
+        })}
+      />,
+    );
     const columns = captured.props!.columns;
     expect(columns[0].summary.total).toBe(9000);
+    expect(columns[0].summary.pageSubtotal).toBe(300);
+    expect(columns[0].summary.cumulative).toBe(700);
     expect(columns[1].summary).toBeUndefined();
   });
 

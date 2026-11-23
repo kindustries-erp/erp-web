@@ -20,6 +20,7 @@ export const V2Tooltip: React.FC<V2TooltipProps> = ({
   arrow = true,
   className,
   asChild = true,
+  triggerOnFocus = true,
 }) => {
   const { isMobile } = useViewport();
 
@@ -31,7 +32,18 @@ export const V2Tooltip: React.FC<V2TooltipProps> = ({
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
-        <TooltipTrigger asChild={asChild}>{children}</TooltipTrigger>
+        <TooltipTrigger
+          asChild={asChild}
+          onFocus={
+            triggerOnFocus
+              ? undefined
+              : (e) => {
+                  e.preventDefault();
+                }
+          }
+        >
+          {children}
+        </TooltipTrigger>
         <TooltipContent
           side={side}
           align={align}

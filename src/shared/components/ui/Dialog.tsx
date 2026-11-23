@@ -62,9 +62,9 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         style={{
-          background: "var(--popup-bg, rgba(246, 248, 252, 0.72))",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          background: "var(--popup-bg, rgba(246, 248, 252, 0.96))",
+          backdropFilter: "blur(10px) saturate(140%)",
+          WebkitBackdropFilter: "blur(10px) saturate(140%)",
           ...style,
         }}
         className={cn(

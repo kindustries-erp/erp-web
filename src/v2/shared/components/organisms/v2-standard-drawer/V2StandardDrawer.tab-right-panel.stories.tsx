@@ -4,7 +4,7 @@ import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-sectio
 import type { Meta } from "@storybook/react";
 
 const meta: Meta<typeof V2StandardDrawer> = {
-  title: "Components/Organisms/Drawer/V2StandardDrawer",
+  title: "Components/Organisms/V2StandardDrawer",
   component: V2StandardDrawer,
 };
 

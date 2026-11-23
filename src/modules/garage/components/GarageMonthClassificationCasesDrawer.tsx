@@ -38,10 +38,16 @@ import { KgaraCaseStatusBadge } from "./KgaraCaseStatusBadge";
 import { GarageCaseStandaloneDrawer } from "./GarageCaseStandaloneDrawer";
 import { GarageCaseSettlementDrawerModal } from "./GarageCaseSettlementDrawerModal";
 import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
+import type { GarageTimeHorizonKey } from "../api/garageDebtsAnalyticsApi";
+
+/** Mốc đối soát dòng tiền công nợ garage (đồng bộ với backend GARAGE_DEBT_BASELINE_DATE). */
+const HORIZON_BASELINE_DATE = "2026-07-01";
 
 export interface GarageMonthClassificationCasesDrawerProps {
   open: boolean;
   month?: string; // e.g. "2026-07" or "07/2026"
+  /** Khi có, danh sách lọc theo mốc tuổi nợ thay vì theo tháng (drawer mốc). */
+  horizon?: GarageTimeHorizonKey;
   monthLabel?: string; // e.g. "Tháng 07/2026"
   filterType: "CLASSIFICATION" | "INVOICE" | "PARTNER_GROUP";
   filterKey: string; // "SUA_CHUA_CHUNG" | "KY_GUI_NOI_BO" | "OJ_NGOAI" | "OTHER" | "WITH_INVOICE" | "NO_INVOICE" | "PARTNER_GROUP"
@@ -55,6 +61,7 @@ export interface GarageMonthClassificationCasesDrawerProps {
 export function GarageMonthClassificationCasesDrawer({
   open,
   month,
+  horizon,
   monthLabel,
   filterType,
   filterKey,
@@ -101,7 +108,7 @@ export function GarageMonthClassificationCasesDrawer({
       setDateRanges({});
       setSorts([]);
     }
-  }, [open, filterType, filterKey, month]);
+  }, [open, filterType, filterKey, month, horizon]);
 
   // Standalone case drawer state
   const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
@@ -146,8 +153,11 @@ export function GarageMonthClassificationCasesDrawer({
     // 1. Chỉ lấy các phiếu trạng thái KẾT THÚC
     combined["statusTab"] = ["completed"];
 
-    // 2. Lọc theo ngày hoàn thành công việc của kỳ đang xem
-    if (dateFrom && dateTo) {
+    // 2. Lọc theo kỳ đang xem: mốc tuổi nợ (từ mốc đối soát) hoặc khoảng ngày của tháng
+    if (horizon) {
+      combined["agingHorizon"] = [horizon];
+      combined["ngayHoanThanhCongViec"] = [`${HORIZON_BASELINE_DATE}..`];
+    } else if (dateFrom && dateTo) {
       combined["ngayHoanThanhCongViec"] = [`${dateFrom}..${dateTo}`];
     }
 
@@ -188,6 +198,7 @@ export function GarageMonthClassificationCasesDrawer({
     columnFilters,
     dateFrom,
     dateTo,
+    horizon,
     filterType,
     filterKey,
     caseCodes,
@@ -226,7 +237,7 @@ export function GarageMonthClassificationCasesDrawer({
         sorts.length > 0 ? sorts : undefined,
       );
     },
-    enabled: open && !!dateFrom && !!dateTo,
+    enabled: open && (!!horizon || (!!dateFrom && !!dateTo)),
   });
 
   const casesList: any[] = useMemo(() => {

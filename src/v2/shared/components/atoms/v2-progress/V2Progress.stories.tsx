@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2Progress } from "./V2Progress";
 
 const meta: Meta<typeof V2Progress> = {
-  title: "Components/Atoms/Display/V2Progress",
+  title: "Components/Atoms/V2Progress",
   component: V2Progress,
   tags: ["autodocs"],
   args: { value: 60, label: "Đang xuất Excel", showValue: true },

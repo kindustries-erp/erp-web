@@ -10,7 +10,9 @@ export const v2En: V2Dictionary = {
         purchasing: "PURCHASING",
         inventory: "WAREHOUSE",
         manufacturing: "MANUFACTURING / WORKSHOP",
+        garage: "GARAGE",
         accounting: "ACCOUNTING",
+        tools: "TOOLS",
         settings: "SYSTEM",
       },
       items: {
@@ -26,6 +28,7 @@ export const v2En: V2Dictionary = {
         erpProduction: "Production",
         erpInvoices: "Invoices",
         cashflow: "Cash Flow",
+        loans: "Loans & Cashflow",
         catalog: "General Settings",
         allModules: "All",
         catalogTitle: "All Modules",
@@ -35,8 +38,18 @@ export const v2En: V2Dictionary = {
         pinnedShortcutsCount: "Pinned {{count}} shortcuts on Bottom Nav",
         resetDefault: "Reset to default",
         inventoryGroup: "Inventory",
-        garageGoodsReceipts: "Garage Goods Receipts",
-        // v2-module:garage-goods-receipts:locale-en
+        garageStockVouchers: "Garage Stock Vouchers",
+        garageStockBalances: "Garage Stock",
+        garageProcurementRequests: "Garage Purchase Requests",
+        garageProcurementOrders: "Garage Purchase Orders",
+        // v2-module:inventory-movements-garage:locale-en
+        erpPermissionsCore: "Roles & Permissions",
+        // v2-module:rbac-roles:locale-en
+        usersManagement: "User management",
+        employeesManagement: "Employee management",
+        // v2-module:users-management:locale-en
+        fileAttachments: "File management",
+        // v2-module:file-attachments-management:locale-en
         // plop:v2-nav-items
       },
       searchPlaceholder: "Search modules...",
@@ -44,14 +57,20 @@ export const v2En: V2Dictionary = {
       clearSearch: "Clear search",
       modulesCountBadge: "{{count}} modules",
     },
+    appearance: {
+      title: "Appearance & Language",
+      subtitle: "Customize color theme and display language",
+    },
     common: {
       close: "Close",
       save: "Save",
+      saveDraft: "Save Draft",
       cancel: "Cancel",
       edit: "Edit",
       done: "Done",
       reset: "Reset",
       loading: "Loading...",
+      loadingPage: "Loading page...",
       error: "An error occurred",
       actions: "Actions",
       overview: "Overview",
@@ -73,10 +92,13 @@ export const v2En: V2Dictionary = {
       empty: "No notifications yet",
       deleteAll: "Delete all",
       markAllAsRead: "Mark all as read",
+      markAsRead: "Mark as read",
       deleteItem: "Delete notification",
+      markAsReadSuccess: "Notification marked as read",
+      markAllAsReadSuccess: "All notifications marked as read",
     },
     topbar: {
-      quickSearchPlaceholder: "Search menus, documents (Ctrl K)...",
+      quickSearchPlaceholder: "Quick search...",
       quickSearchShortcut: "Ctrl K",
       quickSearchAria: "Quick system search",
       languageSwitchAria: "Switch display language",
@@ -101,6 +123,7 @@ export const v2En: V2Dictionary = {
       closeTabShort: "Close tab",
       headerAriaLabel: "Drawer top navigation tabs",
       subAriaLabel: "Drawer sub navigation tabs",
+      statusChipAriaLabel: "Filter by status",
       buttonGroupAriaLabel: "Button group tabs",
     },
     welcome: {
@@ -233,6 +256,9 @@ export const v2En: V2Dictionary = {
       expand: "Expand",
       collapse: "Collapse",
     },
+    activityTimeline: {
+      empty: "No activities recorded",
+    },
     dropdown: {
       optionsTitle: "Action options",
     },
@@ -308,6 +334,13 @@ export const v2En: V2Dictionary = {
       category: "Category",
       other: "Other",
     },
+    linkedField: {
+      edited: "Edited",
+      sourceHint: "Source: {{value}}",
+      revert: "Restore from source",
+      refresh: "Update from source",
+      refreshFailed: "Could not update from source",
+    },
     form: {
       selectPlaceholder: "Select...",
       searchPlaceholder: "Search...",
@@ -343,6 +376,7 @@ export const v2En: V2Dictionary = {
     table: v2EnTable,
     auth: {
       title: "Sign In",
+      loginAction: "Sign In",
       subtitle: "Sign in to ERP system",
       emailLabel: "Email",
       emailPlaceholder: "Enter your email",

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ClipboardList, Calculator, Warehouse } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
@@ -47,7 +48,10 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "erp-finished-goods": PackageCheck,
   "garage-dashboard": LayoutDashboard,
   "garage-cases": Car,
-  "garage-goods-receipts": Package,
+  "garage-cases-v2": Car,
+  "garage-procurement": ClipboardList,
+  "garage-stock-vouchers": Package,
+  "garage-stock-balances": Warehouse,
   "garage-opex": ReceiptText,
   "garage-cashflow": Wallet,
   "garage-customers": Users,
@@ -56,13 +60,15 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "invoice-debts": ReceiptText,
   "vinfast-parts-stock": Package,
   cashflow: Wallet,
+  loans: Calculator,
   "erp-invoices": ReceiptText,
   "journal-entry": FileText,
   "settings-accounts": Layers,
-  "erp-employees": UserSquare2,
-  attachments: Paperclip,
+  "employees-management": UserSquare2,
+  "file-attachments": Paperclip,
   "email-inbox": Mail,
-  "erp-users": Users,
+  "users-management": Users,
+  permission: Shield,
   "erp-permissions-core": Shield,
   "erp-activity-logs": FileText,
   "settings-branch": Building2,
@@ -70,6 +76,11 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "settings-cash-fund": Banknote,
   "sys-tags": Settings,
   "custom-fields": Sliders,
+  "customers-v2": Users,
+  "suppliers-v2": Building2,
+  "invoices-v2": ReceiptText,
+  "audit-logs-v2": FileText,
+  "admin-dashboard-v2": LayoutDashboard,
 };
 
 export function useV2AdaptedTabs(): {
@@ -109,11 +120,17 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.erpProduction", "Lệnh sản xuất");
       case "erp-finished-goods":
         return t("nav.items.erpFinishedGoods", "Thành phẩm");
+      case "garage-cases-v2":
+        return t("nav.items.garageCasesV2", "Hoạt động garage (v2)");
       case "garage-dashboard":
       case "garage-cases":
         return t("nav.items.garageCases", "Hoạt động garage");
-      case "garage-goods-receipts":
-        return t("nav.items.garageGoodsReceipts", "Nhập kho Garage");
+      case "garage-procurement":
+        return t("nav.items.garageProcurement", "Mua hàng Garage");
+      case "garage-stock-vouchers":
+        return t("nav.items.garageStockVouchers", "Chứng từ kho Garage");
+      case "garage-stock-balances":
+        return t("nav.items.garageStockBalances", "Tồn kho Garage");
       case "garage-cashflow":
         return t("nav.items.garageCashflow", "Thu chi garage");
       case "garage-debts":
@@ -124,6 +141,8 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.vinfastPartsGroup", "Phụ tùng Vinfast");
       case "cashflow":
         return t("nav.items.cashflow", "Dòng tiền");
+      case "loans":
+        return t("nav.items.loans", "Khoản vay & Lãi suất");
       case "erp-invoices":
         return t("nav.items.invoices", "Hóa đơn");
       case "invoice-debts":
@@ -134,14 +153,15 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.journal", "Nhật ký chung");
       case "settings-accounts":
         return t("nav.items.accounts", "Hệ thống tài khoản");
-      case "erp-employees":
+      case "employees-management":
         return t("nav.items.erpEmployees", "Nhân sự");
-      case "attachments":
+      case "file-attachments":
         return t("nav.items.attachments", "Tệp đính kèm");
       case "email-inbox":
         return t("nav.items.emailInbox", "Hòm thư");
-      case "erp-users":
+      case "users-management":
         return t("nav.items.users", "Người dùng");
+      case "permission":
       case "erp-permissions-core":
         return t("nav.items.phanquyen", "Phân quyền");
       case "erp-activity-logs":
@@ -156,6 +176,16 @@ export function useV2AdaptedTabs(): {
         return t("nav.items.sysTags", "Tags");
       case "custom-fields":
         return t("nav.items.customFields", "Trường tùy chỉnh");
+      case "customers-v2":
+        return t("nav.items.customersV2", "Khách hàng (v2)");
+      case "suppliers-v2":
+        return t("nav.items.suppliersV2", "Nhà cung cấp (v2)");
+      case "invoices-v2":
+        return t("nav.items.invoicesV2", "Hóa đơn điện tử (v2)");
+      case "audit-logs-v2":
+        return t("nav.items.auditLogsV2", "Nhật ký hoạt động (v2)");
+      case "admin-dashboard-v2":
+        return t("nav.items.adminDashboardV2", "Tổng quan Quản trị (v2)");
       default:
         return key;
     }

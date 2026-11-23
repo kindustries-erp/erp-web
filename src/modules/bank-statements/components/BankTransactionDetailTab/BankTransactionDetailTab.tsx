@@ -2,7 +2,12 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { FileText, Building2, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { V2TabBar, V2Text, type V2TabItemData } from "@/v2/shared/components";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+  V2Text,
+  type V2TabItemData,
+} from "@/v2/shared/components";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { BankTransactionVoucherPreview } from "./components/BankTransactionVoucherPreview";
 import { BankTransactionPartnerSubTab } from "./BankTransactionPartnerSubTab";
@@ -99,7 +104,7 @@ export const BankTransactionDetailTab = React.memo(
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5 w-full">
           <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0">
             <V2TabBar
-              variant="sub"
+              variant={V2TabBarVariant.SUB}
               activeTabKey={viewMode}
               onTabChange={(key) =>
                 handleViewModeChange(key as BankTransactionDetailViewMode)

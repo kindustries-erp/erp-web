@@ -109,4 +109,43 @@ describe("useV2TableState", () => {
     rerender();
     expect(result.current.setColumnFilter).toBe(first);
   });
+
+  it("applyQuery thay toàn bộ điều kiện và sắp xếp, về trang 1 và giữ pageSize", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.setPage(4);
+      result.current.setColumnFilter("status", ["draft"]);
+      result.current.setSearch("cũ");
+    });
+
+    act(() => {
+      result.current.applyQuery({
+        search: "PO",
+        sorts: [{ columnKey: "poNumber", direction: TableSortState.ASC }],
+        columnFilters: { supplier: ["A"] },
+      });
+    });
+
+    expect(result.current.query.page).toBe(1);
+    expect(result.current.query.pageSize).toBe(20);
+    expect(result.current.query.search).toBe("PO");
+    expect(result.current.query.sorts).toEqual([
+      { columnKey: "poNumber", direction: TableSortState.ASC },
+    ]);
+    expect(result.current.query.columnFilters).toEqual({ supplier: ["A"] });
+  });
+
+  it("applyQuery không để lại điều kiện cũ khi snapshot không có trường đó", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.setColumnFilter("status", ["draft"]);
+      result.current.setSearch("cũ");
+    });
+
+    act(() => result.current.applyQuery({}));
+
+    expect(result.current.query.search).toBeUndefined();
+    expect(result.current.query.columnFilters).toEqual({});
+    expect(result.current.activeFilterCount).toBe(0);
+  });
 });

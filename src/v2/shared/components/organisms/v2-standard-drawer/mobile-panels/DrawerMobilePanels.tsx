@@ -1,5 +1,8 @@
 import React from "react";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import {
+  V2TabBar,
+  V2TabBarVariant,
+} from "@/v2/shared/components/molecules/v2-tab-bar";
 import { DrawerRelatedDeck } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
 import { V2Stack } from "@/v2/shared/components/atoms/v2-stack";
 import { V2Divider } from "@/v2/shared/components/atoms/v2-divider";
@@ -24,7 +27,7 @@ export const DrawerMobilePanels: React.FC<DrawerMobilePanelsProps> = ({
       <V2Stack gap="xs">
         {props.leftTabs && props.leftTabs.length > 0 && (
           <V2TabBar
-            variant="sub"
+            variant={V2TabBarVariant.SUB}
             tabs={props.leftTabs}
             activeTabKey={h.activeLeftTabKey}
             onTabChange={h.handleLeftTabChange}
@@ -44,7 +47,7 @@ export const DrawerMobilePanels: React.FC<DrawerMobilePanelsProps> = ({
           <V2Divider orientation="horizontal" className="bg-border/50" />
           {props.rightTabs && props.rightTabs.length > 0 && (
             <V2TabBar
-              variant="sub"
+              variant={V2TabBarVariant.SUB}
               tabs={props.rightTabs}
               activeTabKey={h.activeRightTabKey}
               onTabChange={h.handleRightTabChange}

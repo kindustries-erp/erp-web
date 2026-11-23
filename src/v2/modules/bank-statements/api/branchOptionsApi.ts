@@ -13,7 +13,7 @@ export const branchOptionsApi = {
     const { data } = await v2HttpClient.get<{
       items?: BranchRowDto[];
       data?: BranchRowDto[];
-    }>("/api/v1/branches", {
+    }>("/api/v2/branches", {
       params: { page: 1, pageSize: 500, sort: "code" },
     });
     const rows = data.items ?? data.data ?? [];

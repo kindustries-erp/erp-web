@@ -1,8 +1,15 @@
 import "./traceability.locale";
 
 export * from "./types/traceability.type";
+export type {
+  TraceabilityCanvasActions,
+  TranslateFn,
+} from "./types/traceability.flow.type";
 export * from "./constants/traceability.constants";
 export * from "./utils/traceability.helper";
+export * from "./utils/traceability.link";
+export * from "./utils/traceability.merge";
+export * from "./utils/traceability.openDocument";
 export * from "./utils/traceability.visual";
 export * from "./hooks/useV2Traceability";
 export * from "./hooks/useV2TraceabilityGraphQuery";

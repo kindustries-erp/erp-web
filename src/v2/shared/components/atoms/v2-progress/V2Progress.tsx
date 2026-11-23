@@ -5,9 +5,10 @@ import type { V2ProgressProps, V2ProgressTone } from "./V2Progress.type";
 
 const TONE_CLASS: Record<V2ProgressTone, string> = {
   primary: "bg-primary",
-  emerald: "bg-emerald-500",
-  amber: "bg-amber-500",
-  rose: "bg-rose-500",
+  emerald: "bg-up-fg",
+  amber: "bg-warn-fg",
+  rose: "bg-destructive",
+  neutral: "bg-muted-foreground",
 };
 
 const clamp = (value: number) => Math.min(100, Math.max(0, value));

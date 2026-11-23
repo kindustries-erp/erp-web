@@ -3,17 +3,25 @@ import { kebabCase, pascalCase } from "./v2ModuleData.mjs";
 /** Tầng Atomic V2 hợp lệ (khớp thư mục src/v2/shared/components/<layer>) */
 export const COMPONENT_LAYERS = ["atoms", "molecules", "organisms"];
 
-const LAYER_TITLE = { atoms: "Atoms", molecules: "Molecules", organisms: "Organisms" };
+const LAYER_TITLE = {
+  atoms: "Atoms",
+  molecules: "Molecules",
+  organisms: "Organisms",
+};
 
 /** Chuẩn hóa đầu vào: tên bắt buộc tiền tố V2 (quy ước mọi component shared V2) */
 export function buildComponentData(answers) {
   const layer = answers.layer;
   if (!COMPONENT_LAYERS.includes(layer)) {
-    throw new Error(`Tầng không hợp lệ "${layer}", chọn: ${COMPONENT_LAYERS.join(", ")}`);
+    throw new Error(
+      `Tầng không hợp lệ "${layer}", chọn: ${COMPONENT_LAYERS.join(", ")}`,
+    );
   }
   const Name = pascalCase(answers.name);
   if (!/^V2[A-Z][A-Za-z0-9]*$/.test(Name)) {
-    throw new Error(`Tên "${answers.name}" phải bắt đầu bằng V2 và PascalCase, vd: V2TraceabilityCanvas`);
+    throw new Error(
+      `Tên "${answers.name}" phải bắt đầu bằng V2 và PascalCase, vd: V2TraceabilityCanvas`,
+    );
   }
   return {
     layer,
@@ -24,16 +32,23 @@ export function buildComponentData(answers) {
   };
 }
 
-/** Danh sách template → file đích; thư mục gốc: src/v2/shared/components/<layer>/<folder>/ */
+/**
+ * Danh sách template → file đích; thư mục gốc: src/v2/shared/components/<layer>/<folder>/
+ * Chiến lược test: Organism sinh `.test.tsx` mặc định; Atom/Molecule chỉ viết test khi có logic riêng.
+ * Storybook: mọi tầng (atoms, molecules, organisms) sinh `.stories.tsx` mặc định, theo quy chuẩn bắt buộc cho component mới có UI.
+ */
 export function componentFileMap(data) {
   const base = `src/v2/shared/components/${data.layer}/${data.folder}`;
-  return [
+  const files = [
     ["Component.tsx.hbs", `${base}/${data.Name}.tsx`],
     ["Component.type.ts.hbs", `${base}/${data.Name}.type.ts`],
-    ["Component.test.tsx.hbs", `${base}/${data.Name}.test.tsx`],
     ["Component.stories.tsx.hbs", `${base}/${data.Name}.stories.tsx`],
-    ["index.ts.hbs", `${base}/index.ts`],
   ];
+  if (data.layer === "organisms") {
+    files.push(["Component.test.tsx.hbs", `${base}/${data.Name}.test.tsx`]);
+  }
+  files.push(["index.ts.hbs", `${base}/index.ts`]);
+  return files;
 }
 
 /** Thêm `export * from "./<folder>";` vào barrel của tầng (idempotent) */

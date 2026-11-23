@@ -1,0 +1,63 @@
+import { registerV2ModuleLocale } from "@/v2/shared/locales";
+
+/** Chữ hiển thị dùng chung của họ audit (`v2.audit.*`) */
+registerV2ModuleLocale("audit", {
+  vi: {
+    listLoadError: "Không thể tải nhật ký hoạt động",
+    columns: {
+      createdAt: "Thời gian",
+      actorEmail: "Người thực hiện",
+      module: "Module",
+      actionType: "Hành động",
+      entityType: "Đối tượng",
+      entityId: "Mã đối tượng",
+      status: "Trạng thái",
+      httpMethod: "Phương thức",
+      uiScreen: "Màn hình",
+      message: "Thông điệp",
+    },
+    status: { success: "Thành công", failed: "Lỗi" },
+    views: { all: "Tất cả cột" },
+    detail: {
+      title: "Chi tiết nhật ký",
+      info: "Thông tin",
+      route: "Đường dẫn",
+      uiAction: "Thao tác giao diện",
+      ipAddress: "Địa chỉ IP",
+      userAgent: "Trình duyệt",
+      requestId: "Mã yêu cầu",
+      before: "Dữ liệu trước",
+      after: "Dữ liệu sau",
+      error: "Chi tiết lỗi",
+    },
+  },
+  en: {
+    listLoadError: "Unable to load activity logs",
+    columns: {
+      createdAt: "Time",
+      actorEmail: "Actor",
+      module: "Module",
+      actionType: "Action",
+      entityType: "Entity",
+      entityId: "Entity ID",
+      status: "Status",
+      httpMethod: "Method",
+      uiScreen: "Screen",
+      message: "Message",
+    },
+    status: { success: "Success", failed: "Failed" },
+    views: { all: "All columns" },
+    detail: {
+      title: "Log details",
+      info: "Information",
+      route: "Route",
+      uiAction: "UI action",
+      ipAddress: "IP address",
+      userAgent: "User agent",
+      requestId: "Request ID",
+      before: "Before",
+      after: "After",
+      error: "Error details",
+    },
+  },
+});

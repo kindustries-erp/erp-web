@@ -5,6 +5,11 @@ import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { useV2MobileNavStore } from "@/v2/shared/stores/useV2MobileNavStore";
 import { V2AppLayout } from "./V2AppLayout";
 
+vi.mock("@/v2/shared/hooks/useV2HasPermission", () => ({
+  useV2PermissionChecker: () => () => true,
+  useV2HasPermission: () => true,
+}));
+
 describe("V2AppLayout Switcher", () => {
   const originalInnerWidth = window.innerWidth;
 
@@ -89,7 +94,7 @@ describe("V2AppLayout Switcher", () => {
     expect(screen.queryByText("Quay lại ERP V1")).not.toBeInTheDocument();
   });
 
-  it("hiển thị chính xác 5 menu items ở bottom nav (2-Bubble-2) và cho phép tùy chỉnh", () => {
+  it("hiển thị chính xác 7 menu items ở bottom nav (3-Bubble-3) và cho phép tùy chỉnh", () => {
     Object.defineProperty(window, "innerWidth", {
       writable: true,
       configurable: true,
@@ -105,7 +110,7 @@ describe("V2AppLayout Switcher", () => {
 
     const bottomNav = screen.getByTestId("v2-bottom-nav");
     const navButtons = bottomNav.querySelectorAll("button");
-    expect(navButtons.length).toBe(5);
+    expect(navButtons.length).toBe(7);
 
     const heroBtn = screen.getByTestId("bottom-nav-hero-button");
     expect(heroBtn).toBeInTheDocument();
@@ -119,14 +124,14 @@ describe("V2AppLayout Switcher", () => {
     const editBtn = screen.getByText("Sửa");
     fireEvent.click(editBtn);
 
-    // Đang có 4/4 mục. Tìm một mục chưa được chọn và click -> Bị chặn và hiện thông báo
+    // Đang có 6/6 mục. Tìm một mục chưa được chọn và click -> Bị chặn và hiện thông báo
     const customerBtn = screen.queryByRole("button", { name: /Khách hàng/i });
     if (customerBtn) {
       fireEvent.click(customerBtn);
       // Hiển thị thông báo giới hạn
       expect(screen.getByTestId("limit-warning-banner")).toBeInTheDocument();
       expect(
-        screen.getByText(/Đã chọn đủ 4\/4 mục lối tắt/i),
+        screen.getByText(/Đã chọn đủ 6\/6 mục lối tắt/i),
       ).toBeInTheDocument();
     }
 
@@ -174,7 +179,7 @@ describe("V2AppLayout Switcher", () => {
     expect(screen.getByTestId("mobile-notification")).toBeInTheDocument();
   });
 
-  it("hiển thị bộ chọn theme và ngôn ngữ trong mobile catalog modal và gọi onThemeChange", () => {
+  it("hiển thị bộ chọn theme và ngôn ngữ qua nút trigger trên mobile header và gọi onThemeChange", () => {
     Object.defineProperty(window, "innerWidth", {
       writable: true,
       configurable: true,
@@ -191,8 +196,12 @@ describe("V2AppLayout Switcher", () => {
       </V2AppLayout>,
     );
 
-    const catalogBtn = screen.getByText("Tất cả");
-    fireEvent.click(catalogBtn);
+    // Click nút trigger Palette trên mobile top bar
+    const appearanceTrigger = screen.getByTestId(
+      "mobile-appearance-trigger-btn",
+    );
+    expect(appearanceTrigger).toBeInTheDocument();
+    fireEvent.click(appearanceTrigger);
 
     // Kiểm tra card cài đặt giao diện & ngôn ngữ
     expect(
@@ -325,5 +334,23 @@ describe("V2AppLayout Switcher", () => {
     fireEvent.click(clearBtn);
     expect(withinSheet.getByText("Đơn bán hàng")).toBeInTheDocument();
     expect(withinSheet.getByText("Đơn mua hàng")).toBeInTheDocument();
+  });
+
+  it("ẩn V2BottomNav trên Mobile khi truyền hideBottomNav=true", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 390,
+    });
+
+    render(
+      <V2AppLayout hideBottomNav>
+        <div>Public Content</div>
+      </V2AppLayout>,
+    );
+
+    expect(screen.getByTestId("v2-app-layout-mobile")).toBeInTheDocument();
+    expect(screen.queryByTestId("v2-bottom-nav")).not.toBeInTheDocument();
+    expect(screen.getByText("Public Content")).toBeInTheDocument();
   });
 });

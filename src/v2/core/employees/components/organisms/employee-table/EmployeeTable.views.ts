@@ -1,0 +1,28 @@
+export const EMPLOYEE_VIEW_VISIBILITY = {
+  overview: {
+    employeeCode: true,
+    fullName: true,
+    jobTitle: true,
+    department: true,
+    branchId: true,
+    phone: false,
+    email: false,
+    birthDate: false,
+    startDate: false,
+    status: true,
+    account: true,
+  },
+  all: {
+    employeeCode: true,
+    fullName: true,
+    jobTitle: true,
+    department: true,
+    branchId: true,
+    phone: true,
+    email: true,
+    birthDate: true,
+    startDate: true,
+    status: true,
+    account: true,
+  },
+} as const;

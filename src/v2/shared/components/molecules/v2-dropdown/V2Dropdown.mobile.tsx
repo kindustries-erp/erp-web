@@ -139,7 +139,7 @@ export const V2DropdownMobile: React.FC<V2DropdownProps> = ({
                       }}
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-left transition-colors",
-                        "hover:bg-surface-hover active:bg-surface-hover/80 text-foreground cursor-pointer",
+                        "text-foreground hover:bg-[color:var(--sidebar-hover-bg,rgba(0,0,0,0.05))] hover:text-foreground dark:hover:bg-teal-500/10 dark:hover:text-teal-300 active:bg-[color:var(--sidebar-hover-bg,rgba(0,0,0,0.08))] cursor-pointer",
                         item.variant === "danger" &&
                           "text-destructive hover:bg-destructive/10",
                         (item.disabled || item.loading) &&

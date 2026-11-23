@@ -34,6 +34,8 @@ export interface V2TableState {
   setSearch: (text: string) => void;
   clearColumn: (columnKey: string) => void;
   resetAll: () => void;
+  /** Thay toàn bộ điều kiện và sắp xếp bằng `next`, về trang 1, giữ pageSize */
+  applyQuery: (next: Partial<V2TableQuery>) => void;
 }
 
 export const useV2TableState = ({
@@ -151,6 +153,17 @@ export const useV2TableState = ({
     [patch],
   );
 
+  const applyQuery = useCallback(
+    (next: Partial<V2TableQuery>) =>
+      setQuery((current) => ({
+        ...createInitialQuery({ pageSize: current.pageSize }),
+        ...next,
+        page: 1,
+        pageSize: current.pageSize,
+      })),
+    [],
+  );
+
   const getSort = useCallback(
     (columnKey: string) =>
       query.sorts.find((s) => s.columnKey === columnKey)?.direction ??
@@ -174,5 +187,6 @@ export const useV2TableState = ({
     setSearch,
     clearColumn,
     resetAll,
+    applyQuery,
   };
 };

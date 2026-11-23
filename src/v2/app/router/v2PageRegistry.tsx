@@ -1,8 +1,20 @@
 import type { ReactNode } from "react";
 import { V2AdminRouteId } from "@/v2/shared/types";
-import { GarageGoodsReceiptsPage } from "@/v2/modules/garage-goods-receipts"; // v2-module:garage-goods-receipts:imports
+import {
+  GarageStockBalancesPage,
+  GarageStockVouchersPage,
+} from "@/v2/modules/inventory-movements-garage"; // v2-module:inventory-movements-garage:imports
+import { GarageProcurementRequestsPage } from "@/v2/modules/garage-procurement-requests";
+import { InvoiceShapePage } from "@/v2/modules/finance-invoice";
+import { BusinessPartnersCustomersPage } from "@/v2/modules/business-partners-customers"; // v2-module:business-partners-customers:imports
+import { BusinessPartnersSuppliersPage } from "@/v2/modules/business-partners-suppliers"; // v2-module:business-partners-suppliers:imports
+import { RolesPage } from "@/v2/modules/rbac-roles"; // v2-module:rbac-roles:imports
+import { LoansListPage } from "@/v2/modules/loans-tool";
+import { UsersManagementPage } from "@/v2/modules/users-management"; // v2-module:users-management:imports
+import { EmployeesManagementPage } from "@/v2/modules/employees-management"; // v2-module:employees-management:imports
+import { AuditLogsGuarded } from "@/v2/modules/audit-logs"; // v2-module:audit-logs:imports
+import { FileAttachmentsPage } from "@/v2/modules/file-attachments-management"; // v2-module:file-attachments-management:imports
 // plop:v2-page-imports
-import { BusinessPartnersPage } from "@/v2/modules/business-partners";
 import { V2AdminDashboardPage } from "@/v2/modules/admin-dashboard";
 
 /**
@@ -10,10 +22,31 @@ import { V2AdminDashboardPage } from "@/v2/modules/admin-dashboard";
  * Generator `v2-module` chèn import và entry ngay trước các marker bên dưới.
  */
 export const V2_PAGE_REGISTRY: Record<string, () => ReactNode> = {
-  "garage-goods-receipts": () => <GarageGoodsReceiptsPage />,
-  // v2-module:garage-goods-receipts:pages
+  "garage-stock-vouchers": () => <GarageStockVouchersPage />,
+  "garage-stock-balances": () => <GarageStockBalancesPage />,
+  "garage-procurement": () => (
+    <GarageProcurementRequestsPage defaultTab="requests" />
+  ),
+  // v2-module:inventory-movements-garage:pages
+  customers: () => <BusinessPartnersCustomersPage />,
+  // v2-module:business-partners-customers:pages
+  suppliers: () => <BusinessPartnersSuppliersPage />,
+  // v2-module:business-partners-suppliers:pages
+  permission: () => <RolesPage />,
+  "permission-v2": () => <RolesPage />,
+  "erp-permissions-core": () => <RolesPage />,
+  "erp-permissions-core-v2": () => <RolesPage />,
+  // v2-module:rbac-roles:pages
+  "users-management": () => <UsersManagementPage />,
+  "employees-management": () => <EmployeesManagementPage />,
+  // v2-module:users-management:pages
+  [V2AdminRouteId.AUDIT_LOGS]: () => <AuditLogsGuarded />,
+  // v2-module:audit-logs:pages
+  "file-attachments-management": () => <FileAttachmentsPage />,
+  // v2-module:file-attachments-management:pages
   // plop:v2-pages
+  loans: () => <LoansListPage />,
   [V2AdminRouteId.DASHBOARD]: () => <V2AdminDashboardPage />,
-  customers: () => <BusinessPartnersPage partnerType="CUSTOMER" />,
-  suppliers: () => <BusinessPartnersPage partnerType="VENDOR" />,
+  [V2AdminRouteId.USERS]: () => <UsersManagementPage />,
+  invoices: () => <InvoiceShapePage />,
 };

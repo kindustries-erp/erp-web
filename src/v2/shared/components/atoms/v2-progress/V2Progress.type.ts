@@ -1,4 +1,10 @@
-export type V2ProgressTone = "primary" | "emerald" | "amber" | "rose";
+export type V2ProgressTone =
+  | "primary"
+  | "emerald"
+  | "amber"
+  | "rose"
+  /** Xám trung tính theo token, dùng cho tổng và trạng thái trung lập */
+  | "neutral";
 
 export interface V2ProgressProps {
   /** 0–100. Bỏ trống nghĩa là chưa biết tiến độ (thanh nhấp nháy) */

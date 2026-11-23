@@ -2,12 +2,13 @@ import * as React from "react";
 import { Chart } from "react-chartjs-2";
 import { V2ChartFrame } from "@/v2/shared/components/molecules/v2-chart-frame";
 import { useV2ChartTheme } from "@/v2/shared/hooks/useV2ChartTheme";
+import { defaultFormat } from "./V2Chart.options";
+import { cn } from "@/v2/shared/utils/cn";
 import {
   buildComboData,
   buildComboOptions,
-  defaultFormat,
   prepareComboSeries,
-} from "./V2Chart.options";
+} from "./V2Chart.combo.options";
 import { registerV2Chart } from "./V2Chart.setup";
 import type { V2ComboChartProps } from "./V2Chart.type";
 
@@ -19,11 +20,15 @@ export const V2ComboChart: React.FC<V2ComboChartProps> = ({
   stacked = false,
   formatValue = defaultFormat,
   secondaryFormatValue,
+  minColumnWidth,
   ariaLabel,
   loading,
   height,
   className,
+  onBarClick,
+  onBarContextMenu,
 }) => {
+  const chartRef = React.useRef<any>(null);
   const theme = useV2ChartTheme();
   const prepared = React.useMemo(
     () => prepareComboSeries(series, theme),
@@ -34,39 +39,93 @@ export const V2ComboChart: React.FC<V2ComboChartProps> = ({
     [series],
   );
 
+  const comboData = React.useMemo(
+    () =>
+      buildComboData(labels, prepared.series, prepared.colors, theme, stacked),
+    [labels, prepared.series, prepared.colors, theme, stacked],
+  );
+
+  const comboOptions = React.useMemo(
+    () =>
+      buildComboOptions(
+        theme,
+        formatValue,
+        stacked,
+        hasSecondary,
+        secondaryFormatValue,
+        onBarClick,
+      ),
+    [
+      theme,
+      formatValue,
+      stacked,
+      hasSecondary,
+      secondaryFormatValue,
+      onBarClick,
+    ],
+  );
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!onBarContextMenu) return;
+    const chart = chartRef.current;
+    if (!chart) return;
+    const elements = chart.getElementsAtEventForMode(
+      e.nativeEvent,
+      "index",
+      { intersect: false },
+      true,
+    );
+    if (elements && elements.length > 0) {
+      e.preventDefault();
+      onBarContextMenu(elements[0].index, elements[0].datasetIndex, e);
+    }
+  };
+
   return (
     <V2ChartFrame
       labels={labels}
       series={prepared.series}
-      legend={prepared.series.map((s, i) => ({
-        key: s.key,
-        label: s.label,
-        color: prepared.colors[i] as string,
-        isLine: s.type === "line",
-      }))}
+      legend={prepared.series
+        .map((s, i) => ({ s, i }))
+        .filter(({ s }) => !s.legendHidden)
+        .map(({ s, i }) => ({
+          key: s.key,
+          label: s.label,
+          color: prepared.colors[i] as string,
+          isLine: s.type === "line",
+        }))}
       formatValue={formatValue}
       ariaLabel={ariaLabel}
       loading={loading}
       height={height}
       className={className}
     >
-      <Chart
-        type="bar"
-        data={buildComboData(
-          labels,
-          prepared.series,
-          prepared.colors,
-          theme,
-          stacked,
+      <div
+        onContextMenu={handleContextMenu}
+        className={cn(
+          "h-full w-full",
+          minColumnWidth
+            ? "overflow-x-auto overflow-y-hidden pb-1.5 scrollbar-thin"
+            : "",
         )}
-        options={buildComboOptions(
-          theme,
-          formatValue,
-          stacked,
-          hasSecondary,
-          secondaryFormatValue,
-        )}
-      />
+      >
+        <div
+          style={{
+            width: minColumnWidth
+              ? `${Math.max(100, labels.length * minColumnWidth)}px`
+              : "100%",
+            minWidth: "100%",
+            height: "100%",
+          }}
+        >
+          <Chart
+            ref={chartRef}
+            type="bar"
+            data={comboData}
+            options={comboOptions}
+          />
+        </div>
+      </div>
     </V2ChartFrame>
   );
 };

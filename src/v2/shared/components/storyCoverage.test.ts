@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 const ALLOWLIST = new Set([
   "atoms/v2-badge",
   "molecules/v2-bottom-nav-hero-button",
-  "molecules/v2-drawer-audit-timeline",
   "molecules/v2-drawer-field",
   "molecules/v2-drawer-footer",
   "molecules/v2-drawer-header",

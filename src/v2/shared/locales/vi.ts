@@ -9,7 +9,9 @@ export const v2Vi = {
         purchasing: "MUA HÀNG",
         inventory: "KHO",
         manufacturing: "SẢN XUẤT / XƯỞNG",
+        garage: "GARAGE",
         accounting: "KẾ TOÁN",
+        tools: "CÔNG CỤ",
         settings: "HỆ THỐNG",
       },
       items: {
@@ -25,6 +27,7 @@ export const v2Vi = {
         erpProduction: "Sản xuất",
         erpInvoices: "Hóa đơn",
         cashflow: "Dòng tiền",
+        loans: "Khoản vay & Dòng tiền",
         catalog: "Thiết lập chung",
         allModules: "Tất cả",
         catalogTitle: "Danh mục phân hệ",
@@ -35,8 +38,18 @@ export const v2Vi = {
         pinnedShortcutsCount: "Đang ghim {{count}} mục lối tắt ở Bottom Nav",
         resetDefault: "Khôi phục mặc định",
         inventoryGroup: "Kho",
-        garageGoodsReceipts: "Nhập kho Garage",
-        // v2-module:garage-goods-receipts:locale-vi
+        garageStockVouchers: "Chứng từ kho Garage",
+        garageStockBalances: "Tồn kho Garage",
+        garageProcurementRequests: "Đề nghị mua hàng Garage",
+        garageProcurementOrders: "Đơn mua hàng Garage",
+        // v2-module:inventory-movements-garage:locale-vi
+        erpPermissionsCore: "Phân quyền & Vai trò",
+        // v2-module:rbac-roles:locale-vi
+        usersManagement: "Quản lý tài khoản",
+        employeesManagement: "Quản lý nhân viên",
+        // v2-module:users-management:locale-vi
+        fileAttachments: "Quản lý tài liệu",
+        // v2-module:file-attachments-management:locale-vi
         // plop:v2-nav-items
       },
       searchPlaceholder: "Tìm nhanh phân hệ...",
@@ -44,14 +57,20 @@ export const v2Vi = {
       clearSearch: "Xóa tìm kiếm",
       modulesCountBadge: "{{count}} phân hệ",
     },
+    appearance: {
+      title: "Giao diện & Ngôn ngữ",
+      subtitle: "Tùy chỉnh chủ đề màu sắc và ngôn ngữ hiển thị",
+    },
     common: {
       close: "Đóng",
       save: "Lưu",
+      saveDraft: "Lưu nháp",
       cancel: "Hủy",
       edit: "Sửa",
       done: "Xong",
       reset: "Mặc định",
       loading: "Đang tải...",
+      loadingPage: "Đang tải trang...",
       error: "Đã xảy ra lỗi",
       actions: "Thao tác",
       overview: "Tổng quan",
@@ -73,10 +92,13 @@ export const v2Vi = {
       empty: "Chưa có thông báo nào",
       deleteAll: "Xóa tất cả",
       markAllAsRead: "Đánh dấu đã đọc tất cả",
+      markAsRead: "Đánh dấu đã đọc",
       deleteItem: "Xóa thông báo",
+      markAsReadSuccess: "Đã đánh dấu thông báo là đã đọc",
+      markAllAsReadSuccess: "Đã đánh dấu tất cả thông báo là đã đọc",
     },
     topbar: {
-      quickSearchPlaceholder: "Tìm kiếm menu, chứng từ (Ctrl K)...",
+      quickSearchPlaceholder: "Tìm nhanh...",
       quickSearchShortcut: "Ctrl K",
       quickSearchAria: "Tìm kiếm nhanh hệ thống",
       languageSwitchAria: "Chuyển đổi ngôn ngữ hiển thị",
@@ -101,6 +123,7 @@ export const v2Vi = {
       closeTabShort: "Đóng tab",
       headerAriaLabel: "Thanh điều hướng tiêu đề",
       subAriaLabel: "Thanh điều hướng phụ",
+      statusChipAriaLabel: "Lọc theo trạng thái",
       buttonGroupAriaLabel: "Nhóm nút chuyển đổi tab",
     },
     welcome: {
@@ -232,6 +255,9 @@ export const v2Vi = {
       expand: "Mở rộng",
       collapse: "Thu gọn",
     },
+    activityTimeline: {
+      empty: "Chưa có sự kiện nào",
+    },
     dropdown: {
       optionsTitle: "Tùy chọn thao tác",
     },
@@ -308,6 +334,13 @@ export const v2Vi = {
       category: "Hạng mục",
       other: "Khác",
     },
+    linkedField: {
+      edited: "Đã chỉnh",
+      sourceHint: "Gốc: {{value}}",
+      revert: "Khôi phục theo nguồn",
+      refresh: "Cập nhật từ nguồn",
+      refreshFailed: "Không cập nhật được từ nguồn",
+    },
     form: {
       selectPlaceholder: "Chọn...",
       searchPlaceholder: "Tìm kiếm...",
@@ -343,6 +376,7 @@ export const v2Vi = {
     table: v2ViTable,
     auth: {
       title: "Đăng nhập",
+      loginAction: "Đăng nhập",
       subtitle: "Đăng nhập vào hệ thống ERP",
       emailLabel: "Email",
       emailPlaceholder: "Nhập email của bạn",

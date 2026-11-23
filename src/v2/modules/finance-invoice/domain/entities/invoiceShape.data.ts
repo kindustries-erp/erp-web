@@ -48,6 +48,9 @@ export interface FakeInvoice {
   pdfFileKey?: string | null;
   xmlFileKey?: string | null;
   originalPdfStatus?: string | null;
+  /** Nguồn PDF gốc: provider_original, manual_upload, failed; rỗng = chưa có */
+  pdfSource?: string | null;
+  pdfError?: string | null;
 }
 
 export const BRANCHES = [

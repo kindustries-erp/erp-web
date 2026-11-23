@@ -12,11 +12,16 @@ describe("parseFields", () => {
 
   it("does not duplicate createdAt when provided", () => {
     const fields = parseFields("name:string,createdAt:date");
-    expect(fields.filter((field) => field.name === "createdAt")).toHaveLength(1);
+    expect(fields.filter((field) => field.name === "createdAt")).toHaveLength(
+      1,
+    );
   });
 
   it("defaults the type to string", () => {
-    expect(parseFields("name")[0]).toMatchObject({ name: "name", type: "string" });
+    expect(parseFields("name")[0]).toMatchObject({
+      name: "name",
+      type: "string",
+    });
   });
 
   it("rejects unknown types and invalid names", () => {

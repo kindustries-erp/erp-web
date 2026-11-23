@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Check, Copy, Eye, PanelRightOpen } from "lucide-react";
+import { Eye, PanelRightOpen } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { V2CopyButton } from "@/v2/shared/components/atoms/v2-copy-button";
 import { V2Tooltip } from "@/v2/shared/components/atoms/v2-tooltip";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
@@ -20,7 +21,6 @@ export interface V2TableTextProps {
   className?: string;
 }
 
-const COPIED_RESET_MS = 1500;
 const ICON_BUTTON =
   "h-5 w-5 shrink-0 rounded text-muted-fg opacity-0 transition-opacity hover:bg-transparent hover:text-foreground focus-visible:opacity-100 group-hover/text:opacity-100";
 
@@ -34,18 +34,6 @@ export const V2TableText = React.memo(function V2TableText({
   className,
 }: V2TableTextProps) {
   const { t } = useV2Translation();
-  const [copied, setCopied] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), COPIED_RESET_MS);
-    return () => clearTimeout(timer);
-  }, [copied]);
-
-  const handleCopy = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    void navigator.clipboard?.writeText(text).then(() => setCopied(true));
-  };
 
   const iconButton = (
     label: string,
@@ -102,18 +90,13 @@ export const V2TableText = React.memo(function V2TableText({
           <PanelRightOpen className="h-3.5 w-3.5" />,
           onDrawerClick,
         )}
-      {enableCopy &&
-        iconButton(
-          copied
-            ? t("v2.table.copied", "Đã sao chép")
-            : t("v2.table.copy", "Sao chép"),
-          copied ? (
-            <Check className="h-3.5 w-3.5 text-success" />
-          ) : (
-            <Copy className="h-3.5 w-3.5" />
-          ),
-          handleCopy,
-        )}
+      {enableCopy && (
+        <V2CopyButton
+          value={text}
+          label={t("v2.table.copy", "Sao chép")}
+          className={ICON_BUTTON}
+        />
+      )}
     </div>
   );
 });

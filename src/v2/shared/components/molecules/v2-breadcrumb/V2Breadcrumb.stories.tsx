@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2Breadcrumb } from "./V2Breadcrumb";
 
 const meta: Meta<typeof V2Breadcrumb> = {
-  title: "Components/Molecules/Navigation & Sidebar/V2Breadcrumb",
+  title: "Components/Molecules/V2Breadcrumb",
   component: V2Breadcrumb,
   tags: ["autodocs"],
 };
@@ -24,5 +24,23 @@ export const DeepPath: Story = {
       { label: "Phiếu nhập kho" },
       { label: "NK-20261004-001" },
     ],
+  },
+};
+
+export const WithLinks: Story = {
+  args: {
+    items: [
+      { label: "Trang chủ", href: "/v2" },
+      { label: "Bán hàng", href: "/v2/sales" },
+      { label: "Đơn bán hàng" },
+    ],
+    mobileMode: "last-only",
+  },
+};
+
+export const FullOnMobile: Story = {
+  args: {
+    items: [{ label: "Hệ thống" }, { label: "Phân quyền" }],
+    mobileMode: "full",
   },
 };

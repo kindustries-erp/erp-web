@@ -9,7 +9,7 @@ const options = [
 ];
 
 const meta: Meta<typeof V2MultiCombobox> = {
-  title: "Components/Molecules/Forms & Inputs/V2MultiCombobox",
+  title: "Components/Molecules/V2MultiCombobox",
   component: V2MultiCombobox,
   tags: ["autodocs"],
   args: {

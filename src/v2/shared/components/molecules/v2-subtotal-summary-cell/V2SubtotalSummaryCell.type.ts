@@ -8,16 +8,16 @@ export interface V2SubtotalSummaryCellProps {
   variant: V2SubtotalVariant;
   /** Giá trị của trang hiện tại (hoặc số dòng trang hiện tại nếu variant='label') */
   pageValue?: number;
-  /** Tổng toàn bộ (grand total) trên mọi trang (hoặc tổng số dòng nếu variant='label') */
-  totalValue?: number;
+  /** Tổng toàn bộ (grand total) trên mọi trang (hoặc tổng số dòng nếu variant='label'). `null` hiển thị "—" */
+  totalValue?: number | null;
   /** Nhãn tùy chọn khi variant === 'label', mặc định "Tổng cộng:" */
   label?: string;
   /** Trang hiện tại, mặc định 1 */
   page?: number;
   /** Tổng số trang, mặc định 1 (không phân trang) */
   totalPages?: number;
-  /** Lũy kế từ trang 1 đến trang hiện tại; không truyền thì tự tính khi ở trang 1 */
-  cumulativeValue?: number;
+  /** Lũy kế từ trang 1 đến trang hiện tại; không truyền thì tự tính khi ở trang 1. `null` hiển thị "—" */
+  cumulativeValue?: number | null;
   /** Chế độ hiển thị trên cell, mặc định `page` */
   displayMode?: V2SubtotalDisplayMode;
   /** Tiêu đề chỉ số trong popover, ví dụ "SL nhập kho" */

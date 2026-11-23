@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { V2TableSelectCheckbox } from "./V2TableSelectCheckbox";
 
 const meta: Meta<typeof V2TableSelectCheckbox> = {
-  title: "Components/Molecules/Table/V2TableSelectCheckbox",
+  title: "Components/Molecules/V2TableSelectCheckbox",
   component: V2TableSelectCheckbox,
   tags: ["autodocs"],
 };

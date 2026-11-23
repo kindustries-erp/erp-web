@@ -14,8 +14,6 @@ export interface InvoiceDebtListResultDto {
   page: number;
   pageSize: number;
   totalPages: number;
-  /** Tổng toàn bộ dòng khớp bộ lọc, theo tên cột số (khớp `V2Column.key`) */
-  summaries?: Record<string, number>;
 }
 
 export interface ColumnOptionsResultDto {

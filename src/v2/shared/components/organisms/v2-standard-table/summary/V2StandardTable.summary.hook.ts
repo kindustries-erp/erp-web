@@ -84,16 +84,26 @@ export function useV2TableSummary<T>({
         );
         continue;
       }
-      const pageValue = pageSums[column.key];
+      const server = column.summary;
+      const clientPageValue = pageSums[column.key];
       values[column.key] = {
-        pageValue,
-        totalValue: column.summary?.total ?? 0,
-        cumulativeValue: cumulativeFromPages(
-          serverStates.current[column.key] ?? createServerSummaryState(),
-          signature,
-          query.page,
-          pageValue,
-        ),
+        // Subtotal trang: ưu tiên số của API, không có thì cộng theo dòng đang hiển thị
+        pageValue:
+          typeof server?.pageSubtotal === "number"
+            ? server.pageSubtotal
+            : clientPageValue,
+        // undefined: chưa có số từ API (giữ 0); null: API không tính được → "—"
+        totalValue: server?.total === undefined ? 0 : server.total,
+        // Lũy kế: ưu tiên số/null của API; undefined thì tích lũy theo các trang đã xem
+        cumulativeValue:
+          server?.cumulative !== undefined
+            ? server.cumulative
+            : cumulativeFromPages(
+                serverStates.current[column.key] ?? createServerSummaryState(),
+                signature,
+                query.page,
+                clientPageValue,
+              ),
       };
     }
     return values;

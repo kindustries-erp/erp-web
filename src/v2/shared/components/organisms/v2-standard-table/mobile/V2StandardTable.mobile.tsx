@@ -1,36 +1,47 @@
 import * as React from "react";
-import { MoreHorizontal } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms/v2-button";
-import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
-import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
-import { hasRowActions } from "@/v2/shared/components/molecules/v2-table-row-actions";
+import {
+  V2TablePagination,
+  V2TablePaginationVariant,
+} from "@/v2/shared/components/molecules/v2-table-pagination";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
-import { V2TableSelectCheckbox } from "@/v2/shared/components/molecules/v2-table-select-checkbox";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2TableController } from "../hooks/V2StandardTable.controller.hook";
+import { useV2RowExpansion } from "../hooks/V2StandardTable.expand.hook";
 import { useV2ViewPresets } from "../hooks/V2StandardTable.views.hook";
 import { resolveMobileSlots } from "./V2StandardTable.mobile-slots";
+import { V2StandardTableMobileCard } from "./V2StandardTable.mobile-card";
+import { V2StandardTableMobileToolbar } from "./V2StandardTable.mobile-toolbar";
+import { V2TableSearchFilterSheet } from "./V2TableSearchFilterSheet";
 import { V2TableSkeletonCards } from "../skeleton";
-import { V2TableToolbar } from "../toolbar/V2StandardTable.toolbar";
-import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
+import { useV2ToolbarPortal } from "@/v2/shared/components/molecules/v2-tab-panel";
 import { useV2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import { useV2FilterPanelToolbar } from "../filterpanel/V2StandardTable.filterpanel.hook";
-import { V2TableFilterPanel } from "../filterpanel/V2StandardTable.filterpanel";
 import type { V2StandardTableProps } from "../V2StandardTable.type";
 
 export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
   const { columns, getRowKey, rowActions, loading = false } = props;
   const { t } = useV2Translation();
-  const { state, view, selection, columnsByKey } = useV2TableController(props);
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const { state, view, selection, columnsByKey, fetchOptionsForKey } =
+    useV2TableController(props);
+  const expansion = useV2RowExpansion({
+    expandedRowKeys: props.expandedRowKeys,
+    onExpandedRowsChange: props.onExpandedRowsChange,
+  });
   const filters = useV2HeaderFilters({
     tableId: props.tableId,
     columnsByKey,
-    fetchOptionsFor: view.fetchOptionsFor,
+    fetchOptionsForKey,
     filtersStrFor: view.filtersStrFor,
   });
   const { panel, toolbarConfig } = useV2FilterPanelToolbar({
-    toolbar: props.toolbar,
+    toolbar: props.toolbar
+      ? {
+          ...props.toolbar,
+          filterPanel: props.toolbar.filterPanel ?? {},
+        }
+      : undefined,
     columns,
     filters,
     canFilter: (column) =>
@@ -48,19 +59,26 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
     () => new Set(selection.keys),
     [selection.keys],
   );
-  const { title, subtitle, meta } = slots;
+  const slot = useV2ToolbarPortal();
+  const isSheetOpen = sheetOpen || panel.open;
+  const handleSheetOpenChange = (next: boolean) => {
+    setSheetOpen(next);
+    if (!next && panel.open) panel.close();
+  };
 
   return (
     <div className={cn("flex h-full min-h-0 flex-col gap-2", props.className)}>
-      <V2TableToolbar
+      <V2StandardTableMobileToolbar
         activeFilterCount={state.activeFilterCount}
         onClearAllFilters={state.resetAll}
         selectedCount={selection.selectedCount}
         toolbarExtra={props.toolbarExtra}
         config={toolbarConfig && { ...toolbarConfig, viewModes: undefined }}
+        portalTarget={slot}
         onClearSelection={() => selection.onRowSelectionChange({})}
         loading={loading}
         search={{ value: state.query.search ?? "", onChange: state.setSearch }}
+        onOpenSheet={() => setSheetOpen(true)}
       />
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
         {view.rows.length === 0 && loading ? (
@@ -81,71 +99,28 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
             {view.rows.map((row, rowIndex) => {
               const key = getRowKey(row);
               const index = view.startIndex + rowIndex + 1;
-              const groups = rowActions?.(row) ?? [];
+              const canExpand = Boolean(
+                props.renderExpandedRow &&
+                (props.canExpandRow ? props.canExpandRow(row, index) : true),
+              );
               return (
-                <li
+                <V2StandardTableMobileCard
                   key={key}
-                  data-state={selected.has(key) ? "selected" : undefined}
-                  className={cn(
-                    "flex flex-col gap-2 rounded-xl border border-border/60 bg-surface p-3 data-[state=selected]:bg-primary/5",
-                    props.getRowClassName?.(row, index),
-                  )}
-                >
-                  <div className="flex items-start gap-2">
-                    {props.enableRowSelection && (
-                      <V2TableSelectCheckbox
-                        aria-label={t("v2.table.selectRow", "Chọn dòng")}
-                        checked={selected.has(key)}
-                        onCheckedChange={(value) =>
-                          selection.toggleKey(key, Boolean(value))
-                        }
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[10px] tabular-nums text-muted-fg">
-                        #{index}
-                      </div>
-                      <div className="truncate text-sm font-semibold">
-                        {title?.cell(row, index)}
-                      </div>
-                      {subtitle && (
-                        <div className="truncate text-xs text-muted-fg">
-                          {subtitle.cell(row, index)}
-                        </div>
-                      )}
-                    </div>
-                    {hasRowActions(groups) && (
-                      <V2Dropdown
-                        groups={groups}
-                        align="end"
-                        trigger={
-                          <V2Button
-                            variant="ghost"
-                            size="icon-xs"
-                            aria-label={t(
-                              "v2.table.moreActions",
-                              "Thao tác khác",
-                            )}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </V2Button>
-                        }
-                      />
-                    )}
-                  </div>
-                  {meta.length > 0 && (
-                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                      {meta.map((column) => (
-                        <div key={column.key} className="min-w-0">
-                          <dt className="text-muted-fg">{column.label}</dt>
-                          <dd className="truncate [&>div]:items-start [&>div]:text-left">
-                            {column.cell(row, index)}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
-                </li>
+                  row={row}
+                  rowIndex={rowIndex}
+                  rowKey={key}
+                  startIndex={view.startIndex}
+                  slots={slots}
+                  isSelected={selected.has(key)}
+                  isExpanded={canExpand && expansion.isExpanded(key)}
+                  canExpand={canExpand}
+                  onToggleExpand={() => expansion.toggleExpand(key)}
+                  renderExpandedRow={props.renderExpandedRow}
+                  enableRowSelection={props.enableRowSelection}
+                  rowActions={rowActions}
+                  getRowClassName={props.getRowClassName}
+                  onToggleSelect={selection.toggleKey}
+                />
               );
             })}
           </ul>
@@ -157,23 +132,29 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         total={view.total}
         onPageChange={state.setPage}
         onPageSizeChange={state.setPageSize}
-        className="mt-2 shrink-0"
+        variant={V2TablePaginationVariant.MOBILE}
+        className="mt-2 shrink-0 pb-12 sm:pb-0"
       />
-      <V2Modal
-        open={panel.open}
-        onOpenChange={panel.setOpen}
-        title={t("v2.table.filter", "Bộ lọc")}
-        size="full"
-        bodyClassName="p-0"
-      >
-        <V2TableFilterPanel
-          panel={panel}
-          columns={columns}
-          state={state}
-          filters={filters}
-          extraContent={props.toolbar?.filterPanel?.extraContent}
-        />
-      </V2Modal>
+      <V2TableSearchFilterSheet
+        open={isSheetOpen}
+        onOpenChange={handleSheetOpenChange}
+        search={
+          toolbarConfig?.search
+            ? { value: state.query.search ?? "", onChange: state.setSearch }
+            : undefined
+        }
+        searchPlaceholder={toolbarConfig?.search?.placeholder}
+        filterGroup={toolbarConfig?.filterGroup}
+        activeFilterCount={state.activeFilterCount}
+        onClearAllFilters={state.resetAll}
+        filterDrawer={{
+          panel,
+          columns,
+          state,
+          filters,
+          extraContent: props.toolbar?.filterPanel?.extraContent,
+        }}
+      />
     </div>
   );
 }

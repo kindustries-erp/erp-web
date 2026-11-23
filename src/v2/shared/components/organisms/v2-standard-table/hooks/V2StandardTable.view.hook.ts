@@ -57,13 +57,19 @@ export function useV2TableView<T>({
     [items, mode, serverFetch],
   );
 
-  const filtersStrFor = useCallback(
-    (columnKey: string) =>
+  /** Chuỗi khóa cache options cho một bản query bất kỳ (bảng hoặc bản nháp trong dialog) */
+  const filtersStrForQuery = useCallback(
+    (sourceQuery: V2TableQuery, columnKey: string) =>
       mode === "client"
         ? `client:${items.length}`
-        : serializeOtherFilters(query, columnKey),
-    [mode, items.length, query],
+        : serializeOtherFilters(sourceQuery, columnKey),
+    [mode, items.length],
   );
 
-  return { ...view, fetchOptionsFor, filtersStrFor };
+  const filtersStrFor = useCallback(
+    (columnKey: string) => filtersStrForQuery(query, columnKey),
+    [filtersStrForQuery, query],
+  );
+
+  return { ...view, fetchOptionsFor, filtersStrFor, filtersStrForQuery };
 }

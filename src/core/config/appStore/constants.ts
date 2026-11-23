@@ -101,12 +101,16 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.activitylog",
     group: "settings",
   },
-  "erp-employees": {
+  "employees-management": {
     labelKey: "nav.items.erpEmployees",
     group: "hr",
   },
-  "erp-users": {
+  "users-management": {
     labelKey: "nav.items.users",
+    group: "settings",
+  },
+  permission: {
+    labelKey: "nav.items.phanquyen",
     group: "settings",
   },
   "erp-permissions-core": {
@@ -117,7 +121,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.sysTags",
     group: "settings",
   },
-  attachments: {
+  "file-attachments": {
     labelKey: "nav.items.attachments",
     group: "settings",
   },
@@ -194,11 +198,19 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.cashflow",
     group: "accounting",
   },
+  loans: {
+    labelKey: "nav.items.loans",
+    group: "tools",
+  },
   "garage-dashboard": {
     labelKey: "breadcrumb.garageDashboard",
     group: "garage",
   },
   "garage-cases": {
+    labelKey: "breadcrumb.garageCases",
+    group: "garage",
+  },
+  "garage-cases-v2": {
     labelKey: "breadcrumb.garageCases",
     group: "garage",
   },
@@ -305,10 +317,11 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["nav.items.accessControl"],
     ["breadcrumb.activitylog"],
   ],
-  "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
-  "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
+  "employees-management": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
+  "users-management": [["breadcrumb.settings"], ["breadcrumb.users"]],
+  permission: [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
   "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
-  attachments: [["breadcrumb.settings"], ["nav.items.attachments"]],
+  "file-attachments": [["breadcrumb.settings"], ["nav.items.attachments"]],
   "invoice-dashboard": [
     ["breadcrumb.accounting"],
     ["nav.items.invoiceDashboard"],
@@ -359,6 +372,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "email-inbox": [["nav.items.system"], ["nav.items.emailInbox"]],
   cashflow: [["breadcrumb.accounting"], ["nav.items.cashflow"]],
+  loans: [["breadcrumb.tools"], ["nav.items.loans"]],
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
   "custom-fields": [
@@ -368,6 +382,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
+  "garage-cases-v2": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
   "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],
   "garage-cashflow": [["breadcrumb.garage"], ["breadcrumb.garageCashflow"]],
   "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],

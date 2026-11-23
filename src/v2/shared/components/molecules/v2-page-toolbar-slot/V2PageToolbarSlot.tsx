@@ -16,7 +16,7 @@ export const V2PageToolbarSlot: React.FC<V2PageToolbarSlotProps> = ({
       ref={ref}
       data-toolbar-slot={tabKey}
       className={cn(
-        "flex-wrap items-center gap-2 empty:hidden",
+        "flex-1 min-w-0 sm:flex-initial items-center gap-1.5 sm:gap-2 empty:hidden",
         active ? "flex" : "hidden",
       )}
     />

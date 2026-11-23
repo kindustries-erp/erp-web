@@ -44,8 +44,8 @@ export const createInvoiceFetchOptions = (
     );
     return {
       items,
-      total: res.total,
-      next: res.next,
+      total: res.pagination.total,
+      next: res.pagination.next,
     };
   };
 };

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { V2RadioCardGroup } from "./V2RadioCardGroup";
 
 const meta: Meta<typeof V2RadioCardGroup> = {
-  title: "Components/Molecules/Forms & Inputs/V2RadioCardGroup",
+  title: "Components/Molecules/V2RadioCardGroup",
   component: V2RadioCardGroup,
   tags: ["autodocs"],
 };

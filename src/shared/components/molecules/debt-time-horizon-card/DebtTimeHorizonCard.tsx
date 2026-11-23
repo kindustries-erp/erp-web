@@ -45,24 +45,30 @@ export const DebtTimeHorizonCard: React.FC<DebtTimeHorizonCardProps> = ({
         hoverBorderColor,
       )}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground flex items-center gap-1 group-hover:text-foreground transition-colors">
-          <Icon className={cn("w-3.5 h-3.5 shrink-0", iconColor)} />
-          <span className="truncate">{title}</span>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <span className="min-w-0 flex-1 text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground flex items-start gap-1 group-hover:text-foreground transition-colors">
+          <Icon className={cn("w-3.5 h-3.5 shrink-0 mt-px", iconColor)} />
+          <span className="line-clamp-2 leading-snug">{title}</span>
         </span>
-        <DebtHorizonBadge variant={badgeVariant} label={badge} />
+        <span className="shrink-0">
+          <DebtHorizonBadge variant={badgeVariant} label={badge} />
+        </span>
       </div>
 
       <div className="space-y-1 my-1">
-        <div className="flex justify-between text-xs tabular-nums">
-          <span className="text-muted-foreground">{inLabel}:</span>
-          <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+        <div className="flex justify-between gap-2 text-xs tabular-nums">
+          <span className="min-w-0 truncate text-muted-foreground">
+            {inLabel}:
+          </span>
+          <span className="shrink-0 font-mono font-semibold text-emerald-600 dark:text-emerald-400">
             +{money(inAmount || 0)}
           </span>
         </div>
-        <div className="flex justify-between text-xs tabular-nums">
-          <span className="text-muted-foreground">{outLabel}:</span>
-          <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+        <div className="flex justify-between gap-2 text-xs tabular-nums">
+          <span className="min-w-0 truncate text-muted-foreground">
+            {outLabel}:
+          </span>
+          <span className="shrink-0 font-mono font-semibold text-amber-700 dark:text-amber-400">
             -{money(outAmount || 0)}
           </span>
         </div>

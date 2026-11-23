@@ -34,6 +34,7 @@ export interface GarageCashflowTableProps {
   onView?: (row: GarageCashflowVoucher) => void;
   onEdit?: (row: GarageCashflowVoucher) => void;
   onDelete?: (row: GarageCashflowVoucher) => void;
+  onPrint?: (row: GarageCashflowVoucher) => void;
   onOpenCaseDetail?: (caseCode: string) => void;
   canDelete?: boolean;
   onExportExcel?: (filterState: any) => void;

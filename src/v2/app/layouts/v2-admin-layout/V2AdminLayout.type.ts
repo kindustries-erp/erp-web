@@ -32,4 +32,6 @@ export interface V2AdminLayoutProps extends V2BaseProps {
   onToggleCollapse?: () => void;
   bottomNavVariant?: V2AdminBottomNavVariantType;
   bottomNavIndicator?: V2NavIndicatorType;
+  hideSidebar?: boolean;
+  hideBottomNav?: boolean;
 }

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { V2ColumnSelector } from "./V2ColumnSelector";
 
 const meta: Meta<typeof V2ColumnSelector> = {
-  title: "Components/Molecules/Forms & Inputs/V2ColumnSelector",
+  title: "Components/Molecules/V2ColumnSelector",
   component: V2ColumnSelector,
   tags: ["autodocs"],
 };

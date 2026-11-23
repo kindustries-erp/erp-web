@@ -1,3 +1,4 @@
+import { invoiceFilesV2Api } from "../api/invoiceFilesV2Api";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,8 +11,11 @@ vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
     bulkImportBuyerXml: vi.fn(),
     bulkImportSellerXml: vi.fn(),
-    uploadPdfs: vi.fn(),
   },
+}));
+
+vi.mock("../api/invoiceFilesV2Api", () => ({
+  invoiceFilesV2Api: { upload: vi.fn() },
 }));
 
 vi.mock("react-i18next", () => ({
@@ -43,9 +47,7 @@ describe("useInvoiceXmlImportMutation", () => {
   });
 
   it("ghép PDF tay vào hóa đơn đã chọn, không gọi import XML tự động", async () => {
-    vi.mocked(erpInvoicesCoreApi.uploadPdfs).mockResolvedValueOnce(
-      undefined as any,
-    );
+    vi.mocked(invoiceFilesV2Api.upload).mockResolvedValueOnce(undefined as any);
 
     const { result } = renderHook(() => useInvoiceXmlImportMutation(), {
       wrapper: createWrapper(),
@@ -59,9 +61,11 @@ describe("useInvoiceXmlImportMutation", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(erpInvoicesCoreApi.uploadPdfs).toHaveBeenCalledWith("inv-1", [
-      pdfEntry.file,
-    ]);
+    expect(invoiceFilesV2Api.upload).toHaveBeenCalledWith(
+      "inv-1",
+      [pdfEntry.file],
+      "HOA_DON",
+    );
     expect(erpInvoicesCoreApi.bulkImportBuyerXml).not.toHaveBeenCalled();
     expect(result.current.data?.pdfAttached).toEqual([
       expect.objectContaining({
@@ -73,7 +77,7 @@ describe("useInvoiceXmlImportMutation", () => {
   });
 
   it("ghi lỗi vào kết quả khi ghép tay thất bại", async () => {
-    vi.mocked(erpInvoicesCoreApi.uploadPdfs).mockRejectedValueOnce(
+    vi.mocked(invoiceFilesV2Api.upload).mockRejectedValueOnce(
       new Error("boom"),
     );
 

@@ -9,12 +9,15 @@ export const ratioPct = (value: number, total: number): number => {
   return clampPct(Math.round((Math.abs(value) / Math.abs(total)) * 1000) / 10);
 };
 
-/** Lũy kế đến trang hiện tại: ưu tiên giá trị truyền vào, ở trang 1 thì bằng trang hiện tại */
+/**
+ * Lũy kế đến trang hiện tại: ưu tiên giá trị truyền vào (kể cả `null` = không tính được),
+ * ở trang 1 không truyền thì bằng trang hiện tại.
+ */
 export const resolveCumulative = (
   page: number,
   pageValue: number,
-  cumulativeValue?: number,
-): number | undefined => {
+  cumulativeValue?: number | null,
+): number | null | undefined => {
   if (cumulativeValue !== undefined) return cumulativeValue;
   return page <= 1 ? pageValue : undefined;
 };

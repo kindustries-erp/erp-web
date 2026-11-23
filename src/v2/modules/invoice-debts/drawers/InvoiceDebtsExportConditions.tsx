@@ -1,6 +1,6 @@
 import * as React from "react";
 import { V2Text } from "@/v2/shared/components/atoms";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import { V2TabBar, V2TabBarVariant } from "@/v2/shared/components";
 import {
   V2ExportConditionSection,
   type V2ExportConditionSectionProps,
@@ -49,7 +49,7 @@ export const InvoiceDebtsExportConditions: React.FC<
           {t("v2.invoiceDebts.export.partnerType", "Đối tượng công nợ")}
         </V2Text>
         <V2TabBar
-          variant="button-group"
+          variant={V2TabBarVariant.BUTTON_GROUP}
           tabs={partnerTabs}
           activeTabId={partnerType || "ALL"}
           onTabSelect={(id) =>

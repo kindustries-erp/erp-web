@@ -3,7 +3,10 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { V2NotificationPopover } from "./V2NotificationPopover";
-import type { CoreNotification } from "@/core/api/notifications";
+import {
+  NotificationType,
+  type CoreNotification,
+} from "@/core/api/notifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,38 +17,53 @@ const queryClient = new QueryClient({
 const sampleNotifications: CoreNotification[] = [
   {
     id: "notif-1",
-    userId: "user-1",
-    title: "Đơn mua hàng PO-20261023-001 hoàn tất",
-    message: "Toàn bộ vật tư đã được nhập kho thành công.",
-    type: "SUCCESS",
+    title: "Đề nghị đã được duyệt",
+    message: "GDNM-20261106-001 đã được duyệt",
+    type: NotificationType.SUCCESS,
     isRead: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    updatedAt: new Date().toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
   {
     id: "notif-2",
-    userId: "user-1",
-    title: "Cảnh báo tồn kho dưới định mức",
-    message: "Mặt hàng Má phanh trước chỉ còn 2 bộ trong kho.",
-    type: "WARNING",
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    updatedAt: new Date().toISOString(),
+    title: "Có đề nghị chờ bạn duyệt",
+    message: "GDNM-20261109-001 - Mua hàng demo 2 đang chờ bạn duyệt.",
+    type: NotificationType.INFO,
+    isRead: true,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
   {
     id: "notif-3",
-    userId: "user-1",
+    title: "Đồng bộ hóa đơn chưa đầy đủ",
+    message:
+      "Lượt đồng bộ Cổng Thuế có vấn đề: mua vào: 4 phần lỗi. Các hóa đơn còn thiếu sẽ được quét lại ở lượt sau.",
+    type: NotificationType.WARNING,
+    isRead: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
+  },
+  {
+    id: "notif-4",
     title: "Lỗi đồng bộ hóa đơn GDT",
     message: "Hóa đơn số 0012345 bị từ chối do sai chữ ký số.",
-    type: "ERROR",
+    type: NotificationType.ERROR,
     isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
+    readAt: null,
+    extraData: {},
+    target: null,
   },
 ];
 
 const meta: Meta<typeof V2NotificationPopover> = {
-  title: "Components/Molecules/Feedback & Overlay/V2NotificationPopover",
+  title: "Components/Molecules/V2NotificationPopover",
   component: V2NotificationPopover,
   tags: ["autodocs"],
   decorators: [

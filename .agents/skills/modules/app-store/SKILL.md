@@ -19,7 +19,7 @@ description: Module tri thức Quản lý App State, Multi-tab Navigation, Routi
 
 ## 2. Cấu Trúc Atomic Source Code (`src/core/config/appStore/`)
 
-Module được chia tách theo chuẩn `/ui-structure`:
+Module được chia tách theo chuẩn `/erp-ui-structure`:
 
 ```text
 src/core/config/appStore/

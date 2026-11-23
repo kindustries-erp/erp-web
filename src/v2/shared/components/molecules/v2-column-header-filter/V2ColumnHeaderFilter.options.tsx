@@ -1,5 +1,5 @@
 import * as React from "react";
-import { V2Spinner, V2Text } from "@/v2/shared/components/atoms";
+import { V2Button, V2Spinner, V2Text } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { Checkbox } from "@/v2/shared/ui";
 import { cn } from "@/v2/shared/utils/cn";
@@ -61,12 +61,29 @@ export const V2FilterOptionsList: React.FC<OptionsProps> = ({
       </div>
     );
   }
-  if (status === "error") {
+  if (status === "forbidden") {
     return (
       <div className="p-4 text-center">
+        <V2Text variant="body-sm" color="muted">
+          {t(
+            "v2.table.optionsForbidden",
+            "Bạn không có quyền xem gợi ý giá trị của cột này",
+          )}
+        </V2Text>
+      </div>
+    );
+  }
+  if (status === "error") {
+    return (
+      <div className="flex flex-col items-center gap-2 p-4 text-center">
         <V2Text variant="body-sm" color="destructive">
           {t("v2.common.error", "Đã xảy ra lỗi")}
         </V2Text>
+        {state.onRetry && (
+          <V2Button variant="outline" size="sm" onClick={state.onRetry}>
+            {t("v2.table.optionsRetry", "Thử lại")}
+          </V2Button>
+        )}
       </div>
     );
   }

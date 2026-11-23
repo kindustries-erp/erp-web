@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { V2BaseProps } from "@/v2/shared/types";
 import type { V2NavIndicatorType } from "@/v2/shared/components/molecules/v2-nav-item";
+import type { V2HeroButtonSizeType } from "@/v2/shared/components/molecules/v2-bottom-nav-hero-button";
 
 export enum V2BottomNavVariant {
   GROUNDED = "grounded",
@@ -25,7 +26,9 @@ export interface V2BottomNavProps extends V2BaseProps<HTMLElement> {
   activeId?: string;
   variant?: V2BottomNavVariantType;
   indicator?: V2NavIndicatorType;
+  showLabels?: boolean;
   centerHeroItem?: V2BottomNavItem;
+  heroButtonSize?: V2HeroButtonSizeType;
   onNavigate?: (item: V2BottomNavItem) => void;
   onHeroClick?: (item: V2BottomNavItem) => void;
 }

@@ -1,0 +1,19 @@
+import type {
+  V2FetchOptionsParams,
+  V2FetchOptionsResult,
+  V2TableQuery,
+} from "@/v2/shared/types/v2-table";
+import type { {{recordType}}, {{formValueType}} } from "{{domainFromApi}}";
+
+/**
+ * Hợp đồng API của họ {{family}}. Mỗi module cung cấp một đối tượng đúng hợp đồng này
+ * (endpoint riêng); lõi chỉ gọi qua interface.
+ */
+export interface {{apiType}} {
+  list: (query: V2TableQuery) => Promise<{ items: {{recordType}}[]; total: number }>;
+  options: (params: V2FetchOptionsParams) => Promise<V2FetchOptionsResult>;
+  get: (id: string) => Promise<{{recordType}}>;
+  create: (form: {{formValueType}}) => Promise<{{recordType}}>;
+  update: (id: string, form: {{formValueType}}) => Promise<{{recordType}}>;
+  remove: (id: string) => Promise<{{recordType}}>;
+}

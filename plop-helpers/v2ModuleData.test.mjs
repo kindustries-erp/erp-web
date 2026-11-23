@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildModuleData, camelCase, decorateFields, kebabCase, pascalCase } from "./v2ModuleData.mjs";
+import {
+  buildModuleData,
+  camelCase,
+  decorateFields,
+  kebabCase,
+  pascalCase,
+} from "./v2ModuleData.mjs";
 
 const base = {
   moduleName: "sample-items",
@@ -12,7 +18,8 @@ const base = {
   routeInput: "",
   navSection: "settings",
   tableInput: "",
-  fieldSpec: "code:string:required,name:string:required,phone:string,address:text,status:status",
+  fieldSpec:
+    "code:string:required,name:string:required,phone:string,address:text,status:status",
   hasNextCode: false,
 };
 
@@ -51,20 +58,33 @@ describe("buildModuleData", () => {
   });
 
   it("rejects invalid input before anything is generated", () => {
-    expect(() => buildModuleData({ ...base, entityName: "1bad" })).toThrow(/entityName/);
-    expect(() => buildModuleData({ ...base, apiBase: "v1/x" })).toThrow(/apiBase/);
-    expect(() => buildModuleData({ ...base, navSection: "hr" })).toThrow(/navSection/);
-    expect(() => buildModuleData({ ...base, fieldSpec: "name:string" })).toThrow(/required/);
-    expect(() => buildModuleData({ ...base, fieldSpec: "name:text" })).toThrow(/required/);
+    expect(() => buildModuleData({ ...base, entityName: "1bad" })).toThrow(
+      /entityName/,
+    );
+    expect(() => buildModuleData({ ...base, apiBase: "v1/x" })).toThrow(
+      /apiBase/,
+    );
+    expect(() => buildModuleData({ ...base, navSection: "hr" })).toThrow(
+      /navSection/,
+    );
+    expect(() =>
+      buildModuleData({ ...base, fieldSpec: "name:string" }),
+    ).toThrow(/required/);
+    expect(() => buildModuleData({ ...base, fieldSpec: "name:text" })).toThrow(
+      /required/,
+    );
   });
 
   it("requires the first field to be text when a next code is generated", () => {
     expect(() =>
-      buildModuleData({ ...base, hasNextCode: true, fieldSpec: "status:status:required,name:string:required" }),
+      buildModuleData({
+        ...base,
+        hasNextCode: true,
+        fieldSpec: "status:status:required,name:string:required",
+      }),
     ).toThrow(/hasNextCode/);
   });
 });
-
 
 describe("numeric summary flags", () => {
   it("marks decimal as amount summary and number as qty summary", () => {

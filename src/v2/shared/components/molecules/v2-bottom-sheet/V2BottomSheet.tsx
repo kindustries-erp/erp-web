@@ -21,7 +21,7 @@ export const V2BottomSheet: React.FC<V2BottomSheetProps> = ({
   bodyClassName,
   headerClassName,
   footerClassName,
-  maxHeightClass = "max-h-[85vh]",
+  maxHeightClass = "h-[100dvh] max-h-[100dvh]",
   closeAriaLabel,
 }) => {
   const { t } = useV2Translation();

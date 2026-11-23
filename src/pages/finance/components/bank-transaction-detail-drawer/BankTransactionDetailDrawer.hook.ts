@@ -15,7 +15,7 @@ import type { DrawerAuditLogItem } from "@/shared/components/StandardFormDrawer"
 import {
   toPartnerOptionValue,
   toPartnerSelectionPayload,
-} from "@/v2/modules/business-partners/domain/rules/partnerSelection";
+} from "@/v2/core/business-partners";
 
 /** Giá trị ô chọn đối tượng từ đối tác đã gán cho giao dịch (null nếu chưa gán) */
 const resolvePartnerValue = (transaction: any): string | null =>

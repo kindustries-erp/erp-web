@@ -1,9 +1,18 @@
+import type { ReactNode } from "react";
+
 export interface V2ComboboxOption {
   value: string;
   label: string;
   disabled?: boolean;
   /** Dòng phụ nhỏ bên dưới nhãn (ví dụ mã số thuế) */
   description?: string;
+  /** Biểu tượng hoặc ảnh logo hiển thị bên cạnh nhãn */
+  icon?: ReactNode;
+  /**
+   * Nội dung giải thích thêm (ví dụ chi tiết kỳ đã trả).
+   * Desktop: hiện khi hover qua V2Tooltip. Mobile: hiện thành dòng phụ dưới nhãn.
+   */
+  tooltip?: ReactNode;
 }
 
 export interface V2ComboboxProps {
@@ -27,6 +36,8 @@ export interface V2ComboboxProps {
   "aria-label"?: string;
   /** Callback khi người dùng cuộn tới đáy danh sách (hỗ trợ phân trang / infinite scroll) */
   onScrollBottom?: () => void;
+  /** Phần tử chứa danh sách (mặc định <body>); truyền khung fullscreen để danh sách không bị ẩn. */
+  portalContainer?: HTMLElement | null;
   /** Nhãn hiển thị dự phòng khi `value` chưa có trong mảng `options` ban đầu */
   fallbackLabel?: string;
 }

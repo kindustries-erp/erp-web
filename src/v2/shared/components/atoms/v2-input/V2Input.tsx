@@ -3,6 +3,7 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Icon } from "@/v2/shared/components/atoms/v2-icon";
 import { X } from "@/v2/shared/components/atoms/v2-icon/icons";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2_DRAWER_FOCUS_RING_CLASS } from "@/v2/shared/utils/v2FocusRing";
 import type { V2InputProps, V2InputSize } from "./V2Input.type";
 
 const SIZE_STYLES: Record<
@@ -138,7 +139,7 @@ export const V2Input = React.forwardRef<HTMLInputElement, V2InputProps>(
           className={cn(
             "flex w-full rounded-md border border-input bg-background transition-colors",
             "text-foreground placeholder:text-muted-fg",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            V2_DRAWER_FOCUS_RING_CLASS,
             "disabled:cursor-not-allowed disabled:opacity-50",
             "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
             sizeStyle.height,
@@ -147,9 +148,9 @@ export const V2Input = React.forwardRef<HTMLInputElement, V2InputProps>(
             rightIcon || showClear ? sizeStyle.prIcon : sizeStyle.prDefault,
             error && "border-destructive focus-visible:ring-destructive",
             variant === "search" &&
-              "border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0",
+              "border-0 bg-transparent shadow-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0",
             variant === "ghost" &&
-              "border-0 bg-transparent hover:bg-muted/40 focus-visible:ring-0",
+              "border-0 bg-transparent hover:bg-muted/40 focus:ring-0 focus-visible:ring-0",
             inputClassName,
             className,
           )}

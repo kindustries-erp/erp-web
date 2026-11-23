@@ -5,7 +5,7 @@ import {
   V2MultiCombobox,
   V2Textarea,
 } from "@/v2/shared/components";
-import { BusinessPartnerPicker } from "@/v2/modules/business-partners/components/organisms/business-partner-picker";
+import { BusinessPartnerPicker } from "@/v2/core/business-partners";
 import { CashClassificationFields } from "../../molecules/cash-classification-fields";
 import type { CashGeneralInfoProps } from "./CashGeneralInfo.type";
 

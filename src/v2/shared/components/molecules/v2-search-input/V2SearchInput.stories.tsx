@@ -4,7 +4,7 @@ import { V2SearchInput } from "./V2SearchInput";
 import type { V2SearchInputProps } from "./V2SearchInput.type";
 
 const meta: Meta<typeof V2SearchInput> = {
-  title: "Components/Molecules/Forms & Inputs/V2SearchInput",
+  title: "Components/Molecules/V2SearchInput",
   component: V2SearchInput,
   tags: ["autodocs"],
   args: { onChange: () => {} },

@@ -3,7 +3,7 @@ import { Receipt, Truck, Wrench } from "lucide-react";
 import { V2SidebarNavItem } from "./V2SidebarNavItem";
 
 const meta: Meta<typeof V2SidebarNavItem> = {
-  title: "Components/Molecules/Navigation & Sidebar/V2SidebarNavItem",
+  title: "Components/Molecules/V2SidebarNavItem",
   component: V2SidebarNavItem,
   tags: ["autodocs"],
   argTypes: {

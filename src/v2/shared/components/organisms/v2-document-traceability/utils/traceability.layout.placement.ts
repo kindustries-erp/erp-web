@@ -3,14 +3,15 @@ import type {
   TraceabilityStageConfig,
 } from "../types/traceability.type";
 
-export const CARD_WIDTH = 290;
+export const CARD_WIDTH = 300;
 
 /** Bố cục ngang: mỗi giai đoạn là một cột, chứng từ xếp dọc */
 export const HORIZONTAL = {
-  columnWidth: 330,
-  columnGap: 170,
-  headerHeight: 48,
-  rowGap: 185,
+  columnWidth: 300,
+  columnGap: 160,
+  stageStartY: 36,
+  headerHeight: 0,
+  rowGap: 180,
   minColumnHeight: 180,
   bottomPadding: 30,
 };
@@ -19,9 +20,10 @@ export const HORIZONTAL = {
 export const VERTICAL = {
   minRowWidth: 780,
   rowHeight: 190,
+  stageStartY: 36,
   rowGap: 120,
   cardGap: 30,
-  headerHeight: 48,
+  headerHeight: 20,
   edgePadding: 20,
 };
 
@@ -51,7 +53,7 @@ export function placeStage(
       width: customDimensions?.width ?? HORIZONTAL.columnWidth,
       height: customDimensions?.height ?? defaultHeight,
       x: stageIndex * (HORIZONTAL.columnWidth + HORIZONTAL.columnGap),
-      y: 0,
+      y: HORIZONTAL.stageStartY,
     };
   }
   const defaultWidth = Math.max(
@@ -62,7 +64,9 @@ export function placeStage(
     width: customDimensions?.width ?? defaultWidth,
     height: customDimensions?.height ?? VERTICAL.rowHeight,
     x: 0,
-    y: stageIndex * (VERTICAL.rowHeight + VERTICAL.rowGap),
+    y:
+      stageIndex * (VERTICAL.rowHeight + VERTICAL.rowGap) +
+      VERTICAL.stageStartY,
   };
 }
 

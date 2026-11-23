@@ -13,6 +13,8 @@ description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard H�
 
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn. Giao diện được cấu trúc theo chuẩn **Atomic Design (Atoms -> Molecules -> Organisms)** đáp ứng quy chuẩn No Blue Mandate, Tabular Numbers và Multi-tab Navigation.
 
+- **Tài liệu đính kèm (V2)**: drawer chi tiết hóa đơn V2 (`/v2/invoices`, `InvoiceShapeDetailDrawer`) có tab "Tài liệu" dùng `V2AttachmentsPanel` qua `/api/v2/invoices/:id/attachments` (xem module skill `file-attachments`). Màn V1 `/erp-invoices` đã cutover (Phase 5): workspace tài liệu, đếm file ở tab đối tác, form lưu file chờ (`hooks/flushInvoiceFileChanges.ts`) và ghép PDF tay khi import XML đều gọi V2 qua `api/invoiceFilesV2Api.ts` + `hooks/useInvoiceFilesV2.ts`; danh sách file lấy từ V2 (file XML thuần ẩn, `isOriginal` → nhãn "PDF gốc"). Trang V1 "Quản lý tài liệu" redirect sang `/v2/file-attachments` (`pages/AttachmentsRedirect.tsx`).
+- **Cột "PDF gốc" (V2 `/v2/invoices`)**: key `pdfSource` (`provider_original`, `manual_upload`, `failed`, `__BLANK__` = chưa có) trong `invoiceColumns.audit.tsx`; API V1 và V2 đều lọc/sắp xếp theo `column_filters.pdfSource`.
 - **PageKeys**:
   - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 6 Tabs (`overview`, `in`, `in-lines`, `out`, `out-lines`, `draft`).
   - `erp-invoices-in`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=in`.
@@ -270,6 +272,7 @@ src/modules/erp-invoices-core/
     - `useTraceabilityLogic` chỉ gọi `fetchGraph` một lần khi mount; refetch silent chỉ khi thoát edit mode (chuyển true → false).
     - **Kéo node canvas chậm (Layerize)**: nguyên nhân là các lớp `backdrop-filter` phía sau drawer (bảng hóa đơn `DataTable` V1 có sticky header/footer kính, và pill hành động ẩn ở mỗi dòng). Quy tắc: pill hành động ẩn không được có `backdrop-filter` khi chưa hover (`TableRowHoverActions`, `V2TableRowHoverActions`); khi có drawer V2 mở, `components.css` tắt kính của bảng nền (`body:has([data-v2-standard-drawer][data-state="open"])`). Không thêm `backdrop-blur` mới vào danh sách/bảng nằm dưới drawer.
   - **Sơ đồ V2 (đã nối vào drawer)**: toàn màn hình mở bằng `V2Modal size="full"` (Radix lồng trong drawer, không `fixed`); màu dùng token V2 (`text-success` thu, `text-warning` chi, `text-destructive` lỗi, `bg-surface`/`border-border`), không dùng màu Tailwind thô.
+  - **Core invoices**: `src/v2/core/invoices` (`resolveInvoiceAddLink` → OPEN_NETOFF/PO/SO/GARAGE_CASE, `toPendingDocumentChange` → `{type: BANK|PO|CASE|SO, action: REMOVE, refId}`); `ErpInvoiceLinkedDocsSection` chỉ gọi core rồi mở modal/ghi `pendingDocumentChanges`. Facade V1 `DrawerDocumentTraceability` nay chỉ bọc `V2DocumentTraceability` (canvas/pipeline/table/hook V1 cũ đã xóa).
   - **Sơ đồ V2 (ghi chú cũ)**: `src/v2/shared/components/organisms/v2-document-traceability/` đã có canvas, pipeline, bảng kê, thanh công cụ, xác nhận gỡ liên kết và entry `V2DocumentTraceability`. Drawer hóa đơn vẫn dùng bản V1 cho đến khi nối (Task 3.1). Mở chứng từ qua callback `onOpenDocument`, không dùng event `window` của V1.
   5. `erp-invoice-pdf-upload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer (`erp-invoice-pdf-preview`) hoặc tải xuống.
   6. `erp-invoice-default-attributes-section`: Tích hợp 2 drawer sections: `Thuộc tính chung` (Global) và `Danh mục & Thuộc tính` (Category) từ Module Config.
@@ -451,7 +454,7 @@ bun run lint:check
 - Client: `api/financeInvoiceV2Api.ts` qua `v2HttpClient`. List và column-options gọi `/api/v2/invoices` (và `/api/v2/invoices/column-options`); các endpoint còn lại vẫn `/api/v1/erp-invoices`. Module V2 **không import code V1** (kiểm tra bằng grep `from "@/modules` trong `src/v2/modules/finance-invoice`).
 - Endpoint dùng: `GET /api/v2/invoices` (list), `GET /api/v2/invoices/column-options`, `GET /api/v1/erp-invoices/:id` (chi tiết, bọc `data`), `GET /api/v1/erp-invoices/stats?direction` (KPI tháng), `GET /api/v1/erp-invoices/dashboard/stats` (cashTrend cashIn/cashOut/vatIn/vatOut), `GET /api/v1/erp-invoices/dashboard/partners`.
 - Tham số list (`api/adapters/invoiceQueryAdapter.ts`): `direction`, `sort=-key,key` (không còn `sort_by`/`sort_order`), `date_from`/`date_to` dạng `YYYY-MM-DD`, `column_filters`, `column_search`. Column-options gửi chiều hóa đơn trong `filters` (không có param `direction`), trang kế đọc từ `next`.
-- DTO: `api/dtos/invoice.dto.ts`. Số tiền API v2 là `number`; list trả `summaries` theo key cột (`api/adapters/invoiceRowAdapter.ts`: `toInvoiceRow`, `toInvoiceSummary`) chuyển sang shape cột V2 `FakeInvoice`. Có `netOffAmount` và `remainingAmount` từ server.
+- DTO: `api/dtos/invoice.dto.ts`. Số tiền API v2 là `number`; list gửi `summary_keys` (`invoiceQueryAdapter.ts`) và nhận `summaries[key] = { total, pageSubtotal, cumulative } | null` (`invoice.dto.ts`). `toInvoiceSummary` (`invoiceRowAdapter.ts`) giữ nguyên key API trả về, không điền 0 cho key thiếu. Sample mode (`invoiceShape.logic.ts`) tính cùng shape theo `summaryKeys`. Có `netOffAmount` và `remainingAmount` từ server.
 - Cột V2: `invoiceNo`, `invoiceDate`, `partner`, `preVatAmount`, `vatAmount`, `totalAmount`, `taxInvoiceStatus`, `posting`, `branchId` (overview); thêm `vatRate` (KCT/KTT khi -1/-2), `discountAmount`, `netOffAmount`, `remainingAmount`, `note` (audit); OUT thêm `settlementOrder`, `licensePlate`.
 - **Trạng thái tích hợp**: bảng V2 chưa được gắn vào trang `/invoices` (V1 vẫn chạy). Lọc chi nhánh còn dùng danh sách mẫu `BRANCHES` nên chưa lọc đúng với dữ liệu thật.
 - Dashboard: `domain/rules/invoiceDashboard.logic.ts` (thuần, có test) dựng KPI (VAT = tổng - trước thuế; VAT ròng = VAT đầu ra - VAT đầu vào), chuỗi biểu đồ và cơ cấu đối tác top 5 theo số bán ra.
@@ -486,3 +489,10 @@ bun run lint:check
 - **Status Badges**: `formatTaxInvoiceStatus(status, t)` hỗ trợ đa ngôn ngữ linh hoạt ("Mới" / "New", "Thay thế" / "Replaced", "Điều chỉnh" / "Adjusted", "Bị thay thế" / "Was Replaced", "Bị điều chỉnh" / "Was Adjusted", "Bị hủy" / "Cancelled").
 - **Toasts**: Các thao tác liên kết PO, SO, ngân hàng và vụ việc garage sử dụng các khóa `toastLinkedBankSuccess`, `toastLinkedPoSuccess`, `toastLinkedSoSuccess`, `toastLinkedCaseSuccess`.
 
+
+## Hợp đồng phân trang chuẩn v2 (pagination)
+
+- API trả `{ items, pagination, summaries? }` (list) và `{ items, pagination }` (column-options). `pagination` có `total`, `totalPages`, `next`, `previous`.
+- Kiểu dùng chung: `src/v2/shared/types/v2-pagination.ts` (`V2PaginationMeta`, `V2PaginatedResponse`, `V2PaginatedResponseWithSummaries`).
+- Bảng V2 vẫn nhận `V2FetchOptionsResult` (`items`, `total`, `next`). API client dùng `toFetchOptionsResult` (`src/v2/shared/utils/v2FetchOptionsAdapter.ts`) để đổi; `V2StandardTable` không đổi.
+- Lớp API client V1 đổi wire sang kiểu phẳng cũ bằng `fromPaginatedWire` / `fromColumnOptionsWire` (`src/shared/types/pagination.ts`), nên màn hình V1 không đổi.

@@ -25,7 +25,6 @@ export function useInvoiceDebtsQuery(
   return {
     items: (result.data?.items ?? []) as InvoiceDebt[],
     total: result.data?.total ?? 0,
-    summaries: result.data?.summaries,
     loading: result.isFetching,
     refetch: () => void result.refetch(),
   };

@@ -197,6 +197,45 @@ describe("applyGarageCasesTableState", () => {
     expect(noResult[0].id).toBe("30");
   });
 
+  it("lọc và sắp xếp theo cột xe và đối tượng thanh toán (soKhung, hangXe, dongXe, namSanXuat, doiTuongThanhToan)", () => {
+    const vehicles = [
+      {
+        id: "v1",
+        soChungTu: "V-1",
+        soKhung: "RLV1",
+        hangXeName: "VinFast",
+        dongXeName: "VF8",
+        namSanXuat: 2023,
+        doiTuongThanhToanName: "Bảo hiểm A",
+      },
+      {
+        id: "v2",
+        soChungTu: "V-2",
+        soKhung: "RLV2",
+        hangXeName: "TOYOTA",
+        dongXeName: "Camry",
+        namSanXuat: 2020,
+        doiTuongThanhToanName: null,
+      },
+    ];
+    const run = (
+      columnFilters: Record<string, string[]>,
+      sorts: string[] = [],
+    ) =>
+      applyGarageCasesTableState(
+        vehicles,
+        { sorts, columnSearch: {}, columnFilters },
+        "",
+      ).map((r) => r.id);
+
+    expect(run({ hangXe: ["VinFast"] })).toEqual(["v1"]);
+    expect(run({ dongXe: ["Camry"] })).toEqual(["v2"]);
+    expect(run({ soKhung: ["RLV2"] })).toEqual(["v2"]);
+    expect(run({ doiTuongThanhToan: ["Bảo hiểm A"] })).toEqual(["v1"]);
+    expect(run({}, ["namSanXuat"])).toEqual(["v2", "v1"]);
+    expect(run({}, ["-namSanXuat"])).toEqual(["v1", "v2"]);
+  });
+
   it("filters correctly by collectionProgress and costProgress (PAID, PARTIAL, UNPAID)", () => {
     const progressItems = [
       {
@@ -380,6 +419,37 @@ describe("applyGarageCasesTableState", () => {
       });
       expect(resFormatted).toHaveLength(1);
       expect(resFormatted[0].id).toBe("1");
+    });
+
+    it("tìm biển số bằng chuẩn hóa chung: khác dấu câu, khoảng trắng, hoa thường", () => {
+      const run = (columnSearch: Record<string, string>) =>
+        applyGarageCasesTableState(items, {
+          sorts: [],
+          columnSearch,
+          columnFilters: {},
+        });
+
+      expect(run({ caseCode: "30a 11111" }).map((r) => r.id)).toEqual(["1"]);
+      expect(run({ caseCode: "30A.111-11" }).map((r) => r.id)).toEqual(["1"]);
+      expect(run({ caseCode: '"30a/22222"' }).map((r) => r.id)).toEqual(["2"]);
+    });
+
+    it("lọc composite code:::plate khớp biển viết khác dấu câu", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["A001:::30a 11111"] },
+      });
+      expect(res.map((r) => r.id)).toEqual(["1"]);
+    });
+
+    it("từ khóa chỉ gồm ký tự rác không khớp biển nào", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: { caseCode: "..--" },
+        columnFilters: {},
+      });
+      expect(res.map((r) => r.id)).not.toContain("1");
     });
 
     it("handles columnSearch with semicolon multi-search and license plate", () => {

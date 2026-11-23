@@ -1,79 +1,56 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 import { describe, it, expect, vi } from "vitest";
 import "@testing-library/jest-dom";
+import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 
-vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
-  erpInvoicesCoreApi: {
-    downloadPdfsZip: vi.fn(),
-  },
+const files = [
+  { id: "f-main", fileName: "main-pdf.pdf", category: "HOA_DON" },
+  { id: "f-sub", fileName: "sub-pdf.pdf", category: "BANG_KE" },
+];
+
+vi.mock("@/modules/erp-invoices-core/hooks/useInvoiceFilesV2", () => ({
+  useInvoiceFilesV2: () => ({ files, policy: null, loading: false }),
+}));
+
+vi.mock("@/modules/erp-invoices-core/api/invoiceFilesV2Api", () => ({
+  invoiceFilesV2Api: { downloadUrl: vi.fn(), downloadZip: vi.fn() },
 }));
 
 vi.mock("react-hot-toast", () => ({
-  default: {
-    success: vi.fn(),
-    error: vi.fn(),
-    loading: vi.fn(),
-  },
+  default: { success: vi.fn(), error: vi.fn(), loading: vi.fn() },
 }));
 
-describe("ErpInvoicePdfUpload", () => {
+describe("ErpInvoicePdfUpload (V2)", () => {
   const defaultProps = {
     invoiceId: "inv-1",
-    attachments: [
-      {
-        attachmentId: "att-main",
-        attachment: {
-          id: "file-main",
-          fileName: "main-pdf.pdf",
-          documentType: "HOA_DON",
-          mimeType: "application/pdf",
-        },
-      },
-      {
-        attachmentId: "att-sub",
-        attachment: {
-          id: "file-sub",
-          fileName: "sub-pdf.pdf",
-          documentType: "BANG_KE",
-          mimeType: "application/pdf",
-        },
-      },
-    ],
     editMode: false,
     pendingDeletedPdfs: [],
     pendingAddedAttachments: [],
   };
 
-  it("should render all linked attachments", () => {
+  it("hiển thị file đọc từ API V2", () => {
     render(<ErpInvoicePdfUpload {...defaultProps} />);
-
     expect(screen.getByText("main-pdf.pdf")).toBeInTheDocument();
     expect(screen.getByText("sub-pdf.pdf")).toBeInTheDocument();
   });
 
-  it("should filter out files that are in pendingDeletedPdfs", () => {
+  it("ẩn file nằm trong pendingDeletedPdfs (theo id V2)", () => {
     render(
-      <ErpInvoicePdfUpload
-        {...defaultProps}
-        pendingDeletedPdfs={["att-main"]}
-      />,
+      <ErpInvoicePdfUpload {...defaultProps} pendingDeletedPdfs={["f-main"]} />,
     );
-
     expect(screen.queryByText("main-pdf.pdf")).not.toBeInTheDocument();
     expect(screen.getByText("sub-pdf.pdf")).toBeInTheDocument();
   });
 
-  it("should NOT render delete icons when editMode is false", () => {
+  it("không có nút xóa khi không ở chế độ sửa", () => {
     render(<ErpInvoicePdfUpload {...defaultProps} editMode={false} />);
     expect(screen.queryByTitle("Xóa đính kèm")).not.toBeInTheDocument();
   });
 
-  it("should render without DrawerSection wrapper when noCard is true", () => {
+  it("noCard không render tiêu đề DrawerSection", () => {
     render(<ErpInvoicePdfUpload {...defaultProps} noCard={true} />);
     expect(screen.getByText("main-pdf.pdf")).toBeInTheDocument();
-    // In noCard mode, the duplicate "Tài liệu đính kèm" DrawerSection title should not be rendered
     expect(screen.queryByText("Tài liệu đính kèm")).not.toBeInTheDocument();
   });
 });

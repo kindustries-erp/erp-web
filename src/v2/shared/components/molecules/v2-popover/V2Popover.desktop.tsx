@@ -27,6 +27,8 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
   className,
   triggerClassName,
   modal = false,
+  style,
+  portalContainer,
 }) => {
   const triggerNode = trigger ?? children;
 
@@ -36,11 +38,12 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
         {triggerNode}
       </PopoverTrigger>
       <PopoverContent
+        container={portalContainer}
         side={side}
         align={align}
         sideOffset={sideOffset}
         onFocusOutside={(e) => e.preventDefault()}
-        style={{ pointerEvents: "auto" }}
+        style={{ pointerEvents: "auto", ...style }}
         className={cn(
           // Non-modal popover portals to <body>; a modal Dialog (e.g. drawer) sets body pointer-events:none, so re-enable clicks here.
           // Trên lớp nền drawer v1 (z-400): popover mở từ trong drawer phải nằm trên, không bị che

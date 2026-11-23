@@ -1,0 +1,16 @@
+import type { {{apiType}} } from "{{apiTypeImport}}";
+import type { {{keysType}} } from "{{keysImport}}";
+
+/** Cấu hình để một module ghép lõi họ {{family}}: API riêng, khóa cache, bảng, quyền và trường bắt buộc */
+export interface {{configType}} {
+  api: {{apiType}};
+  keys: {{keysType}};
+  /** Id bảng để lưu cấu hình cột của người dùng */
+  tableId: string;
+  /** Tên collection để kiểm tra quyền (create/update/delete) */
+  permissionCollection: string;
+  /** Trường bắt buộc, theo thứ tự hiển thị trên form */
+  requiredFields: readonly string[];
+  /** Cột hiển thị theo từng chế độ xem hệ thống */
+  viewVisibility: Record<string, Record<string, boolean>>;
+}

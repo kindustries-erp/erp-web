@@ -15,7 +15,14 @@ const columnsByKey = new Map<string, V2Column<Row>>([
   ["code", { key: "code", label: "Mã", cell: (row) => row.code }],
 ]);
 
-const renderBody = (data: Row[], overrides: { loading?: boolean } = {}) =>
+const renderBody = (
+  data: Row[],
+  overrides: {
+    loading?: boolean;
+    expandedKeys?: Set<string>;
+    renderExpandedRow?: (row: Row, index: number) => React.ReactNode;
+  } = {},
+) =>
   render(
     <TableHarness data={data} columns={columns}>
       {(table) => (
@@ -29,6 +36,8 @@ const renderBody = (data: Row[], overrides: { loading?: boolean } = {}) =>
           loadingLabel="Đang tải dữ liệu..."
           menuRowKey={null}
           onRowContextMenu={vi.fn()}
+          expandedKeys={overrides.expandedKeys}
+          renderExpandedRow={overrides.renderExpandedRow}
         />
       )}
     </TableHarness>,
@@ -58,5 +67,20 @@ describe("V2TableBodyRows", () => {
     });
     expect(screen.queryAllByTestId("v2-table-skeleton-bar")).toHaveLength(0);
     expect(container.querySelector("tbody")).toHaveClass("opacity-60");
+  });
+
+  it("renders expanded row content when row id is in expandedKeys", () => {
+    renderBody(
+      [
+        { id: "1", code: "HD-001" },
+        { id: "2", code: "HD-002" },
+      ],
+      {
+        expandedKeys: new Set(["0"]),
+        renderExpandedRow: (row) => <div>Chi tiết {row.code}</div>,
+      },
+    );
+    expect(screen.getByText("Chi tiết HD-001")).toBeInTheDocument();
+    expect(screen.queryByText("Chi tiết HD-002")).not.toBeInTheDocument();
   });
 });

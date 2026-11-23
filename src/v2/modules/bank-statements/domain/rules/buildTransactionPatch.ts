@@ -1,7 +1,7 @@
 import {
   toPartnerOptionValue,
   toPartnerSelectionPayload,
-} from "@/v2/modules/business-partners/domain/rules/partnerSelection";
+} from "@/v2/core/business-partners";
 import type {
   CashTransactionDto,
   CashTransactionUpdateDto,

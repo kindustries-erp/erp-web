@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2ChartFrame } from "./V2ChartFrame";
 
 const meta: Meta<typeof V2ChartFrame> = {
-  title: "Components/Molecules/Data Display/V2ChartFrame",
+  title: "Components/Molecules/V2ChartFrame",
   component: V2ChartFrame,
   tags: ["autodocs"],
   args: {

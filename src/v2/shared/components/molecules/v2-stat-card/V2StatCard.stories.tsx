@@ -3,7 +3,7 @@ import { Wallet } from "lucide-react";
 import { V2StatCard } from "./V2StatCard";
 
 const meta: Meta<typeof V2StatCard> = {
-  title: "Components/Molecules/Data Display/V2StatCard",
+  title: "Components/Molecules/V2StatCard",
   component: V2StatCard,
   tags: ["autodocs"],
   args: {

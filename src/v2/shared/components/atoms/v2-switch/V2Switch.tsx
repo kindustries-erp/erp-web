@@ -41,7 +41,7 @@ export const V2Switch = React.forwardRef<HTMLButtonElement, V2SwitchProps>(
           onClick={toggle}
           className={cn(
             "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-transparent transition-colors",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
             isOn ? "bg-primary" : "bg-input",
           )}
         >

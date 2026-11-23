@@ -4,7 +4,7 @@ import { ClipboardList } from "lucide-react";
 import { V2PageIcon } from "./V2PageIcon";
 
 const meta: Meta<typeof V2PageIcon> = {
-  title: "Components/Atoms/Display/V2PageIcon",
+  title: "Components/Atoms/V2PageIcon",
   component: V2PageIcon,
   tags: ["autodocs"],
 };
