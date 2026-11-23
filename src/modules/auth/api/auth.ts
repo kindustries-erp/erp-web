@@ -103,7 +103,6 @@ export interface Employee {
   email: string;
   phone: string | null;
   manager_employee_id: string | null;
-  directus_user_id: string;
   business_partner_id: string | null;
   employment_status: string;
   hire_date: string | null;
@@ -314,18 +313,3 @@ export async function selfUpdateProfileApi(
 }
 
 // ── Permission helpers ─────────────────────────────────────────────────────
-
-/**
- * Returns true only when the effective permissions of the current session
- * include full CRUD on the `directus_roles` collection.
- * Used to gate the "Login as user" impersonation feature.
- */
-export function hasFullDirectusRolesAccess(
-  permissions: EffectiveCollectionPermission[],
-): boolean {
-  const entry = permissions.find((p) => p.collection === "directus_roles");
-  if (!entry) return false;
-  return ["read", "create", "update", "delete"].every((a) =>
-    entry.actions.includes(a),
-  );
-}

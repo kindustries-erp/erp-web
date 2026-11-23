@@ -99,6 +99,21 @@
   --sidebar-active-fg: #ffffff;
   --main-panel-bg: var(--background);
   --main-panel-border: #dfe6f2;
+
+  /* ── Status Bar & Top Tabs Tokens ── */
+  --status-bar-bg: rgba(255, 255, 255, 0.85);
+  --status-bar-border: rgba(0, 0, 0, 0.08);
+  --status-bar-fg: #0f172a;
+  --status-bar-muted: #64748b;
+
+  /* ── Tab Pill Tokens (Default Light) ── */
+  --tab-pill-active-bg: #0f172a;
+  --tab-pill-active-fg: #ffffff;
+  --tab-pill-active-border: transparent;
+  --tab-pill-active-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --tab-pill-inactive-fg: #64748b;
+  --tab-pill-hover-bg: rgba(0, 0, 0, 0.05);
+  --tab-pill-hover-fg: #0f172a;
 }
 
 /* ── 2. Classic (Light) Theme ── */
@@ -194,6 +209,21 @@
   --sidebar-active-fg: var(--foreground);
   --main-panel-bg: #f9fbfc;
   --main-panel-border: var(--border);
+
+  /* ── Status Bar & Top Tabs Tokens ── */
+  --status-bar-bg: rgba(249, 251, 252, 0.9);
+  --status-bar-border: #e4e7ec;
+  --status-bar-fg: #0f172a;
+  --status-bar-muted: #64748b;
+
+  /* ── Tab Pill Tokens (Classic Light) ── */
+  --tab-pill-active-bg: #0f172a;
+  --tab-pill-active-fg: #ffffff;
+  --tab-pill-active-border: transparent;
+  --tab-pill-active-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --tab-pill-inactive-fg: #64748b;
+  --tab-pill-hover-bg: rgba(0, 0, 0, 0.05);
+  --tab-pill-hover-fg: #0f172a;
 }
 
 /* ── 2.1 Classic (Dark) Theme (Teal Scheme) ── */
@@ -294,6 +324,21 @@
   --sidebar-active-fg: #2dd4bf;
   --main-panel-bg: #16191f;
   --main-panel-border: rgba(255, 255, 255, 0.06);
+
+  /* ── Status Bar & Top Tabs Tokens ── */
+  --status-bar-bg: rgba(22, 25, 31, 0.9);
+  --status-bar-border: rgba(255, 255, 255, 0.06);
+  --status-bar-fg: #e2e8f0;
+  --status-bar-muted: #94a3b8;
+
+  /* ── Tab Pill Tokens (Classic Dark - Teal) ── */
+  --tab-pill-active-bg: rgba(20, 184, 166, 0.15);
+  --tab-pill-active-fg: #2dd4bf;
+  --tab-pill-active-border: rgba(20, 184, 166, 0.35);
+  --tab-pill-active-shadow: 0 2px 10px rgba(20, 184, 166, 0.18);
+  --tab-pill-inactive-fg: #949aa8;
+  --tab-pill-hover-bg: rgba(255, 255, 255, 0.04);
+  --tab-pill-hover-fg: #f4f5f7;
 }
 
 /* ── 3. OrcaQ Theme (Database Tool Flat Style) ── */
@@ -389,6 +434,44 @@
   --orcaq-tab-active-bg: #ffffff;
   --orcaq-tab-active-fg: #18181b;
   --orcaq-tab-inactive-fg: #a1a1aa;
+
+  /* ── Status Bar & Top Tabs Tokens ── */
+  --status-bar-bg: #18181b;
+  --status-bar-border: #27272a;
+  --status-bar-fg: #e0e0e0;
+  --status-bar-muted: #8888a8;
+
+  /* ── Tab Pill Tokens (OrcaQ Flat Dark Style) ── */
+  --tab-pill-active-bg: rgba(255, 255, 255, 0.1);
+  --tab-pill-active-fg: #ffffff;
+  --tab-pill-active-border: rgba(255, 255, 255, 0.15);
+  --tab-pill-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --tab-pill-inactive-fg: #a1a1aa;
+  --tab-pill-hover-bg: rgba(255, 255, 255, 0.06);
+  --tab-pill-hover-fg: #ffffff;
+}
+
+/* ── OrcaQ: Top TabBar & Bottom StatusBar DB-tool styling ── */
+.theme-orcaq .v2-tab-bar {
+  background: var(--app-shell-bg) !important;
+  border-bottom: 1px solid var(--sidebar-border) !important;
+}
+
+.theme-orcaq .v2-tab-item {
+  color: var(--tab-pill-inactive-fg);
+  border-bottom: none !important;
+}
+
+.theme-orcaq .v2-tab-item[aria-selected="true"] {
+  color: var(--tab-pill-active-fg) !important;
+  background: var(--tab-pill-active-bg) !important;
+  border: 1px solid var(--tab-pill-active-border) !important;
+}
+
+.theme-orcaq .v2-status-bar {
+  background: var(--app-shell-bg) !important;
+  border-top: 1px solid var(--sidebar-border) !important;
+  color: var(--status-bar-muted) !important;
 }
 
 /* ── 4. Midnight (Deep Night & Soft Violet Dark) Theme ── */
@@ -486,6 +569,21 @@
   --sidebar-active-fg: #a78bfa;
   --main-panel-bg: #12151e;
   --main-panel-border: rgba(255, 255, 255, 0.06);
+
+  /* ── Status Bar & Top Tabs Tokens ── */
+  --status-bar-bg: rgba(22, 25, 34, 0.92);
+  --status-bar-border: rgba(255, 255, 255, 0.07);
+  --status-bar-fg: #f4f5f7;
+  --status-bar-muted: #9ba1b0;
+
+  /* ── Tab Pill Tokens (Midnight / Dark Default) ── */
+  --tab-pill-active-bg: var(--sidebar-active-bg, rgba(20, 184, 166, 0.15));
+  --tab-pill-active-fg: var(--sidebar-active-fg, #2dd4bf);
+  --tab-pill-active-border: rgba(45, 212, 191, 0.35);
+  --tab-pill-active-shadow: 0 2px 10px rgba(20, 184, 166, 0.18);
+  --tab-pill-inactive-fg: #9ba1b0;
+  --tab-pill-hover-bg: rgba(255, 255, 255, 0.04);
+  --tab-pill-hover-fg: #f4f5f7;
 }
 
 /* ── Accessibility & Performance: Low-Power / Reduced-Motion Fallback ── */

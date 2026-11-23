@@ -18,7 +18,6 @@ describe("executeV2Login", () => {
         email: "admin@liouni.com",
         status: "ACTIVE",
         employeeId: null,
-        legacyDirectusUserId: null,
       },
     } satisfies sessions.LoginSessionData;
     vi.mocked(sessions.loginSession).mockResolvedValueOnce(mockResponse);

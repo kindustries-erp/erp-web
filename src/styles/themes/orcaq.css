@@ -103,6 +103,12 @@
   --orcaq-breadcrumb-bg: #fafafa;
   --orcaq-breadcrumb-border: #e4e4e7;
   --orcaq-accent: #18181b;
+
+  /* ── Status Bar & Top Tabs Tokens ── */
+  --status-bar-bg: #18181b;
+  --status-bar-border: #27272a;
+  --status-bar-fg: #e0e0e0;
+  --status-bar-muted: #8888a8;
 }
 
 /* ── Orcaq: border-radius 8px globally (except tab bar) ── */

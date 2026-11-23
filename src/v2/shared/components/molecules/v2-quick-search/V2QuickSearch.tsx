@@ -37,7 +37,7 @@ export const V2QuickSearch: React.FC<V2QuickSearchProps> = ({
         as="span"
         variant="caption"
         truncate
-        className="hidden sm:inline font-normal text-inherit"
+        className="hidden sm:inline font-normal text-inherit max-w-[120px]"
       >
         {effectivePlaceholder}
       </V2Text>

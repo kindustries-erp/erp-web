@@ -98,7 +98,7 @@ export const v2En: V2Dictionary = {
       markAllAsReadSuccess: "All notifications marked as read",
     },
     topbar: {
-      quickSearchPlaceholder: "Search menus, documents (Ctrl K)...",
+      quickSearchPlaceholder: "Quick search...",
       quickSearchShortcut: "Ctrl K",
       quickSearchAria: "Quick system search",
       languageSwitchAria: "Switch display language",
@@ -333,6 +333,13 @@ export const v2En: V2Dictionary = {
       viewTable: "View as table",
       category: "Category",
       other: "Other",
+    },
+    linkedField: {
+      edited: "Edited",
+      sourceHint: "Source: {{value}}",
+      revert: "Restore from source",
+      refresh: "Update from source",
+      refreshFailed: "Could not update from source",
     },
     form: {
       selectPlaceholder: "Select...",

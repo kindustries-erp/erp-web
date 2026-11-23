@@ -136,6 +136,10 @@ export interface ProcurementOrderDetail extends ProcurementOrderRow {
 
 export interface ProcurementRequestDetail extends ProcurementRequestRow {
   branchId: string | null;
+  /** Field liên kết đã sửa cục bộ so với bản ghi nguồn (vd: `branchName`). */
+  overriddenFields?: string[];
+  /** Giá trị nguồn tại lần lập snapshot gần nhất (khóa camelCase). */
+  sourceSnapshot?: Record<string, unknown>;
   requestDate: string;
   neededDate: string | null;
   remarks: string | null;
@@ -191,6 +195,9 @@ export interface ProcurementDocumentRef {
   id: string;
 }
 
+/** Phiếu trả về sau khi khôi phục/làm mới field liên kết. */
+export type ProcurementLinkResult = ProcurementRequestDetail;
+
 export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   list: (query: ProcurementTableQuery) => Promise<{
     items: T[];
@@ -225,6 +232,11 @@ export interface ProcurementApi<T, D = unknown, C = unknown, H = unknown> {
   purge?: (id: string) => Promise<unknown>;
   /** Nhân bản phiếu đã từ chối/hủy thành nháp mới (trả về id nháp) */
   clone?: (id: string) => Promise<{ id: string }>;
+  /**
+   * Đọc lại bản ghi nguồn và lấy giá trị mới nhất cho field liên kết (chỉ họ hỗ trợ link-override).
+   * "Khôi phục theo nguồn" làm ở client (đặt lại giá trị nguồn rồi lưu), nên không có hàm revert ở đây.
+   */
+  refreshLink?: (id: string, field: string) => Promise<ProcurementLinkResult>;
   /** Chỉ PR có: bản nháp PO điền sẵn (chỉ đọc) */
   poDraft?: (id: string) => Promise<ProcurementPoDraft>;
   /** Nhật ký các bước duyệt của đề nghị mua hàng */

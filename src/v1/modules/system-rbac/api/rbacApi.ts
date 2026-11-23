@@ -81,32 +81,6 @@ export interface SystemUserOption {
   roleName?: string | null;
 }
 
-function extractDirectusUserId(
-  raw: UserItem["directus_user_id"],
-): string | null {
-  if (!raw) return null;
-  if (typeof raw === "string") return raw;
-  if (typeof raw.id === "string") return raw.id;
-  if (typeof raw.user_id === "string") return raw.user_id;
-  if (typeof raw.user === "string") return raw.user;
-  if (
-    raw.user &&
-    typeof raw.user === "object" &&
-    typeof raw.user.id === "string"
-  ) {
-    return raw.user.id;
-  }
-  return null;
-}
-
-function extractRoleName(raw: UserItem["directus_user_id"]): string | null {
-  if (!raw || typeof raw === "string") return null;
-  const role = raw.role;
-  if (!role) return null;
-  if (typeof role === "string") return role;
-  return role.name ?? null;
-}
-
 export async function getSystemUsersApi(): Promise<SystemUserOption[]> {
   try {
     const { data } = await axiosInstance.get<Record<string, unknown>>(
@@ -122,8 +96,7 @@ export async function getSystemUsersApi(): Promise<SystemUserOption[]> {
     const seen = new Set<string>();
     const result: SystemUserOption[] = [];
     for (const u of list) {
-      const directusId = extractDirectusUserId(u.directus_user_id);
-      const id = directusId ?? u.id;
+      const id = u.id;
       if (!id || seen.has(id)) continue;
       seen.add(id);
       const display =
@@ -131,11 +104,7 @@ export async function getSystemUsersApi(): Promise<SystemUserOption[]> {
         u.full_name ||
         [u.first_name, u.last_name].filter(Boolean).join(" ") ||
         id;
-      result.push({
-        id,
-        display,
-        roleName: extractRoleName(u.directus_user_id),
-      });
+      result.push({ id, display, roleName: null });
     }
     return result;
   } catch {
@@ -238,14 +207,12 @@ export async function saveEmployeePermissionsApi(
   await axiosInstance.patch(`/api/v1/employees/${employeeId}/permissions`, dto);
 }
 
-/** Returns role IDs currently assigned to a Directus user. Tries multiple endpoint patterns. */
-export async function getUserRolesApi(
-  directusUserId: string,
-): Promise<string[]> {
+/** Returns role IDs currently assigned to a user. Tries multiple endpoint patterns. */
+export async function getUserRolesApi(userId: string): Promise<string[]> {
   // Pattern 1: dedicated endpoint (BE needs to implement)
   try {
     const { data } = await axiosInstance.get<Record<string, unknown>>(
-      `/api/v1/rbac/users/${directusUserId}/roles`,
+      `/api/v1/rbac/users/${userId}/roles`,
     );
     const raw = data.role_ids ?? data.roles ?? data.role;
     if (raw) {
@@ -259,7 +226,7 @@ export async function getUserRolesApi(
   // Pattern 2: GET single user info which may include role field
   try {
     const { data } = await axiosInstance.get<Record<string, unknown>>(
-      `/api/v1/rbac/users/${directusUserId}`,
+      `/api/v1/rbac/users/${userId}`,
     );
     const raw = data.role_ids ?? data.roles ?? data.role;
     if (raw) {
@@ -273,27 +240,18 @@ export async function getUserRolesApi(
   return [];
 }
 
-/** Replaces the full set of roles for a Directus user */
+/** Replaces the full set of roles for a user */
 export async function updateUserRolesApi(
-  directusUserId: string,
+  userId: string,
   roleIds: string[],
 ): Promise<void> {
-  await axiosInstance.patch(`/api/v1/rbac/users/${directusUserId}/roles`, {
+  await axiosInstance.patch(`/api/v1/rbac/users/${userId}/roles`, {
     role_ids: roleIds,
   });
 }
 
 interface UserItem {
   id: string;
-  directus_user_id?:
-    | string
-    | {
-        id?: string;
-        user_id?: string;
-        user?: string | { id?: string };
-        role?: string | { id?: string; name?: string | null; users?: string[] };
-      }
-    | null;
   full_name?: string | null;
   email?: string | null;
   first_name?: string | null;
@@ -320,12 +278,7 @@ export async function getUserEmailsMapApi(): Promise<Record<string, string>> {
         u.full_name ||
         [u.first_name, u.last_name].filter(Boolean).join(" ") ||
         u.id;
-      const directusId = extractDirectusUserId(u.directus_user_id);
-      const directusKeys = directusId ? [directusId] : [];
-      const keys = [...directusKeys, u.id].filter(Boolean);
-      for (const key of keys) {
-        map[key] = value;
-      }
+      map[u.id] = value;
     }
     return map;
   } catch {
