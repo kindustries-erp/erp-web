@@ -12,6 +12,7 @@ export * from "./v2-sidebar-section";
 export * from "./v2-sidebar-subgroup";
 export * from "./v2-tab-item";
 export * from "./v2-topbar";
+export * from "./v2-status-bar";
 export * from "./v2-user-badge";
 export * from "./v2-drawer-section";
 export * from "./v2-drawer-field";

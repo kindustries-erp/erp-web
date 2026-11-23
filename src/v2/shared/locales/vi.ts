@@ -98,7 +98,7 @@ export const v2Vi = {
       markAllAsReadSuccess: "Đã đánh dấu tất cả thông báo là đã đọc",
     },
     topbar: {
-      quickSearchPlaceholder: "Tìm kiếm menu, chứng từ (Ctrl K)...",
+      quickSearchPlaceholder: "Tìm nhanh...",
       quickSearchShortcut: "Ctrl K",
       quickSearchAria: "Tìm kiếm nhanh hệ thống",
       languageSwitchAria: "Chuyển đổi ngôn ngữ hiển thị",

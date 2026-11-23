@@ -110,6 +110,32 @@ describe("V2TabBar Molecule", () => {
     expect(handleSelect).toHaveBeenCalledWith("app2");
   });
 
+  it("renders variant='app' with only active tab showing icon", () => {
+    const handleSelect = vi.fn();
+    render(
+      <V2TabBar
+        variant={V2TabBarVariant.APP}
+        tabs={[
+          {
+            id: "tab-a",
+            label: "Tab A",
+            icon: <span data-testid="icon-a">IconA</span>,
+          },
+          {
+            id: "tab-b",
+            label: "Tab B",
+            icon: <span data-testid="icon-b">IconB</span>,
+          },
+        ]}
+        activeTabId="tab-a"
+        onTabSelect={handleSelect}
+      />,
+    );
+
+    expect(screen.getByTestId("icon-a")).toBeInTheDocument();
+    expect(screen.queryByTestId("icon-b")).not.toBeInTheDocument();
+  });
+
   it("renders mobile view when viewport is mobile (< 768px)", () => {
     // Mock mobile window innerWidth
     const originalInnerWidth = window.innerWidth;

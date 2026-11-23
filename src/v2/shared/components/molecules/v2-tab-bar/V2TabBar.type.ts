@@ -82,7 +82,10 @@ export interface V2TabItemData {
 
 export type V2TabEntry = V2TabItemData;
 
-export interface V2TabBarProps extends V2BaseProps<HTMLElement> {
+export interface V2TabBarProps extends Omit<
+  V2BaseProps<HTMLElement>,
+  "onSelect"
+> {
   /** Danh sách các tab */
   tabs: V2TabItemData[];
   /** Tab đang được chọn (theo id) */
@@ -95,6 +98,8 @@ export interface V2TabBarProps extends V2BaseProps<HTMLElement> {
   onTabChange?: (key: string) => void;
   /** Callback khi đóng tab (V2TabBarVariant.APP) */
   onTabClose?: (id: string) => void;
+  /** Callback khi người dùng kéo thả đổi thứ tự các tab (V2TabBarVariant.APP) */
+  onTabsReorder?: (newTabs: V2TabItemData[]) => void;
   /** Biến thể giao diện của tab bar theo enum V2TabBarVariant */
   variant?: V2TabBarVariant;
   /** Cụm nút tiện ích hoặc actions hiển thị bên phải thanh tab */
