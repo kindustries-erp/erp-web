@@ -15,6 +15,7 @@ storybook-static/
 .env
 .env.local
 .env.*.local
+.env.demo
 .env.klotus-*
 .env.greenway-*
 .env.blueway-*
