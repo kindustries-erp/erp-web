@@ -13,7 +13,7 @@ Skill này là nguồn tri thức cho việc tạo và migrate module sang V2. C
 | 2 | **Không import V1** | Module và shared V2 không import `@/core`, `@/shared`, `@/modules` (trừ `@/modules/auth/domain/authStore`, session dùng chung). Kiểm bằng audit mục 7. |
 | 3 | **Key i18n `v2.*`** | Mọi `t()` dùng key có tiền tố `v2.`. Key không có tiền tố trả fallback, không đi sang V1. |
 | 4 | **Atomic** | `components/molecules/` và `components/organisms/`, mỗi thư mục kebab-case có `index.ts` và test co-located. |
-| 5 | **< 180 LoC** | Tách `.hook.ts`, helper, sub-component khi gần ngưỡng. |
+| 5 | **180 cảnh báo / 250 chặn** | Tách `.hook.ts`, helper, sub-component khi gần ngưỡng. |
 | 6 | **No Blue** | Dùng token ngữ cảnh (`bg-primary`, `text-muted-fg`...), không dùng `blue-*`. |
 | 7 | **Rolling migration** | Chỉ migrate module khi user ra lệnh. Mỗi module verify đủ audit trước khi báo xong. |
 | 8 | **Storybook** | Component trong `shared/` bắt buộc có `*.stories.tsx` (test `storyCoverage` kiểm). Module không bắt buộc. |

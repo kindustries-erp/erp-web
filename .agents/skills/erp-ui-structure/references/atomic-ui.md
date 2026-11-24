@@ -226,7 +226,7 @@ graph TD
 
 ---
 
-## 📏 5. Giới Hạn File (< 180 LoC) & Cấu Trúc Phân Lớp Thư Mục Chuẩn
+## 📏 5. Giới Hạn File (180 cảnh báo / 250 chặn) & Cấu Trúc Phân Lớp Thư Mục Chuẩn
 
 ### A. Quy tắc Bóc Tách Non-UI vs UI Components
 - **Chỉ chứa UI Components**: Các thư mục `src/shared/components/` (bao gồm `atoms/`, `molecules/`, `organisms/`, `templates/`) **CHỈ CHỨA 100% UI PRESENTATION CODE** và cục bộ UI tests/hooks.
@@ -417,7 +417,7 @@ Khi tạo mới một Component:
 - [ ] **Mỗi Component 1 Folder**: Tất cả các component đều nằm trong thư mục `kebab-case` riêng có `index.ts`?
 - [ ] **Đặt tên chuẩn (Số Ít Đồng Nhất)**: Component `PascalCase.tsx`, co-located files chuẩn số ít: `<ComponentName>.hook.ts`, `<ComponentName>.state.ts`, `<ComponentName>.type.ts`, `<ComponentName>.schema.ts`, `<ComponentName>.helper.ts`?
 - [ ] **Ranh giới Hook Đúng Tầng**: Atoms & Molecules CHỈ chứa UI Logic hooks (0% API/Store). Organisms chứa UI Logic hooks + Business Logic hooks?
-- [ ] **Kích thước file**: Tất cả các file đều $< 180\text{ LoC}$?
+- [ ] **Kích thước file**: không file nào vượt 250 dòng; file vượt 180 dòng có kế hoạch tách?
 - [ ] **Tách biệt Logic & UI**: Toàn bộ TanStack Query, mutations, và form state nằm trong hook/state files riêng biệt?
 - [ ] **Co-located Stories**: Có file `[ComponentName].stories.tsx` đối với mọi component mới có UI (shared/v2, `core/<họ>`, `modules/<module>`)? Ngoại lệ: page ghép và hook thuần, ghi lý do. Title: `Components/<Tầng>/<Name>`, `Core/<Họ>/<Name>`, `Modules/<Module>/<Name>`.
 - [ ] **Co-located Tests**: Test nằm trực tiếp cùng cấp trong component folder đơn lẻ hoặc trong `__tests__/` của multi-component feature/organism?

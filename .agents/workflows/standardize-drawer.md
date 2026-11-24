@@ -8,7 +8,15 @@ Workflow này hướng dẫn Agent và Developer quy trình chuẩn 4 bước kh
 
 ---
 
-## ⚡ Fast-Track: Khi tạo mới Drawer
+## 🚦 Cổng chọn V1 / V2 (đọc trước)
+
+- **Code mới và module thuộc `src/v2/**`**: dùng `V2StandardDrawer` (key i18n `v2.*`, atom `V2*`, không import V1). Làm theo skill `standardize-drawer` → `references/v2-drawer.md`. Các phần bên dưới KHÔNG áp dụng cho V2 (`StandardFormDrawer`, `@/shared/components/*` là của V1).
+- **Sửa drawer V1 hiện có** (`src/modules/**`, `src/v1/**`): làm theo toàn bộ workflow dưới đây. Đây là quy trình **V1 legacy**; không migrate sang V2 khi chưa có lệnh của người dùng (xem `/erp-ui-structure` Phần B).
+- Ngưỡng kích thước chung cho cả hai: 180 dòng cảnh báo, 250 dòng chặn.
+
+---
+
+## ⚡ Fast-Track: Khi tạo mới Drawer (V1)
 
 Nếu bạn đang tạo mới một Drawer cho phân hệ mới, **hãy ưu tiên chạy PlopJS Generator** để sinh ngay 100% code chuẩn trong 1 giây:
 ```bash
