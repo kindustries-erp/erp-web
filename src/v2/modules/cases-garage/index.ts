@@ -12,3 +12,6 @@ export * from "./api/queries/useCaseProgressQuery";
 export * from "./api/queries/useCaseProgressAllQuery";
 export * from "./api/queries/useCaseProgressMutations";
 export * from "./components/GarageCasesKanbanContainer";
+export * from "./pages/GarageWorkshopProgressPage";
+export * from "./domain/caseWorkshop.type";
+export * from "./api/caseWorkshopApi";

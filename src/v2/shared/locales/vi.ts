@@ -343,6 +343,13 @@ export const v2Vi = {
     },
     form: {
       selectPlaceholder: "Chọn...",
+      dateTime: {
+        date: "Ngày",
+        time: "Giờ",
+        now: "Bây giờ",
+        minutesAgo: "{{n}} phút trước",
+        hoursAgo: "{{n}} giờ trước",
+      },
       searchPlaceholder: "Tìm kiếm...",
       noResults: "Không có kết quả",
       searching: "Đang tìm...",

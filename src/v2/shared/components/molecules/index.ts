@@ -80,3 +80,5 @@ export * from "./v2-drawer-history-tab";
 export * from "./v2-group-header";
 export * from "./v2-user-menu";
 export * from "./v2-chat-composer";
+export * from "./v2-autocomplete-input";
+export * from "./v2-date-time-picker";

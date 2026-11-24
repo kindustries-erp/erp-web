@@ -343,6 +343,13 @@ export const v2En: V2Dictionary = {
     },
     form: {
       selectPlaceholder: "Select...",
+      dateTime: {
+        date: "Date",
+        time: "Time",
+        now: "Now",
+        minutesAgo: "{{n}} min ago",
+        hoursAgo: "{{n}} h ago",
+      },
       searchPlaceholder: "Search...",
       noResults: "No results",
       searching: "Searching...",

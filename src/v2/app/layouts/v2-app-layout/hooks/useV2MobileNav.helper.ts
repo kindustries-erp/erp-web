@@ -7,6 +7,7 @@ import { MAX_PINNED_MOBILE_NAV } from "@/v2/shared/stores/useV2MobileNavStore";
 export const PREFERRED_DEFAULT_NAV_IDS = [
   // 1. Phân hệ Garage (dành cho tenant chuyên garage)
   "garage-cases",
+  "garage-workshop-progress",
   "garage-debts",
   // 2. Kế toán & Dòng tiền (luôn ưu tiên cốt lõi)
   "cashflow",

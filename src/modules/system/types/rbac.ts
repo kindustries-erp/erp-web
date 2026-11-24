@@ -47,6 +47,8 @@ export enum ErpResource {
   EMAIL_INGEST = "email_ingest",
   JOURNAL_ENTRIES = "journal_entries",
   GARAGE = "garage",
+  /** Trang tiến độ xưởng: xem (`read`), ghi công đoạn/nhật ký (`update`). */
+  GARAGE_WORKSHOP = "garage_workshop",
   GARAGE_DEBTS = "garage_debts",
   GARAGE_CASHFLOW = "garage_cashflow",
   GARAGE_GOODS_RECEIPTS = "garage_goods_receipts",
@@ -245,6 +247,11 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     group: "Garage & Xưởng dịch vụ",
   },
   {
+    collection: "garage_workshop",
+    label: "Tiến độ xưởng Garage",
+    group: "Garage & Xưởng dịch vụ",
+  },
+  {
     collection: "garage_debts",
     label: "Công nợ Garage",
     group: "Garage & Xưởng dịch vụ",
@@ -344,6 +351,7 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
     defaultLabel: "Garage & Xưởng dịch vụ",
     resources: [
       ErpResource.GARAGE,
+      ErpResource.GARAGE_WORKSHOP,
       ErpResource.GARAGE_DEBTS,
       ErpResource.GARAGE_CASHFLOW,
       ErpResource.GARAGE_GOODS_RECEIPTS,

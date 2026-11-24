@@ -51,6 +51,32 @@ describe("RolePermissionsMatrix", () => {
     expect(screen.getByText("3 quyền được cấp")).toBeInTheDocument();
   });
 
+  it("hiện quyền Tiến độ xưởng Garage trong nhóm Garage với các cột CRUD", () => {
+    render(
+      <RolePermissionsMatrix
+        permMap={{ garage_workshop: { read: true, update: true } }}
+        setPermMap={vi.fn()}
+        resources={[
+          { resource: "garage", label: "Garage" },
+          {
+            resource: "garage_workshop",
+            label: "Tiến độ xưởng Garage (công đoạn, nhật ký, người làm)",
+          },
+        ]}
+        loading={false}
+        error={null}
+        isView={false}
+        t={(_k, fb) => fb ?? ""}
+      />,
+    );
+    expect(screen.getByText("Garage & Xưởng dịch vụ")).toBeInTheDocument();
+    expect(
+      screen.getByText("Tiến độ xưởng Garage (công đoạn, nhật ký, người làm)"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Tài nguyên khác")).toBeNull();
+    expect(screen.getByText("2 quyền được cấp")).toBeInTheDocument();
+  });
+
   it("shows empty state when resources are empty and not loading", () => {
     render(
       <RolePermissionsMatrix
