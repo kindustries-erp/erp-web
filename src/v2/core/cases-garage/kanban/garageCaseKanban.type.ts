@@ -7,6 +7,34 @@ export type GarageKanbanLaneKey =
   | "COMPLETED"
   | "CANCELLED";
 
+/** Trạng thái vụ việc v2 (enum backend `CaseStatus`); cột Kanban ánh xạ 1-1 qua `GARAGE_LANE_STATUS`. */
+export type GarageCaseStatus =
+  | "INTAKE"
+  | "QUOTED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED";
+
+/** Công đoạn sửa chữa (`progress_stage`), hiện thành badge trên thẻ xe đang làm. */
+export const GARAGE_CASE_STAGES = [
+  "WAITING_PARTS",
+  "REPAIRING",
+  "PAINTING",
+  "QC",
+  "READY_FOR_DELIVERY",
+] as const;
+export type GarageCaseStage = (typeof GARAGE_CASE_STAGES)[number];
+
+/** Thông tin v2 của một vụ việc (từ `GET /api/v2/cases-garage/progress`), tra theo `case.id`. */
+export interface GarageCaseV2Info {
+  status: GarageCaseStatus;
+  progressStage: GarageCaseStage | null;
+  /** `status` đang bị sửa đè ở v2 so với KGara. */
+  statusOverridden: boolean;
+}
+
+export type GarageCaseV2InfoMap = Readonly<Record<string, GarageCaseV2Info>>;
+
 export interface GarageVehicleKanbanItem {
   id: string; // [Biển số xe]::[Mốc tiến độ] làm key định danh duy nhất của card
   licensePlate: string;
@@ -27,6 +55,10 @@ export interface GarageVehicleKanbanItem {
   latestDate?: string;
   latestCaseCode?: string;
   latestStatus?: string;
+  /** Công đoạn của phiếu đang làm đầu tiên (chỉ có khi đã tải thông tin v2). */
+  progressStage?: GarageCaseStage | null;
+  /** Có phiếu nào trong thẻ bị sửa đè trạng thái ở v2. */
+  statusOverridden?: boolean;
 }
 
 export interface GarageKanbanAccentConfig {

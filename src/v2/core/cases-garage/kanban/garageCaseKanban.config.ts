@@ -7,6 +7,8 @@ import {
   XCircle,
 } from "lucide-react";
 import type {
+  GarageCaseStage,
+  GarageCaseStatus,
   GarageKanbanLaneDefinition,
   GarageKanbanLaneKey,
   GarageKanbanAccentConfig,
@@ -46,6 +48,71 @@ export const GARAGE_KANBAN_LANE_ACCENTS: Record<
     fallbackHex: "#ef4444",
   },
 } as const;
+
+/** Công đoạn → key locale và nhãn mặc định (badge trên thẻ xe đang làm). */
+export const GARAGE_STAGE_LABELS: Record<
+  GarageCaseStage,
+  { key: string; defaultLabel: string }
+> = {
+  WAITING_PARTS: {
+    key: "v2.garageCases.kanban.stageWaitingParts",
+    defaultLabel: "Chờ phụ tùng",
+  },
+  REPAIRING: {
+    key: "v2.garageCases.kanban.stageRepairing",
+    defaultLabel: "Đang sửa",
+  },
+  PAINTING: {
+    key: "v2.garageCases.kanban.stagePainting",
+    defaultLabel: "Sơn",
+  },
+  QC: {
+    key: "v2.garageCases.kanban.stageQc",
+    defaultLabel: "Kiểm tra chất lượng",
+  },
+  READY_FOR_DELIVERY: {
+    key: "v2.garageCases.kanban.stageReadyForDelivery",
+    defaultLabel: "Sẵn sàng giao",
+  },
+};
+
+/** Cột Kanban → `status` v2 gửi lên `PATCH :id/status`. */
+export const GARAGE_LANE_STATUS: Record<GarageKanbanLaneKey, GarageCaseStatus> =
+  {
+    INTAKE: "INTAKE",
+    QUOTATION: "QUOTED",
+    IN_PROGRESS: "IN_PROGRESS",
+    COMPLETED: "COMPLETED",
+    CANCELLED: "CANCELLED",
+  };
+
+const STATUS_LANE: Record<GarageCaseStatus, GarageKanbanLaneKey> = {
+  INTAKE: "INTAKE",
+  QUOTED: "QUOTATION",
+  IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
+};
+
+/** Mã `tinh_trang_dich_vu` của KGara → cột; cùng bảng ánh xạ với backend `kgara-status.map.ts`. */
+const KGARA_CODE_LANE: Record<number, GarageKanbanLaneKey> = {
+  0: "INTAKE",
+  1: "QUOTATION",
+  2: "IN_PROGRESS",
+  3: "COMPLETED",
+  9: "CANCELLED",
+};
+
+export function statusToLane(status: GarageCaseStatus): GarageKanbanLaneKey {
+  return STATUS_LANE[status] ?? "INTAKE";
+}
+
+/** Mã thiếu hoặc lạ rơi về INTAKE, giống backend. */
+export function kgaraCodeToLane(
+  code: number | null | undefined,
+): GarageKanbanLaneKey {
+  return (code != null && KGARA_CODE_LANE[code]) || "INTAKE";
+}
 
 export function getGarageKanbanLaneAccent(
   key: GarageKanbanLaneKey,

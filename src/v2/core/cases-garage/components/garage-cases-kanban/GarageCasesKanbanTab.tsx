@@ -1,45 +1,59 @@
 import * as React from "react";
-import { toast } from "react-hot-toast";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import {
-  V2KanbanBoard,
-  type V2KanbanDropEvent,
-} from "@/v2/shared/components/organisms/v2-kanban-board";
+import { V2KanbanBoard } from "@/v2/shared/components/organisms/v2-kanban-board";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type { GarageCaseDetailRow } from "@/modules/garage/components/organisms/garage-cases-detail-drawer/components/GarageCasesTableTab.type";
 import {
   groupCasesByVehicle,
   buildGarageKanbanLanes,
-  moveVehicleToLane,
   type GarageVehicleKanbanItem,
-  type GarageKanbanLaneKey,
-  GARAGE_KANBAN_LANES,
+  type GarageCaseStage,
+  type GarageCaseStatus,
+  type GarageCaseV2InfoMap,
 } from "../../kanban";
 import { GarageVehicleKanbanCard } from "./GarageVehicleKanbanCard";
 import { GarageCasesKanbanToolbar } from "./GarageCasesKanbanToolbar";
+import { useGarageKanbanActions } from "./GarageCasesKanbanTab.hook";
 
 export interface GarageCasesKanbanTabProps {
   cases: GarageCaseDetailRow[];
+  /** Thông tin v2 (status, công đoạn, đã ghi đè) tra theo `case.id`; thiếu thì dùng mã KGara. */
+  v2Info?: GarageCaseV2InfoMap;
+  /** Có quyền sửa: không có thì khóa kéo thả, đổi công đoạn và hoàn về KGara. */
+  canEdit?: boolean;
+  /** Lưu `status` v2 cho mọi phiếu của thẻ; reject khi lỗi để tab báo và board giữ nguyên. */
+  onMoveStatus?: (
+    item: GarageVehicleKanbanItem,
+    status: GarageCaseStatus,
+  ) => Promise<unknown>;
+  onChangeStage?: (
+    item: GarageVehicleKanbanItem,
+    stage: GarageCaseStage | null,
+  ) => Promise<unknown>;
+  onRevertStatus?: (item: GarageVehicleKanbanItem) => Promise<unknown>;
   onOpenCaseDetail?: (caseCode: string) => void;
   className?: string;
 }
 
 export const GarageCasesKanbanTab: React.FC<GarageCasesKanbanTabProps> = ({
   cases,
+  v2Info,
+  canEdit = false,
+  onMoveStatus,
+  onChangeStage,
+  onRevertStatus,
   onOpenCaseDetail,
   className,
 }) => {
   const { t } = useV2Translation();
   const [search, setSearch] = React.useState("");
+  const editable = canEdit && Boolean(onMoveStatus);
 
-  const initialItems = React.useMemo(() => groupCasesByVehicle(cases), [cases]);
-  const [items, setItems] =
-    React.useState<GarageVehicleKanbanItem[]>(initialItems);
-
-  React.useEffect(() => {
-    setItems(initialItems);
-  }, [initialItems]);
+  const items = React.useMemo(
+    () => groupCasesByVehicle(cases, v2Info),
+    [cases, v2Info],
+  );
 
   // Lọc theo từ khóa tìm kiếm
   const filteredItems = React.useMemo(() => {
@@ -67,27 +81,13 @@ export const GarageCasesKanbanTab: React.FC<GarageCasesKanbanTabProps> = ({
     [filteredItems],
   );
 
-  // Xử lý kéo thả chuyển mốc tiến độ
-  const handleCardDrop = (
-    event: V2KanbanDropEvent<GarageVehicleKanbanItem>,
-  ) => {
-    const targetKey = event.targetLaneId as GarageKanbanLaneKey;
-    if (event.sourceLaneId === targetKey) return;
-
-    setItems((prev) => moveVehicleToLane(prev, event.itemId, targetKey));
-
-    const targetLane = GARAGE_KANBAN_LANES.find((l) => l.key === targetKey);
-    const targetName = targetLane
-      ? t(targetLane.titleKey, targetLane.defaultTitle)
-      : targetKey;
-
-    toast.success(
-      t(
-        "v2.garageCases.kanban.movedToStatus",
-        `Đã chuyển xe ${event.item.licensePlate || event.itemId} sang trạng thái ${targetName}`,
-      ),
-    );
-  };
+  const { handleCardDrop, handleChangeStage, handleRevert } =
+    useGarageKanbanActions({
+      editable,
+      onMoveStatus,
+      onChangeStage,
+      onRevertStatus,
+    });
 
   const renderCard = React.useCallback(
     (item: GarageVehicleKanbanItem, laneId: string, isOverlay?: boolean) => (
@@ -96,9 +96,12 @@ export const GarageCasesKanbanTab: React.FC<GarageCasesKanbanTabProps> = ({
         laneId={laneId}
         isOverlay={isOverlay}
         onOpenCaseDetail={onOpenCaseDetail}
+        canEdit={canEdit}
+        onChangeStage={handleChangeStage}
+        onRevertStatus={handleRevert}
       />
     ),
-    [onOpenCaseDetail],
+    [onOpenCaseDetail, canEdit, handleChangeStage, handleRevert],
   );
 
   return (
@@ -132,6 +135,7 @@ export const GarageCasesKanbanTab: React.FC<GarageCasesKanbanTabProps> = ({
             id="garage-cases-kanban-board"
             lanes={lanes}
             getItemId={(item) => item.id}
+            isDragDisabled={!editable}
             onCardDrop={handleCardDrop}
             renderCard={renderCard}
           />

@@ -41,6 +41,19 @@ export async function getBranchesApi(): Promise<Branch[]> {
   });
 }
 
+/** `externalId` KGara của chi nhánh ERP (bảng liên kết nguồn ngoài); null khi chưa liên kết. */
+export async function getBranchKgaraExternalIdApi(
+  branchId: string,
+): Promise<string | null> {
+  const { data } = await axiosInstance.get<{
+    items?: Array<{ source: string; externalId: string }>;
+  }>(`/api/v2/branches/${branchId}/external-links`);
+  const link = (data.items ?? []).find(
+    (l) => l.source.toUpperCase() === "KGARA",
+  );
+  return link?.externalId ?? null;
+}
+
 export async function getBranchOptionsApi(): Promise<
   Array<{ value: string; label: string }>
 > {

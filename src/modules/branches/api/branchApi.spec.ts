@@ -10,7 +10,12 @@ vi.mock("@/core/api/axiosInstance", () => ({
 }));
 
 import axiosInstance from "@/core/api/axiosInstance";
-import { createBranchApi, getBranchesApi, updateBranchApi } from "./branchApi";
+import {
+  createBranchApi,
+  getBranchKgaraExternalIdApi,
+  getBranchesApi,
+  updateBranchApi,
+} from "./branchApi";
 
 describe("branchApi normalize is_active", () => {
   beforeEach(() => {
@@ -105,5 +110,31 @@ describe("branchApi normalize is_active", () => {
     expect(axiosInstance.patch).toHaveBeenCalledWith("/api/v2/branches/b1", {
       is_active: false,
     });
+  });
+});
+
+describe("getBranchKgaraExternalIdApi", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("lấy externalId của liên kết KGARA, bỏ qua nguồn khác", async () => {
+    vi.mocked(axiosInstance.get).mockResolvedValue({
+      data: {
+        items: [
+          { source: "OTHER", externalId: "x" },
+          { source: "KGARA", externalId: "ext-1" },
+        ],
+      },
+    } as any);
+    await expect(getBranchKgaraExternalIdApi("b1")).resolves.toBe("ext-1");
+    expect(axiosInstance.get).toHaveBeenCalledWith(
+      "/api/v2/branches/b1/external-links",
+    );
+  });
+
+  it("trả null khi chi nhánh chưa liên kết KGara", async () => {
+    vi.mocked(axiosInstance.get).mockResolvedValue({
+      data: { items: [] },
+    } as any);
+    await expect(getBranchKgaraExternalIdApi("b2")).resolves.toBeNull();
   });
 });

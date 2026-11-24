@@ -2,72 +2,41 @@ import React from "react";
 import type { GarageCaseDetailRow } from "@/modules/garage/components/organisms/garage-cases-detail-drawer/components/GarageCasesTableTab.type";
 import type { V2KanbanLaneData } from "@/v2/shared/components/organisms/v2-kanban-board";
 import { money } from "@/shared/utils/format";
-import { GARAGE_KANBAN_LANES } from "./garageCaseKanban.config";
+import {
+  GARAGE_KANBAN_LANES,
+  kgaraCodeToLane,
+  statusToLane,
+} from "./garageCaseKanban.config";
 import type {
+  GarageCaseV2InfoMap,
   GarageKanbanLaneKey,
   GarageVehicleKanbanItem,
 } from "./garageCaseKanban.type";
 
-export function determineCaseLane(c: GarageCaseDetailRow): GarageKanbanLaneKey {
-  const statusStr = (c.serviceStatus || "").toLowerCase();
-
-  if (
-    c.tinhTrangDichVu === 9 ||
-    statusStr.includes("hủy") ||
-    statusStr.includes("từ chối")
-  ) {
-    return "CANCELLED";
-  }
-
-  if (
-    c.tinhTrangDichVu === 3 ||
-    statusStr.includes("hoàn thành") ||
-    statusStr.includes("kết thúc") ||
-    statusStr.includes("hoàn tất") ||
-    statusStr.includes("giao xe") ||
-    Boolean(c.ngayHoanThanh)
-  ) {
-    return "COMPLETED";
-  }
-
-  if (
-    c.tinhTrangDichVu === 2 ||
-    statusStr.includes("đang sửa") ||
-    statusStr.includes("đang làm") ||
-    statusStr.includes("sửa chữa") ||
-    statusStr.includes("gia công") ||
-    statusStr.includes("kiểm tra") ||
-    statusStr.includes("xử lý")
-  ) {
-    return "IN_PROGRESS";
-  }
-
-  if (
-    c.tinhTrangDichVu === 1 ||
-    statusStr.includes("báo giá") ||
-    statusStr.includes("nháp") ||
-    statusStr.includes("chờ duyệt")
-  ) {
-    return "QUOTATION";
-  }
-
-  if (c.tinhTrangDichVu === 0 || statusStr.includes("tiếp nhận")) {
-    return "INTAKE";
-  }
-
-  return "IN_PROGRESS";
+/**
+ * Cột của một phiếu: ưu tiên `status` v2 (kể cả khi đã sửa đè), thiếu thì theo mã KGara của chính phiếu.
+ * Không đoán theo text trạng thái.
+ */
+export function determineCaseLane(
+  c: GarageCaseDetailRow,
+  v2Info?: GarageCaseV2InfoMap,
+): GarageKanbanLaneKey {
+  const info = v2Info?.[c.id];
+  return info ? statusToLane(info.status) : kgaraCodeToLane(c.tinhTrangDichVu);
 }
 
 export function groupCasesByVehicle(
   cases: GarageCaseDetailRow[],
+  v2Info?: GarageCaseV2InfoMap,
 ): GarageVehicleKanbanItem[] {
   const groupMap = new Map<string, GarageVehicleKanbanItem>();
 
   for (const c of cases) {
     const rawPlate = (c.bienSoXe || "").trim().toUpperCase();
     const plate = rawPlate || c.soChungTu || c.id;
-    const caseLane = determineCaseLane(c);
+    const caseLane = determineCaseLane(c, v2Info);
     const groupKey = `${plate}::${caseLane}`;
+    const info = v2Info?.[c.id];
 
     if (!groupMap.has(groupKey)) {
       groupMap.set(groupKey, {
@@ -90,6 +59,8 @@ export function groupCasesByVehicle(
         latestDate: c.ngayHoanThanh,
         latestCaseCode: c.soChungTu,
         latestStatus: c.serviceStatus,
+        progressStage: info?.progressStage ?? null,
+        statusOverridden: Boolean(info?.statusOverridden),
       });
     } else {
       const item = groupMap.get(groupKey)!;
@@ -114,6 +85,10 @@ export function groupCasesByVehicle(
       if (c.ngayHoanThanh) {
         item.latestDate = c.ngayHoanThanh;
       }
+      if (!item.progressStage && info?.progressStage) {
+        item.progressStage = info.progressStage;
+      }
+      if (info?.statusOverridden) item.statusOverridden = true;
     }
   }
 
@@ -143,23 +118,5 @@ export function buildGarageKanbanLanes(
       icon: React.createElement(Icon, { className: "w-3.5 h-3.5" }),
       items: laneItems,
     };
-  });
-}
-
-export function moveVehicleToLane(
-  items: GarageVehicleKanbanItem[],
-  itemId: string,
-  targetLaneKey: GarageKanbanLaneKey,
-): GarageVehicleKanbanItem[] {
-  return items.map((item) => {
-    if (item.id === itemId) {
-      const plate = item.licensePlate;
-      return {
-        ...item,
-        id: `${plate}::${targetLaneKey}`,
-        laneKey: targetLaneKey,
-      };
-    }
-    return item;
   });
 }

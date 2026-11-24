@@ -5,7 +5,9 @@ import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar/
 import { GarageCasesTableTab } from "./components/GarageCasesTableTab";
 import { DebtPartnerTab } from "../garage-debt-detail-drawer/components/DebtPartnerTab";
 import { DebtClassificationTab } from "../garage-debt-detail-drawer/components/DebtClassificationTab";
-import { GarageCasesKanbanTab } from "@/v2/core/cases-garage";
+import { useAppStore } from "@/core/config/appStore";
+import { useKgaraBranchExternalId } from "@/modules/branches/api/useKgaraBranchExternalId";
+import { GarageCasesKanbanContainer } from "@/v2/modules/cases-garage";
 import type { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 
 type DrawerLogic = ReturnType<typeof useGarageCasesDetailDrawer>;
@@ -36,7 +38,10 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     vehicleTotal,
     isFunnel,
     initialStatus,
+    branchId,
   } = logic;
+  const currentBranchId = useAppStore((s) => s.currentBranchId);
+  const kgaraBranchId = useKgaraBranchExternalId(branchId || currentBranchId);
 
   return useMemo<V2TabItemData[]>(() => {
     const isFunnelScope = Boolean(isCheckpoint && (classification || isFunnel));
@@ -68,8 +73,9 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
         label: t("v2.garageCases.kanban.tabTitle", "Tiến độ công việc"),
         icon: <Kanban className="w-3.5 h-3.5" />,
         content: (
-          <GarageCasesKanbanTab
+          <GarageCasesKanbanContainer
             cases={cases}
+            kgaraBranchId={kgaraBranchId}
             onOpenCaseDetail={setSelectedCaseCode}
           />
         ),
@@ -140,6 +146,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     totalBilled,
     totalCost,
     handleSelectClassification,
+    kgaraBranchId,
     t,
   ]);
 }
