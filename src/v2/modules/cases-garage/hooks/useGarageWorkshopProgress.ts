@@ -118,7 +118,8 @@ export function useGarageWorkshopProgress(kgaraBranchId?: string) {
 
   const create = (v: WorkshopLogSubmit) =>
     saved(async () => {
-      if (!selectedId) return;
+      // Không có xe đang chọn (drawer đóng giữa chừng): báo lỗi thay vì báo đã lưu.
+      if (!selectedId) throw new Error("No workshop case selected");
       await m.createLog.mutateAsync({
         caseId: selectedId,
         payload: toCreateLogPayload(v),

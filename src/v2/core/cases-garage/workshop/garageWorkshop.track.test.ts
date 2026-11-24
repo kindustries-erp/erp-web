@@ -29,6 +29,8 @@ describe("allowedTrackStatuses", () => {
       "IN_PROGRESS",
       "CANCELLED",
     ]);
+    // Không có garage:update: xe mới chỉ vào Tiếp nhận.
+    expect([...allowedTrackStatuses("new", false)]).toEqual(["INTAKE"]);
   });
 
   it("không có quyền đổi trạng thái: chỉ giữ trạng thái hiện tại", () => {

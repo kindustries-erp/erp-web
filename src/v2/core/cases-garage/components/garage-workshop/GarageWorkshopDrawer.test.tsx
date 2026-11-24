@@ -113,9 +113,19 @@ describe("GarageWorkshopLogForm", () => {
     fireEvent.change(screen.getByPlaceholderText(/Ví dụ/), {
       target: { value: " Sơn lót " },
     });
-    fireEvent.change(screen.getByLabelText("Bắt đầu lúc – Giờ"), {
-      target: { value: "07:15" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Bắt đầu lúc – Giờ" }));
+    fireEvent.click(
+      within(screen.getByRole("listbox", { name: "Giờ" })).getByRole("option", {
+        name: "07",
+      }),
+    );
+    // Chọn giờ giữ panel mở; chọn tiếp phút.
+    fireEvent.click(
+      within(screen.getByRole("listbox", { name: "Phút" })).getByRole(
+        "option",
+        { name: "15" },
+      ),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Lưu tiến độ" }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({
@@ -162,12 +172,17 @@ describe("GarageWorkshopDrawer", () => {
     expect(screen.getByText("Đang sửa một dòng nhật ký")).toBeInTheDocument();
     // Giờ kết thúc theo múi giờ máy chạy test, chỉ kiểm có giá trị HH:mm.
     expect(
-      (screen.getByLabelText("Kết thúc lúc – Giờ") as HTMLInputElement).value,
-    ).toMatch(/^\d{2}:\d{2}$/);
+      screen.getByRole("button", { name: "Kết thúc lúc – Giờ" }),
+    ).toHaveTextContent(/\d{2}:\d{2}/);
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
     await waitFor(() =>
       expect(props.onUpdate).toHaveBeenCalledWith("l1", expect.any(Object)),
     );
+    // Không đổi giờ: không gửi startedAt/endedAt (giữ giây gốc ở server).
+    expect(vi.mocked(props.onUpdate).mock.calls[0][1]).toMatchObject({
+      startedAt: undefined,
+      endedAt: undefined,
+    });
   });
 
   it("xóa cần xác nhận trước khi gọi onRemove", async () => {

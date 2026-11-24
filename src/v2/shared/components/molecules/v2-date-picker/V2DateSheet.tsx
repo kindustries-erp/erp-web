@@ -8,14 +8,17 @@ interface V2DateSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  /** Icon tiêu đề (mặc định lịch); ô chọn giờ truyền đồng hồ. */
+  icon?: React.ReactNode;
   children: React.ReactNode;
 }
 
-/** Khung bottom sheet dùng chung cho V2DatePicker và V2DateRangePicker trên mobile */
+/** Khung bottom sheet dùng chung cho V2DatePicker, V2DateRangePicker và V2TimePicker trên mobile */
 export const V2DateSheet: React.FC<V2DateSheetProps> = ({
   open,
   onOpenChange,
   title,
+  icon,
   children,
 }) => {
   const { t } = useV2Translation();
@@ -25,7 +28,7 @@ export const V2DateSheet: React.FC<V2DateSheetProps> = ({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      icon={<V2Icon icon={CalendarDays} size={16} />}
+      icon={icon ?? <V2Icon icon={CalendarDays} size={16} />}
       maxHeightClass="max-h-[85dvh] h-auto"
       bodyClassName="px-4 py-3 overflow-y-auto"
       footer={

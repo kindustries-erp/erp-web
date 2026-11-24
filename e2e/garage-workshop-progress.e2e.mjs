@@ -239,9 +239,11 @@ try {
   await dlg.getByPlaceholder(/Ví dụ/).fill("Kiểm tra gầm");
   // Bắt đầu lúc: V2DateTimePicker, không còn ô datetime-local; dùng nút chọn nhanh.
   check(
-    "C0b Bắt đầu lúc dùng V2DateTimePicker",
+    "C0b Bắt đầu lúc dùng V2DateTimePicker + V2TimePicker",
     (await dlg.locator('input[type="datetime-local"]').count()) === 0 &&
-      (await dlg.getByLabel("Bắt đầu lúc – Giờ").count()) === 1,
+      (await dlg.locator('input[type="time"]').count()) === 0 &&
+      (await dlg.getByRole("button", { name: "Bắt đầu lúc – Giờ" }).count()) ===
+        1,
   );
   await dlg.getByRole("button", { name: "30 phút trước" }).click();
   await dlg.getByRole("button", { name: "Lưu tiến độ" }).click();
@@ -277,9 +279,22 @@ try {
   const stageRow = dlg.getByTestId(`workshop-log-${s1.id}`);
   await stageRow.getByRole("button", { name: /Sửa/ }).click();
   await dlg.getByText("Đang sửa một dòng nhật ký").waitFor();
-  await dlg
-    .getByLabel("Bắt đầu lúc – Giờ")
-    .fill(toLocalInput(new Date(Date.now() - 45 * 60000)).slice(11));
+  // V2TimePicker: chọn giờ rồi phút (bước 5 phút, làm tròn xuống) trong popover.
+  const t45 = new Date(Date.now() - 45 * 60000);
+  const two = (n) => String(n).padStart(2, "0");
+  const timeBtn = dlg.getByRole("button", { name: "Bắt đầu lúc – Giờ" });
+  await timeBtn.click();
+  await page
+    .getByRole("listbox", { name: "Giờ" })
+    .getByRole("option", { name: two(t45.getHours()), exact: true })
+    .click();
+  await page
+    .getByRole("listbox", { name: "Phút" })
+    .getByRole("option", {
+      name: two(Math.floor(t45.getMinutes() / 5) * 5),
+      exact: true,
+    })
+    .click();
   await dlg.getByRole("button", { name: "Lưu thay đổi" }).click();
   const e1 = await poll(
     timeline,

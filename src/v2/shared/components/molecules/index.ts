@@ -82,3 +82,4 @@ export * from "./v2-user-menu";
 export * from "./v2-chat-composer";
 export * from "./v2-autocomplete-input";
 export * from "./v2-date-time-picker";
+export * from "./v2-time-picker";

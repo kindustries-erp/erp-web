@@ -82,6 +82,7 @@ Kiểm tồn tại trước khi kết luận: `ls src/v2/shared/components/{atom
 | Ô nhập tự do có gợi ý từ danh sách (gõ tên, chọn nhanh, không có thì giữ chữ đã gõ); không dùng công tắc "ngoài danh sách" | `V2AutocompleteInput` | `/usr/bin/grep -nE "<datalist\|V2Switch" <file>` |
 | Chọn ngày | `V2DatePicker` | `/usr/bin/grep -nE "type=\"date\"" <file>` |
 | Chọn ngày giờ | `V2DateTimePicker` (ngày + giờ + nút chọn nhanh); không dùng `V2Input type="datetime-local"` | `/usr/bin/grep -nE "datetime-local" <file>` |
+| Chọn giờ | `V2TimePicker` (shadcn Popover + Tailwind, hai cột giờ/phút, mobile bottom sheet, `maxTime`); không dùng `V2Input type="time"` | `/usr/bin/grep -nE "type=\"time\"" <file>` |
 | Hộp xác nhận xóa/hủy | `V2ConfirmModal` | `/usr/bin/grep -nE "window\.confirm\|confirm\(" <file>` |
 | Hộp thoại tự dựng (overlay + khung) | `V2Modal` hoặc `V2BottomSheet` (mobile) | `/usr/bin/grep -nE "fixed inset-0" <file>` |
 | Trạng thái rỗng | `V2EmptyState` | `/usr/bin/grep -nE "Không có\|Chưa có\|empty" <file>` |

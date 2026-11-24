@@ -82,8 +82,16 @@ export function useGarageWorkshopLogForm({
     setErrorKey(err);
     if (err) return;
     const payload = toLogSubmit(value);
+    // Sửa dòng: chỉ gửi giờ khi người dùng đổi, tránh cắt giây gốc khi chỉ sửa mô tả/người làm.
+    const original = editing ? fromLog(editing) : null;
+    const changed = (k: "startedAt" | "endedAt") =>
+      !original || value[k] !== original[k];
     try {
-      await onSubmit(canEditEnd ? payload : { ...payload, endedAt: undefined });
+      await onSubmit({
+        ...payload,
+        startedAt: changed("startedAt") ? payload.startedAt : undefined,
+        endedAt: canEditEnd && changed("endedAt") ? payload.endedAt : undefined,
+      });
     } catch {
       // Lỗi đã được báo ở tầng gọi (toast); giữ nguyên dữ liệu để người dùng sửa lại.
       return;

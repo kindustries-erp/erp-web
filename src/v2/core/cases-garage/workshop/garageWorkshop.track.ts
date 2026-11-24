@@ -51,10 +51,12 @@ export function allowedTrackStatuses(
   canChangeStatus: boolean,
 ): ReadonlySet<WorkshopCaseStatus> {
   if (target === "new") {
-    return new Set<WorkshopCaseStatus>([
-      "INTAKE",
-      ...WORKSHOP_NATIVE_TRANSITIONS.INTAKE,
-    ]);
+    // Xe mới vào thẳng trạng thái khác Tiếp nhận là đổi trạng thái: cần garage:update (API cũng chặn).
+    return new Set<WorkshopCaseStatus>(
+      canChangeStatus
+        ? ["INTAKE", ...WORKSHOP_NATIVE_TRANSITIONS.INTAKE]
+        : ["INTAKE"],
+    );
   }
   return allowedStatuses(target, canChangeStatus);
 }

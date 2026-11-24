@@ -1,10 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { GarageWorkshopTimeFields } from "./GarageWorkshopTimeFields";
 
 describe("GarageWorkshopTimeFields", () => {
   it("dùng V2DateTimePicker: đổi giờ, chọn nhanh; chỉ hiện Kết thúc lúc khi cần", () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 10, 24, 10, 0));
     const onChange = vi.fn();
     const { rerender } = render(
@@ -17,9 +17,13 @@ describe("GarageWorkshopTimeFields", () => {
       />,
     );
     expect(document.querySelector('input[type="datetime-local"]')).toBeNull();
-    fireEvent.change(screen.getByLabelText("Bắt đầu lúc – Giờ"), {
-      target: { value: "08:20" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: "Bắt đầu lúc – Giờ" }));
+    fireEvent.click(
+      within(screen.getByRole("listbox", { name: "Phút" })).getByRole(
+        "option",
+        { name: "20" },
+      ),
+    );
     expect(onChange).toHaveBeenLastCalledWith({
       startedAt: "2026-11-24T08:20",
     });
@@ -37,7 +41,9 @@ describe("GarageWorkshopTimeFields", () => {
         onChange={onChange}
       />,
     );
-    expect(screen.getByLabelText("Kết thúc lúc – Giờ")).toHaveValue("09:00");
+    expect(
+      screen.getByRole("button", { name: "Kết thúc lúc – Giờ" }),
+    ).toHaveTextContent("09:00");
     vi.useRealTimers();
   });
 });

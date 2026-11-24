@@ -1,8 +1,9 @@
 import * as React from "react";
-import { V2Button, V2Input, V2Stack } from "@/v2/shared/components/atoms";
+import { V2Button, V2Stack } from "@/v2/shared/components/atoms";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2DatePicker } from "../v2-date-picker/V2DatePicker";
+import { V2TimePicker } from "../v2-time-picker/V2TimePicker";
 import {
   joinDateTime,
   minutesBefore,
@@ -12,8 +13,8 @@ import {
 import type { V2DateTimePickerProps } from "./V2DateTimePicker.type";
 
 /**
- * Chọn ngày giờ: ngày bằng `V2DatePicker`, giờ bằng ô `time` (mobile hiện bánh xe giờ của máy),
- * kèm nút chọn nhanh "Bây giờ", "15 phút trước"…
+ * Chọn ngày giờ: ngày bằng `V2DatePicker`, giờ bằng `V2TimePicker` (popover desktop, bottom sheet
+ * mobile), kèm nút chọn nhanh "Bây giờ", "15 phút trước"…  `noFuture` chặn cả giờ sau hiện tại trong hôm nay.
  */
 export const V2DateTimePicker: React.FC<V2DateTimePickerProps> = ({
   value,
@@ -58,18 +59,16 @@ export const V2DateTimePicker: React.FC<V2DateTimePickerProps> = ({
           disabled={disabled}
           aria-label={ariaLabel ? `${ariaLabel} – ${dateLabel}` : dateLabel}
         />
-        <V2Input
-          type="time"
-          containerClassName="min-w-0 flex-[2]"
-          sizeVariant="lg"
-          inputClassName="text-base md:text-sm"
+        <V2TimePicker
+          className="min-w-0 flex-[2]"
           value={time}
+          maxTime={
+            noFuture && (date || today) === today ? nowTime() : undefined
+          }
           disabled={disabled}
           aria-label={ariaLabel ? `${ariaLabel} – ${timeLabel}` : timeLabel}
-          onChange={(e) =>
-            onValueChange(
-              joinDateTime(date || today, e.target.value, e.target.value),
-            )
+          onValueChange={(next) =>
+            onValueChange(joinDateTime(date || today, next, next))
           }
         />
       </V2Stack>

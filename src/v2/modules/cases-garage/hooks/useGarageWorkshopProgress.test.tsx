@@ -110,6 +110,21 @@ describe("useGarageWorkshopProgress", () => {
     expect(lastToast()?.variant).toBe("destructive");
   });
 
+  it("không có xe đang chọn: báo lỗi, không gọi API, không báo đã lưu", async () => {
+    setPermissions([{ collection: "*", actions: ["*"] }]);
+    const { result } = renderHook(() => useGarageWorkshopProgress("KG1"));
+    await expect(
+      result.current.create({
+        kind: "NOTE",
+        note: "x",
+        workerId: null,
+        workerName: null,
+      }),
+    ).rejects.toThrow();
+    expect(mutateCreate).not.toHaveBeenCalled();
+    expect(lastToast()?.variant).toBe("destructive");
+  });
+
   it("không có chi nhánh KGara thì báo cần chọn chi nhánh", () => {
     setPermissions([]);
     const { result } = renderHook(() => useGarageWorkshopProgress(undefined));
