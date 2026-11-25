@@ -5,6 +5,7 @@ import {
   V2Button,
   V2Header,
   V2BottomNav,
+  V2BottomNavVariant,
   V2MobileCatalogDrawer,
   V2MobileAppearanceDrawer,
 } from "@/v2/shared/components";
@@ -31,7 +32,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   notificationNode,
   currentTheme,
   onThemeChange,
-  bottomNavVariant = "floating",
+  bottomNavVariant = V2BottomNavVariant.FLOATING,
   bottomNavIndicator = "pill",
   hideBottomNav = false,
   hideSidebar = false,
@@ -54,8 +55,10 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
     filteredSections,
     default4Items,
     currentSelectedIds,
-    quick4Items,
     allMenuItem,
+    bottomNavItems,
+    shouldShowBottomNav,
+    shouldShowCenterHero,
     bottomActiveId,
     handleMobileNavigate,
     handleToggleItem,
@@ -98,6 +101,12 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
     [t],
   );
 
+  const showBottomNav = !hideBottomNav && !hideSidebar && shouldShowBottomNav;
+  const effectiveBottomNavVariant =
+    !shouldShowCenterHero && bottomNavVariant === V2BottomNavVariant.HERO_CENTER
+      ? V2BottomNavVariant.FLOATING
+      : bottomNavVariant;
+
   return (
     <div
       data-testid="v2-app-layout-mobile"
@@ -119,57 +128,59 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
         tabIndex={-1}
         className={cn(
           "flex-1 overflow-y-auto px-2 py-2.5 focus:outline-none sm:px-4 sm:py-4",
-          hideBottomNav || hideSidebar ? "pb-4" : "pb-16",
+          showBottomNav ? "pb-16" : "pb-4",
           contentClassName,
         )}
       >
         {children}
       </main>
-      {!hideBottomNav && !hideSidebar && (
+      {showBottomNav && (
         <>
           <V2BottomNav
-            items={navItems ?? quick4Items}
-            centerHeroItem={allMenuItem}
+            items={bottomNavItems}
+            centerHeroItem={shouldShowCenterHero ? allMenuItem : undefined}
             activeId={bottomActiveId}
-            variant={bottomNavVariant}
+            variant={effectiveBottomNavVariant}
             indicator={bottomNavIndicator}
             onNavigate={handleMobileNavigate}
             onHeroClick={() => setCatalogOpen(true)}
           />
-          <V2MobileCatalogDrawer
-            open={catalogOpen}
-            onOpenChange={(open) => {
-              setCatalogOpen(open);
-              if (!open) closeCatalog();
-            }}
-            totalModulesCount={allAvailableItems.length}
-            filteredSectionsCount={filteredSectionsCount}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            isCustomizing={isCustomizing}
-            limitWarning={limitWarning}
-            currentCount={currentSelectedIds.length}
-            maxCount={MAX_PINNED_MOBILE_NAV}
-            onStartCustomize={() => {
-              if (pinnedIds.length === 0) {
-                setPinnedIds(default4Items.map((it) => it.id));
-              }
-              setIsCustomizing(true);
-            }}
-            onFinishCustomize={() => setIsCustomizing(false)}
-            onResetDefault={() => resetToDefault()}
-            sections={filteredSections}
-            selectedIds={currentSelectedIds}
-            activeNavId={activeNavId}
-            onItemClick={(item) => {
-              if (isCustomizing) {
-                handleToggleItem(item.id);
-              } else {
-                setCatalogOpen(false);
-                onNavigate?.(item);
-              }
-            }}
-          />
+          {shouldShowCenterHero && (
+            <V2MobileCatalogDrawer
+              open={catalogOpen}
+              onOpenChange={(open) => {
+                setCatalogOpen(open);
+                if (!open) closeCatalog();
+              }}
+              totalModulesCount={allAvailableItems.length}
+              filteredSectionsCount={filteredSectionsCount}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              isCustomizing={isCustomizing}
+              limitWarning={limitWarning}
+              currentCount={currentSelectedIds.length}
+              maxCount={MAX_PINNED_MOBILE_NAV}
+              onStartCustomize={() => {
+                if (pinnedIds.length === 0) {
+                  setPinnedIds(default4Items.map((it) => it.id));
+                }
+                setIsCustomizing(true);
+              }}
+              onFinishCustomize={() => setIsCustomizing(false)}
+              onResetDefault={() => resetToDefault()}
+              sections={filteredSections}
+              selectedIds={currentSelectedIds}
+              activeNavId={activeNavId}
+              onItemClick={(item) => {
+                if (isCustomizing) {
+                  handleToggleItem(item.id);
+                } else {
+                  setCatalogOpen(false);
+                  onNavigate?.(item);
+                }
+              }}
+            />
+          )}
         </>
       )}
       <V2MobileAppearanceDrawer

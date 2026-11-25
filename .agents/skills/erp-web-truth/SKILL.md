@@ -16,7 +16,7 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 ## 2. Lane và trạng thái
 
 - Lane giao hàng chính: branch `erp-master`. Repo `erp/erp-web` đang ở `erp-master`.
-- UI phải tiêu thụ đúng API contract thật. Trước khi viết hoặc sửa hook/API client, đối chiếu DTO với code API hoặc với module skill tương ứng.
+- UI phải tiêu thụ đúng API contract thật. Trước khi viết hoặc sửa hook/API client, đối chiếu DTO với code API hoặc với module skill tương ứng. Thứ tự giao hàng `DB -> API -> UI -> QC`: schema và field phải qua Gate 0 phía API (skill `erp-gate-0-precheck` của `erp-api`) trước khi UI dựa vào.
 - Không suy đoán từ note cũ. Trước khi sửa status, đối chiếu code + build/test + git state.
 
 ## 3. Trách nhiệm của tầng web
@@ -27,8 +27,8 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
 
 ## 4. Cấu trúc V1 và V2
 
-- `src/` chứa V1 (`src/core`, `src/modules`, `src/shared`).
-- `src/v1/` (`@/v1/*`) chứa mã nguồn V1 cũ đã được di chuyển có hệ thống khi V2 hoàn thành:
+- V1 gồm hai phần: mã V1 còn nằm tại chỗ (`src/core`, `src/modules`, `src/shared`, `src/pages`) và mã V1 đã được di chuyển sang `src/v1/`. Với phần đã di chuyển, đường dẫn cũ chỉ còn là facade re-export mỏng; nên đọc `src/v1/` để thấy mã thật, và kiểm file thực tế trước khi giả định một đường dẫn là facade hay mã thật.
+- `src/v1/` (`@/v1/*`) chứa mã nguồn V1 cũ đã được di chuyển có hệ thống khi V2 hoàn thành (hiện có `components/`, `modules/`, `pages/`):
   - `src/v1/pages/`: các trang V1 cũ (Users, Employees, Positions, Permissions, ActivityLog, Customers, Suppliers, Partners, EInvoice, WorkflowCanvas, CashflowVouchers, CashFlow, BankDeposit, CashFund, Login).
   - `src/v1/components/`: các shared components V1 cũ (DataTable, StandardTable, SpreadsheetPageTemplate, SortTh, TablePagination, StandardFormDrawer, DrawerModal, drawer/, SlidePanel, Combobox, DatePicker, EmptyState, ConfirmModal, Toast, DrawerDocumentTraceability...). Tại `src/shared/components/*` duy trì hệ thống Facade Re-export mỏng trỏ về `@/v1/components/*` để bảo vệ 100% tính tương thích ngược.
   - `src/v1/modules/`: các domain modules V1 cũ (users, hr-employees, hr, system-rbac, system-audit). Tại `src/modules/*` duy trì Facade Re-export trỏ về `@/v1/modules/*`.

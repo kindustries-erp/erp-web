@@ -16,6 +16,11 @@
     "dashboardFunnel": "CasesDashboardFunnel",
     "dashboardClassificationTable": "CasesDashboardClassificationTable",
     "dashboardFormat": "formatVehicleCaseCounts, formatRatePercent",
-    "dashboardLocaleNamespace": "garageCasesDashboard"
+    "dashboardLocaleNamespace": "garageCasesDashboard",
+    "workshopStatuses": "WORKSHOP_STATUSES",
+    "workshopBoard": "GarageWorkshopBoard",
+    "workshopMobileList": "GarageWorkshopMobileList",
+    "workshopDrawer": "GarageWorkshopDrawer",
+    "workshopClockTick": "useNowTick"
   }
 }

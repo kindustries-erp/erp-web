@@ -173,7 +173,7 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - Unit/integration co-located bằng vitest + testing-library (`bunx vitest run src/v2/shared/components/organisms/v2-standard-table`).
 - Test component dùng `.fixture.tsx` (có ở organism và `v2-column-header-filter`) (dữ liệu, `renderTable`, mock viewport) và bọc `QueryClientProvider`.
 - Stories: `V2/Organisms/V2StandardTable` (ServerSide, ClientSide, WithSelection, Empty, Loading), `.../Variants` (MobileCards, CustomColumnStorage), `.../Toolbar` (WithFullToolbar, WithFilterPanel, FilterPanelWithExtraContent). Mọi thành phần con đều có story riêng (V2ColumnToggle, V2ColumnHeaderFilter, V2TablePagination, V2TableRowActions, V2TableText, V2PageButton, V2TableDateCell, V2TabBar, V2ToolbarIconButton, V2FilterChip/Card/Panel...). `storyCoverage.test.ts` chặn thành phần V2 mới thiếu story (allowlist chỉ còn 6 molecule drawer) và `Components/Templates/V2ModulePage` (ListAndDashboard, ListOnly). Story phải có decorator `QueryClientProvider` vì preview chung không có.
-- Gate: `grep -rn "blue-" src/v2/`, không file > 180 LoC (trừ 3 file có sẵn của `v2-standard-drawer`), `grep -rn 'from "@/shared' src/v2/` rỗng, không molecule import molecule, không `<button` thuần trong code bảng.
+- Gate: `grep -rn "blue-" src/v2/`, không file > 250 LoC, file > 180 LoC phải có kế hoạch tách (trừ 3 file có sẵn của `v2-standard-drawer`), `grep -rn 'from "@/shared' src/v2/` rỗng, không molecule import molecule, không `<button` thuần trong code bảng.
 
 ## Tái sử dụng atom/molecule trong V2StandardTable
 

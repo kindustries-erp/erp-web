@@ -8,7 +8,15 @@ Workflow này hướng dẫn quy trình chuẩn 5 giai đoạn khi **tạo mới
 
 ---
 
-## ⚡ Fast-Track: Khi tạo mới Module Bảng
+## 🚦 Cổng chọn V1 / V2 (đọc trước)
+
+- **Code mới và module thuộc `src/v2/**`**: dùng `V2StandardTable` (key i18n `v2.*`, atom `V2*`, không import V1). Làm theo skill `standardize-table` → `references/v2-table.md`. Các phần bên dưới KHÔNG áp dụng cho V2 (đường dẫn `src/modules/...`, `SpreadsheetPageTemplate`, `DataTable` là của V1).
+- **Sửa bảng V1 hiện có** (`src/modules/**`, `src/v1/**`): làm theo toàn bộ workflow dưới đây. Đây là quy trình **V1 legacy**; không migrate sang V2 khi chưa có lệnh của người dùng (xem `/erp-ui-structure` Phần B).
+- Ngưỡng kích thước chung cho cả hai: 180 dòng cảnh báo, 250 dòng chặn.
+
+---
+
+## ⚡ Fast-Track: Khi tạo mới Module Bảng (V1)
 Nếu bạn đang tạo mới một màn hình bảng dữ liệu, **hãy ưu tiên chạy PlopJS Generator** để sinh ngay 100% code chuẩn trong 1 giây:
 ```bash
 bun plop table-page <moduleName> <componentName> "<pageTitle>" <tableId> <drawerType> <drawerSize> <hasDateColumn> <hasAmountColumn> <hasStatusColumn>
@@ -35,7 +43,7 @@ Trong hệ thống Atomic Design 5 tầng:
 
 ```mermaid
 graph TD
-    P1["GIAI ĐOẠN 1: Pre-flight & Atomic Table Scaffolding<br>(Chia folder kebab-case, 5 files chuẩn < 180 LoC)"]
+    P1["GIAI ĐOẠN 1: Pre-flight & Atomic Table Scaffolding<br>(Chia folder kebab-case, 5 files chuẩn, cảnh báo 180 / chặn 250 LoC)"]
     P2["GIAI ĐOẠN 2: Backend API Contract & Data Hook<br>(getColumnOptions, exact/multi search, cumulative trackers)"]
     P3["GIAI ĐOẠN 3: Standard Columns Definition<br>(STT 40px {idx}, createColumnHeaderFilter, TableText, Badges)"]
     P4["GIAI ĐOẠN 4: Assembly Organism & Subtotal Summary Cell<br>(variant=spreadsheet, NO nested border, rowActions, cumulative)"]
@@ -49,14 +57,14 @@ graph TD
 ### 🔹 GIAI ĐOẠN 1: Pre-flight & Khởi Tạo Thư Mục Atomic Table
 
 > [!IMPORTANT]
-> **QUY TẮC BẮT BUỘC: KHÔNG VIẾT TABLE NGUYÊN KHỐI (> 180 LoC)**.
+> **QUY TẮC BẮT BUỘC: KHÔNG VIẾT TABLE NGUYÊN KHỐI (cảnh báo 180 / chặn 250 LoC)**.
 > Bất kỳ Table Organism nào cũng phải nằm trong một thư mục `kebab-case/` riêng và bóc tách thành 5 file chuẩn:
 
 ```
 src/modules/[module]/components/organisms/[name]-table/
 ├── [Name]Table.tsx               # View JSX chính, render StandardTable (< 150 LoC)
-├── [Name]Table.columns.tsx       # Định nghĩa columns + headerFilter helper (< 180 LoC)
-├── [Name]Table.hook.ts           # React Query + table/filter state + cumulative logic (< 180 LoC)
+├── [Name]Table.columns.tsx       # Định nghĩa columns + headerFilter helper (giữ dưới 180 LoC)
+├── [Name]Table.hook.ts           # React Query + table/filter state + cumulative logic (giữ dưới 180 LoC)
 ├── [Name]Table.type.ts           # Props, DTOs, FilterState interfaces (< 100 LoC)
 ├── [Name]Table.test.tsx          # Co-located Unit Test (render, headers, STT)
 └── index.ts                      # Barrel export: export * from "./[Name]Table";
@@ -330,7 +338,7 @@ grep -rn "blue-" src/modules/[module]/components/organisms/[name]-table/
 # 3. QUÉT CỘT ACTION TĨNH: Phải trả về 0 kết quả (Dùng prop rowActions)
 grep -rn 'key: "actions"' src/modules/[module]/components/organisms/[name]-table/
 
-# 4. QUÉT GIỚI HẠN FILE < 180 LoC: Không file nào vượt quá 180 dòng
+# 4. QUÉT GIỚI HẠN FILE: không file nào vượt 250 dòng (chặn); file > 180 dòng phải có kế hoạch tách
 wc -l src/modules/[module]/components/organisms/[name]-table/*
 
 # 5. QUÉT TRUYỀN LŨY KẾ SUB-TOTAL: Bắt buộc phải có cumulativeAmount
@@ -364,7 +372,7 @@ bun run test src/modules/[module]/components/organisms/[name]-table/
 | 9 | **Cột Trạng Thái** | Dùng `<Badge>` cố định width `w-[80px]` + Tooltip + `truncate`. | [ ] |
 | 10 | **Subtotal Lũy Kế Trang 2+** | Dùng `<SubtotalSummaryCell>`, truyền đủ `cumulativeAmount`, `cumulativeQty`, `cumulativeCount` khi có phân trang. | [ ] |
 | 11 | **Hai Cấp Độ Xóa Lọc** | Nút xóa lọc cục bộ trong Popover + Nút Clear All Filters tổng thể khi `activeFilterCount > 0`. | [ ] |
-| 12 | **Giới Hạn File Atomic** | Chia 5 file chuẩn (`.tsx`, `.columns.tsx`, `.hook.ts`, `.type.ts`, `.test.tsx`), không file nào $> 180\text{ LoC}$. | [ ] |
+| 12 | **Giới Hạn File Atomic** | Chia 5 file chuẩn (`.tsx`, `.columns.tsx`, `.hook.ts`, `.type.ts`, `.test.tsx`), không file nào vượt 250 dòng, file > 180 dòng có kế hoạch tách. | [ ] |
 | 13 | **i18n 100%** | Toàn bộ headers, tooltips, dialogs, empty states bọc trong `t(...)`. | [ ] |
 | 14 | **Zero-Miss Audit Pass** | 8 lệnh Grep Audit CLI chạy thành công, 0 vi phạm. | [ ] |
 | 15 | **Type Check & Test Pass** | `bun run type:check` 0 lỗi và unit test co-located pass 100%. | [ ] |

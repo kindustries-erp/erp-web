@@ -13,7 +13,7 @@ Skill này là nguồn tri thức cho việc tạo và migrate module sang V2. C
 | 2 | **Không import V1** | Module và shared V2 không import `@/core`, `@/shared`, `@/modules` (trừ `@/modules/auth/domain/authStore`, session dùng chung). Kiểm bằng audit mục 7. |
 | 3 | **Key i18n `v2.*`** | Mọi `t()` dùng key có tiền tố `v2.`. Key không có tiền tố trả fallback, không đi sang V1. |
 | 4 | **Atomic** | `components/molecules/` và `components/organisms/`, mỗi thư mục kebab-case có `index.ts` và test co-located. |
-| 5 | **< 180 LoC** | Tách `.hook.ts`, helper, sub-component khi gần ngưỡng. |
+| 5 | **180 cảnh báo / 250 chặn** | Tách `.hook.ts`, helper, sub-component khi gần ngưỡng. |
 | 6 | **No Blue** | Dùng token ngữ cảnh (`bg-primary`, `text-muted-fg`...), không dùng `blue-*`. |
 | 7 | **Rolling migration** | Chỉ migrate module khi user ra lệnh. Mỗi module verify đủ audit trước khi báo xong. |
 | 8 | **Storybook** | Component trong `shared/` bắt buộc có `*.stories.tsx` (test `storyCoverage` kiểm). Module không bắt buộc. |
@@ -97,7 +97,7 @@ Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_tabl
 - **Xóa:** xóa mềm, luôn có `V2ConfirmModal`.
 - **Lỗi:** mutation hiện toast; 409 `DOCUMENT_IN_USE` do modal chung xử lý (mutation không toast lại).
 - **Preference:** giữ nguyên `tableId` của V1 (`erp-<x>-table`) để người dùng không mất cấu hình cột.
-- **Popover (dropdown, lịch):** tự đóng khi click ra ngoài và chỉ một popover mở tại một thời điểm. Dùng hook `useV2PopoverDismiss` (`src/v2/shared/hooks/useV2PopoverDismiss.ts`), không tự gắn listener `pointerdown`. Áp dụng cho `V2Combobox`, `V2DatePicker`, `V2DateRangePicker`.
+- **Popover (dropdown, lịch):** tự đóng khi click ra ngoài và chỉ một popover mở tại một thời điểm. Dùng hook `useV2PopoverDismiss` (`src/v2/shared/hooks/useV2PopoverDismiss.ts`), không tự gắn listener `pointerdown`. Áp dụng cho `V2Combobox`, `V2DatePicker`, `V2DateRangePicker`, `V2TimePicker`.
 - **Hiệu ứng Glassmorphism & Tối ưu GPU:** Giới hạn `--drawer-blur: 10px`, `--glass-blur: 8px`. Cấm lồng nested `backdrop-filter` bên trong Drawer (thẻ `DrawerSection` dùng `--drawer-section-blur: 0px` kết hợp nền thẻ `0.85 - 0.9` và viền sắc nét). Thanh hover table actions dùng `backdrop-blur-sm` (4px). Tự động hạ blur về `0px` khi hệ điều hành kích hoạt `prefers-reduced-motion: reduce`.
 
 ---

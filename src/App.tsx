@@ -83,6 +83,10 @@ const CasesDashboardGarageV2Page = lazy(() =>
   })),
 );
 
+const GarageWorkshopProgressRoute = lazy(
+  () => import("@/modules/garage/pages/GarageWorkshopProgressRoute"),
+);
+
 function AdminOnlyRoute({ children }: { children: React.ReactNode }) {
   const email = useAuthStore((s) => s.employee?.email || s.profile?.email);
   if (email !== "admin@liouni.com") {
@@ -396,6 +400,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "invoice-debts": InvoiceDebtsPage,
   "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
+  "garage-workshop-progress": GarageWorkshopProgressRoute,
   "garage-stock-vouchers": GarageStockVouchersPage,
   "garage-stock-balances": GarageStockBalancesPage,
   "garage-procurement": GarageProcurementRequestsPage,

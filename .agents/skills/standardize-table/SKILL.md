@@ -30,7 +30,7 @@ Xác định trước: code nằm ở `src/` (V1) hay `src/v2/` (V2). Hai bên d
 - **`tableId`**: duy nhất theo bảng (`[module]-table`), dùng để lưu cấu hình cột.
 - **Không bọc thêm border** quanh bảng; container đã có bo góc.
 - **Query**: hằng số `DEFAULT_STALE_TIME` đọc từ `@/shared/lib/queryKeys`, không ghi cứng giá trị.
-- **Kích thước**: mỗi file dưới 180 dòng; tách `.columns.tsx`, `.hook.ts`, `.type.ts`.
+- **Kích thước**: cảnh báo ở 180 dòng, chặn ở 250 dòng; tách `.columns.tsx`, `.hook.ts`, `.type.ts`.
 
 ## 3. Sinh khung và quy trình
 

@@ -101,4 +101,21 @@ describe("V2BottomNav Organism", () => {
     const heroBtn = screen.getByTestId("bottom-nav-hero-button");
     expect(heroBtn.className).toContain("h-[52px] w-[52px]");
   });
+
+  it("render 6 items phẳng đều nhau khi không truyền centerHeroItem", () => {
+    const sixItems = Array.from({ length: 6 }, (_, i) => ({
+      id: `item-${i + 1}`,
+      label: `Mục ${i + 1}`,
+      icon: Home,
+      href: `/item-${i + 1}`,
+    }));
+
+    render(<V2BottomNav items={sixItems} activeId="item-1" />);
+
+    const nav = screen.getByTestId("v2-bottom-nav");
+    expect(nav.querySelectorAll("button")).toHaveLength(6);
+    expect(
+      screen.queryByTestId("bottom-nav-hero-button"),
+    ).not.toBeInTheDocument();
+  });
 });

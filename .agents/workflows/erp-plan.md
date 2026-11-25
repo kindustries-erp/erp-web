@@ -276,7 +276,7 @@ graph TD
 ### Quy tắc UI bắt buộc
 - Bảng: STT 1-based, Header Filter (`showColumnFilter: true`), sort và search phía server (`applyMultiKeywordFilter`), phân trang `getDefaultPageSize()`.
 - Drawer: `StandardFormDrawer` (hoặc `V2StandardDrawer`), kích thước `vw` responsive (`45vw` / `65vw` / `85vw`), Top Navigation Tabs, Collapsible Sections.
-- Kích thước file: dưới 180–200 dòng. Tách thư mục Atomic (`index.ts`, `Component.tsx`, `hooks/`, `utils/`, `types/`).
+- Kích thước file: cảnh báo ở 180 dòng, chặn ở 250 dòng (`.tsx`, `.hook.ts`). Tách thư mục Atomic (`index.ts`, `Component.tsx`, `hooks/`, `utils/`, `types/`).
 - Không dùng `blue-*`. Mọi chuỗi hiển thị qua `t()`.
 
 ---

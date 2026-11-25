@@ -43,8 +43,8 @@
 3. **No Blue Mandate & 100% i18n**:
    - Tuyệt đối không dùng class `blue-*`. Toàn bộ màu sắc dùng neutral tokens, brand `primary`, semantic `emerald-*` (thành công), `amber-*` (tiến trình/cảnh báo) và `destructive` (lỗi/hủy).
    - Đa ngôn ngữ 100% qua từ điển `v2.drawer.*` trong `src/v2/shared/locales/` (`vi.ts`, `en.ts`).
-4. **Kiểm Soát Kích Thước File Cứng (< 180 LoC)**:
-   - 100% files thành phần đều `< 175 LoC`.
+4. **Kiểm Soát Kích Thước File (cảnh báo 180 / chặn 250 LoC)**:
+   - Mục tiêu: file thành phần giữ dưới 180 LoC, không file nào vượt 250 LoC.
 
 ---
 

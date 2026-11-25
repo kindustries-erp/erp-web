@@ -50,7 +50,7 @@ Quy tắc:
 
 ## 3. Table và Drawer
 
-Mỗi loại có một skill duy nhất, đã gồm V1, V2 và phần phụ. Skill tự chọn reference theo V1 (`src/`) hay V2 (`src/v2/`). Thứ tự: nạp `erp-web-truth`, đọc mục này, mở skill, làm theo reference, rồi chạy audit của mục 5.
+Mỗi loại có một skill duy nhất, đã gồm V1, V2 và phần phụ. Skill tự chọn reference theo V1 (`src/` và `src/v1/`) hay V2 (`src/v2/`). Thứ tự: nạp `erp-web-truth`, đọc mục này, mở skill, làm theo reference, rồi chạy audit của mục 5.
 
 | Việc | Skill | Reference chính |
 | :--- | :--- | :--- |
@@ -69,7 +69,7 @@ Mỗi loại có một skill duy nhất, đã gồm V1, V2 và phần phụ. Ski
 Nguyên tắc chính:
 
 - **Dual-run**: `/v2/*` và `/` (V1) chạy song song trên cùng bundle. V2 dùng session qua `useAuthStore`.
-- **Không import V1**: module và shared V2 không import `@/core`, `@/shared`, `@/modules`, trừ auth store dùng chung.
+- **Không import V1**: module và shared V2 không import `@/core`, `@/shared`, `@/modules`, `@/v1`, trừ auth store dùng chung.
 - **Rolling migration**: chỉ migrate khi user ra lệnh cho module đó.
 - **Parity**: trước khi viết, liệt kê feature của module V1 và lập bảng parity V1 → V2.
 - **Audit**: chạy audit ở `references/v2-migration.md` mục 8 trước khi báo hoàn tất (không import V1, key i18n `v2.*`, không `blue-*`, file không vượt ngưỡng 180/250, `core/` không import `modules/`, type-check, test).
