@@ -138,7 +138,7 @@ describe("GarageDebtsExportDrawer", () => {
     );
   });
 
-  it("xuất công nợ tổng hợp theo kỳ (mốc 2026-07-01) kèm header chi nhánh", async () => {
+  it("xuất công nợ tổng hợp theo kỳ (mốc 2026-07-01), không gửi header chi nhánh KGara", async () => {
     renderDrawer();
 
     await act(async () => {
@@ -151,7 +151,7 @@ describe("GarageDebtsExportDrawer", () => {
     expect(body.mode).toBe("by-period");
     expect(body.from).toBe("2026-07-01");
     expect(body.to).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-01" });
+    expect(config.headers).toBeUndefined();
   });
 
   it("mở từ bảng NCC: mặc định theo filter hiện tại và gọi endpoint NCC", async () => {

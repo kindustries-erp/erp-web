@@ -11,6 +11,7 @@ const track = vi.fn();
 const trackNew = vi.fn();
 const untrack = vi.fn();
 const candidatesQuery = vi.fn();
+const mutationsArgs = vi.fn();
 
 vi.mock("../api/queries/useCaseWorkshopQueries", () => ({
   useWorkshopCandidatesQuery: (...a: unknown[]) => {
@@ -19,11 +20,14 @@ vi.mock("../api/queries/useCaseWorkshopQueries", () => ({
   },
 }));
 vi.mock("../api/queries/useCaseWorkshopMutations", () => ({
-  useCaseWorkshopMutations: () => ({
-    track: { mutateAsync: track, isPending: false },
-    trackNew: { mutateAsync: trackNew, isPending: false },
-    untrack: { mutateAsync: untrack },
-  }),
+  useCaseWorkshopMutations: (...a: unknown[]) => {
+    mutationsArgs(...a);
+    return {
+      track: { mutateAsync: track, isPending: false },
+      trackNew: { mutateAsync: trackNew, isPending: false },
+      untrack: { mutateAsync: untrack },
+    };
+  },
 }));
 
 const setPermissions = (perms: { collection: string; actions: string[] }[]) =>
@@ -56,13 +60,13 @@ describe("useGarageWorkshopTracking", () => {
     ]);
   });
 
-  it("quyền: thêm cần garage_workshop:update và chi nhánh; tạo mới theo garage:create", () => {
+  it("quyền: thêm cần garage_workshop:update (chi nhánh không bắt buộc); tạo mới theo garage:create", () => {
     const { result } = renderHook(() => useGarageWorkshopTracking("KG1"));
     expect(result.current.canAdd).toBe(true);
     expect(result.current.canCreate).toBe(true);
     expect(result.current.canChangeStatus).toBe(false);
     const none = renderHook(() => useGarageWorkshopTracking(undefined));
-    expect(none.result.current.canAdd).toBe(false);
+    expect(none.result.current.canAdd).toBe(true);
   });
 
   it("chỉ tìm ứng viên khi hộp thoại mở", () => {
@@ -119,5 +123,10 @@ describe("useGarageWorkshopTracking", () => {
     expect(untrack).toHaveBeenCalledWith("c1");
     expect(result.current.untrackTarget).toBeNull();
     expect(lastToast()?.title).toBe("Đã bỏ xe 51A-1 khỏi bảng");
+  });
+
+  it("xem mọi chi nhánh: lệnh ghi không gửi chi nhánh, xe tạo mới gắn chi nhánh shell", () => {
+    renderHook(() => useGarageWorkshopTracking(undefined, undefined, "GR"));
+    expect(mutationsArgs).toHaveBeenLastCalledWith(undefined, "GR");
   });
 });

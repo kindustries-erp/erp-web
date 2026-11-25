@@ -37,7 +37,6 @@ export function useGarageDebtsColumns({
     allFilters: listHook.columnFilters,
     fetchOptions: async ({ search, pageParam, filtersStr }: any) => {
       const res = await garageApi.getCustomersDebtColumnOptions(
-        selectedBranchId || undefined,
         columnKey,
         search,
         pageParam,

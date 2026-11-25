@@ -6,7 +6,6 @@ import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColu
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { formatGMT7, money } from "@/shared/utils/format";
 import { garageApi } from "@/modules/garage/api/garageApi";
-import { useGarageBranches } from "@/modules/garage/hooks/useGarage";
 import { Check } from "lucide-react";
 
 export function useGarageCaseSelectionModal({
@@ -25,21 +24,11 @@ export function useGarageCaseSelectionModal({
   const [pageSize, setPageSize] = useState(20);
   const [selectedCase, setSelectedCase] = useState<any | null>(null);
 
-  const { data: branches } = useGarageBranches();
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
-
-  useEffect(() => {
-    if (branches && branches.length > 0 && !selectedBranchId) {
-      setSelectedBranchId(branches[0].externalId || branches[0].id);
-    }
-  }, [branches, selectedBranchId]);
-
   const tableState = useTableColumnState("garage-case-selection-table");
 
   const { data, isLoading } = useQuery({
     queryKey: [
       "garage-cases-selection",
-      selectedBranchId,
       page,
       pageSize,
       tableState.columnSearch,
@@ -47,7 +36,6 @@ export function useGarageCaseSelectionModal({
     ],
     queryFn: () =>
       garageApi.getCases(
-        selectedBranchId,
         page,
         pageSize,
         tableState.columnSearch["VuViecCode"] ||
@@ -55,7 +43,7 @@ export function useGarageCaseSelectionModal({
           tableState.columnSearch["TenKhachHang"] ||
           "",
       ),
-    enabled: open && !!selectedBranchId,
+    enabled: open,
   });
 
   const cases = data?.items || [];
@@ -251,9 +239,6 @@ export function useGarageCaseSelectionModal({
     pageSize,
     setPageSize,
     selectedCase,
-    branches,
-    selectedBranchId,
-    setSelectedBranchId,
     cases,
     data,
     isLoading,

@@ -78,7 +78,7 @@ export function useGarageCustomerDetailLogic({
     queryKey: ["garage-cases-by-customer", branchId, customerCode],
     queryFn: () => {
       if (!customerCode) return Promise.resolve([]);
-      return garageApi.getCasesByCustomer(branchId || "", customerCode);
+      return garageApi.getCasesByCustomer(customerCode);
     },
     enabled: open && Boolean(customerCode),
   });
@@ -244,8 +244,12 @@ export function useGarageCustomerDetailLogic({
         t("cases.syncingCase", "Đang đồng bộ dữ liệu vụ việc từ KGara..."),
         { id: `sync-case-${caseId}` },
       );
+      // Đồng bộ gọi thẳng KGara: dùng chi nhánh KGara của chính phiếu.
+      const caseItem = allCases.find(
+        (c: any) => c.hdPhieuDichVuId === caseId || c.id === caseId,
+      );
       syncCaseDetail(
-        { branchId: branchId || "", caseId },
+        { branchId: caseItem?.branchExternalId || branchId || "", caseId },
         {
           onSuccess: () => {
             toast.success(
@@ -267,7 +271,7 @@ export function useGarageCustomerDetailLogic({
         },
       );
     },
-    [branchId, queryClient, refetch, syncCaseDetail, t],
+    [allCases, branchId, queryClient, refetch, syncCaseDetail, t],
   );
 
   return {

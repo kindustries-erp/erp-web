@@ -511,6 +511,11 @@ export const garageVi = {
       recoveryRate: "Tỷ lệ thu hồi",
     },
     syncDrawer: {
+      recent6Months: "6 tháng gần nhất",
+      chunkNotice:
+        "Khoảng ngày được chia theo từng tháng và đồng bộ lần lượt, tháng gần nhất trước. Tháng nào lỗi chỉ tháng đó cần chạy lại, các tháng khác vẫn hoàn tất.",
+      monthUnit: "tháng",
+      failedMonths: "Tháng lỗi",
       titleCases: "Đồng bộ Cases từ Garage",
       titleGrossProfit: "Đồng bộ Lợi nhuận gộp Garage",
       descCases:

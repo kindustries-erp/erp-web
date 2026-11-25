@@ -227,10 +227,10 @@ describe("GarageExportDrawer - bảng kê phiếu dịch vụ", () => {
     });
     expect(body.date_from).toBeTruthy();
     expect(body.filtersStr).toBeUndefined();
-    expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-01" });
+    expect(config.headers).toBeUndefined();
   });
 
-  it("chế độ theo filter hiện tại dùng chi nhánh hiện tại của bảng, không dùng chi nhánh cũ", async () => {
+  it("chế độ theo filter hiện tại không gửi header chi nhánh KGara dù đổi chi nhánh", async () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -255,7 +255,7 @@ describe("GarageExportDrawer - bảng kê phiếu dịch vụ", () => {
 
     await waitFor(() => expect(axiosInstance.post).toHaveBeenCalledTimes(1));
     const [, , config] = (axiosInstance.post as any).mock.calls[0];
-    expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-02" });
+    expect(config.headers).toBeUndefined();
   });
 
   it("chế độ theo filter hiện tại: gửi filtersStr, sorts và khoảng ngày của bảng", async () => {

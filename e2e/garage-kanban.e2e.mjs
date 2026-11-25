@@ -1,6 +1,6 @@
 // E2E Kanban "Tiến độ công việc" (drawer dashboard garage): kéo thẻ Báo giá -> Tiếp nhận lưu vào v2
 // (status ghi đè, KGara giữ nguyên), nút "Về trạng thái KGara" hoàn lại. Ghi tạm DB staging và luôn hoàn lại.
-// Biến môi trường: E2E_PASSWORD (bắt buộc), E2E_ADMIN_EMAIL, E2E_SYNC_BRANCH (branch_external_id của xe KGARA_SYNC).
+// Biến môi trường: E2E_PASSWORD (bắt buộc), E2E_ADMIN_EMAIL, E2E_SYNC_BRANCH (id chi nhánh ERP `branches_management` có xe KGARA_SYNC).
 // Chạy: bun run e2e:garage-kanban
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
@@ -33,7 +33,7 @@ const login = await fetch(`${API}/api/v2/auth-sessions/login`, {
 });
 const token = (await login.json()).data?.accessToken;
 check("A0 đăng nhập API", Boolean(token));
-const H = { Authorization: `Bearer ${token}`, "x-kgara-branch-id": BRANCH };
+const H = { Authorization: `Bearer ${token}`, "x-erp-branch-id": BRANCH };
 const progress = async (status) => {
   const all = [];
   for (let page = 1, pages = 1; page <= pages; page += 1) {

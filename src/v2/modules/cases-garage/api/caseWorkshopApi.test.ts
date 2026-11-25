@@ -13,7 +13,7 @@ vi.mock("@/v2/shared/api/v2HttpClient", () => ({
 
 const http = vi.mocked(v2HttpClient);
 const BASE = "/api/v2/cases-garage";
-const H = { headers: { "x-kgara-branch-id": "KG1" } };
+const H = { headers: { "x-erp-branch-id": "KG1" } };
 
 describe("caseWorkshopApi", () => {
   beforeEach(() => {
@@ -103,5 +103,12 @@ describe("caseWorkshopApi", () => {
       `${BASE}/workshop/track/c1`,
       H,
     );
+  });
+
+  it("không chọn chi nhánh: board không gửi header, backend trả mọi chi nhánh", async () => {
+    await caseWorkshopApi.board({ classification: "OJ" });
+    expect(http.get).toHaveBeenCalledWith(`${BASE}/workshop/board`, {
+      params: { classification: "OJ" },
+    });
   });
 });

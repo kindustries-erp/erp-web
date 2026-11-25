@@ -57,7 +57,6 @@ export function useGarageCustomersList(branchId?: string) {
     ],
     queryFn: () => {
       return garageApi.getCustomersDebt({
-        branchId: branchId || undefined,
         page,
         pageSize,
         q: searchQ || undefined,

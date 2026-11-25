@@ -1,9 +1,9 @@
 // E2E trang Tiến độ xưởng `/garage-workshop-progress` (desktop + mobile): xe chỉ lên bảng khi nhân viên chọn
 // ("Thêm xe vào bảng": xe có sẵn giữ trạng thái, tạo xe mới theo biển số), bỏ khỏi bảng có xác nhận, status v2
 // trên thẻ, ghi công đoạn có giờ sửa tay và người ngoài danh sách, ghi chú, sửa/xóa nhật ký (có xác nhận), kéo thẻ
-// đổi status cha, mobile chọn tab và cập nhật công đoạn. Dùng xe NATIVE tạo qua API trên chi nhánh có liên kết
-// KGara, xóa mềm cuối.
-// Biến môi trường: E2E_PASSWORD (bắt buộc), E2E_ADMIN_EMAIL. Chạy: bun run e2e:garage-workshop-progress
+// đổi status cha, mobile chọn tab và cập nhật công đoạn. Dùng xe NATIVE tạo qua API trên chi nhánh ERP có xe,
+// xóa mềm cuối.
+// Biến môi trường: E2E_PASSWORD (bắt buộc), E2E_ADMIN_EMAIL, E2E_ERP_BRANCH_ID (tùy chọn). Chạy: bun run e2e:garage-workshop-progress
 import { chromium } from "playwright-core";
 import { mkdirSync } from "node:fs";
 import { resolveApiUrl, resolveWebUrl } from "./e2e-ports.mjs";
@@ -44,6 +44,7 @@ const auth = {
   Authorization: `Bearer ${token}`,
   "Content-Type": "application/json",
 };
+// Chi nhánh ERP để chạy (header `x-erp-branch-id`): E2E_ERP_BRANCH_ID, thiếu thì lấy chi nhánh đầu tiên có xe.
 const branches =
   (
     await (
@@ -52,30 +53,24 @@ const branches =
       })
     ).json()
   ).items ?? [];
-let BRANCH = null;
-let KG = null;
-for (const b of branches) {
-  const links =
-    (
-      await (
-        await fetch(`${API}/api/v2/branches/${b.id}/external-links`, {
-          headers: auth,
-        })
-      ).json()
-    ).items ?? [];
-  const k = links.find((l) => String(l.source).toUpperCase() === "KGARA");
-  if (k) {
+let BRANCH = process.env.E2E_ERP_BRANCH_ID ?? null;
+for (const b of BRANCH ? [] : branches) {
+  const r = await (
+    await fetch(`${API}/api/v2/cases-garage?pageSize=1`, {
+      headers: { ...auth, "x-erp-branch-id": b.id },
+    })
+  ).json();
+  if ((r.pagination?.total ?? 0) > 0) {
     BRANCH = b.id;
-    KG = k.externalId;
     break;
   }
 }
 check(
-  "A1 có chi nhánh liên kết KGara",
-  Boolean(BRANCH && KG),
+  "A1 có chi nhánh ERP có xe",
+  Boolean(BRANCH),
   `${branches.length} chi nhánh`,
 );
-const H = { ...auth, "x-kgara-branch-id": KG };
+const H = { ...auth, "x-erp-branch-id": BRANCH };
 const api = async (method, path, body) => {
   const r = await fetch(`${API}/api/v2/cases-garage${path}`, {
     method,

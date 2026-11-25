@@ -11,7 +11,6 @@ import {
   Scale,
   Network,
 } from "lucide-react";
-import { useGarageStore } from "../../store/garageStore";
 import { useGarageCaseServicesList } from "../../hooks/useGarageCaseServicesList";
 import { useServiceColumns } from "./components/serviceColumns";
 import { useGarageCaseServicesSummary } from "./hooks/useGarageCaseServicesSummary";
@@ -35,7 +34,6 @@ const actualTableId = "garage-case-services-table";
 export function useGarageCaseServicesSectionLogic() {
   const { t } = useTranslation("garage");
   const queryClient = useQueryClient();
-  const { selectedBranchId } = useGarageStore();
 
   const listHook = useGarageCaseServicesList();
 
@@ -163,7 +161,6 @@ export function useGarageCaseServicesSectionLogic() {
       const dateTo = listHook.dateRanges["caseDate"]?.to || undefined;
 
       const fileName = await garageApi.exportCaseServicesExcel({
-        branchId: selectedBranchId || undefined,
         from: dateFrom,
         to: dateTo,
         serviceType: listHook.serviceTypeFilter,
@@ -196,7 +193,6 @@ export function useGarageCaseServicesSectionLogic() {
     listHook.serverFiltersStr,
     listHook.tableState.sorts,
     listHook.globalSearch,
-    selectedBranchId,
     t,
   ]);
 

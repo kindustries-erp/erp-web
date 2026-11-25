@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
@@ -39,16 +39,10 @@ export function GarageCases({
 }: GarageCasesProps = {}) {
   const { t } = useTranslation("garage");
   const queryClient = useQueryClient();
-  const { selectedBranchId, setSelectedBranchId } = useGarageStore();
+  // Danh sách V1 luôn xem tất cả phiếu; xe OJ tách bằng phân loại, không theo chi nhánh KGara.
+  const { selectedBranchId } = useGarageStore();
   const { data: branches } = useGarageBranches();
-
-  useEffect(() => {
-    if (branches && branches.length > 0 && !selectedBranchId) {
-      setSelectedBranchId(branches[0].externalId);
-    }
-  }, [branches, selectedBranchId, setSelectedBranchId]);
-
-  const activeBranchId = selectedBranchId || branches?.[0]?.externalId || "";
+  const activeBranchId = selectedBranchId || undefined;
 
   const [dateRanges, setDateRanges] = useState<
     Record<string, { from: string; to: string }>

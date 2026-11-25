@@ -3,7 +3,6 @@ import axiosInstance from "@/core/api/axiosInstance";
 const BASE = "/api/v1/greenway";
 
 export interface ExportCompletedCasesParams {
-  branchId?: string;
   date_from?: string;
   date_to?: string;
   date_type?: "completion_date" | "case_date";
@@ -94,17 +93,11 @@ export const garageApi = {
     if (params.classification)
       searchParams.append("classification", params.classification);
     if (params.status) searchParams.append("status", params.status);
-    if (params.branchId) searchParams.append("branch_id", params.branchId);
     if (params.q) searchParams.append("q", params.q);
 
     const res = await axiosInstance.get(
       `${BASE}/cases/export/excel?${searchParams.toString()}`,
-      {
-        responseType: "blob",
-        headers: {
-          "x-greenway-branch-id": params.branchId || "",
-        },
-      },
+      { responseType: "blob" },
     );
 
     let fileName = params.customFileName;
@@ -175,7 +168,6 @@ export const garageApi = {
   },
 
   getCases: async (
-    branchId: string,
     page: number = 1,
     pageSize: number = 20,
     q: string = "",
@@ -202,16 +194,11 @@ export const garageApi = {
       }
     }
 
-    const res = await axiosInstance.get(`${BASE}/cases?${params.toString()}`, {
-      headers: {
-        "x-greenway-branch-id": branchId || "",
-      },
-    });
+    const res = await axiosInstance.get(`${BASE}/cases?${params.toString()}`);
     return res.data;
   },
 
   getCaseColumnOptions: async (
-    branchId: string,
     column: string,
     search: string = "",
     page: number = 1,
@@ -226,9 +213,6 @@ export const garageApi = {
         pageSize,
         filtersStr,
       },
-      headers: {
-        "x-greenway-branch-id": branchId || "",
-      },
     });
     return res.data as {
       items: Array<string | { label: string; value: string }>;
@@ -239,7 +223,6 @@ export const garageApi = {
   },
 
   getCaseServicesList: async (
-    branchId: string,
     page: number = 1,
     pageSize: number = 20,
     q: string = "",
@@ -269,17 +252,11 @@ export const garageApi = {
 
     const res = await axiosInstance.get(
       `${BASE}/cases/services?${params.toString()}`,
-      {
-        headers: {
-          "x-greenway-branch-id": branchId || "",
-        },
-      },
     );
     return res.data;
   },
 
   getCaseServiceColumnOptions: async (
-    branchId: string,
     column: string,
     search: string = "",
     page: number = 1,
@@ -298,9 +275,6 @@ export const garageApi = {
           filtersStr,
           serviceType: serviceType !== "ALL" ? serviceType : undefined,
         },
-        headers: {
-          "x-greenway-branch-id": branchId || "",
-        },
       },
     );
     return res.data as {
@@ -312,7 +286,6 @@ export const garageApi = {
   },
 
   exportCaseServicesExcel: async (params: {
-    branchId?: string;
     from?: string;
     to?: string;
     serviceType?: string;
@@ -327,7 +300,6 @@ export const garageApi = {
     if (params.serviceType && params.serviceType !== "ALL")
       searchParams.append("serviceType", params.serviceType);
     if (params.filtersStr) searchParams.append("filtersStr", params.filtersStr);
-    if (params.branchId) searchParams.append("branch_id", params.branchId);
     if (params.q) searchParams.append("q", params.q);
     if (params.sorts) {
       if (Array.isArray(params.sorts)) {
@@ -339,12 +311,7 @@ export const garageApi = {
 
     const res = await axiosInstance.get(
       `${BASE}/cases/services/export/excel?${searchParams.toString()}`,
-      {
-        responseType: "blob",
-        headers: {
-          "x-greenway-branch-id": params.branchId || "",
-        },
-      },
+      { responseType: "blob" },
     );
 
     const now = new Date();
@@ -373,10 +340,8 @@ export const garageApi = {
     return res.data;
   },
 
-  getCaseByExternalId: async (externalId: string, branchId?: string) => {
-    let url = `${BASE}/cases/external/${externalId}`;
-    if (branchId) url += `?branchId=${branchId}`;
-    const res = await axiosInstance.get(url);
+  getCaseByExternalId: async (externalId: string) => {
+    const res = await axiosInstance.get(`${BASE}/cases/external/${externalId}`);
     return res.data;
   },
 
@@ -579,19 +544,12 @@ export const garageApi = {
     return res.data;
   },
 
-  getGrossProfitReport: async (
-    branchId: string,
-    from?: string,
-    to?: string,
-  ) => {
+  getGrossProfitReport: async (from?: string, to?: string) => {
     const params = new URLSearchParams();
     if (from) params.append("from", from);
     if (to) params.append("to", to);
     const res = await axiosInstance.get(
       `${BASE}/cases/gross-profit-report?${params.toString()}`,
-      {
-        headers: { "x-greenway-branch-id": branchId },
-      },
     );
     return res.data;
   },
@@ -736,7 +694,6 @@ export const garageApi = {
 
   // ─── Customer Debt & Aging ───────────────────────────────────────────────
   getCustomersDebt: async (params: {
-    branchId?: string;
     page?: number;
     pageSize?: number;
     q?: string;
@@ -765,17 +722,11 @@ export const garageApi = {
 
     const res = await axiosInstance.get(
       `${BASE}/cases/customers-debt?${queryParams.toString()}`,
-      {
-        headers: {
-          "x-greenway-branch-id": params.branchId || "",
-        },
-      },
     );
     return res.data;
   },
 
   getCustomersDebtColumnOptions: async (
-    branchId: string | undefined,
     column: string,
     search: string = "",
     page: number = 1,
@@ -784,10 +735,7 @@ export const garageApi = {
   ) => {
     const res = await axiosInstance.get(
       `${BASE}/cases/customers-debt/column-options`,
-      {
-        params: { column, search, page, pageSize, filtersStr },
-        headers: { "x-greenway-branch-id": branchId || "" },
-      },
+      { params: { column, search, page, pageSize, filtersStr } },
     );
     return res.data as {
       items: (string | { label: string; value: string })[];
@@ -797,24 +745,16 @@ export const garageApi = {
     };
   },
 
-  getCasesByCustomer: async (
-    branchId: string,
-    customerCode: string,
-    licensePlate?: string,
-  ) => {
+  getCasesByCustomer: async (customerCode: string, licensePlate?: string) => {
     const res = await axiosInstance.get(
       `${BASE}/cases/by-customer/${encodeURIComponent(customerCode)}`,
-      {
-        params: licensePlate ? { licensePlate } : undefined,
-        headers: { "x-greenway-branch-id": branchId || "" },
-      },
+      { params: licensePlate ? { licensePlate } : undefined },
     );
     return res.data;
   },
 
   // ─── Supplier Debt & Aging ───────────────────────────────────────────────
   getSuppliersDebt: async (params: {
-    branchId: string;
     page?: number;
     pageSize?: number;
     q?: string;
@@ -843,17 +783,11 @@ export const garageApi = {
 
     const res = await axiosInstance.get(
       `${BASE}/payables/suppliers-debt?${queryParams.toString()}`,
-      {
-        headers: {
-          "x-greenway-branch-id": params.branchId || "",
-        },
-      },
     );
     return res.data;
   },
 
   getSuppliersDebtColumnOptions: async (
-    branchId: string,
     column: string,
     search: string = "",
     page: number = 1,
@@ -862,10 +796,7 @@ export const garageApi = {
   ) => {
     const res = await axiosInstance.get(
       `${BASE}/payables/suppliers-debt/column-options`,
-      {
-        params: { column, search, page, pageSize, filtersStr },
-        headers: { "x-greenway-branch-id": branchId || "" },
-      },
+      { params: { column, search, page, pageSize, filtersStr } },
     );
     return res.data as {
       items: (string | { label: string; value: string })[];
@@ -875,12 +806,9 @@ export const garageApi = {
     };
   },
 
-  getCasesBySupplier: async (branchId: string, supplierId: string) => {
+  getCasesBySupplier: async (supplierId: string) => {
     const res = await axiosInstance.get(
       `${BASE}/payables/by-supplier/${encodeURIComponent(supplierId)}/cases`,
-      {
-        headers: { "x-greenway-branch-id": branchId || "" },
-      },
     );
     return res.data;
   },

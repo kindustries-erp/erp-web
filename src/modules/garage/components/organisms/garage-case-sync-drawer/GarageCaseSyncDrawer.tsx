@@ -57,8 +57,8 @@ export function GarageCaseSyncDrawer(props: GarageCaseSyncDrawerProps) {
               <span className="font-semibold shrink-0">ℹ️ Lưu ý:</span>
               <span>
                 {t(
-                  "cases.syncDrawer.lookbackNotice",
-                  "Hệ thống tự động quét mở rộng 2 tháng trước mốc bắt đầu để cập nhật trạng thái và ngày hoàn thành cho các phiếu sửa chữa kéo dài qua nhiều tháng.",
+                  "cases.syncDrawer.chunkNotice",
+                  "Khoảng ngày được chia theo từng tháng và đồng bộ lần lượt, tháng gần nhất trước. Tháng nào lỗi chỉ tháng đó cần chạy lại, các tháng khác vẫn hoàn tất.",
                 )}
               </span>
             </div>

@@ -27,7 +27,8 @@ const toast = (title: string, variant: "success" | "destructive") =>
   useV2ToastStore.getState().showToast({ title, variant });
 
 /** Điều phối trang tiến độ xưởng: dữ liệu board/timeline/nhân viên, quyền, lệnh ghi kèm toast. */
-export function useGarageWorkshopProgress(kgaraBranchId?: string) {
+/** `branchId`: chi nhánh ERP đang chọn; bỏ trống là mọi chi nhánh. */
+export function useGarageWorkshopProgress(branchId?: string) {
   const { t } = useV2Translation();
   const canEdit = useV2HasPermission({
     collection: "garage_workshop",
@@ -42,19 +43,33 @@ export function useGarageWorkshopProgress(kgaraBranchId?: string) {
   const [workerSearch, setWorkerSearch] = React.useState("");
   const now = useNowTick();
 
-  const board = useCaseWorkshopBoardQuery(BOARD_PARAMS, kgaraBranchId);
+  const [classification, setClassification] = React.useState<string | null>(
+    null,
+  );
+  const boardParams = React.useMemo(
+    () => ({ ...BOARD_PARAMS, classification: classification ?? undefined }),
+    [classification],
+  );
+  // Đổi phạm vi hoặc bộ lọc thì đóng xe đang mở, tránh ghi vào xe không còn trên bảng.
+  const scopeKey = `${branchId ?? ""}|${classification ?? ""}`;
+  const [prevScopeKey, setPrevScopeKey] = React.useState(scopeKey);
+  if (prevScopeKey !== scopeKey) {
+    setPrevScopeKey(scopeKey);
+    setSelectedId(null);
+  }
+  const board = useCaseWorkshopBoardQuery(boardParams, branchId);
   const all = React.useMemo(() => board.data?.items ?? [], [board.data]);
   const items = React.useMemo(
     () => filterWorkshopCases(all, search),
     [all, search],
   );
   const selected = all.find((c) => c.id === selectedId) ?? null;
-  const timeline = useCaseWorkshopTimelineQuery(selectedId, kgaraBranchId);
+  const timeline = useCaseWorkshopTimelineQuery(selectedId, branchId);
   const workers = useWorkshopWorkersQuery(
     workerSearch,
-    selected && canEdit ? kgaraBranchId : undefined,
+    selected && canEdit ? branchId : undefined,
   );
-  const m = useCaseWorkshopMutations(kgaraBranchId);
+  const m = useCaseWorkshopMutations(branchId);
   const defaultWorker = useWorkshopDefaultWorker(workers.data ?? []);
   const plate = selected?.licensePlate || selected?.caseCode || "";
   const fail = (
@@ -144,20 +159,23 @@ export function useGarageWorkshopProgress(kgaraBranchId?: string) {
   };
 
   return {
-    hasBranch: Boolean(kgaraBranchId),
     isLoading: board.isLoading,
     isError: board.isError,
     refetch: () => void board.refetch(),
     items,
     search,
     setSearch,
+    classification,
+    setClassification,
     now,
     canEdit,
     canMoveStatus,
     selected,
     open: (c: CaseWorkshopBoardItem) => setSelectedId(c.id),
     openById: setSelectedId,
-    boardEmpty: !board.isLoading && all.length === 0,
+    boardEmpty: !board.isLoading && all.length === 0 && !classification,
+    filterEmpty:
+      !board.isLoading && all.length === 0 && Boolean(classification),
     defaultWorker,
     close: () => setSelectedId(null),
     logs: timeline.data ?? [],

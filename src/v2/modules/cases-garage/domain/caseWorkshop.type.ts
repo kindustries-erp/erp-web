@@ -33,6 +33,8 @@ export interface CaseWorkshopBoardParams {
   assigneeId?: string;
   /** Xe đã xong/hủy hiện trong số ngày này (1-90, mặc định 7). */
   finishedDays?: number;
+  /** Mã phân loại (ví dụ `OJ`); bỏ trống là mọi phân loại. */
+  classification?: string;
 }
 
 /** Một dòng nhật ký (`GET :id/progress-logs`). */

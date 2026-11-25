@@ -68,26 +68,14 @@ export const useGarageCaseCombobox = (
     queryFn: async () => {
       if (hasCustomerContext && customerCode) {
         return (
-          (await garageApi.getCasesByCustomer(
-            effectiveBranchId,
-            customerCode,
-            licensePlate,
-          )) || []
+          (await garageApi.getCasesByCustomer(customerCode, licensePlate)) || []
         );
       }
       if (hasSupplierContext && supplierId) {
-        return (
-          (await garageApi.getCasesBySupplier(effectiveBranchId, supplierId)) ||
-          []
-        );
+        return (await garageApi.getCasesBySupplier(supplierId)) || [];
       }
       if (hasPlateContext && licensePlate) {
-        const res = await garageApi.getCases(
-          effectiveBranchId,
-          1,
-          50,
-          licensePlate,
-        );
+        const res = await garageApi.getCases(1, 50, licensePlate);
         return res?.data || [];
       }
       return [];
@@ -101,7 +89,7 @@ export const useGarageCaseCombobox = (
     useInfiniteQuery({
       queryKey: ["garage-cases-infinite", effectiveBranchId, debouncedSearch],
       queryFn: ({ pageParam = 1 }) =>
-        garageApi.getCases("", pageParam, 20, debouncedSearch),
+        garageApi.getCases(pageParam, 20, debouncedSearch),
       initialPageParam: 1,
       getNextPageParam: (lastPage, allPages) => {
         if (lastPage?.data?.length === 20) {
