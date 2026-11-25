@@ -25,6 +25,7 @@
     "e2e:garage-link-override": "node e2e/garage-link-override.e2e.mjs",
     "e2e:garage-save-and-act": "node e2e/garage-save-and-act.e2e.mjs",
     "e2e:garage-traceability": "node e2e/garage-traceability.e2e.mjs",
+    "e2e:garage-v1-no-branch": "node e2e/garage-v1-no-branch.e2e.mjs",
     "e2e:invoice-traceability": "node e2e/invoice-traceability.e2e.mjs",
     "e2e:garage-stock": "node e2e/garage-stock.e2e.mjs",
     "e2e:users-management": "node e2e/users-management.e2e.mjs",

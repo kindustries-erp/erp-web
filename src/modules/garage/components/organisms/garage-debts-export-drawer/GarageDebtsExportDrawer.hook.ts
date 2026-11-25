@@ -12,7 +12,6 @@ import {
   type GarageDebtsExportKind,
 } from "@/modules/garage/export/garageDebtsExportContext";
 import {
-  branchHeaders,
   garageAllDebtsExportScope,
   garageCustomersDebtExportScope,
   garageSuppliersDebtExportScope,
@@ -28,7 +27,6 @@ const today = () => toIsoDate(new Date());
 
 export function useGarageDebtsExportDrawer({
   open,
-  branchId,
   context,
 }: GarageDebtsExportDrawerProps) {
   const {
@@ -84,13 +82,8 @@ export function useGarageDebtsExportDrawer({
     : "by-period";
 
   const handleStartExport = async () => {
-    const headers = branchHeaders(branchId);
-
     if (effectiveMode === "by-current-filter" && context?.query) {
-      await exporter.start(
-        { mode: "by-current-filter", ...context.query },
-        headers,
-      );
+      await exporter.start({ mode: "by-current-filter", ...context.query });
       return;
     }
 
@@ -103,10 +96,11 @@ export function useGarageDebtsExportDrawer({
       );
       return;
     }
-    await exporter.start(
-      { mode: "by-period", from: period.dateFrom, to: period.dateTo },
-      headers,
-    );
+    await exporter.start({
+      mode: "by-period",
+      from: period.dateFrom,
+      to: period.dateTo,
+    });
   };
 
   return {

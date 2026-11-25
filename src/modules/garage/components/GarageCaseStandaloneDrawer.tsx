@@ -106,6 +106,8 @@ export function GarageCaseStandaloneDrawer(
     queryClient,
   } = logic;
 
+  // Đồng bộ chi tiết gọi thẳng KGara nên cần chi nhánh KGara của chính phiếu.
+  const syncBranchId = selectedCase?.branchExternalId || selectedBranchId;
   let footerLeft: React.ReactNode = undefined;
   if (!editMode) {
     const dropdownItems: ActionDropdownItem[] = [
@@ -120,16 +122,16 @@ export function GarageCaseStandaloneDrawer(
               />
             ),
             onClick: () => {
-              if (selectedBranchId && selectedCase?.hdPhieuDichVuId) {
+              if (syncBranchId && selectedCase?.hdPhieuDichVuId) {
                 syncCaseDetail({
-                  branchId: selectedBranchId,
+                  branchId: syncBranchId,
                   caseId: selectedCase.hdPhieuDichVuId,
                 });
               }
             },
             disabled:
               isSyncingDetail ||
-              !selectedBranchId ||
+              !syncBranchId ||
               !selectedCase?.hdPhieuDichVuId,
           },
         ],
@@ -181,7 +183,7 @@ export function GarageCaseStandaloneDrawer(
     queryKey: ["garage-cases-by-customer", effectiveBranchId, customerCode],
     queryFn: () => {
       if (!customerCode) return Promise.resolve([]);
-      return garageApi.getCasesByCustomer(effectiveBranchId, customerCode);
+      return garageApi.getCasesByCustomer(customerCode);
     },
     enabled: Boolean(props.isOpen && customerCode),
     staleTime: 30000,

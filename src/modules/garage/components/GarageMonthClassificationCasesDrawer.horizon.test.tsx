@@ -41,7 +41,7 @@ function renderDrawer(props: Record<string, unknown>) {
 
 function lastServerFilters(): Record<string, string[]> {
   const calls = vi.mocked(garageApi.getCases).mock.calls;
-  const raw = calls[calls.length - 1]?.[6] as string | undefined;
+  const raw = calls[calls.length - 1]?.[5] as string | undefined;
   return raw ? JSON.parse(raw) : {};
 }
 

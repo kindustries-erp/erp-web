@@ -67,7 +67,7 @@ export function GarageCasePartnerTab({
     queryKey: ["garage-cases-by-customer", branchId, customerCode],
     queryFn: () => {
       if (!customerCode) return Promise.resolve([]);
-      return garageApi.getCasesByCustomer(branchId || "", customerCode);
+      return garageApi.getCasesByCustomer(customerCode);
     },
     enabled: !!customerCode,
   });

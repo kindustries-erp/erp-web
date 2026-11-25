@@ -5,10 +5,7 @@ import {
   useExportPeriod,
   type ExportMode,
 } from "@/shared/export-jobs";
-import { useGarageBranches } from "@/modules/garage/hooks/useGarage";
-import { useGarageStore } from "@/modules/garage/store/garageStore";
 import {
-  branchHeaders,
   garageDashboardExportScope,
   useGarageDashboardExportStore,
   type GarageDashboardExportPayload,
@@ -41,9 +38,6 @@ export function useGarageDashboardExport({
     period: periodLabels,
     messages,
   } = useGarageExportLabels();
-  const { selectedBranchId } = useGarageStore();
-  const { data: branches } = useGarageBranches();
-  const branchId = selectedBranchId || branches?.[0]?.externalId || "";
 
   // Báo cáo kỳ chỉ có chế độ "Theo kỳ" (tab Tổng quan không có bảng để lấy filter).
   const [exportMode, setExportMode] = useState<ExportMode>("by-period");
@@ -77,10 +71,11 @@ export function useGarageDashboardExport({
       );
       return;
     }
-    await exporter.start(
-      { from: period.dateFrom, to: period.dateTo, reportSections },
-      branchHeaders(branchId),
-    );
+    await exporter.start({
+      from: period.dateFrom,
+      to: period.dateTo,
+      reportSections,
+    });
   };
 
   return {

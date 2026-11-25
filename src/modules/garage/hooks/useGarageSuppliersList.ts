@@ -81,7 +81,6 @@ export function useGarageSuppliersList(branchId?: string) {
     ],
     queryFn: () =>
       garageApi.getSuppliersDebt({
-        branchId: branchId || "",
         page,
         pageSize,
         q: searchQ || undefined,

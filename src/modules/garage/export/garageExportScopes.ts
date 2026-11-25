@@ -111,7 +111,3 @@ export type GarageCasesTableQuery = Pick<
   "date_from" | "date_to" | "q" | "sorts" | "filtersStr"
 >;
 export type GarageOpexTableQuery = Omit<GarageOpexExportPayload, "mode">;
-
-export function branchHeaders(branchId?: string): Record<string, string> {
-  return { "x-greenway-branch-id": branchId || "" };
-}

@@ -19,7 +19,7 @@ export const GarageSupplierDetailDrawer: React.FC<
     queryKey: ["garage-supplier-cases", branchId, supplierId],
     queryFn: () => {
       if (!supplierId) return { payables: [], linkedCases: [] };
-      return garageApi.getCasesBySupplier(branchId || "", supplierId);
+      return garageApi.getCasesBySupplier(supplierId);
     },
     enabled: Boolean(open && supplierId),
   });

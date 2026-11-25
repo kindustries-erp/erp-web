@@ -115,7 +115,7 @@ export function useGarageCasesTable(props: GarageCasesTableProps) {
     tableState.sorts,
   );
 
-  const { data: profitData } = useGarageGrossProfit(branchId);
+  const { data: profitData } = useGarageGrossProfit();
   const profitCases = useMemo(() => {
     if (Array.isArray(profitData?.results)) return profitData.results;
     if (Array.isArray(profitData?.items)) return profitData.items;
@@ -152,7 +152,6 @@ export function useGarageCasesTable(props: GarageCasesTableProps) {
       filtersStr?: string;
     }) => {
       const res = await garageApi.getCaseColumnOptions(
-        branchId || "",
         columnKey,
         search,
         pageParam,

@@ -36,7 +36,6 @@ export function useGarageCases(
     ],
     queryFn: () =>
       garageApi.getCases(
-        branchId || "",
         page,
         pageSize,
         q,
@@ -64,7 +63,7 @@ export const useGarageCaseByExternalId = (
 ) => {
   return useQuery({
     queryKey: ["garage-case-external", externalId, branchId],
-    queryFn: () => garageApi.getCaseByExternalId(externalId!, branchId),
+    queryFn: () => garageApi.getCaseByExternalId(externalId!),
     enabled: !!externalId,
     retry: false,
   });
@@ -106,14 +105,10 @@ export function useGarageCasePayments(caseId?: string) {
   });
 }
 
-export function useGarageGrossProfit(
-  branchId?: string,
-  from?: string,
-  to?: string,
-) {
+export function useGarageGrossProfit(from?: string, to?: string) {
   return useQuery({
-    queryKey: ["garage", "grossProfitReport", branchId, from, to],
-    queryFn: () => garageApi.getGrossProfitReport(branchId || "", from, to),
+    queryKey: ["garage", "grossProfitReport", from, to],
+    queryFn: () => garageApi.getGrossProfitReport(from, to),
   });
 }
 
