@@ -16,7 +16,18 @@ export function GarageBulkSyncProgress({
   if (!status || status.status === "idle") return null;
 
   const isRunning = status.status === "running";
-  const failed = status.results.filter((r) => !r.ok);
+  const failedMonths = status.failedChunks ?? [];
+  // Lỗi theo tháng đã liệt kê riêng; chỉ hiện lỗi chi nhánh không gắn tháng.
+  const failed = status.results.filter(
+    (r) =>
+      !r.ok &&
+      !failedMonths.some(
+        (f) =>
+          f.branchExternalId === r.branchExternalId &&
+          f.accountKey === r.accountKey,
+      ),
+  );
+  const hasChunks = (status.totalChunks ?? 0) > 0;
 
   const branchLabel = (externalId: string, accountKey: string) => {
     const branch = (branches as any[] | undefined)?.find(
@@ -39,6 +50,9 @@ export function GarageBulkSyncProgress({
         <span>
           {status.completedBranches}/{status.totalBranches}{" "}
           {t("cases.syncDrawer.branchUnit", "chi nhánh")}
+          {hasChunks
+            ? ` · ${status.completedChunks ?? 0}/${status.totalChunks} ${t("cases.syncDrawer.monthUnit", "tháng")}`
+            : null}
         </span>
       </div>
 
@@ -49,11 +63,30 @@ export function GarageBulkSyncProgress({
             status.currentBranch.branchExternalId,
             status.currentBranch.accountKey,
           )}
+          {status.currentChunk
+            ? ` · ${status.currentChunk.from} → ${status.currentChunk.to}`
+            : null}
         </div>
       )}
 
       {!isRunning && status.message && (
         <div className="text-muted-foreground">{status.message}</div>
+      )}
+
+      {failedMonths.length > 0 && (
+        <div className="flex flex-col gap-1 text-red-600 dark:text-red-400">
+          <span className="font-medium">
+            {t("cases.syncDrawer.failedMonths", "Tháng lỗi")}
+          </span>
+          <ul className="flex flex-col gap-1">
+            {failedMonths.map((f) => (
+              <li key={`${f.accountKey}-${f.branchExternalId}-${f.from}`}>
+                {branchLabel(f.branchExternalId, f.accountKey)} · {f.from} →{" "}
+                {f.to}: {f.error}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {failed.length > 0 && (

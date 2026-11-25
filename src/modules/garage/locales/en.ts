@@ -511,6 +511,11 @@ export const garageEn = {
       recoveryRate: "Recovery Rate",
     },
     syncDrawer: {
+      recent6Months: "Last 6 months",
+      chunkNotice:
+        "The date range is split into calendar months and synced one by one, newest first. A failed month only needs to be rerun; the other months still complete.",
+      monthUnit: "months",
+      failedMonths: "Failed months",
       titleCases: "Sync Cases from Garage",
       titleGrossProfit: "Sync Garage Gross Profit",
       descCases:

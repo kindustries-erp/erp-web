@@ -14,6 +14,7 @@ export default defineConfig({
       "src/modules/garage/components/organisms/garage-debt-detail-drawer/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/organisms/garage-cases-detail-drawer/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/organisms/garage-month-detail-drawer/**/*.{test,spec}.{ts,tsx}",
+      "src/modules/garage/components/organisms/garage-case-sync-drawer/**/*.{test,spec}.{ts,tsx}",
       "src/shared/utils/pageUrl.test.ts",
       "src/__tests__/App.imotorbike.test.tsx",
       "src/modules/garage/components/garage-case-details-tab/**/*.{test,spec}.{ts,tsx}",
