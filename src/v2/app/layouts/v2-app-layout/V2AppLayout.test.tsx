@@ -3,6 +3,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react";
 import { Wrench } from "lucide-react";
 import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { useV2MobileNavStore } from "@/v2/shared/stores/useV2MobileNavStore";
+import { V2BottomNavVariant } from "@/v2/shared/components";
 import { V2AppLayout } from "./V2AppLayout";
 
 vi.mock("@/v2/shared/hooks/useV2HasPermission", () => ({
@@ -76,6 +77,12 @@ describe("V2AppLayout Switcher", () => {
             icon: Wrench,
             href: "/garage",
           },
+          ...Array.from({ length: 6 }, (_, i) => ({
+            id: `garage-extra-${i + 1}`,
+            label: `Mục phụ ${i + 1}`,
+            icon: Wrench,
+            href: `/garage-extra-${i + 1}`,
+          })),
         ],
       },
     ];
@@ -307,6 +314,16 @@ describe("V2AppLayout Switcher", () => {
           },
         ],
       },
+      {
+        id: "sec-extra",
+        label: "KHÁC",
+        items: Array.from({ length: 5 }, (_, i) => ({
+          id: `extra-${i + 1}`,
+          label: `Phân hệ phụ ${i + 1}`,
+          icon: Wrench,
+          href: `/extra-${i + 1}`,
+        })),
+      },
     ];
 
     render(
@@ -352,5 +369,66 @@ describe("V2AppLayout Switcher", () => {
     expect(screen.getByTestId("v2-app-layout-mobile")).toBeInTheDocument();
     expect(screen.queryByTestId("v2-bottom-nav")).not.toBeInTheDocument();
     expect(screen.getByText("Public Content")).toBeInTheDocument();
+  });
+
+  it("ẩn V2BottomNav và dùng pb-4 trên Mobile khi user chỉ có <= 1 menu item hợp lệ", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 390,
+    });
+
+    const singleSection = [
+      {
+        id: "only-one",
+        label: "Chính",
+        items: [
+          { id: "dashboard", label: "Tổng quan", icon: Wrench, href: "/" },
+        ],
+      },
+    ];
+
+    render(
+      <V2AppLayout sections={singleSection}>
+        <div>Single Page</div>
+      </V2AppLayout>,
+    );
+
+    expect(screen.queryByTestId("v2-bottom-nav")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("bottom-nav-hero-button"),
+    ).not.toBeInTheDocument();
+    const main = screen.getByRole("main");
+    expect(main.className).toContain("pb-4");
+  });
+
+  it("render đủ 6 menu items không có middle action button khi user có <= 6 items", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 390,
+    });
+
+    const sixItems = Array.from({ length: 6 }, (_, i) => ({
+      id: `mod-${i + 1}`,
+      label: `Mục ${i + 1}`,
+      icon: Wrench,
+      href: `/mod-${i + 1}`,
+    }));
+
+    render(
+      <V2AppLayout
+        sections={[{ id: "six", label: "Nghiệp vụ", items: sixItems }]}
+        bottomNavVariant={V2BottomNavVariant.HERO_CENTER}
+      >
+        <div>Six Pages</div>
+      </V2AppLayout>,
+    );
+
+    const bottomNav = screen.getByTestId("v2-bottom-nav");
+    expect(bottomNav.querySelectorAll("button")).toHaveLength(6);
+    expect(
+      screen.queryByTestId("bottom-nav-hero-button"),
+    ).not.toBeInTheDocument();
   });
 });

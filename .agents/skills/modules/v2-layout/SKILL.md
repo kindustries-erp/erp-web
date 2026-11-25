@@ -262,10 +262,11 @@ export interface V2HeaderProps extends V2BaseProps<HTMLElement> {
 - **Mobile Topbar**: Tích hợp `userMenuNode` (mở V2UserMenu / Bottom Sheet đầy đủ tính năng: hồ sơ, cài đặt, theme, ngôn ngữ, đăng xuất) và `notificationNode`. Kích hoạt `onBranchClick` khi click tên/avatar công ty để mở `CompanyProfileDrawer`.
 - **Cài đặt Giao diện & Ngôn ngữ Nhanh (Catalog Modal)**: Tích hợp card Quick Settings ngay đầu modal danh mục cho phép đổi nhanh Sáng / Tối / Midnight và công tắc Ngôn ngữ thông qua props `currentTheme` và `onThemeChange`.
 - **Main Spacing**: Giảm padding lồng ghép từ 36px xuống `px-2 py-2.5 pb-20 sm:px-4 sm:py-4`, tương thích mượt mà với `PageLayout` (`px-2 sm:px-5`).
-- **Thanh Điều Hướng 6 Items Chuẩn**:
-  - Cố định hiển thị **đúng 6 menu items** phân bổ đều (`grid grid-flow-col auto-cols-fr h-16`), vừa vặn hoàn hảo trên mọi kích thước màn hình điện thoại mà không cần cuộn ngang.
-  - **5 Items đầu**: Là các lối tắt (Quick Actions) do người dùng chọn và tùy chỉnh (hoặc tự động chọn 5 mục hữu ích nhất theo quyền).
-  - **Item thứ 6**: Cố định là **"Tất cả"** (`id: "catalog"`, icon `LayoutGrid`) mở Modal/Drawer danh mục toàn bộ hệ thống.
+- **Thanh Điều Hướng Thích Nghi Theo Quyền (`useV2MobileNav` & `V2BottomNav`)**:
+  - `<= 1` menu item hợp lệ: ẩn hoàn toàn `V2BottomNav` và `V2MobileCatalogDrawer`; `<main>` chuyển padding đáy về `pb-4`.
+  - `2..6` menu items hợp lệ: render toàn bộ `2..6` item trên 1 hàng phẳng đều nhau, không hiện middle action button (`centerHeroItem={undefined}`), không mở `V2MobileCatalogDrawer` (kể cả khi truyền `bottomNavVariant={V2BottomNavVariant.HERO_CENTER}`).
+  - `> 6` menu items hợp lệ: hiển thị tối đa **6 lối tắt** (`MAX_PINNED_MOBILE_NAV = 6`) do user chọn/mặc định kèm nút giữa **"Tất cả"** (`id: "catalog"`) để mở `V2MobileCatalogDrawer`.
+  - `bottomNavVariant` dùng enum chuẩn `V2BottomNavVariant` (`V2BottomNavVariant.FLOATING`, `V2BottomNavVariant.HERO_CENTER`) thay cho chuỗi cứng.
 - **Store Quản Lý Lối Tắt Cá Nhân Hóa (`useV2MobileNavStore`)**:
   - Lưu trữ 5 mục ghim vào LocalStorage qua `persist` với key `v2_mobile_nav_pinned`.
   - Hỗ trợ `setPinnedIds`, `togglePinnedId` (tối đa 5), `resetToDefault`.

@@ -50,17 +50,26 @@ export function filterSectionsByQuery(
 ): V2SidebarSectionData[] {
   if (!query.trim()) return sections;
   const q = query.toLowerCase().trim();
+  const matches = (it: V2SidebarNavItem) =>
+    it.label.toLowerCase().includes(q) || it.id.toLowerCase().includes(q);
 
   return sections
     .map((sec) => {
-      const matchingItems = sec.items.filter((item) => {
-        const matchLabel = item.label.toLowerCase().includes(q);
-        const matchId = item.id.toLowerCase().includes(q);
-        return matchLabel || matchId;
-      });
       const matchSecLabel = sec.label
         ? sec.label.toLowerCase().includes(q)
         : false;
+      const matchingItems = sec.items
+        .map((item) => {
+          if (item.children && item.children.length > 0) {
+            const matchingChildren = item.children.filter(matches);
+            if (matchingChildren.length > 0) {
+              return { ...item, children: matchingChildren };
+            }
+            return matches(item) ? item : null;
+          }
+          return matches(item) ? item : null;
+        })
+        .filter(Boolean) as V2SidebarNavItem[];
       if (matchingItems.length === 0 && !matchSecLabel) return null;
       return {
         ...sec,
@@ -106,13 +115,20 @@ export function resolveBottomActiveId(
     return activeNavId;
   }
   const parentSection = effectiveSections.find((sec) =>
-    sec.items.some((item) => item.id === activeNavId),
+    sec.items.some(
+      (item) =>
+        item.id === activeNavId ||
+        item.children?.some((child) => child.id === activeNavId),
+    ),
   );
   if (parentSection) {
     const matched = effectiveNavItems.find(
       (item) =>
-        parentSection.items.some((secItem) => secItem.id === item.id) ||
-        item.label === parentSection.label,
+        parentSection.items.some(
+          (secItem) =>
+            secItem.id === item.id ||
+            secItem.children?.some((child) => child.id === item.id),
+        ) || item.label === parentSection.label,
     );
     if (matched) return matched.id;
   }

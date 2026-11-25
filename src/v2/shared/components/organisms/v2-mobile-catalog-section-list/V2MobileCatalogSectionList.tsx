@@ -3,6 +3,7 @@ import { Search, X, Check } from "lucide-react";
 import { V2Input, V2Button, V2Text, V2Icon } from "@/v2/shared/components";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
+import type { V2SidebarNavItem } from "@/v2/shared/components";
 import type { V2MobileCatalogSectionListProps } from "./V2MobileCatalogSectionList.type";
 
 export const V2MobileCatalogSectionList: React.FC<
@@ -17,6 +18,53 @@ export const V2MobileCatalogSectionList: React.FC<
   onItemClick,
 }) => {
   const { t } = useV2Translation();
+
+  const renderItemButton = (item: V2SidebarNavItem) => {
+    const isSelected = selectedIds.includes(item.id);
+    const isActive = activeNavId === item.id;
+    const Icon = item.icon;
+
+    return (
+      <V2Button
+        key={item.id}
+        variant={
+          isCustomizing
+            ? isSelected
+              ? "secondary"
+              : "outline"
+            : isActive
+              ? "secondary"
+              : "outline"
+        }
+        className={cn(
+          "h-auto justify-between gap-2 py-2.5 px-3 text-left transition-all",
+          isCustomizing &&
+            isSelected &&
+            "border-primary bg-primary/10 text-primary font-medium",
+          !isCustomizing &&
+            isActive &&
+            "border-primary/50 text-primary font-medium",
+        )}
+        onClick={() => onItemClick(item)}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon className="h-4 w-4 shrink-0 text-muted-fg" />
+          <V2Text
+            as="span"
+            variant="caption"
+            weight="medium"
+            truncate
+            className="text-xs text-inherit"
+          >
+            {item.label}
+          </V2Text>
+        </div>
+        {isCustomizing && isSelected && (
+          <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+        )}
+      </V2Button>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -69,65 +117,45 @@ export const V2MobileCatalogSectionList: React.FC<
       )}
 
       {/* Sections List */}
-      {sections.map((section) => (
-        <section key={section.id} className="space-y-2.5">
-          <V2Text
-            variant="section-title"
-            color="muted"
-            className="text-xs font-semibold tracking-wider uppercase"
-          >
-            {section.label}
-          </V2Text>
-          <div className="grid grid-cols-2 gap-2">
-            {section.items.map((item) => {
-              const isSelected = selectedIds.includes(item.id);
-              const isActive = activeNavId === item.id;
-              const Icon = item.icon;
+      {sections.map((section) => {
+        const directItems = section.items.filter(
+          (item) => !item.children || item.children.length === 0,
+        );
+        const groupItems = section.items.filter(
+          (item) => item.children && item.children.length > 0,
+        );
 
-              return (
-                <V2Button
-                  key={item.id}
-                  variant={
-                    isCustomizing
-                      ? isSelected
-                        ? "secondary"
-                        : "outline"
-                      : isActive
-                        ? "secondary"
-                        : "outline"
-                  }
-                  className={cn(
-                    "h-auto justify-between gap-2 py-2.5 px-3 text-left transition-all",
-                    isCustomizing &&
-                      isSelected &&
-                      "border-primary bg-primary/10 text-primary font-medium",
-                    !isCustomizing &&
-                      isActive &&
-                      "border-primary/50 text-primary font-medium",
-                  )}
-                  onClick={() => onItemClick(item)}
+        return (
+          <section key={section.id} className="space-y-2.5">
+            <V2Text
+              variant="section-title"
+              color="muted"
+              className="text-xs font-semibold tracking-wider uppercase"
+            >
+              {section.label}
+            </V2Text>
+            {directItems.length > 0 && (
+              <div className="grid grid-cols-2 gap-2">
+                {directItems.map(renderItemButton)}
+              </div>
+            )}
+            {groupItems.map((group) => (
+              <div key={group.id} className="space-y-1.5 pt-1">
+                <V2Text
+                  variant="caption"
+                  color="muted"
+                  className="block text-[11px] font-medium"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Icon className="h-4 w-4 shrink-0 text-muted-fg" />
-                    <V2Text
-                      as="span"
-                      variant="caption"
-                      weight="medium"
-                      truncate
-                      className="text-xs text-inherit"
-                    >
-                      {item.label}
-                    </V2Text>
-                  </div>
-                  {isCustomizing && isSelected && (
-                    <Check className="h-3.5 w-3.5 text-primary shrink-0" />
-                  )}
-                </V2Button>
-              );
-            })}
-          </div>
-        </section>
-      ))}
+                  {group.label}
+                </V2Text>
+                <div className="grid grid-cols-2 gap-2">
+                  {group.children?.map(renderItemButton)}
+                </div>
+              </div>
+            ))}
+          </section>
+        );
+      })}
     </div>
   );
 };

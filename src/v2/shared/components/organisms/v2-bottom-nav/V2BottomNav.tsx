@@ -70,7 +70,12 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
       className={containerClasses}
       {...props}
     >
-      <div className="flex flex-1 items-center justify-around pr-1">
+      <div
+        className={cn(
+          "flex flex-1 items-center justify-around",
+          heroItem && "pr-1",
+        )}
+      >
         {leftItems.map((item) => (
           <V2NavItem
             key={item.id}
