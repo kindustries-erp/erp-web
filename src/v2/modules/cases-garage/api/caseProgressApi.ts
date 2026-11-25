@@ -8,22 +8,9 @@ import type {
   UpdateCaseProgressPayload,
 } from "../domain/caseProgress.type";
 
+import { branchHeaders, compactParams } from "./garageRequest";
+
 const BASE = "/api/v2/cases-garage";
-
-/** Header chi nhánh KGara (external id) mà `api/v2/cases-garage` bắt buộc; thiếu thì backend trả 400. */
-const branchConfig = (
-  branchId?: string,
-): [] | [{ headers: Record<string, string> }] =>
-  branchId ? [{ headers: { "x-kgara-branch-id": branchId } }] : [];
-
-/** Bỏ các khóa rỗng để query string gọn và backend dùng giá trị mặc định. */
-function compactParams<T extends object>(params: T): Partial<T> {
-  return Object.fromEntries(
-    Object.entries(params).filter(
-      ([, v]) => v !== undefined && v !== null && v !== "",
-    ),
-  ) as Partial<T>;
-}
 
 export const caseProgressApi = {
   /** Bảng theo dõi tiến độ xe; `status: "ALL"` để lấy mọi trạng thái (backend mặc định IN_PROGRESS). */
@@ -35,7 +22,7 @@ export const caseProgressApi = {
       `${BASE}/progress`,
       {
         params: compactParams(params ?? {}),
-        ...(branchConfig(branchId)[0] ?? {}),
+        ...branchHeaders(branchId),
       },
     );
     return data;
@@ -71,7 +58,7 @@ export const caseProgressApi = {
     const { data } = await v2HttpClient.patch<CaseMutationResult>(
       `${BASE}/${id}/status`,
       { status },
-      ...branchConfig(branchId),
+      branchHeaders(branchId),
     );
     return data;
   },
@@ -85,7 +72,7 @@ export const caseProgressApi = {
     const { data } = await v2HttpClient.patch<CaseMutationResult>(
       `${BASE}/${id}/progress`,
       payload,
-      ...branchConfig(branchId),
+      branchHeaders(branchId),
     );
     return data;
   },
@@ -99,7 +86,7 @@ export const caseProgressApi = {
     const { data } = await v2HttpClient.post<CaseMutationResult>(
       `${BASE}/${id}/revert`,
       fields ? { fields } : {},
-      ...branchConfig(branchId),
+      branchHeaders(branchId),
     );
     return data;
   },

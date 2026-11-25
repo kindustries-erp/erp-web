@@ -3,7 +3,7 @@ import type { CaseProgressListParams } from "../../domain/caseProgress.type";
 import { caseProgressApi } from "../caseProgressApi";
 import { caseProgressKeys } from "./caseProgressKeys";
 
-/** Toàn bộ dòng tiến độ (mọi trang) để dựng Kanban; mặc định lấy mọi trạng thái. `branchId` là external id KGara. */
+/** Toàn bộ dòng tiến độ (mọi trang) để dựng Kanban; mặc định lấy mọi trạng thái. `branchId` là chi nhánh ERP; bỏ trống là mọi chi nhánh. */
 export function useCaseProgressAllQuery(
   params: Omit<CaseProgressListParams, "page" | "pageSize"> = { status: "ALL" },
   enabled = true,

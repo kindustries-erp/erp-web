@@ -20,11 +20,12 @@ const plateOf = (c: { licensePlate: string | null; caseCode: string }) =>
 /**
  * Đưa xe vào và bỏ xe khỏi bảng tiến độ: hộp thoại tìm biển số (ứng viên từ API), lệnh track/track-new,
  * hộp xác nhận bỏ khỏi bảng. Quyền: `garage_workshop:update` để thêm/bỏ, `garage:create` để tạo xe mới,
- * `garage:update` để đổi trạng thái khi thêm.
+ * `garage:update` để đổi trạng thái khi thêm. `createBranchId`: chi nhánh gắn cho xe tạo mới.
  */
 export function useGarageWorkshopTracking(
-  kgaraBranchId: string | undefined,
+  branchId: string | undefined,
   onTracked?: (caseId: string) => void,
+  createBranchId: string | undefined = branchId,
 ) {
   const { t } = useV2Translation();
   const canEdit = useV2HasPermission({
@@ -43,8 +44,8 @@ export function useGarageWorkshopTracking(
   const [search, setSearch] = React.useState("");
   const [untrackTarget, setUntrackTarget] =
     React.useState<CaseWorkshopBoardItem | null>(null);
-  const candidates = useWorkshopCandidatesQuery(search, kgaraBranchId, addOpen);
-  const m = useCaseWorkshopMutations(kgaraBranchId);
+  const candidates = useWorkshopCandidatesQuery(search, branchId, addOpen);
+  const m = useCaseWorkshopMutations(branchId, createBranchId);
   const k = (key: string) => `v2.garageCases.workshop.toast.${key}`;
   const fail = (key: string, e: unknown) =>
     toast(
@@ -101,7 +102,7 @@ export function useGarageWorkshopTracking(
   };
 
   return {
-    canAdd: canEdit && Boolean(kgaraBranchId),
+    canAdd: canEdit,
     canCreate,
     canChangeStatus,
     addOpen,

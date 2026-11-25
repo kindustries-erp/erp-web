@@ -21,7 +21,7 @@ const renderIt = () =>
         new QueryClient({ defaultOptions: { queries: { retry: false } } })
       }
     >
-      <GarageCasesKanbanContainer cases={mockCases} kgaraBranchId="ext-1" />
+      <GarageCasesKanbanContainer cases={mockCases} branchId="b-1" />
     </QueryClientProvider>,
   );
 
@@ -43,7 +43,7 @@ describe("GarageCasesKanbanContainer", () => {
     await waitFor(() =>
       expect(caseProgressApi.listAll).toHaveBeenCalledWith(
         { status: "ALL" },
-        "ext-1",
+        "b-1",
       ),
     );
   });

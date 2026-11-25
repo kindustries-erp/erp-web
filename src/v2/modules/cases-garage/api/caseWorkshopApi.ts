@@ -12,51 +12,44 @@ import type {
   WorkshopWorker,
 } from "../domain/caseWorkshop.type";
 
+import { branchHeaders, compactParams } from "./garageRequest";
+
 const BASE = "/api/v2/cases-garage";
 
-/** Header chi nhánh KGara (external id) mà `api/v2/cases-garage` bắt buộc. */
-const withBranch = (branchId: string) => ({
-  headers: { "x-kgara-branch-id": branchId },
-});
-
-const compact = <T extends object>(params: T): Partial<T> =>
-  Object.fromEntries(
-    Object.entries(params).filter(
-      ([, v]) => v !== undefined && v !== null && v !== "",
-    ),
-  ) as Partial<T>;
-
-/** API trang tiến độ xưởng (quyền `garage_workshop`). Đổi status cha dùng `caseProgressApi.updateStatus`. */
+/** API trang tiến độ xưởng (quyền `garage_workshop`). `branchId` là chi nhánh ERP, không bắt buộc. Đổi status cha dùng `caseProgressApi.updateStatus`. */
 export const caseWorkshopApi = {
   board: async (
     params: CaseWorkshopBoardParams,
-    branchId: string,
+    branchId?: string,
   ): Promise<CaseWorkshopBoardResponse> => {
     const { data } = await v2HttpClient.get<CaseWorkshopBoardResponse>(
       `${BASE}/workshop/board`,
-      { params: compact(params), ...withBranch(branchId) },
+      { params: compactParams(params), ...branchHeaders(branchId) },
     );
     return data;
   },
 
   timeline: async (
     caseId: string,
-    branchId: string,
+    branchId?: string,
   ): Promise<CaseProgressLogItem[]> => {
     const { data } = await v2HttpClient.get<{ items: CaseProgressLogItem[] }>(
       `${BASE}/${caseId}/progress-logs`,
-      withBranch(branchId),
+      branchHeaders(branchId),
     );
     return data.items ?? [];
   },
 
   workers: async (
     search: string,
-    branchId: string,
+    branchId?: string,
   ): Promise<WorkshopWorker[]> => {
     const { data } = await v2HttpClient.get<{ items: WorkshopWorker[] }>(
       `${BASE}/workshop/workers`,
-      { params: compact({ search: search.trim() }), ...withBranch(branchId) },
+      {
+        params: compactParams({ search: search.trim() }),
+        ...branchHeaders(branchId),
+      },
     );
     return data.items ?? [];
   },
@@ -64,12 +57,12 @@ export const caseWorkshopApi = {
   createLog: async (
     caseId: string,
     payload: CreateCaseProgressLogPayload,
-    branchId: string,
+    branchId?: string,
   ): Promise<CaseProgressLogItem> => {
     const { data } = await v2HttpClient.post<{ data: CaseProgressLogItem }>(
       `${BASE}/${caseId}/progress-logs`,
       payload,
-      withBranch(branchId),
+      branchHeaders(branchId),
     );
     return data.data;
   },
@@ -77,62 +70,62 @@ export const caseWorkshopApi = {
   updateLog: async (
     logId: string,
     payload: UpdateCaseProgressLogPayload,
-    branchId: string,
+    branchId?: string,
   ): Promise<CaseProgressLogItem> => {
     const { data } = await v2HttpClient.patch<{ data: CaseProgressLogItem }>(
       `${BASE}/progress-logs/${logId}`,
       payload,
-      withBranch(branchId),
+      branchHeaders(branchId),
     );
     return data.data;
   },
 
-  removeLog: async (logId: string, branchId: string): Promise<void> => {
+  removeLog: async (logId: string, branchId?: string): Promise<void> => {
     await v2HttpClient.delete(
       `${BASE}/progress-logs/${logId}`,
-      withBranch(branchId),
+      branchHeaders(branchId),
     );
   },
 
   candidates: async (
     search: string,
-    branchId: string,
+    branchId?: string,
   ): Promise<WorkshopCandidate[]> => {
     const { data } = await v2HttpClient.get<{ items: WorkshopCandidate[] }>(
       `${BASE}/workshop/candidates`,
-      { params: { search: search.trim() }, ...withBranch(branchId) },
+      { params: { search: search.trim() }, ...branchHeaders(branchId) },
     );
     return data.items ?? [];
   },
 
   track: async (
     payload: TrackWorkshopCasePayload,
-    branchId: string,
+    branchId?: string,
   ): Promise<WorkshopTrackResult> => {
     const { data } = await v2HttpClient.post<{ data: WorkshopTrackResult }>(
       `${BASE}/workshop/track`,
-      compact(payload),
-      withBranch(branchId),
+      compactParams(payload),
+      branchHeaders(branchId),
     );
     return data.data;
   },
 
   trackNew: async (
     payload: TrackNewWorkshopCasePayload,
-    branchId: string,
+    branchId?: string,
   ): Promise<WorkshopTrackResult> => {
     const { data } = await v2HttpClient.post<{ data: WorkshopTrackResult }>(
       `${BASE}/workshop/track-new`,
-      compact(payload),
-      withBranch(branchId),
+      compactParams(payload),
+      branchHeaders(branchId),
     );
     return data.data;
   },
 
-  untrack: async (caseId: string, branchId: string): Promise<void> => {
+  untrack: async (caseId: string, branchId?: string): Promise<void> => {
     await v2HttpClient.delete(
       `${BASE}/workshop/track/${caseId}`,
-      withBranch(branchId),
+      branchHeaders(branchId),
     );
   },
 };

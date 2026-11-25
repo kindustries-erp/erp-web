@@ -27,25 +27,31 @@ describe("caseProgressApi", () => {
 
   it("updateStatus gửi PATCH :id/status với body { status }", async () => {
     await caseProgressApi.updateStatus("c1", "INTAKE");
-    expect(patch).toHaveBeenCalledWith(`${BASE}/c1/status`, {
-      status: "INTAKE",
-    });
+    expect(patch).toHaveBeenCalledWith(
+      `${BASE}/c1/status`,
+      { status: "INTAKE" },
+      {},
+    );
   });
 
   it("updateProgress gửi PATCH :id/progress với payload", async () => {
     await caseProgressApi.updateProgress("c1", { progressStage: "PAINTING" });
-    expect(patch).toHaveBeenCalledWith(`${BASE}/c1/progress`, {
-      progressStage: "PAINTING",
-    });
+    expect(patch).toHaveBeenCalledWith(
+      `${BASE}/c1/progress`,
+      { progressStage: "PAINTING" },
+      {},
+    );
   });
 
   it("revert gửi POST :id/revert, có hoặc không có danh sách field", async () => {
     await caseProgressApi.revert("c1", ["status"]);
-    expect(post).toHaveBeenLastCalledWith(`${BASE}/c1/revert`, {
-      fields: ["status"],
-    });
+    expect(post).toHaveBeenLastCalledWith(
+      `${BASE}/c1/revert`,
+      { fields: ["status"] },
+      {},
+    );
     await caseProgressApi.revert("c1");
-    expect(post).toHaveBeenLastCalledWith(`${BASE}/c1/revert`, {});
+    expect(post).toHaveBeenLastCalledWith(`${BASE}/c1/revert`, {}, {});
   });
 
   it("trả về data của response", async () => {
@@ -54,8 +60,8 @@ describe("caseProgressApi", () => {
     );
   });
 
-  it("gửi header x-kgara-branch-id cho đọc và ghi khi có branchId", async () => {
-    const cfg = { headers: { "x-kgara-branch-id": "ext-1" } };
+  it("gửi header x-erp-branch-id cho đọc và ghi khi có branchId", async () => {
+    const cfg = { headers: { "x-erp-branch-id": "ext-1" } };
     await caseProgressApi.list({ status: "ALL" }, "ext-1");
     expect(get).toHaveBeenCalledWith(`${BASE}/progress`, {
       params: { status: "ALL" },
@@ -72,6 +78,19 @@ describe("caseProgressApi", () => {
       `${BASE}/c1/revert`,
       { fields: ["status"] },
       cfg,
+    );
+  });
+
+  it("không chọn chi nhánh thì không gửi header chi nhánh", async () => {
+    await caseProgressApi.list({ status: "ALL" });
+    expect(get).toHaveBeenLastCalledWith(`${BASE}/progress`, {
+      params: { status: "ALL" },
+    });
+    await caseProgressApi.updateStatus("c1", "INTAKE");
+    expect(patch).toHaveBeenLastCalledWith(
+      `${BASE}/c1/status`,
+      { status: "INTAKE" },
+      {},
     );
   });
 });

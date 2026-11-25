@@ -5,8 +5,6 @@ import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar/
 import { GarageCasesTableTab } from "./components/GarageCasesTableTab";
 import { DebtPartnerTab } from "../garage-debt-detail-drawer/components/DebtPartnerTab";
 import { DebtClassificationTab } from "../garage-debt-detail-drawer/components/DebtClassificationTab";
-import { useAppStore } from "@/core/config/appStore";
-import { useKgaraBranchExternalId } from "@/modules/branches/api/useKgaraBranchExternalId";
 import { GarageCasesKanbanContainer } from "@/v2/modules/cases-garage";
 import type { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 
@@ -38,10 +36,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     vehicleTotal,
     isFunnel,
     initialStatus,
-    branchId,
   } = logic;
-  const currentBranchId = useAppStore((s) => s.currentBranchId);
-  const kgaraBranchId = useKgaraBranchExternalId(branchId || currentBranchId);
 
   return useMemo<V2TabItemData[]>(() => {
     const isFunnelScope = Boolean(isCheckpoint && (classification || isFunnel));
@@ -75,7 +70,8 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
         content: (
           <GarageCasesKanbanContainer
             cases={cases}
-            kgaraBranchId={kgaraBranchId}
+            // Danh sách xe ở đây lấy từ API V1 (chưa lọc theo chi nhánh ERP, Phase 5) nên Kanban V2
+            // không gửi chi nhánh, để đọc và ghi cùng phạm vi với các thẻ đang hiện.
             onOpenCaseDetail={setSelectedCaseCode}
           />
         ),
@@ -146,7 +142,6 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     totalBilled,
     totalCost,
     handleSelectClassification,
-    kgaraBranchId,
     t,
   ]);
 }

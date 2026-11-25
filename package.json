@@ -54,7 +54,8 @@
     "e2e:invoice-pdf-source": "node e2e/invoice-pdf-source-filter.e2e.mjs",
     "e2e:garage-dashboard": "node e2e/garage-dashboard.e2e.mjs",
     "e2e:garage-kanban": "node e2e/garage-kanban.e2e.mjs",
-    "e2e:garage-workshop-progress": "node e2e/garage-workshop-progress.e2e.mjs"
+    "e2e:garage-workshop-progress": "node e2e/garage-workshop-progress.e2e.mjs",
+    "e2e:garage-workshop-branch-scope": "node e2e/garage-workshop-branch-scope.e2e.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

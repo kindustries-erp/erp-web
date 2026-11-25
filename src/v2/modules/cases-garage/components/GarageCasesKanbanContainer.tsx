@@ -13,8 +13,8 @@ import { useCaseProgressMutations } from "../api/queries/useCaseProgressMutation
 
 export interface GarageCasesKanbanContainerProps {
   cases: GarageCaseDetailRow[];
-  /** External id KGara của chi nhánh (header `x-kgara-branch-id`); thiếu thì Kanban chỉ đọc. */
-  kgaraBranchId?: string;
+  /** Chi nhánh ERP (header `x-erp-branch-id`); bỏ trống là mọi chi nhánh. */
+  branchId?: string;
   onOpenCaseDetail?: (caseCode: string) => void;
   className?: string;
 }
@@ -25,18 +25,14 @@ const idsOf = (item: GarageVehicleKanbanItem) =>
 /** Nối Kanban (core) với API v2 `cases-garage`: đọc status/công đoạn, ghi qua mutation. */
 export const GarageCasesKanbanContainer: React.FC<
   GarageCasesKanbanContainerProps
-> = ({ cases, kgaraBranchId, onOpenCaseDetail, className }) => {
+> = ({ cases, branchId, onOpenCaseDetail, className }) => {
   const canUpdate = useV2HasPermission({
     collection: "garage",
     action: "update",
   });
-  const { data } = useCaseProgressAllQuery(
-    { status: "ALL" },
-    Boolean(kgaraBranchId),
-    kgaraBranchId,
-  );
+  const { data } = useCaseProgressAllQuery({ status: "ALL" }, true, branchId);
   const { updateStatus, updateProgress, revert } =
-    useCaseProgressMutations(kgaraBranchId);
+    useCaseProgressMutations(branchId);
 
   const v2Info = React.useMemo<GarageCaseV2InfoMap | undefined>(
     () =>

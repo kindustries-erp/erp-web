@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   CaseWorkshopBoardItem,
+  CaseWorkshopBoardParams,
   CaseWorkshopBoardResponse,
 } from "../../domain/caseWorkshop.type";
 import { caseProgressApi } from "../caseProgressApi";
@@ -70,17 +71,21 @@ describe("hook trang tiến độ xưởng", () => {
     progressApi.updateStatus.mockReset();
   });
 
-  it("không có chi nhánh thì không gọi API; có chi nhánh thì gọi kèm header", async () => {
+  it("không chọn chi nhánh vẫn gọi API (mọi chi nhánh); timeline chỉ gọi khi có xe", async () => {
     const { wrapper } = setup();
-    renderHook(() => useCaseWorkshopBoardQuery(PARAMS, undefined), { wrapper });
     renderHook(() => useCaseWorkshopTimelineQuery(null, "KG1"), { wrapper });
-    expect(api.board).not.toHaveBeenCalled();
     expect(api.timeline).not.toHaveBeenCalled();
     const { result } = renderHook(
-      () => useCaseWorkshopBoardQuery(PARAMS, "KG1"),
+      () => useCaseWorkshopBoardQuery(PARAMS, undefined),
       { wrapper },
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.board).toHaveBeenCalledWith(PARAMS, undefined);
+    const withBranch = renderHook(
+      () => useCaseWorkshopBoardQuery(PARAMS, "KG1"),
+      { wrapper },
+    );
+    await waitFor(() => expect(withBranch.result.current.isSuccess).toBe(true));
     expect(api.board).toHaveBeenCalledWith(PARAMS, "KG1");
   });
 
@@ -167,6 +172,39 @@ describe("hook trang tiến độ xưởng", () => {
     );
     expect(api.trackNew).toHaveBeenCalledWith({ licensePlate: "30A-1" }, "KG1");
     expect(spy).toHaveBeenCalledWith({ queryKey: caseWorkshopKeys.all });
+  });
+
+  it("xem mọi chi nhánh: trackNew gắn chi nhánh tạo mới, track không gửi chi nhánh", async () => {
+    api.track.mockReset().mockResolvedValue({} as never);
+    api.trackNew.mockReset().mockResolvedValue({} as never);
+    const { wrapper } = setup();
+    const { result } = renderHook(
+      () => useCaseWorkshopMutations(undefined, "GR"),
+      { wrapper },
+    );
+    await act(() => result.current.track.mutateAsync({ caseId: "c1" }));
+    expect(api.track).toHaveBeenCalledWith({ caseId: "c1" }, undefined);
+    await act(() =>
+      result.current.trackNew.mutateAsync({ licensePlate: "30A-1" }),
+    );
+    expect(api.trackNew).toHaveBeenCalledWith({ licensePlate: "30A-1" }, "GR");
+  });
+
+  it("board giữ dữ liệu cũ khi đổi bộ lọc cùng chi nhánh, không giữ khi đổi chi nhánh", async () => {
+    const { wrapper } = setup();
+    type Props = { params: CaseWorkshopBoardParams; branch?: string };
+    const initialProps: Props = { params: PARAMS, branch: "KG1" };
+    const { result, rerender } = renderHook(
+      (p: Props) => useCaseWorkshopBoardQuery(p.params, p.branch),
+      { wrapper, initialProps },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    api.board.mockReturnValue(new Promise(() => {}));
+    rerender({ params: { ...PARAMS, classification: "OJ" }, branch: "KG1" });
+    expect(result.current.isPlaceholderData).toBe(true);
+    expect(result.current.data?.items).toHaveLength(1);
+    rerender({ params: PARAMS, branch: undefined });
+    expect(result.current.data).toBeUndefined();
   });
 
   it("untrack gỡ thẻ lạc quan, lỗi thì hoàn lại", async () => {

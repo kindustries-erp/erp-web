@@ -6,6 +6,7 @@ import type { CaseWorkshopBoardItem } from "../domain/caseWorkshop.type";
 import { useGarageWorkshopProgress } from "./useGarageWorkshopProgress";
 
 const mutateMove = vi.fn();
+const boardQuery = vi.fn();
 const mutateCreate = vi.fn();
 const item = (over: Partial<CaseWorkshopBoardItem>) =>
   ({
@@ -16,18 +17,22 @@ const item = (over: Partial<CaseWorkshopBoardItem>) =>
     ...over,
   }) as CaseWorkshopBoardItem;
 
+let boardItems: CaseWorkshopBoardItem[] | null = null;
 vi.mock("../api/queries/useCaseWorkshopQueries", () => ({
-  useCaseWorkshopBoardQuery: () => ({
-    data: {
-      items: [
-        item({}),
-        item({ id: "c2", licensePlate: "29C-9", customerName: "Bình" }),
-      ],
-    },
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  }),
+  useCaseWorkshopBoardQuery: (...args: unknown[]) => {
+    boardQuery(...args);
+    return {
+      data: {
+        items: boardItems ?? [
+          item({}),
+          item({ id: "c2", licensePlate: "29C-9", customerName: "Bình" }),
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    };
+  },
   useCaseWorkshopTimelineQuery: () => ({ data: [], isLoading: false }),
   useWorkshopWorkersQuery: () => ({ data: [], isFetching: false }),
 }));
@@ -49,6 +54,7 @@ describe("useGarageWorkshopProgress", () => {
     mutateMove.mockReset().mockResolvedValue({});
     mutateCreate.mockReset().mockResolvedValue({});
     useV2ToastStore.setState({ toasts: [] });
+    boardItems = null;
   });
 
   it("không có quyền garage:update thì không đổi status, báo lỗi quyền", () => {
@@ -125,9 +131,55 @@ describe("useGarageWorkshopProgress", () => {
     expect(lastToast()?.variant).toBe("destructive");
   });
 
-  it("không có chi nhánh KGara thì báo cần chọn chi nhánh", () => {
+  it("không chọn chi nhánh vẫn lấy board (mọi chi nhánh)", () => {
     setPermissions([]);
-    const { result } = renderHook(() => useGarageWorkshopProgress(undefined));
-    expect(result.current.hasBranch).toBe(false);
+    renderHook(() => useGarageWorkshopProgress(undefined));
+    expect(boardQuery).toHaveBeenLastCalledWith(expect.anything(), undefined);
+  });
+
+  it("lọc phân loại OJ gửi classification lên board; bỏ lọc thì không gửi", () => {
+    setPermissions([]);
+    const { result } = renderHook(() => useGarageWorkshopProgress("B1"));
+    expect(boardQuery).toHaveBeenLastCalledWith(
+      { pageSize: 200, classification: undefined },
+      "B1",
+    );
+    act(() => result.current.setClassification("OJ"));
+    expect(result.current.classification).toBe("OJ");
+    expect(boardQuery).toHaveBeenLastCalledWith(
+      { pageSize: 200, classification: "OJ" },
+      "B1",
+    );
+    act(() => result.current.setClassification(null));
+    expect(boardQuery).toHaveBeenLastCalledWith(
+      { pageSize: 200, classification: undefined },
+      "B1",
+    );
+  });
+
+  it("đổi phân loại hoặc phạm vi chi nhánh thì đóng xe đang mở", () => {
+    setPermissions([]);
+    const { result, rerender } = renderHook(
+      ({ branch }: { branch?: string }) => useGarageWorkshopProgress(branch),
+      { initialProps: { branch: "B1" } as { branch?: string } },
+    );
+    act(() => result.current.openById("c1"));
+    expect(result.current.selected?.id).toBe("c1");
+    act(() => result.current.setClassification("OJ"));
+    expect(result.current.selected).toBeNull();
+    act(() => result.current.openById("c2"));
+    rerender({ branch: undefined });
+    expect(result.current.selected).toBeNull();
+  });
+
+  it("board rỗng: không lọc thì boardEmpty, có lọc phân loại thì filterEmpty", () => {
+    setPermissions([]);
+    boardItems = [];
+    const { result } = renderHook(() => useGarageWorkshopProgress("B1"));
+    expect(result.current.boardEmpty).toBe(true);
+    expect(result.current.filterEmpty).toBe(false);
+    act(() => result.current.setClassification("OJ"));
+    expect(result.current.boardEmpty).toBe(false);
+    expect(result.current.filterEmpty).toBe(true);
   });
 });
