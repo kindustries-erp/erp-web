@@ -127,6 +127,7 @@ export const navVi = {
     garage: "Garage",
     garageDashboard: "Tổng quan Garage",
     garageCases: "Hoạt động garage",
+    garageWorkshopProgress: "Tiến độ xưởng",
     garageProcurement: "Mua hàng Garage",
     garageProcurementRequests: "Đề nghị mua hàng Garage",
     garageOpex: "Chi phí vận hành Garage",

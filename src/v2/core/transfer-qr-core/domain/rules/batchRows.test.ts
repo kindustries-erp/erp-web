@@ -33,12 +33,17 @@ describe("validateBatchRow", () => {
     expect(isBatchRowValid(validRow())).toBe(true);
   });
 
-  it("dòng trống báo đủ các ô bắt buộc", () => {
+  it("dòng trống báo đủ các ô bắt buộc (bin, accountNumber; accountName là tùy chọn)", () => {
     expect(validateBatchRow(createBatchRow("r2"))).toEqual({
       bin: "required",
       accountNumber: "required",
-      accountName: "required",
     });
+  });
+
+  it("dòng không có accountName vẫn hợp lệ", () => {
+    const row = { ...validRow(), accountName: "" };
+    expect(validateBatchRow(row)).toEqual({});
+    expect(isBatchRowValid(row)).toBe(true);
   });
 
   it("số tài khoản sai định dạng và số tiền không đọc được đều báo lỗi", () => {

@@ -73,6 +73,10 @@ export const FALLBACK_RESOURCES: ResourceItem[] = [
   { resource: "bom", label: "Định mức sản xuất (BOM)" },
   { resource: "production", label: "Lệnh sản xuất" },
   { resource: "garage", label: "Garage dịch vụ" },
+  {
+    resource: "garage_workshop",
+    label: "Tiến độ xưởng Garage (công đoạn, nhật ký, người làm)",
+  },
   { resource: "garage_debts", label: "Công nợ Garage" },
   { resource: "garage_cashflow", label: "Thu chi xưởng Garage" },
   { resource: "garage_goods_receipts", label: "Nhập kho Garage" },

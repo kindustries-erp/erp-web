@@ -25,6 +25,7 @@
     "e2e:garage-link-override": "node e2e/garage-link-override.e2e.mjs",
     "e2e:garage-save-and-act": "node e2e/garage-save-and-act.e2e.mjs",
     "e2e:garage-traceability": "node e2e/garage-traceability.e2e.mjs",
+    "e2e:garage-v1-no-branch": "node e2e/garage-v1-no-branch.e2e.mjs",
     "e2e:invoice-traceability": "node e2e/invoice-traceability.e2e.mjs",
     "e2e:garage-stock": "node e2e/garage-stock.e2e.mjs",
     "e2e:users-management": "node e2e/users-management.e2e.mjs",
@@ -52,7 +53,10 @@
     "build-storybook": "storybook build -o storybook-static",
     "e2e:invoice-attachments-v1": "bun e2e/invoice-attachments-v1.e2e.mjs",
     "e2e:invoice-pdf-source": "node e2e/invoice-pdf-source-filter.e2e.mjs",
-    "e2e:garage-dashboard": "node e2e/garage-dashboard.e2e.mjs"
+    "e2e:garage-dashboard": "node e2e/garage-dashboard.e2e.mjs",
+    "e2e:garage-kanban": "node e2e/garage-kanban.e2e.mjs",
+    "e2e:garage-workshop-progress": "node e2e/garage-workshop-progress.e2e.mjs",
+    "e2e:garage-workshop-branch-scope": "node e2e/garage-workshop-branch-scope.e2e.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

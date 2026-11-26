@@ -4,6 +4,7 @@ import {
   batchPdfFileName,
   buildBatchPdfBytes,
   type BatchCaption,
+  type BatchPdfItem,
 } from "./exportBatchPdf";
 import { batchZipFileName, buildBatchZipBytes } from "./exportBatchZip";
 
@@ -14,46 +15,63 @@ export interface BatchDownloadItem {
   caption: BatchCaption;
 }
 
+export type CardElementLookup = (
+  fileName: string,
+) => HTMLElement | null | undefined;
+
+interface CapturedCardImage {
+  dataUrl: string;
+  width?: number;
+  height?: number;
+}
+
+/** Chụp DOM thẻ thanh toán sang PNG kèm kích thước thực; trả null nếu thiếu element hoặc lỗi. */
+async function captureCardImage(
+  cardElement?: HTMLElement | null,
+): Promise<CapturedCardImage | null> {
+  if (!cardElement) return null;
+  try {
+    const dataUrl = await cardElementToPng(cardElement);
+    const rect = cardElement.getBoundingClientRect();
+    const width = cardElement.offsetWidth || rect.width;
+    const height = cardElement.offsetHeight || rect.height;
+    return {
+      dataUrl,
+      width: width > 0 ? width : undefined,
+      height: height > 0 ? height : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** Tải một thẻ thanh toán dạng ảnh PNG đẹp mắt; fallback mã QR thô nếu không có element. */
 export async function downloadRowCard(
   item: { fileName: string; qrDataUrl: string },
   cardElement?: HTMLElement | null,
 ): Promise<void> {
   if (!item.qrDataUrl) return;
-  if (cardElement) {
-    try {
-      const cardUrl = await cardElementToPng(cardElement);
-      downloadDataUrl(cardUrl, item.fileName);
-      return;
-    } catch {
-      // Fallback xuống mã QR thô
-    }
-  }
-  downloadDataUrl(item.qrDataUrl, item.fileName);
+  const captured = await captureCardImage(cardElement);
+  downloadDataUrl(captured ? captured.dataUrl : item.qrDataUrl, item.fileName);
 }
 
 /** Tải ZIP chứa mọi ảnh thẻ thanh toán đẹp mắt (hoặc ảnh QR thô nếu fallback). */
 export async function downloadBatchZip(
   items: readonly BatchDownloadItem[],
   now: Date = new Date(),
-  getCardElement?: (fileName: string) => HTMLElement | null | undefined,
+  getCardElement?: CardElementLookup,
 ): Promise<void> {
   if (items.length === 0) return;
-  let itemsToZip = items;
-  if (getCardElement) {
-    itemsToZip = await Promise.all(
-      items.map(async (item) => {
-        const cardEl = getCardElement(item.fileName);
-        if (!cardEl) return item;
-        try {
-          const cardUrl = await cardElementToPng(cardEl);
-          return { ...item, qrDataUrl: cardUrl };
-        } catch {
-          return item;
-        }
-      }),
-    );
-  }
+  const itemsToZip = getCardElement
+    ? await Promise.all(
+        items.map(async (item) => {
+          const captured = await captureCardImage(
+            getCardElement(item.fileName),
+          );
+          return captured ? { ...item, qrDataUrl: captured.dataUrl } : item;
+        }),
+      )
+    : items;
   const bytes = await buildBatchZipBytes(itemsToZip);
   downloadBlob(
     new Blob([bytes], { type: "application/zip" }),
@@ -61,13 +79,31 @@ export async function downloadBatchZip(
   );
 }
 
-/** Tải PDF A4 xếp lưới các mã QR. Không làm gì khi danh sách rỗng. */
+/** Tải PDF A4 xếp lưới các thẻ thanh toán (fallback vector nếu thiếu DOM thẻ). */
 export async function downloadBatchPdf(
   items: readonly BatchDownloadItem[],
   now: Date = new Date(),
+  getCardElement?: CardElementLookup,
 ): Promise<void> {
   if (items.length === 0) return;
-  const bytes = await buildBatchPdfBytes(items);
+  const pdfItems: readonly BatchPdfItem[] = getCardElement
+    ? await Promise.all(
+        items.map(async (item) => {
+          const captured = await captureCardImage(
+            getCardElement(item.fileName),
+          );
+          return captured
+            ? {
+                ...item,
+                cardImageDataUrl: captured.dataUrl,
+                cardWidth: captured.width,
+                cardHeight: captured.height,
+              }
+            : item;
+        }),
+      )
+    : items;
+  const bytes = await buildBatchPdfBytes(pdfItems);
   downloadBlob(
     new Blob([bytes], { type: "application/pdf" }),
     batchPdfFileName(now),

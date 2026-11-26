@@ -29,7 +29,7 @@ export interface TransferQrPasteNotice {
 const QR_OPTIONS = {
   margin: 1,
   width: 320,
-  errorCorrectionLevel: "M" as const,
+  errorCorrectionLevel: "H" as const,
 };
 
 /**
@@ -177,6 +177,11 @@ export function useTransferQrBatchController({ open }: { open: boolean }) {
           cardElementsRef.current.get(fn),
         ),
       ),
-    downloadPdf: () => runBulkDownload(() => downloadBatchPdf(readyItems)),
+    downloadPdf: () =>
+      runBulkDownload(() =>
+        downloadBatchPdf(readyItems, new Date(), (fn) =>
+          cardElementsRef.current.get(fn),
+        ),
+      ),
   };
 }

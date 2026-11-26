@@ -226,7 +226,6 @@ export function GarageMonthClassificationCasesDrawer({
       if (!open)
         return { data: [], pagination: { total: 0, page: 1, pageSize: 20 } };
       return garageApi.getCases(
-        effectiveBranchId,
         page,
         pageSize,
         "",
@@ -273,7 +272,6 @@ export function GarageMonthClassificationCasesDrawer({
       filtersStr?: string;
     }) => {
       const res = await garageApi.getCaseColumnOptions(
-        effectiveBranchId || "",
         columnKey,
         search,
         pageParam,
@@ -991,7 +989,7 @@ export function GarageMonthClassificationCasesDrawer({
                     icon: <RefreshCw className="w-3.5 h-3.5" />,
                     onClick: () => {
                       const targetBranch =
-                        effectiveBranchId || row.branchExternalId;
+                        row.branchExternalId || effectiveBranchId;
                       if (targetBranch && row.hdPhieuDichVuId) {
                         syncCaseDetail({
                           branchId: targetBranch,

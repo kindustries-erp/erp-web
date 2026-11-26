@@ -25,6 +25,8 @@ export interface GarageCaseDetailRow {
   namSanXuat?: number | null;
   khachHangName: string;
   khachHangCode?: string | null;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  tenKhachHang?: string | null;
   payerType: "KH" | "BH";
   partnerType: "insurance" | "enterprise" | "individual";
   debtorName: string;

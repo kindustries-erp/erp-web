@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import { Home } from "lucide-react";
 import { useV2MobileNav } from "./useV2MobileNav";
 import { useV2MobileNavStore } from "@/v2/shared/stores/useV2MobileNavStore";
+import type { V2SidebarSectionData } from "@/v2/shared/components";
 
 vi.mock("@/v2/shared/hooks/useV2Translation", () => ({
   useV2Translation: () => ({
@@ -75,5 +77,116 @@ describe("useV2MobileNav hook", () => {
       "sales-report-dashboard",
     );
     expect(result.current.currentSelectedIds.length).toBeLessThanOrEqual(6);
+  });
+
+  it("ẩn bottom nav khi chỉ có <= 1 menu item hợp lệ", () => {
+    const oneSection: V2SidebarSectionData[] = [
+      {
+        id: "sec-1",
+        label: "Chính",
+        items: [{ id: "dashboard", label: "Tổng quan", icon: Home, href: "/" }],
+      },
+    ];
+    const { result } = renderHook(() =>
+      useV2MobileNav({ sections: oneSection }),
+    );
+
+    expect(result.current.shouldShowBottomNav).toBe(false);
+    expect(result.current.shouldShowCenterHero).toBe(false);
+    expect(result.current.bottomNavItems).toHaveLength(1);
+  });
+
+  it("hiển thị đủ 2..6 menu items và ẩn nút giữa khi <= 6 items", () => {
+    useV2MobileNavStore.setState({ pinnedIds: ["page-1", "page-2"] });
+    const sixItems = Array.from({ length: 6 }, (_, i) => ({
+      id: `page-${i + 1}`,
+      label: `Trang ${i + 1}`,
+      icon: Home,
+      href: `/page-${i + 1}`,
+    }));
+    const sections: V2SidebarSectionData[] = [
+      { id: "sec-6", label: "Nghiệp vụ", items: sixItems },
+    ];
+
+    const { result } = renderHook(() => useV2MobileNav({ sections }));
+
+    expect(result.current.shouldShowBottomNav).toBe(true);
+    expect(result.current.shouldShowCenterHero).toBe(false);
+    expect(result.current.bottomNavItems).toHaveLength(6);
+    expect(
+      result.current.effectiveNavItems.some((i) => i.id === "catalog"),
+    ).toBe(false);
+  });
+
+  it("bật nút giữa và catalog khi có > 6 menu items hoặc truyền navItems > 6", () => {
+    const sevenItems = Array.from({ length: 7 }, (_, i) => ({
+      id: `page-${i + 1}`,
+      label: `Trang ${i + 1}`,
+      icon: Home,
+      href: `/page-${i + 1}`,
+    }));
+    const { result } = renderHook(() =>
+      useV2MobileNav({ navItems: sevenItems }),
+    );
+
+    expect(result.current.shouldShowBottomNav).toBe(true);
+    expect(result.current.shouldShowCenterHero).toBe(true);
+    expect(result.current.bottomNavItems).toHaveLength(7);
+  });
+
+  it("tìm kiếm và nhận diện activeId cho các mục nằm trong children của nhóm con", () => {
+    const sectionsWithChildren: V2SidebarSectionData[] = [
+      {
+        id: "sec-settings",
+        label: "HỆ THỐNG",
+        items: [
+          {
+            id: "sub-access-control",
+            label: "Quản lý truy cập",
+            icon: Home,
+            href: "/users-management",
+            children: [
+              {
+                id: "users-management",
+                label: "Quản lý người dùng",
+                icon: Home,
+                href: "/users-management",
+              },
+              {
+                id: "permission",
+                label: "Phân quyền & Vai trò",
+                icon: Home,
+                href: "/permission",
+              },
+            ],
+          },
+          ...Array.from({ length: 5 }, (_, i) => ({
+            id: `extra-${i + 1}`,
+            label: `Khác ${i + 1}`,
+            icon: Home,
+            href: `/extra-${i + 1}`,
+          })),
+        ],
+      },
+    ];
+
+    const { result } = renderHook(() =>
+      useV2MobileNav({
+        sections: sectionsWithChildren,
+        activeNavId: "permission",
+      }),
+    );
+
+    act(() => {
+      result.current.setSearchQuery("Phân quyền");
+    });
+
+    expect(result.current.filteredSections).toHaveLength(1);
+    expect(result.current.filteredSections[0].items[0].children).toHaveLength(
+      1,
+    );
+    expect(result.current.filteredSections[0].items[0].children?.[0].id).toBe(
+      "permission",
+    );
   });
 });

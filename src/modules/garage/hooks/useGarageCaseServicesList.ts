@@ -2,10 +2,8 @@ import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { garageApi } from "../api/garageApi";
-import { useGarageStore } from "../store/garageStore";
 
 export function useGarageCaseServicesList() {
-  const { selectedBranchId } = useGarageStore();
   const tableState = useTableColumnState("garage-case-services-table");
 
   const [page, setPage] = useState(1);
@@ -81,7 +79,6 @@ export function useGarageCaseServicesList() {
       filtersStr?: string;
     }) => {
       const res = await garageApi.getCaseServiceColumnOptions(
-        selectedBranchId || "",
         columnKey,
         colSearch,
         pageParam,
@@ -98,14 +95,13 @@ export function useGarageCaseServicesList() {
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [selectedBranchId, serverFiltersStr, serviceTypeFilter],
+    [serverFiltersStr, serviceTypeFilter],
   );
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: [
       "garage",
       "case-services",
-      selectedBranchId,
       page,
       pageSize,
       search,
@@ -114,7 +110,6 @@ export function useGarageCaseServicesList() {
     ],
     queryFn: () =>
       garageApi.getCaseServicesList(
-        selectedBranchId || "",
         page,
         pageSize,
         search,
@@ -124,7 +119,6 @@ export function useGarageCaseServicesList() {
         serverFiltersStr,
         tableState.sorts,
       ),
-    enabled: !!selectedBranchId,
     staleTime: 90_000,
   });
 
@@ -134,7 +128,6 @@ export function useGarageCaseServicesList() {
   const totals = data?.totals;
 
   return {
-    selectedBranchId,
     items,
     data,
     total,

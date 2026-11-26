@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 import { GarageCaseSyncDrawer } from "./GarageCaseSyncDrawer";
+import { getRecentMonthsRange } from "./GarageCaseSyncDrawer.hook";
 
 const startBulkSync = vi.fn();
 
@@ -67,5 +68,34 @@ describe("GarageCaseSyncDrawer Organism", () => {
     expect(startBulkSync).toHaveBeenCalledWith(
       expect.objectContaining({ scope: "cases", includeDetails: undefined }),
     );
+  });
+
+  it("mặc định gửi khoảng 6 tháng gần nhất (từ đúng ngày này 6 tháng trước đến hôm nay)", () => {
+    startBulkSync.mockClear();
+    render(<GarageCaseSyncDrawer open={true} onClose={vi.fn()} mode="all" />);
+    expect(screen.getByText("6 tháng gần nhất")).toBeDefined();
+
+    fireEvent.click(screen.getByText("Bắt đầu đồng bộ"));
+
+    const { from, to } = getRecentMonthsRange();
+    expect(startBulkSync).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "all", from, to }),
+    );
+  });
+
+  it("thông báo chia theo tháng thay cho câu tự lùi 2 tháng", () => {
+    render(<GarageCaseSyncDrawer open={true} onClose={vi.fn()} mode="all" />);
+    expect(screen.getByText(/chia theo từng tháng/)).toBeDefined();
+    expect(screen.queryByText(/quét mở rộng 2 tháng/)).toBeNull();
+  });
+});
+
+describe("getRecentMonthsRange", () => {
+  it("6 tháng trước đến hôm nay; ngày cuối tháng được kẹp", () => {
+    expect(getRecentMonthsRange(new Date(2026, 10, 25))).toEqual({
+      from: "2026-05-25",
+      to: "2026-11-25",
+    });
+    expect(getRecentMonthsRange(new Date(2026, 7, 31)).from).toBe("2026-02-28");
   });
 });

@@ -73,6 +73,5 @@ export function validateTransferQrForm(
   if (!target?.accountNumber) errors.accountNumber = "required";
   else if (!isValidAccountNumber(target.accountNumber))
     errors.accountNumber = "invalidAccountNumber";
-  if (!target?.accountName) errors.accountName = "required";
   return errors;
 }

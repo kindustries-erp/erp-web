@@ -18,6 +18,10 @@ export function buildGarageCashflowPrintReason(
 
 export function buildGarageCashflowPrintData(
   source: GarageCashflowPrintSource,
+  qrOptions?: {
+    qrCodeDataUrl?: string | null;
+    qrBankHint?: string | null;
+  },
 ): GarageCashflowPrintData {
   const amount = Number(source.amount) || 0;
   return {
@@ -30,5 +34,7 @@ export function buildGarageCashflowPrintData(
     amount,
     amountInWords: readVietnameseCurrency(amount),
     note: source.note || "",
+    qrCodeDataUrl: qrOptions?.qrCodeDataUrl,
+    qrBankHint: qrOptions?.qrBankHint,
   };
 }

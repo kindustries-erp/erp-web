@@ -17,6 +17,17 @@ export interface GarageBulkSyncStatus {
   totalBranches: number;
   completedBranches: number;
   currentBranch: { branchExternalId: string; accountKey: string } | null;
+  /** Đồng bộ tách theo tháng: tổng đoạn (chi nhánh × tháng), đã chạy, tháng đang chạy, tháng lỗi. */
+  totalChunks?: number;
+  completedChunks?: number;
+  currentChunk?: { from: string; to: string } | null;
+  failedChunks?: {
+    branchExternalId: string;
+    accountKey: string;
+    from: string;
+    to: string;
+    error: string;
+  }[];
   accounts: { accountKey: string; ok: boolean; error?: string }[];
   results: {
     branchExternalId: string;

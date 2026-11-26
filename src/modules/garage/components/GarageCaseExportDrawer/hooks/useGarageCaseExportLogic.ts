@@ -7,7 +7,6 @@ import {
 } from "@/shared/export-jobs";
 import { useGarageBranches } from "@/modules/garage/hooks/useGarage";
 import {
-  branchHeaders,
   garageCasesExportScope,
   useGarageCasesExportStore,
   type GarageCasesExportPayload,
@@ -96,22 +95,16 @@ export function useGarageCaseExportLogic({
   );
 
   const handleStartExport = async () => {
-    const branchId = selectedBranchId || undefined;
-
     if (exportMode === "by-current-filter") {
-      // Bảng đang xem quyết định chi nhánh; không lấy từ state cũ của drawer.
-      await exporter.start(
-        {
-          mode: "by-current-filter",
-          date_from: tableQuery?.date_from,
-          date_to: tableQuery?.date_to,
-          q: tableQuery?.q,
-          sorts: tableQuery?.sorts,
-          filtersStr: tableQuery?.filtersStr,
-          selectedColumns,
-        },
-        branchHeaders(initialBranchId || undefined),
-      );
+      await exporter.start({
+        mode: "by-current-filter",
+        date_from: tableQuery?.date_from,
+        date_to: tableQuery?.date_to,
+        q: tableQuery?.q,
+        sorts: tableQuery?.sorts,
+        filtersStr: tableQuery?.filtersStr,
+        selectedColumns,
+      });
       return;
     }
 
@@ -125,18 +118,15 @@ export function useGarageCaseExportLogic({
       return;
     }
 
-    await exporter.start(
-      {
-        mode: "by-period",
-        date_from: period.dateFrom,
-        date_to: period.dateTo,
-        date_type: dateType,
-        classification: selectedClassification || undefined,
-        status: selectedStatus,
-        selectedColumns,
-      },
-      branchHeaders(branchId),
-    );
+    await exporter.start({
+      mode: "by-period",
+      date_from: period.dateFrom,
+      date_to: period.dateTo,
+      date_type: dateType,
+      classification: selectedClassification || undefined,
+      status: selectedStatus,
+      selectedColumns,
+    });
   };
 
   return {

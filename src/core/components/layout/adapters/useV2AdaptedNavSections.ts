@@ -33,6 +33,7 @@ import {
   ClipboardList,
   Sliders,
   Calculator,
+  Wrench,
 } from "lucide-react";
 
 export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
@@ -106,6 +107,10 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     ErpResource.GARAGE,
     ErpAction.READ,
   );
+  const canReadGarageWorkshop = useHasPermission(
+    ErpResource.GARAGE_WORKSHOP,
+    ErpAction.READ,
+  );
   const canReadGarageDebts = useHasPermission(
     ErpResource.GARAGE_DEBTS,
     ErpAction.READ,
@@ -129,6 +134,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
   );
   const showGarage =
     canReadGarageCases ||
+    canReadGarageWorkshop ||
     canReadGarageProcurementRequests ||
     canReadGaragePurchaseOrders ||
     canReadGarageStockVouchers ||
@@ -439,6 +445,14 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
           label: t("nav.items.garageCases", "Hoạt động garage"),
           icon: Car,
           href: "/garage-cases",
+        });
+      }
+      if (canReadGarageWorkshop) {
+        items.push({
+          id: "garage-workshop-progress",
+          label: t("nav.items.garageWorkshopProgress", "Tiến độ xưởng"),
+          icon: Wrench,
+          href: "/garage-workshop-progress",
         });
       }
       if (isAdminEmail) {
@@ -778,6 +792,7 @@ export function useV2AdaptedNavSections(): V2SidebarSectionData[] {
     showGarage,
     canReadGaragePurchaseOrders,
     canReadGarageCases,
+    canReadGarageWorkshop,
     canReadGarageCashflow,
     canReadGarageDebts,
     canReadGarageOpex,

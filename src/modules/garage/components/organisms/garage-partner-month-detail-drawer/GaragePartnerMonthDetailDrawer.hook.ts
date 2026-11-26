@@ -53,7 +53,7 @@ export function useGaragePartnerMonthDetailDrawerLogic({
     ],
     queryFn: async () => {
       if (!customerCode) return [];
-      return garageApi.getCasesByCustomer(branchId || "", customerCode);
+      return garageApi.getCasesByCustomer(customerCode);
     },
     // Theo mốc: không tải lại toàn bộ phiếu của khách (không lọc được theo mốc phía client)
     enabled: open && !initialCases && Boolean(customerCode) && !horizon,

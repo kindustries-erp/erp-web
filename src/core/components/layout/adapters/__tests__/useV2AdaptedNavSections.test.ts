@@ -303,6 +303,19 @@ describe("useV2AdaptedNavSections - garage-procurement in sec-garage", () => {
     expect(item).toBeUndefined();
   });
 
+  it("shows only the workshop progress page when user has just GARAGE_WORKSHOP read", () => {
+    vi.mocked(useHasPermission).mockImplementation(
+      (resource) => resource === ErpResource.GARAGE_WORKSHOP,
+    );
+
+    const { result } = renderHook(() => useV2AdaptedNavSections());
+    const garageSec = result.current.find((s) => s.id === "sec-garage");
+
+    expect(garageSec?.items.map((item) => item.id)).toEqual([
+      "garage-workshop-progress",
+    ]);
+  });
+
   it("renders garage section items in the expected sequence when all permissions are granted", () => {
     vi.mocked(useHasPermission).mockReturnValue(true);
 
@@ -312,6 +325,7 @@ describe("useV2AdaptedNavSections - garage-procurement in sec-garage", () => {
 
     expect(itemIds).toEqual([
       "garage-cases",
+      "garage-workshop-progress",
       "garage-cashflow",
       "garage-debts",
       "garage-opex",

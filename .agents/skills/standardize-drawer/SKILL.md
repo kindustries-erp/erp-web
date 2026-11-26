@@ -28,7 +28,7 @@ Xác định trước: code nằm ở `src/` (V1) hay `src/v2/` (V2). Hai bên d
 - **Màu**: không dùng `blue-*`. Bảng token: `erp-web-truth/references/ui-shell-and-theme.md` mục 4.
 - **i18n**: 100% chuỗi qua `t()` (VI/EN); V2 dùng prefix `v2.`.
 - **A11y**: theo mục A11y trong `erp-ui-structure/references/atomic-ui.md`.
-- **Kích thước**: mỗi file dưới 180 dòng; tách section và hook khi gần ngưỡng.
+- **Kích thước**: cảnh báo ở 180 dòng, chặn ở 250 dòng; tách section và hook khi gần ngưỡng.
 
 ## 3. Sinh khung và quy trình
 

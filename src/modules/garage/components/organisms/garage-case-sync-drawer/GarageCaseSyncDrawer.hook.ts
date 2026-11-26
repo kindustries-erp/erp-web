@@ -1,15 +1,27 @@
 import { useState, useEffect, useMemo } from "react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { useTranslation } from "react-i18next";
-import {
-  getPastMonthPresets,
-  getCurrentMonthPreset,
-} from "@/shared/utils/datePresets";
+import { getPastMonthPresets } from "@/shared/utils/datePresets";
 import {
   useGarageBulkSyncStatus,
   useStartGarageBulkSync,
 } from "../../../hooks/useGarageBulkSync";
 import { GarageCaseSyncDrawerProps } from "./GarageCaseSyncDrawer.type";
+
+/** Preset mặc định: 6 tháng gần nhất tính từ hôm nay (backend tách theo tháng). */
+export const RECENT_MONTHS_PRESET = "recent-6m";
+const RECENT_MONTHS = 6;
+
+/** Từ đúng ngày này 6 tháng trước (cuối tháng thì kẹp) đến hôm nay, `yyyy-MM-dd`. */
+export function getRecentMonthsRange(today: Date = new Date()): {
+  from: string;
+  to: string;
+} {
+  return {
+    from: format(subMonths(today, RECENT_MONTHS), "yyyy-MM-dd"),
+    to: format(today, "yyyy-MM-dd"),
+  };
+}
 
 export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
   const { open, onSuccess, mode = "all", title, description } = props;
@@ -20,12 +32,11 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
   const { data: bulkStatus } = useGarageBulkSyncStatus(open, onSuccess);
   const isRunning = bulkStatus?.status === "running";
 
-  const initialPreset = useMemo(() => getCurrentMonthPreset(), []);
-  const [selectedPreset, setSelectedPreset] = useState<string>(
-    initialPreset.presetKey,
-  );
-  const [dateFrom, setDateFrom] = useState<string>(initialPreset.from);
-  const [dateTo, setDateTo] = useState<string>(initialPreset.to);
+  const initialRange = useMemo(() => getRecentMonthsRange(), []);
+  const [selectedPreset, setSelectedPreset] =
+    useState<string>(RECENT_MONTHS_PRESET);
+  const [dateFrom, setDateFrom] = useState<string>(initialRange.from);
+  const [dateTo, setDateTo] = useState<string>(initialRange.to);
   const [force, setForce] = useState<boolean>(false);
   const [includeDetails, setIncludeDetails] = useState<boolean>(true);
 
@@ -67,12 +78,25 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
               "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) và doanh thu chi phí từ hệ thống Garage về ERP.",
             ));
 
-  const presetOptions = useMemo(() => getPastMonthPresets(2), []);
+  const presetOptions = useMemo(
+    () => [
+      {
+        value: RECENT_MONTHS_PRESET,
+        label: t("cases.syncDrawer.recent6Months", "6 tháng gần nhất"),
+      },
+      ...getPastMonthPresets(2),
+    ],
+    [t],
+  );
 
   const handlePresetChange = (val: string) => {
     setSelectedPreset(val);
     if (!val) return;
-    if (val.startsWith("month-")) {
+    if (val === RECENT_MONTHS_PRESET) {
+      const range = getRecentMonthsRange();
+      setDateFrom(range.from);
+      setDateTo(range.to);
+    } else if (val.startsWith("month-")) {
       const parts = val.split("-");
       const m = parseInt(parts[1], 10) - 1;
       const y = parseInt(parts[2], 10);
@@ -84,10 +108,10 @@ export function useGarageCaseSyncDrawerLogic(props: GarageCaseSyncDrawerProps) {
 
   useEffect(() => {
     if (open) {
-      const current = getCurrentMonthPreset();
-      setSelectedPreset(current.presetKey);
-      setDateFrom(current.from);
-      setDateTo(current.to);
+      const range = getRecentMonthsRange();
+      setSelectedPreset(RECENT_MONTHS_PRESET);
+      setDateFrom(range.from);
+      setDateTo(range.to);
     }
   }, [open]);
 

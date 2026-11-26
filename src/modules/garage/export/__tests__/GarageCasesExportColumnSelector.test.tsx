@@ -60,9 +60,9 @@ describe("GarageCasesExportColumnSelector", () => {
     fireEvent.click(screen.getByLabelText("Chi phí / Giá vốn"));
     expect(onChange).toHaveBeenLastCalledWith(["soChungTu", "chiPhi"]);
   });
-  it("Mặc định có 30 cột (gồm Thuế GTGT ngay trái Doanh thu); Chọn tất cả có đủ 39 cột", () => {
-    expect(DEFAULT_GARAGE_CASES_EXPORT_COLUMNS).toHaveLength(30);
-    expect(ALL_GARAGE_CASES_EXPORT_COLUMNS).toHaveLength(39);
+  it("Mặc định có 31 cột (gồm Thuế GTGT ngay trái Doanh thu); Chọn tất cả có đủ 40 cột", () => {
+    expect(DEFAULT_GARAGE_CASES_EXPORT_COLUMNS).toHaveLength(31);
+    expect(ALL_GARAGE_CASES_EXPORT_COLUMNS).toHaveLength(40);
     const defaults = DEFAULT_GARAGE_CASES_EXPORT_COLUMNS;
     expect(defaults.indexOf("vatAmount")).toBe(
       defaults.indexOf("doanhThu") - 1,
@@ -87,6 +87,6 @@ describe("GarageCasesExportColumnSelector", () => {
       />,
     );
     fireEvent.click(screen.getByText("Chọn tất cả"));
-    expect(onChange.mock.calls[0][0]).toHaveLength(39);
+    expect(onChange.mock.calls[0][0]).toHaveLength(40);
   });
 });

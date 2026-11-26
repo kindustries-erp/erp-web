@@ -162,7 +162,7 @@ describe("GarageExportDrawer - báo cáo kỳ", () => {
     expect(screen.queryByText("Theo filter hiện tại")).toBeNull();
   });
 
-  it("mặc định tháng hiện tại: POST { from, to, reportSections } kèm header chi nhánh", async () => {
+  it("mặc định tháng hiện tại: POST { from, to, reportSections }, không gửi header chi nhánh KGara", async () => {
     renderDrawer();
     const [url, body, config] = await exportAndGetCall();
 
@@ -172,7 +172,7 @@ describe("GarageExportDrawer - báo cáo kỳ", () => {
       to: "2026-10-31",
       reportSections: ALL_PERIOD_SECTIONS,
     });
-    expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-01" });
+    expect(config.headers).toBeUndefined();
   });
 
   it("tab Tuần và Quý gửi đúng khoảng ngày", async () => {

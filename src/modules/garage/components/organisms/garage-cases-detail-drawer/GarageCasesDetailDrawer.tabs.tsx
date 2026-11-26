@@ -5,7 +5,7 @@ import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar/
 import { GarageCasesTableTab } from "./components/GarageCasesTableTab";
 import { DebtPartnerTab } from "../garage-debt-detail-drawer/components/DebtPartnerTab";
 import { DebtClassificationTab } from "../garage-debt-detail-drawer/components/DebtClassificationTab";
-import { GarageCasesKanbanTab } from "@/v2/core/cases-garage";
+import { GarageCasesKanbanContainer } from "@/v2/modules/cases-garage";
 import type { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 
 type DrawerLogic = ReturnType<typeof useGarageCasesDetailDrawer>;
@@ -68,8 +68,10 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
         label: t("v2.garageCases.kanban.tabTitle", "Tiến độ công việc"),
         icon: <Kanban className="w-3.5 h-3.5" />,
         content: (
-          <GarageCasesKanbanTab
+          <GarageCasesKanbanContainer
             cases={cases}
+            // Danh sách xe ở đây lấy từ API V1 (chưa lọc theo chi nhánh ERP, Phase 5) nên Kanban V2
+            // không gửi chi nhánh, để đọc và ghi cùng phạm vi với các thẻ đang hiện.
             onOpenCaseDetail={setSelectedCaseCode}
           />
         ),

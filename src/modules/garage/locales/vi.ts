@@ -511,6 +511,11 @@ export const garageVi = {
       recoveryRate: "Tỷ lệ thu hồi",
     },
     syncDrawer: {
+      recent6Months: "6 tháng gần nhất",
+      chunkNotice:
+        "Khoảng ngày được chia theo từng tháng và đồng bộ lần lượt, tháng gần nhất trước. Tháng nào lỗi chỉ tháng đó cần chạy lại, các tháng khác vẫn hoàn tất.",
+      monthUnit: "tháng",
+      failedMonths: "Tháng lỗi",
       titleCases: "Đồng bộ Cases từ Garage",
       titleGrossProfit: "Đồng bộ Lợi nhuận gộp Garage",
       descCases:
@@ -551,6 +556,7 @@ export const garageVi = {
       caseCode: "Số chứng từ",
       plate: "Biển số xe",
       customer: "Khách hàng",
+      voucherCustomer: "Tên trên phiếu",
       serviceStatus: "Trạng thái",
       creationDate: "Ngày phát sinh",
       classificationAndNotes: "Phân loại & Thuộc tính ERP",
@@ -1110,6 +1116,7 @@ export const garageVi = {
         bienSoXe: "Biển số xe",
         khachHangCode: "Mã KH",
         khachHangName: "Tên khách hàng",
+        tenKhachHang: "Tên trên phiếu",
         tenTinhTrangDichVu: "Trạng thái",
         classification: "Phân loại",
         ngayTiepNhan: "Ngày tiếp nhận",

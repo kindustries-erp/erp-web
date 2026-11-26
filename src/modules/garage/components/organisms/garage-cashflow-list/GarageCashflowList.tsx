@@ -85,6 +85,8 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
         onClose={() => setDrawerState((prev) => ({ ...prev, open: false }))}
         initialMode={drawerState.mode}
         voucher={drawerState.voucher}
+        tabKey={tabKey}
+        onPrint={printVoucher}
       />
 
       <GarageCashflowExportDrawer

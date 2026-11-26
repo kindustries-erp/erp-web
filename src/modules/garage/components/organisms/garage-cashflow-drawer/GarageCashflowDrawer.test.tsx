@@ -25,6 +25,27 @@ vi.mock("../../../hooks/useGarageCashflowList", () => ({
   }),
 }));
 
+vi.mock("./GarageCashflowDrawerPaymentQrSection", () => ({
+  GarageCashflowDrawerPaymentQrSection: ({ onPrint, voucher }: any) => (
+    <div data-testid="mock-payment-qr-section">
+      THÔNG TIN THANH TOÁN & MÃ QR
+      {onPrint && voucher && (
+        <button
+          type="button"
+          onClick={() =>
+            onPrint(voucher, {
+              qrCodeDataUrl: "mock-url",
+              qrBankHint: "BIDV - 123",
+            })
+          }
+        >
+          In phiếu QR
+        </button>
+      )}
+    </div>
+  ),
+}));
+
 // Mock sub-comboboxes
 vi.mock("../garage-case-combobox", () => ({
   GarageCaseCombobox: () => <div data-testid="mock-case-combobox" />,
@@ -558,6 +579,48 @@ describe("GarageCashflowDrawer Organism", () => {
 
       expect(screen.getByText("Trạng thái")).toBeInTheDocument();
       expect(screen.getByText("Đã chi")).toBeInTheDocument();
+    });
+
+    it("renders payment QR section when tabKey is forecast", () => {
+      vi.mocked(useHasPermission).mockReturnValue(true);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <GarageCashflowDrawer
+            open={true}
+            onClose={vi.fn()}
+            voucher={sampleVoucher}
+            initialMode="view"
+            tabKey="forecast"
+          />
+        </QueryClientProvider>,
+      );
+
+      expect(
+        screen.getByText("THÔNG TIN THANH TOÁN & MÃ QR"),
+      ).toBeInTheDocument();
+    });
+
+    it("renders print button and calls onPrint when clicked", () => {
+      vi.mocked(useHasPermission).mockReturnValue(true);
+      const mockPrint = vi.fn();
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <GarageCashflowDrawer
+            open={true}
+            onClose={vi.fn()}
+            voucher={sampleVoucher}
+            initialMode="view"
+            onPrint={mockPrint}
+          />
+        </QueryClientProvider>,
+      );
+
+      const printButton = screen.getByRole("button", { name: /^In phiếu$/i });
+      expect(printButton).toBeInTheDocument();
+      fireEvent.click(printButton);
+      expect(mockPrint).toHaveBeenCalledWith(sampleVoucher);
     });
   });
 });

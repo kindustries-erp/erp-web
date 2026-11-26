@@ -51,7 +51,7 @@ Quy tắc chung:
 
 - **Multi-Repo & Branch Router**: xác định repo đích (`erp-api`, `erp-web`) và branch (`erp-master`).
 - **Runtime Truth**: đọc `.env`, chạy `SELECT current_database();` rồi báo tên DB trước khi ghi. Không suy ra DB từ tên file hay thông tin cũ.
-- **Scan Codebase & Tri thức**: đọc Module Skill liên quan (`erp/<repo>/.agents/skills/modules/...`). Tra Trilium nếu là module lõi. Dùng `grep`/`view` để rà file.
+- **Scan Codebase & Tri thức**: đọc Module Skill liên quan (`erp/<repo>/.agents/skills/modules/...`). Tra cứu AFFiNE Knowledge Base (`search_docs`, `read_doc`) nếu là module lõi. Dùng `grep`/`view` để rà file.
 - **Structure Routing (bắt buộc khi chạm code)**:
 
   | Task chạm | Theo workflow | Ghi trong plan |
@@ -133,7 +133,7 @@ Ngay sau `OK`, agent **PHẢI HỎI** trước khi làm trên Plane:
   - Mọi Story và Task có `start_date` và `target_date`, nằm trong khoảng Cycle chứa nó.
   - Cycle: nếu `parallel_cycles` tắt thì tuần tự, không chồng lấn; chỉ một cycle `current`; cycle mới nối sau cycle cuối.
   - Việc phát sinh ngoài plan thì tạo Task con mới ngay lúc phát hiện.
-- Chưa có `OK` thì không tạo gì trên Plane. Không ghi plan hay task vào Trilium.
+- Chưa có `OK` thì không tạo gì trên Plane. Không ghi plan hay task vào AFFiNE.
 ---
 
 ## ⚙️ Giai Đoạn 5 — Thực thi, Checkpoint & Nghiệm thu
@@ -276,7 +276,7 @@ graph TD
 ### Quy tắc UI bắt buộc
 - Bảng: STT 1-based, Header Filter (`showColumnFilter: true`), sort và search phía server (`applyMultiKeywordFilter`), phân trang `getDefaultPageSize()`.
 - Drawer: `StandardFormDrawer` (hoặc `V2StandardDrawer`), kích thước `vw` responsive (`45vw` / `65vw` / `85vw`), Top Navigation Tabs, Collapsible Sections.
-- Kích thước file: dưới 180–200 dòng. Tách thư mục Atomic (`index.ts`, `Component.tsx`, `hooks/`, `utils/`, `types/`).
+- Kích thước file: cảnh báo ở 180 dòng, chặn ở 250 dòng (`.tsx`, `.hook.ts`). Tách thư mục Atomic (`index.ts`, `Component.tsx`, `hooks/`, `utils/`, `types/`).
 - Không dùng `blue-*`. Mọi chuỗi hiển thị qua `t()`.
 
 ---

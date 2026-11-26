@@ -74,7 +74,6 @@ export function validateBatchRow(
   if (!row.accountNumber) errors.accountNumber = "required";
   else if (!isValidAccountNumber(row.accountNumber))
     errors.accountNumber = "invalidAccountNumber";
-  if (!row.accountName.trim()) errors.accountName = "required";
   if (
     row.amountInvalid ||
     (row.amount !== null && !isValidVndAmount(row.amount))

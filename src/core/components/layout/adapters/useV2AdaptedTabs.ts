@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ClipboardList, Calculator, Warehouse } from "lucide-react";
+import { ClipboardList, Calculator, Warehouse, Wrench } from "lucide-react";
 import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
@@ -49,6 +49,7 @@ const TAB_ICONS: Partial<Record<PageKey, LucideIcon>> = {
   "garage-dashboard": LayoutDashboard,
   "garage-cases": Car,
   "garage-cases-v2": Car,
+  "garage-workshop-progress": Wrench,
   "garage-procurement": ClipboardList,
   "garage-stock-vouchers": Package,
   "garage-stock-balances": Warehouse,
@@ -125,6 +126,8 @@ export function useV2AdaptedTabs(): {
       case "garage-dashboard":
       case "garage-cases":
         return t("nav.items.garageCases", "Hoạt động garage");
+      case "garage-workshop-progress":
+        return t("nav.items.garageWorkshopProgress", "Tiến độ xưởng");
       case "garage-procurement":
         return t("nav.items.garageProcurement", "Mua hàng Garage");
       case "garage-stock-vouchers":

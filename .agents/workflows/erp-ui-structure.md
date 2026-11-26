@@ -1,5 +1,5 @@
 ---
-description: Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (< 180 LoC, co-located testing, No Blue, i18n VI/EN, Mobile-First chuẩn công thái học). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate). Phần C là cửa vào cho Table và Drawer (chọn skill và workflow chi tiết)
+description: Quy trình chuẩn tổ chức cấu trúc erp-web. Phần A phân rã UI theo Atomic 5 tầng (180 cảnh báo / 250 chặn, co-located testing, No Blue, i18n VI/EN, Mobile-First chuẩn công thái học). Phần B migrate module V1 sang ERP Web v2 (src/v2/, Dual-Run /v2/, Platform Split, Zero-Miss Quality Gate). Phần C là cửa vào cho Table và Drawer (chọn skill và workflow chi tiết)
 ---
 
 # 🏗️ ERP Web Structure Workflow (`/erp-ui-structure`)
@@ -12,7 +12,7 @@ Chọn phần: tạo mới hoặc tách component trong V1/shared thì làm Ph�
 
 ## 🅰️ Phần A: Atomic 5 tầng (V1 và V2)
 
-Workflow này hướng dẫn Developer và Agent quy trình chuẩn 5 giai đoạn khi **tạo mới**, **chia tách file lớn (> 180 LoC)** hoặc **refactor kiến trúc** bất kỳ thành phần giao diện nào trong `erp-web` theo đúng **5 Tầng Atomic Design (Brad Frost) kết hợp Domain-Driven Design (DDD)**.
+Workflow này hướng dẫn Developer và Agent quy trình chuẩn 5 giai đoạn khi **tạo mới**, **chia tách file lớn (> 180 LoC cảnh báo, > 250 LoC chặn)** hoặc **refactor kiến trúc** bất kỳ thành phần giao diện nào trong `erp-web` theo đúng **5 Tầng Atomic Design (Brad Frost) kết hợp Domain-Driven Design (DDD)**.
 
 ---
 
@@ -22,7 +22,7 @@ Workflow này hướng dẫn Developer và Agent quy trình chuẩn 5 giai đo�
 graph LR
     A["1. Layer Identification"] --> B["2. Folder Scaffolding"]
     B --> C["3. Unidirectional Import"]
-    C --> D["4. Size Bound < 180 LoC"]
+    C --> D["4. Size Bound 180 warn / 250 block"]
     D --> E["5. Mobile-First Ergonomics"]
     E --> F["6. Zero-Miss Quality Gate"]
 ```
@@ -31,7 +31,7 @@ graph LR
 2. **Import Một Chiều (Top-Down)**: `Templates > Organisms > Molecules > Atoms`. Tầng cao import tầng thấp. **CẤM** import ngược dòng. **CẤM** import ngang hàng cùng cấp trong cùng một scope.
 2a. **V2 Atom Mandate (Dùng V2 Atom, cấm thẻ HTML trần)**: trong `src/v2/**`, dùng V2 Atom có sẵn (`V2Button`, `V2Text`, `V2Badge`, `V2Input`, `V2Textarea`, `V2Divider`, `V2Progress`, `V2Stack`…) thay cho `<button>`, `<span>` chứa chữ, `<input>`, `<textarea>`, `<hr>`, badge hay progress tự dựng. Chưa có atom thì **tạo trong V2** bằng `bun run plop v2-component` (tầng `atoms`) trước, không tạo ở V1 hay trong module. Chi tiết: `references/atomic-ui.md` mục 2.1 (M1–M4).
 3. **Folder-per-Component (`kebab-case`)**: Mỗi component có 1 thư mục riêng, file chính `PascalCase.tsx`, các file vệ tinh chuẩn số ít (`.hook.ts`, `.state.ts`, `.type.ts`, `.schema.ts`, `.helper.ts`, `.test.tsx`, `index.ts`).
-4. **Giới Hạn Cứng < 180 LoC & Co-located Test**: Không file nào vượt quá 180 dòng. Test nằm ngay bên cạnh component (co-located). Trọng tâm test là Organism (L3) và Integration (page); Atom/Molecule chỉ có test khi có logic riêng (filter, format, validate, state).
+4. **Ngưỡng 180 cảnh báo / 250 chặn & Co-located Test**: `.tsx` và `.hook.ts` cảnh báo ở 180 dòng, chặn ở 250 dòng (loại trừ file dữ liệu/cấu hình thuần). Test nằm ngay bên cạnh component (co-located). Trọng tâm test là Organism (L3) và Integration (page); Atom/Molecule chỉ có test khi có logic riêng (filter, format, validate, state).
 5. **Tư Duy Mobile-First & Chuẩn Công Thái Học Di Động**: 
    - **Mobile-First CSS**: Style mặc định viết cho Mobile trước (`w-full`, layout cột đơn `flex-col`, khoảng cách chạm rộng), sau đó mở rộng dần bằng `sm:`, `md:`, `lg:` cho Desktop. Tuyệt đối không viết Desktop-first rồi override ngược bằng `max-*`.
    - **Touch Target $\ge 44 \times 44\text{px}$**: Mọi button, icon-button, tab, checkbox touch container phải đạt kích thước chạm tối thiểu $44\text{px}$.
@@ -155,7 +155,7 @@ Mỗi component **BẮT BUỘC** nằm trong một thư mục riêng biệt theo
 
 ---
 
-#### 🔹 GIAI ĐOẠN 4: Khống Chế Kích Thước File (< 180 LoC) & Phân Tách Non-UI
+#### 🔹 GIAI ĐOẠN 4: Khống Chế Kích Thước File (180 cảnh báo / 250 chặn) & Phân Tách Non-UI
 
 Khi một file component tiến gần mốc 150-180 dòng, thực hiện phân tách theo thứ tự ưu tiên:
 1. **Bước 1 - Tách Type Contract**: Trích xuất toàn bộ `interface`, `type`, `Props` ra `[ComponentName].type.ts`.
@@ -185,7 +185,7 @@ grep -rn "blue-" src/modules/[target-module]/components/
 # 2. Quét kiểm tra hardcode text không qua i18n
 grep -rn 'title="[A-ZÀ-Ỹa-zà-ỹ]' src/modules/[target-module]/components/
 
-# 3. Quét vi phạm giới hạn kích thước file > 180 LoC
+# 3. Quét vi phạm giới hạn kích thước file > 250 LoC (chặn); liệt kê thêm file > 180 LoC (cảnh báo)
 wc -l src/modules/[target-module]/components/*/*/*
 
 # 4. Quét vi phạm import ngược dòng (Organisms import Templates)
@@ -222,13 +222,13 @@ grep -rnE "(bg|border)-(white|slate-[0-9]+)" src/modules/[target-module]/compone
 | Logic nghiệp vụ thuần (không React, store, axios) | file thuần trong `utils/` hoặc `[Name].helper.ts` | `domain/rules/` |
 | Gọi API | hook query/mutation riêng `use<X>Query.ts` / `use<X>Mutation.ts` | `api/queries/`, `api/mutations/` |
 | Props, type | `[Name].type.ts` | y hệt |
-| Component | folder-per-component, < 180 LoC, test co-located | y hệt, thêm `.desktop/.mobile` (chỉ ở v2) |
+| Component | folder-per-component, 180 cảnh báo / 250 chặn, test co-located | y hệt, thêm `.desktop/.mobile` (chỉ ở v2) |
 
 Quy tắc:
 - **Không** làm platform split `.desktop/.mobile` ở v1; đó là bước của v2.
 - Lập **danh sách tính năng màn hình** ngay trong plan (tính năng, file v1, trạng thái). Đây là bảng parity khi migrate.
 - Module đã migrate sang v2: không refactor v1 nữa, chuyển sang `/erp-ui-structure`.
-- v1 chưa đụng tới và > 180 dòng là **legacy**, không bắt buộc refactor. Ngưỡng 180 bắt buộc với code mới và code được refactor.
+- v1 chưa đụng tới và > 180 dòng là **legacy**, không bắt buộc refactor. Ngưỡng 180 (cảnh báo) / 250 (chặn) bắt buộc với code mới và code được refactor.
 
 Đường dẫn v1 và v2:
 
@@ -246,7 +246,7 @@ Quy tắc:
 - [ ] **Đặt Tên Chuẩn Số Ít**: File chính `PascalCase.tsx`, các file đi kèm chuẩn số ít (`.hook.ts`, `.state.ts`, `.type.ts`, `.schema.ts`, `.helper.ts`, `.stories.tsx`, `.test.tsx`).
 - [ ] **Ranh Giới Hook Chuẩn**: Atoms & Molecules CHỈ chứa Pure UI Hook (0% API/Store). Organisms chứa Business Logic Hooks.
 - [ ] **Import Một Chiều**: Không có import ngược dòng (`Templates > Organisms > Molecules > Atoms`) và không import ngang hàng cùng cấp.
-- [ ] **Giới Hạn File**: 100% các file đều $< 180\text{ LoC}$.
+- [ ] **Giới Hạn File**: không file nào vượt 250 dòng (chặn); file vượt 180 dòng có kế hoạch tách.
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong mã nguồn giao diện.
 - [ ] **Field & Focus Ring theo theme**: Field dùng `bg-background`/`border-input`; focus dùng `V2_DRAWER_FOCUS_RING_CLASS`; không có `ring-offset-<n>` thiếu `ring-offset-background` (audit #9, #10). Chi tiết: `standardize-drawer/references/v2-drawer.md`, mục "Field trong card & focus ring".
 - [ ] **i18n đủ VI/EN**: Tất cả user-facing text (kể cả `aria-label`, `title`, `placeholder`) bọc trong `t(...)` có fallback tiếng Việt. V2 dùng `useV2Translation` với key `v2.*`, mỗi key có đủ vi và en (`src/v2/shared/locales/vi.ts` + `en.ts`, hoặc `<họ>.locale.ts`). Audit: `grep -nE "t\(\s*\"v2\.[^\"]+\"" <file>` rồi đối chiếu cả hai ngôn ngữ.
@@ -276,7 +276,7 @@ graph TD
     A["1. Dual-Run Route /v2/"] --> B["2. Shared UI vs Shared Components"]
     B --> C["3. Platform Split (Desktop vs Mobile)"]
     C --> D["4. Testing Pyramid 3 Tầng"]
-    D --> E["5. Giới Hạn Cứng < 180 LoC"]
+    D --> E["5. Ngưỡng 180 cảnh báo / 250 chặn"]
     E --> F["6. Rolling Migration Theo Lệnh User"]
 ```
 
@@ -529,7 +529,7 @@ grep -rnE "ring-offset-[1-9]" src/v2/modules/[target-module]/ | grep -vE "ring-o
 # 1f. Màu sáng cứng thiếu cặp dark: (rà thủ công kết quả, field trong card/drawer phải có token hoặc dark:)
 grep -rnE "(bg|border)-(white|slate-[0-9]+)" src/v2/modules/[target-module]/ | grep -v "dark:"
 
-# 2. Quét vi phạm kích thước file (> 180 LoC)
+# 2. Quét vi phạm kích thước file (> 250 LoC chặn, > 180 LoC cảnh báo)
 find src/v2/modules/[target-module]/ -name "*.tsx" -o -name "*.ts" | xargs wc -l | awk '$1 > 180 {print}'
 
 # 3. Quét vi phạm hardcode text tiếng Việt không qua i18n

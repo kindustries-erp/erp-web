@@ -295,6 +295,8 @@ export interface GarageCheckpointCaseItem {
   namSanXuat?: number | null;
   khachHangCode: string;
   khachHangName: string;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  tenKhachHang?: string | null;
   tinhTrangDichVu?: number;
   tenTinhTrangDichVu: string;
   classification?: string;

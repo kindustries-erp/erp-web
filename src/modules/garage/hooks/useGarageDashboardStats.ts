@@ -3,29 +3,25 @@ import { useQuery } from "@tanstack/react-query";
 import { garageApi } from "../api/garageApi";
 
 export interface GarageDashboardParams {
-  branchId?: string;
   dateFrom?: string;
   dateTo?: string;
 }
 
 export function useGarageDashboardStats({
-  branchId,
   dateFrom,
   dateTo,
 }: GarageDashboardParams) {
   // Query 1: Gross Profit Report (Revenue, Cost, Profit Breakdown)
   const grossProfitQuery = useQuery({
-    queryKey: ["garage", "grossProfitReport", branchId, dateFrom, dateTo],
-    queryFn: () => garageApi.getGrossProfitReport(branchId!, dateFrom, dateTo),
-    enabled: !!branchId,
+    queryKey: ["garage", "grossProfitReport", dateFrom, dateTo],
+    queryFn: () => garageApi.getGrossProfitReport(dateFrom, dateTo),
     staleTime: 1000 * 60 * 2,
   });
 
   // Query 2: Cases List (for recent cases & status distribution)
   const casesQuery = useQuery({
-    queryKey: ["garage", "cases", branchId, 1, 100, "", dateFrom, dateTo],
-    queryFn: () => garageApi.getCases(branchId!, 1, 100, "", dateFrom, dateTo),
-    enabled: !!branchId,
+    queryKey: ["garage", "cases", 1, 100, "", dateFrom, dateTo],
+    queryFn: () => garageApi.getCases(1, 100, "", dateFrom, dateTo),
     staleTime: 1000 * 60 * 2,
   });
 

@@ -1,7 +1,9 @@
-import type { BatchCellLayout } from "./layoutBatchPage";
-import type { BatchExportItem } from "./exportBatchZip";
-import { foldForPdf, type BatchCaption } from "./exportBatchPdf";
-import { fitTextLines } from "./layoutBatchPage";
+import {
+  fitRectInBox,
+  fitTextLines,
+  type BatchCellLayout,
+} from "./layoutBatchPage";
+import { foldForPdf, type BatchPdfItem } from "./exportBatchPdf";
 
 export interface PdfCanvas {
   addImage: (
@@ -80,14 +82,38 @@ export function drawPageHeaderAndFooter(
   doc.text(`Trang ${page} / ${totalPages}`, 200, 293.5, { align: "right" });
 }
 
-/** Vẽ thẻ lệnh thanh toán (Card Layout) chuyên nghiệp trong từng ô */
+const DEFAULT_CARD_WIDTH = 340;
+const DEFAULT_CARD_HEIGHT = 480;
+const CARD_CELL_PADDING_MM = 1.5;
+
+/** Vẽ thẻ lệnh thanh toán trong từng ô: ưu tiên ảnh thẻ TransferQrPaymentCard giữ tỷ lệ, fallback vector. */
 export function drawBatchCardCell(
   doc: PdfCanvas,
   cell: BatchCellLayout,
   index: number,
-  item: BatchExportItem & { caption: BatchCaption },
+  item: BatchPdfItem,
 ): void {
-  // 1. Viền thẻ bo góc mềm mại
+  if (item.cardImageDataUrl) {
+    const rect = fitRectInBox(
+      item.cardWidth ?? DEFAULT_CARD_WIDTH,
+      item.cardHeight ?? DEFAULT_CARD_HEIGHT,
+      cell.x + CARD_CELL_PADDING_MM,
+      cell.y + CARD_CELL_PADDING_MM,
+      cell.width - CARD_CELL_PADDING_MM * 2,
+      cell.height - CARD_CELL_PADDING_MM * 2,
+    );
+    doc.addImage(
+      item.cardImageDataUrl,
+      "PNG",
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height,
+    );
+    return;
+  }
+
+  // 1. Viền thẻ bo góc mềm mại (fallback khi không có ảnh DOM thẻ)
   doc.setDrawColor(203, 213, 225);
   doc.roundedRect(cell.x, cell.y, cell.width, cell.height, 2.5, 2.5, "S");
 

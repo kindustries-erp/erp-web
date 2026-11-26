@@ -90,10 +90,23 @@ export function useV2MobileNav({
       .filter(Boolean) as V2SidebarNavItem[];
   }, [currentSelectedIds, allAvailableItems]);
 
+  const sourceItems = React.useMemo(
+    () => navItems ?? allAvailableItems,
+    [navItems, allAvailableItems],
+  );
+
+  const shouldShowBottomNav = sourceItems.length > 1;
+  const shouldShowCenterHero = sourceItems.length > MAX_PINNED_MOBILE_NAV;
+
+  const bottomNavItems = React.useMemo(
+    () => (shouldShowCenterHero ? (navItems ?? quick4Items) : sourceItems),
+    [shouldShowCenterHero, navItems, quick4Items, sourceItems],
+  );
+
   const effectiveNavItems = React.useMemo(() => {
     if (navItems) return navItems;
-    return [...quick4Items, allMenuItem];
-  }, [navItems, quick4Items, allMenuItem]);
+    return shouldShowCenterHero ? [...quick4Items, allMenuItem] : sourceItems;
+  }, [navItems, shouldShowCenterHero, quick4Items, allMenuItem, sourceItems]);
 
   const handleMobileNavigate = (item: V2SidebarNavItem) => {
     if (item.id === "catalog") {
@@ -161,6 +174,9 @@ export function useV2MobileNav({
     currentSelectedIds,
     quick4Items,
     allMenuItem,
+    bottomNavItems,
+    shouldShowBottomNav,
+    shouldShowCenterHero,
     effectiveNavItems,
     bottomActiveId,
     handleMobileNavigate,
