@@ -25,7 +25,6 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
   initialMode = V2DrawerMode.VIEW,
   initialData,
   onSuccess,
-  tabKey,
   onPrint,
 }) => {
   const {
