@@ -52,7 +52,7 @@ Chỉ dùng trong repo `erp/erp-web`. Skill này chỉ giữ ngữ cảnh ngắn
   - `build` = `tsc` + `vite build`
   - `test` = `vitest --run` (chỉ chạy test trong V2: `src/v2/**/*.{test,spec}.{ts,tsx}`)
   - `test:v2` = `vitest --run` (alias chỉ chạy V2)
-  - `test:all` = `vitest --run --include 'src/**/*.{test,spec}.{ts,tsx}'` (chạy toàn bộ khi audit thủ công)
+  - `test:all` = `VITEST_ALL=1 vitest --run` (`vitest.config.ts` đổi include sang `src/**/*.{test,spec}.{ts,tsx}`; chạy toàn bộ khi audit thủ công)
   - `e2e:*` = chạy các luồng E2E Playwright trong `e2e/*.e2e.mjs`
   - `lint` / `lint:check` / `check:style`
 - Storybook: `build-storybook`.
