@@ -32,10 +32,19 @@ export function useGarageCashflowPrint() {
     }
   }, [printTargetId, printData, handlePrint]);
 
-  const printVoucher = useCallback((voucher: GarageCashflowVoucher) => {
-    setPrintTargetId(voucher.id);
-    setPrintData(buildGarageCashflowPrintData(voucher));
-  }, []);
+  const printVoucher = useCallback(
+    (
+      voucher: GarageCashflowVoucher,
+      options?: {
+        qrCodeDataUrl?: string | null;
+        qrBankHint?: string | null;
+      },
+    ) => {
+      setPrintTargetId(voucher.id);
+      setPrintData(buildGarageCashflowPrintData(voucher, options));
+    },
+    [],
+  );
 
   return { companyProfile, printRef, printData, printVoucher };
 }

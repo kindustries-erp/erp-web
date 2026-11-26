@@ -11,6 +11,7 @@ import { GarageVehicleFinanceRow } from "./GarageVehicleFinanceRow";
 import { GarageVehicleStageBadge } from "./GarageVehicleStageBadge";
 import { GarageVehicleOverrideNotice } from "./GarageVehicleOverrideNotice";
 import type { GarageCaseStage, GarageVehicleKanbanItem } from "../../kanban";
+import { GarageVoucherNameText } from "../../customer";
 
 export interface GarageVehicleKanbanCardProps {
   item: GarageVehicleKanbanItem;
@@ -72,6 +73,11 @@ export const GarageVehicleKanbanCard: React.FC<GarageVehicleKanbanCardProps> =
             >
               {item.customerName}
             </V2Text>
+            <GarageVoucherNameText
+              customerName={item.customerName}
+              voucherName={item.voucherCustomerName}
+              className="text-[11px] block"
+            />
 
             {(item.brandName || item.modelName || item.modelYear) && (
               <div className="flex items-center gap-1.5 text-[11px] text-muted-fg font-medium">

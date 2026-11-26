@@ -64,6 +64,7 @@ export interface CasesDashboardVehicleRowView {
   key: string;
   licensePlate: string;
   customerName: string;
+  voucherCustomerName: string | null;
   caseCount: number;
   caseCodes: string;
   amount: number;
@@ -77,6 +78,7 @@ export function toVehicleRows(
     key: v.vehicleKey,
     licensePlate: v.licensePlate || "—",
     customerName: v.customerName || "—",
+    voucherCustomerName: v.voucherCustomerName ?? null,
     caseCount: v.caseCount,
     caseCodes: v.caseCodes.join(", "),
     amount: v.amount,

@@ -44,6 +44,7 @@ export function groupCasesByVehicle(
         licensePlate: rawPlate || c.soChungTu || "—",
         customerName: c.khachHangName || "—",
         customerCode: c.khachHangCode,
+        voucherCustomerName: c.tenKhachHang ?? null,
         brandName: c.hangXeName || null,
         modelName: c.dongXeName || null,
         modelYear: c.namSanXuat || null,
@@ -76,6 +77,9 @@ export function groupCasesByVehicle(
       if (!item.modelName && c.dongXeName) item.modelName = c.dongXeName;
       if (!item.modelYear && c.namSanXuat) item.modelYear = c.namSanXuat;
       if (!item.chassisNumber && c.soKhung) item.chassisNumber = c.soKhung;
+      if (c.tenKhachHang && !item.voucherCustomerName) {
+        item.voucherCustomerName = c.tenKhachHang;
+      }
       if (c.khachHangName && item.customerName === "—") {
         item.customerName = c.khachHangName;
       }

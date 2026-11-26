@@ -13,8 +13,15 @@ export function GarageCaseCustomerCell({
   const { t } = useTranslation(["garage", "common"]);
   const customerName = (item.khachHangName || item.customerName || "").trim();
   const customerCode = (item.khachHangCode || item.customerCode || "").trim();
+  const voucherName = (
+    item.tenKhachHang ||
+    item.voucherCustomerName ||
+    ""
+  ).trim();
+  // Chỉ hiện tên trên phiếu khi khác tên danh mục (KGara lưu hai field riêng).
+  const showVoucherName = !!voucherName && voucherName !== customerName;
 
-  if (!customerName && !customerCode) {
+  if (!customerName && !customerCode && !voucherName) {
     return <span className="text-muted-foreground/50 select-none">—</span>;
   }
 
@@ -56,6 +63,20 @@ export function GarageCaseCustomerCell({
             />
           )}
         </div>
+
+        {showVoucherName && (
+          <Tooltip
+            content={`${t("cases.drawer.voucherCustomer", "Tên trên phiếu")}: ${voucherName}`}
+          >
+            <span
+              data-testid="garage-case-voucher-name"
+              className="truncate text-[10.5px] italic text-muted-foreground leading-tight select-text"
+            >
+              {t("cases.drawer.voucherCustomer", "Tên trên phiếu")}:{" "}
+              {voucherName}
+            </span>
+          </Tooltip>
+        )}
 
         {/* Dòng 2: Mã khách hàng (mono mờ) + Nút Copy */}
         {customerCode && (

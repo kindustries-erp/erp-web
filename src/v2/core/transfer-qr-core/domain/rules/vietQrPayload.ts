@@ -51,7 +51,8 @@ export function sanitizeTransferContent(raw: string): string {
     .replace(/[̀-ͯ]/g, "")
     .replace(/đ/g, "d")
     .replace(/Đ/g, "D")
-    .replace(/[^A-Za-z0-9]+/g, " ")
+    .replace(/[^A-Za-z0-9-]+/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, MAX_CONTENT_LENGTH)
     .trim();

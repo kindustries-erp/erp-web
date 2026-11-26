@@ -29,7 +29,7 @@ export interface TransferQrPasteNotice {
 const QR_OPTIONS = {
   margin: 1,
   width: 320,
-  errorCorrectionLevel: "M" as const,
+  errorCorrectionLevel: "H" as const,
 };
 
 /**

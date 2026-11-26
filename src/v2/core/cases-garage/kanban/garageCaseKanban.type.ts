@@ -40,6 +40,8 @@ export interface GarageVehicleKanbanItem {
   licensePlate: string;
   customerName: string;
   customerCode?: string | null;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  voucherCustomerName?: string | null;
   brandName?: string | null;
   modelName?: string | null;
   modelYear?: number | null;

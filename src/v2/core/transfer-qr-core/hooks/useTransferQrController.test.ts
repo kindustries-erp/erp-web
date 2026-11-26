@@ -142,9 +142,27 @@ describe("useTransferQrController", () => {
     expect(result.current.errors).toMatchObject({
       bin: "required",
       accountNumber: "invalidAccountNumber",
-      accountName: "required",
     });
+    expect(result.current.errors.accountName).toBeUndefined();
     expect(QRCode.toDataURL).not.toHaveBeenCalled();
+  });
+
+  it("chế độ trả NCC không nhập accountName vẫn tạo được QR hợp lệ", async () => {
+    const { result } = renderHook(() =>
+      useTransferQrController({ open: true, accounts }),
+    );
+    act(() => {
+      result.current.patchForm({
+        bin: "970436",
+        accountNumber: "0123456789",
+        accountName: "",
+        amount: 500000,
+        content: "HD-123",
+      });
+    });
+    await vi.waitFor(() => expect(result.current.canDownload).toBe(true));
+    expect(result.current.errors).toEqual({});
+    expect(result.current.qrDataUrl).toBe("data:image/png;base64,QR");
   });
 
   it("chế độ trả NCC đủ thông tin và có số tiền: tạo QR động và tên file có số tiền", async () => {

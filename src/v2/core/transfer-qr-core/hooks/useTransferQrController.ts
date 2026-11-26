@@ -85,7 +85,7 @@ export function useTransferQrController({
     QRCode.toDataURL(payload, {
       margin: 1,
       width: 320,
-      errorCorrectionLevel: "M",
+      errorCorrectionLevel: "H",
     })
       .then((url: string) => {
         if (!cancelled) setQrDataUrl(url);

@@ -154,4 +154,69 @@ describe("TransferQrPreview", () => {
       "https://api.vietqr.io/img/VCB.png",
     );
   });
+
+  it("hiển thị logo VietQR chữ ngang trên QR và logo Napas 247 dưới QR", () => {
+    const { container } = render(
+      <TransferQrPreview
+        qrDataUrl="data:image/png;base64,mockqr"
+        target={{
+          bin: "970436",
+          bankCode: "VCB",
+          accountNumber: "0123456789",
+          accountName: "CONG TY ABC",
+        }}
+      />,
+    );
+
+    const vietQrLogo = container.querySelector('img[alt="VietQR"]');
+    expect(vietQrLogo).not.toBeNull();
+
+    const napasLogo = container.querySelector('img[alt="Napas 247"]');
+    expect(napasLogo).not.toBeNull();
+  });
+
+  it("hiển thị logo chữ V ở tâm QR khi thanh toán NCC và fallback logo công ty sang logo V khi lỗi", () => {
+    // 1. Chế độ thanh toán NCC: logo tâm là logo V
+    const { container, rerender } = render(
+      <TransferQrPreview
+        qrDataUrl="data:image/png;base64,mockqr"
+        mode={TransferQrMode.PAY_TO_SUPPLIER}
+        target={{
+          bin: "970436",
+          bankCode: "VCB",
+          accountNumber: "0123456789",
+          accountName: "NCC ABC",
+        }}
+      />,
+    );
+    let centerLogo = container.querySelector('img[alt="Center Logo"]');
+    expect(centerLogo).not.toBeNull();
+    expect(centerLogo?.getAttribute("src")).toContain("data:image/jpeg;base64");
+
+    // 2. Chế độ nhận tiền: có logo công ty
+    rerender(
+      <TransferQrPreview
+        qrDataUrl="data:image/png;base64,mockqr"
+        mode={TransferQrMode.RECEIVE_FROM_CUSTOMER}
+        companyInfo={{
+          companyName: "CONG TY XYZ",
+          logo: "https://example.com/company-logo.png",
+        }}
+        target={{
+          bin: "970436",
+          bankCode: "VCB",
+          accountNumber: "0123456789",
+          accountName: "CONG TY XYZ",
+        }}
+      />,
+    );
+    centerLogo = container.querySelector('img[alt="Center Logo"]');
+    expect(centerLogo?.getAttribute("src")).toBe(
+      "https://example.com/company-logo.png",
+    );
+
+    // 3. Khi logo công ty bị lỗi (onError): tự động fallback về logo V
+    fireEvent.error(centerLogo!);
+    expect(centerLogo?.getAttribute("src")).toContain("data:image/jpeg;base64");
+  });
 });

@@ -4,9 +4,7 @@ import {
   type V2TabItemData,
   type DrawerAction,
 } from "@/v2/shared/components/organisms/v2-standard-drawer";
-import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
 import { DrawerAuditTimeline } from "@/shared/components/drawer/DrawerAuditTimeline";
-import { GarageCashflowDuplicateWarning } from "../../molecules/garage-cashflow-duplicate-warning";
 import { FileText, History } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { Badge } from "@/v2/shared/ui/badge";
@@ -17,6 +15,8 @@ import {
 import { useGarageCashflowDrawer } from "./GarageCashflowDrawer.hook";
 import { GarageCashflowDrawerGeneralSection } from "./GarageCashflowDrawerGeneralSection";
 import { GarageCashflowDrawerSettlementSection } from "./GarageCashflowDrawerSettlementSection";
+import { GarageCashflowDrawerPaymentQrSection } from "./GarageCashflowDrawerPaymentQrSection";
+import { GarageCashflowDrawerDuplicateModal } from "./GarageCashflowDrawerDuplicateModal";
 
 export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
   open,
@@ -25,6 +25,8 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
   initialMode = V2DrawerMode.VIEW,
   initialData,
   onSuccess,
+  tabKey,
+  onPrint,
 }) => {
   const {
     mode,
@@ -59,9 +61,14 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
       <div className="space-y-4 pb-4">
         <GarageCashflowDrawerGeneralSection {...sectionProps} />
         <GarageCashflowDrawerSettlementSection {...sectionProps} />
+        <GarageCashflowDrawerPaymentQrSection
+          voucher={voucher}
+          formData={formData}
+          onPrint={onPrint}
+        />
       </div>
     ),
-    [sectionProps],
+    [sectionProps, voucher, formData, onPrint],
   );
 
   const drawerTabs: V2TabItemData[] | undefined = useMemo(() => {
@@ -104,6 +111,13 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
         variant: "outline",
       },
     ];
+    if (voucher && onPrint) {
+      list.unshift({
+        label: t("common:print", "In phiếu"),
+        onClick: () => onPrint(voucher),
+        variant: "outline",
+      });
+    }
     if (mode === V2DrawerMode.EDIT && canSave) {
       list.push({
         label: t("common:save", "Lưu"),
@@ -113,7 +127,7 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
       });
     }
     return list;
-  }, [t, onClose, mode, canSave, handleSave, isPending]);
+  }, [t, onClose, voucher, onPrint, mode, canSave, handleSave, isPending]);
 
   const isReceipt = (voucher?.voucherType || "").toUpperCase() === "RECEIPT";
   const title =
@@ -146,26 +160,9 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
         confirmOnClose={mode === V2DrawerMode.EDIT}
         leftPanel={!drawerTabs ? mainPanel : undefined}
       />
-      <V2ConfirmModal
-        open={Boolean(duplicate.pending)}
-        variant="warning"
-        title={t(
-          "garage:cashflowDuplicate.title",
-          "Phiếu thu/chi có thể bị trùng",
-        )}
-        message={
-          duplicate.pending && (
-            <GarageCashflowDuplicateWarning
-              amount={duplicate.pending.params.amount}
-              result={duplicate.pending.result}
-            />
-          )
-        }
-        cancelLabel={t("garage:cashflowDuplicate.back", "Quay lại sửa")}
-        confirmLabel={t("garage:cashflowDuplicate.proceed", "Vẫn nhập tiếp")}
-        isLoading={isPending && !duplicate.isChecking}
-        onConfirm={duplicate.confirm}
-        onCancel={duplicate.cancel}
+      <GarageCashflowDrawerDuplicateModal
+        duplicate={duplicate}
+        isPending={isPending}
       />
     </>
   );

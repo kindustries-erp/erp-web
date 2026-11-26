@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/v2/shared/ui";
 import { formatAmount } from "@/v2/shared/utils/v2TableFormat";
+import { GarageVoucherNameText } from "@/v2/core/cases-garage";
 import type { CasesDashboardVehicleItem } from "../domain/casesDashboard.type";
 import { toVehicleRows } from "../domain/casesDashboard.view";
 
@@ -75,7 +76,13 @@ export function CasesDashboardCasesList({
                 <TableCell>{row.licensePlate}</TableCell>
                 <TableCell className="text-right">{row.caseCount}</TableCell>
                 <TableCell>{row.caseCodes}</TableCell>
-                <TableCell>{row.customerName}</TableCell>
+                <TableCell>
+                  {row.customerName}
+                  <GarageVoucherNameText
+                    customerName={row.customerName}
+                    voucherName={row.voucherCustomerName}
+                  />
+                </TableCell>
                 <TableCell className="text-right">
                   {formatAmount(row.amount)}
                 </TableCell>

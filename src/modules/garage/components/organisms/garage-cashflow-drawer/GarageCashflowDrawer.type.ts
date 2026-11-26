@@ -30,6 +30,11 @@ export interface GarageCashflowDrawerProps {
   initialMode?: V2DrawerMode | "view" | "edit" | "create";
   initialData?: InitialCashflowData;
   onSuccess?: () => void;
+  tabKey?: "vouchers" | "forecast";
+  onPrint?: (
+    voucher: GarageCashflowVoucher,
+    options?: { qrCodeDataUrl?: string | null; qrBankHint?: string | null },
+  ) => void;
 }
 
 export interface DrawerSectionProps {

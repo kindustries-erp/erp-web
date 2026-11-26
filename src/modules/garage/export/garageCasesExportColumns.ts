@@ -24,6 +24,7 @@ export const ALL_GARAGE_CASES_EXPORT_COLUMNS: GarageCasesExportColumnItem[] = [
   { key: "bienSoXe", group: "general", defaultLabel: "Biển số xe" },
   { key: "khachHangCode", group: "general", defaultLabel: "Mã KH" },
   { key: "khachHangName", group: "general", defaultLabel: "Tên khách hàng" },
+  { key: "tenKhachHang", group: "general", defaultLabel: "Tên trên phiếu" },
   { key: "tenTinhTrangDichVu", group: "general", defaultLabel: "Trạng thái" },
   { key: "classification", group: "general", defaultLabel: "Phân loại" },
   { key: "ngayTiepNhan", group: "general", defaultLabel: "Ngày tiếp nhận" },
@@ -83,7 +84,7 @@ export const ALL_GARAGE_CASES_EXPORT_COLUMNS: GarageCasesExportColumnItem[] = [
   { key: "dataAsOf", group: "system", defaultLabel: "Dữ liệu lúc" },
 ];
 
-/** Các cột nằm ngoài bộ mặc định 30 cột (chỉ xuất khi người dùng chọn). */
+/** Các cột nằm ngoài bộ mặc định 31 cột (chỉ xuất khi người dùng chọn). */
 const OPTIONAL_GARAGE_CASES_EXPORT_KEYS = new Set([
   "soKhung",
   "hangXe",

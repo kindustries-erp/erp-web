@@ -92,6 +92,8 @@ export interface WorkshopCandidate {
   caseCode: string;
   licensePlate: string | null;
   customerName: string | null;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  voucherCustomerName?: string | null;
   vehicleName: string | null;
   origin: CaseOrigin;
   status: CaseProgressStatus;

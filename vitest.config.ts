@@ -20,6 +20,8 @@ export default defineConfig({
       "src/modules/garage/components/garage-case-details-tab/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/__tests__/**/*.{test,spec}.{ts,tsx}",
       "src/modules/garage/components/GarageConversionFunnelCard/**/*.{test,spec}.{ts,tsx}",
+      "src/shared/components/print-templates/**/*.{test,spec}.{ts,tsx}",
+      "src/modules/garage/components/organisms/garage-cashflow-drawer/**/*.{test,spec}.{ts,tsx}",
     ],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/e2e/**"],
   },
