@@ -29,6 +29,8 @@ export interface GarageCashflowPrintData {
   amount: number;
   amountInWords: string;
   note: string;
+  qrCodeDataUrl?: string | null;
+  qrBankHint?: string | null;
 }
 
 export interface GarageCashflowPrintLabels {

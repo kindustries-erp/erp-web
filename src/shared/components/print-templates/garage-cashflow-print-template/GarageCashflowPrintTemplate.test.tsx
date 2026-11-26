@@ -79,4 +79,29 @@ describe("GarageCashflowPrintTemplate", () => {
       GARAGE_CASHFLOW_PRINT_DEFAULT_LOGO,
     );
   });
+
+  it("renders QR code and bank hint when qrCodeDataUrl is provided", () => {
+    render(
+      <GarageCashflowPrintTemplate
+        data={{
+          ...receiptData,
+          qrCodeDataUrl: "data:image/png;base64,mockqrdata",
+          qrBankHint: "BIDV - 123456789 - CTY LI OUNI",
+        }}
+      />,
+    );
+
+    const qrImg = screen.getByAltText("VietQR");
+    expect(qrImg).toBeInTheDocument();
+    expect(qrImg).toHaveAttribute("src", "data:image/png;base64,mockqrdata");
+    expect(
+      screen.getByText("BIDV - 123456789 - CTY LI OUNI"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not render QR code when qrCodeDataUrl is not provided", () => {
+    render(<GarageCashflowPrintTemplate data={receiptData} />);
+
+    expect(screen.queryByAltText("VietQR")).not.toBeInTheDocument();
+  });
 });
