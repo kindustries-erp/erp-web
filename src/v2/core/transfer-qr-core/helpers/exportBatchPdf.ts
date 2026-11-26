@@ -28,6 +28,14 @@ export interface BatchCaption {
   content: string;
 }
 
+export interface BatchPdfItem extends BatchExportItem {
+  caption: BatchCaption;
+  /** Ảnh chụp DOM thẻ TransferQrPaymentCard (ưu tiên nhúng vào PDF để đồng nhất UI). */
+  cardImageDataUrl?: string;
+  cardWidth?: number;
+  cardHeight?: number;
+}
+
 export interface CaptionBlock {
   text: string;
   bold: boolean;
@@ -75,7 +83,7 @@ export function pageCountFor(itemCount: number): number {
  * `jspdf` được nạp động để không làm nặng bundle chính.
  */
 export async function buildBatchPdfBytes(
-  items: readonly (BatchExportItem & { caption: BatchCaption })[],
+  items: readonly BatchPdfItem[],
 ): Promise<ArrayBuffer> {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a4" });

@@ -6,6 +6,7 @@ import {
   PAGE_WIDTH_MM,
   PDF_PER_PAGE,
   QR_SIZE_MM,
+  fitRectInBox,
   fitTextLines,
   layoutBatchCell,
 } from "./layoutBatchPage";
@@ -109,5 +110,32 @@ describe("fitTextLines", () => {
 
   it("chuỗi rỗng trả về mảng rỗng", () => {
     expect(fitTextLines("", 2, 10, wrap, measure)).toEqual([]);
+  });
+});
+
+describe("fitRectInBox", () => {
+  it("giữ tỷ lệ ảnh dọc (thẻ QR) và căn giữa ngang trong ô A4", () => {
+    const rect = fitRectInBox(340, 480, 12, 21, 89, 82);
+    expect(rect.height).toBeCloseTo(82, 6);
+    expect(rect.width).toBeCloseTo((340 / 480) * 82, 6);
+    expect(rect.y).toBeCloseTo(21, 6);
+    expect(rect.x + rect.width / 2).toBeCloseTo(12 + 89 / 2, 6);
+  });
+
+  it("giữ tỷ lệ ảnh ngang và căn giữa dọc trong ô", () => {
+    const rect = fitRectInBox(200, 100, 10, 20, 80, 80);
+    expect(rect.width).toBeCloseTo(80, 6);
+    expect(rect.height).toBeCloseTo(40, 6);
+    expect(rect.x).toBeCloseTo(10, 6);
+    expect(rect.y).toBeCloseTo(40, 6);
+  });
+
+  it("kích thước nguồn không hợp lệ thì trả về nguyên hộp đích", () => {
+    expect(fitRectInBox(0, 100, 10, 20, 80, 80)).toEqual({
+      x: 10,
+      y: 20,
+      width: 80,
+      height: 80,
+    });
   });
 });
