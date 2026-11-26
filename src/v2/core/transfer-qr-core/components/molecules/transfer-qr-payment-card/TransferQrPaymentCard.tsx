@@ -1,7 +1,6 @@
 import * as React from "react";
 import { VIETQR_BANKS } from "../../../domain/constants/vietQrBanks";
 import { getBankLogoUrl } from "../../../domain/constants/defaultBankOptions";
-import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import "../../../transferQr.locale";
 import { TransferQrMode } from "../../../transferQr.enum";
 import type {
@@ -35,7 +34,6 @@ export function TransferQrPaymentCard({
   mode = TransferQrMode.PAY_TO_SUPPLIER,
   cardRef,
 }: TransferQrPaymentCardProps) {
-  const { t } = useV2Translation();
   const [imgFailed, setImgFailed] = React.useState(false);
   const [companyLogoFailed, setCompanyLogoFailed] = React.useState(false);
   const isReceive = mode === TransferQrMode.RECEIVE_FROM_CUSTOMER;
@@ -78,7 +76,7 @@ export function TransferQrPaymentCard({
   const formattedAmount =
     amount != null && amount > 0
       ? `${new Intl.NumberFormat("vi-VN").format(amount)} ₫`
-      : t("v2.transferQr.card.amountFree");
+      : "";
 
   const displayAccountName = isReceive
     ? companyInfo?.companyName || target?.accountName || "CÔNG TY"

@@ -72,7 +72,7 @@ export function TransferQrPaymentCardQrBlock({
               className="h-4.5 w-auto max-w-[64px] object-contain"
               crossOrigin="anonymous"
               onError={onBankLogoError}
-              loading="lazy"
+              loading="eager"
             />
           ) : (
             <V2Text

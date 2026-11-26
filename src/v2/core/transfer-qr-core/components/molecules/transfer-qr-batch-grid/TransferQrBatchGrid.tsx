@@ -85,15 +85,15 @@ export function TransferQrBatchGrid({
               >
                 {view.row.accountNumber}
               </V2Text>
-              <V2Text
-                variant="currency"
-                weight="bold"
-                className="text-emerald-600 dark:text-emerald-400 block"
-              >
-                {view.row.amount == null
-                  ? t("v2.transferQr.batch.amountFree")
-                  : `${new Intl.NumberFormat("vi-VN").format(view.row.amount)} ₫`}
-              </V2Text>
+              {view.row.amount != null && view.row.amount > 0 && (
+                <V2Text
+                  variant="currency"
+                  weight="bold"
+                  className="text-emerald-600 dark:text-emerald-400 block"
+                >
+                  {`${new Intl.NumberFormat("vi-VN").format(view.row.amount)} ₫`}
+                </V2Text>
+              )}
               {view.caption.content && (
                 <V2Text
                   variant="caption"

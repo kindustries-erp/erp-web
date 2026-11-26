@@ -177,6 +177,11 @@ export function useTransferQrBatchController({ open }: { open: boolean }) {
           cardElementsRef.current.get(fn),
         ),
       ),
-    downloadPdf: () => runBulkDownload(() => downloadBatchPdf(readyItems)),
+    downloadPdf: () =>
+      runBulkDownload(() =>
+        downloadBatchPdf(readyItems, new Date(), (fn) =>
+          cardElementsRef.current.get(fn),
+        ),
+      ),
   };
 }

@@ -21,15 +21,7 @@ export const GarageCashflowDrawerPaymentQrSection: React.FC<
 > = ({ voucher, formData, onPrint }) => {
   const t = useT();
   const paymentQr = useGarageCashflowPaymentQr({ voucher, formData });
-  const {
-    bankCode,
-    accountNumber,
-    accountName,
-    amount,
-    content,
-    qrDataUrl,
-    qrBankHint,
-  } = paymentQr;
+  const { bankCode, accountNumber, content, qrDataUrl, qrBankHint } = paymentQr;
 
   const handleDownloadQr = () => {
     if (!qrDataUrl) return;

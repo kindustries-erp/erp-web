@@ -83,13 +83,15 @@ export function TransferQrPaymentCardDetails({
         <V2Text variant="caption" className="text-slate-500 shrink-0">
           {t("v2.transferQr.card.amount")}:
         </V2Text>
-        <V2Text
-          variant="currency"
-          weight="bold"
-          className="text-emerald-700 truncate"
-        >
-          {formattedAmount}
-        </V2Text>
+        {formattedAmount && (
+          <V2Text
+            variant="currency"
+            weight="bold"
+            className="text-emerald-700 truncate"
+          >
+            {formattedAmount}
+          </V2Text>
+        )}
       </div>
 
       {content && (

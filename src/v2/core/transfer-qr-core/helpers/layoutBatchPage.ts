@@ -98,3 +98,36 @@ export function fitTextLines(
   kept[maxLines - 1] = `${last.trimEnd()}...`;
   return kept;
 }
+
+export interface FittedRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Tính khung hình chữ nhật lớn nhất nằm gọn trong hộp đích, giữ nguyên tỷ lệ gốc và căn giữa.
+ * Nếu kích thước nguồn không hợp lệ (<= 0), trả về nguyên hộp đích.
+ */
+export function fitRectInBox(
+  srcWidth: number,
+  srcHeight: number,
+  boxX: number,
+  boxY: number,
+  boxWidth: number,
+  boxHeight: number,
+): FittedRect {
+  if (srcWidth <= 0 || srcHeight <= 0 || boxWidth <= 0 || boxHeight <= 0) {
+    return { x: boxX, y: boxY, width: boxWidth, height: boxHeight };
+  }
+  const scale = Math.min(boxWidth / srcWidth, boxHeight / srcHeight);
+  const width = srcWidth * scale;
+  const height = srcHeight * scale;
+  return {
+    x: boxX + (boxWidth - width) / 2,
+    y: boxY + (boxHeight - height) / 2,
+    width,
+    height,
+  };
+}
