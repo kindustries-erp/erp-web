@@ -1,6 +1,16 @@
 import axiosInstance from "@/core/api/axiosInstance";
 
-export interface GarageCashflowVoucher {
+/** Thông tin thanh toán dựng VietQR đã lưu trên phiếu (API `kgara_cashflow_vouchers.qr_*`). Số tiền QR = `amount`. */
+export interface GarageCashflowQrFields {
+  qrCompanyAccountId?: string | null;
+  qrBankBin?: string | null;
+  qrBankCode?: string | null;
+  qrAccountNumber?: string | null;
+  qrAccountName?: string | null;
+  qrTransferContent?: string | null;
+}
+
+export interface GarageCashflowVoucher extends GarageCashflowQrFields {
   id: string;
   voucherCode: string;
   voucherType: "RECEIPT" | "PAYMENT";
@@ -46,7 +56,7 @@ export interface GarageCashflowVoucher {
   };
 }
 
-export interface CreateGarageCashflowVoucherDto {
+export interface CreateGarageCashflowVoucherDto extends GarageCashflowQrFields {
   voucherType: "RECEIPT" | "PAYMENT";
   amount: number;
   voucherCode?: string;

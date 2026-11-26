@@ -18,9 +18,14 @@ export interface GarageCashflowDrawerPaymentQrSectionProps extends UseGarageCash
 
 export const GarageCashflowDrawerPaymentQrSection: React.FC<
   GarageCashflowDrawerPaymentQrSectionProps
-> = ({ voucher, formData, onPrint }) => {
+> = ({ voucher, formData, setFormData, readOnly, onPrint }) => {
   const t = useT();
-  const paymentQr = useGarageCashflowPaymentQr({ voucher, formData });
+  const paymentQr = useGarageCashflowPaymentQr({
+    voucher,
+    formData,
+    setFormData,
+    readOnly,
+  });
   const { bankCode, accountNumber, content, qrDataUrl, qrBankHint } = paymentQr;
 
   const handleDownloadQr = () => {
@@ -42,7 +47,8 @@ export const GarageCashflowDrawerPaymentQrSection: React.FC<
 
   const handlePrintWithQr = () => {
     if (!voucher || !onPrint) return;
-    onPrint(voucher, { qrCodeDataUrl: qrDataUrl, qrBankHint });
+    // In theo dữ liệu đã lưu, không dùng QR đang sửa chưa lưu.
+    onPrint(voucher);
   };
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { auditCoreApi } from "@/modules/system/api/usersCoreApi";
@@ -25,6 +26,7 @@ import {
   buildBaselineCashflowAuditItems,
   mergeAuditItems,
 } from "./GarageCashflowDrawer.helper";
+import { isQrAccountNumberInvalid } from "./useGarageCashflowPaymentQr.helper";
 import type { DrawerAuditLogItem } from "@/shared/components/drawer/DrawerAuditTimeline";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 
@@ -83,6 +85,10 @@ export function useGarageCashflowDrawer({
 
   const handleSave = useCallback(() => {
     if (!canSave) return;
+    if (isQrAccountNumberInvalid(formData.qrAccountNumber)) {
+      toast.error(t("garage:cashflowDrawer.accountNumberInvalid"));
+      return;
+    }
 
     if (initialMode === "create") {
       const createDto = buildCreatePayload(formData);
@@ -147,6 +153,7 @@ export function useGarageCashflowDrawer({
     duplicateGuard,
     onSuccess,
     onClose,
+    t,
   ]);
 
   const { data: remoteAuditLogs, isLoading: isAuditLoading } = useQuery({

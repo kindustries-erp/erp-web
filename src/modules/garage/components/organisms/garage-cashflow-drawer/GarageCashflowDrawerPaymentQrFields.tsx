@@ -28,10 +28,17 @@ export const GarageCashflowDrawerPaymentQrFields: React.FC<
     accountName,
     setAccountName,
     amount,
-    setAmount,
     content,
     setContent,
+    readOnly,
+    accountNumberInvalid,
   } = paymentQr;
+  const accountNumberError = accountNumberInvalid
+    ? t(
+        "garage:cashflowDrawer.accountNumberInvalid",
+        "Số tài khoản chỉ gồm 1-19 ký tự chữ hoặc số",
+      )
+    : undefined;
 
   return (
     <div className="space-y-3">
@@ -50,6 +57,7 @@ export const GarageCashflowDrawerPaymentQrFields: React.FC<
             }))}
             value={accountId}
             onValueChange={(val) => val && handleSelectCompanyAccount(val)}
+            disabled={readOnly}
             placeholder={t(
               "garage:cashflowDrawer.selectCompanyAccount",
               "Chọn tài khoản nhận",
@@ -66,6 +74,7 @@ export const GarageCashflowDrawerPaymentQrFields: React.FC<
               options={bankOptions}
               value={bin}
               onValueChange={(val) => val && handleSelectPartnerBank(val)}
+              disabled={readOnly}
               placeholder={t(
                 "garage:cashflowDrawer.selectBank",
                 "Chọn ngân hàng",
@@ -86,11 +95,19 @@ export const GarageCashflowDrawerPaymentQrFields: React.FC<
             <V2Input
               value={accountNumber}
               onChange={(e) => setAccountNumber(e.target.value)}
+              disabled={readOnly}
+              error={accountNumberError}
+              aria-invalid={accountNumberInvalid || undefined}
               placeholder={t(
                 "garage:cashflowDrawer.accountNumberPlaceholder",
                 "Nhập số tài khoản",
               )}
             />
+            {accountNumberError && (
+              <V2Text variant="caption" className="text-destructive">
+                {accountNumberError}
+              </V2Text>
+            )}
           </div>
           <div className="space-y-1">
             <V2Text variant="caption" className="text-slate-600 font-medium">
@@ -102,6 +119,7 @@ export const GarageCashflowDrawerPaymentQrFields: React.FC<
             <V2Input
               value={accountName}
               onChange={(e) => setAccountName(e.target.value)}
+              disabled={readOnly}
               placeholder={t(
                 "garage:cashflowDrawer.accountNamePlaceholder",
                 "Ví dụ: NGUYEN VAN A",
@@ -115,12 +133,14 @@ export const GarageCashflowDrawerPaymentQrFields: React.FC<
         <V2Text variant="caption" className="text-slate-600 font-medium">
           {t("garage:cashflowDrawer.amountVnd", "Số tiền thanh toán (VND)")}
         </V2Text>
+        {/* Số tiền QR luôn bằng số tiền phiếu, sửa ở phần thông tin chung. */}
         <V2NumberInput
           value={amount}
-          onValueChange={(val) => setAmount(val)}
-          placeholder={t(
-            "garage:cashflowDrawer.amountPlaceholder",
-            "Nhập số tiền",
+          onValueChange={() => undefined}
+          disabled
+          aria-label={t(
+            "garage:cashflowDrawer.amountVnd",
+            "Số tiền thanh toán (VND)",
           )}
         />
       </div>
@@ -133,6 +153,7 @@ export const GarageCashflowDrawerPaymentQrFields: React.FC<
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onBlur={() => setContent(content.trim())}
+          disabled={readOnly}
           placeholder={t(
             "garage:cashflowDrawer.contentPlaceholder",
             "Nội dung",

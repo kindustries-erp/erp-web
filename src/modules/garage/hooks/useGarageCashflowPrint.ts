@@ -6,9 +6,21 @@ import {
   type GarageCashflowPrintData,
 } from "@/shared/components/print-templates/garage-cashflow-print-template";
 import type { GarageCashflowVoucher } from "../api/garageCashflowApi";
+import { useGarageCompanyAccounts } from "../components/organisms/garage-cashflow-drawer/useGarageCashflowPaymentQr";
+import { buildVoucherPrintQr } from "../components/organisms/garage-cashflow-drawer/useGarageCashflowPaymentQr.helper";
 
+export interface GarageCashflowPrintOptions {
+  qrCodeDataUrl?: string | null;
+  qrBankHint?: string | null;
+}
+
+/**
+ * In phiếu thu chi. Có `options.qrCodeDataUrl` (in từ phần QR của drawer) thì dùng nguyên; không thì
+ * dựng QR từ thông tin thanh toán đã lưu trên phiếu (phiếu thu cũ dùng tài khoản công ty mặc định).
+ */
 export function useGarageCashflowPrint() {
   const { data: companyProfile } = useCompanyProfile();
+  const companyAccounts = useGarageCompanyAccounts();
 
   const printRef = useRef<HTMLDivElement>(null);
   const [printData, setPrintData] = useState<GarageCashflowPrintData | null>(
@@ -33,17 +45,21 @@ export function useGarageCashflowPrint() {
   }, [printTargetId, printData, handlePrint]);
 
   const printVoucher = useCallback(
-    (
+    async (
       voucher: GarageCashflowVoucher,
-      options?: {
-        qrCodeDataUrl?: string | null;
-        qrBankHint?: string | null;
-      },
+      options?: GarageCashflowPrintOptions,
     ) => {
+      const qr = options?.qrCodeDataUrl
+        ? options
+        : await buildVoucherPrintQr(
+            voucher,
+            companyAccounts,
+            companyProfile?.company_name,
+          );
+      setPrintData(buildGarageCashflowPrintData(voucher, qr));
       setPrintTargetId(voucher.id);
-      setPrintData(buildGarageCashflowPrintData(voucher, options));
     },
-    [],
+    [companyAccounts, companyProfile?.company_name],
   );
 
   return { companyProfile, printRef, printData, printVoucher };

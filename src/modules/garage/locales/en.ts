@@ -159,6 +159,7 @@ export const garageEn = {
     selectPlaceholder: "— Select —",
     formattedAmount: "Formatted amount:",
     amountInWords: "In words:",
+    accountNumberInvalid: "Account number must be 1-19 letters or digits",
   },
   tabs: {
     dashboard: "Overview",

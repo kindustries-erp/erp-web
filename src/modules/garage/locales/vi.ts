@@ -159,6 +159,7 @@ export const garageVi = {
     selectPlaceholder: "— Chọn —",
     formattedAmount: "Định dạng số:",
     amountInWords: "Bằng chữ:",
+    accountNumberInvalid: "Số tài khoản chỉ gồm 1-19 ký tự chữ hoặc số",
   },
   tabs: {
     dashboard: "Tổng quan",
