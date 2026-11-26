@@ -35,7 +35,7 @@ export const transferQrLocale = {
     },
     hints: {
       content:
-        "Tối đa 95 ký tự, không dấu. Ký tự đặc biệt như / - ( ) # sẽ đổi thành dấu cách, không làm dính chữ.",
+        "Tối đa 95 ký tự, không dấu. Ký tự gạch nối (-) được giữ nguyên; ký tự đặc biệt khác như / ( ) # đổi thành dấu cách.",
       contentOnQr: "Nội dung trên QR:",
       receiveBankFallback:
         "Tài khoản này chưa khớp được ngân hàng, hãy chọn ngân hàng bên dưới.",
@@ -146,7 +146,7 @@ export const transferQrLocale = {
     },
     hints: {
       content:
-        "Up to 95 characters, no accents. Special characters such as / - ( ) # become spaces so words do not run together.",
+        "Up to 95 characters, no accents. Hyphens (-) are preserved; other special characters like / ( ) # become spaces.",
       contentOnQr: "Note on QR:",
       receiveBankFallback:
         "This account could not be matched to a bank. Choose the bank below.",

@@ -1,6 +1,4 @@
 import * as React from "react";
-import { QrCode } from "lucide-react";
-import { V2Icon, V2Image, V2Text } from "@/v2/shared/components/atoms";
 import { VIETQR_BANKS } from "../../../domain/constants/vietQrBanks";
 import { getBankLogoUrl } from "../../../domain/constants/defaultBankOptions";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -10,8 +8,10 @@ import type {
   TransferQrCompanyInfo,
   TransferQrAccountOption,
 } from "../../../transferQr.types";
+import { VIETQR_V_CENTER_ICON } from "../../../assets/vietQrBrandAssets";
 import { TransferQrPaymentCardHeader } from "./TransferQrPaymentCardHeader";
 import { TransferQrPaymentCardDetails } from "./TransferQrPaymentCardDetails";
+import { TransferQrPaymentCardQrBlock } from "./TransferQrPaymentCardQrBlock";
 
 export interface TransferQrPaymentCardProps {
   qrDataUrl: string;
@@ -37,6 +37,7 @@ export function TransferQrPaymentCard({
 }: TransferQrPaymentCardProps) {
   const { t } = useV2Translation();
   const [imgFailed, setImgFailed] = React.useState(false);
+  const [companyLogoFailed, setCompanyLogoFailed] = React.useState(false);
   const isReceive = mode === TransferQrMode.RECEIVE_FROM_CUSTOMER;
 
   const bankInfo = React.useMemo(() => {
@@ -59,6 +60,21 @@ export function TransferQrPaymentCard({
     setImgFailed(false);
   }, [bankLogoUrl]);
 
+  React.useEffect(() => {
+    setCompanyLogoFailed(false);
+  }, [companyInfo?.logo]);
+
+  const centerLogoSrc =
+    isReceive && companyInfo?.logo && !companyLogoFailed
+      ? companyInfo.logo
+      : VIETQR_V_CENTER_ICON;
+
+  const handleCenterLogoError = () => {
+    if (isReceive && companyInfo?.logo) {
+      setCompanyLogoFailed(true);
+    }
+  };
+
   const formattedAmount =
     amount != null && amount > 0
       ? `${new Intl.NumberFormat("vi-VN").format(amount)} ₫`
@@ -79,37 +95,16 @@ export function TransferQrPaymentCard({
         displayAccountName={displayAccountName}
       />
 
-      {/* QR Code Canvas */}
-      <div className="my-3 flex flex-col items-center">
-        <div className="relative rounded-xl bg-white p-2.5 shadow-sm border border-slate-200">
-          <V2Image
-            src={qrDataUrl}
-            alt="VietQR"
-            className="h-44 w-44 object-contain"
-          />
-        </div>
-        <div className="mt-1.5 flex items-center justify-center gap-1.5">
-          {bankLogoUrl && !imgFailed && (
-            <V2Image
-              src={bankLogoUrl}
-              alt={bankInfo?.shortName || "Bank Logo"}
-              className="h-4 w-auto max-w-[48px] object-contain"
-              crossOrigin="anonymous"
-              onError={() => setImgFailed(true)}
-              loading="lazy"
-            />
-          )}
-          <V2Text
-            variant="caption"
-            weight="semibold"
-            className="text-center text-slate-600 block"
-          >
-            {bankInfo
-              ? `${bankInfo.shortName} (${bankInfo.code})`
-              : target?.bankCode || "NAPAS 247"}
-          </V2Text>
-        </div>
-      </div>
+      <TransferQrPaymentCardQrBlock
+        qrDataUrl={qrDataUrl}
+        centerLogoSrc={centerLogoSrc}
+        onCenterLogoError={handleCenterLogoError}
+        bankLogoUrl={bankLogoUrl}
+        imgFailed={imgFailed}
+        onBankLogoError={() => setImgFailed(true)}
+        bankInfo={bankInfo}
+        targetBankCode={target?.bankCode}
+      />
 
       <TransferQrPaymentCardDetails
         isReceive={isReceive}
@@ -118,19 +113,6 @@ export function TransferQrPaymentCard({
         formattedAmount={formattedAmount}
         content={content}
       />
-
-      {/* Footer hint */}
-      <div className="mt-2.5 flex items-center justify-center gap-1 text-[10px] text-slate-500">
-        <V2Icon icon={QrCode} size={12} className="text-emerald-600 shrink-0" />
-        <V2Text
-          variant="caption"
-          className="truncate text-slate-500 text-[10px]"
-        >
-          {isReceive
-            ? t("v2.transferQr.card.scanHintReceive")
-            : t("v2.transferQr.card.scanHintPay")}
-        </V2Text>
-      </div>
     </div>
   );
 }

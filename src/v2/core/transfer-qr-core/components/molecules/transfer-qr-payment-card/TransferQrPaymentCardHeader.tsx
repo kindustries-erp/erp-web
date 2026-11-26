@@ -20,8 +20,8 @@ export function TransferQrPaymentCardHeader({
 
   return (
     <>
-      {/* Top Bar: Badge phân loại giao dịch (Nhận tiền vs Thanh toán) + VietQR Napas */}
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
+      {/* Top Bar: Badge phân loại giao dịch (Nhận tiền vs Thanh toán) */}
+      <div className="flex items-center justify-start pb-2.5 border-b border-slate-200">
         {isReceive ? (
           <V2Badge
             variant="success"
@@ -61,13 +61,6 @@ export function TransferQrPaymentCardHeader({
             </V2Text>
           </V2Badge>
         )}
-        <V2Badge
-          variant="secondary"
-          size="xs"
-          className="bg-slate-100 text-slate-700 border-slate-200 px-2 py-0.5 text-[9px] font-black tracking-wider shrink-0 whitespace-nowrap"
-        >
-          {t("v2.transferQr.card.brand")}
-        </V2Badge>
       </div>
 
       {/* Thông tin công ty: CHỈ HIỂN THỊ khi là QR Nhận tiền (receiveFromCustomer) */}

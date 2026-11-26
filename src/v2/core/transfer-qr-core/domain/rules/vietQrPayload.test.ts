@@ -47,12 +47,13 @@ describe("sanitizeTransferContent", () => {
     expect(payload.slice(-4)).toBe(computeCrc16Ccitt(payload.slice(0, -4)));
   });
 
-  it("đổi ký tự đặc biệt thành dấu cách, không làm dính chữ", () => {
+  it("đổi ký tự đặc biệt thành dấu cách, giữ nguyên dấu gạch nối (-), trim đầu cuối", () => {
     expect(sanitizeTransferContent("HD001/2025")).toBe("HD001 2025");
-    expect(sanitizeTransferContent("A-B_C")).toBe("A B C");
-    expect(sanitizeTransferContent("NCC (ABC)-01")).toBe("NCC ABC 01");
+    expect(sanitizeTransferContent("HD-001/2025")).toBe("HD-001 2025");
+    expect(sanitizeTransferContent("A-B_C")).toBe("A-B C");
+    expect(sanitizeTransferContent("NCC (ABC)-01")).toBe("NCC ABC -01");
     expect(sanitizeTransferContent("a///b...c")).toBe("a b c");
-    expect(sanitizeTransferContent("--x--")).toBe("x");
+    expect(sanitizeTransferContent("  HD-12345  ")).toBe("HD-12345");
   });
 });
 

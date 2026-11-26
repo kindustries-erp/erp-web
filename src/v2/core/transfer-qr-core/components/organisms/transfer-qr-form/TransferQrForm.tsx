@@ -102,6 +102,7 @@ export function TransferQrForm({
             <V2Input
               value={form.content}
               onChange={(e) => onPatch({ content: e.target.value })}
+              onBlur={() => onPatch({ content: form.content.trim() })}
               placeholder={t("v2.transferQr.placeholders.content")}
               aria-label={t("v2.transferQr.fields.content")}
               maxLength={95}
