@@ -25,6 +25,8 @@ export interface CaseProgressItem {
   vehicleBrandName: string | null;
   vehicleModelName: string | null;
   customerName: string | null;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  voucherCustomerName?: string | null;
   receivedAt: string | null;
   startedAt: string | null;
   workSummary: string | null;

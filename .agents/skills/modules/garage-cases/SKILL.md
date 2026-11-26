@@ -102,7 +102,7 @@ src/modules/garage/
   3. `ngayHoanThanhCongViec`: Ngày kết thúc (150px, `text-right`, lọc popup khoảng ngày `DateRangeColumnSlot`).
   4. `caseCode`: Số chứng từ (170px, `text-left`, link mở chi tiết & tooltip).
   5. `licensePlate`: Biển số xe (140px, font mono kèm icon Car).
-  6. `customerCode` & `customerName`: Mã & Tên khách hàng.
+  6. `customerCode` & `customerName`: Mã & Tên khách hàng. Khi tên trên phiếu (`tenKhachHang` V1 / `voucherCustomerName` V2) khác tên danh mục, `GarageCaseCustomerCell` hiện thêm dòng phụ "Tên trên phiếu: …"; drawer thông tin chung có dòng "Tên trên phiếu"; bộ chọn cột export có `tenKhachHang` (mặc định 31 cột). V2 dùng `GarageVoucherNameText` / `voucherNameIfDiffers` từ `@/v2/core/cases-garage` (Kanban, popover xe, thẻ tiến độ xưởng, danh sách xe dashboard).
   7. `doanhThu`, `chiPhi`, `loiNhuan`, `margin`: Nhóm chỉ số tài chính (căn phải, định dạng tiền tệ / %).
   8. `classification`: Phân loại ERP (170px, căn giữa, dropdown đổi nhanh tích hợp button icon exclamation kèm Tooltip hiển thị Phân loại KGara khi hover).
   9. `statusName`: Trạng thái dịch vụ (căn giữa, `KgaraCaseStatusBadge`).

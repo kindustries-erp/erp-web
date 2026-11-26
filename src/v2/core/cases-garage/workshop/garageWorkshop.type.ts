@@ -21,6 +21,8 @@ export interface WorkshopCaseView {
   vehicleBrandName: string | null;
   vehicleModelName: string | null;
   customerName: string | null;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  voucherCustomerName?: string | null;
   workSummary: string | null;
   status: WorkshopCaseStatus;
   /** Nguồn vụ việc: xe KGara đổi trạng thái tự do (ghi đè ở ERP), xe ERP theo bảng chuyển. */
@@ -89,6 +91,8 @@ export interface WorkshopCandidateView {
   caseCode: string;
   licensePlate: string | null;
   customerName: string | null;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  voucherCustomerName?: string | null;
   vehicleName: string | null;
   origin: WorkshopCaseOrigin;
   status: WorkshopCaseStatus;

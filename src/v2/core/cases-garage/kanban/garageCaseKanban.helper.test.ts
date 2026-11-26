@@ -90,6 +90,17 @@ describe("garageCaseKanban.helper", () => {
     expect(items.find((v) => v.id === "51F-99999::QUOTATION")).toBeUndefined();
   });
 
+  it("groupCasesByVehicle mang tên khách trên phiếu lên thẻ, không gộp vào tên danh mục", () => {
+    const [first, ...rest] = mockCases;
+    const items = groupCasesByVehicle([
+      { ...first, khachHangName: "ACTR", tenKhachHang: "SAILUN" },
+      ...rest,
+    ]);
+    const card = items.find((v) => v.cases.some((c) => c.id === first.id));
+    expect(card?.customerName).toBe("ACTR");
+    expect(card?.voucherCustomerName).toBe("SAILUN");
+  });
+
   it("buildGarageKanbanLanes luôn trả đủ 5 lane (kể cả INTAKE trống để làm đích kéo thả)", () => {
     const items = groupCasesByVehicle(mockCases);
     const lanes = buildGarageKanbanLanes(items, (_k, def) => def || _k);

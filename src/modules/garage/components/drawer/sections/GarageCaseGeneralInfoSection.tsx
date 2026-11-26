@@ -53,6 +53,13 @@ export function GarageCaseGeneralInfoSection({
         label={t("cases.drawer.customer", "Khách hàng")}
         value={caseData.khachHangName || "—"}
       />
+      {caseData.tenKhachHang &&
+        caseData.tenKhachHang !== caseData.khachHangName && (
+          <DrawerRow
+            label={t("cases.drawer.voucherCustomer", "Tên trên phiếu")}
+            value={caseData.tenKhachHang}
+          />
+        )}
       {buildVehicleInfoRows(caseData).map((row) => (
         <DrawerRow
           key={row.key}

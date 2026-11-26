@@ -181,6 +181,9 @@ export const garageCasesLocale: V2ModuleLocale = {
         untrackFailed: "Không bỏ được xe khỏi bảng: {{reason}}",
       },
     },
+    customer: {
+      onVoucher: "Trên phiếu",
+    },
     kanban: {
       tabTitle: "Tiến độ công việc",
       laneIntake: "Tiếp nhận",
@@ -409,6 +412,9 @@ export const garageCasesLocale: V2ModuleLocale = {
         untrackFailed:
           "Could not remove the vehicle from the board: {{reason}}",
       },
+    },
+    customer: {
+      onVoucher: "On voucher",
     },
     kanban: {
       tabTitle: "Work Progress",

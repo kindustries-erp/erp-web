@@ -6,6 +6,7 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { formatDuration, type WorkshopCaseView } from "../../workshop";
+import { GarageVoucherNameText } from "../../customer";
 import { GarageWorkshopClock } from "./GarageWorkshopClock";
 import { GarageWorkshopStatusBadge } from "./GarageWorkshopStatusBadge";
 
@@ -68,6 +69,10 @@ export const GarageWorkshopCard = React.memo(function GarageWorkshopCard({
           <V2Text variant="caption" color="muted" truncate>
             {item.customerName || item.caseCode}
           </V2Text>
+          <GarageVoucherNameText
+            customerName={item.customerName}
+            voucherName={item.voucherCustomerName}
+          />
         </V2Stack>
         {item.isOverdue ? (
           <V2Badge variant="destructive" size="xs">

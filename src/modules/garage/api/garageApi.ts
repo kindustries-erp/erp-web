@@ -20,6 +20,7 @@ export interface KgaraCaseServiceRow {
   bienSoXe?: string;
   khachHangCode?: string;
   khachHangName?: string;
+  tenKhachHang?: string | null;
   caseDate?: string;
   completionDate?: string;
   branchExternalId?: string;

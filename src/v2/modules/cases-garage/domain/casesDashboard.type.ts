@@ -106,6 +106,8 @@ export interface CasesDashboardCaseItem {
   licensePlate: string | null;
   vehicleKey: string;
   customerName: string | null;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  voucherCustomerName?: string | null;
   status: CasesDashboardCaseStatus;
   stage: CasesDashboardStage;
   classification: CasesDashboardClass;
@@ -119,6 +121,8 @@ export interface CasesDashboardVehicleItem {
   vehicleKey: string;
   licensePlate: string | null;
   customerName: string | null;
+  /** Tên khách in trên phiếu KGara (có thể khác tên danh mục). */
+  voucherCustomerName?: string | null;
   caseCount: number;
   caseCodes: string[];
   amount: number;

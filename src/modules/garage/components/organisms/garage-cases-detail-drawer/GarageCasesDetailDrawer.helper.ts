@@ -125,6 +125,7 @@ export function extractCheckpointCases(
     namSanXuat: c.namSanXuat,
     khachHangName: c.khachHangName,
     khachHangCode: c.khachHangCode,
+    tenKhachHang: c.tenKhachHang ?? null,
     payerType: "KH",
     partnerType: "enterprise",
     debtorName: c.khachHangName,

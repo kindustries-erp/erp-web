@@ -11,6 +11,7 @@ import { money } from "@/shared/utils/format";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { GarageVehicleCasesTable } from "./GarageVehicleCasesTable";
+import { GarageVoucherNameText } from "../../customer";
 import type { GarageVehicleKanbanItem } from "../../kanban";
 
 export interface GarageVehicleCasesPopoverProps {
@@ -57,6 +58,11 @@ export const GarageVehicleCasesPopover: React.FC<
             >
               {item.customerName}
             </V2Text>
+            <GarageVoucherNameText
+              customerName={item.customerName}
+              voucherName={item.voucherCustomerName}
+              className="text-xs max-w-[180px]"
+            />
             {(vehicleName || item.modelYear) && (
               <V2Badge
                 variant="secondary"
