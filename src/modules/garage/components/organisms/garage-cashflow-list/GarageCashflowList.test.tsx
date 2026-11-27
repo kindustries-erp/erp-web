@@ -38,6 +38,17 @@ vi.mock("../../GarageCaseStandaloneDrawer", () => ({
   },
 }));
 
+const printState = vi.hoisted(() => ({ isPrinting: false }));
+vi.mock("../../../hooks/useGarageCashflowPrint", () => ({
+  useGarageCashflowPrint: () => ({
+    companyProfile: undefined,
+    printRef: { current: null },
+    printData: null,
+    printVoucher: vi.fn(),
+    isPrinting: printState.isPrinting,
+  }),
+}));
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
 });
@@ -190,5 +201,26 @@ describe("GarageCashflowList Organism RBAC", () => {
     );
 
     expect(tablePropsSpy.tabKey).toBe("forecast");
+  });
+});
+
+describe("GarageCashflowList - overlay khi chuẩn bị bản in", () => {
+  it("hiện overlay khi isPrinting = true và ẩn khi false", () => {
+    printState.isPrinting = true;
+    const { unmount } = render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowList />
+      </QueryClientProvider>,
+    );
+    expect(document.querySelector("[role='status']")).not.toBeNull();
+    unmount();
+
+    printState.isPrinting = false;
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowList />
+      </QueryClientProvider>,
+    );
+    expect(document.querySelector("[role='status']")).toBeNull();
   });
 });

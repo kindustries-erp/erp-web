@@ -10,6 +10,7 @@ import {
   GARAGE_CASHFLOW_PRINT_DEFAULT_LOGO,
   GARAGE_CASHFLOW_PRINT_DOTTED,
   GARAGE_CASHFLOW_PRINT_LABELS,
+  GARAGE_CASHFLOW_PRINT_LIGHT_VARS,
   GARAGE_CASHFLOW_PRINT_STATUTORY_NOTE,
 } from "./GarageCashflowPrintTemplate.data";
 import type { GarageCashflowPrintTemplateProps } from "./GarageCashflowPrintTemplate.type";
@@ -41,6 +42,7 @@ export const GarageCashflowPrintTemplate = React.forwardRef<
         padding: "10mm",
         fontSize: "14px",
         lineHeight: "1.5",
+        ...(GARAGE_CASHFLOW_PRINT_LIGHT_VARS as React.CSSProperties),
       }}
     >
       <style type="text/css" media="print">
@@ -145,7 +147,7 @@ export const GarageCashflowPrintTemplate = React.forwardRef<
                     : TransferQrMode.PAY_TO_SUPPLIER)
                 }
                 variant={TransferQrCardVariant.HORIZONTAL}
-                className="w-full max-w-[460px] rounded-2xl border border-slate-200 bg-white p-3.5 text-slate-900 shadow-none"
+                className="w-full max-w-[460px] rounded-2xl border border-border bg-card p-3.5 text-foreground shadow-none"
               />
             ) : (
               <div className="inline-flex flex-col items-center justify-center p-2 rounded-lg border border-slate-300 bg-white text-center max-w-[130px]">

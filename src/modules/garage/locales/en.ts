@@ -1,8 +1,5 @@
 export const garageEn = {
   cashflow: {
-    print: {
-      preparing: "Preparing print preview…",
-    },
     tabs: {
       dashboard: "Overview",
       vouchers: "Cashflow Vouchers",

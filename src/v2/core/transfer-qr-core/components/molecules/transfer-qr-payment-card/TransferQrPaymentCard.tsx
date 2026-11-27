@@ -121,8 +121,8 @@ export function TransferQrPaymentCard({
       className={
         className ??
         (isHorizontal
-          ? "w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-slate-900 select-none"
-          : "w-full max-w-[340px] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg text-slate-900 select-none")
+          ? "w-full rounded-2xl border border-border bg-white p-3.5 text-foreground select-none"
+          : "w-full max-w-[340px] rounded-2xl border border-border bg-white p-4 shadow-lg text-foreground select-none")
       }
     >
       {variant === TransferQrCardVariant.FULL && (

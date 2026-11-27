@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import {
@@ -58,28 +58,28 @@ export function useGarageCashflowPrint() {
     }
   }, [printData, handlePrint]);
 
-  const printVoucher = async (
-    voucher: GarageCashflowVoucher,
-    options?: GarageCashflowPrintOptions,
-  ) => {
-    if (preparingRef.current) return;
-    preparingRef.current = true;
-    setIsPrinting(true);
-    try {
-      const qr = options?.qrCodeDataUrl
-        ? options
-        : await buildVoucherPrintQr(
-            voucher,
-            companyAccounts,
-            companyProfile?.company_name,
-          );
-      pendingPrintRef.current = true;
-      setPrintData(buildGarageCashflowPrintData(voucher, qr));
-    } catch {
-      preparingRef.current = false;
-      setIsPrinting(false);
-    }
-  };
+  const companyName = companyProfile?.company_name;
+  const printVoucher = useCallback(
+    async (
+      voucher: GarageCashflowVoucher,
+      options?: GarageCashflowPrintOptions,
+    ) => {
+      if (preparingRef.current) return;
+      preparingRef.current = true;
+      setIsPrinting(true);
+      try {
+        const qr = options?.qrCodeDataUrl
+          ? options
+          : await buildVoucherPrintQr(voucher, companyAccounts, companyName);
+        pendingPrintRef.current = true;
+        setPrintData(buildGarageCashflowPrintData(voucher, qr));
+      } catch {
+        preparingRef.current = false;
+        setIsPrinting(false);
+      }
+    },
+    [companyAccounts, companyName],
+  );
 
   return { companyProfile, printRef, printData, printVoucher, isPrinting };
 }

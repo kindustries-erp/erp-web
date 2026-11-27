@@ -39,7 +39,7 @@ export function TransferQrPaymentCardDetails({
   };
 
   return (
-    <div className="space-y-1.5 rounded-xl bg-slate-50 p-2.5 text-xs border border-slate-200">
+    <div className="space-y-1.5 rounded-xl bg-muted p-2.5 text-xs border border-border">
       <div
         className={
           stacked
@@ -47,7 +47,7 @@ export function TransferQrPaymentCardDetails({
             : "flex items-baseline justify-between gap-1"
         }
       >
-        <V2Text variant="caption" className="text-slate-500 shrink-0">
+        <V2Text variant="caption" className="text-muted-foreground shrink-0">
           {isReceive
             ? t("v2.transferQr.card.accountName")
             : t("v2.transferQr.card.recipientSupplier")}
@@ -58,8 +58,8 @@ export function TransferQrPaymentCardDetails({
           weight="bold"
           className={
             stacked
-              ? "text-slate-900 uppercase break-words"
-              : "text-slate-900 uppercase truncate"
+              ? "text-foreground uppercase break-words"
+              : "text-foreground uppercase truncate"
           }
         >
           {displayAccountName}
@@ -67,11 +67,11 @@ export function TransferQrPaymentCardDetails({
       </div>
 
       <div className="flex items-center justify-between gap-1">
-        <V2Text variant="caption" className="text-slate-500 shrink-0">
+        <V2Text variant="caption" className="text-muted-foreground shrink-0">
           {t("v2.transferQr.card.accountNumber")}:
         </V2Text>
-        <div className="flex items-center gap-1 font-mono font-bold text-slate-900">
-          <V2Text variant="numeric" weight="bold" className="text-slate-900">
+        <div className="flex items-center gap-1 font-mono font-bold text-foreground">
+          <V2Text variant="numeric" weight="bold" className="text-foreground">
             {accountNumber}
           </V2Text>
           {accountNumber !== "-" && (
@@ -79,11 +79,11 @@ export function TransferQrPaymentCardDetails({
               variant="ghost"
               size="icon-xs"
               onClick={() => handleCopy("account", accountNumber)}
-              className="h-4 w-4 text-slate-400 hover:text-slate-700 p-0 print:hidden"
+              className="h-4 w-4 text-muted-foreground hover:text-muted-foreground p-0 print:hidden"
               title={t("v2.transferQr.card.copy")}
             >
               {copiedField === "account" ? (
-                <Check className="h-3 w-3 text-emerald-600" />
+                <Check className="h-3 w-3 text-success" />
               ) : (
                 <Copy className="h-3 w-3" />
               )}
@@ -93,14 +93,14 @@ export function TransferQrPaymentCardDetails({
       </div>
 
       <div className="flex items-baseline justify-between gap-1">
-        <V2Text variant="caption" className="text-slate-500 shrink-0">
+        <V2Text variant="caption" className="text-muted-foreground shrink-0">
           {t("v2.transferQr.card.amount")}:
         </V2Text>
         {formattedAmount && (
           <V2Text
             variant="currency"
             weight="bold"
-            className="text-emerald-700 truncate"
+            className="text-success truncate"
           >
             {formattedAmount}
           </V2Text>
@@ -111,11 +111,11 @@ export function TransferQrPaymentCardDetails({
         <div
           className={
             stacked
-              ? "flex flex-col gap-0.5 pt-1 border-t border-slate-200"
-              : "flex items-start justify-between gap-1 pt-1 border-t border-slate-200"
+              ? "flex flex-col gap-0.5 pt-1 border-t border-border"
+              : "flex items-start justify-between gap-1 pt-1 border-t border-border"
           }
         >
-          <V2Text variant="caption" className="text-slate-500 shrink-0">
+          <V2Text variant="caption" className="text-muted-foreground shrink-0">
             {t("v2.transferQr.card.content")}:
           </V2Text>
           <div
@@ -129,8 +129,8 @@ export function TransferQrPaymentCardDetails({
               variant="caption"
               className={
                 stacked
-                  ? "font-mono text-slate-800 break-all"
-                  : "font-mono text-slate-800 truncate"
+                  ? "font-mono text-foreground break-all"
+                  : "font-mono text-foreground truncate"
               }
             >
               {content}
@@ -139,11 +139,11 @@ export function TransferQrPaymentCardDetails({
               variant="ghost"
               size="icon-xs"
               onClick={() => handleCopy("content", content)}
-              className="h-3.5 w-3.5 shrink-0 text-slate-400 hover:text-slate-700 p-0 print:hidden"
+              className="h-3.5 w-3.5 shrink-0 text-muted-foreground hover:text-muted-foreground p-0 print:hidden"
               title={t("v2.transferQr.card.copy")}
             >
               {copiedField === "content" ? (
-                <Check className="h-3 w-3 text-emerald-600" />
+                <Check className="h-3 w-3 text-success" />
               ) : (
                 <Copy className="h-3 w-3" />
               )}

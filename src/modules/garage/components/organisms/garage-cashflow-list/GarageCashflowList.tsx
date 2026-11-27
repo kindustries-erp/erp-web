@@ -8,7 +8,7 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { GarageCashflowPrintTemplate } from "@/shared/components/print-templates/garage-cashflow-print-template";
 import { useGarageCashflowList } from "./GarageCashflowList.hook";
 import { useGarageCashflowPrint } from "../../../hooks/useGarageCashflowPrint";
-import { GarageCashflowPrintLoading } from "./GarageCashflowPrintLoading";
+import { V2PrintPreparingOverlay, V2Text } from "@/v2/shared/components";
 
 export interface GarageCashflowListProps {
   tabs?: TabItem[];
@@ -67,7 +67,7 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
         onPrint={printVoucher}
       />
 
-      <GarageCashflowPrintLoading open={isPrinting} />
+      <V2PrintPreparingOverlay open={isPrinting} />
 
       <div style={{ display: "none" }}>
         <GarageCashflowPrintTemplate
@@ -105,12 +105,12 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
         message={
           deleteModal.voucher?.case ? (
             <div className="space-y-2 text-sm text-foreground">
-              <p>
+              <V2Text as="p" variant="body-sm">
                 {t(
                   "garage.cashflow.modal.deleteConfirm",
                   "Bạn có chắc chắn muốn xóa phiếu {{code}} không?",
                 ).replace("{{code}}", deleteModal.voucher.voucherCode)}
-              </p>
+              </V2Text>
               <div className="bg-amber-50 text-amber-600 p-3 rounded-md border border-amber-200">
                 {t(
                   "garage.cashflow.modal.deleteLinkedWarning",

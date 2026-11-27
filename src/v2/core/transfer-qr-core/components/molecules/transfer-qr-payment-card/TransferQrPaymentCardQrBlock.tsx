@@ -49,7 +49,7 @@ export function TransferQrPaymentCardQrBlock({
       </div>
 
       {/* Khung QR code kèm Logo ở tâm */}
-      <div className="relative rounded-xl bg-white p-2 shadow-sm border border-slate-200">
+      <div className="relative rounded-xl bg-white p-2 shadow-sm border border-border">
         <V2Image
           src={qrDataUrl}
           alt="VietQR"
@@ -60,8 +60,8 @@ export function TransferQrPaymentCardQrBlock({
         <div
           className={
             compact
-              ? "absolute inset-0 m-auto flex h-7 w-7 items-center justify-center rounded-md bg-white p-0.5 shadow-sm border border-slate-100"
-              : "absolute inset-0 m-auto flex h-9 w-9 items-center justify-center rounded-lg bg-white p-0.5 shadow-sm border border-slate-100"
+              ? "absolute inset-0 m-auto flex h-7 w-7 items-center justify-center rounded-md bg-white p-0.5 shadow-sm border border-border"
+              : "absolute inset-0 m-auto flex h-9 w-9 items-center justify-center rounded-lg bg-white p-0.5 shadow-sm border border-border"
           }
         >
           <V2Image
@@ -81,7 +81,7 @@ export function TransferQrPaymentCardQrBlock({
           alt="Napas 247"
           className="h-3.5 w-auto max-w-[70px] object-contain"
         />
-        <div className="h-3.5 w-px bg-slate-300" />
+        <div className="h-3.5 w-px bg-border" />
         <div className="flex items-center gap-1.5">
           {bankLogoUrl && !imgFailed ? (
             <V2Image
@@ -96,7 +96,7 @@ export function TransferQrPaymentCardQrBlock({
             <V2Text
               variant="caption"
               weight="semibold"
-              className="text-center text-slate-600 block text-xs"
+              className="text-center text-muted-foreground block text-xs"
             >
               {bankInfo
                 ? `${bankInfo.shortName} (${bankInfo.code})`
