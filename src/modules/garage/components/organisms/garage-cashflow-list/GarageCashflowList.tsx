@@ -8,6 +8,7 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { GarageCashflowPrintTemplate } from "@/shared/components/print-templates/garage-cashflow-print-template";
 import { useGarageCashflowList } from "./GarageCashflowList.hook";
 import { useGarageCashflowPrint } from "../../../hooks/useGarageCashflowPrint";
+import { GarageCashflowPrintLoading } from "./GarageCashflowPrintLoading";
 
 export interface GarageCashflowListProps {
   tabs?: TabItem[];
@@ -46,7 +47,7 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
     t,
   } = useGarageCashflowList({ onOpenCaseDetailProp, tabKey });
 
-  const { companyProfile, printRef, printData, printVoucher } =
+  const { companyProfile, printRef, printData, printVoucher, isPrinting } =
     useGarageCashflowPrint();
 
   return (
@@ -65,6 +66,8 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
         onExportExcel={handleOpenExport}
         onPrint={printVoucher}
       />
+
+      <GarageCashflowPrintLoading open={isPrinting} />
 
       <div style={{ display: "none" }}>
         <GarageCashflowPrintTemplate

@@ -34,9 +34,10 @@ export const GarageCashflowPrintTemplate = React.forwardRef<
   return (
     <div
       ref={ref}
-      className="bg-white text-black font-serif print:p-0"
+      className="flex flex-col bg-white text-black font-serif print:p-0"
       style={{
         fontFamily: '"Times New Roman", Times, serif',
+        minHeight: "265mm",
         padding: "10mm",
         fontSize: "14px",
         lineHeight: "1.5",
@@ -78,10 +79,7 @@ export const GarageCashflowPrintTemplate = React.forwardRef<
           Ngày {format(date, "dd")} tháng {format(date, "MM")} năm{" "}
           {format(date, "yyyy")}
         </div>
-        <div className="flex justify-end gap-10 pr-16 font-medium">
-          <div>Quyển số: {GARAGE_CASHFLOW_PRINT_DOTTED}</div>
-          <div>Số: {data.voucherCode}</div>
-        </div>
+        <div className="text-center font-medium">Số: {data.voucherCode}</div>
       </div>
 
       <div className="mb-8 space-y-1">
@@ -106,11 +104,7 @@ export const GarageCashflowPrintTemplate = React.forwardRef<
         </div>
       </div>
 
-      <div
-        className={`flex justify-between text-center ${
-          data.qrCodeDataUrl ? "pb-14" : "pb-24"
-        }`}
-      >
+      <div className="flex justify-between text-center pb-32">
         {signers.map((s) => (
           <div key={s.title} className="flex-1">
             <div className="font-bold mb-1">{s.title}</div>
@@ -120,49 +114,57 @@ export const GarageCashflowPrintTemplate = React.forwardRef<
       </div>
 
       {data.qrCodeDataUrl && (
-        <div style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}>
-          <V2Divider orientation="horizontal" className="my-4 bg-slate-300" />
-          {data.qrTarget ? (
-            <TransferQrPaymentCard
-              qrDataUrl={data.qrCodeDataUrl}
-              companyInfo={
-                companyProfile
-                  ? {
-                      companyName: companyProfile.company_name || undefined,
-                      taxCode: companyProfile.tax_code ?? undefined,
-                      logo: companyProfile.logo ?? undefined,
-                    }
-                  : undefined
-              }
-              target={data.qrTarget}
-              amount={data.amount}
-              content={data.qrContent}
-              mode={
-                data.qrMode ??
-                (data.variant === "RECEIPT"
-                  ? TransferQrMode.RECEIVE_FROM_CUSTOMER
-                  : TransferQrMode.PAY_TO_SUPPLIER)
-              }
-              variant={TransferQrCardVariant.HORIZONTAL}
-              className="w-full max-w-[460px] rounded-2xl border border-slate-200 bg-white p-3.5 text-slate-900 shadow-none"
-            />
-          ) : (
-            <div className="inline-flex flex-col items-center justify-center p-2 rounded-lg border border-slate-300 bg-white text-center max-w-[130px]">
-              <img
-                src={data.qrCodeDataUrl}
-                alt="VietQR"
-                className="w-24 h-24 object-contain"
+        <div
+          className="flex flex-1 flex-col"
+          style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}
+        >
+          <V2Divider
+            orientation="horizontal"
+            className="mt-6 mb-4 bg-slate-300"
+          />
+          <div className="flex flex-1 items-center justify-center">
+            {data.qrTarget ? (
+              <TransferQrPaymentCard
+                qrDataUrl={data.qrCodeDataUrl}
+                companyInfo={
+                  companyProfile
+                    ? {
+                        companyName: companyProfile.company_name || undefined,
+                        taxCode: companyProfile.tax_code ?? undefined,
+                        logo: companyProfile.logo ?? undefined,
+                      }
+                    : undefined
+                }
+                target={data.qrTarget}
+                amount={data.amount}
+                content={data.qrContent}
+                mode={
+                  data.qrMode ??
+                  (data.variant === "RECEIPT"
+                    ? TransferQrMode.RECEIVE_FROM_CUSTOMER
+                    : TransferQrMode.PAY_TO_SUPPLIER)
+                }
+                variant={TransferQrCardVariant.HORIZONTAL}
+                className="w-full max-w-[460px] rounded-2xl border border-slate-200 bg-white p-3.5 text-slate-900 shadow-none"
               />
-              <div className="text-[10px] font-bold mt-1 text-slate-800 leading-tight">
-                Quét mã để thanh toán
-              </div>
-              {data.qrBankHint && (
-                <div className="text-[9px] font-mono text-slate-600 leading-tight mt-0.5 break-all">
-                  {data.qrBankHint}
+            ) : (
+              <div className="inline-flex flex-col items-center justify-center p-2 rounded-lg border border-slate-300 bg-white text-center max-w-[130px]">
+                <img
+                  src={data.qrCodeDataUrl}
+                  alt="VietQR"
+                  className="w-24 h-24 object-contain"
+                />
+                <div className="text-[10px] font-bold mt-1 text-slate-800 leading-tight">
+                  Quét mã để thanh toán
                 </div>
-              )}
-            </div>
-          )}
+                {data.qrBankHint && (
+                  <div className="text-[9px] font-mono text-slate-600 leading-tight mt-0.5 break-all">
+                    {data.qrBankHint}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

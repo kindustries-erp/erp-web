@@ -4,8 +4,16 @@ import { act, renderHook } from "@testing-library/react";
 import type { GarageCashflowVoucher } from "../api/garageCashflowApi";
 import { useGarageCashflowPrint } from "./useGarageCashflowPrint";
 
-const printSpy = vi.fn();
-vi.mock("react-to-print", () => ({ useReactToPrint: () => printSpy }));
+const { printSpy, captured } = vi.hoisted(() => ({
+  printSpy: vi.fn(),
+  captured: { options: null as null | Record<string, () => unknown> },
+}));
+vi.mock("react-to-print", () => ({
+  useReactToPrint: (options: Record<string, () => unknown>) => {
+    captured.options = options;
+    return printSpy;
+  },
+}));
 
 vi.mock("@/core/api/companyProfileApi", () => ({
   useCompanyProfile: () => ({ data: { company_name: "CTY BLUEWAY" } }),
@@ -83,5 +91,51 @@ describe("useGarageCashflowPrint", () => {
     expect(result.current.printData?.qrCodeDataUrl).toBe(
       "data:image/png;base64,abc",
     );
+  });
+
+  it("isPrinting bật ngay khi bấm In và tắt khi hộp thoại in sẵn sàng", async () => {
+    printSpy.mockClear();
+    const { result } = renderHook(() => useGarageCashflowPrint());
+    await act(() =>
+      result.current.printVoucher(voucher(), {
+        qrCodeDataUrl: "data:image/png;base64,abc",
+      }),
+    );
+    expect(result.current.isPrinting).toBe(true);
+    expect(printSpy).toHaveBeenCalledTimes(1);
+
+    await act(() => (captured.options?.onBeforePrint as () => Promise<void>)());
+    expect(result.current.isPrinting).toBe(false);
+  });
+
+  it("bấm In liên tiếp khi đang chuẩn bị chỉ in một lần", async () => {
+    printSpy.mockClear();
+    const { result } = renderHook(() => useGarageCashflowPrint());
+    await act(async () => {
+      await Promise.all([
+        result.current.printVoucher(voucher(), {
+          qrCodeDataUrl: "data:image/png;base64,abc",
+        }),
+        result.current.printVoucher(voucher(), {
+          qrCodeDataUrl: "data:image/png;base64,abc",
+        }),
+      ]);
+    });
+    expect(printSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("lỗi in tắt isPrinting", async () => {
+    const { result } = renderHook(() => useGarageCashflowPrint());
+    await act(() =>
+      result.current.printVoucher(voucher(), {
+        qrCodeDataUrl: "data:image/png;base64,abc",
+      }),
+    );
+    expect(result.current.isPrinting).toBe(true);
+
+    await act(async () => {
+      (captured.options?.onPrintError as () => void)();
+    });
+    expect(result.current.isPrinting).toBe(false);
   });
 });

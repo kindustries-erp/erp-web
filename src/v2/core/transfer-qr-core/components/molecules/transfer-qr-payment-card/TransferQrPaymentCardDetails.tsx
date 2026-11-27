@@ -10,6 +10,8 @@ export interface TransferQrPaymentCardDetailsProps {
   accountNumber?: string;
   formattedAmount: string;
   content?: string;
+  /** Hàng dài (chủ tài khoản, nội dung) xếp nhãn trên, giá trị xuống dòng dưới; không cắt chữ. */
+  stacked?: boolean;
 }
 
 export function TransferQrPaymentCardDetails({
@@ -18,6 +20,7 @@ export function TransferQrPaymentCardDetails({
   accountNumber = "-",
   formattedAmount,
   content,
+  stacked = false,
 }: TransferQrPaymentCardDetailsProps) {
   const { t } = useV2Translation();
   const [copiedField, setCopiedField] = React.useState<
@@ -37,7 +40,13 @@ export function TransferQrPaymentCardDetails({
 
   return (
     <div className="space-y-1.5 rounded-xl bg-slate-50 p-2.5 text-xs border border-slate-200">
-      <div className="flex items-baseline justify-between gap-1">
+      <div
+        className={
+          stacked
+            ? "flex flex-col gap-0.5"
+            : "flex items-baseline justify-between gap-1"
+        }
+      >
         <V2Text variant="caption" className="text-slate-500 shrink-0">
           {isReceive
             ? t("v2.transferQr.card.accountName")
@@ -47,7 +56,11 @@ export function TransferQrPaymentCardDetails({
         <V2Text
           variant="body-sm"
           weight="bold"
-          className="text-slate-900 uppercase truncate"
+          className={
+            stacked
+              ? "text-slate-900 uppercase break-words"
+              : "text-slate-900 uppercase truncate"
+          }
         >
           {displayAccountName}
         </V2Text>
@@ -95,14 +108,30 @@ export function TransferQrPaymentCardDetails({
       </div>
 
       {content && (
-        <div className="flex items-start justify-between gap-1 pt-1 border-t border-slate-200">
+        <div
+          className={
+            stacked
+              ? "flex flex-col gap-0.5 pt-1 border-t border-slate-200"
+              : "flex items-start justify-between gap-1 pt-1 border-t border-slate-200"
+          }
+        >
           <V2Text variant="caption" className="text-slate-500 shrink-0">
             {t("v2.transferQr.card.content")}:
           </V2Text>
-          <div className="flex items-center gap-1 max-w-[190px]">
+          <div
+            className={
+              stacked
+                ? "flex items-start gap-1 min-w-0"
+                : "flex items-center gap-1 max-w-[190px]"
+            }
+          >
             <V2Text
               variant="caption"
-              className="font-mono text-slate-800 truncate"
+              className={
+                stacked
+                  ? "font-mono text-slate-800 break-all"
+                  : "font-mono text-slate-800 truncate"
+              }
             >
               {content}
             </V2Text>

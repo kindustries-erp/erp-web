@@ -111,6 +111,7 @@ export function TransferQrPaymentCard({
       accountNumber={target?.accountNumber}
       formattedAmount={formattedAmount}
       content={content}
+      stacked={isHorizontal}
     />
   );
 

@@ -1,5 +1,8 @@
 export const garageVi = {
   cashflow: {
+    print: {
+      preparing: "Đang chuẩn bị bản in…",
+    },
     tabs: {
       dashboard: "Tổng quan",
       vouchers: "Phiếu thu chi",

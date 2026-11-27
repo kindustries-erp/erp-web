@@ -18,6 +18,8 @@ const DEFAULT_INCLUDE = [
   "src/shared/components/print-templates/**/*.{test,spec}.{ts,tsx}",
   "src/modules/garage/components/organisms/garage-cashflow-drawer/**/*.{test,spec}.{ts,tsx}",
   "src/modules/garage/hooks/garageCashflowQueries.test.ts",
+  "src/modules/garage/hooks/useGarageCashflowPrint.test.ts",
+  "src/modules/garage/components/organisms/garage-cashflow-list/**/*.{test,spec}.{ts,tsx}",
 ];
 
 // `VITEST_ALL=1` (script `test:all`): chạy mọi test trong `src` khi audit thủ công.

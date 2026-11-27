@@ -124,6 +124,41 @@ describe("GarageCashflowPrintTemplate", () => {
     expect(screen.queryByText(/THẺ NHẬN TIỀN/i)).not.toBeInTheDocument();
   });
 
+  it("không còn dòng Quyển số dưới tiêu đề", () => {
+    render(<GarageCashflowPrintTemplate data={receiptData} />);
+
+    expect(screen.queryByText(/Quyển số/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Số: PT-GARA-001/)).toBeInTheDocument();
+  });
+
+  it("canh giữa thẻ QR trong wrapper justify-center và chừa khoảng ký (pb-32) khi có QR", () => {
+    const { container } = render(
+      <GarageCashflowPrintTemplate
+        data={{
+          ...receiptData,
+          qrCodeDataUrl: "data:image/png;base64,mockqrdata",
+          qrTarget: {
+            bin: "970416",
+            bankCode: "ACB",
+            accountNumber: "878984375",
+            accountName: "XE KHACH ANH TU",
+            logoUrl: "",
+          },
+          qrContent: "MIG-20260604",
+        }}
+      />,
+    );
+
+    const qrImg = screen.getByAltText("Napas 247");
+    const centered = qrImg.closest(".justify-center");
+    expect(centered).not.toBeNull();
+    expect(centered?.className).toContain("flex");
+
+    const signRow = container.querySelector(".pb-32");
+    expect(signRow).not.toBeNull();
+    expect(container.querySelector(".pb-14")).toBeNull();
+  });
+
   it("does not render QR code when qrCodeDataUrl is not provided", () => {
     render(<GarageCashflowPrintTemplate data={receiptData} />);
 
