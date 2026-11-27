@@ -97,6 +97,50 @@ describe("V2Popover Molecule", () => {
     expect(dialog.className).toContain("max-w-none");
   });
 
+  it("Desktop: wheel/touchmove trong popover không lan tới document (drawer modal không chặn cuộn)", () => {
+    vi.spyOn(useViewportModule, "useViewport").mockReturnValue({
+      width: 1280,
+      height: 800,
+      isMobile: false,
+      isTablet: false,
+      isDesktop: true,
+    });
+    const onDocWheel = vi.fn();
+    const onDocTouchMove = vi.fn();
+    document.addEventListener("wheel", onDocWheel);
+    document.addEventListener("touchmove", onDocTouchMove);
+
+    try {
+      render(
+        <V2Popover
+          open
+          onOpenChange={vi.fn()}
+          hideCloseButton
+          content={
+            <ul data-testid="scroll-list" className="max-h-60 overflow-y-auto">
+              <li>Ngân hàng A</li>
+            </ul>
+          }
+          trigger={<button type="button">Trigger</button>}
+        />,
+      );
+
+      const list = screen.getByTestId("scroll-list");
+      fireEvent.wheel(list, { deltaY: 120 });
+      fireEvent.touchMove(list);
+
+      expect(onDocWheel).not.toHaveBeenCalled();
+      expect(onDocTouchMove).not.toHaveBeenCalled();
+
+      // Đối chứng: sự kiện ngoài popover vẫn tới document.
+      fireEvent.wheel(screen.getByText("Trigger"), { deltaY: 120 });
+      expect(onDocWheel).toHaveBeenCalledTimes(1);
+    } finally {
+      document.removeEventListener("wheel", onDocWheel);
+      document.removeEventListener("touchmove", onDocTouchMove);
+    }
+  });
+
   it("exports AppPopover as alias of V2Popover", () => {
     expect(AppPopover).toBe(V2Popover);
   });

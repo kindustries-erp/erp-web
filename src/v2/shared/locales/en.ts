@@ -3,6 +3,9 @@ import { v2EnTable } from "./en.table";
 
 export const v2En: V2Dictionary = {
   v2: {
+    print: {
+      preparing: "Preparing print preview…",
+    },
     nav: {
       sections: {
         admin: "ADMIN",

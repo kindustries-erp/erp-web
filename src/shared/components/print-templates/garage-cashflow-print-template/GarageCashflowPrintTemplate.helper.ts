@@ -21,6 +21,9 @@ export function buildGarageCashflowPrintData(
   qrOptions?: {
     qrCodeDataUrl?: string | null;
     qrBankHint?: string | null;
+    qrTarget?: GarageCashflowPrintData["qrTarget"];
+    qrContent?: string;
+    qrMode?: GarageCashflowPrintData["qrMode"];
   },
 ): GarageCashflowPrintData {
   const amount = Number(source.amount) || 0;
@@ -36,5 +39,8 @@ export function buildGarageCashflowPrintData(
     note: source.note || "",
     qrCodeDataUrl: qrOptions?.qrCodeDataUrl,
     qrBankHint: qrOptions?.qrBankHint,
+    qrTarget: qrOptions?.qrTarget,
+    qrContent: qrOptions?.qrContent,
+    qrMode: qrOptions?.qrMode,
   };
 }

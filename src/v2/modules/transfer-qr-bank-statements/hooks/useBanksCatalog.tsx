@@ -6,8 +6,10 @@ import {
   VIETQR_BANKS,
   type VietQrBank,
 } from "@/v2/core/transfer-qr-core/domain/constants/vietQrBanks";
-import { getBankLogoUrl } from "@/v2/core/transfer-qr-core/domain/constants/defaultBankOptions";
+import { getBankLogoUrl, resolveBankLogoUrl } from "@/v2/core/transfer-qr-core";
 import { banksCatalogApi } from "../api/banksCatalogApi";
+
+export { resolveBankLogoUrl };
 
 export interface UnifiedBank extends VietQrBank {
   logoUrl?: string | null;
@@ -19,16 +21,6 @@ export interface BankComboboxOption {
   description?: string;
   logoUrl?: string | null;
   icon?: React.ReactNode;
-}
-
-export function resolveBankLogoUrl(
-  code: string,
-  rawLogoUrl?: string | null,
-): string {
-  if (rawLogoUrl && !rawLogoUrl.includes("vietqr.io")) {
-    return rawLogoUrl;
-  }
-  return getBankLogoUrl(code);
 }
 
 const STATIC_FALLBACK_BANKS: readonly UnifiedBank[] = VIETQR_BANKS.map((b) => ({

@@ -8,6 +8,7 @@ import {
   garageCashflowApi,
   type GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
+import { invalidateGarageCashflowQueries } from "../../../hooks/garageCashflowQueries";
 
 export interface UseGarageCashflowListOptions {
   onOpenCaseDetailProp?: (caseCode: string) => void;
@@ -79,13 +80,7 @@ export function useGarageCashflowList({
           "Xóa phiếu thu/chi thành công",
         ),
       );
-      queryClient.invalidateQueries({ queryKey: ["garage-cashflow-list"] });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-cashflow-forecast-list"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-cashflow-dashboard"],
-      });
+      invalidateGarageCashflowQueries(queryClient);
       setDeleteModal({ open: false, voucher: null });
     },
     onError: (err: any) => {

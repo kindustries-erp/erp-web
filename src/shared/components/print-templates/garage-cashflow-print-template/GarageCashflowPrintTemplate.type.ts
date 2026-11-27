@@ -1,4 +1,8 @@
 import type { CompanyProfile } from "@/core/api/companyProfileApi";
+import type {
+  TransferQrAccountOption,
+  TransferQrMode,
+} from "@/v2/core/transfer-qr-core";
 
 export type GarageCashflowPrintVariant = "RECEIPT" | "PAYMENT";
 
@@ -31,6 +35,12 @@ export interface GarageCashflowPrintData {
   note: string;
   qrCodeDataUrl?: string | null;
   qrBankHint?: string | null;
+  qrTarget?: Pick<
+    TransferQrAccountOption,
+    "bin" | "bankCode" | "accountNumber" | "accountName" | "logoUrl"
+  > | null;
+  qrContent?: string;
+  qrMode?: TransferQrMode;
 }
 
 export interface GarageCashflowPrintLabels {

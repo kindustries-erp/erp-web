@@ -2,9 +2,15 @@ import {
   TransferQrMode,
   TransferQrDrawerTab,
   TransferQrBatchColumn,
+  TransferQrCardVariant,
 } from "./transferQr.enum";
 
-export { TransferQrMode, TransferQrDrawerTab, TransferQrBatchColumn };
+export {
+  TransferQrMode,
+  TransferQrDrawerTab,
+  TransferQrBatchColumn,
+  TransferQrCardVariant,
+};
 
 /** Nhãn i18n của từng chế độ; một nguồn duy nhất cho tab trái của drawer. */
 export const TRANSFER_QR_MODE_LABEL_KEY: Record<TransferQrMode, string> = {

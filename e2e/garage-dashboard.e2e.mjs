@@ -122,8 +122,11 @@ check(
   Number(drawerCounts?.[1]) === expectedQuotation,
   `UI ${tableCounts}, API ${expectedQuotation} xe`,
 );
-// B6. Không còn đếm theo phiếu.
-const drawerText = await page.innerText("body");
+// B6. Không còn đếm theo phiếu (chỉ xét khung bảng của drawer, không lấy toàn trang có thẻ dashboard phía sau).
+const drawerText = await counts
+  .first()
+  .locator("xpath=ancestor::*[.//table][1]")
+  .innerText();
 check(
   "B6 không còn đếm 'N phiếu' trong drawer",
   !/\d+\s*phiếu/i.test(drawerText),

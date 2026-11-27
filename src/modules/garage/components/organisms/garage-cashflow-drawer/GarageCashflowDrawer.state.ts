@@ -1,6 +1,7 @@
 import type {
   GarageCashflowVoucher,
   CreateGarageCashflowVoucherDto,
+  GarageCashflowQrFields,
   UpdateGarageCashflowVoucherDto,
 } from "../../../api/garageCashflowApi";
 import type { InitialCashflowData } from "./GarageCashflowDrawer.type";
@@ -35,6 +36,7 @@ export function buildInitialFormData(
         ((voucher.voucherType || "").toUpperCase() === "PAYMENT"
           ? "PAID"
           : "PAID"),
+      ...pickQrFields(voucher),
     };
   }
 
@@ -57,6 +59,28 @@ export function buildInitialFormData(
     erpCashVoucherId: "",
     paymentStatus: defaultVoucherType === "PAYMENT" ? "PENDING" : "PAID",
   };
+}
+
+const QR_KEYS = [
+  "qrCompanyAccountId",
+  "qrBankBin",
+  "qrBankCode",
+  "qrAccountNumber",
+  "qrAccountName",
+  "qrTransferContent",
+] as const satisfies ReadonlyArray<keyof GarageCashflowQrFields>;
+
+/** Thông tin thanh toán QR: chỉ khóa có giá trị (kể cả null để xóa), chuỗi cắt khoảng trắng. */
+export function pickQrFields(
+  src: GarageCashflowQrFields,
+): GarageCashflowQrFields {
+  const out: GarageCashflowQrFields = {};
+  for (const key of QR_KEYS) {
+    const v = src[key];
+    if (v === undefined) continue;
+    out[key] = typeof v === "string" && v.trim() ? v.trim() : null;
+  }
+  return out;
 }
 
 export function buildCreatePayload(
@@ -83,6 +107,7 @@ export function buildCreatePayload(
     payerType: resolvePayerTypePayload(formData),
     erpBankTransactionId: formData.erpBankTransactionId?.trim() || undefined,
     erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,
+    ...pickQrFields(formData),
   };
 }
 
@@ -124,6 +149,7 @@ export function buildUpdatePayload(
     payerType: resolvePayerTypePayload(formData),
     erpBankTransactionId: formData.erpBankTransactionId?.trim() || undefined,
     erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,
+    ...pickQrFields(formData),
   };
 }
 

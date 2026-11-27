@@ -63,11 +63,13 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
         <GarageCashflowDrawerPaymentQrSection
           voucher={voucher}
           formData={formData}
+          setFormData={setFormData}
+          readOnly={mode !== V2DrawerMode.EDIT}
           onPrint={onPrint}
         />
       </div>
     ),
-    [sectionProps, voucher, formData, onPrint],
+    [sectionProps, voucher, formData, setFormData, mode, onPrint],
   );
 
   const drawerTabs: V2TabItemData[] | undefined = useMemo(() => {

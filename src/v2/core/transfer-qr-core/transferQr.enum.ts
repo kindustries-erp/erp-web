@@ -25,3 +25,10 @@ export enum TransferQrBatchColumn {
   CONTENT = "content",
   REMOVE = "remove",
 }
+
+/** Biến thể hiển thị Thẻ mã QR thanh toán. */
+export enum TransferQrCardVariant {
+  FULL = "full",
+  COMPACT = "compact",
+  HORIZONTAL = "horizontal",
+}

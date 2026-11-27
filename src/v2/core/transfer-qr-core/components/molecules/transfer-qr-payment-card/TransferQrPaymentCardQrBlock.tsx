@@ -15,6 +15,7 @@ export interface TransferQrPaymentCardQrBlockProps {
   onBankLogoError: () => void;
   bankInfo?: VietQrBank | null;
   targetBankCode?: string;
+  compact?: boolean;
 }
 
 export function TransferQrPaymentCardQrBlock({
@@ -26,26 +27,43 @@ export function TransferQrPaymentCardQrBlock({
   onBankLogoError,
   bankInfo,
   targetBankCode,
+  compact = false,
 }: TransferQrPaymentCardQrBlockProps) {
   return (
-    <div className="my-3 flex flex-col items-center">
+    <div
+      className={
+        compact
+          ? "flex flex-col items-center shrink-0"
+          : "my-3 flex flex-col items-center"
+      }
+    >
       {/* Logo VietQR thương hiệu phía trên QR */}
-      <div className="mb-2 flex items-center justify-center">
+      <div className="mb-1.5 flex items-center justify-center">
         <V2Image
           src={VIETQR_HORIZONTAL_LOGO}
           alt="VietQR"
-          className="h-6 w-auto object-contain"
+          className={
+            compact ? "h-5 w-auto object-contain" : "h-6 w-auto object-contain"
+          }
         />
       </div>
 
       {/* Khung QR code kèm Logo ở tâm */}
-      <div className="relative rounded-xl bg-white p-2.5 shadow-sm border border-slate-200">
+      <div className="relative rounded-xl bg-white p-2 shadow-sm border border-border">
         <V2Image
           src={qrDataUrl}
           alt="VietQR"
-          className="h-44 w-44 object-contain"
+          className={
+            compact ? "h-28 w-28 object-contain" : "h-44 w-44 object-contain"
+          }
         />
-        <div className="absolute inset-0 m-auto flex h-9 w-9 items-center justify-center rounded-lg bg-white p-0.5 shadow-sm border border-slate-100">
+        <div
+          className={
+            compact
+              ? "absolute inset-0 m-auto flex h-7 w-7 items-center justify-center rounded-md bg-white p-0.5 shadow-sm border border-border"
+              : "absolute inset-0 m-auto flex h-9 w-9 items-center justify-center rounded-lg bg-white p-0.5 shadow-sm border border-border"
+          }
+        >
           <V2Image
             src={centerLogoSrc}
             alt="Center Logo"
@@ -63,7 +81,7 @@ export function TransferQrPaymentCardQrBlock({
           alt="Napas 247"
           className="h-3.5 w-auto max-w-[70px] object-contain"
         />
-        <div className="h-3.5 w-px bg-slate-300" />
+        <div className="h-3.5 w-px bg-border" />
         <div className="flex items-center gap-1.5">
           {bankLogoUrl && !imgFailed ? (
             <V2Image
@@ -78,7 +96,7 @@ export function TransferQrPaymentCardQrBlock({
             <V2Text
               variant="caption"
               weight="semibold"
-              className="text-center text-slate-600 block text-xs"
+              className="text-center text-muted-foreground block text-xs"
             >
               {bankInfo
                 ? `${bankInfo.shortName} (${bankInfo.code})`

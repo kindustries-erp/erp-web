@@ -18,7 +18,7 @@
     "preview": "vite preview",
     "test": "vitest --run",
     "test:v2": "vitest --run",
-    "test:all": "vitest --run --include 'src/**/*.{test,spec}.{ts,tsx}'",
+    "test:all": "VITEST_ALL=1 vitest --run",
     "e2e:invoice-attachments": "node e2e/invoice-attachments.e2e.mjs",
     "e2e:file-attachments": "node e2e/file-attachments.e2e.mjs",
     "e2e:garage-procurement": "node e2e/garage-procurement.e2e.mjs",
@@ -56,7 +56,9 @@
     "e2e:garage-dashboard": "node e2e/garage-dashboard.e2e.mjs",
     "e2e:garage-kanban": "node e2e/garage-kanban.e2e.mjs",
     "e2e:garage-workshop-progress": "node e2e/garage-workshop-progress.e2e.mjs",
-    "e2e:garage-workshop-branch-scope": "node e2e/garage-workshop-branch-scope.e2e.mjs"
+    "e2e:garage-workshop-branch-scope": "node e2e/garage-workshop-branch-scope.e2e.mjs",
+    "e2e:garage-cashflow-qr": "node e2e/garage-cashflow-qr.e2e.mjs",
+    "e2e:garage-cashflow-forecast": "node e2e/garage-cashflow-forecast.e2e.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

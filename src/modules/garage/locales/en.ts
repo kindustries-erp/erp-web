@@ -122,6 +122,10 @@ export const garageEn = {
   },
   cashflowDrawer: {
     createTitle: "Create Cashflow Voucher",
+    downloadQr: "Download QR",
+    downloadQrTitle: "Download QR image",
+    printWithQr: "Print with QR",
+    printWithQrTitle: "Print voucher with QR code",
     voucherPrefix: "Voucher",
     tabDetails: "Details",
     tabHistory: "History & Audit",
@@ -159,6 +163,7 @@ export const garageEn = {
     selectPlaceholder: "— Select —",
     formattedAmount: "Formatted amount:",
     amountInWords: "In words:",
+    accountNumberInvalid: "Account number must be 1-19 letters or digits",
   },
   tabs: {
     dashboard: "Overview",

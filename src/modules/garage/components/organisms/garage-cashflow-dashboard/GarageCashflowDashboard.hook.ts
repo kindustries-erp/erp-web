@@ -6,6 +6,7 @@ import {
   garageCashflowApi,
   type GarageCashflowTopTransactionItem,
 } from "../../../api/garageCashflowApi";
+import { GARAGE_CASHFLOW_QUERY_KEYS } from "../../../hooks/garageCashflowQueries";
 
 export function useGarageCashflowDashboard(
   onOpenCaseDetailProp?: (caseCode: string) => void,
@@ -26,12 +27,14 @@ export function useGarageCashflowDashboard(
   }, [selectedBranchId]);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["garage-cashflow-dashboard", queryParams],
+    queryKey: [GARAGE_CASHFLOW_QUERY_KEYS.dashboard, queryParams],
     queryFn: () => garageCashflowApi.getDashboard(queryParams),
   });
 
   const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["garage-cashflow-dashboard"] });
+    queryClient.invalidateQueries({
+      queryKey: [GARAGE_CASHFLOW_QUERY_KEYS.dashboard],
+    });
   }, [queryClient]);
 
   const handleOpenExport = useCallback(() => {

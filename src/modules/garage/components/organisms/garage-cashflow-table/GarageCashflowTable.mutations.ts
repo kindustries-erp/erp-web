@@ -2,11 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { garageCashflowApi } from "../../../api/garageCashflowApi";
 import type { UpdateGarageCashflowVoucherDto } from "../../../api/garageCashflowApi";
+import { invalidateGarageCashflowQueries } from "../../../hooks/garageCashflowQueries";
 
 export function useGarageCashflowMutations() {
   const queryClient = useQueryClient();
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["garage-cashflow-list"] });
+  const invalidate = () => invalidateGarageCashflowQueries(queryClient);
 
   const createMutation = useMutation({
     mutationFn: garageCashflowApi.create,
