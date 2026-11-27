@@ -33,7 +33,7 @@ export const V2TabItem: React.FC<V2TabItemProps> = ({
       data-testid={`v2-tab-item-${id}`}
       onClick={onClick}
       className={cn(
-        "v2-tab-item group relative flex h-7 items-center gap-1.5 px-3 rounded-lg text-xs font-medium cursor-pointer transition-all duration-150 ease-out whitespace-nowrap select-none",
+        "v2-tab-item group relative flex h-6 items-center gap-1.5 px-2.5 rounded-md text-[11px] font-medium cursor-pointer transition-all duration-150 ease-out whitespace-nowrap select-none",
         isActive
           ? "bg-slate-900 text-white shadow-xs border border-transparent dark:bg-[color:var(--sidebar-active-bg,rgba(20,184,166,0.15))] dark:text-[color:var(--sidebar-active-fg,#2dd4bf)] dark:border-teal-500/35 dark:shadow-[0_2px_10px_rgba(20,184,166,0.18)] font-semibold"
           : "text-muted-fg dark:text-zinc-400 hover:text-foreground dark:hover:text-zinc-100 hover:bg-black/5 dark:hover:bg-white/[0.05] border border-transparent",
@@ -70,7 +70,7 @@ export const V2TabItem: React.FC<V2TabItemProps> = ({
         as="span"
         variant="body-sm"
         truncate
-        className="max-w-[130px] leading-none text-inherit text-xs"
+        className="max-w-[130px] leading-none text-inherit text-[11px]"
       >
         {label}
       </V2Text>
