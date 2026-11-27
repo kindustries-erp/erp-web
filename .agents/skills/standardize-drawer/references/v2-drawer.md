@@ -355,6 +355,7 @@ Drawer V2 ở `mode="view"` hiển thị **nhãn - giá trị** (từng dòng, k
 - Focus dùng `V2_DRAWER_FOCUS_RING_CLASS` (`src/v2/shared/utils/v2FocusRing.ts`): ring 1px `--primary` 40%, `ring-offset-0`. Không dùng `focus-visible:ring-ring` đứng một mình, vì ring đậm và offset mặc định trắng làm viền trắng trong dark theme.
 - Cấm `ring-offset-<n>` nếu dòng đó không có `ring-offset-background` hoặc `ring-offset-0`. Test `src/v2/shared/utils/v2FocusRing.guard.test.ts` kiểm tra điều này cho toàn bộ `src/v2`.
 - Input trong popover tự focus (ví dụ ô tìm kiếm của `V2Combobox`) cũng theo cùng chuẩn. Variant `search` và `ghost` tắt ring bằng `focus:ring-0 focus-visible:ring-0`.
+- **Cuộn trong popover khi nằm trong drawer (KINDU-2154)**: `V2Popover` (desktop) portal ra `<body>`, nằm ngoài vùng khóa cuộn của Dialog modal; `react-remove-scroll` chặn `wheel`/`touchmove` ở `document`. `V2PopoverDesktop` dừng lan hai sự kiện này tại `PopoverContent` (`stopScrollPropagation`) nên danh sách trong `V2Combobox`, `V2MultiCombobox`, `V2MultiSelect`, `V2DatePicker`… cuộn được trong drawer. Không bật `modal` cho popover để sửa việc này (đổi hành vi bấm ra ngoài của mọi picker). Test: `V2Popover.test.tsx` (wheel trong popover không tới document).
 - Khi đụng field trong drawer/card, kiểm tra ít nhất 3 theme: `default`, `classic-dark`, `midnight` (Storybook hoặc app thật).
 
 ## 3. Mở V2 drawer chồng lên drawer v1 (DrawerModal)

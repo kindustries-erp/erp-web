@@ -148,7 +148,8 @@ try {
   await accInput().fill(ACC_NO);
   await nameInput().fill(ACC_NAME);
   await contentInput().fill(CONTENT);
-  const qrImg = drawer().getByAltText("VietQR");
+  // Thẻ QR có logo VietQR (cùng alt) phía trên ảnh mã QR: lấy ảnh cuối là mã QR.
+  const qrImg = drawer().getByAltText("VietQR").last();
   await qrImg.waitFor({ timeout: 15000 });
   check(
     "B3 sửa: QR xem trước là PNG",
@@ -226,7 +227,12 @@ try {
         (i) =>
           i.src.startsWith("data:image/png") && !i.closest("[role=dialog]"),
       )
-      .map((i) => i.parentElement?.parentElement?.textContent ?? "")
+      // Thẻ QR ngang trong mẫu in: số TK nằm ở khối chi tiết cạnh khối QR, lấy chữ của khối thẻ bao ngoài.
+      .map((i) => {
+        let el = i;
+        for (let k = 0; k < 6 && el.parentElement; k += 1) el = el.parentElement;
+        return el.textContent ?? "";
+      })
       .join(" "),
   );
   check("E1 in: mẫu in có ảnh QR", true);

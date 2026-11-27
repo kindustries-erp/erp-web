@@ -9,7 +9,7 @@ import type {
   CreateGarageCashflowVoucherDto,
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
-import { useGarageCashflowList } from "../../../hooks/useGarageCashflowList";
+import { useGarageCashflowMutations } from "../garage-cashflow-table/GarageCashflowTable.mutations";
 import {
   V2DrawerMode,
   type DrawerModeType,
@@ -48,7 +48,7 @@ export function useGarageCashflowDrawer({
   onSuccess,
 }: UseGarageCashflowDrawerParams) {
   const t = useT();
-  const { createMutation, updateMutation } = useGarageCashflowList();
+  const { createMutation, updateMutation } = useGarageCashflowMutations();
 
   const canCreate = useHasPermission(
     ErpResource.GARAGE_CASHFLOW,

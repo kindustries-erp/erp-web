@@ -17,6 +17,7 @@ const DEFAULT_INCLUDE = [
   "src/modules/garage/components/GarageConversionFunnelCard/**/*.{test,spec}.{ts,tsx}",
   "src/shared/components/print-templates/**/*.{test,spec}.{ts,tsx}",
   "src/modules/garage/components/organisms/garage-cashflow-drawer/**/*.{test,spec}.{ts,tsx}",
+  "src/modules/garage/hooks/garageCashflowQueries.test.ts",
 ];
 
 // `VITEST_ALL=1` (script `test:all`): chạy mọi test trong `src` khi audit thủ công.
