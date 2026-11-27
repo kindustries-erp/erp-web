@@ -1,6 +1,6 @@
 import {
   resolveBankBin,
-  getVietQrCdnLogoUrl,
+  resolveBankLogoUrl,
   type TransferQrAccountOption,
 } from "@/v2/core/transfer-qr-core";
 
@@ -26,8 +26,9 @@ export function toTransferQrAccountOptions(
       bankName: account.bankName,
     });
     const bankCode = bank?.code ?? account.bankCode;
-    const logoUrl =
-      bank?.logoUrl ?? (bankCode ? getVietQrCdnLogoUrl(bankCode) : null);
+    const logoUrl = bankCode
+      ? resolveBankLogoUrl(bankCode, bank?.logoUrl)
+      : null;
     return {
       id: account.id,
       label: `${bankCode} - ${account.accountNumber}`,

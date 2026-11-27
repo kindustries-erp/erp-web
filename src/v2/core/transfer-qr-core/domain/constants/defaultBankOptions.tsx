@@ -9,6 +9,20 @@ export function getBankLogoUrl(code: string): string {
   return `${base}/api/v2/banks-management/logo/${cleanCode}`;
 }
 
+/**
+ * Chuẩn hóa URL logo ngân hàng: bỏ qua URL CDN vietqr.io (bị chặn CORS khi render/in)
+ * và dùng endpoint nội bộ `/api/v2/banks-management/logo/:code`.
+ */
+export function resolveBankLogoUrl(
+  code: string,
+  rawLogoUrl?: string | null,
+): string {
+  if (rawLogoUrl && !rawLogoUrl.includes("vietqr.io")) {
+    return rawLogoUrl;
+  }
+  return getBankLogoUrl(code);
+}
+
 export const DEFAULT_BANK_OPTIONS: V2ComboboxOption[] = VIETQR_BANKS.map(
   (b) => ({
     value: b.bin,

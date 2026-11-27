@@ -14,7 +14,12 @@ import {
   type TransferQrBankStatementsAccount,
 } from "@/v2/modules/transfer-qr-bank-statements";
 import { useBanksCatalog } from "@/v2/modules/transfer-qr-bank-statements/hooks/useBanksCatalog";
-import { VIETQR_BANKS } from "@/v2/core/transfer-qr-core";
+import {
+  resolveBankLogoUrl,
+  TransferQrMode,
+  VIETQR_BANKS,
+  type TransferQrCompanyInfo,
+} from "@/v2/core/transfer-qr-core";
 import type {
   CreateGarageCashflowVoucherDto,
   GarageCashflowQrFields,
@@ -190,10 +195,58 @@ export function useGarageCashflowPaymentQr({
     };
   }, [info.bin, info.accountNumber, info.content, amount]);
 
+  const companyInfo: TransferQrCompanyInfo | undefined = useMemo(() => {
+    if (!companyProfile) return undefined;
+    return {
+      companyName: companyProfile.company_name || undefined,
+      taxCode: companyProfile.tax_code ?? undefined,
+      logo: companyProfile.logo ?? undefined,
+    };
+  }, [companyProfile]);
+
+  const selectedCompanyAccount = useMemo(
+    () => companyAccounts.find((a) => a.id === info.accountId),
+    [companyAccounts, info.accountId],
+  );
+
+  const target = useMemo(() => {
+    if (!info.bin || !info.accountNumber) return null;
+    const catalogBank = banks.findBank?.(info.bin || info.bankCode);
+    const resolvedBankCode = catalogBank?.code || info.bankCode;
+    return {
+      bin: info.bin,
+      bankCode: resolvedBankCode,
+      accountNumber: info.accountNumber,
+      accountName: info.accountName,
+      logoUrl:
+        catalogBank?.logoUrl ??
+        (resolvedBankCode
+          ? resolveBankLogoUrl(
+              resolvedBankCode,
+              selectedCompanyAccount?.logoUrl,
+            )
+          : null),
+    };
+  }, [
+    info.bin,
+    info.bankCode,
+    info.accountNumber,
+    info.accountName,
+    banks,
+    selectedCompanyAccount?.logoUrl,
+  ]);
+
+  const mode = isReceipt
+    ? TransferQrMode.RECEIVE_FROM_CUSTOMER
+    : TransferQrMode.PAY_TO_SUPPLIER;
+
   return {
     isReceipt,
     readOnly: !canEdit,
     companyAccounts,
+    companyInfo,
+    target,
+    mode,
     bankOptions: banks.bankOptions,
     isBanksLoading: banks.loading,
     onScrollBottom: banks.onScrollBottom,

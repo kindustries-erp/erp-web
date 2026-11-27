@@ -66,7 +66,7 @@ export function TransferQrPaymentCardDetails({
               variant="ghost"
               size="icon-xs"
               onClick={() => handleCopy("account", accountNumber)}
-              className="h-4 w-4 text-slate-400 hover:text-slate-700 p-0"
+              className="h-4 w-4 text-slate-400 hover:text-slate-700 p-0 print:hidden"
               title={t("v2.transferQr.card.copy")}
             >
               {copiedField === "account" ? (
@@ -110,7 +110,7 @@ export function TransferQrPaymentCardDetails({
               variant="ghost"
               size="icon-xs"
               onClick={() => handleCopy("content", content)}
-              className="h-3.5 w-3.5 shrink-0 text-slate-400 hover:text-slate-700 p-0"
+              className="h-3.5 w-3.5 shrink-0 text-slate-400 hover:text-slate-700 p-0 print:hidden"
               title={t("v2.transferQr.card.copy")}
             >
               {copiedField === "content" ? (

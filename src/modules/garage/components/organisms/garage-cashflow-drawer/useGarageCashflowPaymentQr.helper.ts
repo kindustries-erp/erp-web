@@ -1,7 +1,10 @@
-import QRCode from "qrcode";
 import {
   buildVietQrPayload,
   isValidAccountNumber,
+  renderVietQrDataUrl,
+  resolveBankLogoUrl,
+  TransferQrMode,
+  VIETQR_BANKS,
   type TransferQrAccountOption,
 } from "@/v2/core/transfer-qr-core";
 import type {
@@ -14,6 +17,8 @@ export function buildVoucherTransferContent(
   voucher: GarageCashflowVoucher | null,
   formData: Partial<CreateGarageCashflowVoucherDto>,
 ): string {
+  const note = (formData.note ?? voucher?.note ?? "").trim();
+  if (note) return note;
   const code = voucher?.voucherCode || formData.voucherCode || "";
   const plate =
     voucher?.licensePlate ||
@@ -44,11 +49,7 @@ export async function generateVietQrDataUrl(params: {
       amount: amount && amount > 0 ? amount : null,
       content: content.trim(),
     });
-    return await QRCode.toDataURL(payload, {
-      margin: 1,
-      width: 320,
-      errorCorrectionLevel: "H",
-    });
+    return await renderVietQrDataUrl(payload);
   } catch {
     return null;
   }
@@ -164,14 +165,57 @@ export function formatQrBankHint(info: VoucherQrInfo): string | null {
   return `${info.bankCode || "BANK"} - ${info.accountNumber}`;
 }
 
+export type VoucherPrintQrTarget = Pick<
+  TransferQrAccountOption,
+  "bin" | "bankCode" | "accountNumber" | "accountName" | "logoUrl"
+>;
+
+/** Tải trước logo ngân hàng sang Data URL để iframe in hiển thị tức thì; lỗi trả về "" (rơi về text). */
+async function preloadBankLogoDataUrl(url: string): Promise<string> {
+  if (!url) return "";
+  if (url.startsWith("data:")) return url;
+  if (typeof fetch !== "function" || typeof FileReader === "undefined") {
+    return "";
+  }
+  const controller =
+    typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = controller
+    ? setTimeout(() => controller.abort(), 1500)
+    : undefined;
+  try {
+    const res = await fetch(url, { signal: controller?.signal });
+    if (!res.ok) return "";
+    const blob = await res.blob();
+    if (!blob.type.startsWith("image/")) return "";
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () =>
+        resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return "";
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 /** Dựng QR để in từ phiếu đã lưu (số tiền = số tiền phiếu). */
 export async function buildVoucherPrintQr(
   voucher: GarageCashflowVoucher,
   companyAccounts: readonly TransferQrAccountOption[],
   companyName?: string | null,
-): Promise<{ qrCodeDataUrl: string | null; qrBankHint: string | null }> {
+): Promise<{
+  qrCodeDataUrl: string | null;
+  qrBankHint: string | null;
+  qrTarget?: VoucherPrintQrTarget | null;
+  qrContent?: string;
+  qrMode?: TransferQrMode;
+}> {
+  const isReceipt = (voucher.voucherType || "").toUpperCase() === "RECEIPT";
   const info = resolveVoucherQrInfo({
-    isReceipt: (voucher.voucherType || "").toUpperCase() === "RECEIPT",
+    isReceipt,
     saved: voucher,
     defaultContent: buildVoucherTransferContent(voucher, {}),
     companyAccounts,
@@ -183,8 +227,35 @@ export async function buildVoucherPrintQr(
     amount: Number(voucher.amount) || null,
     content: info.content,
   });
+  if (!qrCodeDataUrl) {
+    return { qrCodeDataUrl: null, qrBankHint: null };
+  }
+  const matchedAcc = companyAccounts.find((a) => a.id === info.accountId);
+  const bankInfo = VIETQR_BANKS.find(
+    (b) => b.bin === info.bin || b.code === info.bankCode,
+  );
+  const resolvedCode = bankInfo?.code || info.bankCode;
+  const rawLogoUrl = resolvedCode
+    ? resolveBankLogoUrl(resolvedCode, matchedAcc?.logoUrl ?? bankInfo?.logoUrl)
+    : "";
+  const preloadedLogo = await preloadBankLogoDataUrl(rawLogoUrl);
+  const finalLogoUrl = preloadedLogo || rawLogoUrl;
   return {
     qrCodeDataUrl,
-    qrBankHint: qrCodeDataUrl ? formatQrBankHint(info) : null,
+    qrBankHint: formatQrBankHint(info),
+    qrTarget:
+      info.bin && info.accountNumber
+        ? {
+            bin: info.bin,
+            bankCode: info.bankCode,
+            accountNumber: info.accountNumber,
+            accountName: info.accountName,
+            logoUrl: finalLogoUrl,
+          }
+        : null,
+    qrContent: info.content,
+    qrMode: isReceipt
+      ? TransferQrMode.RECEIVE_FROM_CUSTOMER
+      : TransferQrMode.PAY_TO_SUPPLIER,
   };
 }

@@ -122,6 +122,10 @@ export const garageEn = {
   },
   cashflowDrawer: {
     createTitle: "Create Cashflow Voucher",
+    downloadQr: "Download QR",
+    downloadQrTitle: "Download QR image",
+    printWithQr: "Print with QR",
+    printWithQrTitle: "Print voucher with QR code",
     voucherPrefix: "Voucher",
     tabDetails: "Details",
     tabHistory: "History & Audit",

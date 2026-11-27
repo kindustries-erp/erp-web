@@ -4,6 +4,7 @@ import type { TransferQrAccountOption } from "@/v2/core/transfer-qr-core";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import {
   buildVoucherPrintQr,
+  buildVoucherTransferContent,
   isQrAccountNumberInvalid,
   normalizeAccountNumber,
   resolveVoucherQrInfo,
@@ -35,6 +36,25 @@ const voucher = (
   createdAt: "",
   updatedAt: "",
   ...extra,
+});
+
+describe("buildVoucherTransferContent", () => {
+  it("ưu tiên dùng ghi chú (note) làm nội dung chuyển khoản", () => {
+    expect(
+      buildVoucherTransferContent(voucher({ note: "Thanh toan coc xe" }), {}),
+    ).toBe("Thanh toan coc xe");
+    expect(
+      buildVoucherTransferContent(voucher({ note: "Cu" }), {
+        note: "Ghi chu moi",
+      }),
+    ).toBe("Ghi chu moi");
+  });
+
+  it("fallback về mã phiếu + biển số khi không có ghi chú", () => {
+    expect(buildVoucherTransferContent(voucher({ note: "" }), {})).toBe(
+      "PT-001 30A12345",
+    );
+  });
 });
 
 describe("resolveVoucherQrInfo", () => {

@@ -99,6 +99,31 @@ describe("GarageCashflowPrintTemplate", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders TransferQrPaymentCard in compact mode without header when qrTarget is provided", () => {
+    render(
+      <GarageCashflowPrintTemplate
+        data={{
+          ...receiptData,
+          qrCodeDataUrl: "data:image/png;base64,mockqrdata",
+          qrTarget: {
+            bin: "970416",
+            bankCode: "ACB",
+            accountNumber: "878984375",
+            accountName: "XE KHACH ANH TU",
+            logoUrl: "",
+          },
+          qrContent: "MIG-20260604",
+        }}
+      />,
+    );
+
+    expect(screen.getByAltText("Napas 247")).toBeInTheDocument();
+    expect(screen.getByText("878984375")).toBeInTheDocument();
+    expect(screen.getByText("MIG-20260604")).toBeInTheDocument();
+    expect(screen.queryByAltText("Bank Logo")).not.toBeInTheDocument();
+    expect(screen.queryByText(/THẺ NHẬN TIỀN/i)).not.toBeInTheDocument();
+  });
+
   it("does not render QR code when qrCodeDataUrl is not provided", () => {
     render(<GarageCashflowPrintTemplate data={receiptData} />);
 

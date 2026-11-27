@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import QRCode from "qrcode";
 import {
   buildTransferQrFileName,
   buildVietQrPayload,
+  renderVietQrDataUrl,
 } from "../domain/rules/vietQrPayload";
 import {
   EMPTY_TRANSFER_QR_FORM,
@@ -82,17 +82,9 @@ export function useTransferQrController({
       setQrDataUrl(null);
       return;
     }
-    QRCode.toDataURL(payload, {
-      margin: 1,
-      width: 320,
-      errorCorrectionLevel: "H",
-    })
-      .then((url: string) => {
-        if (!cancelled) setQrDataUrl(url);
-      })
-      .catch(() => {
-        if (!cancelled) setQrDataUrl(null);
-      });
+    renderVietQrDataUrl(payload).then((url) => {
+      if (!cancelled) setQrDataUrl(url);
+    });
     return () => {
       cancelled = true;
     };

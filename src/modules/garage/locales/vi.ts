@@ -122,6 +122,10 @@ export const garageVi = {
   },
   cashflowDrawer: {
     createTitle: "Tạo Phiếu Thu Chi Mới",
+    downloadQr: "Tải QR",
+    downloadQrTitle: "Tải ảnh QR",
+    printWithQr: "In phiếu QR",
+    printWithQrTitle: "In phiếu kèm mã QR",
     voucherPrefix: "Phiếu",
     tabDetails: "Chi tiết",
     tabHistory: "Lịch sử & Kiểm duyệt",

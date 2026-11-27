@@ -1,5 +1,11 @@
 import React from "react";
 import { format } from "date-fns";
+import { V2Divider } from "@/v2/shared/components/atoms";
+import {
+  TransferQrCardVariant,
+  TransferQrMode,
+  TransferQrPaymentCard,
+} from "@/v2/core/transfer-qr-core";
 import {
   GARAGE_CASHFLOW_PRINT_DEFAULT_LOGO,
   GARAGE_CASHFLOW_PRINT_DOTTED,
@@ -78,51 +84,33 @@ export const GarageCashflowPrintTemplate = React.forwardRef<
         </div>
       </div>
 
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div className="flex-1 space-y-1 min-w-0">
-          <div>
-            - {labels.partyLabel}:{" "}
-            {data.partyName || GARAGE_CASHFLOW_PRINT_DOTTED}
-          </div>
-          <div>
-            - Địa chỉ: {data.partyAddress || GARAGE_CASHFLOW_PRINT_DOTTED}
-          </div>
-          <div>
-            - {labels.reasonLabel}:{" "}
-            {data.reason || GARAGE_CASHFLOW_PRINT_DOTTED}
-          </div>
-          <div>
-            - Số tiền: <span className="font-bold">{amountText}</span> VND
-          </div>
-          <div>
-            - Viết bằng chữ:{" "}
-            {data.amountInWords || GARAGE_CASHFLOW_PRINT_DOTTED}
-          </div>
-          <div>
-            - Kèm theo: {data.note || GARAGE_CASHFLOW_PRINT_DOTTED} chứng từ gốc
-          </div>
+      <div className="mb-8 space-y-1">
+        <div>
+          - {labels.partyLabel}:{" "}
+          {data.partyName || GARAGE_CASHFLOW_PRINT_DOTTED}
         </div>
-
-        {data.qrCodeDataUrl && (
-          <div className="shrink-0 flex flex-col items-center justify-center p-2 rounded-lg border border-slate-300 bg-white text-center max-w-[130px]">
-            <img
-              src={data.qrCodeDataUrl}
-              alt="VietQR"
-              className="w-24 h-24 object-contain"
-            />
-            <div className="text-[10px] font-bold mt-1 text-slate-800 leading-tight">
-              Quét mã để thanh toán
-            </div>
-            {data.qrBankHint && (
-              <div className="text-[9px] font-mono text-slate-600 leading-tight mt-0.5 break-all">
-                {data.qrBankHint}
-              </div>
-            )}
-          </div>
-        )}
+        <div>
+          - Địa chỉ: {data.partyAddress || GARAGE_CASHFLOW_PRINT_DOTTED}
+        </div>
+        <div>
+          - {labels.reasonLabel}: {data.reason || GARAGE_CASHFLOW_PRINT_DOTTED}
+        </div>
+        <div>
+          - Số tiền: <span className="font-bold">{amountText}</span> VND
+        </div>
+        <div>
+          - Viết bằng chữ: {data.amountInWords || GARAGE_CASHFLOW_PRINT_DOTTED}
+        </div>
+        <div>
+          - Kèm theo: {data.note || GARAGE_CASHFLOW_PRINT_DOTTED} chứng từ gốc
+        </div>
       </div>
 
-      <div className="flex justify-between text-center pb-24">
+      <div
+        className={`flex justify-between text-center ${
+          data.qrCodeDataUrl ? "pb-14" : "pb-24"
+        }`}
+      >
         {signers.map((s) => (
           <div key={s.title} className="flex-1">
             <div className="font-bold mb-1">{s.title}</div>
@@ -130,6 +118,53 @@ export const GarageCashflowPrintTemplate = React.forwardRef<
           </div>
         ))}
       </div>
+
+      {data.qrCodeDataUrl && (
+        <div style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif" }}>
+          <V2Divider orientation="horizontal" className="my-4 bg-slate-300" />
+          {data.qrTarget ? (
+            <TransferQrPaymentCard
+              qrDataUrl={data.qrCodeDataUrl}
+              companyInfo={
+                companyProfile
+                  ? {
+                      companyName: companyProfile.company_name || undefined,
+                      taxCode: companyProfile.tax_code ?? undefined,
+                      logo: companyProfile.logo ?? undefined,
+                    }
+                  : undefined
+              }
+              target={data.qrTarget}
+              amount={data.amount}
+              content={data.qrContent}
+              mode={
+                data.qrMode ??
+                (data.variant === "RECEIPT"
+                  ? TransferQrMode.RECEIVE_FROM_CUSTOMER
+                  : TransferQrMode.PAY_TO_SUPPLIER)
+              }
+              variant={TransferQrCardVariant.HORIZONTAL}
+              className="w-full max-w-[460px] rounded-2xl border border-slate-200 bg-white p-3.5 text-slate-900 shadow-none"
+            />
+          ) : (
+            <div className="inline-flex flex-col items-center justify-center p-2 rounded-lg border border-slate-300 bg-white text-center max-w-[130px]">
+              <img
+                src={data.qrCodeDataUrl}
+                alt="VietQR"
+                className="w-24 h-24 object-contain"
+              />
+              <div className="text-[10px] font-bold mt-1 text-slate-800 leading-tight">
+                Quét mã để thanh toán
+              </div>
+              {data.qrBankHint && (
+                <div className="text-[9px] font-mono text-slate-600 leading-tight mt-0.5 break-all">
+                  {data.qrBankHint}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 });
