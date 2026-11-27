@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
@@ -7,46 +14,70 @@ import {
   type TransferQrBankStatementsAccount,
 } from "@/v2/modules/transfer-qr-bank-statements";
 import { useBanksCatalog } from "@/v2/modules/transfer-qr-bank-statements/hooks/useBanksCatalog";
-import { VIETQR_BANKS } from "@/v2/core/transfer-qr-core";
+import {
+  resolveBankLogoUrl,
+  TransferQrMode,
+  VIETQR_BANKS,
+  type TransferQrCompanyInfo,
+} from "@/v2/core/transfer-qr-core";
 import type {
   CreateGarageCashflowVoucherDto,
+  GarageCashflowQrFields,
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
 import {
   buildVoucherTransferContent,
+  EMPTY_QR_BANK_FIELDS,
+  formatQrBankHint,
   generateVietQrDataUrl,
+  hasSavedQrInfo,
+  isQrAccountNumberInvalid,
+  normalizeAccountNumber,
+  resolveVoucherQrInfo,
+  toQrPatchFields,
+  type VoucherQrInfo,
 } from "./useGarageCashflowPaymentQr.helper";
+
+type FormData = Partial<CreateGarageCashflowVoucherDto>;
 
 export interface UseGarageCashflowPaymentQrParams {
   voucher: GarageCashflowVoucher | null;
-  formData: Partial<CreateGarageCashflowVoucherDto>;
+  formData: FormData;
+  /** Ghi thông tin thanh toán vào form để lưu cùng phiếu. Thiếu thì chỉ xem. */
+  setFormData?: Dispatch<SetStateAction<FormData>>;
+  /** Không ở chế độ sửa: khóa mọi thay đổi. */
+  readOnly?: boolean;
 }
 
-export function useGarageCashflowPaymentQr({
-  voucher,
-  formData,
-}: UseGarageCashflowPaymentQrParams) {
-  const { data: companyProfile } = useCompanyProfile();
-  const {
-    bankOptions,
-    onScrollBottom,
-    onSearchChange,
-    loading: isBanksLoading,
-  } = useBanksCatalog();
+export const GARAGE_BANK_ACCOUNTS_QUERY_KEY = ["bank-accounts"] as const;
 
+/** Tài khoản công ty nhận tiền (dùng chung cho drawer và bản in). */
+export function useGarageCompanyAccounts() {
   const { data: rawAccounts = [] } = useQuery({
-    queryKey: ["bank-accounts"],
+    queryKey: GARAGE_BANK_ACCOUNTS_QUERY_KEY,
     queryFn: () => bankStatementApi.getBankAccounts(),
     staleTime: 5 * 60 * 1000,
   });
-
-  const companyAccounts = useMemo(
+  return useMemo(
     () =>
       toTransferQrAccountOptions(
         rawAccounts as TransferQrBankStatementsAccount[],
       ),
     [rawAccounts],
   );
+}
+
+export function useGarageCashflowPaymentQr({
+  voucher,
+  formData,
+  setFormData,
+  readOnly = false,
+}: UseGarageCashflowPaymentQrParams) {
+  const { data: companyProfile } = useCompanyProfile();
+  const banks = useBanksCatalog();
+  const companyAccounts = useGarageCompanyAccounts();
+  const companyName = companyProfile?.company_name;
+  const canEdit = !readOnly && Boolean(setFormData);
 
   const isReceipt =
     (
@@ -55,90 +86,186 @@ export function useGarageCashflowPaymentQr({
       "RECEIPT"
     ).toUpperCase() === "RECEIPT";
 
-  const [accountId, setAccountId] = useState<string | null>(null);
-  const [bin, setBin] = useState<string | null>(null);
-  const [bankCode, setBankCode] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [accountName, setAccountName] = useState("");
-  const [amount, setAmount] = useState<number | null>(null);
-  const [content, setContent] = useState("");
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const saved: GarageCashflowQrFields = useMemo(
+    () => ({ ...(voucher ?? {}), ...formData }),
+    [voucher, formData],
+  );
+  const info = useMemo(
+    () =>
+      resolveVoucherQrInfo({
+        isReceipt,
+        saved,
+        defaultContent: buildVoucherTransferContent(voucher, formData),
+        companyAccounts,
+        companyName,
+      }),
+    [isReceipt, saved, voucher, formData, companyAccounts, companyName],
+  );
+  const amount = Number(formData.amount ?? voucher?.amount) || null;
 
-  useEffect(() => {
-    const rawAmount = formData.amount ?? voucher?.amount;
-    setAmount(rawAmount ? Number(rawAmount) : null);
-    setContent(buildVoucherTransferContent(voucher, formData));
-  }, [voucher, formData.amount, formData.voucherCode, formData.licensePlate]);
+  // Ghi đúng field vừa sửa, tính từ form mới nhất (`prev`). Chưa có thông tin đã lưu thì chốt
+  // thông tin ngân hàng đang hiển thị; nội dung CK chỉ ghi khi người dùng tự sửa.
+  const update = useCallback(
+    (patch: Partial<VoucherQrInfo>) => {
+      if (!canEdit || !setFormData) return;
+      setFormData((prev) => {
+        const merged = { ...(voucher ?? {}), ...prev };
+        if (hasSavedQrInfo(merged))
+          return { ...prev, ...toQrPatchFields(patch) };
+        const shown = resolveVoucherQrInfo({
+          isReceipt,
+          saved: merged,
+          defaultContent: "",
+          companyAccounts,
+          companyName,
+        });
+        const { accountId, bin, bankCode, accountNumber, accountName } = shown;
+        return {
+          ...prev,
+          ...toQrPatchFields({
+            accountId,
+            bin,
+            bankCode,
+            accountNumber,
+            accountName,
+          }),
+          ...toQrPatchFields(patch),
+        };
+      });
+    },
+    [canEdit, setFormData, voucher, isReceipt, companyAccounts, companyName],
+  );
 
+  // Phiếu mới đổi loại thu/chi: thông tin ngân hàng không khớp loại (phiếu chi giữ tài khoản
+  // công ty, phiếu thu giữ ngân hàng đối tác) thì bỏ để điền lại theo loại mới.
+  const bankMismatch =
+    !voucher &&
+    canEdit &&
+    (isReceipt
+      ? hasSavedQrInfo(formData) && !formData.qrCompanyAccountId
+      : Boolean(formData.qrCompanyAccountId));
   useEffect(() => {
-    if (isReceipt && companyAccounts.length > 0 && !accountId) {
-      const first = companyAccounts[0];
-      setAccountId(first.id);
-      setBin(first.bin);
-      setBankCode(first.bankCode);
-      setAccountNumber(first.accountNumber);
-      setAccountName(companyProfile?.company_name || first.accountName);
-    }
-  }, [isReceipt, companyAccounts, accountId, companyProfile?.company_name]);
+    if (bankMismatch && setFormData)
+      setFormData((prev) => ({ ...prev, ...EMPTY_QR_BANK_FIELDS }));
+  }, [bankMismatch, setFormData]);
+
+  // Phiếu mới: ghi tài khoản mặc định vào form để lưu cùng phiếu.
+  const shouldSeedDefault =
+    !voucher && canEdit && !hasSavedQrInfo(saved) && Boolean(info.bin);
+  useEffect(() => {
+    if (shouldSeedDefault) update({});
+  }, [shouldSeedDefault, update]);
 
   const handleSelectCompanyAccount = useCallback(
     (id: string) => {
-      setAccountId(id);
       const acc = companyAccounts.find((a) => a.id === id);
-      if (acc) {
-        setBin(acc.bin);
-        setBankCode(acc.bankCode);
-        setAccountNumber(acc.accountNumber);
-        setAccountName(companyProfile?.company_name || acc.accountName);
-      }
+      if (!acc) return;
+      update({
+        accountId: acc.id,
+        bin: acc.bin,
+        bankCode: acc.bankCode,
+        accountNumber: acc.accountNumber,
+        accountName: companyName || acc.accountName,
+      });
     },
-    [companyAccounts, companyProfile?.company_name],
+    [companyAccounts, companyName, update],
   );
 
-  const handleSelectPartnerBank = useCallback((selectedBin: string) => {
-    setBin(selectedBin);
-    const bank = VIETQR_BANKS.find((b) => b.bin === selectedBin);
-    setBankCode(bank?.code || "");
-  }, []);
+  const handleSelectPartnerBank = useCallback(
+    (bin: string) => {
+      const bank = VIETQR_BANKS.find((b) => b.bin === bin);
+      update({ accountId: null, bin, bankCode: bank?.code || "" });
+    },
+    [update],
+  );
 
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
-    generateVietQrDataUrl({ bin, accountNumber, amount, content }).then(
-      (url) => {
-        if (!cancelled) setQrDataUrl(url);
-      },
-    );
+    generateVietQrDataUrl({
+      bin: info.bin,
+      accountNumber: info.accountNumber,
+      amount,
+      content: info.content,
+    }).then((url) => {
+      if (!cancelled) setQrDataUrl(url);
+    });
     return () => {
       cancelled = true;
     };
-  }, [bin, accountNumber, amount, content]);
+  }, [info.bin, info.accountNumber, info.content, amount]);
 
-  const qrBankHint = useMemo(() => {
-    if (!bankCode && !accountNumber) return null;
-    return `${bankCode || "BANK"} - ${accountNumber}`;
-  }, [bankCode, accountNumber]);
+  const companyInfo: TransferQrCompanyInfo | undefined = useMemo(() => {
+    if (!companyProfile) return undefined;
+    return {
+      companyName: companyProfile.company_name || undefined,
+      taxCode: companyProfile.tax_code ?? undefined,
+      logo: companyProfile.logo ?? undefined,
+    };
+  }, [companyProfile]);
+
+  const selectedCompanyAccount = useMemo(
+    () => companyAccounts.find((a) => a.id === info.accountId),
+    [companyAccounts, info.accountId],
+  );
+
+  const target = useMemo(() => {
+    if (!info.bin || !info.accountNumber) return null;
+    const catalogBank = banks.findBank?.(info.bin || info.bankCode);
+    const resolvedBankCode = catalogBank?.code || info.bankCode;
+    return {
+      bin: info.bin,
+      bankCode: resolvedBankCode,
+      accountNumber: info.accountNumber,
+      accountName: info.accountName,
+      logoUrl:
+        catalogBank?.logoUrl ??
+        (resolvedBankCode
+          ? resolveBankLogoUrl(
+              resolvedBankCode,
+              selectedCompanyAccount?.logoUrl,
+            )
+          : null),
+    };
+  }, [
+    info.bin,
+    info.bankCode,
+    info.accountNumber,
+    info.accountName,
+    banks,
+    selectedCompanyAccount?.logoUrl,
+  ]);
+
+  const mode = isReceipt
+    ? TransferQrMode.RECEIVE_FROM_CUSTOMER
+    : TransferQrMode.PAY_TO_SUPPLIER;
 
   return {
     isReceipt,
+    readOnly: !canEdit,
     companyAccounts,
-    bankOptions,
-    isBanksLoading,
-    onScrollBottom,
-    onSearchChange,
-    accountId,
+    companyInfo,
+    target,
+    mode,
+    bankOptions: banks.bankOptions,
+    isBanksLoading: banks.loading,
+    onScrollBottom: banks.onScrollBottom,
+    onSearchChange: banks.onSearchChange,
+    accountId: info.accountId,
     handleSelectCompanyAccount,
-    bin,
-    bankCode,
+    bin: info.bin,
+    bankCode: info.bankCode,
     handleSelectPartnerBank,
-    accountNumber,
-    setAccountNumber,
-    accountName,
-    setAccountName,
+    accountNumber: info.accountNumber,
+    setAccountNumber: (v: string) =>
+      update({ accountNumber: normalizeAccountNumber(v) }),
+    accountNumberInvalid: isQrAccountNumberInvalid(info.accountNumber),
+    accountName: info.accountName,
+    setAccountName: (v: string) => update({ accountName: v }),
     amount,
-    setAmount,
-    content,
-    setContent,
+    content: info.content,
+    setContent: (v: string) => update({ content: v }),
     qrDataUrl,
-    qrBankHint,
+    qrBankHint: formatQrBankHint(info),
   };
 }

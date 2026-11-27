@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { garageCashflowApi } from "../../../api/garageCashflowApi";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
+import { garageCashflowListKey } from "../../../hooks/garageCashflowQueries";
 import { useGarageCashflowMutations } from "./GarageCashflowTable.mutations";
 
 export const getDefaultPageSize = (): number =>
@@ -35,9 +36,7 @@ export function useGarageCashflowTable({
   }, [columnFilters, dateRanges]);
 
   const queryKey = [
-    tabKey === "forecast"
-      ? "garage-cashflow-forecast-list"
-      : "garage-cashflow-list",
+    garageCashflowListKey(tabKey),
     page,
     pageSize,
     sorts,

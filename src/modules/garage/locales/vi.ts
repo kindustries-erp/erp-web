@@ -122,6 +122,10 @@ export const garageVi = {
   },
   cashflowDrawer: {
     createTitle: "Tạo Phiếu Thu Chi Mới",
+    downloadQr: "Tải QR",
+    downloadQrTitle: "Tải ảnh QR",
+    printWithQr: "In phiếu QR",
+    printWithQrTitle: "In phiếu kèm mã QR",
     voucherPrefix: "Phiếu",
     tabDetails: "Chi tiết",
     tabHistory: "Lịch sử & Kiểm duyệt",
@@ -159,6 +163,7 @@ export const garageVi = {
     selectPlaceholder: "— Chọn —",
     formattedAmount: "Định dạng số:",
     amountInWords: "Bằng chữ:",
+    accountNumberInvalid: "Số tài khoản chỉ gồm 1-19 ký tự chữ hoặc số",
   },
   tabs: {
     dashboard: "Tổng quan",

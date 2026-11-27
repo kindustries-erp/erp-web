@@ -3,6 +3,7 @@ import { Plus, ReceiptText } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { createColumnHeaderFilter } from "@/shared/components/DataTable/createColumnHeaderFilter";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
+import { garageCashflowOptionsKey } from "../../../hooks/garageCashflowQueries";
 import type { GarageCashflowTableProps } from "./GarageCashflowTable.type";
 import { useGarageCashflowTable } from "./GarageCashflowTable.hook";
 import { useT } from "@/core/i18n";
@@ -83,7 +84,7 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
       createColumnHeaderFilter({
         listHook: tableHook as any,
         fetchOptions: tableHook.getColumnOptions,
-        queryKeyPrefix: `garage-cashflow-options-${tabKey}`,
+        queryKeyPrefix: garageCashflowOptionsKey(tabKey),
       }),
     [tableHook, tabKey],
   );

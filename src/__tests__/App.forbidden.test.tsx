@@ -83,7 +83,8 @@ vi.mock("@/core/components/GlobalErpDocumentOpener", () => ({
   GlobalErpDocumentOpener: () => null,
 }));
 
-vi.mock("@/shared/utils/pageUrl", () => ({
+vi.mock("@/shared/utils/pageUrl", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/utils/pageUrl")>()),
   LOANS_TOOL_PATH: "/loans-tool",
   pathToPage: () => ({ page: "purchasing" }),
 }));

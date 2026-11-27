@@ -41,6 +41,7 @@ export * from "./v2-page-toolbar-slot";
 export * from "./v2-page-header";
 export * from "./v2-table-select-checkbox";
 export * from "./v2-alert-banner";
+export * from "./v2-print-preparing-overlay";
 export * from "./v2-drawer-sheet";
 export * from "./v2-stat-card";
 export * from "./v2-search-input";

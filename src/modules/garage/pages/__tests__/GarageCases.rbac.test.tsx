@@ -105,7 +105,9 @@ describe("GarageCases Page - Edit Mode RBAC Triggers", () => {
 
     expect(standaloneDrawerPropsSpy.isOpen).toBe(true);
     expect(standaloneDrawerPropsSpy.initialEditMode).toBe(true);
-    expect(standaloneDrawerPropsSpy.initialTabKey).toBe("financials");
+    // Tài chính là tab con của "Chi tiết báo giá" (00d7ec97)
+    expect(standaloneDrawerPropsSpy.initialTabKey).toBe("quote_details");
+    expect(standaloneDrawerPropsSpy.initialSubTabKey).toBe("financials");
 
     // Trigger onOpenEditNotes
     act(() => {

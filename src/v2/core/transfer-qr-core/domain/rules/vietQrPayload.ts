@@ -1,3 +1,5 @@
+import QRCode from "qrcode";
+
 /** Chuỗi định danh dịch vụ VietQR (GUID) và dịch vụ chuyển khoản theo số tài khoản. */
 export const VIETQR_GUID = "A000000727";
 export const VIETQR_TRANSFER_SERVICE = "QRIBFTTA";
@@ -102,4 +104,20 @@ export function buildTransferQrFileName(parts: {
 }): string {
   const amountPart = parts.amount != null ? `_${parts.amount}` : "";
   return `QR_${parts.bankCode}_${parts.accountNumber}${amountPart}.png`;
+}
+
+/** Render chuỗi VietQR thành ảnh PNG Data URL (320px, mức sửa lỗi H). */
+export async function renderVietQrDataUrl(
+  payload: string,
+): Promise<string | null> {
+  if (!payload) return null;
+  try {
+    return await QRCode.toDataURL(payload, {
+      margin: 1,
+      width: 320,
+      errorCorrectionLevel: "H",
+    });
+  } catch {
+    return null;
+  }
 }

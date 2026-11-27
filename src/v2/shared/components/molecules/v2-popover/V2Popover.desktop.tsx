@@ -10,6 +10,9 @@ import {
 import { cn } from "@/v2/shared/utils/cn";
 import { V2PopoverProps } from "./V2Popover.type";
 
+const stopScrollPropagation = (event: React.SyntheticEvent) =>
+  event.stopPropagation();
+
 export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
   trigger,
   children,
@@ -43,6 +46,10 @@ export const V2PopoverDesktop: React.FC<V2PopoverProps> = ({
         align={align}
         sideOffset={sideOffset}
         onFocusOutside={(e) => e.preventDefault()}
+        // Popover portal ra <body>, nằm ngoài vùng khóa cuộn của Dialog modal (drawer): react-remove-scroll
+        // chặn wheel/touchmove ở document. Dừng lan sự kiện tại đây để danh sách trong popover cuộn được.
+        onWheel={stopScrollPropagation}
+        onTouchMove={stopScrollPropagation}
         style={{ pointerEvents: "auto", ...style }}
         className={cn(
           // Non-modal popover portals to <body>; a modal Dialog (e.g. drawer) sets body pointer-events:none, so re-enable clicks here.

@@ -2,6 +2,9 @@ import { v2ViTable } from "./vi.table";
 
 export const v2Vi = {
   v2: {
+    print: {
+      preparing: "Đang chuẩn bị bản in…",
+    },
     nav: {
       sections: {
         admin: "QUẢN TRỊ",

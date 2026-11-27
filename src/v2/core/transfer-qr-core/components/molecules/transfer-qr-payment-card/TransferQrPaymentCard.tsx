@@ -2,7 +2,10 @@ import * as React from "react";
 import { VIETQR_BANKS } from "../../../domain/constants/vietQrBanks";
 import { getBankLogoUrl } from "../../../domain/constants/defaultBankOptions";
 import "../../../transferQr.locale";
-import { TransferQrMode } from "../../../transferQr.enum";
+import {
+  TransferQrCardVariant,
+  TransferQrMode,
+} from "../../../transferQr.enum";
 import type {
   TransferQrCompanyInfo,
   TransferQrAccountOption,
@@ -23,6 +26,8 @@ export interface TransferQrPaymentCardProps {
   content?: string;
   mode?: TransferQrMode;
   cardRef?: React.Ref<HTMLDivElement>;
+  className?: string;
+  variant?: TransferQrCardVariant;
 }
 
 export function TransferQrPaymentCard({
@@ -33,6 +38,8 @@ export function TransferQrPaymentCard({
   content,
   mode = TransferQrMode.PAY_TO_SUPPLIER,
   cardRef,
+  className,
+  variant = TransferQrCardVariant.FULL,
 }: TransferQrPaymentCardProps) {
   const [imgFailed, setImgFailed] = React.useState(false);
   const [companyLogoFailed, setCompanyLogoFailed] = React.useState(false);
@@ -46,13 +53,14 @@ export function TransferQrPaymentCard({
   }, [target]);
 
   const bankLogoUrl =
-    target?.logoUrl ||
-    bankInfo?.logoUrl ||
-    (bankInfo?.code
-      ? getBankLogoUrl(bankInfo.code)
-      : target?.bankCode
-        ? getBankLogoUrl(target.bankCode)
-        : null);
+    target?.logoUrl !== undefined && target?.logoUrl !== null
+      ? target.logoUrl
+      : bankInfo?.logoUrl ||
+        (bankInfo?.code
+          ? getBankLogoUrl(bankInfo.code)
+          : target?.bankCode
+            ? getBankLogoUrl(target.bankCode)
+            : null);
 
   React.useEffect(() => {
     setImgFailed(false);
@@ -82,35 +90,60 @@ export function TransferQrPaymentCard({
     ? companyInfo?.companyName || target?.accountName || "CÔNG TY"
     : target?.accountName || "-";
 
+  const isHorizontal = variant === TransferQrCardVariant.HORIZONTAL;
+  const qrBlock = (
+    <TransferQrPaymentCardQrBlock
+      qrDataUrl={qrDataUrl}
+      centerLogoSrc={centerLogoSrc}
+      onCenterLogoError={handleCenterLogoError}
+      bankLogoUrl={bankLogoUrl}
+      imgFailed={imgFailed}
+      onBankLogoError={() => setImgFailed(true)}
+      bankInfo={bankInfo}
+      targetBankCode={target?.bankCode}
+      compact={isHorizontal}
+    />
+  );
+  const detailsBlock = (
+    <TransferQrPaymentCardDetails
+      isReceive={isReceive}
+      displayAccountName={displayAccountName}
+      accountNumber={target?.accountNumber}
+      formattedAmount={formattedAmount}
+      content={content}
+      stacked={isHorizontal}
+    />
+  );
+
   return (
     <div
       ref={cardRef}
-      className="w-full max-w-[340px] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg text-slate-900 select-none"
+      className={
+        className ??
+        (isHorizontal
+          ? "w-full rounded-2xl border border-border bg-white p-3.5 text-foreground select-none"
+          : "w-full max-w-[340px] rounded-2xl border border-border bg-white p-4 shadow-lg text-foreground select-none")
+      }
     >
-      <TransferQrPaymentCardHeader
-        isReceive={isReceive}
-        companyInfo={companyInfo}
-        displayAccountName={displayAccountName}
-      />
+      {variant === TransferQrCardVariant.FULL && (
+        <TransferQrPaymentCardHeader
+          isReceive={isReceive}
+          companyInfo={companyInfo}
+          displayAccountName={displayAccountName}
+        />
+      )}
 
-      <TransferQrPaymentCardQrBlock
-        qrDataUrl={qrDataUrl}
-        centerLogoSrc={centerLogoSrc}
-        onCenterLogoError={handleCenterLogoError}
-        bankLogoUrl={bankLogoUrl}
-        imgFailed={imgFailed}
-        onBankLogoError={() => setImgFailed(true)}
-        bankInfo={bankInfo}
-        targetBankCode={target?.bankCode}
-      />
-
-      <TransferQrPaymentCardDetails
-        isReceive={isReceive}
-        displayAccountName={displayAccountName}
-        accountNumber={target?.accountNumber}
-        formattedAmount={formattedAmount}
-        content={content}
-      />
+      {isHorizontal ? (
+        <div className="flex items-center gap-4">
+          {qrBlock}
+          <div className="flex-1 min-w-0">{detailsBlock}</div>
+        </div>
+      ) : (
+        <>
+          {qrBlock}
+          {detailsBlock}
+        </>
+      )}
     </div>
   );
 }

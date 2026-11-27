@@ -33,3 +33,19 @@ export const GARAGE_CASHFLOW_PRINT_DOTTED =
 
 /** Logo mặc định lấy từ file Excel mẫu PHIẾU THU (dùng khi công ty chưa cấu hình logo). */
 export const GARAGE_CASHFLOW_PRINT_DEFAULT_LOGO = "/garage-cashflow-logo.png";
+
+/**
+ * Biến CSS sáng cho khối in. Bản in chạy trong iframe không có class `.theme-*`, nên phải gắn trực tiếp
+ * để các token (`text-foreground`, `border-border`…) luôn ra màu của giấy in, không theo theme đang bật.
+ */
+export const GARAGE_CASHFLOW_PRINT_LIGHT_VARS: Record<string, string> = {
+  "--surface": "#ffffff",
+  "--border": "#e4e7ec",
+  "--foreground": "#0f172a",
+  "--muted": "#f8fafc",
+  "--muted-fg": "#64748b",
+  "--warn-bg": "#fffbeb",
+  "--warn-fg": "#b45309",
+  "--approve-bg": "#f0fdf4",
+  "--approve-fg": "#16a34a",
+};

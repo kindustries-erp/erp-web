@@ -18,8 +18,8 @@ vi.mock("../../../api/garageCashflowApi", () => ({
   garageCashflowApi: { checkDuplicates: vi.fn() },
 }));
 
-vi.mock("../../../hooks/useGarageCashflowList", () => ({
-  useGarageCashflowList: () => ({
+vi.mock("../garage-cashflow-table/GarageCashflowTable.mutations", () => ({
+  useGarageCashflowMutations: () => ({
     createMutation: { mutate: mockCreateMutate, isPending: false },
     updateMutation: { mutate: mockUpdateMutate, isPending: false },
   }),

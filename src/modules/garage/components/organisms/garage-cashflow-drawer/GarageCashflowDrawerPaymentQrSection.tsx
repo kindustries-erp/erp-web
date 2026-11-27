@@ -1,5 +1,9 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
+import {
+  buildPaymentCardFileName,
+  exportCardImage,
+} from "@/v2/core/transfer-qr-core";
 import { useT } from "@/core/i18n";
 import {
   useGarageCashflowPaymentQr,
@@ -18,12 +22,29 @@ export interface GarageCashflowDrawerPaymentQrSectionProps extends UseGarageCash
 
 export const GarageCashflowDrawerPaymentQrSection: React.FC<
   GarageCashflowDrawerPaymentQrSectionProps
-> = ({ voucher, formData, onPrint }) => {
+> = ({ voucher, formData, setFormData, readOnly, onPrint }) => {
   const t = useT();
-  const paymentQr = useGarageCashflowPaymentQr({ voucher, formData });
-  const { bankCode, accountNumber, content, qrDataUrl, qrBankHint } = paymentQr;
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const handleDownloadQr = () => {
+  const paymentQr = useGarageCashflowPaymentQr({
+    voucher,
+    formData,
+    setFormData,
+    readOnly,
+  });
+  const {
+    bankCode,
+    accountNumber,
+    amount,
+    content,
+    qrDataUrl,
+    companyInfo,
+    target,
+    mode,
+  } = paymentQr;
+
+  const downloadRawQr = () => {
     if (!qrDataUrl) return;
     const a = document.createElement("a");
     a.href = qrDataUrl;
@@ -31,18 +52,33 @@ export const GarageCashflowDrawerPaymentQrSection: React.FC<
     a.click();
   };
 
-  const handleCopy = async (text: string) => {
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // Insecure context fallback
+  const handleDownloadQr = async () => {
+    if (!qrDataUrl) return;
+    if (cardRef.current) {
+      setIsExporting(true);
+      try {
+        const fileName = buildPaymentCardFileName({
+          bankCode: bankCode || target?.bin || "BANK",
+          accountNumber: accountNumber || "acc",
+          amount,
+          mode,
+        });
+        const ok = await exportCardImage({
+          cardElement: cardRef.current,
+          fileName,
+        });
+        if (ok) return;
+      } finally {
+        setIsExporting(false);
+      }
     }
+    downloadRawQr();
   };
 
   const handlePrintWithQr = () => {
     if (!voucher || !onPrint) return;
-    onPrint(voucher, { qrCodeDataUrl: qrDataUrl, qrBankHint });
+    // In theo dữ liệu đã lưu, không dùng QR đang sửa chưa lưu.
+    onPrint(voucher);
   };
 
   return (
@@ -58,11 +94,14 @@ export const GarageCashflowDrawerPaymentQrSection: React.FC<
         <GarageCashflowDrawerPaymentQrFields paymentQr={paymentQr} />
         <GarageCashflowDrawerPaymentQrPreview
           qrDataUrl={qrDataUrl}
-          qrBankHint={qrBankHint}
-          accountNumber={accountNumber}
+          companyInfo={companyInfo}
+          target={target}
+          amount={amount}
           content={content}
+          mode={mode}
+          cardRef={cardRef}
           onDownloadQr={handleDownloadQr}
-          onCopy={handleCopy}
+          isExporting={isExporting}
           onPrintWithQr={handlePrintWithQr}
           canPrint={Boolean(onPrint && voucher)}
         />
