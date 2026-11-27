@@ -70,3 +70,9 @@ description: Tri thức frontend cho drawer tạo mã QR chuyển khoản VietQR
 - `stacked`: "Chủ tài khoản" và "Nội dung" xếp nhãn một dòng, giá trị xuống dòng bên dưới (`break-words` / `break-all`, không `truncate`). "Số tài khoản" và "Số tiền" giữ bố cục nhãn trái, giá trị phải.
 - Biến thể `FULL` không đổi (drawer, tải QR, PDF hàng loạt).
 - Test: `TransferQrPaymentCardDetails.test.tsx`.
+
+## Token theme trong thẻ QR (2026-11-27)
+
+- `transfer-qr-payment-card/*` (Card, Details, QrBlock, Header) không còn `slate-*`, `emerald-*`, `amber-*`: dùng token `border-border`, `bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground`, `text-success`, `text-warning`/`bg-warning-bg`. Hộp trắng quanh mã QR giữ `bg-white` để đảm bảo tương phản khi quét.
+- Khi thẻ nằm trong bản in (iframe `react-to-print`, không có class theme), mẫu in phải gắn biến màu sáng (`GARAGE_CASHFLOW_PRINT_LIGHT_VARS` của `garage-dashboard`) lên root; nếu không token sẽ lấy giá trị sai.
+- Commit `9899cc8d` (erp-web `erp-master`).

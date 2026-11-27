@@ -354,5 +354,7 @@ Resource RBAC: `garage`
 
 - Mẫu in `GarageCashflowPrintTemplate`: không còn dòng "Quyển số"; dòng "Số" canh giữa dưới ngày; khoảng chừa ký `pb-32`; root là cột flex `minHeight: 265mm`, khối QR (divider + thẻ) dùng `flex-1` và canh giữa ngang/dọc trong vùng còn lại; chỉ 1 trang A4.
 - Biến thể thẻ QR ngang (`HORIZONTAL`) truyền `stacked` (xem `transfer-qr`): nhãn trên, giá trị dưới, không cắt chữ.
-- Bấm In (menu hàng, footer drawer, "In phiếu QR") đi qua `useGarageCashflowPrint.printVoucher`: `isPrinting` bật ngay, hiện `GarageCashflowPrintLoading` ("Đang chuẩn bị bản in…") đến `onBeforePrint` hoặc `onPrintError`; `preparingRef` chặn bấm lặp.
-- Test: `useGarageCashflowPrint.test.ts`, `GarageCashflowPrintLoading.test.tsx` (đã thêm vào `vitest.config.ts`).
+- Bấm In (menu hàng, footer drawer, "In phiếu QR") đi qua `useGarageCashflowPrint.printVoucher`: `isPrinting` bật ngay, hiện molecule V2 `V2PrintPreparingOverlay` (`@/v2/shared/components`, nhãn `v2.print.preparing`) đến `onBeforePrint` hoặc `onPrintError`; `preparingRef` chặn bấm lặp. Loading V1 `GarageCashflowPrintLoading` đã xóa.
+- `printVoucher` dùng `useCallback` với deps `[companyAccounts, companyName]` (`companyName` tách ra trước để qua rule `react-hooks/preserve-manual-memoization`).
+- Bản in chạy trong iframe của `react-to-print` (không có class theme của app). Mẫu in gắn biến màu sáng `GARAGE_CASHFLOW_PRINT_LIGHT_VARS` (`.data.ts`) lên root, nên bản in không đổi theo theme tối. Đã kiểm bằng HTML iframe thật: giống hệt nhau khi app ở theme sáng và tối; PDF A4 đúng 1 trang (commit `9899cc8d`).
+- Test: `useGarageCashflowPrint.test.ts`, `v2-print-preparing-overlay` (stories, test), `GarageCashflowList.test.tsx` (overlay role=status theo `isPrinting`). Đã thêm vào `vitest.config.ts`.
