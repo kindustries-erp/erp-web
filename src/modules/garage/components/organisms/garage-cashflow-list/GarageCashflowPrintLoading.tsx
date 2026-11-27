@@ -4,7 +4,7 @@ import {
   V2LoadingSize,
   V2LoadingTextPosition,
   V2LoadingVariant,
-} from "@/v2/shared/components/atoms/v2-loading";
+} from "@/v2/shared/components/atoms";
 
 export interface GarageCashflowPrintLoadingProps {
   open: boolean;
