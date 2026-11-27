@@ -63,3 +63,10 @@ description: Tri thức frontend cho drawer tạo mã QR chuyển khoản VietQR
 - Bảng nhiều lệnh: đổi ngân hàng đi qua `bankFieldsFromBin` nên BIN và mã viết tắt luôn khớp (tên file, chữ dưới QR, lưới).
 - Chế độ nhận tiền: số tài khoản ERP phải qua `isValidAccountNumber` trước khi tạo QR; BIN dự phòng chọn tay cập nhật mã viết tắt theo BIN đó.
 
+
+## Biến thể HORIZONTAL và prop `stacked` (2026-11-27)
+
+- `TransferQrPaymentCardDetails` nhận `stacked?: boolean` (mặc định `false`). `TransferQrPaymentCard` truyền `stacked={isHorizontal}`.
+- `stacked`: "Chủ tài khoản" và "Nội dung" xếp nhãn một dòng, giá trị xuống dòng bên dưới (`break-words` / `break-all`, không `truncate`). "Số tài khoản" và "Số tiền" giữ bố cục nhãn trái, giá trị phải.
+- Biến thể `FULL` không đổi (drawer, tải QR, PDF hàng loạt).
+- Test: `TransferQrPaymentCardDetails.test.tsx`.

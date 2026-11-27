@@ -349,3 +349,10 @@ Resource RBAC: `garage`
 - Quyền: kéo thả, đổi công đoạn, hoàn về KGara cần `garage:update`; thiếu quyền thì `isDragDisabled`.
 - Test: vitest trong `core/cases-garage` và `modules/cases-garage`; E2E `bun run e2e:garage-kanban` (cần `E2E_SYNC_BRANCH`; ghi tạm staging và luôn hoàn lại). Locator nút hoàn về phải là `button[aria-label="Về trạng thái KGara"]` vì thẻ kéo thả cũng có `role=button`.
 
+
+## 16. In phiếu thu chi: bố cục và loading (2026-11-27)
+
+- Mẫu in `GarageCashflowPrintTemplate`: không còn dòng "Quyển số"; dòng "Số" canh giữa dưới ngày; khoảng chừa ký `pb-32`; root là cột flex `minHeight: 265mm`, khối QR (divider + thẻ) dùng `flex-1` và canh giữa ngang/dọc trong vùng còn lại; chỉ 1 trang A4.
+- Biến thể thẻ QR ngang (`HORIZONTAL`) truyền `stacked` (xem `transfer-qr`): nhãn trên, giá trị dưới, không cắt chữ.
+- Bấm In (menu hàng, footer drawer, "In phiếu QR") đi qua `useGarageCashflowPrint.printVoucher`: `isPrinting` bật ngay, hiện `GarageCashflowPrintLoading` ("Đang chuẩn bị bản in…") đến `onBeforePrint` hoặc `onPrintError`; `preparingRef` chặn bấm lặp.
+- Test: `useGarageCashflowPrint.test.ts`, `GarageCashflowPrintLoading.test.tsx` (đã thêm vào `vitest.config.ts`).
