@@ -444,19 +444,19 @@ export function TableColumnHeaderFilter({
             WebkitBackdropFilter: "blur(24px) saturate(200%)",
           }}
           className={cn(
-            "z-[9999] rounded-xl border border-border/70 p-0 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset] outline-none",
+            "z-[9999] rounded-xl border border-border/80 dark:border-white/[0.06] p-0 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.08)] dark:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.6)] outline-none",
             dateRangeSlot ? "w-72" : "w-64",
           )}
         >
           {!hideSort && (
             <div className="flex items-center gap-1.5 border-b border-border p-2">
-              <div className="flex min-w-0 flex-1 rounded-lg border border-border/80 bg-muted/60 shadow-2xs overflow-hidden divide-x divide-border/60">
+              <div className="flex min-w-0 flex-1 rounded-lg border border-border/80 dark:border-white/[0.06] bg-muted/60 overflow-hidden divide-x divide-border/60 dark:divide-white/[0.06]">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer",
+                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer focus-visible:outline-none focus-visible:ring-0",
                     sortState === "asc"
                       ? "bg-surface text-primary font-semibold shadow-2xs"
                       : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
@@ -484,7 +484,7 @@ export function TableColumnHeaderFilter({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer",
+                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer focus-visible:outline-none focus-visible:ring-0",
                     sortState === "desc"
                       ? "bg-surface text-primary font-semibold shadow-2xs"
                       : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",

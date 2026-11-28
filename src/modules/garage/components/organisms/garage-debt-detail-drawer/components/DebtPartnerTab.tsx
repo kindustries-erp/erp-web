@@ -27,6 +27,7 @@ export interface DebtPartnerTabProps {
   effectiveBreakdownTotal: number;
   onSelectGroup: (group: MonthlyReceivablesGroupItem) => void;
   onOpenCaseDetail?: (code: string) => void;
+  fillHeight?: boolean;
 }
 
 /** Tab "Phân loại theo đối tượng": KH doanh nghiệp, KH cá nhân, bảo hiểm. Dùng chung cho tháng và mốc. */
@@ -37,6 +38,7 @@ export const DebtPartnerTab: React.FC<DebtPartnerTabProps> = ({
   effectiveBreakdownTotal,
   onSelectGroup,
   onOpenCaseDetail,
+  fillHeight = false,
 }) => {
   const { t } = useTranslation(["garage", "common"]);
   const [partnerTypeFilter, setPartnerTypeFilter] =
@@ -81,8 +83,20 @@ export const DebtPartnerTab: React.FC<DebtPartnerTabProps> = ({
   );
 
   return (
-    <div className="flex flex-col gap-3.5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
+    <div
+      className={
+        fillHeight
+          ? "flex flex-col gap-3.5 flex-1 min-h-0"
+          : "flex flex-col gap-3.5"
+      }
+    >
+      <div
+        className={
+          fillHeight
+            ? "flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 shrink-0"
+            : "flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1"
+        }
+      >
         <div className="flex items-center overflow-x-auto scrollbar-none min-w-0">
           <V2TabBar
             variant={V2TabBarVariant.SUB}
@@ -143,6 +157,7 @@ export const DebtPartnerTab: React.FC<DebtPartnerTabProps> = ({
         onSelectGroup={onSelectGroup}
         onOpenCaseDetail={onOpenCaseDetail}
         defaultCollapsed={false}
+        fillHeight={fillHeight}
       />
     </div>
   );

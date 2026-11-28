@@ -20,10 +20,10 @@ import {
   createCashflowDateHeader,
 } from "./GarageCashflowTable.helper";
 import {
-  PAYMENT_METHOD_OPTIONS,
-  PAYMENT_CONTENT_OPTIONS,
-  PAYMENT_STATUS_OPTIONS,
-} from "./GarageCashflowTable.type";
+  getPaymentContentOptions,
+  getPaymentMethodOptions,
+  getPaymentStatusOptions,
+} from "./GarageCashflowTable.options";
 
 export { getGarageCashflowRowActions } from "./GarageCashflowTable.actions";
 
@@ -109,10 +109,12 @@ export const getGarageCashflowColumns = (
       size: 140,
       header: filterBuilder.amount(
         "thu",
-        isForecast
-          ? tr("garage.cashflow.columns.forecastThu", "Tiền vào (Dự thu)")
-          : tr("garage.cashflow.columns.thu", "Tiền vào (Thu)"),
-        { valueType: ColumnValueType.NUMBER, align: "right" },
+        tr("garage.cashflow.columns.thu", "Tiền vào"),
+        {
+          valueType: ColumnValueType.NUMBER,
+          align: "right",
+          showBlankOption: true,
+        },
       ),
       className: "text-right",
       headerClassName: "text-right",
@@ -124,10 +126,12 @@ export const getGarageCashflowColumns = (
       size: 140,
       header: filterBuilder.amount(
         "chi",
-        isForecast
-          ? tr("garage.cashflow.columns.forecastChi", "Tiền ra (Dự chi)")
-          : tr("garage.cashflow.columns.chi", "Tiền ra (Chi)"),
-        { valueType: ColumnValueType.NUMBER, align: "right" },
+        tr("garage.cashflow.columns.chi", "Tiền ra"),
+        {
+          valueType: ColumnValueType.NUMBER,
+          align: "right",
+          showBlankOption: true,
+        },
       ),
       className: "text-right",
       headerClassName: "text-right",
@@ -142,7 +146,8 @@ export const getGarageCashflowColumns = (
         tr("garage.cashflow.columns.paymentStatus", "Trạng thái"),
         {
           valueType: ColumnValueType.SELECT,
-          filterOptions: PAYMENT_STATUS_OPTIONS,
+          filterOptions: getPaymentStatusOptions(isForecast, tr),
+          enableSelectAllMatching: false,
         },
       ),
       cell: (row) => renderPaymentStatusCell(row, tr),
@@ -156,7 +161,8 @@ export const getGarageCashflowColumns = (
         tr("garage.cashflow.columns.paymentMethod", "Phương thức TT"),
         {
           valueType: ColumnValueType.SELECT,
-          filterOptions: PAYMENT_METHOD_OPTIONS,
+          filterOptions: getPaymentMethodOptions(tr),
+          enableSelectAllMatching: false,
         },
       ),
       cell: renderPaymentMethodCell,
@@ -170,8 +176,9 @@ export const getGarageCashflowColumns = (
         tr("garage.cashflow.columns.paymentContent", "Nội dung TT"),
         {
           valueType: ColumnValueType.SELECT,
-          filterOptions: PAYMENT_CONTENT_OPTIONS,
+          filterOptions: getPaymentContentOptions(tr),
           showBlankOption: true,
+          enableSelectAllMatching: false,
         },
       ),
       cell: renderPaymentContentCell,

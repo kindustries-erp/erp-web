@@ -23,7 +23,7 @@ describe("V2TabItem Molecule", () => {
 
     const tab = screen.getByRole("tab", { name: /Tổng quan/ });
     expect(tab).toHaveAttribute("aria-selected", "true");
-    expect(tab).toHaveClass("rounded-lg", "font-semibold");
+    expect(tab).toHaveClass("rounded-md", "font-semibold");
 
     // Active tab renders icon
     expect(tab.querySelector("svg")).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe("V2TabItem Molecule", () => {
 
     const tab = screen.getByRole("tab", { name: /Báo cáo/ });
     expect(tab).toHaveAttribute("aria-selected", "false");
-    expect(tab).toHaveClass("rounded-lg");
+    expect(tab).toHaveClass("rounded-md");
     // Inactive tab should not render tab icon
     expect(
       tab.querySelector(".lucide-layout-dashboard"),

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { DrawerSection } from "@/shared/components/DrawerModal";
+import { DrawerSection as V2DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
 import { MonthInvoicePartnerTable } from "./MonthInvoicePartnerTable";
@@ -20,6 +21,7 @@ export interface MonthPartnerCategorizedSectionProps {
   isAllTab?: boolean;
   onSelectGroup?: (group: MonthlyReceivablesGroupItem) => void;
   onOpenCaseDetail?: (caseCode: string) => void;
+  fillHeight?: boolean;
 }
 
 export const MonthPartnerCategorizedSection: React.FC<
@@ -34,6 +36,7 @@ export const MonthPartnerCategorizedSection: React.FC<
   isAllTab = false,
   onSelectGroup,
   onOpenCaseDetail,
+  fillHeight = false,
 }) => {
   const { t } = useTranslation(["garage", "common"]);
   const isPayable = debtType === "payables";
@@ -61,12 +64,14 @@ export const MonthPartnerCategorizedSection: React.FC<
 
   // 1. Nếu ở tab "Tất cả đối tượng": chỉ hiển thị 1 table tổng hợp duy nhất
   if (isAllTab) {
+    const SectionWrapper = fillHeight ? V2DrawerSection : DrawerSection;
     return (
-      <DrawerSection
+      <SectionWrapper
         title={title}
         titleExtra={titleExtra}
         collapsible
         defaultCollapsed={defaultCollapsed}
+        {...(fillHeight ? { fillHeight: true, className: "mb-0" } : {})}
       >
         <MonthInvoicePartnerTable
           items={categorized.all}
@@ -75,8 +80,9 @@ export const MonthPartnerCategorizedSection: React.FC<
           debtType={debtType}
           onSelectGroup={onSelectGroup}
           onOpenCaseDetail={onOpenCaseDetail}
+          fillHeight={fillHeight}
         />
-      </DrawerSection>
+      </SectionWrapper>
     );
   }
 
@@ -113,7 +119,13 @@ export const MonthPartnerCategorizedSection: React.FC<
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div
+      className={
+        fillHeight
+          ? "flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto scrollbar-thin"
+          : "flex flex-col gap-4"
+      }
+    >
       {subSections.map((sec) => {
         const cases = sec.items.reduce(
           (sum, i) => sum + (i.cases?.length || i.caseCount || 0),

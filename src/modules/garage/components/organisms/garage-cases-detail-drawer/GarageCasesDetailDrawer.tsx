@@ -14,7 +14,10 @@ import { GarageCasesRightPanel } from "./components/GarageCasesRightPanel";
 import { DebtRateBadge } from "../garage-debt-detail-drawer/components/DebtRateBadge";
 import { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 import { useGarageCasesDrawerTabs } from "./GarageCasesDetailDrawer.tabs";
-import type { GarageCasesDetailDrawerProps } from "./GarageCasesDetailDrawer.type";
+import {
+  GarageCasesDrawerTab,
+  type GarageCasesDetailDrawerProps,
+} from "./GarageCasesDetailDrawer.type";
 import { formatVehiclesAndCases } from "./GarageCasesDetailDrawer.helper";
 
 /**
@@ -32,6 +35,9 @@ export const GarageCasesDetailDrawer: React.FC<
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const [exportOpen, setExportOpen] = useState(false);
+  const [activeDrawerTab, setActiveDrawerTab] = useState<GarageCasesDrawerTab>(
+    GarageCasesDrawerTab.CASES,
+  );
 
   const logic = useGarageCasesDetailDrawer({
     open,
@@ -101,6 +107,15 @@ export const GarageCasesDetailDrawer: React.FC<
     exportOpen,
   );
 
+  // Tab Kanban hoặc tab danh sách phiếu của garage-debts cần fillHeight + overflow-hidden để cuộn bên trong; các tab khác giữ overflow-y-auto mặc định.
+  const isKanbanActive =
+    isCheckpoint && activeDrawerTab === GarageCasesDrawerTab.KANBAN;
+  const isFillHeightActive =
+    isKanbanActive ||
+    (!isCheckpoint &&
+      (activeDrawerTab === GarageCasesDrawerTab.CASES ||
+        activeDrawerTab === GarageCasesDrawerTab.PARTNER_BREAKDOWN));
+
   return (
     <>
       <V2StandardDrawer
@@ -151,10 +166,19 @@ export const GarageCasesDetailDrawer: React.FC<
         }
         size="xl"
         layout="2-columns"
-        fillHeight={true}
-        bodyClassName="overflow-hidden p-3 sm:p-4 md:p-[18px]"
+        fillHeight={isFillHeightActive}
+        stickyRightPanel={!isFillHeightActive}
+        bodyClassName={
+          isFillHeightActive
+            ? "overflow-hidden p-3 sm:p-4 md:p-[18px]"
+            : "p-3 sm:p-4 md:p-[18px]"
+        }
         tabs={drawerTabs}
-        defaultTabKey="cases"
+        activeTabKey={activeDrawerTab}
+        onTabChange={(tabKey) =>
+          setActiveDrawerTab(tabKey as GarageCasesDrawerTab)
+        }
+        defaultTabKey={GarageCasesDrawerTab.CASES}
         collapsibleRightPanel={true}
         rightPanel={
           <GarageCasesRightPanel

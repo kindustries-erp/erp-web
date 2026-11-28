@@ -8,6 +8,7 @@ import {
   V2BottomNavVariant,
   V2MobileCatalogDrawer,
   V2MobileAppearanceDrawer,
+  V2EnvStamp,
 } from "@/v2/shared/components";
 import { MAX_PINNED_MOBILE_NAV } from "@/v2/shared/stores/useV2MobileNavStore";
 import { useV2MobileNav } from "./hooks/useV2MobileNav";
@@ -112,6 +113,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
       data-testid="v2-app-layout-mobile"
       className="flex min-h-screen w-full flex-col bg-background text-foreground"
     >
+      <V2EnvStamp />
       <V2Header
         breadcrumbs={breadcrumbs ?? fallbackBreadcrumbs}
         userName={effectiveUserName}
