@@ -21,6 +21,7 @@ export const garageVi = {
       stt: "#",
       transDate: "Ngày",
       expectedDate: "Ngày dự kiến",
+      overdueDays: "Quá hạn (ngày)",
       createdAt: "Ngày tạo",
       voucherCode: "Mã phiếu",
       thu: "Tiền vào",
@@ -116,8 +117,15 @@ export const garageVi = {
       method: {
         cash: "Tiền mặt",
         transfer: "Chuyển khoản",
+        transferOther: "Chuyển khoản khác",
         card: "Thẻ tín dụng",
         other: "Khác",
+      },
+      overdue: {
+        notDue: "Chưa đến hạn",
+        d1_30: "1–30 ngày",
+        d31_90: "31–90 ngày",
+        d90Plus: "Trên 90 ngày",
       },
       content: {
         c1: "1. KH thanh toán",
@@ -194,6 +202,22 @@ export const garageVi = {
     formattedAmount: "Định dạng số:",
     amountInWords: "Bằng chữ:",
     accountNumberInvalid: "Số tài khoản chỉ gồm 1-19 ký tự chữ hoặc số",
+    contentCaseHint:
+      "Nội dung này cần gắn phiếu dịch vụ, hoặc ghi lý do vào Ghi chú.",
+    contentLegacyWarning:
+      "Nội dung đang lưu không đúng loại phiếu, nên chọn lại.",
+    methodLegacyWarning:
+      "Phương thức đang lưu không còn trong danh sách, nên chọn lại.",
+    rules: {
+      amount: "Số tiền phải lớn hơn 0.",
+      methodRequired: "Phiếu đã thu/chi phải có phương thức thanh toán.",
+      contentRequired: "Phiếu đã thu/chi phải có nội dung thanh toán.",
+      contentType:
+        'Nội dung thanh toán "{{content}}" không dùng cho loại phiếu này. Hãy chọn lại nội dung.',
+      methodInvalid: 'Phương thức thanh toán "{{method}}" không hợp lệ.',
+      caseRequired:
+        'Nội dung "{{content}}" cần gắn phiếu dịch vụ. Nếu chưa có (thu trước, trả gộp), hãy ghi lý do vào Ghi chú.',
+    },
   },
   tabs: {
     dashboard: "Tổng quan",

@@ -1,13 +1,12 @@
 import React from "react";
 import { Combobox } from "@/shared/components/Combobox";
+import { GARAGE_PAYMENT_METHODS } from "../../../utils/garageCashflowCatalog";
 import { PaymentMethodComboboxProps } from "./PaymentMethodCombobox.type";
 
-export const PAYMENT_METHOD_OPTIONS = [
-  { label: "Tiền mặt", value: "Tiền mặt" },
-  { label: "Chuyển khoản", value: "Chuyển khoản" },
-  { label: "Thẻ tín dụng", value: "Thẻ tín dụng" },
-  { label: "Khác", value: "Khác" },
-];
+export const PAYMENT_METHOD_OPTIONS = GARAGE_PAYMENT_METHODS.map((value) => ({
+  label: value,
+  value,
+}));
 
 export const PaymentMethodCombobox: React.FC<PaymentMethodComboboxProps> = ({
   value,

@@ -69,7 +69,6 @@ export function useGarageDebtsActions({
                   onCreateCashflow({
                     voucherType: "PAYMENT",
                     customerCode: row.customerCode,
-                    partnerName: row.customerName,
                     licensePlate: row.licensePlate,
                     amount: undefined,
                   }),

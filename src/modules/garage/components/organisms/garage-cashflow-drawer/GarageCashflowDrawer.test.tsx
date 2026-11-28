@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageCashflowDrawer } from "./GarageCashflowDrawer";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { garageCashflowApi } from "../../../api/garageCashflowApi";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -56,22 +57,6 @@ vi.mock("../erp-bank-transaction-combobox", () => ({
 }));
 vi.mock("../erp-cash-voucher-combobox", () => ({
   ErpCashVoucherCombobox: () => <div data-testid="mock-cash-combobox" />,
-}));
-vi.mock("../../molecules/payment-method-combobox", () => ({
-  PaymentMethodCombobox: () => <div data-testid="mock-pm-combobox" />,
-  PAYMENT_METHOD_OPTIONS: [
-    { label: "Tiền mặt", value: "Tiền mặt" },
-    { label: "Chuyển khoản", value: "Chuyển khoản" },
-    { label: "Thẻ tín dụng", value: "Thẻ tín dụng" },
-    { label: "Khác", value: "Khác" },
-  ],
-}));
-vi.mock("../../molecules/payment-content-combobox", () => ({
-  PaymentContentCombobox: () => <div data-testid="mock-pc-combobox" />,
-  PAYMENT_CONTENT_OPTIONS: [
-    { label: "1. KH thanh toán", value: "1. KH thanh toán" },
-    { label: "5. HH Bán hàng", value: "5. HH Bán hàng" },
-  ],
 }));
 vi.mock("@/modules/auth/domain/authStore", () => ({
   useAuthStore: (selector: any) =>
@@ -303,6 +288,7 @@ describe("GarageCashflowDrawer Organism", () => {
       licensePlate: "3UR-3168658",
       note: "CIF:26985202",
       paymentMethod: "Chuyển khoản",
+      paymentContent: "2. Tất toán",
       caseId: "704a0916-3e78-4f93-be03-98461447c409",
       createdAt: "2026-10-12T10:10:00.966Z",
       updatedAt: "2026-10-12T10:10:00.966Z",
@@ -342,7 +328,7 @@ describe("GarageCashflowDrawer Organism", () => {
       licensePlate: "3UR-3168658",
       note: "CIF:26985202",
       paymentMethod: "Chuyển khoản",
-      paymentContent: undefined,
+      paymentContent: "2. Tất toán",
       paymentStatus: "PAID",
       caseId: "704a0916-3e78-4f93-be03-98461447c409",
       referenceNumber: undefined,
@@ -353,6 +339,30 @@ describe("GarageCashflowDrawer Organism", () => {
     expect(calledArg.data.case).toBeUndefined();
     expect(calledArg.data.rawData).toBeUndefined();
     expect(calledArg.data.id).toBeUndefined();
+  });
+
+  it("blocks saving a collected receipt without method and content", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowDrawer
+          open={true}
+          onClose={vi.fn()}
+          voucher={sampleVoucher}
+          initialMode="edit"
+        />
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByText("Lưu"));
+    expect(mockUpdateMutate).not.toHaveBeenCalled();
+    expect(useV2ToastStore.getState().toasts).toContainEqual(
+      expect.objectContaining({
+        title: "Phiếu đã thu/chi phải có phương thức thanh toán.",
+        variant: "destructive",
+      }),
+    );
   });
 
   describe("duplicate warning", () => {
@@ -382,6 +392,8 @@ describe("GarageCashflowDrawer Organism", () => {
         voucherType: "RECEIPT",
         transDate: "2026-10-12",
         amount,
+        paymentMethod: "Tiền mặt",
+        paymentContent: "2. Tất toán",
       };
       return render(
         <QueryClientProvider client={queryClient}>

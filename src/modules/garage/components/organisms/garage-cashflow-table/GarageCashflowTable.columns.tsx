@@ -24,6 +24,7 @@ import {
   getPaymentMethodOptions,
   getPaymentStatusOptions,
 } from "./GarageCashflowTable.options";
+import { createOverdueColumn } from "./GarageCashflowTable.overdueColumn";
 
 export { getGarageCashflowRowActions } from "./GarageCashflowTable.actions";
 
@@ -72,6 +73,7 @@ export const getGarageCashflowColumns = (
         />
       ),
     },
+    ...(isForecast ? [createOverdueColumn(filterBuilder, tr)] : []),
     {
       key: "createdAt",
       sortKey: "createdAt",
@@ -184,6 +186,16 @@ export const getGarageCashflowColumns = (
       cell: renderPaymentContentCell,
     },
     {
+      key: "note",
+      size: 250,
+      header: filterBuilder(
+        "note",
+        tr("garage.cashflow.columns.note", "Ghi chú"),
+        { valueType: ColumnValueType.TEXT, showBlankOption: true },
+      ),
+      cell: renderNoteCell,
+    },
+    {
       key: "caseCode",
       sortKey: "caseCode",
       size: 180,
@@ -217,16 +229,6 @@ export const getGarageCashflowColumns = (
         { valueType: ColumnValueType.TEXT, showBlankOption: true },
       ),
       cell: renderPartnerNameCell,
-    },
-    {
-      key: "note",
-      size: 250,
-      header: filterBuilder(
-        "note",
-        tr("garage.cashflow.columns.note", "Ghi chú"),
-        { valueType: ColumnValueType.TEXT, showBlankOption: true },
-      ),
-      cell: renderNoteCell,
     },
   ];
 };

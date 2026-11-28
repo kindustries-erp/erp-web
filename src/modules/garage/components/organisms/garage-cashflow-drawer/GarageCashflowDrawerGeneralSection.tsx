@@ -3,6 +3,7 @@ import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-sectio
 import { V2FormGrid } from "@/v2/shared/components/molecules/v2-form-grid";
 import { buildGeneralFieldConfigs } from "./garageCashflowDrawer.generalFields";
 import { useGarageCashflowEditSection } from "./useGarageCashflowEditSection";
+import { applyFieldChange } from "./garageCashflowDrawer.rules";
 import type { DrawerSectionProps } from "./GarageCashflowDrawer.type";
 
 export const GarageCashflowDrawerGeneralSection: React.FC<
@@ -81,7 +82,7 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
         fields={fields}
         values={formData}
         onChange={(name, val) =>
-          setFormData((prev) => ({ ...prev, [name]: val }))
+          setFormData((prev) => applyFieldChange(prev, name, val))
         }
         viewing={mode === "view"}
       />

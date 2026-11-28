@@ -70,6 +70,7 @@ export const DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY: Record<
 > = {
   stt: true,
   transDate: true,
+  overdueDays: true,
   createdAt: false,
   voucherCode: true,
   thu: true,
@@ -89,6 +90,7 @@ export const RECONCILIATION_GARAGE_CASHFLOW_COLUMN_VISIBILITY: Record<
 > = {
   stt: true,
   transDate: true,
+  overdueDays: true,
   createdAt: false,
   voucherCode: true,
   thu: true,
@@ -105,6 +107,7 @@ export const RECONCILIATION_GARAGE_CASHFLOW_COLUMN_VISIBILITY: Record<
 export const ALL_GARAGE_CASHFLOW_COLUMN_VISIBILITY: Record<string, boolean> = {
   stt: true,
   transDate: true,
+  overdueDays: true,
   createdAt: true,
   voucherCode: true,
   thu: true,

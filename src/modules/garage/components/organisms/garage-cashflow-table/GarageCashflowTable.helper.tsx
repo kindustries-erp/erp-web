@@ -1,3 +1,4 @@
+import { getVoucherPartnerName } from "../../../utils/garageCashflowPartner";
 import React from "react";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { TableText } from "@/shared/components/DataTable/TableText";
@@ -111,7 +112,7 @@ export const renderCaseCodeCell = (
 };
 
 export const renderPartnerNameCell = (row: GarageCashflowVoucher) => {
-  const name = row.partnerName || row.case?.khachHangName || "—";
+  const name = getVoucherPartnerName(row) || "—";
   return (
     <span className="truncate block" title={name}>
       {name}

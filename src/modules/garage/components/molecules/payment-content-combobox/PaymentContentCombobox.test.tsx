@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 import {
   PaymentContentCombobox,
   PAYMENT_CONTENT_OPTIONS,
+  getPaymentContentSelectOptions,
 } from "./PaymentContentCombobox";
 
 describe("PaymentContentCombobox Molecule", () => {
@@ -30,6 +31,31 @@ describe("PaymentContentCombobox Molecule", () => {
       "12. Hoàn ứng",
       "13. Khác",
     ]);
+  });
+
+  it("lọc nội dung theo loại phiếu, giống danh mục API", () => {
+    const valuesOf = (type?: string) =>
+      getPaymentContentSelectOptions(type).map((o) => o.value);
+    expect(valuesOf("RECEIPT")).toEqual([
+      "1. KH thanh toán",
+      "2. Tất toán",
+      "3. BH thanh toán",
+      "8. Cấn trừ",
+      "12. Hoàn ứng",
+      "13. Khác",
+    ]);
+    expect(valuesOf("PAYMENT")).toEqual([
+      "4. HHBH",
+      "5. HH Bán hàng",
+      "6. HH Xưởng",
+      "7. Ứng trước",
+      "8. Cấn trừ",
+      "9. Phụ tùng / vật tư",
+      "10. Vật tư tiêu hao",
+      "11. Chi phí vận hành",
+      "13. Khác",
+    ]);
+    expect(valuesOf()).toHaveLength(13);
   });
 
   it("triggers onChange when selected", () => {

@@ -1,8 +1,16 @@
 import React from "react";
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { renderPaymentStatusCell } from "./GarageCashflowTable.paymentCells";
-import { getPaymentStatusOptions } from "./GarageCashflowTable.options";
+import {
+  renderPaymentMethodCell,
+  renderPaymentStatusCell,
+} from "./GarageCashflowTable.paymentCells";
+import {
+  getPaymentMethodOptions,
+  getPaymentStatusOptions,
+} from "./GarageCashflowTable.options";
+
+import { GARAGE_PAYMENT_METHODS } from "../../../utils/garageCashflowCatalog";
 
 const tr = (_key: string, def?: string) => def || "";
 
@@ -75,5 +83,26 @@ describe("payment status filter options", () => {
       "RECEIPT_PAID",
       "PAYMENT_PAID",
     ]);
+  });
+});
+
+describe("phương thức Chuyển khoản khác", () => {
+  it("bộ lọc khớp danh mục phương thức", () => {
+    expect(getPaymentMethodOptions(tr).map((o) => o.value)).toEqual([
+      ...GARAGE_PAYMENT_METHODS,
+    ]);
+  });
+
+  it("hiện đúng nhãn đang lưu kèm màu riêng", () => {
+    render(
+      <>
+        {renderPaymentMethodCell({
+          paymentMethod: "Chuyển khoản khác",
+        } as any)}
+      </>,
+    );
+    expect(screen.getByText("Chuyển khoản khác").className).toContain(
+      "bg-teal-500/10",
+    );
   });
 });

@@ -4,12 +4,16 @@ import type {
   GarageCashflowQrFields,
   UpdateGarageCashflowVoucherDto,
 } from "../../../api/garageCashflowApi";
-import type { InitialCashflowData } from "./GarageCashflowDrawer.type";
+import type {
+  CashflowFormData,
+  InitialCashflowData,
+} from "./GarageCashflowDrawer.type";
+import { getVoucherPartnerName } from "../../../utils/garageCashflowPartner";
 
 export function buildInitialFormData(
   voucher: GarageCashflowVoucher | null,
   initialData?: InitialCashflowData,
-): Partial<CreateGarageCashflowVoucherDto> {
+): CashflowFormData {
   if (voucher) {
     return {
       voucherType: (voucher.voucherType || "").toUpperCase() as
@@ -20,7 +24,10 @@ export function buildInitialFormData(
         ? voucher.transDate.slice(0, 10)
         : new Date().toISOString().slice(0, 10),
       amount: Number(voucher.amount) || 0,
-      partnerName: voucher.partnerName || voucher.case?.khachHangName || "",
+      partnerName: getVoucherPartnerName(voucher),
+      autoPartnerName: voucher.partnerName
+        ? undefined
+        : getVoucherPartnerName(voucher) || undefined,
       partnerPhone: voucher.partnerPhone || "",
       licensePlate: voucher.licensePlate || voucher.case?.bienSoXe || "",
       note: voucher.note || "",
@@ -48,6 +55,8 @@ export function buildInitialFormData(
     transDate: initialData?.transDate || new Date().toISOString().slice(0, 10),
     amount: initialData?.amount || 0,
     partnerName: initialData?.partnerName || "",
+    autoPartnerName:
+      defaultVoucherType === "RECEIPT" ? initialData?.partnerName : undefined,
     partnerPhone: initialData?.partnerPhone || "",
     licensePlate: initialData?.licensePlate || "",
     note: initialData?.note || "",
@@ -123,8 +132,17 @@ function resolvePayerTypePayload(
     : undefined;
 }
 
+/** API giữ giá trị cũ khi nhận undefined, nên trường đã bị xóa phải gửi null. */
+function editedText(
+  value: string | undefined,
+  stored: string | null | undefined,
+): string | null | undefined {
+  return value?.trim() || (stored ? null : undefined);
+}
+
 export function buildUpdatePayload(
   formData: Partial<CreateGarageCashflowVoucherDto>,
+  stored?: GarageCashflowVoucher | null,
 ): UpdateGarageCashflowVoucherDto {
   return {
     voucherType: formData.voucherType
@@ -132,12 +150,15 @@ export function buildUpdatePayload(
       : undefined,
     amount: Number(formData.amount) || 0,
     transDate: formData.transDate,
-    partnerName: formData.partnerName?.trim() || undefined,
+    partnerName: editedText(
+      formData.partnerName,
+      getVoucherPartnerName(stored ?? undefined),
+    ),
     partnerPhone: formData.partnerPhone?.trim() || undefined,
     licensePlate: formData.licensePlate?.trim() || undefined,
-    note: formData.note?.trim() || undefined,
-    paymentMethod: formData.paymentMethod || undefined,
-    paymentContent: formData.paymentContent?.trim() || undefined,
+    note: editedText(formData.note, stored?.note),
+    paymentMethod: editedText(formData.paymentMethod, stored?.paymentMethod),
+    paymentContent: editedText(formData.paymentContent, stored?.paymentContent),
     paymentStatus:
       formData.voucherType?.toUpperCase() === "PAYMENT"
         ? formData.paymentStatus || "PENDING"
@@ -145,7 +166,7 @@ export function buildUpdatePayload(
           ? formData.paymentStatus || "PAID"
           : formData.paymentStatus,
     referenceNumber: formData.referenceNumber?.trim() || undefined,
-    caseId: formData.caseId?.trim() || undefined,
+    caseId: editedText(formData.caseId, stored?.caseId),
     payerType: resolvePayerTypePayload(formData),
     erpBankTransactionId: formData.erpBankTransactionId?.trim() || undefined,
     erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,

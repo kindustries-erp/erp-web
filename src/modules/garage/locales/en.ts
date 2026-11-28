@@ -21,6 +21,7 @@ export const garageEn = {
       stt: "#",
       transDate: "Date",
       expectedDate: "Expected Date",
+      overdueDays: "Overdue (days)",
       createdAt: "Created At",
       voucherCode: "Voucher Code",
       thu: "Cash In",
@@ -116,8 +117,15 @@ export const garageEn = {
       method: {
         cash: "Cash",
         transfer: "Bank transfer",
+        transferOther: "Other transfer",
         card: "Credit card",
         other: "Other",
+      },
+      overdue: {
+        notDue: "Not due",
+        d1_30: "1–30 days",
+        d31_90: "31–90 days",
+        d90Plus: "Over 90 days",
       },
       content: {
         c1: "1. Customer payment",
@@ -194,6 +202,21 @@ export const garageEn = {
     formattedAmount: "Formatted amount:",
     amountInWords: "In words:",
     accountNumberInvalid: "Account number must be 1-19 letters or digits",
+    contentCaseHint: "This purpose needs a service order, or a reason in Note.",
+    contentLegacyWarning:
+      "The saved purpose does not match the voucher type. Please choose again.",
+    methodLegacyWarning:
+      "The saved method is no longer in the list. Please choose again.",
+    rules: {
+      amount: "Amount must be greater than 0.",
+      methodRequired: "A collected/paid voucher requires a payment method.",
+      contentRequired: "A collected/paid voucher requires a payment purpose.",
+      contentType:
+        'Payment purpose "{{content}}" is not valid for this voucher type. Please choose again.',
+      methodInvalid: 'Payment method "{{method}}" is not valid.',
+      caseRequired:
+        'Payment purpose "{{content}}" requires a service order. If there is none yet (advance or combined payment), state the reason in Note.',
+    },
   },
   tabs: {
     dashboard: "Overview",

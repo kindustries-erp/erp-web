@@ -46,3 +46,8 @@ export interface DrawerSectionProps {
   >;
   initialData?: InitialCashflowData;
 }
+
+/** Dữ liệu form; `autoPartnerName` là tên đối tác do hệ thống tự điền, không gửi lên API. */
+export type CashflowFormData = Partial<CreateGarageCashflowVoucherDto> & {
+  autoPartnerName?: string;
+};

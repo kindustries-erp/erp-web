@@ -114,7 +114,6 @@ export function buildCustomerCaseRowActions(
                     voucherType: "PAYMENT",
                     caseId: row.id,
                     licensePlate: row.bienSoXe,
-                    partnerName: row.khachHangName,
                     amount: chiAmount > 0 ? chiAmount : undefined,
                   }),
               },
