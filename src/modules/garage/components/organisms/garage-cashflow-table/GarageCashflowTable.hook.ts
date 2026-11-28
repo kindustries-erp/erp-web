@@ -28,6 +28,10 @@ export function useGarageCashflowTable({
 
   const serverFilters = useMemo(() => {
     const combined: Record<string, string[]> = { ...columnFilters };
+    // "Chọn tất cả kết quả tìm kiếm" gửi sentinel; từ khóa đã đi qua column_search.
+    Object.keys(combined).forEach((key) => {
+      if (combined[key]?.[0] === "__ALL_MATCHING__") delete combined[key];
+    });
     Object.entries(dateRanges).forEach(([key, range]) => {
       if (range?.from || range?.to)
         combined[key] = [`${range.from || ""}..${range.to || ""}`];

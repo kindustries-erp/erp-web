@@ -363,7 +363,7 @@ describe("GarageCashflowTable", () => {
         <div>{renderPaymentStatusCell(mockReceipt)}</div>,
       );
       expect(screen.getByText("Dự thu")).toBeInTheDocument();
-      expect(container.innerHTML).toContain("text-amber-600");
+      expect(container.innerHTML).toContain("text-sky-600");
     });
 
     it("renders Đã thu for RECEIPT with PAID or null status", () => {
@@ -376,7 +376,7 @@ describe("GarageCashflowTable", () => {
         <div>{renderPaymentStatusCell(mockReceipt)}</div>,
       );
       expect(screen.getByText("Đã thu")).toBeInTheDocument();
-      expect(container.innerHTML).toContain("text-emerald-600");
+      expect(container.innerHTML).toContain("bg-emerald-600");
 
       const mockLegacyReceipt = {
         ...mockRow,
@@ -423,7 +423,7 @@ describe("GarageCashflowTable", () => {
         <div>{renderPaymentStatusCell(mockPayment)}</div>,
       );
       expect(screen.getByText("Đã chi")).toBeInTheDocument();
-      expect(container.innerHTML).toContain("text-emerald-600");
+      expect(container.innerHTML).toContain("bg-rose-600");
     });
   });
 
@@ -464,6 +464,20 @@ describe("GarageCashflowTable", () => {
       expect(keys[paymentIndex + 1]).toBe("paymentContent");
       expect(keys[paymentIndex + 2]).toBe("caseCode");
       expect(keys[paymentIndex + 3]).toBe("licensePlate");
+    });
+
+    it("enables the (Trống) blank option on Tiền vào and Tiền ra filters", () => {
+      const mockFilterBuilder = vi.fn((key) => key) as any;
+      mockFilterBuilder.date = vi.fn(() => "date");
+      mockFilterBuilder.amount = vi.fn(() => "amount");
+
+      getGarageCashflowColumns(mockFilterBuilder, vi.fn(), vi.fn());
+
+      const amountCalls = mockFilterBuilder.amount.mock.calls as any[][];
+      const optionsFor = (key: string) =>
+        amountCalls.find((c) => c[0] === key)?.[2];
+      expect(optionsFor("thu")?.showBlankOption).toBe(true);
+      expect(optionsFor("chi")?.showBlankOption).toBe(true);
     });
   });
 

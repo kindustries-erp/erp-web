@@ -88,6 +88,7 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
           companyName={companyName}
           logoUrl={logoUrl}
           onBranchClick={onBranchClick}
+          showEnvIndicator={false}
         />
       )}
     </div>

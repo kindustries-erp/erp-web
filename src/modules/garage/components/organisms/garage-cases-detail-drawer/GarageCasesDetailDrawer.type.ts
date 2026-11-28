@@ -31,6 +31,13 @@ export type GarageCasesScope =
       item: GarageTrendItem;
     };
 
+export enum GarageCasesDrawerTab {
+  CASES = "cases",
+  KANBAN = "kanban",
+  PARTNER_BREAKDOWN = "partner_breakdown",
+  CLASSIFICATION = "classification",
+}
+
 export interface GarageCasesDetailDrawerProps {
   open: boolean;
   onClose: () => void;

@@ -6,6 +6,7 @@ import { GarageCasesTableTab } from "./components/GarageCasesTableTab";
 import { DebtPartnerTab } from "../garage-debt-detail-drawer/components/DebtPartnerTab";
 import { DebtClassificationTab } from "../garage-debt-detail-drawer/components/DebtClassificationTab";
 import { GarageCasesKanbanContainer } from "@/v2/modules/cases-garage";
+import { GarageCasesDrawerTab } from "./GarageCasesDetailDrawer.type";
 import type { useGarageCasesDetailDrawer } from "./GarageCasesDetailDrawer.hook";
 
 type DrawerLogic = ReturnType<typeof useGarageCasesDetailDrawer>;
@@ -41,7 +42,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
   return useMemo<V2TabItemData[]>(() => {
     const isFunnelScope = Boolean(isCheckpoint && (classification || isFunnel));
     const mainTab: V2TabItemData = {
-      key: "cases",
+      key: GarageCasesDrawerTab.CASES,
       label: isCheckpoint
         ? t("cases.tabs.carList", "Danh sách xe")
         : t("debts.detailDrawer.tabRemainingCases", "Phiếu còn công nợ"),
@@ -58,13 +59,14 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
           isFunnelScope={isFunnelScope}
           initialCategoryFilter={initialStatus}
           vehicleTotal={vehicleTotal}
+          fillHeight={!isCheckpoint}
         />
       ),
     };
 
     if (isCheckpoint) {
       const kanbanTab: V2TabItemData = {
-        key: "kanban",
+        key: GarageCasesDrawerTab.KANBAN,
         label: t("v2.garageCases.kanban.tabTitle", "Tiến độ công việc"),
         icon: <Kanban className="w-3.5 h-3.5" />,
         content: (
@@ -83,7 +85,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
     return [
       mainTab,
       {
-        key: "partner_breakdown",
+        key: GarageCasesDrawerTab.PARTNER_BREAKDOWN,
         label: t(
           "progress.tabs.partnerClassification",
           "Phân loại theo đối tượng",
@@ -98,11 +100,12 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
             effectiveBreakdownTotal={effectiveBreakdownTotal}
             onSelectGroup={handleSelectPartnerGroup}
             onOpenCaseDetail={setSelectedCaseCode}
+            fillHeight={!isCheckpoint}
           />
         ),
       },
       {
-        key: "classification",
+        key: GarageCasesDrawerTab.CLASSIFICATION,
         label: isReceipt
           ? t("progress.tabs.businessClassification", "Phân loại Nghiệp vụ")
           : t("progress.tabs.costClassification", "Phân loại Chi phí"),

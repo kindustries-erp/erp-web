@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageCasesDetailDrawer } from "./GarageCasesDetailDrawer";
 import type { GarageCasesScope } from "./GarageCasesDetailDrawer.type";
@@ -151,5 +151,33 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
         classification: "SUA_CHUA_CHUNG",
       }),
     );
+  });
+
+  it("ở debt mode tab Phiếu dịch vụ fill chiều cao drawer và cuộn trong bảng", () => {
+    renderCasesScope({ kind: "month", item: monthItem }, false);
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.querySelector(".overflow-hidden.p-3")).not.toBeNull();
+    expect(dialog.querySelectorAll(".overflow-y-auto").length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it("chỉ bật overflow-hidden khi chuyển sang tab Kanban ở checkpoint mode", () => {
+    renderCasesScope(
+      {
+        kind: "checkpoint",
+        dateFrom: "2026-11-01",
+        dateTo: "2026-11-30",
+        periodLabel: "Tháng 11/2026",
+      },
+      true,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.querySelector(".overflow-hidden.p-3")).toBeNull();
+
+    fireEvent.click(screen.getByText("Tiến độ công việc"));
+    expect(dialog.querySelector(".overflow-hidden.p-3")).not.toBeNull();
   });
 });

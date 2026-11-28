@@ -1,4 +1,5 @@
 import React from "react";
+import { BadgeCheck, CheckCircle2, Clock } from "lucide-react";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 
 const METHOD_BADGE_STYLES: Record<string, string> = {
@@ -102,12 +103,21 @@ export const renderPaymentContentCell = (row: GarageCashflowVoucher) => {
   );
 };
 
-const STATUS_BADGE_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  APPROVED: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-  PAID: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  EXPECTED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-};
+/* Dự thu/Dự chi: nền nhạt + icon đồng hồ. Đã thu/Đã chi: nền đặc + icon check.
+ * Thu = xanh lá, chi = đỏ, khớp màu số tiền cột Thu/Chi. Không dùng blue-*. */
+const STATUS_BADGE_STYLES = {
+  EXPECTED: "bg-sky-500/10 text-sky-600 border-sky-500/30 dark:text-sky-300",
+  PENDING:
+    "bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-300",
+  APPROVED:
+    "bg-indigo-500/10 text-indigo-600 border-indigo-500/30 dark:text-indigo-300",
+  RECEIVED:
+    "bg-emerald-600 text-white border-emerald-600 dark:bg-emerald-500 dark:border-emerald-500",
+  PAID_OUT:
+    "bg-rose-600 text-white border-rose-600 dark:bg-rose-500 dark:border-rose-500",
+} as const;
+
+const STATUS_ICON_CLASS = "h-3 w-3 shrink-0";
 
 export const renderPaymentStatusCell = (
   row: GarageCashflowVoucher,
@@ -124,27 +134,32 @@ export const renderPaymentStatusCell = (
   let label = "";
   let badgeStyle = "bg-slate-500/10 text-slate-600 border-slate-500/20";
 
+  let Icon: typeof Clock = Clock;
+
   if (isReceipt) {
     if (row.paymentStatus === "EXPECTED") {
-      label = tr("garage.cashflow.status.expected", "Dự thu");
+      label = tr("garage.cashflow.optionLabels.status.expected", "Dự thu");
       badgeStyle = STATUS_BADGE_STYLES.EXPECTED;
     } else {
-      label = tr("garage.cashflow.status.collected", "Đã thu");
-      badgeStyle = STATUS_BADGE_STYLES.PAID;
+      label = tr("garage.cashflow.optionLabels.status.receiptPaid", "Đã thu");
+      badgeStyle = STATUS_BADGE_STYLES.RECEIVED;
+      Icon = CheckCircle2;
     }
   } else if (isPayment) {
     if (!row.paymentStatus) {
       return <span className="text-muted-foreground">—</span>;
     }
     if (row.paymentStatus === "PENDING") {
-      label = tr("garage.cashflow.status.pending", "Dự chi");
+      label = tr("garage.cashflow.optionLabels.status.pending", "Dự chi");
       badgeStyle = STATUS_BADGE_STYLES.PENDING;
     } else if (row.paymentStatus === "APPROVED") {
-      label = tr("garage.cashflow.status.approved", "Đã duyệt");
+      label = tr("garage.cashflow.optionLabels.status.approved", "Đã duyệt");
       badgeStyle = STATUS_BADGE_STYLES.APPROVED;
+      Icon = BadgeCheck;
     } else if (row.paymentStatus === "PAID") {
-      label = tr("garage.cashflow.status.paid", "Đã chi");
-      badgeStyle = STATUS_BADGE_STYLES.PAID;
+      label = tr("garage.cashflow.optionLabels.status.paymentPaid", "Đã chi");
+      badgeStyle = STATUS_BADGE_STYLES.PAID_OUT;
+      Icon = CheckCircle2;
     } else {
       label = row.paymentStatus;
     }
@@ -152,8 +167,9 @@ export const renderPaymentStatusCell = (
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
     >
+      <Icon className={STATUS_ICON_CLASS} aria-hidden="true" />
       {label}
     </span>
   );

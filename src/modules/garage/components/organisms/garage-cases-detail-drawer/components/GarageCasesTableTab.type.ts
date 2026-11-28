@@ -73,4 +73,6 @@ export interface GarageCasesTableTabProps {
   initialCategoryFilter?: string;
   /** Tổng số xe theo API (checkpoint); lớn hơn số đã tải thì báo bị cắt. */
   vehicleTotal?: number;
+  /** Giới hạn chiều cao vừa khít drawer và chỉ cuộn phần thân bảng. */
+  fillHeight?: boolean;
 }
