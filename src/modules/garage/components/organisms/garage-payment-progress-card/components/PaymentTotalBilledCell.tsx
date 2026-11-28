@@ -6,10 +6,12 @@ import type { GarageTrendItem } from "@/modules/garage/api/garageDashboardApi";
 
 interface PaymentTotalBilledCellProps {
   item: GarageTrendItem;
+  hideTooltip?: boolean;
 }
 
 export const PaymentTotalBilledCell: React.FC<PaymentTotalBilledCellProps> = ({
   item,
+  hideTooltip = false,
 }) => {
   const total = item.tienCoThue || item.totalBilled || 0;
   const paid = item.paid || 0;
@@ -32,7 +34,7 @@ export const PaymentTotalBilledCell: React.FC<PaymentTotalBilledCellProps> = ({
       : `Đã thu: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải thu: ${money(bal)}`;
 
   return (
-    <Tooltip content={tooltipText} side="top">
+    <Tooltip content={tooltipText} side="top" disabled={hideTooltip}>
       <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
         <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
           <span className="font-semibold text-foreground font-mono">

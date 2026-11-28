@@ -1,5 +1,6 @@
 import React from "react";
 import { Combobox } from "@/shared/components/Combobox";
+import { getGarageContentsForType } from "../../../utils/garageCashflowCatalog";
 import type { PaymentContentComboboxProps } from "./PaymentContentCombobox.type";
 
 export const PAYMENT_CONTENT_OPTIONS = [
@@ -18,8 +19,16 @@ export const PAYMENT_CONTENT_OPTIONS = [
   { label: "13. Khác", value: "13. Khác" },
 ];
 
+/** Lựa chọn nội dung theo loại phiếu; bỏ trống loại thì trả toàn bộ. */
+export const getPaymentContentSelectOptions = (voucherType?: string | null) => {
+  if (!voucherType) return PAYMENT_CONTENT_OPTIONS;
+  const allowed = getGarageContentsForType(voucherType);
+  return PAYMENT_CONTENT_OPTIONS.filter((o) => allowed.includes(o.value));
+};
+
 export const PaymentContentCombobox: React.FC<PaymentContentComboboxProps> = ({
   value,
+  voucherType,
   onChange,
   placeholder = "Chọn hoặc nhập nội dung...",
   className,
@@ -31,7 +40,7 @@ export const PaymentContentCombobox: React.FC<PaymentContentComboboxProps> = ({
         onChange={(val) => {
           if (onChange) onChange(val);
         }}
-        options={PAYMENT_CONTENT_OPTIONS}
+        options={getPaymentContentSelectOptions(voucherType)}
         placeholder={placeholder}
       />
     </div>

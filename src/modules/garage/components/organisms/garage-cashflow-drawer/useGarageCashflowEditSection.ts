@@ -2,7 +2,11 @@ import type React from "react";
 import { useT } from "@/core/i18n";
 import { renderGarageCaseTooltipContent } from "../garage-case-combobox";
 import type { CreateGarageCashflowVoucherDto } from "../../../api/garageCashflowApi";
-import type { DrawerSectionProps } from "./GarageCashflowDrawer.type";
+import type {
+  CashflowFormData,
+  DrawerSectionProps,
+} from "./GarageCashflowDrawer.type";
+import { isReceiptType } from "../../../utils/garageCashflowPartner";
 
 export function useGarageCashflowEditSection({
   voucher,
@@ -21,8 +25,11 @@ export function useGarageCashflowEditSection({
     };
 
   const handleCaseChange = (val: string, opt?: any) => {
-    const updates: Partial<CreateGarageCashflowVoucherDto> = { caseId: val };
-    if (opt?.originalName) updates.partnerName = opt.originalName;
+    const updates: CashflowFormData = { caseId: val };
+    if (opt?.originalName && isReceiptType(formData.voucherType || "RECEIPT")) {
+      updates.partnerName = opt.originalName;
+      updates.autoPartnerName = opt.originalName;
+    }
     if (opt?.originalLicensePlate && !formData.licensePlate) {
       updates.licensePlate = opt.originalLicensePlate;
     }

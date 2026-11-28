@@ -1,3 +1,4 @@
+import { getVoucherPartnerName } from "../../../utils/garageCashflowPartner";
 import type { DrawerAuditLogItem } from "@/shared/components/drawer/DrawerAuditTimeline";
 import type {
   CreateGarageCashflowVoucherDto,
@@ -54,7 +55,7 @@ export function buildBaselineCashflowAuditItems(
   if (voucher.caseId || voucher.case) {
     const c = voucher.case;
     const plate = voucher.licensePlate || c?.bienSoXe;
-    const partner = voucher.partnerName || c?.khachHangName;
+    const partner = getVoucherPartnerName(voucher);
     const desc = [
       c?.soChungTu ? `Phiếu DV: ${c.soChungTu}` : `Case: #${voucher.caseId}`,
       plate ? `• ${plate}` : "",

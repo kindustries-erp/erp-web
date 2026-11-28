@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "react-hot-toast";
+import { useUIStore } from "@/core/config/uiStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { auditCoreApi } from "@/modules/system/api/usersCoreApi";
@@ -26,9 +26,15 @@ import {
   buildBaselineCashflowAuditItems,
   mergeAuditItems,
 } from "./GarageCashflowDrawer.helper";
+import { findFormViolation } from "./garageCashflowDrawer.rules";
+import { formatGarageVoucherViolation } from "../../../utils/garageCashflowVoucherRules";
 import { isQrAccountNumberInvalid } from "./useGarageCashflowPaymentQr.helper";
 import type { DrawerAuditLogItem } from "@/shared/components/drawer/DrawerAuditTimeline";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+
+/** Toast của app đi qua V2Toaster; `react-hot-toast` không được mount nên không hiện. */
+const showError = (title: string) =>
+  useUIStore.getState().showToast({ title, variant: "destructive" });
 
 interface UseGarageCashflowDrawerParams {
   open: boolean;
@@ -86,7 +92,16 @@ export function useGarageCashflowDrawer({
   const handleSave = useCallback(() => {
     if (!canSave) return;
     if (isQrAccountNumberInvalid(formData.qrAccountNumber)) {
-      toast.error(t("garage:cashflowDrawer.accountNumberInvalid"));
+      showError(t("garage:cashflowDrawer.accountNumberInvalid"));
+      return;
+    }
+
+    const violation = findFormViolation(
+      formData,
+      initialMode === "create" ? null : voucher,
+    );
+    if (violation) {
+      showError(formatGarageVoucherViolation(violation, t));
       return;
     }
 
@@ -113,7 +128,7 @@ export function useGarageCashflowDrawer({
         submit();
       }
     } else if (voucher) {
-      const updateDto = buildUpdatePayload(formData);
+      const updateDto = buildUpdatePayload(formData, voucher);
       const submit = () =>
         updateMutation.mutate(
           { id: voucher.id, data: updateDto },
@@ -133,7 +148,7 @@ export function useGarageCashflowDrawer({
           {
             amount: updateDto.amount,
             transDate: updateDto.transDate,
-            caseId: updateDto.caseId,
+            caseId: updateDto.caseId ?? undefined,
             licensePlate: updateDto.licensePlate,
             excludeId: voucher.id,
           },

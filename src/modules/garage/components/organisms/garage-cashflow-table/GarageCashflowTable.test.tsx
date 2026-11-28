@@ -445,7 +445,7 @@ describe("GarageCashflowTable", () => {
       expect(pcCol?.size).toBe(160);
     });
 
-    it("places paymentContent right after paymentMethod, followed by caseCode and licensePlate", () => {
+    it("places paymentContent after paymentMethod, followed by note, caseCode and licensePlate", () => {
       const mockFilterBuilder = vi.fn((key) => key) as any;
       mockFilterBuilder.date = vi.fn(() => "date");
       mockFilterBuilder.amount = vi.fn(() => "amount");
@@ -462,8 +462,9 @@ describe("GarageCashflowTable", () => {
       const paymentIndex = keys.indexOf("paymentMethod");
       expect(paymentIndex).toBeGreaterThan(-1);
       expect(keys[paymentIndex + 1]).toBe("paymentContent");
-      expect(keys[paymentIndex + 2]).toBe("caseCode");
-      expect(keys[paymentIndex + 3]).toBe("licensePlate");
+      expect(keys[paymentIndex + 2]).toBe("note");
+      expect(keys[paymentIndex + 3]).toBe("caseCode");
+      expect(keys[paymentIndex + 4]).toBe("licensePlate");
     });
 
     it("enables the (Trống) blank option on Tiền vào and Tiền ra filters", () => {

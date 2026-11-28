@@ -240,3 +240,33 @@ describe("garage-cases-v2 (dashboard V2)", () => {
     expect(parsed?.tab).toBe("dashboard");
   });
 });
+
+describe("garage-cashflow và garage-debts URL tab parsing", () => {
+  it("giữ nguyên tab hợp lệ của garage-cashflow gồm dashboard, vouchers, forecast", () => {
+    expect(pathToPage("/garage-cashflow", "?tab=vouchers")?.tab).toBe(
+      "vouchers",
+    );
+    expect(pathToPage("/garage-cashflow", "?tab=forecast")?.tab).toBe(
+      "forecast",
+    );
+    expect(pathToPage("/garage-cashflow", "?tab=dashboard")?.tab).toBe(
+      "dashboard",
+    );
+    expect(pathToPage("/garage-cashflow", "")?.tab).toBe("dashboard");
+    expect(pathToPage("/garage-cashflow", "?tab=invalid")?.tab).toBe(
+      "dashboard",
+    );
+  });
+
+  it("giữ nguyên tab hợp lệ của garage-debts gồm overview, receivables, payables, customers", () => {
+    expect(pathToPage("/garage-debts", "?tab=receivables")?.tab).toBe(
+      "receivables",
+    );
+    expect(pathToPage("/garage-debts", "?tab=payables")?.tab).toBe("payables");
+    expect(pathToPage("/garage-debts", "?tab=customers")?.tab).toBe(
+      "customers",
+    );
+    expect(pathToPage("/garage-debts", "")?.tab).toBe("overview");
+    expect(pathToPage("/garage-debts", "?tab=cashflow")?.tab).toBe("overview");
+  });
+});

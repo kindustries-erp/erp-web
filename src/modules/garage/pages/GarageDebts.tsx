@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useGarageStore } from "../store/garageStore";
 import { GarageCustomerDetailDrawer } from "../components/organisms/garage-customer-detail-drawer";
 import { GarageDebtsDashboardTab } from "../components/GarageDebtsDashboardTab";
@@ -7,16 +7,19 @@ import { GarageDebtsTable } from "../components/organisms/garage-debts-table";
 import { GaragePayablesTable } from "../components/organisms/garage-payables-table";
 import { GarageSupplierDetailDrawer } from "../components/organisms/garage-supplier-detail-drawer";
 import { GarageCashflowDrawer } from "../components/organisms/garage-cashflow-drawer/GarageCashflowDrawer";
-import { useGarageDebtsTabs } from "../hooks/useGarageDebtsTabs";
+import {
+  GarageDebtsTabKey,
+  useGarageDebtsTabs,
+} from "../hooks/useGarageDebtsTabs";
 import { useGarageDebtsCashflow } from "../hooks/useGarageDebtsCashflow";
 import type { GarageDebtsExportContext } from "../export/garageDebtsExportContext";
 
 export interface GarageDebtsProps {
-  initialTab?: string;
+  initialTab?: GarageDebtsTabKey | string;
 }
 
 export function GarageDebts({
-  initialTab = "overview",
+  initialTab = GarageDebtsTabKey.OVERVIEW,
 }: GarageDebtsProps = {}) {
   const { selectedBranchId } = useGarageStore();
 
@@ -52,50 +55,93 @@ export function GarageDebts({
     setExportDrawerOpen(true);
   }, []);
 
+  const normalizedTab: GarageDebtsTabKey =
+    activeTab === GarageDebtsTabKey.CUSTOMERS
+      ? GarageDebtsTabKey.RECEIVABLES
+      : activeTab;
+
+  const mountedViewsRef = useRef<Record<string, boolean>>({
+    [GarageDebtsTabKey.OVERVIEW]: normalizedTab === GarageDebtsTabKey.OVERVIEW,
+    [GarageDebtsTabKey.RECEIVABLES]:
+      normalizedTab === GarageDebtsTabKey.RECEIVABLES,
+    [GarageDebtsTabKey.PAYABLES]: normalizedTab === GarageDebtsTabKey.PAYABLES,
+  });
+  mountedViewsRef.current[normalizedTab] = true;
+
   return (
-    <>
-      {activeTab === "overview" && (
-        <GarageDebtsDashboardTab
-          tabs={pageTabs}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          onExportClick={() => openExportDrawer()}
-          onOpenCustomerDetail={(code, name, licensePlate) =>
-            setSelectedCustomer({
-              code,
-              name: name || "",
-              licensePlate,
-              debtType: "receivables",
-            })
+    <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
+      {mountedViewsRef.current[GarageDebtsTabKey.OVERVIEW] && (
+        <div
+          className={
+            normalizedTab === GarageDebtsTabKey.OVERVIEW
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
           }
-        />
+        >
+          <GarageDebtsDashboardTab
+            tabs={pageTabs}
+            activeTab={normalizedTab}
+            onTabChange={handleTabChange}
+            onExportClick={() => openExportDrawer()}
+            onOpenCustomerDetail={(code, name, licensePlate) =>
+              setSelectedCustomer({
+                code,
+                name: name || "",
+                licensePlate,
+                debtType: GarageDebtsTabKey.RECEIVABLES,
+              })
+            }
+          />
+        </div>
       )}
 
-      {activeTab === "payables" && (
-        <GaragePayablesTable
-          tabs={pageTabs}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          onOpenCustomerDetail={(cust) =>
-            setSelectedCustomer({ ...cust, debtType: "payables" })
+      {mountedViewsRef.current[GarageDebtsTabKey.PAYABLES] && (
+        <div
+          className={
+            normalizedTab === GarageDebtsTabKey.PAYABLES
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
           }
-          onOpenSupplierDetail={setSelectedSupplier}
-          onOpenExportDrawer={openExportDrawer}
-          onCreateCashflow={handleOpenCreateCashflow}
-        />
+        >
+          <GaragePayablesTable
+            tabs={pageTabs}
+            activeTab={normalizedTab}
+            onTabChange={handleTabChange}
+            onOpenCustomerDetail={(cust) =>
+              setSelectedCustomer({
+                ...cust,
+                debtType: GarageDebtsTabKey.PAYABLES,
+              })
+            }
+            onOpenSupplierDetail={setSelectedSupplier}
+            onOpenExportDrawer={openExportDrawer}
+            onCreateCashflow={handleOpenCreateCashflow}
+          />
+        </div>
       )}
 
-      {(activeTab === "receivables" || activeTab === "customers") && (
-        <GarageDebtsTable
-          tabs={pageTabs}
-          activeTab={activeTab === "customers" ? "receivables" : activeTab}
-          onTabChange={handleTabChange}
-          onOpenCustomerDetail={(cust) =>
-            setSelectedCustomer({ ...cust, debtType: "receivables" })
+      {mountedViewsRef.current[GarageDebtsTabKey.RECEIVABLES] && (
+        <div
+          className={
+            normalizedTab === GarageDebtsTabKey.RECEIVABLES
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
           }
-          onOpenExportDrawer={openExportDrawer}
-          onCreateCashflow={handleOpenCreateCashflow}
-        />
+        >
+          <GarageDebtsTable
+            tabs={pageTabs}
+            activeTab={normalizedTab}
+            onTabChange={handleTabChange}
+            onOpenCustomerDetail={(cust) =>
+              setSelectedCustomer({
+                ...cust,
+                debtType: GarageDebtsTabKey.RECEIVABLES,
+              })
+            }
+            onOpenExportDrawer={openExportDrawer}
+            onCreateCashflow={handleOpenCreateCashflow}
+          />
+        </div>
       )}
 
       <GarageCustomerDetailDrawer
@@ -107,7 +153,9 @@ export function GarageDebts({
         branchId={selectedBranchId || undefined}
         debtType={
           selectedCustomer?.debtType ||
-          (activeTab === "payables" ? "payables" : "receivables")
+          (normalizedTab === GarageDebtsTabKey.PAYABLES
+            ? GarageDebtsTabKey.PAYABLES
+            : GarageDebtsTabKey.RECEIVABLES)
         }
         onDebtTypeChange={(newDebtType) => {
           setSelectedCustomer((prev) =>
@@ -141,7 +189,7 @@ export function GarageDebts({
         initialData={cashflowDrawerState.initialData}
         onSuccess={handleCashflowSuccess}
       />
-    </>
+    </div>
   );
 }
 

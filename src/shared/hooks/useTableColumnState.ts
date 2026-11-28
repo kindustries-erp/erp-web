@@ -2,7 +2,10 @@ import { create } from "zustand";
 import { useMemo } from "react";
 import { clearAllDropdownSearchStates } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { decodeStateParam } from "@/shared/utils/pageUrl";
-import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import {
+  ErpUrlQueryParam,
+  GarageCashflowTabKey,
+} from "@/shared/constants/urlParams";
 
 interface TableColumnState {
   sorts: string[];
@@ -112,6 +115,16 @@ export function isTableMatchingCurrentUrl(
       return tableId === "bank-transactions-table-cashbook";
     // Default tab is 'tcb'
     return tableId === "bank-transactions-table-tcb";
+  }
+
+  // 5. Garage Cashflow
+  if (tableId.startsWith("garage-cashflow-table-")) {
+    if (tab === GarageCashflowTabKey.FORECAST) {
+      return (
+        tableId === `garage-cashflow-table-${GarageCashflowTabKey.FORECAST}`
+      );
+    }
+    return tableId === `garage-cashflow-table-${GarageCashflowTabKey.VOUCHERS}`;
   }
 
   // Other single tables (e.g. inventory-stock-table, garage-cases-table, etc.)
