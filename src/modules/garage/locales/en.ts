@@ -450,6 +450,7 @@ export const garageEn = {
       OJ: "OJ",
       OJ_NGOAI: "OJ External",
       KHAC: "Other",
+      ojHasInvoice: "Invoiced",
     },
     exclusions: {
       reports: "Exclude from Reports",

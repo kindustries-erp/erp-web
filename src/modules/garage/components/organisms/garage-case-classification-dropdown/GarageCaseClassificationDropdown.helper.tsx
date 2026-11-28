@@ -9,12 +9,17 @@ export function getClassificationDisplayMeta(caseItem: any, t: any) {
     GARAGE_CASE_CLASSIFICATIONS[
       effectiveCode === "OJ_NGOAI" ? "OJ" : effectiveCode
     ];
-  const label =
+  const baseLabel =
     caseItem.category?.name ||
     (meta
       ? t(`cases.classification.${meta.value}`, meta.label)
       : effectiveCode) ||
     t("cases.classification.unclassified", "Chưa phân loại");
+  // API chỉ trả `true` cho phiếu OJ đã gắn hóa đơn đầu ra còn hiệu lực
+  const label =
+    caseItem.ojHasInvoice === true
+      ? `${baseLabel} · ${t("cases.classification.ojHasInvoice", "Có hóa đơn")}`
+      : baseLabel;
   const icon =
     meta?.icon ||
     (effectiveCode ? (

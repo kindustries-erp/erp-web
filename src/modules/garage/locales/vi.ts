@@ -452,6 +452,7 @@ export const garageVi = {
       OJ: "OJ",
       OJ_NGOAI: "OJ Ngoài",
       KHAC: "Khác",
+      ojHasInvoice: "Có hóa đơn",
     },
     exclusions: {
       reports: "Không báo cáo",
