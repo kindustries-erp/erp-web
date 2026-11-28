@@ -153,13 +153,14 @@ describe("GarageCasesDetailDrawer: Organism lõi dùng chung", () => {
     );
   });
 
-  it("giữ overflow-y-auto (cho phép scroll) ở debt mode", () => {
+  it("ở debt mode tab Phiếu dịch vụ fill chiều cao drawer và cuộn trong bảng", () => {
     renderCasesScope({ kind: "month", item: monthItem }, false);
 
     const dialog = screen.getByRole("dialog");
-    const scrollContainers = dialog.querySelectorAll(".overflow-y-auto");
-    expect(scrollContainers.length).toBeGreaterThan(0);
-    expect(dialog.querySelector(".overflow-hidden.p-3")).toBeNull();
+    expect(dialog.querySelector(".overflow-hidden.p-3")).not.toBeNull();
+    expect(dialog.querySelectorAll(".overflow-y-auto").length).toBeGreaterThan(
+      0,
+    );
   });
 
   it("chỉ bật overflow-hidden khi chuyển sang tab Kanban ở checkpoint mode", () => {
