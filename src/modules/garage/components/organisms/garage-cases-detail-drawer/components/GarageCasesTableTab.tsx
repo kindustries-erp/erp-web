@@ -30,6 +30,7 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
   isFunnelScope,
   initialCategoryFilter,
   vehicleTotal,
+  fillHeight = false,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const isFunnelMode = Boolean(
@@ -106,8 +107,20 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
       );
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
+    <div
+      className={
+        fillHeight
+          ? "flex flex-col gap-3 flex-1 min-h-0"
+          : "flex flex-col gap-3"
+      }
+    >
+      <div
+        className={
+          fillHeight
+            ? "flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 shrink-0"
+            : "flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1"
+        }
+      >
         <div className="flex items-center overflow-x-auto scrollbar-none min-w-0">
           <V2TabBar
             variant={V2TabBarVariant.SUB}
@@ -144,6 +157,8 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
         }
         collapsible
         defaultCollapsed={false}
+        fillHeight={fillHeight}
+        className={fillHeight ? "mb-0" : undefined}
       >
         <V2StandardTable<GarageCaseDetailRow>
           tableId="garage-cases-detail-table"
@@ -161,6 +176,7 @@ export const GarageCasesTableTab: React.FC<GarageCasesTableTabProps> = ({
             />
           )}
           initialQuery={{ pageSize: 10, page: 1 }}
+          className={fillHeight ? "flex-1 min-h-0" : undefined}
           emptyLabel={t(
             "cases.emptyLabel",
             "Không có vụ việc nào phù hợp với bộ lọc",

@@ -107,9 +107,14 @@ export const GarageCasesDetailDrawer: React.FC<
     exportOpen,
   );
 
-  // Chỉ tab Kanban cần fillHeight + overflow-hidden để từng lane tự cuộn; các tab bảng/danh sách phải giữ overflow-y-auto mặc định.
+  // Tab Kanban hoặc tab danh sách phiếu của garage-debts cần fillHeight + overflow-hidden để cuộn bên trong; các tab khác giữ overflow-y-auto mặc định.
   const isKanbanActive =
     isCheckpoint && activeDrawerTab === GarageCasesDrawerTab.KANBAN;
+  const isFillHeightActive =
+    isKanbanActive ||
+    (!isCheckpoint &&
+      (activeDrawerTab === GarageCasesDrawerTab.CASES ||
+        activeDrawerTab === GarageCasesDrawerTab.PARTNER_BREAKDOWN));
 
   return (
     <>
@@ -161,10 +166,10 @@ export const GarageCasesDetailDrawer: React.FC<
         }
         size="xl"
         layout="2-columns"
-        fillHeight={isKanbanActive}
-        stickyRightPanel={!isKanbanActive}
+        fillHeight={isFillHeightActive}
+        stickyRightPanel={!isFillHeightActive}
         bodyClassName={
-          isKanbanActive
+          isFillHeightActive
             ? "overflow-hidden p-3 sm:p-4 md:p-[18px]"
             : "p-3 sm:p-4 md:p-[18px]"
         }

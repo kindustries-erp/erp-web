@@ -59,6 +59,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
           isFunnelScope={isFunnelScope}
           initialCategoryFilter={initialStatus}
           vehicleTotal={vehicleTotal}
+          fillHeight={!isCheckpoint}
         />
       ),
     };
@@ -99,6 +100,7 @@ export function useGarageCasesDrawerTabs(logic: DrawerLogic): V2TabItemData[] {
             effectiveBreakdownTotal={effectiveBreakdownTotal}
             onSelectGroup={handleSelectPartnerGroup}
             onOpenCaseDetail={setSelectedCaseCode}
+            fillHeight={!isCheckpoint}
           />
         ),
       },
