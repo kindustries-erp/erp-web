@@ -73,7 +73,7 @@ export function useGaragePayablesActions({
                 onClick: () =>
                   onCreateCashflow({
                     voucherType: "PAYMENT",
-                    partnerName: row.supplierName || row.customerName,
+                    partnerName: row.supplierName,
                     licensePlate: row.licensePlate || row.bienSoXe,
                     supplierId: row.supplierId,
                     customerCode: row.customerCode,

@@ -76,8 +76,19 @@ export interface CreateGarageCashflowVoucherDto extends GarageCashflowQrFields {
   transDate?: string;
 }
 
-export type UpdateGarageCashflowVoucherDto =
-  Partial<CreateGarageCashflowVoucherDto>;
+type ClearableVoucherField =
+  | "note"
+  | "paymentMethod"
+  | "paymentContent"
+  | "partnerName"
+  | "caseId";
+
+/** Cập nhật: bỏ trống là giữ nguyên, null là xóa giá trị đang lưu. */
+export type UpdateGarageCashflowVoucherDto = Partial<
+  Omit<CreateGarageCashflowVoucherDto, ClearableVoucherField>
+> & {
+  [K in ClearableVoucherField]?: CreateGarageCashflowVoucherDto[K] | null;
+};
 
 export interface CashflowDuplicateItem {
   id: string;

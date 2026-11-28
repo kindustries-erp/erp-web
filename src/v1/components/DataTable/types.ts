@@ -150,6 +150,7 @@ export interface DataTableProps<T> {
   onPageSize?: (pageSize: number) => void;
   onRowClick?: (item: T) => void;
   getRowClassName?: (item: T, index: number) => string | undefined;
+  getRowTooltip?: (item: T, index: number) => ReactNode;
   enableRowContextMenu?: boolean;
   onRowContextMenu?: (item: T, index: number, event: MouseEvent) => void;
   renderSubRow?: (item: T) => ReactNode;
@@ -192,6 +193,7 @@ export interface DataTableRowMemoProps<T> {
   rowIndex: number;
   isSelected: boolean;
   getRowClassName?: (record: T, index: number) => string | undefined;
+  getRowTooltip?: (record: T, index: number) => ReactNode;
   onRowClick?: (record: T) => void;
   onRowContextMenu?: (record: T, index: number, event: MouseEvent) => void;
   enableRowContextMenu?: boolean;

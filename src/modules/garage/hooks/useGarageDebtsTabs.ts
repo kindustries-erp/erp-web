@@ -1,29 +1,67 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { useAppStore } from "@/core/config/appStore";
+import {
+  ErpUrlQueryParam,
+  GarageDebtsTabKey,
+} from "@/shared/constants/urlParams";
 import type { TabItem } from "@/shared/components/PageLayout";
 
-export function useGarageDebtsTabs(initialTab = "overview") {
+export { GarageDebtsTabKey };
+
+const GARAGE_DEBTS_INSTANCE_IDS = new Set([
+  "garage-debts",
+  "garage-partners",
+  "garage-customers",
+]);
+
+function getGarageDebtsInstanceId(): string {
+  const currentId = useAppStore.getState().currentInstanceId;
+  if (currentId && GARAGE_DEBTS_INSTANCE_IDS.has(currentId)) {
+    return currentId;
+  }
+  return "garage-debts";
+}
+
+function resolveValidDebtsTab(
+  tab: string | null | undefined,
+): GarageDebtsTabKey {
+  if (
+    tab === GarageDebtsTabKey.RECEIVABLES ||
+    tab === GarageDebtsTabKey.PAYABLES ||
+    tab === GarageDebtsTabKey.OVERVIEW ||
+    tab === GarageDebtsTabKey.CUSTOMERS
+  ) {
+    return tab;
+  }
+  return GarageDebtsTabKey.OVERVIEW;
+}
+
+export function useGarageDebtsTabs(
+  initialTab: GarageDebtsTabKey | string = GarageDebtsTabKey.OVERVIEW,
+) {
   const { t } = useTranslation(["garage", "debts", "common"]);
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
-  const getValidTab = useCallback((tab: string | null) => {
-    if (
-      ["receivables", "payables", "overview", "customers"].includes(tab || "")
-    ) {
-      return tab as string;
-    }
-    return "overview";
-  }, []);
-
-  const [activeTab, setActiveTab] = useState<string>(() => {
+  const [activeTab, setActiveTab] = useState<GarageDebtsTabKey>(() => {
     if (typeof window !== "undefined") {
       const tabParam = new URLSearchParams(window.location.search).get(
         ErpUrlQueryParam.TAB,
       );
-      if (tabParam) return getValidTab(tabParam);
+      if (tabParam) return resolveValidDebtsTab(tabParam);
     }
-    return getValidTab(initialTab);
+    return resolveValidDebtsTab(initialTab);
   });
+
+  useEffect(() => {
+    return () => {
+      if (debounceUrlTimerRef.current) {
+        clearTimeout(debounceUrlTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,31 +69,60 @@ export function useGarageDebtsTabs(initialTab = "overview") {
       const tabParam = new URLSearchParams(window.location.search).get(
         ErpUrlQueryParam.TAB,
       );
-      setActiveTab(getValidTab(tabParam || initialTab));
+      setActiveTab(resolveValidDebtsTab(tabParam || initialTab));
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [getValidTab, initialTab]);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.get(ErpUrlQueryParam.TAB)) {
+      url.searchParams.set(ErpUrlQueryParam.TAB, activeTab);
+      const fullUrl = `${url.pathname}${url.search}`;
+      window.history.replaceState(null, "", fullUrl);
+      useAppStore
+        .getState()
+        .updateCurrentTabUrl?.(getGarageDebtsInstanceId(), fullUrl);
+    }
+  }, [activeTab]);
 
   const handleTabChange = useCallback((nextTab: string) => {
-    setActiveTab(nextTab);
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
+    const validTab = resolveValidDebtsTab(nextTab);
+    setActiveTab(validTab);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      const newParams = new URLSearchParams(url.search);
-      newParams.set(ErpUrlQueryParam.TAB, nextTab);
-      window.history.replaceState(
-        null,
-        "",
-        `${url.pathname}?${newParams.toString()}`,
-      );
+      url.searchParams.set(ErpUrlQueryParam.TAB, validTab);
+      const newUrl = `${url.pathname}${url.search}`;
+      window.history.replaceState(null, "", newUrl);
+
+      debounceUrlTimerRef.current = setTimeout(() => {
+        useAppStore
+          .getState()
+          .updateCurrentTabUrl?.(getGarageDebtsInstanceId(), newUrl);
+      }, 300);
     }
   }, []);
 
   const pageTabs: TabItem[] = useMemo(
     () => [
-      { value: "overview", label: t("debts:tabs.overview", "Tổng quan") },
-      { value: "receivables", label: t("partners.tabReceivables", "Phải thu") },
-      { value: "payables", label: t("partners.tabPayables", "Phải trả") },
+      {
+        value: GarageDebtsTabKey.OVERVIEW,
+        label: t("debts:tabs.overview", "Tổng quan"),
+      },
+      {
+        value: GarageDebtsTabKey.RECEIVABLES,
+        label: t("partners.tabReceivables", "Phải thu"),
+      },
+      {
+        value: GarageDebtsTabKey.PAYABLES,
+        label: t("partners.tabPayables", "Phải trả"),
+      },
     ],
     [t],
   );

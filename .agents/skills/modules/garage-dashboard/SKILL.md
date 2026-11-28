@@ -358,3 +358,19 @@ Resource RBAC: `garage`
 - `printVoucher` dùng `useCallback` với deps `[companyAccounts, companyName]` (`companyName` tách ra trước để qua rule `react-hooks/preserve-manual-memoization`).
 - Bản in chạy trong iframe của `react-to-print` (không có class theme của app). Mẫu in gắn biến màu sáng `GARAGE_CASHFLOW_PRINT_LIGHT_VARS` (`.data.ts`) lên root, nên bản in không đổi theo theme tối. Đã kiểm bằng HTML iframe thật: giống hệt nhau khi app ở theme sáng và tối; PDF A4 đúng 1 trang (commit `9899cc8d`).
 - Test: `useGarageCashflowPrint.test.ts`, `v2-print-preparing-overlay` (stories, test), `GarageCashflowList.test.tsx` (overlay role=status theo `isPrinting`). Đã thêm vào `vitest.config.ts`.
+
+## 17. Phiếu thu chi: luật theo loại phiếu và quá hạn (2026-11-28)
+
+- Danh mục và luật là bản sao của API (skill API `garage-cashflow`): `utils/garageCashflowCatalog.ts`, `utils/garageCashflowVoucherRules.ts` (`findGarageVoucherViolation`), `utils/garageCashflowPartner.ts`. Đổi luật phải đổi cả API và web, kèm hai bảng test.
+- Drawer: option nội dung theo loại, giữ giá trị cũ kèm cảnh báo (`garageCashflowDrawer.paymentFields.ts`); đổi loại thì reset trạng thái, bỏ nội dung sai loại và bỏ đối tác tự điền (`garageCashflowDrawer.rules.ts`, `autoPartnerName`); chặn lưu trước khi gọi API.
+- Đối tác: chỉ phiếu thu tự điền từ phiếu dịch vụ, kể cả khi mở drawer từ công nợ; phiếu chi từ bảng Phải trả chỉ điền `supplierName`. Payload sửa gửi `null` để xóa field đã lưu (`editedText`).
+- Bảng: cột Ghi chú đứng sau Nội dung TT (view "Tổng quan" mặc định vẫn ẩn; ai đã lưu thứ tự cột phải đặt lại view). `tab=forecast` có cột Quá hạn (`GarageCashflowTable.overdueColumn.tsx`) lọc phía server qua `column_filters.overdueDays`, không sort.
+- Toast: dùng `useUIStore.getState().showToast`; `react-hot-toast` không được mount nên không hiện.
+- QC: `bun run e2e:garage-cashflow-rules`.
+
+## 18. Bảng Tiến độ Dòng tiền & Công nợ Dịch vụ (`GaragePaymentProgressCard`, KINDU-2280, 2026-11-28)
+
+- **Gộp Phải Thu & Phải Trả**: Xóa `PillTabs` chuyển tab ở header; `PaymentProgressBar` hiển thị 2 thanh tiến độ song song (Thu tiền dịch vụ & Chi trả chi phí / NCC).
+- **Bảng 9 cột (`getUnifiedProgressColumns` / `getUnifiedSummaryRow`)**: `#`, `Tháng`, `Số vụ việc`, `Tổng Phải Thu`, `Đã Thu`, `Còn Phải Thu`, `Tổng Phải Trả`, `Đã Trả`, `Còn Phải Trả`.
+- **Row Hover Tooltip (`DataTable.getRowTooltip` + `PaymentRowTooltipContent`)**: Ẩn cột `Doanh Thu`, `Còn Phải Thu Có HĐ`, `Còn Phải Thu Không HĐ`, `Không Theo Dõi Công Nợ` khỏi bảng; khi hover vào mỗi hàng sẽ hiển thị `Doanh thu`, `Chi phí`, `Lợi nhuận`, `Còn phải trả`, và `Không theo dõi công nợ` (không tách Có HĐ / Không HĐ).
+- **Test**: `src/modules/garage/components/organisms/garage-payment-progress-card/GaragePaymentProgressCard.test.tsx`.

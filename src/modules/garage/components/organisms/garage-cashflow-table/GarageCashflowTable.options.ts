@@ -69,6 +69,10 @@ export const getPaymentMethodOptions = (
     value: "Chuyển khoản",
   },
   {
+    label: tr(`${OPTION_KEY}.method.transferOther`, "Chuyển khoản khác"),
+    value: "Chuyển khoản khác",
+  },
+  {
     label: tr(`${OPTION_KEY}.method.card`, "Thẻ tín dụng"),
     value: "Thẻ tín dụng",
   },

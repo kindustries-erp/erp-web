@@ -281,3 +281,9 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
 - `QuoteDocumentCostSummary` hiển thị "Chiết khấu (giảm trừ doanh thu, TK 521)" thành dòng riêng ngoài cụm chi phí (`data-testid="cost-summary-discount"`); "Tổng chi phí" không cộng chiết khấu. Biên lợi nhuận do backend tính trên doanh thu thuần.
 - Test V1 của thư mục này không nằm trong `vitest.config.ts` mặc định; chạy bằng config tạm trỏ `src/modules/garage/components/organisms/garage-case-preview/**`.
 
+
+## Nhãn OJ có hóa đơn (KINDU-2262, 2026-11-28)
+
+- `getClassificationDisplayMeta` thêm hậu tố `cases.classification.ojHasInvoice` ("OJ · Có hóa đơn" / "OJ · Invoiced") khi API trả `ojHasInvoice === true` (`null` = không phải OJ).
+- Cờ "Loại khỏi công nợ" của phiếu OJ do API tính theo hóa đơn đầu ra; thao tác đổi tay trên UI bị API bỏ qua (UI chưa khóa nút).
+- `vite.config` chỉ chạy một số thư mục test garage; test của dropdown phân loại đặt ở `modules/garage/components/__tests__/`.

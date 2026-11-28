@@ -1,8 +1,6 @@
-export enum GarageCashflowTabKey {
-  DASHBOARD = "dashboard",
-  VOUCHERS = "vouchers",
-  FORECAST = "forecast",
-}
+import { GarageCashflowTabKey } from "@/shared/constants/urlParams";
+
+export { GarageCashflowTabKey };
 
 export type GarageCashflowTabKeyType = "dashboard" | "vouchers" | "forecast";
 

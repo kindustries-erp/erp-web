@@ -1,5 +1,9 @@
 import { PageKey } from "@/shared/types";
-import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import {
+  ErpUrlQueryParam,
+  GarageCashflowTabKey,
+  GarageDebtsTabKey,
+} from "@/shared/constants/urlParams";
 
 /** URL chuẩn của module khoản vay, thống nhất với API `api/v2/loans-tool`. */
 export const LOANS_TOOL_PATH = "/loans-tool";
@@ -392,10 +396,29 @@ export function pathToPage(
       tab = "dashboard";
     }
   } else if (slug === "garage-cashflow" || page === "garage-cashflow") {
-    if (tab === "vouchers") {
-      tab = "vouchers";
+    if (
+      tab === GarageCashflowTabKey.VOUCHERS ||
+      tab === GarageCashflowTabKey.FORECAST
+    ) {
+      // keep valid tab
     } else {
-      tab = "dashboard";
+      tab = GarageCashflowTabKey.DASHBOARD;
+    }
+  } else if (
+    slug === "garage-debts" ||
+    page === "garage-debts" ||
+    slug === "garage-partners" ||
+    slug === "garage-customers"
+  ) {
+    if (
+      tab === GarageDebtsTabKey.RECEIVABLES ||
+      tab === GarageDebtsTabKey.PAYABLES ||
+      tab === GarageDebtsTabKey.CUSTOMERS ||
+      tab === GarageDebtsTabKey.OVERVIEW
+    ) {
+      // keep valid tab
+    } else {
+      tab = GarageDebtsTabKey.OVERVIEW;
     }
   }
 

@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAppStore } from "@/core/config/appStore";
 import { GarageDebts } from "../GarageDebts";
 
 vi.mock("@/modules/garage/store/garageStore", () => ({
@@ -61,8 +62,13 @@ vi.mock("@/modules/garage/hooks/useGarageDebtsDashboard", () => ({
 }));
 
 vi.mock("../../components/organisms/garage-debts-table", () => ({
-  GarageDebtsTable: () => (
-    <div data-testid="garage-debts-table">Debts Table</div>
+  GarageDebtsTable: ({ onTabChange }: any) => (
+    <div data-testid="garage-debts-table">
+      Debts Table
+      <button onClick={() => onTabChange?.("payables")}>
+        Mock Switch to Payables
+      </button>
+    </div>
   ),
 }));
 
@@ -89,9 +95,14 @@ describe("GarageDebts Page RBAC & Tabs", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState(null, "", "/garage-debts");
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders default 3 tabs (Tổng quan, Phải thu, Phải trả) without cashflow tab", () => {
@@ -152,5 +163,48 @@ describe("GarageDebts Page RBAC & Tabs", () => {
     const drawer = screen.getByTestId("mock-cashflow-drawer");
     expect(drawer).toBeInTheDocument();
     expect(drawer).toHaveAttribute("data-open", "false");
+  });
+
+  it("preserves mounted views (keep-alive) when switching sub-tabs and syncs URL with appStore", () => {
+    vi.useFakeTimers();
+    const updateSpy = vi.fn();
+    useAppStore.setState({
+      currentInstanceId: "garage-debts",
+      updateCurrentTabUrl: updateSpy,
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebts />
+      </QueryClientProvider>,
+    );
+
+    expect(window.location.search).toContain("tab=overview");
+    expect(updateSpy).toHaveBeenCalledWith(
+      "garage-debts",
+      "/garage-debts?tab=overview",
+    );
+
+    const receivablesTab = screen.getByRole("tab", { name: "Phải thu" });
+    fireEvent.mouseDown(receivablesTab, { button: 0 });
+    fireEvent.click(receivablesTab);
+    expect(screen.getByTestId("garage-debts-table")).toBeInTheDocument();
+    expect(window.location.search).toContain("tab=receivables");
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(updateSpy).toHaveBeenCalledWith(
+      "garage-debts",
+      "/garage-debts?tab=receivables",
+    );
+
+    fireEvent.click(screen.getByText("Mock Switch to Payables"));
+    expect(screen.getByTestId("garage-payables-table")).toBeInTheDocument();
+    // Previously mounted receivables table stays mounted in DOM (hidden)
+    expect(screen.getByTestId("garage-debts-table")).toBeInTheDocument();
+    expect(screen.getByTestId("garage-debts-table").parentElement).toHaveClass(
+      "hidden",
+    );
   });
 });

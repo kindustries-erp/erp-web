@@ -4,6 +4,7 @@ import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 
 const METHOD_BADGE_STYLES: Record<string, string> = {
   "Chuyển khoản": "bg-sky-500/10 text-sky-600 border-sky-500/20",
+  "Chuyển khoản khác": "bg-teal-500/10 text-teal-600 border-teal-500/20",
   "Tiền mặt": "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   "Thẻ tín dụng": "bg-purple-500/10 text-purple-600 border-purple-500/20",
 };

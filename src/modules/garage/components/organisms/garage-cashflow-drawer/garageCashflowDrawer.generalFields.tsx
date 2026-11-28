@@ -3,8 +3,7 @@ import { V2FormFieldType } from "@/v2/shared/components/molecules/v2-form-field"
 import type { V2FormFieldConfig } from "@/v2/shared/components/molecules/v2-form-grid";
 import { V2DrawerMode, type V2DrawerModeType } from "@/v2/shared/types";
 import { GarageCashflowFieldKey } from "./garageCashflowDrawer.enum";
-import { PAYMENT_METHOD_OPTIONS } from "../../molecules/payment-method-combobox";
-import { PAYMENT_CONTENT_OPTIONS } from "../../molecules/payment-content-combobox";
+import { buildPaymentFieldConfigs } from "./garageCashflowDrawer.paymentFields";
 import { GarageCaseCombobox } from "../garage-case-combobox";
 import { GarageCashflowDrawerStatusField } from "./GarageCashflowDrawerStatusField";
 import { readVietnameseCurrency } from "@/shared/utils/format";
@@ -13,6 +12,7 @@ import type {
   CreateGarageCashflowVoucherDto,
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
+import { getVoucherPartnerName } from "../../../utils/garageCashflowPartner";
 import type { InitialCashflowData } from "./GarageCashflowDrawer.type";
 
 export interface GeneralFieldContext {
@@ -96,26 +96,7 @@ export function buildGeneralFieldConfigs(
         />
       ),
     },
-    {
-      name: GarageCashflowFieldKey.PAYMENT_METHOD,
-      label: t("garage:cashflowDrawer.paymentMethod", "Phương thức TT"),
-      type: V2FormFieldType.SELECT,
-      options: PAYMENT_METHOD_OPTIONS,
-      placeholder: t(
-        "garage:cashflowDrawer.selectPaymentMethod",
-        "Chọn phương thức...",
-      ),
-    },
-    {
-      name: GarageCashflowFieldKey.PAYMENT_CONTENT,
-      label: t("garage:cashflowDrawer.paymentContent", "Nội dung TT"),
-      type: V2FormFieldType.SELECT,
-      options: PAYMENT_CONTENT_OPTIONS,
-      placeholder: t(
-        "garage:cashflowDrawer.selectPaymentContent",
-        "Chọn hoặc nhập nội dung...",
-      ),
-    },
+    ...buildPaymentFieldConfigs(formData, voucher, t),
     {
       name: GarageCashflowFieldKey.AMOUNT,
       label: t("garage:cashflowDrawer.amount", "Số tiền"),
@@ -164,8 +145,7 @@ export function buildGeneralFieldConfigs(
       name: GarageCashflowFieldKey.PARTNER_NAME,
       label: t("garage:cashflowDrawer.partnerName", "Đối tác"),
       type: V2FormFieldType.TEXT,
-      renderView: () =>
-        voucher?.partnerName || voucher?.case?.khachHangName || "—",
+      renderView: () => getVoucherPartnerName(voucher ?? undefined) || "—",
     },
     {
       name: GarageCashflowFieldKey.LICENSE_PLATE,
