@@ -17,14 +17,17 @@ export const renderDebtAmount = (val: number) => (
 export function PaymentRemainingDebtCell({
   val,
   prefix,
+  hideTooltip = false,
 }: {
   val: number;
   prefix: string;
+  hideTooltip?: boolean;
 }) {
   return (
     <Tooltip
       content={val > 0 ? `${prefix}: ${money(val)}` : undefined}
       side="top"
+      disabled={hideTooltip}
     >
       <span
         className={

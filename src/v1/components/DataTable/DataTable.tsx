@@ -59,6 +59,7 @@ export function DataTable<T>({
   onPageSize,
   onRowClick,
   getRowClassName,
+  getRowTooltip,
   enableRowContextMenu = true,
   onRowContextMenu,
   renderSubRow,
@@ -539,6 +540,7 @@ export function DataTable<T>({
                                 rowIndex={index}
                                 isSelected={isSelected}
                                 getRowClassName={getRowClassName}
+                                getRowTooltip={getRowTooltip}
                                 onRowClick={onRowClick}
                                 onRowContextMenu={onRowContextMenu}
                                 enableRowContextMenu={enableRowContextMenu}

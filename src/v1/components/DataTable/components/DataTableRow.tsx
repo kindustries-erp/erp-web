@@ -1,6 +1,7 @@
 import React, { type MouseEvent } from "react";
 import { flexRender } from "@tanstack/react-table";
 import { TableRow, TableCell } from "@/shared/components/ui/table";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
 import type { DataTableRowMemoProps, DataTableRowMeta } from "../types";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
@@ -13,6 +14,7 @@ export function DataTableRowInner<T>({
   rowIndex,
   isSelected,
   getRowClassName,
+  getRowTooltip,
   onRowClick,
   onRowContextMenu,
   enableRowContextMenu,
@@ -23,103 +25,115 @@ export function DataTableRowInner<T>({
   enableColumnResizing,
   renderSubRow,
 }: DataTableRowMemoProps<T>) {
-  return (
-    <React.Fragment key={row.id}>
-      <TableRow
-        data-state={isSelected && "selected"}
-        data-context-menu-active={isContextMenuActive ? "true" : undefined}
-        className={cn(
-          "group",
-          variant === "spreadsheet" && "min-h-[38px] h-[38px]",
-          onRowClick && "cursor-pointer",
-          isExpanded && "bg-muted/5 font-medium border-l-2 border-l-primary",
-          isContextMenuActive && "bg-primary/[0.04] dark:bg-primary/[0.08]",
-          getRowClassName?.(row.original, rowIndex),
-        )}
-        onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-        onContextMenu={(e: MouseEvent) => {
-          if (onRowContextMenu) {
-            onRowContextMenu(row.original, rowIndex + 1, e);
-          }
-          if (enableRowContextMenu !== false) {
-            let actionItems: ActionDropdownItem[] | undefined;
-            if (rowHoverActions) {
-              actionItems = rowHoverActions(
-                row.original,
-                rowIndex + 1,
-                (row as any).table?.options?.meta,
-              );
-            }
-            if (actionItems && actionItems.length > 0) {
-              e.preventDefault();
-              e.stopPropagation();
-              setContextMenu({
-                x: e.clientX,
-                y: e.clientY,
-                items: actionItems,
-                rowKey,
-              });
-            }
-          }
-        }}
-      >
-        {row.getVisibleCells().map((cell, index) => {
-          const isHoverActionsCol = cell.column.id === "__hover_actions";
-          if (isHoverActionsCol) {
-            return (
-              <TableCell
-                key={cell.id}
-                className="w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-none bg-transparent sticky right-0 z-20 overflow-visible pointer-events-none"
-                style={{
-                  width: 116,
-                  minWidth: 116,
-                  maxWidth: 116,
-                }}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
+  const rowTooltip = getRowTooltip?.(row.original, rowIndex);
+
+  const rowElement = (
+    <TableRow
+      data-state={isSelected && "selected"}
+      data-context-menu-active={isContextMenuActive ? "true" : undefined}
+      className={cn(
+        "group",
+        variant === "spreadsheet" && "min-h-[38px] h-[38px]",
+        onRowClick && "cursor-pointer",
+        isExpanded && "bg-muted/5 font-medium border-l-2 border-l-primary",
+        isContextMenuActive && "bg-primary/[0.04] dark:bg-primary/[0.08]",
+        getRowClassName?.(row.original, rowIndex),
+      )}
+      onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+      onContextMenu={(e: MouseEvent) => {
+        if (onRowContextMenu) {
+          onRowContextMenu(row.original, rowIndex + 1, e);
+        }
+        if (enableRowContextMenu !== false) {
+          let actionItems: ActionDropdownItem[] | undefined;
+          if (rowHoverActions) {
+            actionItems = rowHoverActions(
+              row.original,
+              rowIndex + 1,
+              (row as any).table?.options?.meta,
             );
           }
-          const meta = cell.column.columnDef.meta as DataTableRowMeta;
-          const isFirstCol = index === 0;
-          const isActionsCol = cell.column.id === "__actions";
-          const actionsWidth = cell.column.getSize();
+          if (actionItems && actionItems.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            setContextMenu({
+              x: e.clientX,
+              y: e.clientY,
+              items: actionItems,
+              rowKey,
+            });
+          }
+        }
+      }}
+    >
+      {row.getVisibleCells().map((cell, index) => {
+        const isHoverActionsCol = cell.column.id === "__hover_actions";
+        if (isHoverActionsCol) {
           return (
             <TableCell
               key={cell.id}
-              className={cn(
-                meta?.className,
-                isFirstCol &&
-                  !enableRowSelection &&
-                  variant !== "spreadsheet" &&
-                  "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
-                variant === "spreadsheet" &&
-                  "border-r border-border/40 dark:border-white/[0.04] py-1 text-xs",
-                variant === "spreadsheet" &&
-                  !["__actions", "__selection", "__expand"].includes(
-                    cell.column.id,
-                  ) &&
-                  "px-2 truncate",
-              )}
+              className="w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-none bg-transparent sticky right-0 z-20 overflow-visible pointer-events-none"
               style={{
-                width: isActionsCol ? actionsWidth : undefined,
-                minWidth: isActionsCol ? actionsWidth : undefined,
-                maxWidth: isActionsCol
-                  ? actionsWidth
-                  : enableColumnResizing
-                    ? cell.column.getSize()
-                    : undefined,
+                width: 116,
+                minWidth: 116,
+                maxWidth: 116,
               }}
             >
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
             </TableCell>
           );
-        })}
-        <TableCell
-          className="w-auto p-0 m-0 border-none"
-          style={{ width: "auto" }}
-        />
-      </TableRow>
+        }
+        const meta = cell.column.columnDef.meta as DataTableRowMeta;
+        const isFirstCol = index === 0;
+        const isActionsCol = cell.column.id === "__actions";
+        const actionsWidth = cell.column.getSize();
+        return (
+          <TableCell
+            key={cell.id}
+            className={cn(
+              meta?.className,
+              isFirstCol &&
+                !enableRowSelection &&
+                variant !== "spreadsheet" &&
+                "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
+              variant === "spreadsheet" &&
+                "border-r border-border/40 dark:border-white/[0.04] py-1 text-xs",
+              variant === "spreadsheet" &&
+                !["__actions", "__selection", "__expand"].includes(
+                  cell.column.id,
+                ) &&
+                "px-2 truncate",
+            )}
+            style={{
+              width: isActionsCol ? actionsWidth : undefined,
+              minWidth: isActionsCol ? actionsWidth : undefined,
+              maxWidth: isActionsCol
+                ? actionsWidth
+                : enableColumnResizing
+                  ? cell.column.getSize()
+                  : undefined,
+            }}
+          >
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        );
+      })}
+      <TableCell
+        className="w-auto p-0 m-0 border-none"
+        style={{ width: "auto" }}
+      />
+    </TableRow>
+  );
+
+  return (
+    <React.Fragment key={row.id}>
+      {rowTooltip ? (
+        <Tooltip content={rowTooltip} side="top">
+          {rowElement}
+        </Tooltip>
+      ) : (
+        rowElement
+      )}
       {renderSubRow && isExpanded && (
         <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
           <TableCell
@@ -149,6 +163,7 @@ export const DataTableRowMemo = React.memo(DataTableRowInner, (prev, next) => {
     prev.enableColumnResizing !== next.enableColumnResizing ||
     prev.rowKey !== next.rowKey ||
     prev.getRowClassName !== next.getRowClassName ||
+    prev.getRowTooltip !== next.getRowTooltip ||
     prev.onRowClick !== next.onRowClick ||
     prev.renderSubRow !== next.renderSubRow
   ) {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
@@ -13,25 +13,18 @@ import {
   type GarageTrendItem,
 } from "../../../api/garageDashboardApi";
 import type { GaragePaymentProgressCardProps } from "./GaragePaymentProgressCard.type";
-import {
-  getReceiptColumns,
-  getPaymentColumns,
-} from "./utils/paymentProgressColumns";
-import {
-  getReceiptSummaryRow,
-  getPaymentSummaryRow,
-} from "./utils/paymentSummaryRows";
+import { getUnifiedProgressColumns } from "./utils/paymentProgressColumns";
+import { getUnifiedSummaryRow } from "./utils/paymentSummaryRows";
 import {
   calculateTotals,
   trendExtractors,
 } from "./GaragePaymentProgressCard.helper";
+import { PaymentRowTooltipContent } from "./components/PaymentRowTooltipContent";
 
 export function useGaragePaymentProgressLogic(
   props: GaragePaymentProgressCardProps = {},
 ) {
   const { t } = useTranslation("garage");
-  const [activeTab, setActiveTab] = useState<"RECEIPT" | "PAYMENT">("RECEIPT");
-  const isReceipt = activeTab === "RECEIPT";
 
   // Self-fetching fallback when parent does not pass data props
   const shouldFetchSelf =
@@ -56,42 +49,42 @@ export function useGaragePaymentProgressLogic(
   );
   const [monthDrawerOpen, setMonthDrawerOpen] = useState(false);
 
-  const openMonthDetail = (item: GarageTrendItem) => {
+  const openMonthDetail = useCallback((item: GarageTrendItem) => {
     setSelectedMonth(item);
     setMonthDrawerOpen(true);
-  };
+  }, []);
 
-  const closeMonthDetail = () => {
+  const closeMonthDetail = useCallback(() => {
     setMonthDrawerOpen(false);
-  };
+  }, []);
 
-  // Receipt (Collection) stats
-  const totalBilled = collectionSummary?.totalBilled || 0;
-  const totalPaid = collectionSummary?.totalPaid || 0;
-  const collectionRate = collectionSummary?.collectionRate || 0;
+  const collectionProgress = useMemo(
+    () => ({
+      total: collectionSummary?.totalBilled || 0,
+      paid: collectionSummary?.totalPaid || 0,
+      rate: collectionSummary?.collectionRate || 0,
+    }),
+    [collectionSummary],
+  );
 
-  // Payment (Cost) stats
-  const totalCost = costPaymentSummary?.totalCost || 0;
-  const totalPaidCost = costPaymentSummary?.totalPaidCost || 0;
-  const costPaymentRate = costPaymentSummary?.paymentRate || 0;
+  const costPaymentProgress = useMemo(
+    () => ({
+      total: costPaymentSummary?.totalCost || 0,
+      paid: costPaymentSummary?.totalPaidCost || 0,
+      rate: costPaymentSummary?.paymentRate || 0,
+    }),
+    [costPaymentSummary],
+  );
 
-  const currentRate = isReceipt ? collectionRate : costPaymentRate;
-  const currentTotal = isReceipt ? totalBilled : totalCost;
-  const currentPaid = isReceipt ? totalPaid : totalPaidCost;
-
-  // Table Column State Hook
-  const tableId = isReceipt
-    ? "garage-payment-progress-receipt"
-    : "garage-payment-progress-payment";
+  const tableId = "garage-payment-progress";
   const listHook = useTableColumnState(tableId);
 
   // Chỉ hiển thị từ tháng 07/2026 trở đi (neo mốc đối soát dòng tiền)
   const effectiveTrend = useMemo(() => {
     if (!trend || trend.length === 0) return [];
-    return trend.filter((t) => t.label >= "2026-07");
+    return trend.filter((item) => item.label >= "2026-07");
   }, [trend]);
 
-  // Process and sort trend data using universal client-side filter
   const processedItems = useMemo(() => {
     return filterClientItems(effectiveTrend, listHook, {
       dateField: "label",
@@ -114,58 +107,51 @@ export function useGaragePaymentProgressLogic(
     [listHook, effectiveTrend],
   );
 
-  const receiptColumns = useMemo(
-    () => getReceiptColumns(headerFilter, t, openMonthDetail),
-    [headerFilter, t],
+  const columns = useMemo(
+    () => getUnifiedProgressColumns(headerFilter, t, openMonthDetail),
+    [headerFilter, t, openMonthDetail],
   );
 
-  const paymentColumns = useMemo(
-    () => getPaymentColumns(headerFilter, t, openMonthDetail),
-    [headerFilter, t],
-  );
-
-  const receiptSummaryRow = useMemo(
-    () => getReceiptSummaryRow(totals, t),
+  const summaryRow = useMemo(
+    () => getUnifiedSummaryRow(totals, t),
     [totals, t],
   );
 
-  const paymentSummaryRow = useMemo(
-    () => getPaymentSummaryRow(totals, t),
-    [totals, t],
+  const getRowTooltip = useCallback(
+    (item: GarageTrendItem) =>
+      React.createElement(PaymentRowTooltipContent, { item }),
+    [],
   );
 
-  const columns = isReceipt ? receiptColumns : paymentColumns;
-  const summaryRow = isReceipt ? receiptSummaryRow : paymentSummaryRow;
-
-  const getRowActions = (item: GarageTrendItem): ActionDropdownItem[] => [
-    {
-      groupLabel: t("common.actions", "TRA CỨU"),
-      items: [
-        {
-          label: t("progress.viewMonthDetail", "Xem chi tiết đối soát tháng"),
-          icon: React.createElement(Eye, { className: "w-3.5 h-3.5" }),
-          onClick: () => openMonthDetail(item),
-        },
-      ],
-    },
-  ];
+  const getRowActions = useCallback(
+    (item: GarageTrendItem): ActionDropdownItem[] => [
+      {
+        groupLabel: t("common.actions", "TRA CỨU"),
+        items: [
+          {
+            label: t("progress.viewMonthDetail", "Xem chi tiết đối soát tháng"),
+            icon: React.createElement(Eye, { className: "w-3.5 h-3.5" }),
+            onClick: () => openMonthDetail(item),
+          },
+        ],
+      },
+    ],
+    [t, openMonthDetail],
+  );
 
   return {
     t,
-    activeTab,
-    setActiveTab,
-    isReceipt,
     selectedMonth,
     monthDrawerOpen,
     closeMonthDetail,
-    currentRate,
-    currentTotal,
-    currentPaid,
+    collectionProgress,
+    costPaymentProgress,
     tableId,
     listHook,
     processedItems,
     columns,
     summaryRow,
+    getRowTooltip,
     getRowActions,
     loading,
   };

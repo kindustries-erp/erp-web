@@ -367,3 +367,10 @@ Resource RBAC: `garage`
 - Bảng: cột Ghi chú đứng sau Nội dung TT (view "Tổng quan" mặc định vẫn ẩn; ai đã lưu thứ tự cột phải đặt lại view). `tab=forecast` có cột Quá hạn (`GarageCashflowTable.overdueColumn.tsx`) lọc phía server qua `column_filters.overdueDays`, không sort.
 - Toast: dùng `useUIStore.getState().showToast`; `react-hot-toast` không được mount nên không hiện.
 - QC: `bun run e2e:garage-cashflow-rules`.
+
+## 18. Bảng Tiến độ Dòng tiền & Công nợ Dịch vụ (`GaragePaymentProgressCard`, KINDU-2280, 2026-11-28)
+
+- **Gộp Phải Thu & Phải Trả**: Xóa `PillTabs` chuyển tab ở header; `PaymentProgressBar` hiển thị 2 thanh tiến độ song song (Thu tiền dịch vụ & Chi trả chi phí / NCC).
+- **Bảng 9 cột (`getUnifiedProgressColumns` / `getUnifiedSummaryRow`)**: `#`, `Tháng`, `Số vụ việc`, `Tổng Phải Thu`, `Đã Thu`, `Còn Phải Thu`, `Tổng Phải Trả`, `Đã Trả`, `Còn Phải Trả`.
+- **Row Hover Tooltip (`DataTable.getRowTooltip` + `PaymentRowTooltipContent`)**: Ẩn cột `Doanh Thu`, `Còn Phải Thu Có HĐ`, `Còn Phải Thu Không HĐ`, `Không Theo Dõi Công Nợ` khỏi bảng; khi hover vào mỗi hàng sẽ hiển thị `Doanh thu`, `Chi phí`, `Lợi nhuận`, `Còn phải trả`, và `Không theo dõi công nợ` (không tách Có HĐ / Không HĐ).
+- **Test**: `src/modules/garage/components/organisms/garage-payment-progress-card/GaragePaymentProgressCard.test.tsx`.
