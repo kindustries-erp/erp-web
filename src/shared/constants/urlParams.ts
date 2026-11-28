@@ -45,3 +45,22 @@ export enum ErpUrlQueryParam {
   VEHICLE_TYPE = "vehicleType",
   PARTNER_TAX_CODE = "partner_tax_code",
 }
+
+/**
+ * Chuẩn hóa Enum Tab Keys cho module Thu chi Garage (`garage-cashflow`).
+ */
+export enum GarageCashflowTabKey {
+  DASHBOARD = "dashboard",
+  VOUCHERS = "vouchers",
+  FORECAST = "forecast",
+}
+
+/**
+ * Chuẩn hóa Enum Tab Keys cho module Công nợ Garage (`garage-debts`).
+ */
+export enum GarageDebtsTabKey {
+  OVERVIEW = "overview",
+  RECEIVABLES = "receivables",
+  PAYABLES = "payables",
+  CUSTOMERS = "customers",
+}
